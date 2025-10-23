@@ -1,0 +1,15 @@
+# Định tuyến vào trong public/
+
+RewriteEngine On
+
+# Redirect tất cả về public/
+
+RewriteCond %{REQUEST_URI} !^/faculty/public/
+RewriteRule ^(.\*)$ public/$1 [L]
+
+# Bảo vệ file .htaccess
+
+<Files ".htaccess">
+Order allow,deny
+Deny from all
+</Files>
