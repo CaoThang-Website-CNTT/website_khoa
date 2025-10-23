@@ -73,7 +73,8 @@ web_khoa/
 ├── assets/                 # Chứa các tài nguyên tĩnh (CSS, JS, hình ảnh)
 │   ├── css/                # Chứa các tệp CSS
 │   ├── js/                 # Chứa các tệp JavaScript
-│   └── img/                # Chứa hình ảnh (logo, banner)
+│   ├── img/                # Chứa hình ảnh (logo, banner)
+│   └── fonts/              # Chứa các tệp fonts
 ├── public/                 # Thư mục gốc web (điểm truy cập - entry point)
 │   ├── index.php           # Tệp định tuyến chính
 │   ├── .htaccess           # Tệp cấu hình URL (Đã từng đề cập trong buổi đầu tiên môn NodeJS)
