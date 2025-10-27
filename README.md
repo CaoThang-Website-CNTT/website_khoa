@@ -61,14 +61,14 @@ web_khoa/
 ├── includes/               # Chứa các tệp PHP dùng chung
 │   ├── (ví dụ: utils.php)       # Các hàm tiện ích
 │   ├── (ví dụ: auth.php)        # Quản lý đăng nhập/đăng xuất
-│   ├── (ví dụ: header.php)      # Mẫu header chung (menu điều hướng, logo)
-│   ├── (ví dụ: footer.php)      # Mẫu footer chung
 │   └── (ví dụ: db.php)          # Các hàm hỗ trợ truy vấn cơ sở dữ liệu
 ├── models/                 # Chứa logic tương tác dữ liệu, bao gồm model để ánh xạ dữ liệu
 ├── controllers/            # Chứa logic điều khiển và xử lý yêu cầu
 ├── views/                  # Chứa các tệp giao diện (HTML + PHP)
 │   ├── templates/          # Các giao diện có thể tái sử dụng
 │   │   ├── (ví dụ: nav.php)     # Menu điều hướng (tùy chỉnh theo vai trò)
+│   │   ├── (ví dụ: header.php)  # Mẫu header chung (menu điều hướng, logo)
+│   │   ├── (ví dụ: footer.php)  # Mẫu footer chung
 │   │   └── (ví dụ: form.php)    # Form chung
 ├── assets/                 # Chứa các tài nguyên tĩnh (CSS, JS, hình ảnh)
 │   ├── css/                # Chứa các tệp CSS

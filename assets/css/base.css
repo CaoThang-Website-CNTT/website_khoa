@@ -1,0 +1,72 @@
+:root {
+  --text-base: 16px;
+
+  /* 2px  */
+  --radius-xs: 0.125rem;
+  /* 4px  */
+  --radius-sm: 0.25rem;
+  /* 8px  */
+  --radius-md: 0.5rem;
+  /* 16px */
+  --radius-lg: 1rem;
+  /* 24px */
+  --radius-xl: 1.5rem;
+  /* 32px */
+  --radius-2xl: 2rem;
+
+  --background: #ffffffff;
+  --banner-background: #003280;
+  --footer-background: #101828;
+  --foreground: #0A0A0A;
+  --primary: #155DFC;
+  --primary-alt: #51A2FF;
+  --primary-foreground: #FFFFFF;
+  --secondary: #003280;
+  --secondary-foreground: #ffffff;
+  --muted: #f3f3f3;
+  --muted-foreground: #4a5565;
+  --accent: #e3eefd;
+  --accent-foreground: #155dfc;
+}
+
+html {
+  font-size: var(--text-base);
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+ul,
+ol {
+  list-style-type: none;
+}
+
+.rounded-xs {
+  border-radius: var(--radius-xs);
+}
+
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+.rounded-xl {
+  border-radius: var(--radius-xl);
+}
+
+.rounded-2xl {
+  border-radius: var(--radius-2xl);
+}
+
+.rounded-none {
+  border-radius: 0;
+}
+
+.rounded-full {
+  border-radius: calc(infinity * 1px);
+}
