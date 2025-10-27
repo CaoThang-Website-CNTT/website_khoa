@@ -65,11 +65,14 @@ web_khoa/
 ├── models/                 # Chứa logic tương tác dữ liệu, bao gồm model để ánh xạ dữ liệu
 ├── controllers/            # Chứa logic điều khiển và xử lý yêu cầu
 ├── views/                  # Chứa các tệp giao diện (HTML + PHP)
-│   ├── templates/          # Các giao diện có thể tái sử dụng
-│   │   ├── (ví dụ: nav.php)     # Menu điều hướng (tùy chỉnh theo vai trò)
-│   │   ├── (ví dụ: header.php)  # Mẫu header chung (menu điều hướng, logo)
-│   │   ├── (ví dụ: footer.php)  # Mẫu footer chung
-│   │   └── (ví dụ: form.php)    # Form chung
+│   ├── components/         # Các thành phần giao diện có thể tái sử dụng
+│   │   ├── (ví dụ: Nav.php)     # Menu điều hướng (tùy chỉnh theo vai trò)
+│   │   ├── (ví dụ: Header.php)  # Mẫu header chung (menu điều hướng, logo)
+│   │   ├── (ví dụ: Footer.php)  # Mẫu footer chung
+│   │   └── (ví dụ: Form.php)    # Form chung
+│   ├── layouts/            # Chứa các bố cục
+│   │   └ (ví dụ: HomepageLayout.php)   # bố cục của trang chủ
+│   └── (ví dụ: Homepage.php)    # Trang chủ
 ├── assets/                 # Chứa các tài nguyên tĩnh (CSS, JS, hình ảnh)
 │   ├── css/                # Chứa các tệp CSS
 │   ├── js/                 # Chứa các tệp JavaScript
