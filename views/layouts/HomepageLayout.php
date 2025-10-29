@@ -18,8 +18,7 @@ class HomepageLayout implements IBaseViewComponent
     $Header = new Header();
     $Footer = new Footer();
 
-    ob_start();
-?>
+    return <<<HTML
     <!DOCTYPE html>
     <html lang="en">
 
@@ -28,19 +27,21 @@ class HomepageLayout implements IBaseViewComponent
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
       <link rel="preload" as="style" href="../assets/css/fonts.css">
+      <link rel="stylesheet" href="../assets/css/fonts.css">
       <link rel="preload" as="style" href="../assets/css/base.css">
+      <link rel="stylesheet" href="../assets/css/base.css">
+      <link rel="preload" as="style" href="../assets/css/main.css">
+      <link rel="stylesheet" href="../assets/css/main.css">
       <title>Khoa Công nghệ Thông tin - Trường CĐKT Cao Thắng</title>
     </head>
 
     <body>
-      <?= $Header->render() ?>
-      <?= $this->content ?>
-      <?= $Footer->render() ?>
+      {$Header->render()}
+      {$this->content}
+      {$Footer->render()}
     </body>
 
     </html>
-<?php
-
-    return ob_get_clean();
+    HTML;
   }
 }
