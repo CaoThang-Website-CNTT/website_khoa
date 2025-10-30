@@ -15,7 +15,7 @@ use App\Views\Layouts\Sections\{
 class HomepageLayout extends ViewComponent
 {
   private string $content;
-  public function __construct(string $content = 'Khoa CNTT - Cao Thắng')
+  public function __construct(string $content)
   {
     $this->content = $content;
   }
@@ -49,6 +49,7 @@ class HomepageLayout extends ViewComponent
       {$Header->render()}   
       {$Hero->render()}
       {$WhyChooseUs->render()}
+      {$NewsFeed->render()}
       {$Footer->render()}
     </body>
 

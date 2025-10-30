@@ -155,14 +155,41 @@ class WhyChooseUs extends ViewComponent
               <h3 class="text-2xl font-semibold mb-2">Nghiên cứu & Phát triển</h3>
               <p class="text-sm font-normal leading-5">Tham gia các dự án nghiên cứu thực tế cùng giảng viên</p>
             </div>
+          </div>
+          
+          <!--statistic info-->
+          <!-- {$this->renderStatisticInfo($this->statisticInfo)} -->
+          <div class="col-start-3 row-start-1 bg-accent-foreground rounded-2xl p-8 text-white flex flex-col gap-2 justify-center">
+            <h2 class="text-7xl font-bold">{$this->statisticInfo[0]['title']}</h2>
+            <p class="text-xl font-semibold">{$this->statisticInfo[0]['subTitle']}</p>
+            <p class="text-base font-normal">{$this->statisticInfo[0]['short']}</p>
+          </div>
+
+          <div class="col-start-3 row-start-2 bg-pink-gradient rounded-2xl p-8 text-white flex flex-col gap-2 justify-center">
+            <h2 class="text-7xl font-bold">{$this->statisticInfo[1]['title']}</h2>
+            <p class="text-xl font-semibold">{$this->statisticInfo[1]['subTitle']}</p>
+            <p class="text-base font-normal">{$this->statisticInfo[1]['short']}</p>
+          </div>
         </div>
-        
-        <div class="flex-1 overflow-hidden relative rounded-2xl">
-          <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute">
-            <div class="absolute inset-0 bg-green-gradient flex flex-col justify-end items-start text-white p-6">
-              <h3 class="text-2xl font-semibold mb-2">Nghiên cứu & Phát triển</h3>
-              <p class="text-sm font-normal leading-5">Tham gia các dự án nghiên cứu thực tế cùng giảng viên</p>
-            </div>
+        <!--outstanding info-->
+        {$this->renderOutstandingInfo($this->outstandingInfo)}
+        <!---->
+        <div class="flex justify-center items-stretch self-stretch gap-6 mb-12" style="height: 280px">
+          <div class="flex-1 overflow-hidden relative rounded-2xl">
+            <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
+              <div class="absolute inset-0 bg-blue-gradient flex flex-col justify-end items-start text-white p-6">
+                <h3 class="text-2xl font-semibold mb-2">Nghiên cứu & Phát triển</h3>
+                <p class="text-sm font-normal leading-5">Tham gia các dự án nghiên cứu thực tế cùng giảng viên</p>
+              </div>
+          </div>
+          
+          <div class="flex-1 overflow-hidden relative rounded-2xl">
+            <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
+              <div class="absolute inset-0 bg-green-gradient flex flex-col justify-end items-start text-white p-6">
+                <h3 class="text-2xl font-semibold mb-2">Hợp tác Quốc tế</h3>
+                <p class="text-sm font-normal leading-5">Cơ hội trao đổi sinh viên và học bổng du học</p>
+              </div>
+          </div>
         </div>
       </div>
     </section>
