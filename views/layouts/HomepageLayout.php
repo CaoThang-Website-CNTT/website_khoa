@@ -5,9 +5,11 @@ namespace App\Views\Layouts;
 use App\Core\ViewComponent;
 use App\Views\Components\{
   Header,
-  Carousel,
   WhyChooseUs,
   Footer
+};
+use App\Views\Layouts\Sections\{
+  HeroSection
 };
 
 class HomepageLayout extends ViewComponent
@@ -20,26 +22,10 @@ class HomepageLayout extends ViewComponent
   public function render(): string
   {
     $Header = new Header();
-    $Carousel = new Carousel([
-      [
-        'title'       => 'Môi trường học tập',
-        'subtitle'    => 'Chuyên nghiệp & Sáng tạo',
-        'description' => 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.',
-        'button'      => 'Tìm hiểu thêm',
-        'image'       => 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?...',
-        'alt'         => 'Lecture hall with students',
-      ],
-      [
-        'title'       => 'Công nghệ tiên tiến',
-        'subtitle'    => 'Hỗ trợ học tập 24/7',
-        'description' => 'Hệ thống học trực tuyến hiện đại, tài liệu số hóa đầy đủ, và phòng lab công nghệ cao giúp bạn học mọi lúc, mọi nơi.',
-        'button'      => 'Khám phá ngay',
-        'image'       => 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?...',
-        'alt'         => 'Modern computer lab',
-      ],
-    ]);
-    $Footer = new Footer();
+
+    $Hero = new HeroSection();
     $WhyChooseUs = new WhyChooseUs();
+    $Footer = new Footer();
 
     return <<<HTML
     <!DOCTYPE html>
@@ -60,13 +46,8 @@ class HomepageLayout extends ViewComponent
     </head>
 
     <body>
-      {$Header->render()}
-      <div id="hero-section">
-        <div class="container">
-          {$Carousel->render()}
-        </div>
-      </div>
-      {$this->content}
+      {$Header->render()}   
+      {$Hero->render()}
       {$WhyChooseUs->render()}
       {$Footer->render()}
     </body>
