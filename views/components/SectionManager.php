@@ -2,7 +2,7 @@
 
 namespace App\Views\Components;
 
-use App\Types\IBaseViewComponent;
+use App\Core\ViewComponent;
 
 /**
  * Quản lý mảng các thành phần giao diện, giúp thêm động các thành phần tuỳ chọn vào giao diện
@@ -14,7 +14,7 @@ class SectionManager
   /**
    * Thêm một section vào danh sách
    */
-  public function add(IBaseViewComponent $section): self
+  public function add(ViewComponent $section): self
   {
     $this->sections[] = $section;
     return $this;
@@ -26,7 +26,7 @@ class SectionManager
   public function addMany(array $sections): self
   {
     foreach ($sections as $section) {
-      if ($section instanceof IBaseViewComponent) {
+      if ($section instanceof ViewComponent) {
         $this->add($section);
       }
     }

@@ -2,9 +2,9 @@
 
 namespace App\Views\Components;
 
-use App\Types\IBaseViewComponent;
+use App\Core\ViewComponent;
 
-class WhyChooseUs implements IBaseViewComponent
+class WhyChooseUs extends ViewComponent
 {
   public function render(): string
   {

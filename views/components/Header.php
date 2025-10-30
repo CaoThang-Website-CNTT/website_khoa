@@ -58,33 +58,33 @@ class Header extends ViewComponent
   public function render(): string
   {
     return <<<HTML
-    <header>
+    <header class="z-50">
       <div class="sub-header">
-        <div class="container flex font-light">
-          <div class="">📧 cntt@caothang.edu.vn</div>        
-          <div class="">📞 +84 (08) 3821 2360</div>
+        <div class="container flex gap-4 px-4 font-light">
+          <div>📧 cntt@caothang.edu.vn</div>        
+          <div>📞 +84 (08) 3821 2360</div>
         </div>
       </div>
       <div class="main-header">
         <div class="container">
           <div class="flex justify-between items-center p-4">
-            <div class="web-title flex">
-              <div class="web-logo">
+            <div class="flex gap-4">
+              <div class="web-logo object-contain">
                 <img src="{$this->asset('img/faculty_logo.jpg')}" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
               </div>
               <div class="flex flex-col justify-center">
-                <div class="faculty-name uppercase">KHOA CÔNG NGHỆ THÔNG TIN</div>
+                <div class="text-xl uppercase">KHOA CÔNG NGHỆ THÔNG TIN</div>
                 <div class="uni-name uppercase">TRƯỜNG CAO ĐẲNG KỸ THUẬT CAO THẮNG</div>
               </div>
             </div>
-            <div class="search-bar flex items-center rounded-2xl">
+            <div class="search-bar flex items-center px-4 gap-2 rounded-2xl text-sm">
               {$this->icon('search_icon', ['alt' => 'Search Icon'])}
               <input class="search-bar__input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
             </div>
           </div>
         </div>
         <nav class="navbar">
-          <div class="container flex">
+          <div class="container flex py-2 px-4 gap-4">
             {$this->renderNav()}
           </div>
         </nav>
@@ -110,7 +110,7 @@ class Header extends ViewComponent
   {
     $active = $data['active'] ?? false;
 
-    $class = "class='navbar__item flex items-center" . ($active ? ' navbar__item--active' : '') . "'";
+    $class = "class='navbar__item flex items-center py-2 gap-2 z-50" . ($active ? ' navbar__item--active' : '') . "'";
 
     $dropdownMenu = !empty($data['dropdown']) ? $this->renderDropdown($data['dropdown']) : '';
 
@@ -129,7 +129,7 @@ class Header extends ViewComponent
 
     foreach ($dropdownItems as $label => $url) {
       $items .= <<<HTML
-      <a class="dropdown-menu__item flex justify-between" href="{$url}">
+      <a class="dropdown-menu__item flex justify-between items-center px-4 py-2" href="{$url}">
         <div>{$label}</div>
         <div>
           {$this->icon('chevron_right', ['alt' => 'Dropdown Item Go-to Icon'])}
@@ -140,7 +140,7 @@ class Header extends ViewComponent
 
     return <<<HTML
     {$this->icon('chevron_down', ['alt' => 'Dropdown Icon'])}
-    <div class="dropdown-menu">
+    <div class="dropdown-menu rounded-md">
       {$items}
     </div>
     HTML;

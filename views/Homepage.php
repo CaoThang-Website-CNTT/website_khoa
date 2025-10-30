@@ -9,7 +9,7 @@ class Homepage extends ViewComponent
 {
   public function render(): string
   {
-    $Content = "Hello mng, đây là Khoa CNTT - Trường CĐKT Cao Thắng";
+    $Content = "";
 
     $Layout = new HomepageLayout($Content);
 
