@@ -2,9 +2,9 @@
 
 namespace App\Views\Components;
 
-use App\Types\IBaseViewComponent;
+use App\Core\ViewComponent;
 
-class Footer implements IBaseViewComponent
+class Footer extends ViewComponent
 {
   public function render(): string
   {

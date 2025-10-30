@@ -2,9 +2,9 @@
 
 namespace App\Views\Components;
 
-use App\Types\IBaseViewComponent;
+use App\Core\ViewComponent;
 
-class Header implements IBaseViewComponent
+class Header extends ViewComponent
 {
   private array $navLinks = [
     'Trang Chủ' => [
@@ -70,7 +70,7 @@ class Header implements IBaseViewComponent
           <div class="flex justify-between items-center p-4">
             <div class="web-title flex">
               <div class="web-logo">
-                <img src="../assets/img/faculty_logo.jpg" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
+                <img src="{$this->asset('img/faculty_logo.jpg')}" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
               </div>
               <div class="flex flex-col justify-center">
                 <div class="faculty-name uppercase">KHOA CÔNG NGHỆ THÔNG TIN</div>
@@ -78,7 +78,7 @@ class Header implements IBaseViewComponent
               </div>
             </div>
             <div class="search-bar flex items-center rounded-2xl">
-              <img class="search-bar__icon" src="../assets/icons/search_icon.svg" alt="Search Icon">
+              {$this->icon('search_icon', ['alt' => 'Search Icon'])}
               <input class="search-bar__input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
             </div>
           </div>
@@ -132,14 +132,14 @@ class Header implements IBaseViewComponent
       <a class="dropdown-menu__item flex justify-between" href="{$url}">
         <div>{$label}</div>
         <div>
-          <img class="dropdown-menu__item-icon" src="../assets/icons/chevron_right.svg" alt="Dropdown Item Go-to Icon">
+          {$this->icon('chevron_right', ['alt' => 'Dropdown Item Go-to Icon'])}
         </div>
       </a>
       HTML;
     }
 
     return <<<HTML
-    <img class="dropdown-icon" src="../assets/icons/chevron_down.svg" alt="Dropdown Icon">
+    {$this->icon('chevron_down', ['alt' => 'Dropdown Icon'])}
     <div class="dropdown-menu">
       {$items}
     </div>
