@@ -2,11 +2,10 @@
 
 namespace App\Views;
 
-use App\Types\IBaseViewComponent;
-use App\Views\Components\WhyChooseUs;
+use App\Core\ViewComponent;
 use App\Views\Layouts\HomepageLayout;
 
-class Homepage implements IBaseViewComponent
+class Homepage extends ViewComponent
 {
   public function render(): string
   {

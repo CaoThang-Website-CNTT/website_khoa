@@ -1,0 +1,198 @@
+:root {
+  --text-base: 16px;
+
+  /* 2px  */
+  --radius-xs: 0.125rem;
+  /* 4px  */
+  --radius-sm: 0.25rem;
+  /* 8px  */
+  --radius-md: 0.5rem;
+  /* 16px */
+  --radius-lg: 1rem;
+  /* 24px */
+  --radius-xl: 1.5rem;
+  /* 32px */
+  --radius-2xl: 2rem;
+
+  --background: #ffffff;
+  --banner-background: #003280;
+  --footer-background: #101828;
+  --foreground: #0a0a0a;
+  --primary: #155dfc;
+  --primary-alt: #51a2ff;
+  --primary-foreground: #ffffff;
+  --secondary: #003280;
+  --secondary-foreground: #ffffff;
+  --muted: #f3f3f3;
+  --muted-foreground: #4a5565;
+  --accent: #e3eefd;
+  --accent-foreground: #155dfc;
+
+  --ring: 4px solid rgba(0, 0, 0, 0.20);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: var(--text-base);
+  font-family: "Be Vietnam Pro";
+}
+
+img,
+video {
+  color: inherit;
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+ul,
+ol {
+  list-style-type: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.container {
+  width: 1440px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-col-reverse {
+  flex-direction: column-reverse;
+}
+
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.pb-4 {
+  padding-bottom: 1rem;
+}
+
+.pl-4 {
+  padding-left: 1rem;
+}
+
+.pr-4 {
+  padding-right: 1rem;
+}
+
+.px-4 {
+  padding-inline: 1rem;
+}
+
+.py-4 {
+  padding-block: 1rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-end {
+  align-items: flex-end;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.font-light {
+  font-weight: 300;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.lowercase {
+  text-transform: lowercase;
+}
+
+.rounded-xs {
+  border-radius: var(--radius-xs);
+}
+
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+.rounded-xl {
+  border-radius: var(--radius-xl);
+}
+
+.rounded-2xl {
+  border-radius: var(--radius-2xl);
+}
+
+.rounded-none {
+  border-radius: 0;
+}
+
+.rounded-full {
+  border-radius: calc(infinity * 1px);
+}
