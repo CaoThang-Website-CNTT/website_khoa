@@ -3,8 +3,7 @@
 namespace App\Views\Layouts;
 
 use App\Types\IBaseViewComponent;
-use App\Views\Components\Header;
-use App\Views\Components\Footer;
+use App\Views\Components\{Header, Footer, WhyChooseUs};
 
 class HomepageLayout implements IBaseViewComponent
 {
@@ -17,6 +16,7 @@ class HomepageLayout implements IBaseViewComponent
   {
     $Header = new Header();
     $Footer = new Footer();
+    $WhyChooseUs = new WhyChooseUs();
 
     ob_start();
 ?>
@@ -28,13 +28,17 @@ class HomepageLayout implements IBaseViewComponent
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
       <link rel="preload" as="style" href="../assets/css/fonts.css">
+      <link rel="stylesheet" href="../assets/css/fonts.css">
       <link rel="preload" as="style" href="../assets/css/base.css">
+      <link rel="stylesheet" href="../assets/css/base.css">
+
       <title>Khoa Công nghệ Thông tin - Trường CĐKT Cao Thắng</title>
     </head>
 
-    <body>
+    <body style="width: 1440px; padding: 0 152px 0 152px; margin: 0 auto;">
       <?= $Header->render() ?>
       <?= $this->content ?>
+      <?= $WhyChooseUs->render() ?>
       <?= $Footer->render() ?>
     </body>
 
