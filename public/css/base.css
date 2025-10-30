@@ -96,6 +96,7 @@
   padding: 0;
   box-sizing: border-box;
   font-size: var(--text-base);
+  font-weight: 400;
   line-height: var(--text-base--line-height);
   font-family: "Be Vietnam Pro";
 }
@@ -1043,4 +1044,20 @@ a {
 
 .z-50 {
   z-index: 50;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.relative {
+  position: relative;
+}
+
+.sticky {
+  position: sticky;
 }

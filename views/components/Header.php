@@ -110,7 +110,7 @@ class Header extends ViewComponent
   {
     $active = $data['active'] ?? false;
 
-    $class = "class='navbar__item flex items-center py-2 gap-2 z-50" . ($active ? ' navbar__item--active' : '') . "'";
+    $class = "class='navbar__item flex items-center py-2 gap-2 z-50 relative" . ($active ? ' navbar__item--active' : '') . "'";
 
     $dropdownMenu = !empty($data['dropdown']) ? $this->renderDropdown($data['dropdown']) : '';
 
@@ -140,7 +140,7 @@ class Header extends ViewComponent
 
     return <<<HTML
     {$this->icon('chevron_down', ['alt' => 'Dropdown Icon'])}
-    <div class="dropdown-menu rounded-md">
+    <div class="dropdown-menu absolute rounded-md">
       {$items}
     </div>
     HTML;

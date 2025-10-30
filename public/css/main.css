@@ -3,32 +3,16 @@
   background-color: var(--banner-background);
 }
 
-.sub-header .container {
-  gap: 1rem;
-  padding: 0 1rem;
-}
-
 .main-header {
   background-color: var(--background);
-}
-
-.web-title {
-  gap: 1rem;
 }
 
 .web-logo {
   width: 4rem;
   height: 4rem;
-  object-fit: contain;
-}
-
-.faculty-name {
-  font-size: 1.25rem;
-  line-height: 1.75rem;
 }
 
 .uni-name {
-  line-height: 1.5rem;
   color: var(--muted-foreground);
 }
 
@@ -36,10 +20,7 @@
   background: #e5e7eb;
   width: 16rem;
   height: 2.5rem;
-  padding: 0 1rem;
-  gap: 0.5rem;
   color: var(--muted-foreground);
-  font-size: 14px;
   transition: outline 100ms ease;
 }
 
@@ -65,17 +46,9 @@
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.navbar .container {
-  padding: 0.5rem 1rem;
-  gap: 1rem;
-}
-
 .navbar__item {
   cursor: pointer;
-  position: relative;
-  padding: 4px 0;
   color: var(--muted-foreground);
-  gap: 0.25rem;
 }
 
 .navbar__item--active {
@@ -92,26 +65,41 @@
 }
 
 .navbar__item:hover .dropdown-menu {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .dropdown-menu {
-  position: absolute;
+  border: none;
   overflow: hidden;
   top: 100%;
+  transform: translateY(-8px);
   width: 15rem;
   background: var(--background);
-  border-radius: 0.5rem;
   box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
-  display: none;
-}
-
-.dropdown-menu__item {
-  padding: 0.75rem;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 200ms ease;
 }
 
 .dropdown-menu__item:hover,
 .dropdown-menu__item:hover .dropdown-menu__icon {
   color: var(--primary-foreground);
   background: var(--primary);
+}
+
+#hero-section {
+  background: linear-gradient(90deg, #1C398E 0%, #1447E6 100%);
+}
+
+.wave-container {
+  display: block;
+  width: 100%;
+  height: 60px;
+}
+
+.wave {
+  width: 100%;
+  height: 100%;
 }
