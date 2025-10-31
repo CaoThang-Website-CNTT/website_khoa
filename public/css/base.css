@@ -59,6 +59,7 @@
   --background: #ffffff;
   --banner-background: #003280;
   --footer-background: #101828;
+  --footer-text: #99a1af;
   --foreground: #0a0a0a;
   --primary: #155dfc;
   --primary-alt: #51a2ff;
@@ -70,24 +71,29 @@
   --accent: #e3eefd;
   --accent-foreground: #155dfc;
   --border-gray: #e5e7eb;
+  --green: rgba(13, 84, 43, 0.95);
+  --purple: rgba(89, 22, 139, 0.95);
   --blue-gradient: linear-gradient(0deg,
       rgba(28, 57, 142, 0.95) 0%,
       rgba(28, 57, 142, 0.5) 50%,
       rgba(0, 0, 0, 0) 100%);
   --green-gradient: linear-gradient(0deg,
-      rgba(13, 84, 43, 0.95) 0%,
+      var(--green) 0%,
       rgba(13, 84, 43, 0.5) 50%,
       rgba(0, 0, 0, 0) 100%);
   --pink-gradient: linear-gradient(135deg, #9810fa 0%, #e60076 100%);
   --purple-gradient: linear-gradient(0deg,
-      rgba(89, 22, 139, 0.95) 0%,
+      var(--purple) 0%,
       rgba(89, 22, 139, 0.5) 50%,
       rgba(0, 0, 0, 0) 100%);
   --black-gradient: linear-gradient(0deg,
       rgba(0, 0, 0, 0.8) 0%,
       rgba(0, 0, 0, 0.4) 50%,
       rgba(0, 0, 0, 0) 100%);
-
+  --blue-from-left-gradient: linear-gradient(90deg,
+      rgba(28, 57, 142, 0.9) 0%,
+      rgba(25, 60, 184, 0.7) 50%,
+      rgba(0, 0, 0, 0) 100%);
   --ring: 4px solid rgba(0, 0, 0, 0.2);
 }
 
@@ -123,6 +129,10 @@ ol {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+svg path {
+  stroke: currentColor;
 }
 
 .container {
@@ -365,6 +375,18 @@ a {
 
 .bg-purple-gradient {
   background-image: var(--purple-gradient);
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+.text-primary-alt {
+  color: var(--primary-alt);
+}
+
+.text-footer {
+  color: var(--footer-text);
 }
 
 .text-accent-foreground {
