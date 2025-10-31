@@ -3,6 +3,7 @@
 namespace App\Views\Components;
 
 use App\Core\ViewComponent;
+use App\Views\Components\{SectionTitle};
 
 class WhyChooseUs extends ViewComponent
 {
@@ -69,14 +70,14 @@ class WhyChooseUs extends ViewComponent
   {
     $SectionTile = new SectionTitle($this->title, $this->sub_title);
     return <<<HTML
-    <section class="my-16 container" id="why-choose-us">
+    <section class="py-16 container" id="why-choose-us">
       <div class="container-wrapper flex flex-col items-center justify-center">
         <p class="text-sm inline-block bg-accent px-4 py-2 rounded-full text-accent-foreground text-center mb-4">Tại sao chọn chúng tôi</p>
         {$SectionTile->render()}
         <div class="grid grid-cols-3 grid-rows-2 gap-6 mb-12 self-stretch">
           
-          <div class="overflow-hidden relative col-span-2 row-span-2 rounded-3xl" style="height: 480px">
-            <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=750" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
+          <div class="overflow-hidden relative col-span-2 row-span-2 rounded-3xl image-wrapper" style="height: 480px">
+            <img class="image" src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=750" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
             <div class="absolute inset-0 bg-black-gradient flex flex-col justify-end items-start text-white p-8">
               <span class="rounded-full bg-accent-foreground text-center font-normal text-sm px-3 py-1 mb-3">Nổi bật</span>
               <h3 class="text-3xl font-semibold mb-4">Môi trường học tập hiện đại, sáng tạo</h3>
@@ -105,86 +106,16 @@ class WhyChooseUs extends ViewComponent
         {$this->render_outstanding_info($this->outstanding_info)}
         <!---->
         <div class="flex justify-center items-stretch self-stretch gap-6 mb-12" style="height: 280px">
-          <div class="flex-1 overflow-hidden relative rounded-2xl">
-            <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
-              <div class="absolute inset-0 bg-blue-gradient flex flex-col justify-end items-start text-white p-6">
-                <h3 class="text-2xl font-semibold mb-2">Nghiên cứu & Phát triển</h3>
-                <p class="text-sm font-normal leading-5">Tham gia các dự án nghiên cứu thực tế cùng giảng viên</p>
-              </div>
-          </div>
-          <h4 class="text-base font-semibold text-foreground mb-2">Công nghệ Tiên tiến</h4>
-          <p class="text-sm font-normal text-muted-foreground leading-5">Học tập với các công nghệ mới nhất: AI, Cloud, Blockchain, IoT</p>
-        </div>
-
-        <div class="flex flex-col items-start justify-start flex-1 bg-white rounded-2xl p-6 border-gray" style="width: 266px">
-          <div class="flex justify-center items-center rounded-full text-4xl mb-4 bg-accent p-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M16 18L22 12L16 6" stroke="#155DFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M8 6L2 12L8 18" stroke="#155DFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <h4 class="text-base font-semibold text-foreground mb-2">Công nghệ Tiên tiến</h4>
-          <p class="text-sm font-normal text-muted-foreground leading-5">Học</p>
-        </div>
-        <div class="flex flex-col items-start justify-start flex-1 bg-white rounded-2xl p-6 border-gray" style="width: 266px">
-          <div class="flex justify-center items-center rounded-full text-4xl mb-4 bg-accent p-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M16 18L22 12L16 6" stroke="#155DFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M8 6L2 12L8 18" stroke="#155DFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <h4 class="text-base font-semibold text-foreground mb-2">Công nghệ Tiên tiến</h4>
-          <p class="text-sm font-normal text-muted-foreground leading-5">Học</p>
-        </div>
-        <div class="flex flex-col items-start justify-start flex-1 bg-white rounded-2xl p-6 border-gray" style="width: 266px">
-          <div class="flex justify-center items-center rounded-full text-4xl mb-4 bg-accent p-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M16 18L22 12L16 6" stroke="#155DFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M8 6L2 12L8 18" stroke="#155DFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <h4 class="text-base font-semibold text-foreground mb-2">Công nghệ Tiên tiến</h4>
-          <p class="text-sm font-normal text-muted-foreground leading-5">Học</p>
-        </div>
-      </div>
-      <!---->
-      <div class="flex justify-center items-stretch gap-6 mb-12" style="height: 280px">
-        <div class="flex-1 overflow-hidden relative rounded-2xl">
-          <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute">
-            <div class="absolute inset-0 bg-blue-gradient flex flex-col justify-end items-start text-white p-6">
-              <h3 class="text-2xl font-semibold mb-2">Nghiên cứu & Phát triển</h3>
-              <p class="text-sm font-normal leading-5">Tham gia các dự án nghiên cứu thực tế cùng giảng viên</p>
-            </div>
-          </div>
-          
-          <!--statistic info-->
-          <!-- {$this->renderStatisticInfo($this->statisticInfo)} -->
-          <div class="col-start-3 row-start-1 bg-accent-foreground rounded-2xl p-8 text-white flex flex-col gap-2 justify-center">
-            <h2 class="text-7xl font-bold">{$this->statisticInfo[0]['title']}</h2>
-            <p class="text-xl font-semibold">{$this->statisticInfo[0]['subTitle']}</p>
-            <p class="text-base font-normal">{$this->statisticInfo[0]['short']}</p>
-          </div>
-
-          <div class="col-start-3 row-start-2 bg-pink-gradient rounded-2xl p-8 text-white flex flex-col gap-2 justify-center">
-            <h2 class="text-7xl font-bold">{$this->statisticInfo[1]['title']}</h2>
-            <p class="text-xl font-semibold">{$this->statisticInfo[1]['subTitle']}</p>
-            <p class="text-base font-normal">{$this->statisticInfo[1]['short']}</p>
-          </div>
-        </div>
-        <!--outstanding info-->
-        {$this->renderOutstandingInfo($this->outstandingInfo)}
-        <!---->
-        <div class="flex justify-center items-stretch self-stretch gap-6 mb-12" style="height: 280px">
-          <div class="flex-1 overflow-hidden relative rounded-2xl">
-            <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
+          <div class="flex-1 overflow-hidden relative rounded-2xl image-wrapper">
+            <img class="image object-fit" src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
               <div class="absolute inset-0 bg-blue-gradient flex flex-col justify-end items-start text-white p-6">
                 <h3 class="text-2xl font-semibold mb-2">Nghiên cứu & Phát triển</h3>
                 <p class="text-sm font-normal leading-5">Tham gia các dự án nghiên cứu thực tế cùng giảng viên</p>
               </div>
           </div>
           
-          <div class="flex-1 overflow-hidden relative rounded-2xl">
-            <img src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
+          <div class="flex-1 overflow-hidden relative rounded-2xl image-wrapper">
+            <img class="image object-fit" src="https://images.unsplash.com/photo-1761602545494-4cd002b4d2b2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=600" alt="Trường Cao Thắng" class="absolute w-full h-full object-cover">
               <div class="absolute inset-0 bg-green-gradient flex flex-col justify-end items-start text-white p-6">
                 <h3 class="text-2xl font-semibold mb-2">Hợp tác Quốc tế</h3>
                 <p class="text-sm font-normal leading-5">Cơ hội trao đổi sinh viên và học bổng du học</p>

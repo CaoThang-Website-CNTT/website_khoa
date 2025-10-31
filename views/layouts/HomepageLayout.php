@@ -9,7 +9,8 @@ use App\Views\Components\{
   Footer
 };
 use App\Views\Layouts\Sections\{
-  HeroSection
+  HeroSection,
+  AboutSection
 };
 
 class HomepageLayout extends ViewComponent
@@ -22,8 +23,8 @@ class HomepageLayout extends ViewComponent
   public function render(): string
   {
     $Header = new Header();
-
     $Hero = new HeroSection();
+    $About = new AboutSection();
     $WhyChooseUs = new WhyChooseUs();
     $Footer = new Footer();
 
@@ -48,8 +49,8 @@ class HomepageLayout extends ViewComponent
     <body>
       {$Header->render()}   
       {$Hero->render()}
+      {$About->render()}
       {$WhyChooseUs->render()}
-      {$NewsFeed->render()}
       {$Footer->render()}
     </body>
 

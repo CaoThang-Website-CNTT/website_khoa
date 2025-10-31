@@ -114,3 +114,41 @@
   width: 100%;
   height: 100%;
 }
+
+.number-of-text {
+  color: var(--border-gray)
+}
+
+#about-section .container-wrapper {
+  gap: 6rem;
+}
+
+.about-item>* {
+  flex: 1;
+}
+
+.about-item__sub-title {
+  color: #155DFC;
+  letter-spacing: 0.0375rem;
+}
+
+.about-item__content {
+  color: #4A5565;
+}
+
+.about-item__card {
+  bottom: 0;
+  right: 0;
+  transform: translate(15%, 20%);
+  max-width: 12rem;
+  background-color: var(--background);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.about-item__card-main-content {
+  color: var(--primary);
+}
+
+.about-item__card-sub-content {
+  color: var(--muted-foreground);
+}
