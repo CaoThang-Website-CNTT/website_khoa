@@ -30,8 +30,8 @@ class Carousel extends ViewComponent
             </div>
           </div>
 
-          <div class="carousel__image-wrapper rounded-2xl">
-            <img src="{$this->e($slide['image'])}" alt="{$this->e($slide['alt'])}" class="carousel__image">
+          <div class="image-wrapper carousel__image-wrapper rounded-2xl">
+            <img src="{$this->e($slide['image'])}" alt="{$this->e($slide['alt'])}" class="image carousel__image">
           </div>
         </div>
       HTML;

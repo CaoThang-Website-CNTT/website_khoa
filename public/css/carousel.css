@@ -59,17 +59,6 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.carousel__image {
-  width: 100%;
-  height: auto;
-  display: block;
-  transition: transform 0.4s ease;
-}
-
-.carousel__image-wrapper:hover .carousel__image {
-  transform: scale(1.03);
-}
-
 .carousel__control {
   top: 50%;
   transform: translateY(-50%);
