@@ -100,6 +100,111 @@
   background: var(--primary);
 }
 
+#featured-news {
+  margin-bottom: 96px;
+}
+
+.news__item {
+  height: 320px;
+}
+
+.news__item--tag {
+  background-color: var(--background);
+  color: var(--foreground);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.news__item--overlay {
+  background: var(--black-gradient);
+}
+
+.news__item .news__item--title {
+  line-height: 28px;
+}
+
+.news__item .news__item--subtitle {
+  line-height: 24px;
+}
+
+#featured-news a.news__item:nth-child(1) .news__item--overlay {
+  background-image: var(--blue-gradient);
+}
+
+#featured-news a.news__item:nth-child(1) .news__item--tag {
+  background-color: var(--primary);
+  color: var(--background);
+}
+
+#featured-news a.news__item:nth-child(2) .news__item--overlay {
+  background-image: var(--purple-gradient);
+}
+
+#featured-news a.news__item:nth-child(2) .news__item--tag {
+  background-color: var(--purple);
+  color: var(--background);
+}
+
+#featured-news a.news__item:nth-child(3) .news__item--overlay {
+  background-image: var(--green-gradient);
+}
+
+#featured-news a.news__item:nth-child(3) .news__item--tag {
+  background-color: var(--green);
+  color: var(--background);
+}
+
+#featured-news>.news__item {
+  height: 500px;
+  border-radius: 38px;
+}
+
+#featured-news>.news__item .news__item--overlay {
+  background-image: var(--blue-from-left-gradient);
+}
+
+#featured-news>.news__item .news__item--tag {
+  background-color: #fc1515;
+  color: var(--background);
+}
+
+#featured-news>.news__item .news__item--title {
+  width: 640px;
+  line-height: 48px;
+}
+
+#featured-news>.news__item .news__item--subtitle {
+  width: 640px;
+}
+
+footer {
+  background-color: var(--footer-background);
+}
+
+.footer-wrapper {
+  padding: 48px 16px;
+}
+
+.footer-content {
+  gap: 64px;
+  line-height: 24px;
+}
+
+.footer-content__item {
+  width: 260px;
+}
+
+.footer-content__logo {
+  height: 3rem;
+  width: 3rem;
+}
+
+footer>p.footer-wrapper {
+  padding-top: 32px;
+  border-top: #1e2939 1px solid;
+}
+
 #hero-section {
   background: linear-gradient(90deg, #1C398E 0%, #1447E6 100%);
 }
