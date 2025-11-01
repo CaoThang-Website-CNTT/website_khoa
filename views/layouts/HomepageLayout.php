@@ -5,12 +5,14 @@ namespace App\Views\Layouts;
 use App\Core\ViewComponent;
 use App\Views\Components\{
   Header,
-  WhyChooseUs,
   Footer
 };
 use App\Views\Layouts\Sections\{
   HeroSection,
-  AboutSection
+  AboutSection,
+  BaseSection,
+  WhyChooseUsSection,
+  NewsFeedSection,
 };
 
 class HomepageLayout extends ViewComponent
@@ -23,9 +25,28 @@ class HomepageLayout extends ViewComponent
   public function render(): string
   {
     $Header = new Header();
+    /** Không dùng base section cho Hero (do có phần tử đặc biệt) */
     $Hero = new HeroSection();
-    $About = new AboutSection();
-    $WhyChooseUs = new WhyChooseUs();
+    $About = new BaseSection([
+      'id' => 'about-section',
+      'title' => '',
+      'sub_title' => '',
+      'badge' => '',
+      'children' => new AboutSection()
+    ]);
+    $WhyChooseUs = new BaseSection([
+      'id' => 'why-choose-us-section',
+      'title' => 'Trải nghiệm Khoa CNTT Cao Thắng',
+      'sub_title' => 'Nơi ươm mầm tài năng công nghệ thông tin, kết nối tri thức với thực tiễn',
+      'badge' => 'Tại sao chọn chúng tôi',
+      'children' => new WhyChooseUsSection()
+    ]);
+    $NewsFeed = new BaseSection([
+      'id' => 'newsfeed-section',
+      'title' => 'Tin tức & Sự kiện',
+      'sub_title' => 'Cập nhật những tin tức mới nhất về hoạt động của khoa, thành tích sinh viên và các sự kiện sắp tới',
+      'children' => new NewsFeedSection()
+    ]);
     $Footer = new Footer();
 
     return <<<HTML
@@ -51,6 +72,7 @@ class HomepageLayout extends ViewComponent
       {$Hero->render()}
       {$About->render()}
       {$WhyChooseUs->render()}
+      {$NewsFeed->render()}
       {$Footer->render()}
     </body>
 

@@ -126,11 +126,11 @@ class Footer extends ViewComponent
   {
     return <<<HTML
       <footer>
-        <div class="footer-content flex footer-wrapper">
+        <div class="container footer-content flex gap-16 py-12 px-4">
           <div class="flex-1">
             <div class="flex gap-3 mb-4 items-center">
-                <div class="footer-content__logo rounded-full overflow-hidden">
-                    <img class="h-full w-full object-contain" src="{$this->asset('img/faculty_logo.jpg')}" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
+                <div class="footer-content__logo overflow-hidden rounded-full">
+                  <img class="w-full h-full object-contain" src="{$this->asset('img/faculty_logo.jpg')}" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
                 </div>
                 <div class="flex flex-col justify-center">
                     <div class="text-xl text-white uppercase">KHOA CÔNG NGHỆ THÔNG TIN</div>
@@ -148,7 +148,11 @@ class Footer extends ViewComponent
             {$this->render_social_links('Theo dõi chúng tôi',$this->social_links)}
           </div>
         </div>
-        <p class="footer-wrapper text-footer text-sm">© 2025 Khoa Công nghệ Thông tin - Trường Cao Đẳng Kỹ Thuật Cao Thắng. All rights reserved.</p>
+        <div class="footer-copyright">
+          <div class="container  py-12 px-4">
+            <p class="text-footer text-sm">© 2025 Khoa Công nghệ Thông tin - Trường Cao Đẳng Kỹ Thuật Cao Thắng. All rights reserved.</p>
+          </div>
+        </div>
       </footer>
     HTML;
   }

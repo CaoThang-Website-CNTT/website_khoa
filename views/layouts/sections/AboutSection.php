@@ -12,8 +12,10 @@ class AboutSection extends ViewComponent
       'title' => 'Đảm bảo chất lượng đào tạo',
       'sub_title' => 'LOREM ISPUM GÌ ĐÓ Ở ĐÂY',
       'content' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      'image' => 'img/about.jpg',
-      'alt' => 'Lecture hall with students',
+      'image' => [
+        'src' => 'img/about.jpg',
+        'alt' => 'Lecture hall with students'
+      ],
       'card' => [
         'main_content' => 'Top 1',
         'sub_content' => 'Khoa CNTT tại Miền Nam (So với các Cao Đẳng khác)'
@@ -23,8 +25,10 @@ class AboutSection extends ViewComponent
       'title' => 'Cơ hội Nghề nghiệp',
       'sub_title' => 'LOREM ISPUM GÌ ĐÓ Ở ĐÂY',
       'content' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      'image' => 'img/about.jpg',
-      'alt' => 'Lecture hall with students',
+      'image' => [
+        'src' => 'img/about.jpg',
+        'alt' => 'Lecture hall with students'
+      ],
       'card' => [
         'main_content' => '98%',
         'sub_content' => 'Tỷ lệ có việc làm'
@@ -34,8 +38,10 @@ class AboutSection extends ViewComponent
       'title' => 'Nghiên cứu Đột phá',
       'sub_title' => 'LOREM ISPUM GÌ ĐÓ Ở ĐÂY',
       'content' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      'image' => 'img/about.jpg',
-      'alt' => 'Lecture hall with students',
+      'image' => [
+        'src' => 'img/about.jpg',
+        'alt' => 'Lecture hall with students'
+      ],
       'card' => [
         'main_content' => '50+',
         'sub_content' => 'Doanh nghiệp'
@@ -52,11 +58,9 @@ class AboutSection extends ViewComponent
       $content .= $this->renderAboutItem($index + 1, $section);
     }
     return <<<HTML
-    <section class="relative container py-16" id="about-section">
-      <div class="container-wrapper flex flex-col">
-        {$content}
-      </div>
-    </section>
+    <div class="about-container flex flex-col">
+      {$content}
+    </div>
     HTML;
   }
   private function renderAboutItem(int $no, array $content): string
@@ -69,7 +73,7 @@ class AboutSection extends ViewComponent
       <div class="relative">
         <div class="about-item__image-container overflow-hidden rounded-2xl">
           <div class="image-wrapper">
-            <img class="image w-full h-full object-fit" src="{$this->asset($content['image'])}" />
+            <img class="image w-full h-full object-fit" src="{$this->asset($content['image']['src'])}" alt="{$content['image']['alt']}" />
           </div>
         </div>
         <div class="about-item__card absolute z-10 rounded-2xl p-6 flex flex-col gap-1">

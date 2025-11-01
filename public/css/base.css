@@ -131,14 +131,6 @@ a {
   color: inherit;
 }
 
-svg path {
-  stroke: currentColor;
-}
-
-svg path {
-  stroke: currentColor;
-}
-
 .container {
   width: 1440px;
   max-width: 1440px;
@@ -175,34 +167,6 @@ svg path {
 
 .flex-col-reverse {
   flex-direction: column-reverse;
-}
-
-.pt-4 {
-  padding-top: 1rem;
-}
-
-.pb-4 {
-  padding-bottom: 1rem;
-}
-
-.pl-4 {
-  padding-left: 1rem;
-}
-
-.pr-4 {
-  padding-right: 1rem;
-}
-
-.px-4 {
-  padding-inline: 1rem;
-}
-
-.py-4 {
-  padding-block: 1rem;
-}
-
-.p-4 {
-  padding: 1rem;
 }
 
 .justify-center {
@@ -703,6 +667,22 @@ svg path {
   margin-bottom: 4rem;
 }
 
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.pb-4 {
+  padding-bottom: 1rem;
+}
+
+.pl-4 {
+  padding-left: 1rem;
+}
+
+.pr-4 {
+  padding-right: 1rem;
+}
+
 .p-1 {
   padding: 0.25rem;
 }
@@ -945,6 +925,14 @@ svg path {
 
 .gap-12 {
   gap: 3rem;
+}
+
+.gap-14 {
+  gap: 3.5rem;
+}
+
+.gap-16 {
+  gap: 4rem;
 }
 
 
