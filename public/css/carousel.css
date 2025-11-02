@@ -41,15 +41,8 @@
 }
 
 .carousel__btn {
-  display: inline-block;
-  color: var(--secondary);
-  background-color: var(--secondary-foreground);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.carousel__btn:hover {
-  transform: translateY(2px);
+  background: var(--secondary);
+  color: var(--secondary-foreground-alt);
 }
 
 .carousel__image-wrapper {
