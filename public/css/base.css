@@ -154,6 +154,12 @@
     transition: all 0.25s ease;
     padding-bottom: 1px;
   }
+
+  button {
+    cursor: pointer;
+    border: none;
+    outline: none;
+  }
 }
 
 /* ==========================================================================
@@ -249,6 +255,14 @@
     padding: 1rem 3rem;
     background: transparent;
     border: 2px solid var(--primary-foreground);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .primary-btn {
+    border-radius: calc(infinity * 1px);
+    padding: 1rem 3rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
@@ -585,6 +599,29 @@
   .text-center {
     text-align: center;
   }
+
+  /* Borders */
+  .border { border: 1px solid var(--muted); }
+  .border-primary { border-color: var(--primary); }
+
+  /* Interactive */
+  .focus\:border-primary:focus { border-color: var(--primary); }
+  .focus\:outline-none:focus { outline: none; }
+
+  /* Shadows */
+  .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+  .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); }
+  .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); }
+
+  /* Sizing - Max Width */
+  .max-w-sm { max-width: 24rem; }
+  .max-w-md { max-width: 28rem; }
+  .max-w-lg { max-width: 32rem; }
+  .max-w-xl { max-width: 36rem; }
+  .max-w-2xl { max-width: 42rem; }
+
+  /* Height */
+  .h-12 { height: 3rem; }
 
   /* Border Radius */
   .rounded-xs {

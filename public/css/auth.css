@@ -1,0 +1,33 @@
+.login-card {
+  background: var(--background);
+  border: 1px solid var(--muted);
+  color: var(--foreground);
+}
+
+.login-title {
+  color: var(--foreground);
+}
+
+.login-field__label {
+  color: var(--foreground);
+}
+
+.login-field__input {
+  color: var(--foreground);
+  border: 1px solid var(--muted);
+  background: var(--background);
+  transition: border-color 0.2s ease;
+}
+
+.login-field__input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.login-footer__text {
+  color: var(--muted-foreground);
+}
+
+.login-footer__link {
+  color: var(--primary);
+}
