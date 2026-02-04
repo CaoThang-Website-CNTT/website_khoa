@@ -26,34 +26,25 @@
 
   <main class="container flex justify-center items-center py-16">
     <div class="login-card rounded-2xl shadow-sm p-8 flex flex-col items-center gap-6 w-full max-w-md">
-      
+
       <!-- Title -->
       <h1 class="login-title text-2xl font-bold">Đăng Nhập</h1>
 
       <!-- Form -->
-      <form action="" class="w-full flex flex-col gap-4">
-        
+      <form action="./controllers/auth_controller.php" method="POST" class="w-full flex flex-col gap-4">
+
         <!-- Field 1 -->
         <div class="flex flex-col gap-2 items-start w-full">
           <label for="username" class="login-field__label text-sm">Mã SV</label>
-          <input 
-            type="text" 
-            id="username" 
-            name="username" 
-            placeholder="mssv@caothang.edu.vn" 
-            class="login-field__input w-full h-12 rounded-md px-3 py-2 text-sm"
-          >
+          <input type="text" id="username" name="username" placeholder="MSSV" value="0306231001"
+            class="login-field__input w-full h-12 rounded-md px-3 py-2 text-sm">
         </div>
 
         <!-- Field 2 -->
         <div class="flex flex-col gap-2 items-start w-full">
           <label for="password" class="login-field__label text-sm">Mật Khẩu</label>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            class="login-field__input w-full h-12 rounded-md px-3 py-2 text-sm"
-          >
+          <input type="password" id="password" name="password" placeholder="Mật khẩu" value="123456"
+            class="login-field__input w-full h-12 rounded-md px-3 py-2 text-sm">
         </div>
 
         <!-- Submit Button -->
