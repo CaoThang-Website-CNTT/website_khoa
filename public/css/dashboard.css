@@ -2503,6 +2503,9 @@ p {
   align-items: center;
   justify-content: center;
 }
+.header .header-left .menu-toggle-btn svg {
+  fill: var(--primary);
+}
 .header .header-left .header-search form {
   max-width: 270px;
   position: relative;
@@ -3483,9 +3486,10 @@ p {
   }
 }
 .sidebar-nav-wrapper .navbar-logo {
-  padding: 0 25px;
-  margin-bottom: 30px;
-  margin-top: 11px;
+  margin: 0 auto;
+  margin-bottom: 1rem;
+  width: 4rem;
+  height: 4rem;
 }
 .sidebar-nav-wrapper .sidebar-nav .divider {
   padding: 5px 25px;
