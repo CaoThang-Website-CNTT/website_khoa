@@ -16,7 +16,7 @@
 
 .section__badge {
   color: var(--primary);
-  background: var(--accent);
+  background: color-mix(in oklch, var(--primary) 10%, white);
 }
 
 .section__title {
@@ -92,11 +92,11 @@
 }
 
 .wcu__perk-item {
-  border: 1px solid var(--muted);
+  border: 1px solid var(--border);
 }
 
 .wcu__perk-item-icon-wrapper {
-  background: var(--accent);
+  background: color-mix(in oklch, var(--primary) 10%, white);
 }
 
 .wcu__perk-item-icon {
@@ -133,7 +133,7 @@
 
 /* STATS */
 .stats__stat-card {
-  background: var(--accent);
+  background: color-mix(in oklch, var(--primary) 10%, white);
 }
 
 .stats__benefit-card-list {
@@ -160,13 +160,13 @@
 
 .stats__benefit-card {
   color: var(--foreground);
-  border: 1px solid var(--muted);
+  border: 1px solid var(--border);
 }
 
 .stats__benefit-card-icon-wrapper {
   width: 3.5rem;
   height: 3.5rem;
-  background: var(--accent);
+  background: color-mix(in oklch, var(--primary) 10%, white);
 }
 
 .stats__benefit-card-icon {
@@ -230,8 +230,8 @@
 }
 
 #featured-news > .news-card .news-card__tag {
-  background: var(--accent-1);
-  color: var(--accent-foreground-1);
+  background: var(--chart-1);
+  color: var(--background);
 }
 
 #featured-news > .news-card .news-card__title,
@@ -253,8 +253,8 @@
 }
 
 #featured-news a.news-card:nth-child(2) .news-card__tag {
-  background: var(--accent-2);
-  color: var(--accent-foreground-2);
+  background: var(--chart-2);
+  color: var(--background);
 }
 
 #featured-news a.news-card:nth-child(3) .news-card__content {
@@ -262,10 +262,10 @@
 }
 
 #featured-news a.news-card:nth-child(3) .news-card__tag {
-  background: var(--accent-3);
-  color: var(--accent-foreground-3);
+  background: var(--chart-3);
+  color: var(--background);
 }
 
 .newsfeed__view-all-link {
-  color: var(--secondary-foreground);
+  color: var(--primary);
 }

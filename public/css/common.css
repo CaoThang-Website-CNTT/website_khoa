@@ -21,7 +21,7 @@
 }
 
 .search-bar {
-  background: var(--muted);
+  background: var(--input);
   width: 16rem;
   height: 2.5rem;
   color: var(--muted-foreground);
@@ -43,7 +43,7 @@
 
 .search-bar:focus-within {
   outline: var(--ring);
-  outline-offset: -1px;
+  outline-offset: -2px;
 }
 
 .navbar {
@@ -57,6 +57,7 @@
 
 .navbar__item--active {
   color: var(--secondary-foreground-alt);
+  padding-bottom: 0rem;
   border-bottom: 2px var(--secondary-foreground-alt) solid;
 }
 
