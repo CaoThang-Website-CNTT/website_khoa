@@ -43,6 +43,13 @@
     --radius-2xl: 2rem; /* 32px */
     --radius-3xl: 2.25rem; /* 36px */
 
+    /* Font Weights */
+    --fw-light: 300;
+    --fw-normal: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
     /* Color Palette */
     /* Neutrals & Backgrounds */
     --background: oklch(1 0 0); /* #ffffff */
@@ -140,7 +147,7 @@
     padding: 0;
     box-sizing: border-box;
     font-size: var(--text-base);
-    font-weight: 400;
+    font-weight: var(--fw-normal);
     line-height: var(--text-base--line-height);
     font-family:
       "Be Vietnam Pro",
@@ -201,6 +208,13 @@
     margin: 0 auto;
   }
 
+  .container-fluid {
+    width: 100%;
+    height: fit-content;
+    padding: 0 1rem;
+    margin: 0 auto;
+  }
+
   .sr-only {
     position: absolute;
     width: 1px;
@@ -258,7 +272,7 @@
   }
 
   .badge {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     border-radius: calc(infinity * 1px);
     padding: 0.25rem 0.5rem;
     text-align: center;
@@ -669,19 +683,19 @@
 
   /* Typography - Font Weight */
   .font-light {
-    font-weight: 300;
+    font-weight: var(--fw-light);
   }
   .font-normal {
-    font-weight: 400;
+    font-weight: var(--fw-normal);
   }
   .font-medium {
-    font-weight: 500;
+    font-weight: var(--fw-medium);
   }
   .font-semibold {
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
   }
   .font-bold {
-    font-weight: 700;
+    font-weight: var(--fw-bold);
   }
 
   /* Typography - Text Transform */
@@ -1316,90 +1330,6 @@
     padding-bottom: 0;
   }
 
-  /* ========== Container Utilities ========== */
-  .container-fluid {
-    width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  /* ========== Row and Columns (12-Column Flex Grid) ========== */
-  .row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
-  }
-
-  .row > * {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  /* 12-Column Grid */
-  .col {
-    flex: 0 0 auto;
-    width: auto;
-  }
-
-  .col-auto {
-    flex: 0 0 auto;
-    width: auto;
-  }
-
-  .col-full {
-    flex: 0 0 100%;
-  }
-
-  .col-1 {
-    flex: 0 0 calc(100% / 12);
-  }
-
-  .col-2 {
-    flex: 0 0 calc(100% * 2 / 12);
-  }
-
-  .col-3 {
-    flex: 0 0 25%;
-  }
-
-  .col-4 {
-    flex: 0 0 calc(100% / 3);
-  }
-
-  .col-5 {
-    flex: 0 0 calc(100% * 5 / 12);
-  }
-
-  .col-6 {
-    flex: 0 0 50%;
-  }
-
-  .col-7 {
-    flex: 0 0 calc(100% * 7 / 12);
-  }
-
-  .col-8 {
-    flex: 0 0 calc(100% * 2 / 3);
-  }
-
-  .col-9 {
-    flex: 0 0 75%;
-  }
-
-  .col-10 {
-    flex: 0 0 calc(100% * 10 / 12);
-  }
-
-  .col-11 {
-    flex: 0 0 calc(100% * 11 / 12);
-  }
-
-  .col-12 {
-    flex: 0 0 100%;
-  }
   /* ========== Background & Border Utilities ========== */
   .bg-transparent {
     background-color: transparent;
