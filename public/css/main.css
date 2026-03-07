@@ -16,7 +16,7 @@
 
 .section__badge {
   color: var(--primary);
-  background: color-mix(in oklch, var(--primary) 10%, white);
+  background: color-mix(in oklab, var(--primary) 10%, white);
 }
 
 .section__title {
@@ -79,6 +79,12 @@
   background: var(--primary);
 }
 
+.wcu__feature-card-link {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
 .wcu__stat-card {
   color: var(--primary-foreground);
 }
@@ -96,7 +102,7 @@
 }
 
 .wcu__perk-item-icon-wrapper {
-  background: color-mix(in oklch, var(--primary) 10%, white);
+  background: color-mix(in oklab, var(--primary) 10%, white);
 }
 
 .wcu__perk-item-icon {
@@ -133,7 +139,7 @@
 
 /* STATS */
 .stats__stat-card {
-  background: color-mix(in oklch, var(--primary) 10%, white);
+  background: color-mix(in oklab, var(--primary) 10%, white);
 }
 
 .stats__benefit-card-list {
@@ -166,7 +172,7 @@
 .stats__benefit-card-icon-wrapper {
   width: 3.5rem;
   height: 3.5rem;
-  background: color-mix(in oklch, var(--primary) 10%, white);
+  background: color-mix(in oklab, var(--primary) 10%, white);
 }
 
 .stats__benefit-card-icon {
@@ -195,7 +201,8 @@
   color: var(--accent);
 }
 
-.stats__cta-button--primary {
+.stats__cta-button--secondary {
+  border-width: 2px;
 }
 
 /* NEWSFEED */

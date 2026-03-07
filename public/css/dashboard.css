@@ -13,7 +13,7 @@
   --sidebar-ring: oklch(0.51 0.23 277);
   --dash-primary: var(--primary); /* #365CF5 */
   --dash-primary-foreground: var(--primary-foreground);
-  --dash-foreground: var(--foreground); /* #1A2142 -> primary foreground */
+  --dash-foreground: var(--foreground);
   --dash-muted-foreground: var(--muted-foreground); /* #5d657b */
   --dash-muted: var(--muted); /* #efefef / light borders */
   --dash-accent: #f1f5f9; /* page accent */
@@ -30,9 +30,6 @@ html {
 }
 
 body {
-  font-weight: normal;
-  font-style: normal;
-  color: var(--dash-muted-foreground);
   overflow-x: hidden;
   background: var(--dash-accent);
 }
@@ -52,16 +49,6 @@ body {
   top: 0;
   z-index: 99;
   height: var(--dash-header-height);
-}
-.header .header-left .menu-toggle-btn .main-btn {
-  padding: 10px 16px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.header .header-left .menu-toggle-btn svg {
-  fill: var(--primary);
 }
 .header .header-right {
   display: flex;
@@ -507,7 +494,7 @@ body {
 /* ========== Section (Main Content) Styling ========== */
 .section {
   padding: 32px 0;
-  min-height: calc(100vh - 400px);
+  min-height: calc(100vh - var(--dash-header-height));
   height: fit-content;
 }
 
@@ -546,6 +533,7 @@ body {
 
 .data-table th h6 {
   color: var(--foreground);
+  font-weight: var(--fw-bold);
   margin: 0;
   white-space: nowrap;
 }
@@ -561,14 +549,8 @@ body {
   font-weight: var(--fw-bold);
 }
 
-.data-table tbody tr {
-  transition: all 0.3s ease;
-  background: #fff;
-}
-
 .data-table tbody tr:hover {
-  background: #f5f8fc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  background: color-mix(in oklab, var(--primary) 10%, white);
 }
 
 /* Action buttons */
@@ -604,4 +586,14 @@ body {
 
 .data-table-action-btn.delete:hover {
   background: rgba(213, 1, 0, 0.1);
+}
+
+.detail-panel-container {
+  display: flex;
+  flex-direction: row !important;
+  gap: 1rem !important;
+}
+
+.detail-panel-container .detail-panel {
+  flex: 1;
 }

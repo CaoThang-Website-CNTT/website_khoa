@@ -37,6 +37,87 @@
   }
 }
 
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  line-height: 1.375;
+  font-weight: var(--fw-medium);
+  font-size: var(--text-sm);
+  color: var(--foreground);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 0;
+  gap: 1rem;
+}
+
+.card__header {
+  display: grid;
+  grid-auto-rows: min-content;
+  align-items: start;
+  gap: 0.25rem;
+  padding: 0 1rem;
+}
+
+.card__title {
+  line-height: 1.375;
+  font-weight: var(--fw-medium);
+}
+
+.card__description {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
+.card__header:has(.card__action) {
+  grid-template-columns: 1fr auto;
+}
+
+.card__header .card__action {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.card__header:has(.card__description) .card__action {
+  align-self: center;
+}
+
+.card__header .card__title,
+.card__header .card__description {
+  grid-column: 1;
+}
+
+.card__header:has(.card__description) {
+  grid-template-rows: auto auto;
+}
+
+.card__content {
+  padding: 0 1rem;
+}
+
+.card__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
 .banner {
   color: var(--primary-foreground);
   background: var(--banner-background);
@@ -57,6 +138,27 @@
 
 .uni-name {
   color: var(--muted-foreground);
+}
+
+.field__input {
+  height: 2rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.25rem 0.625rem;
+
+  line-height: 1.5;
+
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.field__input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.field__input:focus-within {
+  outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
 }
 
 .search-bar {
@@ -81,8 +183,7 @@
 }
 
 .search-bar:focus-within {
-  outline: var(--ring);
-  outline-offset: -2px;
+  outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
 }
 
 .navbar {
@@ -96,7 +197,7 @@
 
 .navbar__item--active {
   color: var(--secondary-foreground-alt);
-  padding-bottom: 0rem;
+  padding-bottom: 0.25rem;
   border-bottom: 2px var(--secondary-foreground-alt) solid;
 }
 

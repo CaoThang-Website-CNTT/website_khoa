@@ -25,7 +25,7 @@
   <!-- HEADER: END -->
 
   <main class="container flex justify-center items-center py-16">
-    <div class="login-card rounded-2xl shadow-sm p-8 flex flex-col items-center gap-6 w-full max-w-md">
+    <div class="login-card rounded-3xl shadow-sm p-8 flex flex-col items-center gap-6 w-full max-w-md">
 
       <!-- Title -->
       <h1 class="login-title text-2xl font-bold">Đăng Nhập</h1>
@@ -48,7 +48,8 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="primary-btn w-full rounded-md py-3 font-semibold text-base mt-2 bouncy-btn">
+        <button type="submit" data-variant="primary"
+          class="btn w-full rounded-md py-3 font-semibold text-base mt-2 bouncy-btn">
           Đăng Nhập
         </button>
 

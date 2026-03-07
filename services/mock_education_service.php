@@ -12,19 +12,25 @@ use App\Models\Classroom;
 
 interface EducationRepositoryInterface
 {
+  // Student
   /** @return Student[] */
-  public function getAllStudents(): array;
+  public function getAllStudents(int $pageTo, int $limit = 15): array;
   public function getStudentById(int $id): ?Student;
   public function createStudent(Student $student, string $rawPassword): int;
   public function updateStudent(int $id, Student $student): bool;
   public function deleteStudent(int $id): bool;
 
+  // Teacher
   /** @return Teacher[] */
   public function getAllTeachers(): array;
   public function getTeacherById(int $id): ?Teacher;
   public function createTeacher(Teacher $teacher, string $rawPassword): int;
   public function updateTeacher(int $id, Teacher $teacher): bool;
   public function deleteTeacher(int $id): bool;
+
+  // Classroom
+  /** @return Classroom[] */
+  public function getAllClassrooms(): array;
 }
 
 class MockEducationService implements EducationRepositoryInterface
@@ -104,21 +110,38 @@ class MockEducationService implements EducationRepositoryInterface
       name: "CDTH23WebC",
       description: "Lớp Lập trình web cao đẳng khóa 2023"
     );
+    $this->classes[2] = new Classroom(
+      id: 2,
+      name: "CDTH23DiDongD",
+      description: "Lớp Lập trình web cao đẳng khóa 2023"
+    );
+    $this->classes[3] = new Classroom(
+      id: 3,
+      name: "CDTH23MangA",
+      description: "Lớp Lập trình web cao đẳng khóa 2023"
+    );
   }
 
   // --- STUDENT METHODS ---
 
-  public function getAllStudents(): array
+  public function getAllStudents(int $pageTo, int $limit = 15): array
   {
-    // Now we filter objects, not arrays
-    return array_filter($this->students, function (Student $s) {
-      return $s->account !== null && !$s->account->deleted_at; // Check the nested account's deleted status
+    $activeStudents = array_filter($this->students, function (Student $s) {
+      return $s->account !== null && !$s->account->deleted_at;
     });
+
+    $currentPage = max(1, $pageTo);
+    $offset = ($currentPage - 1) * $limit;
+
+    return array_slice($activeStudents, $offset, $limit);
   }
 
   public function getStudentById(int $id): ?Student
   {
-    return $this->students[$id] ?? null;
+    $match = array_filter($this->students ?? [], fn($s) => $s->account_id === $id);
+
+    // reset() gets the first element of the filtered array, or false if empty
+    return reset($match) ?: null;
   }
 
   public function createStudent(Student $student, string $rawPassword): int
@@ -257,5 +280,10 @@ class MockEducationService implements EducationRepositoryInterface
       return true;
     }
     return false;
+  }
+
+  public function getAllClassrooms(): array
+  {
+    return array_values($this->classes);
   }
 }

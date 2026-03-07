@@ -14,7 +14,8 @@ class Student
     public int $class_id,
 
     // Referenced Account data
-    public ?Account $account = null
+    public ?Account $account = null,
+    public ?Classroom $classroom = null
   ) {
   }
 }

@@ -61,13 +61,13 @@ spl_autoload_register(function ($class) {
                 tâm.
               </p>
               <div>
-                <a href="#"
-                  class="carousel__btn px-8 py-2 rounded-lg text-sm font-medium inline-block secondary-btn bouncy-btn">Tìm
+                <a href="#" data-variant="secondary"
+                  class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block bouncy-btn">Tìm
                   hiểu thêm</a>
               </div>
             </div>
 
-            <div class="image-wrapper carousel__image-wrapper rounded-2xl">
+            <div class="image-wrapper carousel__image-wrapper rounded-3xl">
               <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                 alt="Lecture hall with students" class="image carousel__image">
             </div>
@@ -83,12 +83,12 @@ spl_autoload_register(function ($class) {
                 phòng lab công nghệ cao giúp bạn học mọi lúc, mọi nơi.
               </p>
               <div>
-                <a href="#" class="carousel__btn px-8 py-2 rounded-lg text-sm font-medium inline-block">Khám phá
+                <a href="#" class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block">Khám phá
                   ngay</a>
               </div>
             </div>
 
-            <div class="image-wrapper carousel__image-wrapper rounded-2xl">
+            <div class="image-wrapper carousel__image-wrapper rounded-3xl">
               <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?..." alt="Modern computer lab"
                 class="image carousel__image">
             </div>
@@ -105,12 +105,12 @@ spl_autoload_register(function ($class) {
                 tâm.
               </p>
               <div>
-                <a href="#" class="carousel__btn px-8 py-2 rounded-lg text-sm font-medium inline-block">Tìm hiểu
+                <a href="#" class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block">Tìm hiểu
                   thêm</a>
               </div>
             </div>
 
-            <div class="image-wrapper carousel__image-wrapper rounded-2xl">
+            <div class="image-wrapper carousel__image-wrapper rounded-3xl">
               <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                 alt="Lecture hall with students" class="image carousel__image">
             </div>
@@ -126,12 +126,12 @@ spl_autoload_register(function ($class) {
                 phòng lab công nghệ cao giúp bạn học mọi lúc, mọi nơi.
               </p>
               <div>
-                <a href="#" class="carousel__btn px-8 py-2 rounded-lg text-sm font-medium inline-block">Khám phá
+                <a href="#" class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block">Khám phá
                   ngay</a>
               </div>
             </div>
 
-            <div class="image-wrapper carousel__image-wrapper rounded-2xl">
+            <div class="image-wrapper carousel__image-wrapper rounded-3xl">
               <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?..." alt="Modern computer lab"
                 class="image carousel__image">
             </div>
@@ -181,13 +181,13 @@ spl_autoload_register(function ($class) {
       <div class="about-container flex flex-col">
         <div class="about-item flex gap-12 flex-row">
           <div class="relative">
-            <div class="about-item__image-container overflow-hidden rounded-2xl">
+            <div class="about-item__image-container overflow-hidden rounded-3xl">
               <div class="image-wrapper">
                 <img class="image w-full h-full object-fit" src="./public/img/about.jpg"
                   alt="Lecture hall with students">
               </div>
             </div>
-            <div class="about-item__card absolute z-10 rounded-2xl p-6 flex flex-col gap-1">
+            <div class="about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
               <div class="about-item__card-main-content text-5xl">Top 1</div>
               <div class="about-item__card-sub-content text-sm">
                 Khoa CNTT tại Miền Nam (So với các Cao Đẳng khác)
@@ -215,13 +215,13 @@ spl_autoload_register(function ($class) {
         </div>
         <div class="about-item flex gap-12 flex-row-reverse">
           <div class="relative">
-            <div class="about-item__image-container overflow-hidden rounded-2xl">
+            <div class="about-item__image-container overflow-hidden rounded-3xl">
               <div class="image-wrapper">
                 <img class="image w-full h-full object-fit" src="./public/img/about.jpg"
                   alt="Lecture hall with students">
               </div>
             </div>
-            <div class="about-item__card absolute z-10 rounded-2xl p-6 flex flex-col gap-1">
+            <div class="about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
               <div class="about-item__card-main-content text-5xl">98%</div>
               <div class="about-item__card-sub-content text-sm">
                 Tỷ lệ có việc làm
@@ -247,13 +247,13 @@ spl_autoload_register(function ($class) {
         </div>
         <div class="about-item flex gap-12 flex-row">
           <div class="relative">
-            <div class="about-item__image-container overflow-hidden rounded-2xl">
+            <div class="about-item__image-container overflow-hidden rounded-3xl">
               <div class="image-wrapper">
                 <img class="image w-full h-full object-fit" src="./public/img/about.jpg"
                   alt="Lecture hall with students">
               </div>
             </div>
-            <div class="about-item__card absolute z-10 rounded-2xl p-6 flex flex-col gap-1">
+            <div class="about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
               <div class="about-item__card-main-content text-5xl">50+</div>
               <div class="about-item__card-sub-content text-sm">
                 Doanh nghiệp
@@ -286,7 +286,7 @@ spl_autoload_register(function ($class) {
   <section class="wcu relative container py-16" id="why-choose-us-section">
     <div class="wcu__container container-wrapper">
       <div class="wcu__header flex flex-col justify-center items-center gap-4 mb-12">
-        <div class="wcu__badge section__badge px-4 py-2 rounded-2xl text-sm mb-4">
+        <div class="wcu__badge section__badge px-4 py-2 rounded-3xl text-sm mb-4">
           Tại sao chọn chúng tôi
         </div>
 
@@ -334,7 +334,7 @@ spl_autoload_register(function ($class) {
           </div>
 
           <div
-            class="wcu__stat-card wcu__stat-card--primary col-start-3 row-start-1 rounded-2xl p-8 flex flex-col gap-2 justify-center">
+            class="wcu__stat-card wcu__stat-card--primary col-start-3 row-start-1 rounded-3xl p-8 flex flex-col gap-2 justify-center">
             <h2 class="wcu__stat-card-number text-7xl font-bold">20</h2>
             <p class="wcu__stat-card-title text-xl font-semibold">
               Năm kinh nghiệm
@@ -346,7 +346,7 @@ spl_autoload_register(function ($class) {
           </div>
 
           <div
-            class="wcu__stat-card wcu__stat-card--gradient col-start-3 row-start-2 bg-pink-gradient rounded-2xl p-8 flex flex-col gap-2 justify-center text-white">
+            class="wcu__stat-card wcu__stat-card--gradient col-start-3 row-start-2 bg-pink-gradient rounded-3xl p-8 flex flex-col gap-2 justify-center text-white">
             <h2 class="wcu__stat-card-number text-7xl font-bold">95%</h2>
             <p class="wcu__stat-card-title text-xl font-semibold">Tỷ lệ việc làm</p>
             <p class="wcu__stat-card-description text-base font-normal">
@@ -357,7 +357,7 @@ spl_autoload_register(function ($class) {
 
         <div class="wcu__perks-list flex justify-center items-stretch self-stretch gap-6 mb-6">
 
-          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-2xl p-6">
+          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
             <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
               <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -375,7 +375,7 @@ spl_autoload_register(function ($class) {
             </p>
           </div>
 
-          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-2xl p-6">
+          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
             <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
               <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -401,7 +401,7 @@ spl_autoload_register(function ($class) {
             </p>
           </div>
 
-          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-2xl p-6">
+          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
             <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
               <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -421,7 +421,7 @@ spl_autoload_register(function ($class) {
             </p>
           </div>
 
-          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-2xl p-6">
+          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
             <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
               <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -448,7 +448,7 @@ spl_autoload_register(function ($class) {
 
         <div class="wcu__highlights-list flex justify-center items-stretch self-stretch gap-6">
 
-          <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-2xl image-wrapper text-white">
+          <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white">
             <img class="wcu__highlight-item-image image object-fit"
               src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Trường Cao Thắng">
             <div
@@ -462,7 +462,7 @@ spl_autoload_register(function ($class) {
             </div>
           </div>
 
-          <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-2xl image-wrapper text-white">
+          <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white">
             <img class="wcu__highlight-item-image image object-fit"
               src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Trường Cao Thắng">
             <div
@@ -497,7 +497,7 @@ spl_autoload_register(function ($class) {
       </div>
       <div class="flex flex-col items-stretch justify-center gap-6">
         <div class="stats__grid flex gap-6">
-          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-2xl p-8">
+          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
             <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
               <svg class="stats__stat-card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -517,7 +517,7 @@ spl_autoload_register(function ($class) {
               </p>
             </div>
           </div>
-          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-2xl p-8">
+          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
             <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
               <svg class="stats__stat-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -537,7 +537,7 @@ spl_autoload_register(function ($class) {
               <p class="stats__stat-card-description text-sm">Tốt nghiệp thành công</p>
             </div>
           </div>
-          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-2xl p-8">
+          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
             <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
               <svg class="stats__stat-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -555,7 +555,7 @@ spl_autoload_register(function ($class) {
               <p class="stats__stat-card-description text-sm">Sau 6 tháng tốt nghiệp</p>
             </div>
           </div>
-          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-2xl p-8">
+          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
             <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
               <svg class="stats__stat-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -581,7 +581,7 @@ spl_autoload_register(function ($class) {
           </div>
         </div>
         <div class="stats__benefits-grid flex gap-6 items-stretch">
-          <div class="stats__benefit-card flex-1 flex flex-col gap-6 p-8 rounded-2xl">
+          <div class="stats__benefit-card flex-1 flex flex-col gap-6 p-8 rounded-3xl">
             <div class="stats__benefit-card-header flex gap-4 items-center">
               <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full">
                 <svg class="stats__benefit-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
@@ -625,7 +625,7 @@ spl_autoload_register(function ($class) {
             </ul>
           </div>
 
-          <div class="stats__benefit-card flex-1 flex flex-col gap-6 p-8 rounded-2xl">
+          <div class="stats__benefit-card flex-1 flex flex-col gap-6 p-8 rounded-3xl">
             <div class="stats__benefit-card-header flex gap-4 items-center">
               <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full">
                 <svg class="stats__benefit-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
@@ -668,7 +668,7 @@ spl_autoload_register(function ($class) {
             </ul>
           </div>
         </div>
-        <div class="stats__cta flex flex-col items-center p-12 rounded-2xl">
+        <div class="stats__cta flex flex-col items-center p-12 rounded-3xl">
           <h3 class="stats__cta-title text-center text-3xl font-semibold mb-2">
             Sẵn sàng bắt đầu hành trình của bạn?
           </h3>
@@ -677,12 +677,12 @@ spl_autoload_register(function ($class) {
             làm việc tại các công ty công nghệ hàng đầu
           </p>
           <div class="stats__cta-buttons flex gap-4">
-            <a href="#"
-              class="stats__cta-button stats__cta-button--primary flex items-center px-8 py-4 secondary-btn bouncy-btn">
+            <a href="#" data-variant="outline-alt"
+              class="stats__cta-button stats__cta-button--primary flex items-center px-8 py-4 btn bouncy-btn rounded-full">
               Đăng ký tư vấn
             </a>
-            <a href="#"
-              class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 outline-btn bouncy-btn">
+            <a href="#" data-variant="outline"
+              class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full bg-transparent">
               Xem chương trình đào tạo
             </a>
           </div>
@@ -710,7 +710,7 @@ spl_autoload_register(function ($class) {
 
         <div id="featured-news" class="newsfeed__featured-group flex flex-col gap-6">
 
-          <div class="news-card news-card--featured relative overflow-hidden rounded-2xl">
+          <div class="news-card news-card--featured relative overflow-hidden rounded-3xl">
             <div class="news-card__image-wrapper image-wrapper">
               <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                 alt="This is an image of a student won a tournament"
@@ -743,8 +743,8 @@ spl_autoload_register(function ($class) {
                   Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết để
                   đạt được danh hiệu cao quý
                 </p>
-                <a href="#"
-                  class="news-card__link flex items-center gap-2 text-base px-4 py-2 secondary-btn bouncy-btn">
+                <a href="#" data-variant="outline-alt"
+                  class="news-card__link flex items-center gap-2 text-base px-4 py-2 btn bouncy-btn rounded-full">
                   Đọc thêm
                   <svg class="news-card__link-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
@@ -760,7 +760,7 @@ spl_autoload_register(function ($class) {
 
           <div class="newsfeed__secondary-grid flex gap-6 justify-center items-stretch self-stretch">
 
-            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-2xl">
+            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
               <div class="news-card__image-wrapper image-wrapper">
                 <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                   alt="This is an image of a student won a tournament"
@@ -798,7 +798,7 @@ spl_autoload_register(function ($class) {
               </div>
             </a>
 
-            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-2xl">
+            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
               <div class="news-card__image-wrapper image-wrapper">
                 <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                   alt="This is an image of a student won a tournament"
@@ -836,7 +836,7 @@ spl_autoload_register(function ($class) {
               </div>
             </a>
 
-            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-2xl">
+            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
               <div class="news-card__image-wrapper image-wrapper">
                 <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                   alt="This is an image of a student won a tournament"
@@ -896,7 +896,7 @@ spl_autoload_register(function ($class) {
 
           <div class="newsfeed__other-grid flex gap-6 justify-center items-stretch self-stretch">
 
-            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-2xl">
+            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
               <div class="news-card__image-wrapper image-wrapper">
                 <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                   alt="This is an image of a student won a tournament"
@@ -933,7 +933,7 @@ spl_autoload_register(function ($class) {
               </div>
             </a>
 
-            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-2xl">
+            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
               <div class="news-card__image-wrapper image-wrapper">
                 <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                   alt="This is an image of a student won a tournament"
@@ -970,7 +970,7 @@ spl_autoload_register(function ($class) {
               </div>
             </a>
 
-            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-2xl">
+            <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
               <div class="news-card__image-wrapper image-wrapper">
                 <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
                   alt="This is an image of a student won a tournament"
