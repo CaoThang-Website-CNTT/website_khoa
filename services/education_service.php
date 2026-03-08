@@ -6,11 +6,15 @@ require_once __DIR__ . '/../models/account.php';
 require_once __DIR__ . '/../models/student.php';
 require_once __DIR__ . '/../models/teacher.php';
 require_once __DIR__ . '/../models/classroom.php';
+require_once __DIR__ . '/../db/database.php';
 
 use App\Models\Account;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Classroom;
+use Database;
+use PDO;
+
 
 interface EducationRepositoryInterface
 {
@@ -35,110 +39,67 @@ interface EducationRepositoryInterface
   public function getAllClassrooms(): array;
 }
 
-class MockEducationService implements EducationRepositoryInterface
+class EducationService implements EducationRepositoryInterface
 {
-  /** @var array<int, Account> */
-  private array $accounts = [];
-  /** @var array<int, Student> */
-  private array $students = [];
-  /** @var array<int, Teacher> */
-  private array $teachers = [];
-  /** @var array<int, Classroom> */
-  private array $classes = [];
-  private int $lastId = 0;
+  private $db;
 
   public function __construct()
   {
-    $this->seedData();
+    $this->db = Database::getInstance()->getConnection();
   }
-
-  private function seedData(): void
-  {
-    // Seed Teachers
-    for ($i = 1; $i <= 10; $i++) {
-      // Create an account
-      $account = new Account(
-        id: $i,
-        email: "teacher$i@caothang.edu.vn",
-        password_hash: password_hash("123456", PASSWORD_DEFAULT),
-        role: 'teacher',
-        deleted_at: null
-      );
-      $this->accounts[$i] = clone $account;
-
-      // Create a teacher linked to that account
-      $this->teachers[$i] = new Teacher(
-        account_id: $i,
-        fullname: "Giảng viên $i",
-        department: 'CNTT',
-        account: clone $account,
-        phone: "012345678$i",
-        gender: ($i % 2 == 0) ? 'Nữ' : 'Nam',
-        dob: "1980-01-0$i",
-        title: ($i % 3 == 0) ? 'Phó Giáo sư' : 'Giảng viên',
-        start_date: "2010-09-01",
-      );
-    }
-
-    // Seed Students
-    for ($i = 11; $i <= 40; $i++) {
-      // Create an account
-      $account = new Account(
-        id: $i,
-        email: "03062310$i@caothang.edu.vn",
-        password_hash: password_hash("123456", PASSWORD_DEFAULT),
-        role: 'student',
-        deleted_at: null
-      );
-      $this->accounts[$i] = clone $account;
-
-      $this->students[$i] = new Student(
-        account_id: $i,
-        student_id: "03062310$i",
-        fullname: "Sinh viên $i",
-        account: clone $account,
-        dob: "2000-01-0" . ($i - 10),
-        phone: "012345678$i",
-        gender: ($i % 2 == 0) ? 'Nữ' : 'Nam',
-        class_id: "1",
-        birth_place: "HCM",
-      );
-    }
-
-    $this->lastId = 40;
-
-    // Seed Classrooms
-    $this->classes[1] = new Classroom(
-      id: 1,
-      name: "CDTH23WebC",
-      description: "Lớp Lập trình web cao đẳng khóa 2023"
-    );
-    $this->classes[2] = new Classroom(
-      id: 2,
-      name: "CDTH23DiDongD",
-      description: "Lớp Lập trình web cao đẳng khóa 2023"
-    );
-    $this->classes[3] = new Classroom(
-      id: 3,
-      name: "CDTH23MangA",
-      description: "Lớp Lập trình web cao đẳng khóa 2023"
-    );
-  }
-
   // --- STUDENT METHODS ---
 
   public function getAllStudents(int $pageTo, int $limit = 15): array
   {
-    $activeStudents = array_filter($this->students, function (Student $s) {
-      return $s->account !== null && !$s->account->deleted_at;
-    });
-
     $currentPage = max(1, $pageTo);
     $offset = ($currentPage - 1) * $limit;
 
-    return array_slice($activeStudents, $offset, $limit);
+    $sql = "SELECT 
+                s.*, 
+                a.id AS acc_id, a.email, a.role, a.created_at, a.updated_at, a.deleted_at
+            FROM `students` s
+            INNER JOIN `accounts` a ON s.`account_id` = a.`id`
+            WHERE a.`deleted_at` IS NULL 
+            LIMIT :limit OFFSET :offset";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+    $stmt->bindValue(":offset", $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    $students = [];
+
+    foreach ($rows as $row) {
+      $account = new Account(
+        id: $row['acc_id'],
+        email: $row['email'],
+        password_hash: null,
+        role: $row['role'],
+        created_at: $row['created_at'],
+        updated_at: $row['updated_at'],
+        deleted_at: $row['deleted_at']
+      );
+
+      $students[] = new Student(
+        account_id: $row['account_id'],
+        student_id: $row['student_code'],
+        fullname: $row['full_name'],
+        gender: $row['gender'],
+        dob: $row['dob'],
+        phone: $row['phone'],
+        class_id: $row['class_id'],
+        major: $row['major'],
+        birth_place: $row['birth_place'],
+
+        account: $account
+      );
+    }
+
+    return $students;
   }
 
+
+  //TODO: Implemt toàn bộ các method còn lại
   public function getStudentById(int $id): ?Student
   {
     $match = array_filter($this->students ?? [], fn($s) => $s->account_id === $id);

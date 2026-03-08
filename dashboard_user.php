@@ -1,8 +1,9 @@
 <?php
-include __DIR__ . '/services/mock_education_service.php';
-use App\Services\MockEducationService;
+include __DIR__ . '/services/education_service.php';
 
-$mockService = new MockEducationService();
+use App\Services\EducationService;
+
+$mockService = new EducationService();
 ob_start();
 ?>
 <!-- ========== title-wrapper start ========== -->

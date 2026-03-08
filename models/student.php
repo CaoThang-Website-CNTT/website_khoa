@@ -12,10 +12,11 @@ class Student
     public string $dob,
     public string $phone,
     public int $class_id,
+    public ?string $major = null,
+    public ?string $birth_place,
 
     // Referenced Account data
     public ?Account $account = null,
     public ?Classroom $classroom = null
-  ) {
-  }
+  ) {}
 }
