@@ -155,6 +155,10 @@
       sans-serif;
   }
 
+  body {
+    position: relative;
+  }
+
   img,
   video {
     color: inherit;
@@ -284,6 +288,7 @@
   .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
     font-size: var(--text-sm);
     line-height: var(--text-sm--line-height);

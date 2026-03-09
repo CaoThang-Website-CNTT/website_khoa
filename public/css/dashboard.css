@@ -47,7 +47,7 @@ body {
   background: #fff;
   position: sticky;
   top: 0;
-  z-index: 99;
+  z-index: 80;
   height: var(--dash-header-height);
 }
 .header .header-right {
@@ -314,7 +314,7 @@ body {
   overflow-x: hidden;
   top: 0;
   left: 0;
-  z-index: 999;
+  z-index: 80;
   transition: var(--dash-sidebar-transition);
   transform: translateX(calc(-1 * var(--dash-sidebar-width)));
 }

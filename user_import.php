@@ -22,11 +22,13 @@ ob_start();
     </div>
   </div>
   <div class="card__content">
-    <div class="field-group">
-      <div class="field">
-        <input id="file" class="field__input" type="file" name="file">
+    <form action="routes/users/import.php" method="POST" enctype="multipart/form-data">
+      <div class="field-group">
+        <div class="field" data-field-auto-submit>
+          <input id="file" class="field__input" type="file" name="uploaded_file" accept=".csv">
+        </div>
       </div>
-    </div>
+    </form>
   </div>
   <div class="card__footer">
   </div>
@@ -34,5 +36,5 @@ ob_start();
 <?php
 $content = ob_get_clean();
 
-require 'includes/dashboard_layout.php';
+require 'templates/layouts/dashboard_layout.php';
 ?>

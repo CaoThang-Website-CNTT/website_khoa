@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: center;
   background: #fff;
-  z-index: 999999;
+  z-index: 90;
 }
 #preloader .spinner {
   width: 80px;
