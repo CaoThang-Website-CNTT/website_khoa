@@ -1,0 +1,86 @@
+INSERT INTO `classrooms` (`name`) VALUES 
+('CĐTH23A'), 
+('CĐTH23B'), 
+('CĐTH23C'), 
+('CĐTH23D'), 
+('CĐTH23E');
+
+-- tài khoản giảng viên
+INSERT INTO `accounts` (`id`, `email`, `password_hash`, `role`, `created_at`) VALUES
+(1, 'nguyenvanan@caothang.edu.vn', '$2b$10$hash1', 'teacher', NOW()),
+(2, 'lethibinh@caothang.edu.vn', '$2b$10$hash2', 'teacher', NOW()),
+(3, 'tranminh@caothang.edu.vn', '$2b$10$hash3', 'teacher', NOW()),
+(4, 'phamthidiem@caothang.edu.vn', '$2b$10$hash4', 'teacher', NOW()),
+(5, 'hoangvanem@caothang.edu.vn', '$2b$10$hash5', 'teacher', NOW()),
+(6, 'nguyenthiphong@caothang.edu.vn', '$2b$10$hash6', 'teacher', NOW()),
+(7, 'dangvannghia@caothang.edu.vn', '$2b$10$hash7', 'teacher', NOW()),
+(8, 'buithihanh@caothang.edu.vn', '$2b$10$hash8', 'teacher', NOW()),
+(9, 'vovanluong@caothang.edu.vn', '$2b$10$hash9', 'teacher', NOW()),
+(10, 'duongthikieu@caothang.edu.vn', '$2b$10$hash10', 'teacher', NOW());
+
+INSERT INTO `teachers` (`account_id`, `full_name`, `gender`, `dob`, `phone`, `degree`, `title`, `department`, `start_date`) VALUES
+(1, 'Nguyễn Văn An', 'male', '1985-05-20', '0901234561', 'Thạc sĩ', NULL, NULL, '2010-09-01'),
+(2, 'Lê Thị Bình', 'female', '1988-03-15', '0901234562', 'Tiến sĩ', NULL, NULL, '2012-09-01'),
+(3, 'Trần Minh', 'male', '1982-11-10', '0901234563', 'Thạc sĩ', NULL, NULL, '2008-09-01'),
+(4, 'Phạm Thị Diễm', 'female', '1990-01-25', '0901234564', 'Đại học', NULL, NULL, '2015-09-01'),
+(5, 'Hoàng Văn Em', 'male', '1987-07-07', '0901234565', 'Thạc sĩ', NULL, NULL, '2011-09-01'),
+(6, 'Nguyễn Thị Phong', 'female', '1984-12-12', '0901234566', 'Thạc sĩ', NULL, NULL, '2009-09-01'),
+(7, 'Đặng Văn Nghĩa', 'male', '1980-08-08', '0901234567', 'Tiến sĩ', NULL, NULL, '2005-09-01'),
+(8, 'Bùi Thị Hạnh', 'female', '1992-04-04', '0901234568', 'Thạc sĩ', NULL, NULL, '2018-09-01'),
+(9, 'Võ Văn Lượng', 'male', '1989-09-09', '0901234569', 'Thạc sĩ', NULL, NULL, '2014-09-01'),
+(10, 'Dương Thị Kiều', 'female', '1991-10-10', '0901234570', 'Đại học', NULL, NULL, '2016-09-01');
+
+-- tài khoản sinh viên 
+INSERT INTO `accounts` (`id`, `email`, `password_hash`, `role`, `created_at`) VALUES
+(11, '0306231001@caothang.edu.vn', '123456', 'student', NOW()),
+(12, '0306231002@caothang.edu.vn', '123456', 'student', NOW()),
+(13, '0306231003@caothang.edu.vn', '123456', 'student', NOW()),
+(14, '0306231004@caothang.edu.vn', '123456', 'student', NOW()),
+(15, '0306231005@caothang.edu.vn', '123456', 'student', NOW()),
+(16, '0306231006@caothang.edu.vn', '123456', 'student', NOW()),
+(17, '0306231007@caothang.edu.vn', '123456', 'student', NOW()),
+(18, '0306231008@caothang.edu.vn', '123456', 'student', NOW()),
+(19, '0306231009@caothang.edu.vn', '123456', 'student', NOW()),
+(20, '0306231010@caothang.edu.vn', '123456', 'student', NOW()),
+(21, '0306231011@caothang.edu.vn', '123456', 'student', NOW()),
+(22, '0306231012@caothang.edu.vn', '123456', 'student', NOW()),
+(23, '0306231013@caothang.edu.vn', '123456', 'student', NOW()),
+(24, '0306231014@caothang.edu.vn', '123456', 'student', NOW()),
+(25, '0306231015@caothang.edu.vn', '123456', 'student', NOW()),
+(26, '0306231016@caothang.edu.vn', '123456', 'student', NOW()),
+(27, '0306231017@caothang.edu.vn', '123456', 'student', NOW()),
+(28, '0306231018@caothang.edu.vn', '123456', 'student', NOW()),
+(29, '0306231019@caothang.edu.vn', '123456', 'student', NOW()),
+(30, '0306231020@caothang.edu.vn', '123456', 'student', NOW()),
+(31, '0306231021@caothang.edu.vn', '123456', 'student', NOW()),
+(32, '0306231022@caothang.edu.vn', '123456', 'student', NOW()),
+(33, '0306231023@caothang.edu.vn', '123456', 'student', NOW()),
+(34, '0306231024@caothang.edu.vn', '123456', 'student', NOW()),
+(35, '0306231025@caothang.edu.vn', '123456', 'student', NOW());
+
+INSERT INTO `students` (`account_id`, `student_id`, `full_name`, `gender`, `dob`, `phone`, `classroom_id`, `major`, `birth_place`) VALUES
+(11, '0306231001', 'Nguyễn Sinh Viên 1', 'male', '2007-01-15', '0311111101', 1, NULL, 'TP.HCM'),
+(12, '0306231002', 'Trần Sinh Viên 2', 'female', '2007-02-20', '0311111102', 1, NULL, 'Long An'),
+(13, '0306231003', 'Lê Sinh Viên 3', 'male', '2007-03-10', '0311111103', 1, NULL, 'Tiền Giang'),
+(14, '0306231004', 'Phạm Sinh Viên 4', 'female', '2007-04-05', '0311111104', 1, NULL, 'Đồng Nai'),
+(15, '0306231005', 'Hoàng Sinh Viên 5', 'male', '2007-05-12', '0311111105', 1, NULL, 'Bình Dương'),
+(16, '0306231006', 'Vũ Sinh Viên 6', 'female', '2007-06-25', '0311111106', 2, NULL, 'TP.HCM'),
+(17, '0306231007', 'Đặng Sinh Viên 7', 'male', '2007-07-30', '0311111107', 2, NULL, 'Tây Ninh'),
+(18, '0306231008', 'Bùi Sinh Viên 8', 'female', '2007-08-14', '0311111108', 2, NULL, 'Vũng Tàu'),
+(19, '0306231009', 'Lý Sinh Viên 9', 'male', '2007-09-18', '0311111109', 2, NULL, 'Cần Thơ'),
+(20, '0306231010', 'Ngô Sinh Viên 10', 'female', '2007-10-22', '0311111110', 2, NULL, 'Đồng Tháp'),
+(21, '0306231011', 'Phan Sinh Viên 11', 'male', '2007-11-01', '0311111111', 3, NULL, 'TP.HCM'),
+(22, '0306231012', 'Trịnh Sinh Viên 12', 'female', '2007-12-05', '0311111112', 3, NULL, 'An Giang'),
+(23, '0306231013', 'Vương Sinh Viên 13', 'male', '2007-01-20', '0311111113', 3, NULL, 'Kiên Giang'),
+(24, '0306231014', 'Đoàn Sinh Viên 14', 'female', '2007-02-28', '0311111114', 3, NULL, 'Bến Tre'),
+(25, '0306231015', 'Mai Sinh Viên 15', 'male', '2007-03-15', '0311111115', 3, NULL, 'Sóc Trăng'),
+(26, '0306231016', 'Đào Sinh Viên 16', 'female', '2007-04-10', '0311111116', 4, NULL, 'Trà Vinh'),
+(27, '0306231017', 'Hồ Sinh Viên 17', 'male', '2007-05-05', '0311111117', 4, NULL, 'Vĩnh Long'),
+(28, '0306231018', 'Lương Sinh Viên 18', 'female', '2007-06-12', '0311111118', 4, NULL, 'Bạc Liêu'),
+(29, '0306231019', 'Thái Sinh Viên 19', 'male', '2007-07-20', '0311111119', 4, NULL, 'Cà Mau'),
+(30, '0306231020', 'Tạ Sinh Viên 20', 'female', '2007-08-25', '0311111120', 4, NULL, 'Hậu Giang'),
+(31, '0306231021', 'Quách Sinh Viên 21', 'male', '2007-09-30', '0311111121', 5, NULL, 'TP.HCM'),
+(32, '0306231022', 'Kim Sinh Viên 22', 'female', '2007-10-14', '0311111122', 5, NULL, 'Bình Phước'),
+(33, '0306231023', 'Chu Sinh Viên 23', 'male', '2007-11-08', '0311111123', 5, NULL, 'Đắk Lắk'),
+(34, '0306231024', 'Mạc Sinh Viên 24', 'female', '2007-12-12', '0311111124', 5, NULL, 'Lâm Đồng'),
+(35, '0306231025', 'Đỗ Sinh Viên 25', 'male', '2007-01-30', '0311111125', 5, NULL, 'Gia Lai');

@@ -16,6 +16,24 @@ class Teacher
 
     // Referenced Account data
     public ?Account $account = null
-  ) {
+  ) {}
+  /**
+   * Tự động mapping trường dữ liệu DB
+   * @param array $data
+   * @return Teacher
+   */
+  public static function fromArray(array $data): self
+  {
+    return new self(
+      account_id: $data['account_id'] ?? 0,
+      fullname: $data['full_name'] ?? '',
+      gender: $data['gender'] ?? '',
+      dob: $data['dob'] ?? '',
+      phone: $data['phone'] ?? '',
+      title: $data['title'] ?? '',
+      department: $data['department'] ?? '',
+      start_date: $data['start_date'] ?? '',
+      account: isset($data['acc_email']) ? Account::fromArray($data, 'acc_') : null
+    );
   }
 }
