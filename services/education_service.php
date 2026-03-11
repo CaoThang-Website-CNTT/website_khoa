@@ -56,7 +56,8 @@ class EducationService implements EducationRepositoryInterface
 
     $sql = "SELECT 
                 s.*, 
-                a.id AS acc_id, a.email, a.role, a.created_at, a.updated_at, a.deleted_at
+                a.id AS acc_id, a.email as acc_email, a.role AS acc_role, 
+                a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
             FROM `students` s
             INNER JOIN `accounts` a ON s.`account_id` = a.`id`
             WHERE a.`deleted_at` IS NULL 
