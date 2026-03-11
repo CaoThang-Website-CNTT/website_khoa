@@ -2,7 +2,7 @@
   <div class="sidebar__header">
     <a href="index.php" class="sidebar__brand flex gap-4">
       <div class="sidebar__logo object-contain">
-        <img src="./public/img/faculty_logo.jpg" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
+        <img src="<?= url('/public/img/faculty_logo.jpg') ?>" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
       </div>
       <div class="sidebar__title flex flex-col justify-center">
         <div class="sidebar_main-title font-medium text-lg uppercase">KHOA CNTT</div>
@@ -37,7 +37,7 @@
         </a>
         <ul id="ddmenu_1" class="sidebar__dropdown">
           <li class="sidebar__dropdown-item">
-            <a href="dashboard_user.php" class="sidebar__dropdown-link">Quản Lý Người Dùng</a>
+            <a href="<?= url('admin/students') ?>" class="sidebar__dropdown-link">Quản Lý Sinh Viên</a>
           </li>
           <li class="sidebar__dropdown-item">
             <a href="dashboard_user.php" class="sidebar__dropdown-link">Quản Lý Người Dùng</a>

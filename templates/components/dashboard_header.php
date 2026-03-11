@@ -33,7 +33,7 @@
             <div class="profile-info">
               <div class="info">
                 <div class="image">
-                  <img src="assets/images/profile/profile-image.png" alt="" />
+                  <img src="<?= url('assets/images/profile/profile-image.png') ?>" alt="" />
                 </div>
                 <div>
                   <h6 class="font-medium">Adam Joe</h6>

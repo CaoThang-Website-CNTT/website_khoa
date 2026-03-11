@@ -30,7 +30,7 @@
       <div class="flex justify-between items-center p-4">
         <div class="flex gap-4">
           <div class="web-logo object-contain">
-            <img src="./public/img/faculty_logo.jpg" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
+            <img src="<?= url('/public/img/faculty_logo.jpg') ?>" alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
           </div>
           <div class="flex flex-col justify-center">
             <div class="text-xl uppercase">KHOA CÔNG NGHỆ THÔNG TIN</div>
