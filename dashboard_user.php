@@ -1,11 +1,3 @@
-<?php
-include __DIR__ . '/services/education_service.php';
-
-use App\Services\EducationService;
-
-$mockService = new EducationService();
-ob_start();
-?>
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
@@ -13,7 +5,7 @@ ob_start();
       <h2 class="title text-2xl font-semibold">Users</h2>
     </div>
     <div class="col-6 col-md-6 flex gap-2">
-      <a href="user_new.php" data-variant="primary" data-size="md" class="btn">
+      <a href="<?= url('admin/students/create') ?>" data-variant="primary" data-size="md" class="btn">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
           <path
             d="M256 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 160-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0 0 160c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160 160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-160z" />
@@ -58,35 +50,23 @@ ob_start();
       </tr>
     </thead>
     <tbody>
-      <?php foreach ($mockService->getAllStudents(1) as $index => $user): ?>
-        <tr onclick="window.location.href='user_detail.php?id=<?php echo $user->account_id; ?>';">
-          <td class="data-table__id">
-            #
-            <?php echo $index + 1; ?>
-          </td>
-          <td>
-            <?php echo $user->fullname ?? 'N/A'; ?>
-          </td>
-          <td>
-            <?php echo $user->account->email ?? 'N/A'; ?>
-          </td>
-          <td>
-            <?php echo $user->gender ?? 'N/A'; ?>
-          </td>
-          <td>
-            <?php echo $user->dob ?? 'N/A'; ?>
-          </td>
-          <td>
-            <?php echo $user->phone ?? 'N/A'; ?>
-          </td>
+      <?php if (!empty($students)): ?>
+        <?php foreach ($students as $index => $user): ?>
+          <tr onclick="window.location.href='<?= url('admin/students/edit/' . $user->account_id) ?>'">
+            <td class="data-table__id">#<?= $index + 1; ?></td>
+            <td><?= htmlspecialchars($user->fullname ?? 'N/A'); ?></td>
+            <td><?= htmlspecialchars($user->account->email ?? 'N/A'); ?></td>
+            <td><?= htmlspecialchars($user->gender ?? 'N/A'); ?></td>
+            <td><?= htmlspecialchars($user->dob ?? 'N/A'); ?></td>
+            <td><?= htmlspecialchars($user->phone ?? 'N/A'); ?></td>
+          </tr>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <tr>
+          <td colspan="6" class="text-center">No students found.</td>
         </tr>
-      <?php endforeach; ?>
+      <?php endif; ?>
     </tbody>
   </table>
 </div>
 <!-- ========== table-wrapper end ========== -->
-<?php
-$content = ob_get_clean();
-
-require 'templates/layouts/dashboard_layout.php';
-?>

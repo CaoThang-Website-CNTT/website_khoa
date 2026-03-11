@@ -66,32 +66,9 @@ class EducationService implements EducationRepositoryInterface
     $stmt->bindValue(":offset", $offset, PDO::PARAM_INT);
     $stmt->execute();
 
-    $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    $students = [];
-
-    foreach ($rows as $row) {
-      $account = new Account(
-        id: $row['acc_id'],
-        email: $row['email'],
-        password_hash: null,
-        role: $row['role'],
-        created_at: $row['created_at'],
-        updated_at: $row['updated_at'],
-        deleted_at: $row['deleted_at']
-      );
-
-      $students[] = new Student(
-        account_id: $row['account_id'],
-        student_id: $row['student_code'],
-        fullname: $row['full_name'],
-        gender: $row['gender'],
-        dob: $row['dob'],
-        phone: $row['phone'],
-        class_id: $row['class_id'],
-        major: $row['major'],
-        birth_place: $row['birth_place'],
-
-        account: $account
+    return array_map(
+      fn($row) => Student::fromArray($row),
+      $stmt->fetchAll(PDO::FETCH_ASSOC)
       );
     }
 
@@ -102,10 +79,15 @@ class EducationService implements EducationRepositoryInterface
   //TODO: Implemt toàn bộ các method còn lại
   public function getStudentById(int $id): ?Student
   {
-    $match = array_filter($this->students ?? [], fn($s) => $s->account_id === $id);
-
-    // reset() gets the first element of the filtered array, or false if empty
-    return reset($match) ?: null;
+    $sql = "SELECT s.*, a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
+                   a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
+            FROM `students` s 
+            INNER JOIN `accounts` a ON s.`account_id` = a.`id`
+            WHERE s.`account_id` = :id AND a.`deleted_at` IS NULL";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ? Student::fromArray($row) : null;
   }
 
   public function createStudent(Student $student, string $rawPassword): int
@@ -245,6 +227,12 @@ class EducationService implements EducationRepositoryInterface
 
   public function getAllClassrooms(): array
   {
-    return array_values($this->classes);
+    $sql = "SELECT * FROM `classrooms`";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+    return array_map(
+      fn($row) => Classroom::fromArray($row),
+      $stmt->fetchAll((PDO::FETCH_ASSOC))
+    );
   }
 }

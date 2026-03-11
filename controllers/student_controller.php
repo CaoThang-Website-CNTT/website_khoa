@@ -1,4 +1,8 @@
 <?php
+
+use App\Utils\Validator;
+use App\Services\EducationRepositoryInterface;
+
 class StudentController
 {
   private $_educationService;
@@ -10,8 +14,11 @@ class StudentController
 
   public function index()
   {
-    $students = $this->_educationService->getAllStudents();
-    return $students;
+    $students = $this->_educationService->getAllStudents(1);
+    ob_start();
+    require_once __DIR__ . '/../dashboard_user.php';
+    $content = ob_get_clean();
+    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
 
   public function show($id)
