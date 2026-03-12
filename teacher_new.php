@@ -17,32 +17,35 @@ function errorFor($field, $errors)
 <div class="detail-panel card shadow">
   <div class="card__header">
     <div class="card__title">
-      <h6>Create new Student</h6>
+      <h6>Create new Teacher</h6>
     </div>
     <div class="card__description">
-      This is creating new Student form
+      This is creating new Teacher form
     </div>
   </div>
   <div class="card__content">
-    <form id="user-add-form" method="POST" action="<?= url('admin/students/store') ?>">
+    <form id="user-add-form" method="POST" action="<?= url('admin/teachers/store') ?>">
       <div class="field-group">
         <div class="field">
-          <label for="email">Email</label>
-          <input id="email" class="field__input" type="text" name="email"
-            value="Mặc định sẽ có dạng: mssv@caothang.edu.vn" disabled>
+          <label for="email">Email *</label>
+          <input id="email" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
+            type="email" name="email" value="">
+          <?= errorFor('email', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="password">Password</label>
-          <input id="password" class="field__input" type="text" name="password" value="Mặc định là: Khoacntt@123"
-            disabled>
+          <label for="password">Password *</label>
+          <input id="password" class="field__input <?= isset($errors['password']) ? 'field__input--error' : '' ?>"
+            type="password" name="password" value="">
+          <?= errorFor('password', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="student_id">Student ID *</label>
-          <input id="student_id" class="field__input <?= isset($errors['student_id']) ? 'field__input--error' : '' ?>"
-            type="text" name="student_id" value="">
-          <?= errorFor('student_id', $errors) ?>
+          <label for="password_comfirmation">Password Comfirmation *</label>
+          <input id="password_comfirmation"
+            class="field__input <?= isset($errors['password_comfirmation']) ? 'field__input--error' : '' ?>"
+            type="password" name="password_comfirmation" value="">
+          <?= errorFor('password_comfirmation', $errors) ?>
         </div>
 
         <div class="field">
@@ -77,34 +80,26 @@ function errorFor($field, $errors)
         </div>
 
         <div class="field">
-          <label for="classroom_id">Classroom *</label>
-          <select id="classroom_id"
-            class="field__input <?= isset($errors['classroom_id']) ? 'field__input--error' : '' ?>" name="classroom_id">
-            <option value="" selected>
-              -- Chọn lớp học--
-            </option>
-            <?php foreach ($classrooms as $classroom): ?>
-              <option value=<?= htmlspecialchars($classroom->id) ?>>
-                <?= htmlspecialchars($classroom->name); ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <?= errorFor('classroom_id', $errors) ?>
+          <label for="start_date">Start Date *</label>
+          <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
+            type="date" name="start_date" value="">
+          <?= errorFor('start_date', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="major">Major</label>
-          <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
-            name="major" value="">
-          <?= errorFor('major', $errors) ?>
+          <label for="title">Title</label>
+          <input id="title" class="field__input <?= isset($errors['title']) ? 'field__input--error' : '' ?>" type="text"
+            name="title" value="">
+          <?= errorFor('title', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="birth_place">Birth Place</label>
-          <input id="birth_place" class="field__input <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>"
-            type="text" name="birth_place" value="">
-          <?= errorFor('birth_place', $errors) ?>
+          <label for="department">Department</label>
+          <input id="department" class="field__input <?= isset($errors['department']) ? 'field__input--error' : '' ?>"
+            type="text" name="department" value="">
+          <?= errorFor('department', $errors) ?>
         </div>
+
       </div>
     </form>
   </div>

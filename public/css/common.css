@@ -165,6 +165,13 @@
   border-color: #fa5656;
 }
 
+.field__error {
+  color: red;
+  font-size: 0.85em;
+  display: block;
+  margin-top: 6px;
+}
+
 .search-bar {
   background: var(--input);
   width: 16rem;

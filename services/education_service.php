@@ -284,7 +284,7 @@ class EducationService implements EducationRepositoryInterface
   {
     try {
       $this->db->beginTransaction();
-      $email = $teacher->account->email ?? '';
+      $email = $teacher['email'];
       $accId = $this->createAccount($email, $rawPassword, 'teacher');
       $sqlTeach = "INSERT INTO `teachers` (account_id, full_name, gender, dob, phone, title, department,`start_date`) 
                   VALUES (:acc_id, :name, :gender, :dob, :phone, :title, :dept, :start)";

@@ -7,7 +7,7 @@ unset($_SESSION['errors'], $_SESSION['old_data']);
 function errorFor($field, $errors)
 {
   if (isset($errors[$field])) {
-    return '<span class="text-danger" style="color:red; font-size: 0.85em; display:block; margin-top:5px;">'
+    return '<span class="field__error">'
       . htmlspecialchars($errors[$field][0]) .
       '</span>';
   }

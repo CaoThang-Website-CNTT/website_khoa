@@ -24,11 +24,47 @@ class TeacherController
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
-
+  public function create()
+  {
+    ob_start();
+    require_once __DIR__ . '/../teacher_new.php';
+    $content = ob_get_clean();
+    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+  }
   public function store(array $data)
   {
-    $newId = $this->_educationService->createTeacher($data);
-    return $newId;
+    $validator = new Validator();
+    $rules = [
+      'email' => ['required', 'email', 'max:255'],
+      'password' => ['required', 'password',],
+      'password_comfirmation' => ['required', 'same:password',],
+      'full_name' => ['required', 'max:255'],
+      'phone' => ['required', 'phone', 'max:15'],
+      'gender' => ['required'],
+      'dob' => ['required', 'date'],
+      'title' => ['max:150'],
+      'department' => ['max:255'],
+      'start_date' => ['required, date']
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      return $this->redirectWithError($validator->getErrors(), $data);
+    }
+
+    if ($this->_educationService->isEmailUnique($data['email']) === false) {
+      $validator->addError('email', 'Email này đã tồn tại trong hệ thống.');
+      return $this->redirectWithError($validator->getErrors(), $data);
+    }
+
+    $newStudentId = $this->_educationService->createTeacher($data, $data['password']);
+    if ($newStudentId) {
+      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Tạo mới giảng viên thành công!'];
+    } else {
+      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+    }
+
+    header("Location: " . url('admin/teachers'));
+    exit;
   }
 
   public function update($id, array $data)
@@ -97,7 +133,7 @@ class TeacherController
     exit;
   }
   /**
-   * Helper function, redirect về form tạo/sửa sinh viên khi có lỗi validate
+   * Helper function, redirect về form tạo/sửa giảng viên khi có lỗi validate
    * @param array $errors
    * @param array $oldData
    * @return never

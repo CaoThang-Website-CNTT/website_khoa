@@ -39,7 +39,7 @@ class StudentController
     $rules = [
       'student_id' => ['required', 'mssv', 'max:10'],
       'full_name' => ['required', 'max:255'],
-      'phone' => ['phone', 'max:15'],
+      'phone' => ['required', 'phone', 'max:15'],
       'gender' => ['required'],
       'dob' => ['required', 'date'],
       'major' => ['max:150'],
