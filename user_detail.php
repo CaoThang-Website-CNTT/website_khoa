@@ -103,8 +103,9 @@ function errorFor($field, $errors)
       <button data-modal-trigger="#confirm-modal" id="update-submit-btn" type="button" data-variant="primary"
         data-size="lg" class="w-full btn">Lưu thay
         đổi</button>
-      <button data-modal-trigger="#confirm-modal" id="delete-submit-btn" type="submit" formaction="routes/users/destroy"
-        data-variant="destructive" data-size="lg" class="w-full btn">Xóa</button>
+      <button data-modal-trigger="#confirm-modal" id="delete-submit-btn" type="submit"
+        formaction="<?= url('admin/students/delete/' . $student->account_id) ?>" data-variant="destructive"
+        data-size="lg" class="w-full btn">Xóa</button>
     </div>
   </form>
 </div>

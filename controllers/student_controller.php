@@ -18,18 +18,13 @@ class StudentController
 
   public function index()
   {
-    $students = $this->_educationService->getAllStudents(1);
+    $students = $this->_educationService->getAllStudents(2);
     ob_start();
     require_once __DIR__ . '/../dashboard_user.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
 
-  public function show($id)
-  {
-    $student = $this->_educationService->getStudentById($id);
-    return $student;
-  }
   public function create()
   {
     $classrooms = $this->_educationService->getAllClassrooms();
@@ -129,7 +124,15 @@ class StudentController
 
   public function destroy($id)
   {
-    return $this->_educationService->deleteStudent($id);
+    $isSuccess = $this->_educationService->deleteStudent($id);
+    if ($isSuccess) {
+      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Xoá sinh viên thành công!'];
+    } else {
+      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+    }
+
+    header("Location: " . url('admin/students'));
+    exit;
   }
   /**
    * Helper function, redirect về form tạo/sửa sinh viên khi có lỗi validate
