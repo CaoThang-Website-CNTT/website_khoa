@@ -1,65 +1,109 @@
 <?php
-include __DIR__ . '/services/mock_education_service.php';
-use App\Services\MockEducationService;
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-$mockService = new MockEducationService();
-
-$classrooms = $mockService->getAllClassrooms();
-ob_start();
+$errors = $_SESSION['errors'] ?? [];
+$old_data = $_SESSION['old_data'] ?? [];
+unset($_SESSION['errors'], $_SESSION['old_data']);
+function errorFor($field, $errors)
+{
+  if (isset($errors[$field])) {
+    return '<span class="text-danger" style="color:red; font-size: 0.85em; display:block; margin-top:5px;">'
+      . htmlspecialchars($errors[$field][0]) .
+      '</span>';
+  }
+  return '';
+}
 ?>
 <div class="detail-panel card shadow">
   <div class="card__header">
     <div class="card__title">
-      <h6>Create new user</h6>
+      <h6>Create new Student</h6>
     </div>
     <div class="card__description">
-      This is creating new user form
+      This is creating new Student form
     </div>
   </div>
   <div class="card__content">
-    <form id="user-add-form" method="POST" action="users/add.php">
+    <form id="user-add-form" method="POST" action="<?= url('admin/students/store') ?>">
       <div class="field-group">
         <div class="field">
-          <label for="student_id">Student ID</label>
-          <input id="student_id" class="field__input" type="text" name="student_id" value="">
+          <label for="email">Email</label>
+          <input id="email" class="field__input" type="text" name="email"
+            value="Mặc định sẽ có dạng: mssv@caothang.edu.vn" disabled>
         </div>
 
         <div class="field">
-          <label for="fullname">Full Name</label>
-          <input id="fullname" class="field__input" type="text" name="fullname" value="">
+          <label for="password">Password</label>
+          <input id="password" class="field__input" type="text" name="password" value="Mặc định là: Khoacntt@123"
+            disabled>
         </div>
 
         <div class="field">
-          <label for="gender">Gender</label>
-          <select id="gender" class="field__input" name="gender">
-            <option value="">Nam</option>
-            <option value="">Nữ</option>
-            <option value="">Khác</option>
+          <label for="student_id">Student ID *</label>
+          <input id="student_id" class="field__input <?= isset($errors['student_id']) ? 'field__input--error' : '' ?>"
+            type="text" name="student_id" value="">
+          <?= errorFor('student_id', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="full_name">Full Name *</label>
+          <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
+            type="text" name="full_name" value="">
+          <?= errorFor('full_name', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="gender">Gender *</label>
+          <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
+            name="gender">
+            <option value="male">Nam</option>
+            <option value="female">Nữ</option>
           </select>
+          <?= errorFor('gender', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input" type="date" name="dob" value="">
+          <label for="dob">Date of Birth *</label>
+          <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
+            name="dob" value="">
+          <?= errorFor('dob', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="phone">Phone</label>
-          <input id="phone" class="field__input" type="text" name="phone" value="">
+          <label for="phone">Phone *</label>
+          <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="tel"
+            name="phone" value="">
+          <?= errorFor('phone', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="class_id">Classroom</label>
-          <select id="class_id" class="field__input" name="class_id">
+          <label for="classroom_id">Classroom *</label>
+          <select id="classroom_id"
+            class="field__input <?= isset($errors['classroom_id']) ? 'field__input--error' : '' ?>" name="classroom_id">
             <option value="" selected>
               -- Chọn lớp học--
             </option>
             <?php foreach ($classrooms as $classroom): ?>
-              <option value=<?php htmlspecialchars($classroom->name); ?>>
+              <option value=<?= htmlspecialchars($classroom->id) ?>>
                 <?= htmlspecialchars($classroom->name); ?>
               </option>
             <?php endforeach; ?>
           </select>
+          <?= errorFor('classroom_id', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="major">Major</label>
+          <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
+            name="major" value="">
+          <?= errorFor('major', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="birth_place">Birth Place</label>
+          <input id="birth_place" class="field__input <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>"
+            type="text" name="birth_place" value="">
+          <?= errorFor('birth_place', $errors) ?>
         </div>
       </div>
     </form>
@@ -69,11 +113,6 @@ ob_start();
       data-size="lg" class="w-full btn">Thêm</button>
   </div>
 </div>
-<?php
-$content = ob_get_clean();
-
-require 'templates/layouts/dashboard_layout.php';
-?>
 <!-- Add confirm modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
@@ -99,9 +138,8 @@ require 'templates/layouts/dashboard_layout.php';
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector('#detail-form');
-    const updateBtn = document.querySelector('#update-submit-btn');
-    const deleteBtn = document.querySelector('#delete-submit-btn');
+    const form = document.querySelector('#user-add-form');
+    const createBtn = document.querySelector('#create-submit-btn');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
 
     const modal = new Modal("#confirm-modal");
@@ -111,20 +149,14 @@ require 'templates/layouts/dashboard_layout.php';
 
     console.log(modal)
 
-    // Update Btn Event Listener
-    updateBtn.addEventListener('click', function (e) {
+    // Create Btn Event Listener
+    createBtn.addEventListener('click', function(e) {
       e.preventDefault();
       pendingActionUrl = form.getAttribute('action');
     });
 
-    // Delete Btn Event Listener
-    deleteBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      pendingActionUrl = deleteBtn.getAttribute('formaction');
-    });
-
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function () {
+    confirmBtn.addEventListener('click', function() {
       form.action = pendingActionUrl;
       form.submit();
     });

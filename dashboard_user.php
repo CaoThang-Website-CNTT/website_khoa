@@ -54,7 +54,7 @@
         <?php foreach ($students as $index => $user): ?>
           <tr onclick="window.location.href='<?= url('admin/students/edit/' . $user->account_id) ?>'">
             <td class="data-table__id">#<?= $index + 1; ?></td>
-            <td><?= htmlspecialchars($user->fullname ?? 'N/A'); ?></td>
+            <td><?= htmlspecialchars($user->full_name ?? 'N/A'); ?></td>
             <td><?= htmlspecialchars($user->account->email ?? 'N/A'); ?></td>
             <td><?= htmlspecialchars($user->gender ?? 'N/A'); ?></td>
             <td><?= htmlspecialchars($user->dob ?? 'N/A'); ?></td>

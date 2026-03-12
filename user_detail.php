@@ -1,14 +1,18 @@
 <?php
-include __DIR__ . '/services/mock_education_service.php';
-use App\Services\MockEducationService;
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-$mockService = new MockEducationService();
-
-$user_id = $_GET['id'] ?? null;
-
-$student = $mockService->getStudentById((int) $user_id);
-$classrooms = $mockService->getAllClassrooms();
-ob_start();
+$errors = $_SESSION['errors'] ?? [];
+$old_data = $_SESSION['old_data'] ?? [];
+unset($_SESSION['errors'], $_SESSION['old_data']);
+function errorFor($field, $errors)
+{
+  if (isset($errors[$field])) {
+    return '<span class="text-danger" style="color:red; font-size: 0.85em; display:block; margin-top:5px;">'
+      . htmlspecialchars($errors[$field][0]) .
+      '</span>';
+  }
+  return '';
+}
 ?>
 <div class="detail-panel card shadow">
   <div class="card__header">
@@ -22,54 +26,76 @@ ob_start();
       This is user detail form
     </div>
   </div>
-  <form id="detail-form" action="routes/users/update" method="POST">
+  <form id="detail-form" action="<?= url('admin/students/update/') . $student->account_id ?>" method="POST">
     <div class="card__content">
       <div class="field-group">
         <div class="field" data-field-disabled data-field-readonly>
           <label for="student_id">Student ID</label>
-          <input id="student_id" class="field__input" type="text" name="student_id"
-            value="<?= htmlspecialchars($student->student_id ?? '') ?>">
+          <input id="student_id" class="field__input <?= isset($errors['student_id']) ? 'field__input--error' : '' ?>"
+            type="text" name="student_id" value="<?= htmlspecialchars($student->student_id ?? '') ?>">
+          <?= errorFor('student_id', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="fullname">Full Name</label>
-          <input id="fullname" class="field__input" type="text" name="fullname"
-            value="<?= htmlspecialchars($student->fullname ?? '') ?>">
+          <label for="full_name">Full Name</label>
+          <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
+            type="text" name="full_name" value="<?= htmlspecialchars($student->full_name ?? '') ?>">
+          <?= errorFor('full_name', $errors) ?>
         </div>
 
         <div class="field">
           <label for="gender">Gender</label>
-          <select id="gender" class="field__input" name="gender">
+          <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
+            name="gender">
             <option value="Male" <?= ($student?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
             <option value="Female" <?= ($student?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
-            <option value="Other" <?= ($student?->gender == 'Khác') ? 'selected' : '' ?>>Khác</option>
           </select>
+          <?= errorFor('gender', $errors) ?>
         </div>
 
         <div class="field">
           <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input" type="date" name="dob"
-            value="<?= htmlspecialchars($student->dob ?? '') ?>">
+          <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
+            name="dob" value="<?= htmlspecialchars($student->dob ?? '') ?>">
+          <?= errorFor('dob', $errors) ?>
         </div>
 
         <div class="field">
           <label for="phone">Phone</label>
-          <input id="phone" class="field__input" type="text" name="phone"
-            value="<?= htmlspecialchars($student->phone ?? '') ?>">
+          <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="text"
+            name="phone" value="<?= htmlspecialchars($student->phone ?? '') ?>">
+          <?= errorFor('phone', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="class_id">Classroom</label>
-          <select id="class_id" class="field__input" name="class_id">
-            <option value="" disabled hidden <?= is_null($student?->class_id) ? 'selected' : '' ?>>
+          <label for="major">Major</label>
+          <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
+            name="major" value="<?= htmlspecialchars($student->major ?? '') ?>">
+          <?= errorFor('major', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="birth_place">Birth Place</label>
+          <input id="birth_place" class="field__input <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>"
+            type="text" name="birth_place" value="<?= htmlspecialchars($student->birth_place ?? '') ?>">
+          <?= errorFor('birth_place', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="classroom_id">Classroom</label>
+          <select id="classroom_id"
+            class="field__input  <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>" name="classroom_id">
+            <option value="" disabled hidden <?= is_null($student?->classroom_id) ? 'selected' : '' ?>>
               -- Chọn lớp học--
             </option>
+            <span><?= $student->classroom_id ?></span>
             <?php foreach ($classrooms as $classroom): ?>
-              <option value="<?= $classroom->id ?>" <?= ($student?->class_id == $classroom->id) ? 'selected' : '' ?>>
+              <option value="<?= $classroom->id ?>" <?= ($student?->classroom_id == $classroom->id) ? 'selected' : '' ?>>
                 <?= htmlspecialchars($classroom->name) ?>
               </option>
             <?php endforeach; ?>
           </select>
+          <?= errorFor('classroom_id', $errors) ?>
         </div>
       </div>
     </div>
@@ -82,11 +108,6 @@ ob_start();
     </div>
   </form>
 </div>
-<?php
-$content = ob_get_clean();
-
-require 'templates/layouts/dashboard_layout.php';
-?>
 <!-- Add confirm modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
@@ -125,19 +146,19 @@ require 'templates/layouts/dashboard_layout.php';
     console.log(modal)
 
     // Update Btn Event Listener
-    updateBtn.addEventListener('click', function (e) {
+    updateBtn.addEventListener('click', function(e) {
       e.preventDefault();
       pendingActionUrl = form.getAttribute('action');
     });
 
     // Delete Btn Event Listener
-    deleteBtn.addEventListener('click', function (e) {
+    deleteBtn.addEventListener('click', function(e) {
       e.preventDefault();
       pendingActionUrl = deleteBtn.getAttribute('formaction');
     });
 
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function () {
+    confirmBtn.addEventListener('click', function() {
       form.action = pendingActionUrl;
       form.submit();
     });

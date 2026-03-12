@@ -14,6 +14,7 @@ use App\Models\Teacher;
 use App\Models\Classroom;
 use Database;
 use PDO;
+use Exception;
 
 
 interface EducationRepositoryInterface
@@ -22,7 +23,7 @@ interface EducationRepositoryInterface
   /** @return Student[] */
   public function getAllStudents(int $pageTo, int $limit = 15): array;
   public function getStudentById(int $id): ?Student;
-  public function createStudent(Student $student, string $rawPassword): int;
+  public function createStudent(array $student, string $rawPassword): int;
   public function updateStudent(int $id, Student $student): bool;
   public function deleteStudent(int $id): bool;
 
@@ -37,6 +38,9 @@ interface EducationRepositoryInterface
   // Classroom
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
+  // Helper
+  public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
+  public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
 }
 
 class EducationService implements EducationRepositoryInterface
@@ -47,6 +51,92 @@ class EducationService implements EducationRepositoryInterface
   {
     $this->db = Database::getInstance()->getConnection();
   }
+  // --- HELPER METHODS ---
+  /**
+   * Tạo tài khoản
+   * @param string $email
+   * @param string $rawPassword
+   * @param string $role
+   * @return int
+   */
+  private function createAccount(string $email, string $rawPassword, string $role): int
+  {
+    $now = date('Y-m-d H:i:s');
+    $sql = "INSERT INTO `accounts` (email, password_hash, role, created_at, updated_at) 
+                VALUES (:email, :password, :role, :created, :updated)";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+      ':email'    => $email,
+      ':password' => password_hash($rawPassword, PASSWORD_DEFAULT),
+      ':role'     => $role,
+      ':created'  => $now,
+      ':updated'  => $now
+    ]);
+    return (int)$this->db->lastInsertId();
+  }
+
+  /**
+   * Summary of touchAccount
+   * @param int $accountId
+   * @return void
+   */
+  private function touchAccount(int $accountId): void
+  {
+    $sql = "UPDATE `accounts` SET updated_at = NOW() WHERE id = :id";
+    $this->db->prepare($sql)->execute([':id' => $accountId]);
+  }
+
+  /**
+   * Xoá mềm tài khoản
+   * @param int $accountId
+   * @return bool
+   */
+  private function softDeleteAccount(int $accountId): bool
+  {
+    $sql = "UPDATE `accounts` SET deleted_at = NOW() WHERE id = :id";
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute([':id' => $accountId]);
+  }
+  /**
+   * Kiểm tra mssv unique
+   * @param string $studentId
+   * @param mixed $excludeAccountId
+   * @return bool
+   */
+  public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool
+  {
+    $sql = "SELECT COUNT(*) FROM students WHERE student_id = :student_id";
+    $params = [':student_id' => $studentId];
+
+    if ($excludeAccountId) {
+      $sql .= " AND account_id != :exclude_id";
+      $params[':exclude_id'] = $excludeAccountId;
+    }
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchColumn() == 0;
+  }
+  /**
+   * Kiểm tra email unique
+   * @param string $email
+   * @param mixed $excludeAccountId
+   * @return bool
+   */
+  public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool
+  {
+    $sql = "SELECT COUNT(*) FROM accounts WHERE email = :email AND deleted_at IS NULL";
+    $params = [':email' => $email];
+
+    if ($excludeAccountId) {
+      $sql .= " AND id != :exclude_id";
+      $params[':exclude_id'] = $excludeAccountId;
+    }
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchColumn() == 0;
+  }
   // --- STUDENT METHODS ---
 
   public function getAllStudents(int $pageTo, int $limit = 15): array
@@ -55,7 +145,7 @@ class EducationService implements EducationRepositoryInterface
     $offset = ($currentPage - 1) * $limit;
 
     $sql = "SELECT 
-                s.*, 
+                s.*,
                 a.id AS acc_id, a.email as acc_email, a.role AS acc_role, 
                 a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
             FROM `students` s
@@ -70,14 +160,9 @@ class EducationService implements EducationRepositoryInterface
     return array_map(
       fn($row) => Student::fromArray($row),
       $stmt->fetchAll(PDO::FETCH_ASSOC)
-      );
-    }
-
-    return $students;
+    );
   }
 
-
-  //TODO: Implemt toàn bộ các method còn lại
   public function getStudentById(int $id): ?Student
   {
     $sql = "SELECT s.*, a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
@@ -91,139 +176,167 @@ class EducationService implements EducationRepositoryInterface
     return $row ? Student::fromArray($row) : null;
   }
 
-  public function createStudent(Student $student, string $rawPassword): int
+  public function createStudent(array $student, string $rawPassword): int
   {
-    $accId = ++$this->lastId;
-    $now = date('Y-m-d H:i:s');
+    try {
+      $this->db->beginTransaction();
 
-    // 1. Setup Account Model
-    $account = $student->account ?? new Account(
-      id: $accId,
-      email: $student->student_id . "@caothang.edu.vn",
-      role: 'student',
-      deleted_at: null
-    );
-    $account->id = $accId;
-    $account->email = $account->email ?: "student{$accId}@example.com"; // Fallback if empty
-    $account->password_hash = password_hash($rawPassword, PASSWORD_DEFAULT);
-    $account->role = 'student';
-    $account->created_at = $now;
-    $account->updated_at = $now;
+      $email = $student['student_id'] . "@caothang.edu.vn";
+      $accId = $this->createAccount($email, $rawPassword, 'student');
 
-    $this->accounts[$accId] = clone $account;
+      $sqlStu = "INSERT INTO `students` (account_id, student_id, full_name, gender, dob, phone, classroom_id, major, birth_place) 
+                VALUES (:acc_id, :code, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)";
 
-    // 2. Setup Student Model
-    $student->account_id = $accId;
-    $student->account = clone $account; // Link the relationship
+      $this->db->prepare($sqlStu)->execute([
+        ':acc_id'       => $accId,
+        ':code'         => $student['student_id'],
+        ':name'         => $student['full_name'],
+        ':gender'       => $student['gender'],
+        ':dob'          => $student['dob'],
+        ':phone'        => $student['phone'],
+        ':classroom_id' => $student['classroom_id'],
+        ':major'        => $student['major'],
+        ':birth_place'  => $student['birth_place']
+      ]);
 
-    $this->students[$accId] = clone $student;
-
-    return $accId;
+      $this->db->commit();
+      return $accId;
+    } catch (Exception $e) {
+      $this->db->rollBack();
+      throw $e;
+    }
   }
 
-  public function updateStudent(int $id, Student $updatedStudent): bool
+  public function updateStudent(int $id, Student $student): bool
   {
-    if (!isset($this->students[$id]) || !isset($this->accounts[$id])) {
+    try {
+      $this->db->beginTransaction();
+
+      $this->touchAccount($id);
+      $sqlStu = "UPDATE `students` SET 
+                full_name = :name, gender = :gender, dob = :dob, 
+                phone = :phone, classroom_id = :classroom_id, major = :major, birth_place = :birth_place 
+                WHERE account_id = :id";
+
+      $result = $this->db->prepare($sqlStu)->execute([
+        ':name'         => $student->full_name,
+        ':gender'       => $student->gender,
+        ':dob'          => $student->dob,
+        ':phone'        => $student->phone,
+        ':classroom_id' => $student->classroom_id,
+        ':major'        => $student->major,
+        ':birth_place'  => $student->birth_place,
+        ':id'           => $id
+      ]);
+
+      $this->db->commit();
+      return $result;
+    } catch (Exception $e) {
+      $this->db->rollBack();
       return false;
     }
-
-    // Ensure ID integrity
-    $updatedStudent->account_id = $id;
-
-    // Touch the account timestamp
-    $this->accounts[$id]->updated_at = date('Y-m-d H:i:s');
-
-    // Re-link the account to prevent the relationship from breaking
-    $updatedStudent->account = clone $this->accounts[$id];
-
-    // Overwrite existing state
-    $this->students[$id] = clone $updatedStudent;
-    return true;
   }
 
   public function deleteStudent(int $id): bool
   {
-    if (isset($this->accounts[$id])) {
-      $this->accounts[$id]->deleted_at = date('Y-m-d H:i:s');
-
-      // Sync the change to the nested object if someone fetches the student directly
-      if (isset($this->students[$id]) && $this->students[$id]->account !== null) {
-        $this->students[$id]->account->deleted_at = $this->accounts[$id]->deleted_at;
-      }
-      return true;
-    }
-    return false;
+    return $this->softDeleteAccount($id);
   }
 
   // --- TEACHER METHODS ---
-  // (These follow the exact same object-oriented pattern as the Student methods)
 
   public function getAllTeachers(): array
   {
-    return array_filter($this->teachers, function (Teacher $t) {
-      return $t->account !== null && !$t->account->deleted_at; // Check the nested account's deleted status
-    });
+    $sql = "SELECT t.*, 
+                  a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
+                  a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
+            FROM `teachers` t
+            INNER JOIN `accounts` a ON t.`account_id` = a.`id`
+            WHERE a.`deleted_at` IS NULL";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+
+    return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function getTeacherById(int $id): ?Teacher
   {
-    return $this->teachers[$id] ?? null;
+    $sql = "SELECT t.*, 
+                  a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
+                  a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
+            FROM `teachers` t 
+            INNER JOIN `accounts` a ON t.`account_id` = a.`id`
+            WHERE t.`account_id` = :id AND a.`deleted_at` IS NULL";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $row ? Teacher::fromArray($row) : null;
   }
 
   public function createTeacher(Teacher $teacher, string $rawPassword): int
   {
-    $accId = ++$this->lastId;
-    $now = date('Y-m-d H:i:s');
-    $teacherEmail = preg_replace('/\s+/', '.', strtolower($teacher->fullname)) . "@caothang.edu.vn";
+    try {
+      $this->db->beginTransaction();
+      $email = $teacher->account->email ?? '';
+      $accId = $this->createAccount($email, $rawPassword, 'teacher');
+      $sqlTeach = "INSERT INTO `teachers` (account_id, full_name, gender, dob, phone, title, department,`start_date`) 
+                  VALUES (:acc_id, :name, :gender, :dob, :phone, :title, :dept, :start)";
 
-    $account = $teacher->account ?? new Account(
-      id: $accId,
-      email: $teacherEmail,
-      role: 'teacher',
-      deleted_at: null,
-    );
-    $account->id = $accId;
-    $account->password_hash = password_hash($rawPassword, PASSWORD_DEFAULT);
-    $account->role = 'teacher';
-    $account->deleted_at = null;
-    $account->created_at = $now;
-    $account->updated_at = $now;
+      $this->db->prepare($sqlTeach)->execute([
+        ':acc_id' => $accId,
+        ':name'   => $teacher->full_name,
+        ':gender' => $teacher->gender,
+        ':dob'    => $teacher->dob,
+        ':phone'  => $teacher->phone,
+        ':title'  => $teacher->title,
+        ':dept'   => $teacher->department,
+        ':start'  => $teacher->start_date
+      ]);
 
-    $this->accounts[$accId] = clone $account;
-
-    $teacher->account_id = $accId;
-    $teacher->account = clone $account;
-
-    $this->teachers[$accId] = clone $teacher;
-
-    return $accId;
+      $this->db->commit();
+      return $accId;
+    } catch (Exception $e) {
+      $this->db->rollBack();
+      throw $e;
+    }
   }
 
-  public function updateTeacher(int $id, Teacher $updatedTeacher): bool
+  public function updateTeacher(int $id, Teacher $teacher): bool
   {
-    if (!isset($this->teachers[$id]) || !isset($this->accounts[$id])) {
+    try {
+      $this->db->beginTransaction();
+
+      $this->touchAccount($id);
+
+      $sqlTeach = "UPDATE `teachers` SET 
+                    full_name = :name, gender = :gender, dob = :dob, 
+                    phone = :phone, title = :title, department = :dept, `start_date` = :start 
+                  WHERE account_id = :id";
+
+      $result = $this->db->prepare($sqlTeach)->execute([
+        ':name'   => $teacher->full_name,
+        ':gender' => $teacher->gender,
+        ':dob'    => $teacher->dob,
+        ':phone'  => $teacher->phone,
+        ':title'  => $teacher->title,
+        ':dept'   => $teacher->department,
+        ':start'  => $teacher->start_date,
+        ':id'     => $id
+      ]);
+
+      $this->db->commit();
+      return $result;
+    } catch (Exception $e) {
+      $this->db->rollBack();
       return false;
     }
-
-    $updatedTeacher->account_id = $id;
-    $this->accounts[$id]->updated_at = date('Y-m-d H:i:s');
-    $updatedTeacher->account = clone $this->accounts[$id];
-
-    $this->teachers[$id] = clone $updatedTeacher;
-    return true;
   }
 
   public function deleteTeacher(int $id): bool
   {
-    if (isset($this->accounts[$id])) {
-      $this->accounts[$id]->deleted_at = date('Y-m-d H:i:s');
-
-      if (isset($this->teachers[$id]) && $this->teachers[$id]->account !== null) {
-        $this->teachers[$id]->account->deleted_at = $this->accounts[$id]->deleted_at;
-      }
-      return true;
-    }
-    return false;
+    return $this->softDeleteAccount($id);
   }
 
   public function getAllClassrooms(): array
