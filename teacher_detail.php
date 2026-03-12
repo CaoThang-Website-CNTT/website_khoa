@@ -68,6 +68,13 @@ function errorFor($field, $errors)
         </div>
 
         <div class="field">
+          <label for="start_date">Start Date *</label>
+          <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
+            type="date" name="start_date" value="<?= htmlspecialchars($teacher->start_date ?? '') ?>">
+          <?= errorFor('start_date', $errors) ?>
+        </div>
+
+        <div class="field">
           <label for="title">Title</label>
           <input id="title" class="field__input <?= isset($errors['title']) ? 'field__input--error' : '' ?>" type="text"
             name="title" value="<?= htmlspecialchars($teacher->title ?? '') ?>">
@@ -79,13 +86,6 @@ function errorFor($field, $errors)
           <input id="department" class="field__input <?= isset($errors['department']) ? 'field__input--error' : '' ?>"
             type="text" name="department" value="<?= htmlspecialchars($teacher->department ?? '') ?>">
           <?= errorFor('department', $errors) ?>
-        </div>
-
-        <div class="field">
-          <label for="start_date">Start Date *</label>
-          <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
-            type="date" name="start_date" value="<?= htmlspecialchars($teacher->start_date ?? '') ?>">
-          <?= errorFor('start_date', $errors) ?>
         </div>
 
       </div>

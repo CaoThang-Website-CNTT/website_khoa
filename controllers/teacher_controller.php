@@ -33,8 +33,43 @@ class TeacherController
 
   public function update($id, array $data)
   {
-    $isSuccess = $this->_educationService->updateteacher($id, $data);
-    return $isSuccess;
+    $validator = new Validator();
+    $rules = [
+      'full_name' => ['required', 'max:255'],
+      'phone' => ['phone', 'max:15'],
+      'gender' => ['required'],
+      'dob' => ['required', 'date'],
+      'title' => ['max:150'],
+      'department' => ['max:255'],
+      'start_date' => ['required, date']
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $data['account_id'] = $id;
+      return $this->redirectWithError($validator->getErrors(), $data);
+    }
+    $teacher = new Teacher(
+      account_id: (int)$id,
+      full_name: $data['full_name'],
+      gender: $data['gender'],
+      dob: $data['dob'],
+      phone: $data['phone'],
+      title: $data['title'],
+      department: $data['department'],
+      start_date: $data['start_date']
+    );
+
+    session_start();
+    $isSuccess = $this->_educationService->updateTeacher((int)$id, $teacher);
+
+    if ($isSuccess) {
+      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Cập nhật giảng viên thành công!'];
+    } else {
+      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+    }
+
+    header("Location: " . url('admin/teachers'));
+    exit;
   }
 
   public function edit($id)
