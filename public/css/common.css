@@ -161,6 +161,10 @@
   outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
 }
 
+.field__input--error {
+  border-color: #fa5656;
+}
+
 .search-bar {
   background: var(--input);
   width: 16rem;

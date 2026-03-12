@@ -7,7 +7,7 @@ class Student
   public function __construct(
     public int $account_id,
     public string $student_id, // Mã sinh viên
-    public string $fullname,
+    public string $full_name,
     public string $gender,
     public string $dob,
     public string $phone,
@@ -29,7 +29,7 @@ class Student
     return new self(
       account_id: $data['account_id'] ?? 0,
       student_id: $data['student_id'] ?? '',
-      fullname: $data['full_name'] ?? '',
+      full_name: $data['full_name'] ?? '',
       gender: $data['gender'] ?? '',
       dob: $data['dob'] ?? '',
       phone: $data['phone'] ?? '',

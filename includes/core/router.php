@@ -41,7 +41,11 @@ class Router
         $action = $route['action'];
 
         $controllerInstance = new $controllerClass($dependencies['educationService']);
-        return call_user_func_array([$controllerInstance, $action], $matches);
+        $params = $matches;
+        if ($method === 'POST') {
+          $params[] = $_POST;
+        }
+        return call_user_func_array([$controllerInstance, $action], $params);
       }
     }
 
