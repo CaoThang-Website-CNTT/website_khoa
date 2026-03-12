@@ -22,7 +22,7 @@ ob_start();
     </div>
   </div>
   <div class="card__content">
-    <form action="routes/users/import.php" method="POST" enctype="multipart/form-data">
+    <form action="admin/students/import.php" method="POST" enctype="multipart/form-data">
       <div class="field-group">
         <div class="field" data-field-auto-submit>
           <input id="file" class="field__input" type="file" name="uploaded_file" accept=".csv">

@@ -17,8 +17,10 @@ $router = require_once __DIR__ . '/routes.php';
 $baseDir = '/website_khoa';
 $requestUri = $_SERVER['REQUEST_URI'];
 $uri = str_replace($baseDir, '', $requestUri);
+echo $uri;
 $method = $_SERVER['REQUEST_METHOD'];
 
 $router->dispatch($uri, $method, [
   'educationService' => $educationService
 ]);
+?>

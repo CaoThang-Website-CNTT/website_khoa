@@ -70,8 +70,7 @@ class EducationService implements EducationRepositoryInterface
     return array_map(
       fn($row) => Student::fromArray($row),
       $stmt->fetchAll(PDO::FETCH_ASSOC)
-      );
-    }
+    );
 
     return $students;
   }
@@ -237,3 +236,4 @@ class EducationService implements EducationRepositoryInterface
     );
   }
 }
+?>
