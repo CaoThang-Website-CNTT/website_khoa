@@ -98,19 +98,19 @@ class StudentController
       return $this->redirectWithError($validator->getErrors(), $data);
     }
     $student = new Student(
-      account_id: (int)$id,
+      account_id: (int) $id,
       student_id: 0,
       full_name: $data['full_name'],
       gender: $data['gender'],
       dob: $data['dob'],
       phone: $data['phone'],
-      classroom_id: (int)$data['classroom_id'],
+      classroom_id: (int) $data['classroom_id'],
       major: $data['major'],
       birth_place: $data['birth_place']
     );
 
     session_start();
-    $isSuccess = $this->_educationService->updateStudent((int)$id, $student);
+    $isSuccess = $this->_educationService->updateStudent((int) $id, $student);
 
     if ($isSuccess) {
       $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Cập nhật sinh viên thành công!'];
@@ -134,6 +134,11 @@ class StudentController
     header("Location: " . url('admin/students'));
     exit;
   }
+
+  public function import()
+  {
+
+  }
   /**
    * Helper function, redirect về form tạo/sửa sinh viên khi có lỗi validate
    * @param array $errors
@@ -142,7 +147,8 @@ class StudentController
    */
   private function redirectWithError(array $errors, array $oldData)
   {
-    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (session_status() === PHP_SESSION_NONE)
+      session_start();
     $_SESSION['errors'] = $errors;
     $_SESSION['old_data'] = $oldData;
     if (isset($oldData['account_id'])) {

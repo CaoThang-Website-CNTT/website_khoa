@@ -66,13 +66,13 @@ class EducationService implements EducationRepositoryInterface
                 VALUES (:email, :password, :role, :created, :updated)";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([
-      ':email'    => $email,
+      ':email' => $email,
       ':password' => password_hash($rawPassword, PASSWORD_DEFAULT),
-      ':role'     => $role,
-      ':created'  => $now,
-      ':updated'  => $now
+      ':role' => $role,
+      ':created' => $now,
+      ':updated' => $now
     ]);
-    return (int)$this->db->lastInsertId();
+    return (int) $this->db->lastInsertId();
   }
 
   /**
@@ -188,15 +188,15 @@ class EducationService implements EducationRepositoryInterface
                 VALUES (:acc_id, :code, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)";
 
       $this->db->prepare($sqlStu)->execute([
-        ':acc_id'       => $accId,
-        ':code'         => $student['student_id'],
-        ':name'         => $student['full_name'],
-        ':gender'       => $student['gender'],
-        ':dob'          => $student['dob'],
-        ':phone'        => $student['phone'],
+        ':acc_id' => $accId,
+        ':code' => $student['student_id'],
+        ':name' => $student['full_name'],
+        ':gender' => $student['gender'],
+        ':dob' => $student['dob'],
+        ':phone' => $student['phone'],
         ':classroom_id' => $student['classroom_id'],
-        ':major'        => $student['major'],
-        ':birth_place'  => $student['birth_place']
+        ':major' => $student['major'],
+        ':birth_place' => $student['birth_place']
       ]);
 
       $this->db->commit();
@@ -219,14 +219,14 @@ class EducationService implements EducationRepositoryInterface
                 WHERE account_id = :id";
 
       $result = $this->db->prepare($sqlStu)->execute([
-        ':name'         => $student->full_name,
-        ':gender'       => $student->gender,
-        ':dob'          => $student->dob,
-        ':phone'        => $student->phone,
+        ':name' => $student->full_name,
+        ':gender' => $student->gender,
+        ':dob' => $student->dob,
+        ':phone' => $student->phone,
         ':classroom_id' => $student->classroom_id,
-        ':major'        => $student->major,
-        ':birth_place'  => $student->birth_place,
-        ':id'           => $id
+        ':major' => $student->major,
+        ':birth_place' => $student->birth_place,
+        ':id' => $id
       ]);
 
       $this->db->commit();
@@ -291,13 +291,13 @@ class EducationService implements EducationRepositoryInterface
 
       $this->db->prepare($sqlTeach)->execute([
         ':acc_id' => $accId,
-        ':name'   => $teacher['full_name'],
+        ':name' => $teacher['full_name'],
         ':gender' => $teacher['gender'],
-        ':dob'    => $teacher['dob'],
-        ':phone'  => $teacher['phone'],
-        ':title'  => $teacher['title'],
-        ':dept'   => $teacher['department'],
-        ':start'  => $teacher['start_date']
+        ':dob' => $teacher['dob'],
+        ':phone' => $teacher['phone'],
+        ':title' => $teacher['title'],
+        ':dept' => $teacher['department'],
+        ':start' => $teacher['start_date']
       ]);
 
       $this->db->commit();
@@ -321,14 +321,14 @@ class EducationService implements EducationRepositoryInterface
                   WHERE account_id = :id";
 
       $result = $this->db->prepare($sqlTeach)->execute([
-        ':name'   => $teacher->full_name,
+        ':name' => $teacher->full_name,
         ':gender' => $teacher->gender,
-        ':dob'    => $teacher->dob,
-        ':phone'  => $teacher->phone,
-        ':title'  => $teacher->title,
-        ':dept'   => $teacher->department,
-        ':start'  => $teacher->start_date,
-        ':id'     => $id
+        ':dob' => $teacher->dob,
+        ':phone' => $teacher->phone,
+        ':title' => $teacher->title,
+        ':dept' => $teacher->department,
+        ':start' => $teacher->start_date,
+        ':id' => $id
       ]);
 
       $this->db->commit();
