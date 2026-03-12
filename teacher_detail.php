@@ -18,36 +18,37 @@ function errorFor($field, $errors)
   <div class="card__header">
     <div class="card__title">
       <h6>
-        Student
-        <span class="font-bold">#<?= htmlspecialchars($student->account_id ?? '') ?></span>
+        Teacher
+        <span class="font-bold">#<?= htmlspecialchars($teacher->account_id ?? '') ?></span>
       </h6>
     </div>
     <div class="card__description">
-      This is student detail form
+      This is teacher detail form
     </div>
   </div>
-  <form id="detail-form" action="<?= url('admin/students/update/') . $student->account_id ?>" method="POST">
+  <form id="detail-form" action="<?= url('admin/teachers/update/') . $teacher->account_id ?>" method="POST">
     <div class="card__content">
       <div class="field-group">
-        <div class="field" data-field-disabled data-field-readonly>
-          <label for="student_id">Student ID</label>
-          <input id="student_id" class="field__input" type="text" name="student_id"
-            value="<?= htmlspecialchars($student->student_id ?? '') ?>" disabled>
-        </div>
 
         <div class="field">
           <label for="full_name">Full Name *</label>
           <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="text" name="full_name" value="<?= htmlspecialchars($student->full_name ?? '') ?>">
+            type="text" name="full_name" value="<?= htmlspecialchars($teacher->full_name ?? '') ?>">
           <?= errorFor('full_name', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" class="field__input" type="email" name="email"
+            value="<?= htmlspecialchars($teacher->account->email ?? '') ?>" disabled>
         </div>
 
         <div class="field">
           <label for="gender">Gender *</label>
           <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
             name="gender">
-            <option value="Male" <?= ($student?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
-            <option value="Female" <?= ($student?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
+            <option value="Male" <?= ($teacher?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
+            <option value="Female" <?= ($teacher?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
           </select>
           <?= errorFor('gender', $errors) ?>
         </div>
@@ -55,54 +56,45 @@ function errorFor($field, $errors)
         <div class="field">
           <label for="dob">Date of Birth *</label>
           <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
-            name="dob" value="<?= htmlspecialchars($student->dob ?? '') ?>">
+            name="dob" value="<?= htmlspecialchars($teacher->dob ?? '') ?>">
           <?= errorFor('dob', $errors) ?>
         </div>
 
         <div class="field">
           <label for="phone">Phone *</label>
           <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="text"
-            name="phone" value="<?= htmlspecialchars($student->phone ?? '') ?>">
+            name="phone" value="<?= htmlspecialchars($teacher->phone ?? '') ?>">
           <?= errorFor('phone', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="major">Major</label>
-          <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
-            name="major" value="<?= htmlspecialchars($student->major ?? '') ?>">
-          <?= errorFor('major', $errors) ?>
+          <label for="start_date">Start Date *</label>
+          <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
+            type="date" name="start_date" value="<?= htmlspecialchars($teacher->start_date ?? '') ?>">
+          <?= errorFor('start_date', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="birth_place">Birth Place</label>
-          <input id="birth_place" class="field__input <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>"
-            type="text" name="birth_place" value="<?= htmlspecialchars($student->birth_place ?? '') ?>">
-          <?= errorFor('birth_place', $errors) ?>
+          <label for="title">Title</label>
+          <input id="title" class="field__input <?= isset($errors['title']) ? 'field__input--error' : '' ?>" type="text"
+            name="title" value="<?= htmlspecialchars($teacher->title ?? '') ?>">
+          <?= errorFor('title', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="classroom_id">Classroom *</label>
-          <select id="classroom_id"
-            class="field__input  <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>" name="classroom_id">
-            <option value="" disabled hidden <?= is_null($student?->classroom_id) ? 'selected' : '' ?>>
-              -- Chọn lớp học--
-            </option>
-            <span><?= $student->classroom_id ?></span>
-            <?php foreach ($classrooms as $classroom): ?>
-              <option value="<?= $classroom->id ?>" <?= ($student?->classroom_id == $classroom->id) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($classroom->name) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <?= errorFor('classroom_id', $errors) ?>
+          <label for="department">Department</label>
+          <input id="department" class="field__input <?= isset($errors['department']) ? 'field__input--error' : '' ?>"
+            type="text" name="department" value="<?= htmlspecialchars($teacher->department ?? '') ?>">
+          <?= errorFor('department', $errors) ?>
         </div>
+
       </div>
     </div>
     <div class="card__footer">
       <button data-modal-trigger="#confirm-modal" id="update-submit-btn" type="button" data-variant="primary"
         data-size="lg" class="w-full btn">Lưu thay đổi</button>
       <button data-modal-trigger="#confirm-modal" id="delete-submit-btn" type="submit"
-        formaction="<?= url('admin/students/delete/' . $student->account_id) ?>" data-variant="destructive"
+        formaction="<?= url('admin/teachers/delete/' . $teacher->account_id) ?>" data-variant="destructive"
         data-size="lg" class="w-full btn">Xóa</button>
     </div>
   </form>

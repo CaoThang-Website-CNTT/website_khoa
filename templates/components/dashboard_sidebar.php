@@ -40,7 +40,7 @@
             <a href="<?= url('admin/students') ?>" class="sidebar__dropdown-link">Quản Lý Sinh Viên</a>
           </li>
           <li class="sidebar__dropdown-item">
-            <a href="dashboard_user.php" class="sidebar__dropdown-link">Quản Lý Người Dùng</a>
+            <a href="<?= url('admin/teachers') ?>" class="sidebar__dropdown-link">Quản Lý Giảng viên</a>
           </li>
         </ul>
       </li>

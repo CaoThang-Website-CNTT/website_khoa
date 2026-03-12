@@ -35,6 +35,7 @@
   <!-- ========= Dashboard Scripts ======== -->
   <?php include_once __DIR__ . '/../partials/dashboard_scripts.php'; ?>
   <!-- ========= Dashboard Scripts End ======== -->
+  <?php include_once __DIR__ . '/../components/flash_message.php'; ?>
 </body>
 
 </html>
