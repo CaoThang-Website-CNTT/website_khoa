@@ -56,11 +56,6 @@ class FormHandler {
       case "fieldDisabled":
         input.disabled = true;
         break;
-      case "fieldAutoSubmit":
-        if (this.form) {
-          this.form.submit();
-        }
-        break;
       default:
         console.warn(`FormHandler: Không nhận dạng được ruleType "${ruleType}"`);
     }

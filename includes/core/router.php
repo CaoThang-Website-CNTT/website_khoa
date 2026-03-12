@@ -1,6 +1,11 @@
 <?php
 
 namespace App\Core;
+use App\Core\Request;
+use ReflectionMethod;
+
+require_once __DIR__ . '/request.php';
+
 
 class Router
 {
@@ -25,7 +30,7 @@ class Router
       'method' => $method,
       'path' => '#^' . $regexPath . '$#',
       'controller' => $controllerAction[0],
-      'action' => $controllerAction[1]
+      'action' => $controllerAction[1],
     ];
   }
 
@@ -34,6 +39,8 @@ class Router
     $parsedUrl = parse_url($uri);
     $path = $parsedUrl['path'] ?? '/';
 
+    $request = Request::capture();
+
     foreach ($this->routes as $route) {
       if ($route['method'] === $method && preg_match($route['path'], $path, $matches)) {
         array_shift($matches);
@@ -41,16 +48,44 @@ class Router
         $action = $route['action'];
 
         $controllerInstance = new $controllerClass($dependencies['educationService']);
-        $params = $matches;
-        if ($method === 'POST') {
-          $params[] = $_POST;
-        }
-        return call_user_func_array([$controllerInstance, $action], $params);
+
+        $args = $this->resolveArgs($controllerClass, $action, $request, $matches);
+
+        return call_user_func_array([$controllerInstance, $action], $args);
       }
     }
 
     http_response_code(404);
     echo "404 - Không tìm thấy trang!";
     exit;
+  }
+
+  private function resolveArgs(string $class, string $method, Request $request, array $matches): array
+  {
+    // Đọc định nghĩa phương thức của class để xác định các tham số cần thiết
+    $rf = new ReflectionMethod($class, $method);
+    $args = [];
+    $matchIndex = 0;
+
+    foreach ($rf->getParameters() as $param) {
+      $type = $param->getType();
+
+      // Kiểm tra loại param có phải Request
+      if ($type == Request::class || $type === 'Request') {
+        $args[] = $request;
+      }
+      // Param động từ route
+      elseif ($matchIndex < count($matches)) {
+        $args[] = $matches[$matchIndex++];
+      }
+      // Kiểm tra param có default value không
+      elseif ($param->isDefaultValueAvailable()) {
+        $args[] = $param->getDefaultValue();
+      } else {
+        $args[] = null;
+      }
+    }
+
+    return $args;
   }
 }

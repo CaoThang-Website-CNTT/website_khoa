@@ -137,8 +137,12 @@ class StudentController
 
   public function import()
   {
-
+    ob_start();
+    require_once __DIR__ . '/../dashboard_user_import.php';
+    $content = ob_get_clean();
+    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
+
   /**
    * Helper function, redirect về form tạo/sửa sinh viên khi có lỗi validate
    * @param array $errors
