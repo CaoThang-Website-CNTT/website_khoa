@@ -29,9 +29,9 @@ interface EducationRepositoryInterface
 
   // Teacher
   /** @return Teacher[] */
-  public function getAllTeachers(): array;
+  public function getAllTeachers(int $pageTo, int $limit = 15): array;
   public function getTeacherById(int $id): ?Teacher;
-  public function createTeacher(Teacher $teacher, string $rawPassword): int;
+  public function createTeacher(array $teacher, string $rawPassword): int;
   public function updateTeacher(int $id, Teacher $teacher): bool;
   public function deleteTeacher(int $id): bool;
 
@@ -244,16 +244,21 @@ class EducationService implements EducationRepositoryInterface
 
   // --- TEACHER METHODS ---
 
-  public function getAllTeachers(): array
+  public function getAllTeachers(int $pageTo, int $limit = 15): array
   {
+    $currentPage = max(1, $pageTo);
+    $offset = ($currentPage - 1) * $limit;
     $sql = "SELECT t.*, 
                   a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
                   a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
             FROM `teachers` t
             INNER JOIN `accounts` a ON t.`account_id` = a.`id`
-            WHERE a.`deleted_at` IS NULL";
+            WHERE a.`deleted_at` IS NULL
+            LIMIT :limit OFFSET :offset";
 
     $stmt = $this->db->prepare($sql);
+    $stmt->bindvalue(":limit", $limit, PDO::PARAM_INT);
+    $stmt->bindvalue(":offset", $offset, PDO::PARAM_INT);
     $stmt->execute();
 
     return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -275,7 +280,7 @@ class EducationService implements EducationRepositoryInterface
     return $row ? Teacher::fromArray($row) : null;
   }
 
-  public function createTeacher(Teacher $teacher, string $rawPassword): int
+  public function createTeacher(array $teacher, string $rawPassword): int
   {
     try {
       $this->db->beginTransaction();
@@ -286,13 +291,13 @@ class EducationService implements EducationRepositoryInterface
 
       $this->db->prepare($sqlTeach)->execute([
         ':acc_id' => $accId,
-        ':name'   => $teacher->full_name,
-        ':gender' => $teacher->gender,
-        ':dob'    => $teacher->dob,
-        ':phone'  => $teacher->phone,
-        ':title'  => $teacher->title,
-        ':dept'   => $teacher->department,
-        ':start'  => $teacher->start_date
+        ':name'   => $teacher['full_name'],
+        ':gender' => $teacher['gender'],
+        ':dob'    => $teacher['dob'],
+        ':phone'  => $teacher['phone'],
+        ':title'  => $teacher['title'],
+        ':dept'   => $teacher['department'],
+        ':start'  => $teacher['start_date']
       ]);
 
       $this->db->commit();

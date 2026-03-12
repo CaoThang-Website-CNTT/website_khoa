@@ -18,7 +18,7 @@ class StudentController
 
   public function index()
   {
-    $students = $this->_educationService->getAllStudents(2);
+    $students = $this->_educationService->getAllStudents(1);
     ob_start();
     require_once __DIR__ . '/../dashboard_user.php';
     $content = ob_get_clean();
