@@ -26,6 +26,7 @@ interface EducationRepositoryInterface
   public function createStudent(array $student, string $rawPassword): int;
   public function updateStudent(int $id, Student $student): bool;
   public function deleteStudent(int $id): bool;
+  public function importStudents(array $students): void;
 
   // Teacher
   /** @return Teacher[] */
@@ -38,6 +39,8 @@ interface EducationRepositoryInterface
   // Classroom
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
+  public function createClassroom(array $classroom): int;
+
   // Helper
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
@@ -51,14 +54,7 @@ class EducationService implements EducationRepositoryInterface
   {
     $this->db = Database::getInstance()->getConnection();
   }
-  // --- HELPER METHODS ---
-  /**
-   * Tạo tài khoản
-   * @param string $email
-   * @param string $rawPassword
-   * @param string $role
-   * @return int
-   */
+
   private function createAccount(string $email, string $rawPassword, string $role): int
   {
     $now = date('Y-m-d H:i:s');
@@ -75,34 +71,18 @@ class EducationService implements EducationRepositoryInterface
     return (int) $this->db->lastInsertId();
   }
 
-  /**
-   * Summary of touchAccount
-   * @param int $accountId
-   * @return void
-   */
   private function touchAccount(int $accountId): void
   {
     $sql = "UPDATE `accounts` SET updated_at = NOW() WHERE id = :id";
     $this->db->prepare($sql)->execute([':id' => $accountId]);
   }
 
-  /**
-   * Xoá mềm tài khoản
-   * @param int $accountId
-   * @return bool
-   */
   private function softDeleteAccount(int $accountId): bool
   {
     $sql = "UPDATE `accounts` SET deleted_at = NOW() WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute([':id' => $accountId]);
+    return $this->db->prepare($sql)->execute([':id' => $accountId]);
   }
-  /**
-   * Kiểm tra mssv unique
-   * @param string $studentId
-   * @param mixed $excludeAccountId
-   * @return bool
-   */
+
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool
   {
     $sql = "SELECT COUNT(*) FROM students WHERE student_id = :student_id";
@@ -117,12 +97,7 @@ class EducationService implements EducationRepositoryInterface
     $stmt->execute($params);
     return $stmt->fetchColumn() == 0;
   }
-  /**
-   * Kiểm tra email unique
-   * @param string $email
-   * @param mixed $excludeAccountId
-   * @return bool
-   */
+
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool
   {
     $sql = "SELECT COUNT(*) FROM accounts WHERE email = :email AND deleted_at IS NULL";
@@ -137,12 +112,14 @@ class EducationService implements EducationRepositoryInterface
     $stmt->execute($params);
     return $stmt->fetchColumn() == 0;
   }
-  // --- STUDENT METHODS ---
+
+  // ===================================
+  // Student Methods
+  // ===================================
 
   public function getAllStudents(int $pageTo, int $limit = 15): array
   {
-    $currentPage = max(1, $pageTo);
-    $offset = ($currentPage - 1) * $limit;
+    $offset = (max(1, $pageTo) - 1) * $limit;
 
     $sql = "SELECT 
                 s.*,
@@ -152,15 +129,13 @@ class EducationService implements EducationRepositoryInterface
             INNER JOIN `accounts` a ON s.`account_id` = a.`id`
             WHERE a.`deleted_at` IS NULL 
             LIMIT :limit OFFSET :offset";
+
     $stmt = $this->db->prepare($sql);
-    $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
-    $stmt->bindValue(":offset", $offset, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
-    return array_map(
-      fn($row) => Student::fromArray($row),
-      $stmt->fetchAll(PDO::FETCH_ASSOC)
-    );
+    return array_map(fn($row) => Student::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function getStudentById(int $id): ?Student
@@ -170,24 +145,26 @@ class EducationService implements EducationRepositoryInterface
             FROM `students` s 
             INNER JOIN `accounts` a ON s.`account_id` = a.`id`
             WHERE s.`account_id` = :id AND a.`deleted_at` IS NULL";
+
     $stmt = $this->db->prepare($sql);
     $stmt->execute(['id' => $id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
     return $row ? Student::fromArray($row) : null;
   }
 
   public function createStudent(array $student, string $rawPassword): int
   {
-    try {
-      $this->db->beginTransaction();
-
+    return Database::getInstance()->transaction(function () use ($student, $rawPassword): int {
       $email = $student['student_id'] . "@caothang.edu.vn";
       $accId = $this->createAccount($email, $rawPassword, 'student');
 
-      $sqlStu = "INSERT INTO `students` (account_id, student_id, full_name, gender, dob, phone, classroom_id, major, birth_place) 
-                VALUES (:acc_id, :code, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)";
+      $sql = "INSERT INTO `students` 
+                    (account_id, student_id, full_name, gender, dob, phone, classroom_id, major, birth_place) 
+                VALUES 
+                    (:acc_id, :code, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)";
 
-      $this->db->prepare($sqlStu)->execute([
+      $this->db->prepare($sql)->execute([
         ':acc_id' => $accId,
         ':code' => $student['student_id'],
         ':name' => $student['full_name'],
@@ -196,29 +173,29 @@ class EducationService implements EducationRepositoryInterface
         ':phone' => $student['phone'],
         ':classroom_id' => $student['classroom_id'],
         ':major' => $student['major'],
-        ':birth_place' => $student['birth_place']
+        ':birth_place' => $student['birth_place'],
       ]);
 
-      $this->db->commit();
       return $accId;
-    } catch (Exception $e) {
-      $this->db->rollBack();
-      throw $e;
-    }
+    });
   }
 
   public function updateStudent(int $id, Student $student): bool
   {
-    try {
-      $this->db->beginTransaction();
-
+    return Database::getInstance()->transaction(function () use ($id, $student): bool {
       $this->touchAccount($id);
-      $sqlStu = "UPDATE `students` SET 
-                full_name = :name, gender = :gender, dob = :dob, 
-                phone = :phone, classroom_id = :classroom_id, major = :major, birth_place = :birth_place 
-                WHERE account_id = :id";
 
-      $result = $this->db->prepare($sqlStu)->execute([
+      $sql = "UPDATE `students` SET 
+                full_name    = :name,
+                gender       = :gender,
+                dob          = :dob,
+                phone        = :phone,
+                classroom_id = :classroom_id,
+                major        = :major,
+                birth_place  = :birth_place
+              WHERE account_id = :id";
+
+      return $this->db->prepare($sql)->execute([
         ':name' => $student->full_name,
         ':gender' => $student->gender,
         ':dob' => $student->dob,
@@ -226,15 +203,9 @@ class EducationService implements EducationRepositoryInterface
         ':classroom_id' => $student->classroom_id,
         ':major' => $student->major,
         ':birth_place' => $student->birth_place,
-        ':id' => $id
+        ':id' => $id,
       ]);
-
-      $this->db->commit();
-      return $result;
-    } catch (Exception $e) {
-      $this->db->rollBack();
-      return false;
-    }
+    });
   }
 
   public function deleteStudent(int $id): bool
@@ -242,12 +213,42 @@ class EducationService implements EducationRepositoryInterface
     return $this->softDeleteAccount($id);
   }
 
-  // --- TEACHER METHODS ---
+  public function importStudents(array $rows): void
+  {
+    Database::getInstance()->transaction(function () use ($rows): void {
+      $sql = "INSERT INTO `students` 
+                    (account_id, student_id, full_name, gender, dob, phone, classroom_id, major, birth_place)
+                VALUES 
+                    (:acc_id, :code, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)";
+      $stmt = $this->db->prepare($sql);
+
+      foreach ($rows as $row) {
+        $email = $row['student_id'] . "@caothang.edu.vn";
+        $accId = $this->createAccount($email, $row['password'] ?? $row['student_id'], 'student');
+
+        $stmt->execute([
+          ':acc_id' => $accId,
+          ':code' => $row['student_id'],
+          ':name' => $row['full_name'],
+          ':gender' => $row['gender'],
+          ':dob' => $row['dob'],
+          ':phone' => $row['phone'],
+          ':classroom_id' => $row['classroom_id'],
+          ':major' => $row['major'],
+          ':birth_place' => $row['birth_place'],
+        ]);
+      }
+    });
+  }
+
+  // ===================================
+  // Teacher Methods
+  // ===================================
 
   public function getAllTeachers(int $pageTo, int $limit = 15): array
   {
-    $currentPage = max(1, $pageTo);
-    $offset = ($currentPage - 1) * $limit;
+    $offset = (max(1, $pageTo) - 1) * $limit;
+
     $sql = "SELECT t.*, 
                   a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
                   a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
@@ -257,8 +258,8 @@ class EducationService implements EducationRepositoryInterface
             LIMIT :limit OFFSET :offset";
 
     $stmt = $this->db->prepare($sql);
-    $stmt->bindvalue(":limit", $limit, PDO::PARAM_INT);
-    $stmt->bindvalue(":offset", $offset, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
     return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -282,14 +283,15 @@ class EducationService implements EducationRepositoryInterface
 
   public function createTeacher(array $teacher, string $rawPassword): int
   {
-    try {
-      $this->db->beginTransaction();
-      $email = $teacher['email'];
-      $accId = $this->createAccount($email, $rawPassword, 'teacher');
-      $sqlTeach = "INSERT INTO `teachers` (account_id, full_name, gender, dob, phone, title, department,`start_date`) 
-                  VALUES (:acc_id, :name, :gender, :dob, :phone, :title, :dept, :start)";
+    return Database::getInstance()->transaction(function () use ($teacher, $rawPassword): int {
+      $accId = $this->createAccount($teacher['email'], $rawPassword, 'teacher');
 
-      $this->db->prepare($sqlTeach)->execute([
+      $sql = "INSERT INTO `teachers` 
+                    (account_id, full_name, gender, dob, phone, title, department, `start_date`) 
+                VALUES 
+                    (:acc_id, :name, :gender, :dob, :phone, :title, :dept, :start)";
+
+      $this->db->prepare($sql)->execute([
         ':acc_id' => $accId,
         ':name' => $teacher['full_name'],
         ':gender' => $teacher['gender'],
@@ -297,30 +299,29 @@ class EducationService implements EducationRepositoryInterface
         ':phone' => $teacher['phone'],
         ':title' => $teacher['title'],
         ':dept' => $teacher['department'],
-        ':start' => $teacher['start_date']
+        ':start' => $teacher['start_date'],
       ]);
 
-      $this->db->commit();
       return $accId;
-    } catch (Exception $e) {
-      $this->db->rollBack();
-      throw $e;
-    }
+    });
   }
 
   public function updateTeacher(int $id, Teacher $teacher): bool
   {
-    try {
-      $this->db->beginTransaction();
-
+    return Database::getInstance()->transaction(function () use ($id, $teacher): bool {
       $this->touchAccount($id);
 
-      $sqlTeach = "UPDATE `teachers` SET 
-                    full_name = :name, gender = :gender, dob = :dob, 
-                    phone = :phone, title = :title, department = :dept, `start_date` = :start 
-                  WHERE account_id = :id";
+      $sql = "UPDATE `teachers` SET 
+                full_name   = :name,
+                gender      = :gender,
+                dob         = :dob,
+                phone       = :phone,
+                title       = :title,
+                department  = :dept,
+                `start_date`= :start
+              WHERE account_id = :id";
 
-      $result = $this->db->prepare($sqlTeach)->execute([
+      return $this->db->prepare($sql)->execute([
         ':name' => $teacher->full_name,
         ':gender' => $teacher->gender,
         ':dob' => $teacher->dob,
@@ -328,15 +329,9 @@ class EducationService implements EducationRepositoryInterface
         ':title' => $teacher->title,
         ':dept' => $teacher->department,
         ':start' => $teacher->start_date,
-        ':id' => $id
+        ':id' => $id,
       ]);
-
-      $this->db->commit();
-      return $result;
-    } catch (Exception $e) {
-      $this->db->rollBack();
-      return false;
-    }
+    });
   }
 
   public function deleteTeacher(int $id): bool
@@ -344,14 +339,21 @@ class EducationService implements EducationRepositoryInterface
     return $this->softDeleteAccount($id);
   }
 
+  // ===================================
+  // Classroom methods
+  // ===================================
   public function getAllClassrooms(): array
   {
-    $sql = "SELECT * FROM `classrooms`";
-    $stmt = $this->db->prepare($sql);
+    $stmt = $this->db->prepare("SELECT * FROM `classrooms`");
     $stmt->execute();
-    return array_map(
-      fn($row) => Classroom::fromArray($row),
-      $stmt->fetchAll((PDO::FETCH_ASSOC))
-    );
+
+    return array_map(fn($row) => Classroom::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  public function createClassroom(array $classroom): int
+  {
+    $stmt = $this->db->prepare("INSERT INTO `classrooms` (name) VALUES (:name)");
+    $stmt->execute([':name' => $classroom['name']]);
+    return (int) $this->db->lastInsertId();
   }
 }

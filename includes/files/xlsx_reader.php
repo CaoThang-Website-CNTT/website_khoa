@@ -1,41 +1,30 @@
 <?php
 
 /**
- * XlsxReader
- *
- * Low-level, pure-PHP reader for .xlsx files.
- * Parses the OOXML ZIP container (sharedStrings, workbook rels, sheet XML)
- * and exposes a simple cell-access API to callers.
- *
- * No external dependencies — requires only ext-zip + ext-simplexml (both
- * are bundled with every standard PHP 7.4+ distribution).
- *
- * This class knows nothing about the business meaning of the data; it only
- * understands the XLSX file format.
+ * Trình đọc file .xlsx cơ bản bằng PHP thuần.
+ * Phân tích cấu trúc file ZIP của định dạng OOXML (sharedStrings, workbook rels, sheet XML) và cung cấp các hàm đơn giản để lấy dữ liệu từng ô.
  */
 class XlsxReader
 {
-  // -------------------------------------------------------------------------
-  // State
-  // -------------------------------------------------------------------------
-
-  /** @var array<string, scalar>  "row:col" (1-based) → scalar cell value */
+  /** Lưu trữ dữ liệu ô dưới dạng "dòng:cột" (bắt đầu từ 1) => giá trị 
+   * @var array<string, scalar> 
+   */
   private array $cells = [];
 
-  /** @var int  Highest row index found in the sheet */
+  /** Dòng tối đa có chứa dữ liệu
+   * @var int
+   */
   private int $maxRow = 0;
 
-  /** @var int  Highest column index found in the sheet */
+  /** Cột tối đa có chứa dữ liệu 
+   * @var int
+   */
   private int $maxCol = 0;
 
-  // -------------------------------------------------------------------------
-  // Factory
-  // -------------------------------------------------------------------------
-
   /**
-   * Open an XLSX file and return a ready-to-query XlsxReader instance.
+   * Mở file XLSX và trả về đối tượng XlsxReader đã sẵn sàng để truy vấn.
    *
-   * @throws RuntimeException on missing file, corrupt ZIP, or missing XML parts.
+   * @throws RuntimeException Nếu không tìm thấy file, file ZIP lỗi hoặc thiếu XML.
    */
   public static function open(string $filePath): self
   {
@@ -44,18 +33,13 @@ class XlsxReader
     return $reader;
   }
 
-  // -------------------------------------------------------------------------
-  // Public query API
-  // -------------------------------------------------------------------------
-
   /**
-   * Return the scalar value of a single cell, or $default if the cell is
-   * empty / out of range.
+   * Lấy giá trị của một ô dựa vào chỉ số dòng và cột. 
+   * Trả về $default nếu ô trống hoặc ngoài vùng dữ liệu.
    *
-   * @param int   $row      1-based row index
-   * @param int   $col      1-based column index
-   * @param mixed $default  Returned when the cell has no value
-   * @return scalar|mixed
+   * @param int   $row     Chỉ số dòng (bắt đầu từ 1)
+   * @param int   $col     Chỉ số cột (bắt đầu từ 1)
+   * @param mixed $default Giá trị mặc định nếu ô rỗng
    */
   public function cell(int $row, int $col, mixed $default = null): mixed
   {
@@ -63,12 +47,10 @@ class XlsxReader
   }
 
   /**
-   * Return the scalar value of a cell addressed by its A1-style reference
-   * (e.g. "E4", "N7"), or $default if empty.
+   * Lấy giá trị của một ô dựa vào tọa độ (ví dụ: "E4", "N7").
    *
-   * @param string $ref     Cell reference like "A1", "E4", "AA10"
-   * @param mixed  $default
-   * @return scalar|mixed
+   * @param string $ref     Tọa độ ô (vd: "A1", "E4", "AA10")
+   * @param mixed  $default Giá trị mặc định
    */
   public function cellByRef(string $ref, mixed $default = null): mixed
   {
@@ -77,14 +59,12 @@ class XlsxReader
   }
 
   /**
-   * Iterate over all non-empty rows in the given range.
+   * Lặp qua các dòng có dữ liệu trong khoảng chỉ định.
+   * Chỉ trả về những cột thực sự có giá trị trong dòng đó.
    *
-   * Yields: int $rowIndex => array<int colIndex, scalar value>
-   * Only columns that actually have values are included per row.
-   *
-   * @param int      $startRow  First row to include (1-based, default 1)
-   * @param int|null $endRow    Last row to include (null = last row in sheet)
-   * @return iterable<int, array<int, scalar>>
+   * @param int      $startRow Dòng bắt đầu (mặc định là 1)
+   * @param int|null $endRow   Dòng kết thúc (null = dòng cuối cùng của sheet)
+   * @return iterable Trả về danh sách dạng: dòng => [cột => giá trị]
    */
   public function rows(int $startRow = 1, ?int $endRow = null): iterable
   {
@@ -105,7 +85,7 @@ class XlsxReader
   }
 
   /**
-   * Return the index of the last row that contains any data.
+   * Trả về chỉ số của dòng cuối cùng có chứa dữ liệu.
    */
   public function maxRow(): int
   {
@@ -113,36 +93,28 @@ class XlsxReader
   }
 
   /**
-   * Return the index of the last column that contains any data.
+   * Trả về chỉ số của cột cuối cùng có chứa dữ liệu.
    */
   public function maxCol(): int
   {
     return $this->maxCol;
   }
 
-  // -------------------------------------------------------------------------
-  // Static helpers (public so callers can reuse them)
-  // -------------------------------------------------------------------------
-
   /**
-   * Convert an A1-style cell reference to [row, col] (both 1-based).
-   *
-   * Examples:  "A1" → [1, 1],  "E4" → [4, 5],  "AA10" → [10, 27]
-   *
-   * @return array{0: int, 1: int}
+   * Chuyển đổi tọa độ ô thành mảng [dòng, cột] (đều bắt đầu từ 1).
+   * Ví dụ: "A1" -> [1, 1], "E4" -> [4, 5], "AA10" -> [10, 27]
    */
   public static function refToRowCol(string $ref): array
   {
     if (!preg_match('/^([A-Za-z]+)(\d+)$/', $ref, $m)) {
-      throw new InvalidArgumentException("Invalid cell reference: {$ref}");
+      throw new InvalidArgumentException("Tọa độ ô không hợp lệ: {$ref}");
     }
     return [(int) $m[2], self::colLettersToIndex(strtoupper($m[1]))];
   }
 
   /**
-   * Convert column letter(s) to a 1-based column index.
-   *
-   * A=1, B=2 … Z=26, AA=27, AB=28 …
+   * Chuyển đổi chữ cái của cột thành số thứ tự.
+   * Ví dụ: A=1, B=2 ... Z=26, AA=27, AB=28 ...
    */
   public static function colLettersToIndex(string $letters): int
   {
@@ -155,19 +127,15 @@ class XlsxReader
     return $col;
   }
 
-  // -------------------------------------------------------------------------
-  // Private loading pipeline
-  // -------------------------------------------------------------------------
-
   private function load(string $filePath): void
   {
     if (!file_exists($filePath)) {
-      throw new RuntimeException("File not found: {$filePath}");
+      throw new RuntimeException("Không tìm thấy file: {$filePath}");
     }
 
     $zip = new ZipArchive();
     if ($zip->open($filePath) !== true) {
-      throw new RuntimeException("Cannot open XLSX (not a valid ZIP): {$filePath}");
+      throw new RuntimeException("Không thể mở file XLSX (không phải định dạng ZIP hợp lệ): {$filePath}");
     }
 
     try {
@@ -180,40 +148,30 @@ class XlsxReader
     $this->cells = $this->parseSheetXml($sheetXml, $sharedStrings);
   }
 
-  // ·····················································
-  // Step 1: shared strings
-  // ·····················································
-
   /**
-   * Parse xl/sharedStrings.xml into a flat indexed array.
-   *
-   * Handles both plain-text (<si><t>…</t></si>) and rich-text
-   * (<si><r><t>…</t></r>…</si>) entries.
-   *
-   * Returns an empty array when the file has no sharedStrings.xml (valid for
-   * workbooks that contain only numeric / inline-string data).
-   *
-   * @return string[]
+   * Đọc file xl/sharedStrings.xml thành một mảng đơn giản.
+   * Xử lý cả văn bản thường và văn bản có định dạng (rich-text).
+   * Trả về mảng rỗng nếu file không có sharedStrings (vd: file chỉ chứa số).
    */
   private function loadSharedStrings(ZipArchive $zip): array
   {
     $xml = $zip->getFromName('xl/sharedStrings.xml');
     if ($xml === false) {
-      return [];   // sharedStrings.xml is optional
+      return []; // sharedStrings.xml là không bắt buộc
     }
 
     $sxe = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
-      throw new RuntimeException("Failed to parse xl/sharedStrings.xml.");
+      throw new RuntimeException("Lỗi phân tích cú pháp xl/sharedStrings.xml.");
     }
 
     $strings = [];
     foreach ($sxe->si as $si) {
       if (isset($si->t)) {
-        // Plain text
+        // Văn bản thường
         $strings[] = (string) $si->t;
       } else {
-        // Rich text: concatenate all <r><t> runs
+        // Văn bản có định dạng: nối tất cả các đoạn <r><t> lại với nhau
         $parts = [];
         foreach ($si->r as $r) {
           $parts[] = (string) $r->t;
@@ -225,98 +183,71 @@ class XlsxReader
     return $strings;
   }
 
-  // ·····················································
-  // Step 2: resolve first sheet
-  // ·····················································
-
   /**
-   * Locate and return the raw XML of the workbook's first worksheet.
-   *
-   * Reads xl/_rels/workbook.xml.rels to discover the canonical path rather
-   * than assuming "sheet1.xml" — some tools generate "sheet0.xml" or other
-   * names.
+   * Tìm và đọc nội dung XML của sheet đầu tiên.
+   * Đọc file cấu hình để biết tên chính xác của sheet thay vì tự đoán là "sheet1.xml".
    */
   private function loadFirstSheetXml(ZipArchive $zip): string
   {
     $path = $this->resolveFirstSheetPath($zip);
     $content = $zip->getFromName($path);
     if ($content === false) {
-      throw new RuntimeException("Worksheet XML not found at resolved path: {$path}");
+      throw new RuntimeException("Không tìm thấy XML của sheet tại: {$path}");
     }
     return $content;
   }
 
   /**
-   * Return the ZIP-internal path to the first worksheet by reading the
-   * workbook relationship file.
-   *
-   * Falls back to probing common paths when the .rels file is absent.
+   * Đọc file workbook.xml.rels để tìm đường dẫn của sheet đầu tiên trong ZIP.
+   * Nếu không có file rels, sẽ thử quét các tên phổ biến.
    */
   private function resolveFirstSheetPath(ZipArchive $zip): string
   {
     $relsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
 
     if ($relsXml === false) {
-      // Fallback: probe known common names
+      // Dự phòng: thử các tên phổ biến
       foreach (['xl/worksheets/sheet1.xml', 'xl/worksheets/sheet0.xml'] as $candidate) {
         if ($zip->getFromName($candidate) !== false) {
           return $candidate;
         }
       }
-      throw new RuntimeException(
-        "Cannot locate worksheet: xl/_rels/workbook.xml.rels is missing."
-      );
+      throw new RuntimeException("Không tìm thấy sheet: thiếu file xl/_rels/workbook.xml.rels.");
     }
 
     $sxe = simplexml_load_string($relsXml, 'SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
-      throw new RuntimeException("Failed to parse xl/_rels/workbook.xml.rels.");
+      throw new RuntimeException("Lỗi phân tích cú pháp xl/_rels/workbook.xml.rels.");
     }
 
     foreach ($sxe->Relationship as $rel) {
       if (str_ends_with((string) $rel['Type'], '/worksheet')) {
-        // Target can be absolute  (/xl/worksheets/sheet0.xml)
-        // or relative             (worksheets/sheet1.xml)
         $target = (string) $rel['Target'];
+        // Trả về đường dẫn chính xác dựa trên việc target là đường dẫn tuyệt đối hay tương đối
         return str_starts_with($target, '/')
-          ? ltrim($target, '/')          // strip leading slash → ZIP path
-          : 'xl/' . $target;             // prepend xl/ for relative targets
+          ? ltrim($target, '/')
+          : 'xl/' . $target;
       }
     }
 
-    throw new RuntimeException(
-      "No worksheet relationship found in xl/_rels/workbook.xml.rels."
-    );
+    throw new RuntimeException("Không tìm thấy liên kết sheet nào trong xl/_rels/workbook.xml.rels.");
   }
 
-  // ·····················································
-  // Step 3: parse sheet XML into cell map
-  // ·····················································
-
   /**
-   * Parse a worksheet XML string and build the internal cell map.
-   *
-   * Cell map format:  "rowIndex:colIndex" (both 1-based) → scalar value
-   *
-   * Merged cells in XLSX only store a value in the top-left anchor cell;
-   * the remaining cells in the merged region simply have no <c> element —
-   * so no special merge handling is required here.
-   *
-   * Cell type codes:
-   *   s          → shared-string index (look up in $sharedStrings)
-   *   inlineStr  → <is><t> inline string
-   *   b          → boolean  (0 / 1)
-   *   (empty)    → numeric or date serial
-   *
-   * @param  string   $xml            Raw sheet XML
-   * @param  string[] $sharedStrings  Indexed shared-strings table
-   * @return array<string, scalar>
+   * Đọc XML của sheet và xây dựng mảng dữ liệu.
+   * * Cấu trúc lưu trữ: "dòng:cột" (bắt đầu từ 1) => giá trị
+   * Các ô bị merge sẽ chỉ lưu giá trị ở ô góc trên cùng bên trái.
+   * * Các kiểu dữ liệu của ô:
+   * s         -> Chuỗi dùng chung (tìm trong $sharedStrings)
+   * inlineStr -> Chuỗi trực tiếp
+   * b         -> Boolean (0 / 1)
+   * (trống)   -> Số hoặc ngày tháng
    */
   private function parseSheetXml(string $xml, array $sharedStrings): array
   {
     $sxe = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
-      throw new RuntimeException("Failed to parse worksheet XML.");
+      throw new RuntimeException("Lỗi phân tích cú pháp XML của sheet.");
     }
 
     $cells = [];
@@ -328,12 +259,13 @@ class XlsxReader
 
       foreach ($row->c as $c) {
         if (!isset($c->v)) {
-          continue;   // empty cell
+          continue; // Bỏ qua ô trống
         }
 
         $ref = (string) $c['r'];
         $type = (string) $c['t'];
         $raw = (string) $c->v;
+        // Tách lấy chữ cái trong tọa độ để chuyển thành số thứ tự cột
         $colIdx = self::colLettersToIndex(
           (string) preg_replace('/[0-9]/', '', $ref)
         );

@@ -3,84 +3,51 @@
 require_once __DIR__ . '/xlsx_reader.php';
 
 /**
- * StudentImportConfig
- *
- * All template-specific knowledge for the "Danh Sách Sinh Viên Đầu Khóa"
- * report format lives here — cell addresses, column indices, and the row
- * validation rule.
- *
- * To adapt to a different report layout, only this file needs to change.
- * XlsxReader remains untouched.
+ * Config cho import "Danh Sách Sinh Viên".
+ * Chứa thông tin về vị trí ô, chỉ số cột và dòng bắt đầu để có trích xuất dữ liệu chính xác
  */
 class StudentImportConfig
 {
-  // =========================================================================
-  // Template configuration
-  // Change these constants whenever the school updates the report format.
-  // =========================================================================
-
   /**
-   * A1-style reference of the cell that contains the class name.
-   * Current layout: "LỚP:" label in C4, value merged across E4:L4 → read E4.
+   * Vị trí ô chứa giá trị tên lớp (mặc định là E4, nếu merge E4->L4 thì chỉ đọc E4)
    */
   public const CLASS_NAME_REF = 'E4';
 
   /**
-   * First row that contains student data (1-based).
-   * Rows 1–6 are the title block and header row.
+   * Dòng đầu tiên chứa dữ liệu sinh viên (bỏ qua 6 dòng đầu là tiêu đề).
    */
   public const DATA_START_ROW = 7;
 
   /**
-   * Column indices (1-based) for each student field.
+   * Chỉ số cột (bắt đầu từ 1) cho từng trường thông tin.
    *
-   * Quick reference: A=1 B=2 C=3 D=4 E=5 F=6 G=7 … K=11 … N=14 P=16 Q=17
-   *
-   * Note: "Họ tên" is split across two merged regions in the template:
-   *   - COL_HO_TEN_1 (col G, merged G:J)  → họ + tên đệm
-   *   - COL_HO_TEN_2 (col K, merged K:M)  → tên
-   * Both parts are concatenated into a single 'ho_ten' field on output.
+   * Lưu ý: "Họ tên" trong file bị chia làm 2 phần:
+   * - Cột G (merge G:J): Họ + tên đệm
+   * - Cột K (merge K:M): Tên
+   * Hai cột này sẽ được gộp chung thành trường 'ho_ten' khi xuất ra.
    */
-  public const COL_STT = 1;   // A — số thứ tự (used to detect valid rows)
-  public const COL_SBD = 4;   // D — số báo danh
-  public const COL_MA_SV = 6;   // F — mã sinh viên
-  public const COL_HO_TEN_1 = 7;   // G — họ + tên đệm  (merged G:J)
-  public const COL_HO_TEN_2 = 11;  // K — tên            (merged K:M)
-  public const COL_NGAY_SINH = 14;  // N — ngày sinh      (merged N:O)
-  public const COL_NOI_SINH = 16;  // P — nơi sinh
-  public const COL_GHI_CHU = 17;  // Q — ghi chú        (merged Q:S)
+  public const COL_STT = 1;  // A - Số thứ tự (dùng để kiểm tra dòng hợp lệ)
+  public const COL_SBD = 4;  // D - Số báo danh
+  public const COL_MA_SV = 6;  // F - Mã sinh viên
+  public const COL_HO_TEN_1 = 7;  // G - Họ và tên đệm
+  public const COL_HO_TEN_2 = 11; // K - Tên
+  public const COL_NGAY_SINH = 14; // N - Ngày sinh
+  public const COL_NOI_SINH = 16; // P - Nơi sinh
+  public const COL_GHI_CHU = 17; // Q - Ghi chú
 }
 
 /**
- * StudentImporter
- *
- * Uses XlsxReader (generic) + StudentImportConfig (domain config) to
- * extract structured student records from the school's XLSX report.
+ * Lớp xử lý trích xuất dữ liệu sinh viên từ file XLSX.
+ * * Kết hợp giữa thư viện XlsxReader và cấu hình StudentImportConfig.
  */
 class StudentImporter
 {
-  // =========================================================================
-  // Public API
-  // =========================================================================
-
   /**
-   * Parse an XLSX file and return all student records plus the class name.
+   * Đọc file XLSX và trả về tên lớp cùng danh sách sinh viên.
    *
-   * @param  string $filePath  Absolute path to the .xlsx file.
-   * @return array{
-   *     class_name: string,
-   *     students: array<array{
-   *         stt: int,
-   *         sbd: string,
-   *         ma_sv: string,
-   *         ho_ten: string,
-   *         ngay_sinh: string,
-   *         noi_sinh: string,
-   *         ghi_chu: string,
-   *     }>
-   * }
-   *
-   * @throws RuntimeException  propagated from XlsxReader on format errors.
+   * @param string $filePath Đường dẫn tuyệt đối tới file .xlsx.
+   * @return array Mảng chứa 'class_name' và 'students'.
+   * @throws RuntimeException Báo lỗi từ XlsxReader nếu file sai định dạng.
    */
   public static function import(string $filePath): array
   {
@@ -92,15 +59,17 @@ class StudentImporter
     ];
   }
 
-  // =========================================================================
-  // Private extraction helpers
-  // =========================================================================
-
+  /**
+   * Lấy tên lớp từ ô cấu hình sẵn.
+   */
   private static function readClassName(XlsxReader $reader): string
   {
     return (string) $reader->cellByRef(StudentImportConfig::CLASS_NAME_REF, '');
   }
 
+  /**
+   * Đọc và chuẩn hóa danh sách sinh viên.
+   */
   private static function readStudents(XlsxReader $reader): array
   {
     $students = [];
@@ -108,8 +77,8 @@ class StudentImporter
     foreach ($reader->rows(StudentImportConfig::DATA_START_ROW) as $rowIdx => $row) {
       $stt = $row[StudentImportConfig::COL_STT] ?? null;
 
-      // A valid student row has a positive integer in the STT column.
-      // Footer rows, signature lines, and blank rows all fail this check.
+      // Dòng sinh viên hợp lệ phải có STT là số nguyên dương.
+      // Các dòng trống, chân trang hoặc chữ ký sẽ bị bỏ qua.
       if (!is_numeric($stt) || (int) $stt <= 0) {
         continue;
       }
@@ -120,7 +89,7 @@ class StudentImporter
         'ma_sv' => (string) ($row[StudentImportConfig::COL_MA_SV] ?? ''),
         'ho_ten' => self::joinName(
           (string) ($row[StudentImportConfig::COL_HO_TEN_1] ?? ''),
-          (string) ($row[StudentImportConfig::COL_HO_TEN_2] ?? ''),
+          (string) ($row[StudentImportConfig::COL_HO_TEN_2] ?? '')
         ),
         'ngay_sinh' => (string) ($row[StudentImportConfig::COL_NGAY_SINH] ?? ''),
         'noi_sinh' => (string) ($row[StudentImportConfig::COL_NOI_SINH] ?? ''),
@@ -132,15 +101,14 @@ class StudentImporter
   }
 
   /**
-   * Join the two name parts, handling cases where one part may be empty.
-   *
-   * Template splits name across two merged column groups (G:J and K:M).
-   * If the second part is empty (single-word names), only the first is used.
+   * Gộp phần "Họ + Tên đệm" và "Tên" thành một chuỗi hoàn chỉnh.
+   * Nếu phần tên (part2) trống (ví dụ: tên chỉ có 1 chữ), sẽ chỉ lấy phần 1.
    */
   private static function joinName(string $part1, string $part2): string
   {
     $part1 = trim($part1);
     $part2 = trim($part2);
+
     return $part2 !== '' ? "{$part1} {$part2}" : $part1;
   }
 }
