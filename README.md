@@ -1,81 +1,117 @@
-# website_khoacntt_caothang
+# Website Khoa CNTT - Trường CĐKT Cao Thắng
 
 Đây là dự án Website cho Khoa CNTT của Trường Cao Đẳng Kỹ Thuật Cao Thắng
 
-Tài liệu này cung cấp thông tin về cấu trúc thư mục, quy ước đặt tên, và các tiêu chuẩn lập trình cho dự án `website_khoacntt_caothang`.
+Tài liệu này cung cấp hướng dẫn cài đặt môi trường, tổng quan kiến trúc, cấu trúc thư mục và quy chuẩn lập trình.
 
 ---
 
 ## Mục lục
-
-- [Làm thế nào để chạy](#làm-thế-nào-để-chạy)
-- [Công nghệ sử dụng](#công-nghệ-sử-dụng)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Quy ước đặt tên](#quy-ước-đặt-tên)
-  - [Thư mục và file](#thư-mục-và-file)
-  - [Biến, hàm, class (PHP)](#biến-hàm-class-php)
-  - [CSS (Class, ID)](#css-class-id)
-  - [JavaScript](#javascript)
-- [Code style](#code-style)
-- [Quy trình Git](#quy-trình-git)
-
----
-
-## Làm thế nào để chạy
-
-- Clone Repo dự án về thư mục `xampp/htdocs`
-- Bật **Xampp Control Panel**.- Chạy và mở **Apache** và bạn sẽ thấy nội dung của file `/index.php`.
+1. [Công nghệ sử dụng](#công-nghệ-sử-dụng)
+2. [Cấu trúc Project MVC](#cấu-trúc-project-mvc)
+3. [Hướng dẫn cài đặt & chạy dự án](#hướng-dẫn-cài-đặt--chạy-dự-án)
+4. [Hướng dẫn cấu hình Database](#hướng-dẫn-cấu-hình-database)
+5. [Quy ước lập trình (Coding Conventions)](#quy-ước-lập-trình-coding-conventions)
+6. [Quy trình Git](#quy-trình-git)
 
 ---
 
 ## Công nghệ sử dụng
-
-- PHP + HTML, CSS, JavaScript.
+- **Backend Core**: PHP thuần (Kiến trúc MVC tuỳ biến), routing cơ bản tự build.
+- **Database**: MySQL thông qua PDO (Performance & Security).
+- **Frontend**: 
+  - Vanilla HTML.
+  - CSS thuần (Sử dụng CSS `@layer`, CSS Variables thay đổi theme).
+  - Javascript thuần (Vanilla JS, Event Delegation, Data Attributes để quản lý state).
 
 ---
 
-## Cấu trúc thư mục
+## Cấu trúc Project MVC
 
-Cấu trúc thư mục của dự án được tổ chức như sau:
+Dự án áp dụng mô hình tổ chức thư mục linh hoạt dạng Model-View-Controller nhằm tách biệt giao diện, logic xử lý và cơ sở dữ liệu.
 
-```
-web_khoa/
-├── config/                 # Chứa các tệp cấu hình cho dự án
-│   └── (ví dụ: database.php)    # Cấu hình kết nối cơ sở dữ liệu
-├── includes/               # Chứa các tệp PHP dùng chung
-│   ├── core/               # Chứa phần core xử lý cho dự án
-│   ├── (ví dụ: utils.php)       # Các hàm tiện ích
-│   ├── (ví dụ: auth.php)        # Quản lý đăng nhập/đăng xuất
-│   └── (ví dụ: db.php)          # Các hàm hỗ trợ truy vấn cơ sở dữ liệu
-├── models/                 # Chứa logic tương tác dữ liệu, bao gồm model để ánh xạ dữ liệu
-├── controllers/            # Chứa logic điều khiển và xử lý yêu cầu
-├── views/                  # Chứa các tệp giao diện (HTML + PHP)
-│   ├── components/         # Các thành phần giao diện có thể tái sử dụng
-│   │   ├── (ví dụ: Nav.php)     # Menu điều hướng (tùy chỉnh theo vai trò)
-│   │   ├── (ví dụ: Header.php)  # Mẫu header chung (menu điều hướng, logo)
-│   │   ├── (ví dụ: Footer.php)  # Mẫu footer chung
-│   │   └── (ví dụ: Form.php)    # Form chung
-│   ├── layouts/            # Chứa các bố cục
-│   │   └ (ví dụ: HomepageLayout.php)   # bố cục của trang chủ
-│   └── (ví dụ: Homepage.php)    # Trang chủ
-├── public/                 # Chứa các tài nguyên tĩnh (CSS, JS, hình ảnh)
-│   ├── css/                # Chứa các tệp CSS
-│   ├── js/                 # Chứa các tệp JavaScript
-│   ├── img/                # Chứa hình ảnh (logo, banner)
-│   ├── fonts/              # Chứa các tệp fonts
-│   └── favicon.ico         # Biểu tượng website
-├── db/                     # Chứa các tệp liên quan đến cơ sở dữ liệu
-│   └── (ví dụ: schema.sql)      # Tệp SQL chứa lược đồ cơ sở dữ liệu và dữ liệu mẫu
-├── tests/                  # Chứa các kiểm thử (Dự án cần phải kiểm thử cho nhiều chức năng)
-│   └── (ví dụ: test_auth.php)   # Chứa các testcases của chức năng đăng nhập
-├── index.php               # Tệp định tuyến chính
-├── .gitignore              # Tệp liệt kê các thư mục/tệp không đưa vào Git (ví dụ: config, vendor/)
-└── README.md               # Tài liệu dự án
+```text
+website_khoa/
+├── config/                 # Chứa các file cấu hình hệ thống (ví dụ: config.php)
+├── controllers/            # Controller xử lý Request, gọi Service & Model, trả về View
+├── db/                     # Lưu trữ script schema SQL, database mock data
+├── includes/               # Thư mục tiện ích hệ thống
+│   ├── core/               # Routing xử lý Request/Response core
+│   └── files/              # Xử lý các nghiệp vụ phụ như Upload File, XLSX Reader
+├── models/                 # Chứa các Class Entity Base ánh xạ với Database (User, Student, Teacher)
+├── public/                 # Assets tĩnh (Public access)
+│   ├── css/                # Tổ chức module CSS (`base.css`, `dashboard.css`,...)
+│   ├── js/                 # Tổ chức Javascript (`dashboard.js`, `tabs.js`)
+│   └── img/                # Ảnh tĩnh, logos, SVG
+├── services/               # Chứa logic nghiệp vụ phức tạp tách biệt khỏi Controller 
+│   │                         (ví dụ: EducationService, EducationRepositoryInterface)
+├── templates/              # Thư mục chứa toàn bộ giao diện HTML/PHP nội bộ
+│   ├── components/         # Các mảnh Component tái sử dụng (Sidebar, Header, Footer)
+│   ├── layouts/            # Layout bao bọc giao diện chung (Dashboard Layout)
+│   └── pages/              # Nơi chứa Content chuyên biệt cho từng trang
+│       ├── admin/          # Giao diện cho Admin Dashboard (Users, Teachers)
+│       └── site/           # Giao diện Landing Page & Public Site
+├── tests/                  # Script để Test cases
+├── .gitignore              # Định nghĩa file ẩn với Git
+├── DOCS.md                 # Tài liệu Frontend Component
+├── index.php               # Front-Controller tiếp nhận toàn bộ request HTTP
+├── README.md               # File tổng quan bạn đang đọc
+└── routes.php              # Chứa định nghĩa các URL tới Controller
 ```
 
 ---
 
-## Quy ước đặt tên
+## Hướng dẫn cài đặt & chạy dự án
+
+Dự án sử dụng PHP cơ bản và tương thích tốt với bất kỳ phần mềm local server nào (XAMPP, MAMP, Laragon, v.v.).
+
+### Bước 1: Clone repo
+Điều hướng tới thư mục chứa code của local server (Thường là `C:/xampp/htdocs` đối với Windows hoặc `/Applications/MAMP/htdocs` với MacOS).
+
+Kéo dự án về máy:
+```bash
+git clone https://github.com/CaoThang-Website-CNTT/website_khoa.git
+```
+*(Nếu đổi tên thư mục thành `website_khoa` nếu clone sai tên)*.
+
+### Bước 2: Config DB Server (XAMPP/MAMP)
+1. Bật bảng điều khiển **XAMPP Control Panel**.
+2. Start Module **Apache** và **MySQL**.
+3. Import cơ sở dữ liệu. Mở `phpMyAdmin` (http://localhost/phpmyadmin), tạo một database tên là `khoacntt` với encoding `utf8mb4_general_ci`. Đổ nội dung file script .sql trong thư mục `db/` vào.
+
+### Bước 3: Xem Website
+Mở trình duyệt, truy cập: [http://localhost/website_khoa](http://localhost/website_khoa)
+
+Lưu ý: Luôn chắc chắn cấu hình `RewriteRule` nếu hệ thống file `.htaccess` tự custom không hoạt động trên Apache của bạn.
+
+---
+
+## Hướng dẫn cấu hình Database
+
+Để kết nối mã nguồn với cơ sở dữ liệu cá nhân, bạn cần tạo hoặc cấu hình lại thông số trong môi trường lập trình của mình:
+
+Tạo hoặc chỉnh sửa nội dung file **`config/config.php`** với nội dung gốc sau:
+
+```php
+<?php
+// config/config.php
+
+return [
+    'db' => [
+        'host'     => '127.0.0.1',
+        'dbname'   => 'khoacntt', // Chỉnh sửa lại tên DB bạn đã tự tạo trên phpMyAdmin
+        'username' => 'root',         // Mặc định của XAMPP thường là root
+        'password' => '',             // Mặc định của XAMPP thường để trống
+        'charset'  => 'utf8mb4'
+    ]
+];
+```
+
+*Lưu ý: Không bao giờ đẩy cấu hình mật khẩu Production thực tế lên code-base public. Hãy thêm `config/config.php` vào `.gitignore`.*
+
+---
+
+## Quy ước đặt tên (Coding Conventions)
 
 ### Thư mục và file
 
@@ -97,7 +133,7 @@ web_khoa/
 
 ### Biến, hàm, class (PHP)
 
-- **Biến/hàm**: Sử dụng `snake_case`.
+- **Biến/hàm**: Sử dụng `camelCase`.
   - Tốt: `$user_id`, `get_news_list()`
   - Xấu: `$userId`, `getNewsList()`
 - **Hằng số**: Sử dụng `UPPER_SNAKE_CASE`.
@@ -128,6 +164,7 @@ web_khoa/
   - Tốt: `--primary-color: #007bff;`
   - Xấu: `--PrimaryColor: #007bff;`
 - **Quy tắc chung**: Tránh sử dụng `!important` (nếu dùng, cần ghi lý do).
+- Để xem thông tin bổ trợ UI Kits, check qua [DOCS.md](./DOCS.md)
 
 **Ví dụ**:
 
@@ -141,7 +178,7 @@ web_khoa/
   - Xấu: `let user_id;`, `function fetch_news()`
 - **Quy tắc chung**:
   - Sử dụng `const`/`let`, tránh `var`.
-  - Tách file JS theo chức năng, ví dụ: `ai-news.js`.
+  - Tách file JS theo chức năng.
   - Sử dụng `addEventListener` cho sự kiện.
 
 **Ví dụ**:
@@ -177,22 +214,16 @@ function get_news_list($limit) {
 
 ## Quy trình Git
 
-- **Branch**:
+Hiện tại team áp dụng **Conventional Commits** cho commit message và quản lý nhánh theo branch `feature/*`.
 
-  - main: Branch chính (production).
-  - feature/tên-tính-năng: Branch cho tính năng mới.
-  - fix/tên-bug: Branch sửa lỗi.
+### Branching
+- `main`: Branch code chuẩn bảo đảm luôn chạy và release.
+- `feature/tên-tính-năng`: Branch để phát triển tác vụ mới. (Ví dụ: `feature/dashboard`, `feature/student-import`).
+- `fix/tên-bug`: Branch fix bug nhanh.
 
-- **Commit**: Sử dụng Conventional Commits.
-
-  - Tốt: feat(news): add detail page
-  - Xấu: update news
-
-- **.gitignore**: Loại bỏ .env, file tạm, và các assets lớn.
-
-**Ví dụ**:
-
-```
-Commit: fix(schedule): correct room display error
-Branch: feature/ai-text-to-speech
-```
+### Commit Messages
+Cú pháp Conventional theo kiểu tiếng Việt/tiếng Anh linh hoạt nhưng prefix phải đồng bộ:
+- Thêm tính năng: `feat(dashboard): chức năng tạo mới giảng viên`
+- Sửa lỗi: `fix(auth): sửa lỗi không lưu được session đăng nhập`
+- Refactor Code: `refactor(core): tối ưu cấu trúc controller và move files tới templates/pages`
+- Viết Document: `docs(readme): cập nhật hướng dẫn cài đặt`
