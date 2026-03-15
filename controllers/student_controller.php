@@ -20,7 +20,7 @@ class StudentController
   {
     $students = $this->_educationService->getAllStudents(1);
     ob_start();
-    require_once __DIR__ . '/../dashboard_user.php';
+    require_once __DIR__ . '/../templates/pages/admin/dashboard_user.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
@@ -29,7 +29,7 @@ class StudentController
   {
     $classrooms = $this->_educationService->getAllClassrooms();
     ob_start();
-    require_once __DIR__ . '/../user_new.php';
+    require_once __DIR__ . '/../templates/pages/admin/user_new.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
@@ -75,7 +75,7 @@ class StudentController
     }
     $classrooms = $this->_educationService->getAllClassrooms();
     ob_start();
-    require_once __DIR__ . '/../user_detail.php';
+    require_once __DIR__ . '/../templates/pages/admin/user_detail.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
@@ -138,7 +138,7 @@ class StudentController
   public function import()
   {
     ob_start();
-    require_once __DIR__ . '/../dashboard_user_import.php';
+    require_once __DIR__ . '/../templates/pages/admin/dashboard_user_import.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }

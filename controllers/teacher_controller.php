@@ -20,14 +20,14 @@ class TeacherController
   {
     $teachers = $this->_educationService->getAllTeachers(1);
     ob_start();
-    require_once __DIR__ . '/../dashboard_teacher.php';
+    require_once __DIR__ . '/../templates/pages/admin/dashboard_teacher.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
   public function create()
   {
     ob_start();
-    require_once __DIR__ . '/../teacher_new.php';
+    require_once __DIR__ . '/../templates/pages/admin/teacher_new.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
@@ -115,7 +115,7 @@ class TeacherController
       die("Không thấy giảng viên với id: $id");
     }
     ob_start();
-    require_once __DIR__ . '/../teacher_detail.php';
+    require_once __DIR__ . '/../templates/pages/admin/teacher_detail.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
