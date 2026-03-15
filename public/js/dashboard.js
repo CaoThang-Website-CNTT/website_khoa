@@ -26,24 +26,15 @@
     toggle.addEventListener('click', function (e) {
       e.preventDefault();
       const targetId = this.getAttribute('data-target');
+
+      // Kiểm tra có tồn tại dropdown không
+      // tránh tình trạng thay đổi state nhưng không có dropdown
       if (targetId) {
-        const target = document.querySelector(targetId);
-        if (target) {
-          target.classList.toggle('show');
+        const currentState = this.getAttribute('data-state') || 'collapsed';
+        const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed';
 
-          // Update aria-expanded for accessibility
-          const isExpanded = target.classList.contains('show');
-          this.setAttribute('aria-expanded', isExpanded);
-
-          // Update toggle button color based on collapse state
-          if (isExpanded) {
-            this.classList.remove('collapsed');
-            this.style.color = 'var(--primary)';
-          } else {
-            this.classList.add('collapsed');
-            this.style.color = 'var(--muted-foreground)';
-          }
-        }
+        this.dataset.state = newState;
+        this.dataset.ariaExpanded = newState === 'expanded';
       }
     });
   })

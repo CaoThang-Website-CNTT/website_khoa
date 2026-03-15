@@ -1,4 +1,4 @@
-<aside class="sidebar shadow active" id="sidebar">
+<aside class="sidebar shadow sidebar--active" id="sidebar">
   <div class="sidebar__header">
     <a href="index.php" class="sidebar__brand flex gap-4">
       <div class="sidebar__logo object-contain">
@@ -16,7 +16,7 @@
   <nav class="sidebar__nav">
     <ul class="sidebar__menu">
       <li class="sidebar__item sidebar__item--has-children">
-        <a href="#0" class="sidebar__link collapsed" data-toggle="collapse" data-target="#ddmenu_1"
+        <a href="#0" class="sidebar__link" data-toggle="collapse" data-state="collapsed" data-target="#ddmenu_1"
           aria-expanded="false">
           <span class="sidebar__link-icon mr-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 640 640">
@@ -35,7 +35,7 @@
             </svg>
           </div>
         </a>
-        <ul id="ddmenu_1" class="sidebar__dropdown">
+        <ul id="ddmenu_1" class="sidebar__dropdown" data-state="collapsed">
           <li class="sidebar__dropdown-item">
             <a href="<?= url('admin/students') ?>" class="sidebar__dropdown-link">Quản Lý Sinh Viên</a>
           </li>

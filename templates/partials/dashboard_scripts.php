@@ -2,3 +2,4 @@
 <script src="<?= url('/public/js/modal.js') ?>"></script>
 <script src="<?= url('/public/js/dashboard.js') ?>"></script>
 <script src="<?= url('/public/js/form.js') ?>"></script>
+<script src="<?= url('/public/js/tabs.js') ?>"></script>

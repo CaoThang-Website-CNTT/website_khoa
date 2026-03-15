@@ -38,7 +38,7 @@
   gap: 6rem;
 }
 
-.about-item > * {
+.about-item>* {
   flex: 1;
 }
 
@@ -72,11 +72,6 @@
 .wcu__feature-card-content {
   color: var(--primary-foreground);
   background: var(--black-gradient);
-}
-
-.wcu__feature-card-badge {
-  color: var(--primary-foreground);
-  background: var(--primary);
 }
 
 .wcu__feature-card-link {
@@ -236,13 +231,13 @@
   color: var(--accent);
 }
 
-#featured-news > .news-card .news-card__tag {
+#featured-news>.news-card .news-card__tag {
   background: var(--chart-1);
   color: var(--background);
 }
 
-#featured-news > .news-card .news-card__title,
-#featured-news > .news-card .news-card__description {
+#featured-news>.news-card .news-card__title,
+#featured-news>.news-card .news-card__description {
   max-width: 60%;
 }
 
