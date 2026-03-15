@@ -5,6 +5,7 @@ require_once __DIR__ . '/includes/helper.php';
 require_once __DIR__ . '/includes/core/router.php';
 require_once __DIR__ . '/services/education_service.php';
 require_once __DIR__ . '/controllers/site_controller.php';
+require_once __DIR__ . '/controllers/user_controller.php';
 require_once __DIR__ . '/controllers/student_controller.php';
 require_once __DIR__ . '/controllers/student_import_controller.php';
 require_once __DIR__ . '/controllers/teacher_controller.php';

@@ -37,10 +37,7 @@
         </a>
         <ul id="ddmenu_1" class="sidebar__dropdown" data-state="collapsed">
           <li class="sidebar__dropdown-item">
-            <a href="<?= url('admin/students') ?>" class="sidebar__dropdown-link">Quản Lý Sinh Viên</a>
-          </li>
-          <li class="sidebar__dropdown-item">
-            <a href="<?= url('admin/teachers') ?>" class="sidebar__dropdown-link">Quản Lý Giảng viên</a>
+            <a href="<?= url('admin/users') ?>" class="sidebar__dropdown-link">Quản Lý Tài Khoản</a>
           </li>
         </ul>
       </li>
