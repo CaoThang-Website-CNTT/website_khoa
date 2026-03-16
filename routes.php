@@ -5,7 +5,7 @@ use App\Core\Router;
 $router = new Router();
 
 $router->get('/', ['SiteController', 'index']);
-$router->get('/admin', ['StudentController', 'index']);
+$router->get('/admin', ['UserController', 'index']);
 
 $router->get('/admin/users', ['UserController', 'index']);
 
