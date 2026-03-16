@@ -17,6 +17,7 @@ class UserController
   public function index()
   {
     $students = $this->_educationService->getAllStudents(1);
+    $teachers = $this->_educationService->getAllTeachers(1);
     ob_start();
     require_once __DIR__ . '/../templates/pages/admin/dashboard_user.php';
     $content = ob_get_clean();
