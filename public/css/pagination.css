@@ -1,0 +1,33 @@
+.pagination-wrapper {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.pagination {
+  display: flex;
+  padding: 0 25px;
+  border-radius: 35px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.page-numbers {
+  display: block;
+  padding: 8px 16px;
+  transition: 0.4 ease;
+  color: var(--muted-foreground);
+  font-size: 1rem;
+
+  &:hover,
+  &.current {
+    background-color: var(--primary);
+    color: var(--muted);
+  }
+
+  &.prev:hover,
+  &.next:hover {
+    background-color: transparent;
+    color: var(--primary);
+  }
+}

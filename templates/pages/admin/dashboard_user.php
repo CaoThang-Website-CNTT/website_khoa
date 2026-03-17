@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../../components/pagination.php';
+
+use App\Components\Pagination;
 // Initial tab hint for JS — reads from URL hash on client, this is just the server default
 $initialTab = in_array($_GET['tab'] ?? '', ['students', 'teachers']) ? $_GET['tab'] : 'students';
 
@@ -45,6 +48,7 @@ ob_start(); ?>
       <?php endif; ?>
     </tbody>
   </table>
+  <?= Pagination::render($currentPage, $totalPages, '?page='); ?>
 </div>
 <?php $studentsPanel = ob_get_clean();
 

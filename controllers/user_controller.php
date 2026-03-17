@@ -16,7 +16,14 @@ class UserController
 
   public function index()
   {
-    $students = $this->_educationService->getAllStudents(1);
+    $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = 15;
+
+    $paginationData = $this->_educationService->getStudents($currentPage, $limit);
+
+    $students = $paginationData['data'];
+    $totalPages = $paginationData['last_page'];
+
     $teachers = $this->_educationService->getAllTeachers(1);
     ob_start();
     require_once __DIR__ . '/../templates/pages/admin/dashboard_user.php';
