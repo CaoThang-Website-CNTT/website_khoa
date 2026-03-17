@@ -5,16 +5,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 class TabHandler {
   constructor() {
-    this.tabs = document.querySelectorAll("[data-tabs]");
+    this._tabs = document.querySelectorAll("[data-tabs]");
   }
 
   /**
    * Khởi tạo các logic liên quan đến tabs.
+   * @private
    */
   init() {
-    if (!this.tabs.length) return;
+    if (!this._tabs.length) return;
 
-    this.tabs.forEach(tab => {
+    this._tabs.forEach(tab => {
       const tabId = tab.dataset.id;
       const initialKey = this.resolveInitialKey(tab, tabId);
 

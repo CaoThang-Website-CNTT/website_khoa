@@ -6,17 +6,18 @@ document.addEventListener("DOMContentLoaded", () => {
 class FormHandler {
   constructor() {
     // Truy vấn DOM Elements khi khởi tạo
-    this.fields = document.querySelectorAll(".field");
-    this.form = document.querySelector("form:has(.field-group, .field)");
+    this._fields = document.querySelectorAll(".field");
+    this._form = document.querySelector("form:has(.field-group, .field)");
   }
 
   /**
    * Khởi tạo các logic liên quan đến form.
+   * @private
    */
   init() {
-    if (!this.fields.length) return;
+    if (!this._fields.length) return;
 
-    this.fields.forEach(field => {
+    this._fields.forEach(field => {
       const fieldInput = field.querySelector(".field__input");
       if (!fieldInput) return; // Skip
 
