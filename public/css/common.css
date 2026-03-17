@@ -20,10 +20,10 @@
   border: 5px solid #365cf5;
   border-top-color: transparent;
   border-radius: 50%;
-  animation: spinner 0.9s linear infinite;
+  animation: spin 0.9s linear infinite;
 }
 
-@keyframes spinner {
+@keyframes spin {
   from {
     -webkit-transform: rotate(0deg);
     -moz-transform: rotate(0deg);
@@ -39,6 +39,229 @@
     -o-transform: rotate(360deg);
     transform: rotate(360deg);
   }
+}
+
+/* ==========================================================================
+   ALERT (Server Side) & TOAST (Client Side)
+   ========================================================================== */
+/* Variants */
+.alert[data-variant="success"],
+.toast[data-variant="success"] {
+  --toast-bg: var(--toast-success-bg);
+  --toast-border-color: var(--toast-success-border);
+  --toast-color: var(--toast-success-color);
+  --toast-icon-color: var(--toast-success-icon);
+}
+
+.alert[data-variant="error"],
+.toast[data-variant="error"] {
+  --toast-bg: var(--toast-error-bg);
+  --toast-border-color: var(--toast-error-border);
+  --toast-color: var(--toast-error-color);
+  --toast-icon-color: var(--toast-error-icon);
+}
+
+.alert[data-variant="warning"],
+.toast[data-variant="warning"] {
+  --toast-bg: var(--toast-warning-bg);
+  --toast-border-color: var(--toast-warning-border);
+  --toast-color: var(--toast-warning-color);
+  --toast-icon-color: var(--toast-warning-icon);
+}
+
+.alert[data-variant="info"],
+.toast[data-variant="info"] {
+  --toast-bg: var(--toast-info-bg);
+  --toast-border-color: var(--toast-info-border);
+  --toast-color: var(--toast-info-color);
+  --toast-icon-color: var(--toast-info-icon);
+}
+
+#toast-portal {
+  position: fixed;
+  z-index: 99999;
+  width: 20rem;
+  max-width: 20rem;
+  height: var(--front-toast-height, 0px);
+}
+
+/* Position trục X */
+#toast-portal[data-position*="center"] {
+  left: 50%;
+  transform: translateX(-50%);
+}
+#toast-portal[data-position*="left"] {
+  left: 1rem;
+}
+#toast-portal[data-position*="right"] {
+  right: 1rem;
+}
+
+/* Position trục Y */
+#toast-portal[data-position*="bottom"] {
+  bottom: 1rem;
+}
+#toast-portal[data-position*="top"] {
+  top: 1rem;
+}
+
+/* Dùng ::after để nối dài phần hover vào của toast (hover bridge) */
+#toast-portal[data-position*="bottom"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: calc(var(--toast-stack-height) * var(--front-toast-height));
+}
+
+#toast-portal[data-position*="top"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: calc(var(--toast-stack-height) * var(--front-toast-height));
+}
+
+#toast-portal[data-position*="bottom"] .toast[data-mounted="false"] {
+  opacity: 0;
+  transform: translateY(100%) scale(0.96);
+}
+
+#toast-portal[data-position*="top"] .toast[data-mounted="false"] {
+  opacity: 0;
+  transform: translateY(-100%) scale(0.96);
+}
+
+.toast[data-mounted="true"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+#toast-portal > * {
+  margin-block-start: 0.5rem;
+  margin-block-end: 0.5rem;
+}
+
+.alert,
+.toast {
+  display: grid;
+  text-align: left;
+  gap: 0.125rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--toast-border-color);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  background: var(--toast-bg);
+  color: var(--toast-color);
+  transition:
+    transform 0.2s ease,
+    opacity 0.4s ease;
+}
+
+.toast {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+.toast[data-mounted="false"] {
+  opacity: 0;
+  transform: translateY(100%) scale(0.96);
+}
+
+.toast[data-mounted="true"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast[data-removed="true"] {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  pointer-events: none;
+}
+
+.alert {
+  animation: alertFadeIn 0.22s ease both;
+}
+
+.alert:has(.alert-action) {
+  padding-right: 4.5rem;
+}
+
+.alert:has(svg),
+.toast:has(svg) {
+  column-gap: 0.5rem;
+  grid-template-columns: auto 1fr;
+}
+
+.alert svg,
+.toast svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  min-width: 1rem;
+  transform: translateY(0.125rem);
+  grid-row: span 2;
+}
+
+@keyframes alertFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-title,
+.toast-title {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+}
+
+.alert-description,
+.toast-description {
+  font-size: var(--text-sm);
+  text-wrap: pretty;
+  color: color-mix(in oklab, var(--alert-color) 60%, transparent);
+}
+
+.alert-action,
+.toast-action {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.alert-close,
+.toast-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.45;
+  color: inherit;
+  transition: opacity 0.15s;
+}
+
+.alert-close:hover,
+.toast-close:hover {
+  opacity: 1;
+}
+
+.alert + .alert {
+  margin-block-start: 0.5rem;
+  margin-block-end: 0.5rem;
+}
+
+.toast[data-variant="loading"] svg {
+  translate: 0 0.125rem;
+  animation: spin 1s linear infinite;
 }
 
 /* ==========================================================================
@@ -62,7 +285,6 @@
   font-size: var(--text-sm);
   color: var(--foreground);
 }
-
 
 /* ==========================================================================
    CARD
@@ -129,7 +351,6 @@
   padding: 1rem;
 }
 
-
 /* ==========================================================================
    TABS
    ========================================================================== */
@@ -178,7 +399,6 @@
 .tabs__trigger:hover {
   color: var(--foreground);
 }
-
 
 .tabs__trigger:disabled {
   pointer-events: none;
@@ -237,7 +457,7 @@
   box-shadow: 0 0 0 3px var(--ring) / 0.5;
 }
 
-.badge>svg {
+.badge > svg {
   pointer-events: none;
   flex-shrink: 0;
   width: 12px;
@@ -263,7 +483,6 @@
   border-color: transparent;
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
-
 
 .banner {
   color: var(--primary-foreground);

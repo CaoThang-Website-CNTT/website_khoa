@@ -33,6 +33,7 @@ class StudentController
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
+
   public function store(array $data)
   {
     $validator = new Validator();
@@ -44,7 +45,7 @@ class StudentController
       'dob' => ['required', 'date'],
       'major' => ['max:150'],
       'classroom_id' => ['required'],
-      'birth_place' => ['max:255']
+      'birth_place' => ['max:255'],
     ];
 
     if (!$validator->validate($data, $rules)) {
@@ -55,18 +56,19 @@ class StudentController
       $validator->addError('student_id', 'Mã số sinh viên này đã tồn tại trong hệ thống.');
       return $this->redirectWithError($validator->getErrors(), $data);
     }
-    session_start();
-    $defaultPassword = 'Khoacntt@123';
-    $newStudentId = $this->_educationService->createStudent($data, $defaultPassword);
+
+    $newStudentId = $this->_educationService->createStudent($data, 'Khoacntt@123');
+
     if ($newStudentId) {
-      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Tạo mới sinh viên thành công!'];
+      flash('success', 'Tạo mới sinh viên thành công!');
     } else {
-      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header("Location: " . url('admin/students'));
+    header('Location: ' . url('admin/students'));
     exit;
   }
+
   public function edit($id)
   {
     $student = $this->_educationService->getStudentById($id);
@@ -90,13 +92,14 @@ class StudentController
       'gender' => ['required'],
       'dob' => ['required', 'date'],
       'classroom_id' => ['required'],
-      'birth_place' => ['max:255']
+      'birth_place' => ['max:255'],
     ];
 
     if (!$validator->validate($data, $rules)) {
       $data['account_id'] = $id;
       return $this->redirectWithError($validator->getErrors(), $data);
     }
+
     $student = new Student(
       account_id: (int) $id,
       student_id: 0,
@@ -106,32 +109,32 @@ class StudentController
       phone: $data['phone'],
       classroom_id: (int) $data['classroom_id'],
       major: $data['major'],
-      birth_place: $data['birth_place']
+      birth_place: $data['birth_place'],
     );
 
-    session_start();
     $isSuccess = $this->_educationService->updateStudent((int) $id, $student);
 
     if ($isSuccess) {
-      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Cập nhật sinh viên thành công!'];
+      flash('success', 'Cập nhật sinh viên thành công!');
     } else {
-      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header("Location: " . url('admin/students'));
+    header('Location: ' . url('admin/students'));
     exit;
   }
 
   public function destroy($id)
   {
     $isSuccess = $this->_educationService->deleteStudent($id);
+
     if ($isSuccess) {
-      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Xoá sinh viên thành công!'];
+      flash('success', 'Xoá sinh viên thành công!');
     } else {
-      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header("Location: " . url('admin/students'));
+    header('Location: ' . url('admin/students'));
     exit;
   }
 
@@ -143,22 +146,15 @@ class StudentController
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
 
-  /**
-   * Helper function, redirect về form tạo/sửa sinh viên khi có lỗi validate
-   * @param array $errors
-   * @param array $oldData
-   * @return never
-   */
   private function redirectWithError(array $errors, array $oldData)
   {
-    if (session_status() === PHP_SESSION_NONE)
-      session_start();
     $_SESSION['errors'] = $errors;
     $_SESSION['old_data'] = $oldData;
+
     if (isset($oldData['account_id'])) {
-      header("Location: " . url('admin/students/edit/' . $oldData['account_id']));
+      header('Location: ' . url('admin/students/edit/' . $oldData['account_id']));
     } else {
-      header("Location: " . url('admin/students/create'));
+      header('Location: ' . url('admin/students/create'));
     }
     exit;
   }

@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/includes/helper.php';
+require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/core/router.php';
 require_once __DIR__ . '/services/education_service.php';
 require_once __DIR__ . '/controllers/site_controller.php';

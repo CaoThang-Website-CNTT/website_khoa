@@ -21,7 +21,6 @@ class StudentImportController
 
   public function store(Request $request): void
   {
-    // Parse uploaded files
     $files = $request->allFiles();
 
     try {
@@ -46,9 +45,7 @@ class StudentImportController
       return;
     }
 
-    // Validate các dòng dữ liệu
     $errors = [];
-
     foreach ($rows as $index => $row) {
       $rowErrors = $this->validateRow($row, $index + 1);
       if (!empty($rowErrors)) {
@@ -58,26 +55,26 @@ class StudentImportController
 
     if (!empty($errors)) {
       $_SESSION['import_errors'] = $errors;
-      header('Location: /website_khoa/admin/students/import');
+      header('Location: ' . url('admin/students/import'));
       exit;
     }
 
-    // Thực hiện thêm vào DB
     try {
       $classroomId = $this->resolveClassroom($className);
       $mapped = array_map(fn($row) => $this->mapRow($row, $classroomId), $rows);
 
       $this->_educationService->importStudents($mapped);
 
-      $_SESSION['import_success'] = count($rows) . ' sinh viên đã được nhập thành công.';
+      flash('success', 'Nhập danh sách thành công!', count($rows) . ' sinh viên đã được thêm vào hệ thống.');
     } catch (Exception $e) {
       $this->redirectWithError('Lỗi khi lưu dữ liệu: ' . $e->getMessage());
       return;
     }
 
-    header('Location: /website_khoa/admin/students');
+    header('Location: ' . url('admin/students'));
     exit;
   }
+
   private function mapRow(array $row, int $classroomId): array
   {
     return [
@@ -86,18 +83,17 @@ class StudentImportController
       'dob' => $this->normalizeDate($row['ngay_sinh'] ?? ''),
       'birth_place' => $row['noi_sinh'] ?? null,
       'classroom_id' => $classroomId,
-      // Not present in import file — safe defaults
       'gender' => null,
       'phone' => null,
       'major' => null,
-      'password' => $row['ma_sv'],  // default password = student ID
+      'password' => $row['ma_sv'],
     ];
   }
+
   private function validateRow(array $row, int $lineNumber): array
   {
     $errors = [];
-    $label = "Dòng {$lineNumber} (" . mb_convert_case($row['ho_ten'], MB_CASE_TITLE, "UTF-8") . ")";
-
+    $label = 'Dòng ' . $lineNumber . ' (' . mb_convert_case($row['ho_ten'], MB_CASE_TITLE, 'UTF-8') . ')';
 
     if (empty($row['ma_sv'])) {
       $errors[] = "{$label}: Mã sinh viên không được để trống.";
@@ -115,6 +111,7 @@ class StudentImportController
 
     return $errors;
   }
+
   private function resolveClassroom(string $name): int
   {
     foreach ($this->_educationService->getAllClassrooms() as $classroom) {
@@ -125,6 +122,7 @@ class StudentImportController
 
     return $this->_educationService->createClassroom(['name' => $name]);
   }
+
   private function normalizeDate(string $raw): ?string
   {
     if (empty($raw))
@@ -144,8 +142,8 @@ class StudentImportController
 
   private function redirectWithError(string $message): void
   {
-    $_SESSION['import_errors'] = [[$message]];
-    header('Location: /website_khoa/admin/students/import');
+    $_SESSION['import_errors'] = [[$message]];  // kept: feeds the import error view, not a toast
+    header('Location: ' . url('admin/students/import'));
     exit;
   }
 }

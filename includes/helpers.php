@@ -13,3 +13,15 @@ function url(string $path = ''): string
 {
   return APP_URL . ltrim($path, '/');
 }
+
+/**
+ * Hàm hỗ trợ lưu flash message nhằm để tạo thông báo flash tại UI
+ * @param string $type
+ * @param string $title
+ * @param string $desc
+ * @return void
+ */
+function flash(string $type, string $title, string $desc = ''): void
+{
+  $_SESSION['_flash'] = compact('type', 'title', 'desc');
+}

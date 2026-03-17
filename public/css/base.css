@@ -76,27 +76,17 @@
     --fw-bold: 700;
 
     /* Shadow */
-    --shadow-sm:
-      0 1px 3px 0 rgb(0 0 0 / 0.10),
-      0 1px 2px -1px rgb(0 0 0 / 0.10);
-    --shadow:
-      0 1px 3px 0 rgb(0 0 0 / 0.10),
-      0 1px 2px -1px rgb(0 0 0 / 0.10);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-md:
-      0 4px 6px -1px rgb(0 0 0 / 0.10),
-      0 2px 4px -2px rgb(0 0 0 / 0.10);
+      0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg:
-      0 10px 15px -3px rgb(0 0 0 / 0.10),
-      0 4px 6px -4px rgb(0 0 0 / 0.10);
+      0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl:
-      0 20px 25px -5px rgb(0 0 0 / 0.10),
-      0 8px 10px -6px rgb(0 0 0 / 0.10);
-    --shadow-2xl:
-      0 25px 50px -12px rgb(0 0 0 / 0.25);
-    --shadow-inner:
-      inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
-    --shadow-none:
-      0 0 rgb(0 0 0 / 0);
+      0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+    --shadow-none: 0 0 rgb(0 0 0 / 0);
 
     /* Color Palette */
     /* Neutrals & Backgrounds */
@@ -169,30 +159,137 @@
     /* #fe9a00 */
     --chart-6: oklch(0.646 0.222 41.116);
 
+    /* Toast (Notifications) */
+    /* Use for toast, flash alert */
+    --toast-bg: var(--background);
+    --toast-border-color: var(--border);
+    --toast-color: var(--foreground);
+    --toast-icon-color: var(--muted);
+
+    /* Toast Variants */
+    /* #f0fdf4 */
+    --toast-success-bg: oklch(0.9819 0.0181 155.83);
+    /* #86efac */
+    --toast-success-border: oklch(0.8712 0.1363 154.45);
+    /* #14532d */
+    --toast-success-color: oklch(0.3925 0.0896 152.54);
+    /* #16a34a */
+    --toast-success-icon: oklch(0.6271 0.1699 149.21);
+
+    /* #fef2f2 */
+    --toast-error-bg: oklch(0.9705 0.0129 17.38);
+    /* #fca5a5 */
+    --toast-error-border: oklch(0.8077 0.1035 19.57);
+    /* #7f1d1d */
+    --toast-error-color: oklch(0.3958 0.1331 25.72);
+    /* #dc2626 */
+    --toast-error-icon: oklch(0.5771 0.2152 27.33);
+
+    /* #fffbeb */
+    --toast-warning-bg: oklch(0.9869 0.0214 95.28);
+    /* #fcd34d */
+    --toast-warning-border: oklch(0.879 0.1534 91.61);
+    /* #78350f */
+    --toast-warning-color: oklch(0.4137 0.1054 45.9);
+    /* #d97706 */
+    --toast-warning-icon: oklch(0.6658 0.1574 58.32);
+
+    /* #eff6ff */
+    --toast-info-bg: oklch(0.9705 0.0142 254.6);
+    /* #93c5fd */
+    --toast-info-border: oklch(0.8091 0.0956 251.81);
+    /* #1e3a8a */
+    --toast-info-color: oklch(0.3791 0.1378 265.52);
+    /* #2563eb */
+    --toast-info-icon: oklch(0.5461 0.2152 262.88);
+
     /* Gradients */
-    --blue-gradient: linear-gradient(0deg,
-        rgba(28, 57, 142, 0.95) 0%,
-        rgba(28, 57, 142, 0.5) 50%,
-        rgba(0, 0, 0, 0) 100%);
-    --green-gradient: linear-gradient(0deg,
-        rgba(13, 84, 43, 0.95) 0%,
-        rgba(13, 84, 43, 0.5) 50%,
-        rgba(0, 0, 0, 0) 100%);
-    --pink-gradient: linear-gradient(135deg,
-        rgba(152, 16, 250, 1) 0%,
-        rgba(230, 0, 118, 1) 100%);
-    --purple-gradient: linear-gradient(0deg,
-        rgba(89, 22, 139, 0.95) 0%,
-        rgba(89, 22, 139, 0.5) 50%,
-        rgba(0, 0, 0, 0) 100%);
-    --black-gradient: linear-gradient(0deg,
-        rgba(0, 0, 0, 0.8) 0%,
-        rgba(0, 0, 0, 0.4) 50%,
-        rgba(0, 0, 0, 0) 100%);
-    --blue-from-left-gradient: linear-gradient(90deg,
-        rgba(28, 57, 142, 1) 0%,
-        rgba(25, 60, 184, 0.7) 50%,
-        rgba(0, 0, 0, 0.2) 100%);
+    --blue-gradient: linear-gradient(
+      0deg,
+      rgba(28, 57, 142, 0.95) 0%,
+      rgba(28, 57, 142, 0.5) 50%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    --green-gradient: linear-gradient(
+      0deg,
+      rgba(13, 84, 43, 0.95) 0%,
+      rgba(13, 84, 43, 0.5) 50%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    --pink-gradient: linear-gradient(
+      135deg,
+      rgba(152, 16, 250, 1) 0%,
+      rgba(230, 0, 118, 1) 100%
+    );
+    --purple-gradient: linear-gradient(
+      0deg,
+      rgba(89, 22, 139, 0.95) 0%,
+      rgba(89, 22, 139, 0.5) 50%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    --black-gradient: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    --blue-from-left-gradient: linear-gradient(
+      90deg,
+      rgba(28, 57, 142, 1) 0%,
+      rgba(25, 60, 184, 0.7) 50%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
+  }
+}
+
+/* DARK MODE */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --toast-bg: oklch(0.2273 0.0038 286.09);
+    --toast-border-color: color-mix(
+      in oklab,
+      oklch(0.2273 0.0038 286.09) 10%,
+      white 30%
+    );
+    --toast-color: var(--background);
+    --toast-icon-color: var(--background);
+
+    /* Variants */
+    /* #052e16 */
+    --toast-success-bg: oklch(0.2664 0.0628 152.93);
+    /* #166534 */
+    --toast-success-border: oklch(0.4479 0.1083 151.33);
+    /* #bbf7d0 */
+    --toast-success-color: oklch(0.925 0.0806 155.99);
+    /* #4ade80 */
+    --toast-success-icon: oklch(0.925 0.0806 155.99);
+
+    /* #450a0a */
+    --toast-error-bg: oklch(0.2575 0.0886 26.04);
+    /* #991b1b */
+    --toast-error-border: oklch(0.4437 0.1613 26.9);
+    /* #fecaca */
+    --toast-error-color: oklch(0.8845 0.0593 18.33);
+    /* #f87171 */
+    --toast-error-icon: oklch(0.8845 0.0593 18.33);
+
+    /* #422006 */
+    --toast-warning-bg: oklch(0.2857 0.0639 53.81);
+    /* #92400e */
+    --toast-warning-border: oklch(0.4732 0.1247 46.2);
+    /* #fde68a */
+    --toast-warning-color: oklch(0.9243 0.1151 95.75);
+    /* #fbbf24 */
+    --toast-warning-icon: oklch(0.9243 0.1151 95.75);
+
+    /* #172554 */
+    --toast-info-bg: oklch(0.2823 0.0874 267.94);
+    /* #1e40af */
+    --toast-info-border: oklch(0.4244 0.1809 265.64);
+    /* #bfdbfe */
+    --toast-info-color: oklch(0.8823 0.0571 254.13);
+    /* #60a5fa */
+    --toast-info-icon: oklch(0.8823 0.0571 254.13);
   }
 }
 
@@ -416,7 +513,6 @@
    LAYOUT UTILITIES
    ========================================================================== */
 @layer layout {
-
   /* Display */
   .flex {
     display: flex;
@@ -503,7 +599,6 @@
    UTILITY CLASSES
    ========================================================================== */
 @layer utilities {
-
   /* Flexbox Direction */
   .flex-row {
     flex-direction: row;
@@ -922,7 +1017,6 @@
   .shadow-none {
     box-shadow: var(--shadow-none);
   }
-
 
   /* Sizing - Max Width */
   .max-w-sm {

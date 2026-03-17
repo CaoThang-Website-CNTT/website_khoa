@@ -11,31 +11,39 @@
   </div>
   <div class="card__content">
 
-    <!-- IMPORT MESSAGES -->
-    <?php if (!empty($_SESSION['import_errors'])): ?>
-      <div class="alert alert--error">
-        <div class="alert__title">
-          Import thất bại — vui lòng kiểm tra các lỗi sau:
-        </div>
-        <ul class="alert__list">
-          <?php foreach ($_SESSION['import_errors'] as $rowErrors): ?>
-            <?php foreach ((array) $rowErrors as $message): ?>
-              <li><?= htmlspecialchars($message) ?></li>
-            <?php endforeach ?>
-          <?php endforeach ?>
-        </ul>
-      </div>
-      <?php unset($_SESSION['import_errors']) ?>
-    <?php endif ?>
+    <!-- FLASH ALERT -->
+    <?php
+    // Test flash alert
+    // $_SESSION['_flash'] = [
+    //   'type' => 'warning',
+    //   'title' => 'hello',
+    //   'desc' => 'world'
+    // ];
+    include dirname(__DIR__, 2) . '/components/flash_alert.php';
+    ?>
 
-    <?php if (!empty($_SESSION['import_success'])): ?>
-      <div class="alert alert--success">
-        <?= htmlspecialchars($_SESSION['import_success']) ?>
-      </div>
-      <?php unset($_SESSION['import_success']) ?>
-    <?php endif ?>
+    <?php
+    $importErrors = $_SESSION['import_errors'] ?? null;
+    unset($_SESSION['import_errors']);
 
-    <form id="import-form" method="POST" enctype="multipart/form-data">
+    if ($importErrors) {
+      foreach ($importErrors as $rowErrors) {
+        foreach ($rowErrors as $error) {
+          $msg .= htmlspecialchars($error, ENT_COMPAT, 'UTF-8') . "\n";
+        }
+      }
+
+      $_SESSION['_flash'] = [
+        'type' => 'error',
+        'title' => count($importErrors) . ' dòng có lỗi, vui lòng kiểm tra lại.',
+        'desc' => $msg,
+      ];
+    }
+
+    include dirname(__DIR__, 2) . '/components/flash_alert.php';
+    ?>
+
+    <form id="import-form" action=<?= url('admin/students/import') ?> method="POST" enctype="multipart/form-data">
       <div class="field-group">
         <div class="field">
           <input id="import-file" class="field__input" type="file" name="uploaded_file" accept=".xlsx">
@@ -47,7 +55,8 @@
   </div>
 </div>
 <script>
-  document.querySelector("#import-file").addEventListener("change", () => {
+  document.querySelector("#import-file").addEventListener("change", (e) => {
+    e.preventDefault();
     document.querySelector("#import-form").submit();
   })
 </script>
