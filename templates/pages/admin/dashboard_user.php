@@ -48,7 +48,7 @@ ob_start(); ?>
       <?php endif; ?>
     </tbody>
   </table>
-  <?= Pagination::render($currentPage, $totalPages, '?page='); ?>
+  <?= Pagination::render($studentPage, $studentTotalPages, $studentBaseUrl); ?>
 </div>
 <?php $studentsPanel = ob_get_clean();
 
@@ -94,6 +94,7 @@ ob_start(); ?>
       <?php endif; ?>
     </tbody>
   </table>
+  <?= Pagination::render($teacherPage, $teacherTotalPages, $teacherBaseUrl); ?>
 </div>
 <?php $teachersPanel = ob_get_clean(); ?>
 
@@ -148,8 +149,8 @@ ob_start(); ?>
 
 <?php
 $tabs = [
-  ['key' => 'students', 'label' => 'Students', 'badge' => count($students ?? [])],
-  ['key' => 'teachers', 'label' => 'Teachers', 'badge' => count($teachers ?? [])],
+  ['key' => 'students', 'label' => 'Students', 'badge' => $studentTotalRows],
+  ['key' => 'teachers', 'label' => 'Teachers', 'badge' => $teacherTotalRows],
 ];
 $tabPanels = [
   'students' => $studentsPanel,

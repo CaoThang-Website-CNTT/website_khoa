@@ -32,6 +32,7 @@ interface EducationRepositoryInterface
   // Teacher
   /** @return Teacher[] */
   public function getAllTeachers(int $pageTo, int $limit = 15): array;
+  public function getTeachers(int $page, int $limit = 15): array;
   public function getTeacherById(int $id): ?Teacher;
   public function createTeacher(array $teacher, string $rawPassword): int;
   public function updateTeacher(int $id, Teacher $teacher): bool;
@@ -296,6 +297,38 @@ class EducationService implements EducationRepositoryInterface
     $stmt->execute();
 
     return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  public function getTeachers(int $page, int $limit = 15): array
+  {
+    $offset = (max(1, $page) - 1) * $limit;
+
+    $countSql = "SELECT COUNT(*) FROM teachers t 
+                 INNER JOIN accounts a ON t.account_id = a.id 
+                 WHERE a.deleted_at IS NULL";
+    $totalRows = $this->db->query($countSql)->fetchColumn();
+
+    $sql = "SELECT 
+              t.*,
+              a.id AS acc_id, a.email as acc_email, a.role AS acc_role, 
+              a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
+            FROM `teachers` t
+            INNER JOIN `accounts` a ON t.`account_id` = a.`id`
+            WHERE a.`deleted_at` IS NULL 
+            LIMIT :limit OFFSET :offset";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $items = array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return [
+      'data' => $items,
+      'total_rows' => (int)$totalRows,
+      'current_page' => $page,
+      'last_page' => ceil($totalRows / $limit)
+    ];
   }
 
   public function getTeacherById(int $id): ?Teacher
