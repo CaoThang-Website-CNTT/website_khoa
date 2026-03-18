@@ -17,3 +17,4 @@
 
 
 <link rel="shortcut icon" href="<?= url('assets/images/favicon.svg') ?>" type="image/x-icon" />
+<link rel="stylesheet" href="<?= url('public/css/pagination.css') ?>">

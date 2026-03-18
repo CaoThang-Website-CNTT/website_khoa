@@ -16,8 +16,25 @@ class UserController
 
   public function index()
   {
-    $students = $this->_educationService->getAllStudents(1);
-    $teachers = $this->_educationService->getAllTeachers(1);
+
+    $activeTab = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $studentPage = isset($_GET['student_page']) ? (int)$_GET['student_page'] : 1;
+    $teacherPage = isset($_GET['teacher_page']) ? (int)$_GET['teacher_page'] : 1;
+    $limit = 15;
+
+    $studentData = $this->_educationService->getStudents($studentPage, $limit);
+    $teacherData = $this->_educationService->getTeachers($teacherPage, $limit);
+
+    $students = $studentData['data'];
+    $studentTotalPages = $studentData['last_page'];
+    $studentTotalRows = $studentData['total_rows'];
+
+    $teachers = $teacherData['data'];
+    $teacherTotalPages = $teacherData['last_page'];
+    $teacherTotalRows = $teacherData['total_rows'];
+
+    $studentBaseUrl = "?usersTabs=students&teacher_page={$teacherPage}&student_page=";
+    $teacherBaseUrl = "?usersTabs=teachers&student_page={$studentPage}&teacher_page=";
     ob_start();
     require_once __DIR__ . '/../templates/pages/admin/dashboard_user.php';
     $content = ob_get_clean();
