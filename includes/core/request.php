@@ -27,15 +27,14 @@ class Request
    * @var array
    */
   protected array $files;
-
   public function __construct(
     array $query = [],
-    array $request = [],
+    array $body = [],   // rename from $request to $body
     array $files = [],
     array $server = [],
   ) {
     $this->query = $query;
-    $this->request = $request;
+    $this->body = $body;   // now correctly assigned
     $this->files = $this->normaliseFiles($files);
     $this->headers = $this->parseHeaders($server);
   }
@@ -115,6 +114,19 @@ class Request
     }
 
     return null;
+  }
+
+  // ===================================
+  // Body
+  // ===================================
+  public function all(): array
+  {
+    return $this->body;
+  }
+
+  public function input(string $key, mixed $default = null): mixed
+  {
+    return $this->body[$key] ?? $default;
   }
 
   // ===================================

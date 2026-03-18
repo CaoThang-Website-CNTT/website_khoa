@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../utils/request_validator.php';
 require_once __DIR__ . '/../models/teacher.php';
 
+use App\Core\Request;
 use App\Models\Teacher;
 use App\Utils\Validator;
 use App\Services\EducationRepositoryInterface;
@@ -33,8 +34,10 @@ class TeacherController
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
 
-  public function store(array $data)
+  public function store(Request $request)
   {
+    $data = $request->all();
+
     $validator = new Validator();
     $rules = [
       'email' => ['required', 'email', 'max:255'],
@@ -82,8 +85,10 @@ class TeacherController
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
 
-  public function update($id, array $data)
+  public function update($id, Request $request)
   {
+    $data = $request->all();
+
     $validator = new Validator();
     $rules = [
       'full_name' => ['required', 'max:255'],
