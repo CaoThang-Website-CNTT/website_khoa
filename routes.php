@@ -23,4 +23,11 @@ $router->get('/admin/teachers/edit/{id}', ['TeacherController', 'edit']);
 $router->post('/admin/teachers/update/{id}', ['TeacherController', 'update']);
 $router->post('/admin/teachers/delete/{id}', ['TeacherController', 'destroy']);
 
+$router->get('/admin/categories', ['CategoryController', 'index']);
+$router->get('/admin/categories/create', ['CategoryController', 'create']);
+$router->get('/admin/categories/{id}', ['CategoryController', 'edit']);
+$router->post('/admin/categories', ['CategoryController', 'store']);
+$router->post('/admin/categories/{id}', ['CategoryController', 'update']);
+$router->post('/admin/categories/delete/{id}', ['CategoryController', 'destroy']);
+
 return $router;

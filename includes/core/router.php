@@ -2,6 +2,7 @@
 
 namespace App\Core;
 use App\Core\Request;
+use ReflectionClass;
 use ReflectionMethod;
 
 require_once __DIR__ . '/request.php';
@@ -38,17 +39,15 @@ class Router
   {
     $parsedUrl = parse_url($uri);
     $path = $parsedUrl['path'] ?? '/';
-
     $request = Request::capture();
 
     foreach ($this->routes as $route) {
       if ($route['method'] === $method && preg_match($route['path'], $path, $matches)) {
         array_shift($matches);
+
         $controllerClass = $route['controller'];
         $action = $route['action'];
-
-        $controllerInstance = new $controllerClass($dependencies['educationService']);
-
+        $controllerInstance = $this->resolveController($controllerClass, $dependencies);
         $args = $this->resolveArgs($controllerClass, $action, $request, $matches);
 
         return call_user_func_array([$controllerInstance, $action], $args);
@@ -58,6 +57,30 @@ class Router
     http_response_code(404);
     echo "404 - Không tìm thấy trang!";
     exit;
+  }
+
+  private function resolveController(string $controllerClass, array $dependencies): object
+  {
+    $rf = new ReflectionClass($controllerClass);
+    $constructor = $rf->getConstructor();
+
+    if (!$constructor) {
+      return new $controllerClass();
+    }
+
+    $args = [];
+    foreach ($constructor->getParameters() as $param) {
+      $name = $param->getName();
+      if (isset($dependencies[$name])) {
+        $args[] = $dependencies[$name];
+      } elseif ($param->isOptional()) {
+        $args[] = $param->getDefaultValue();
+      } else {
+        throw new \RuntimeException("Không thể resolve dependency: \${$name} cho {$controllerClass}");
+      }
+    }
+
+    return $rf->newInstanceArgs($args);
   }
 
   private function resolveArgs(string $class, string $method, Request $request, array $matches): array
