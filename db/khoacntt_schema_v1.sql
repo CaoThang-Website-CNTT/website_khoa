@@ -32,13 +32,6 @@ CREATE TABLE `students` (
   `birth_place` varchar(255)
 );
 
-CREATE TABLE `classrooms` (
-  `id` bigint PRIMARY KEY AUTO_INCREMENT,
-  `name` varchar(50)
-);
-
 ALTER TABLE `students` ADD FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`);
 
 ALTER TABLE `teachers` ADD FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`);
-
-ALTER TABLE `students` ADD FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`);

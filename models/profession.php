@@ -2,15 +2,11 @@
 
 namespace App\Models;
 
-class Classroom
+class Profession
 {
   public function __construct(
     public int $id,
-    public string $level,
-    public int $profession,
-    public int $class_of,
-    public ?int $major_id,
-    public string $letter,
+    public string $full_name,
     public string $short_name,
     public ?string $created_at = null,
     public ?string $updated_at = null,
@@ -19,17 +15,13 @@ class Classroom
   /**
    * Tự động mapping trường dữ liệu DB
    * @param array $data
-   * @return Classroom
+   * @return Profession
    */
   public static function fromArray(array $data): self
   {
     return new self(
       id: $data['id'] ?? 0,
-      level: $data['level'] ?? '',
-      profession: $data['profession'] ?? 0,
-      class_of: $data['class_of'] ?? 0,
-      major_id: $data['major_id'] ?? 0,
-      letter: $data['letter'] ?? '',
+      full_name: $data['full_name'] ?? '',
       short_name: $data['short_name'] ?? '',
       created_at: $data['created_at'] ?? null,
       updated_at: $data['updated_at'] ?? null,

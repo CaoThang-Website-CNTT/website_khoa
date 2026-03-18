@@ -1,10 +1,3 @@
-INSERT INTO `classrooms` (`name`) VALUES 
-('CĐTH23A'), 
-('CĐTH23B'), 
-('CĐTH23C'), 
-('CĐTH23D'), 
-('CĐTH23E');
-
 -- tài khoản giảng viên
 INSERT INTO `accounts` (`id`, `email`, `password_hash`, `role`, `created_at`) VALUES
 (1, 'nguyenvanan@caothang.edu.vn', '$2b$10$hash1', 'teacher', NOW()),
