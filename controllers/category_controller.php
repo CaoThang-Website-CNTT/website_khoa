@@ -1,7 +1,9 @@
 <?php
 
-require_once __DIR__ . '/../utils/request_validator.php';
-require_once __DIR__ . '/../models/category.php';
+namespace App\Controllers;
+
+require_once BASE_PATH . '/utils/request_validator.php';
+require_once BASE_PATH . '/models/category.php';
 
 use App\Core\Request;
 use App\Models\Category;

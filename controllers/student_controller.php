@@ -1,18 +1,20 @@
 <?php
 
-require_once __DIR__ . '/../utils/request_validator.php';
-require_once __DIR__ . '/../models/student.php';
+namespace App\Controllers;
+
+require_once BASE_PATH . '/utils/request_validator.php';
+require_once BASE_PATH . '/models/student.php';
 
 use App\Core\Request;
 use App\Models\Student;
 use App\Utils\Validator;
-use App\Services\EducationRepositoryInterface;
+use App\Services\EducationService;
 
 class StudentController
 {
   private $_educationService;
 
-  public function __construct(EducationRepositoryInterface $educationService)
+  public function __construct(EducationService $educationService)
   {
     $this->_educationService = $educationService;
   }

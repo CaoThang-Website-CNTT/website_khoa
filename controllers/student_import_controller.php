@@ -1,20 +1,23 @@
 <?php
 
-require_once __DIR__ . '/../utils/request_validator.php';
-require_once __DIR__ . '/../includes/core/request.php';
-require_once __DIR__ . '/../models/student.php';
-require_once __DIR__ . '/../includes/files/uploaded_file_handler.php';
-require_once __DIR__ . '/../includes/files/xlsx_reader.php';
-require_once __DIR__ . '/../includes/files/student_importer.php';
+namespace App\Controllers;
+
+require_once BASE_PATH . '/utils/request_validator.php';
+require_once BASE_PATH . '/includes/core/request.php';
+require_once BASE_PATH . '/models/student.php';
+require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
+require_once BASE_PATH . '/includes/files/xlsx_reader.php';
+require_once BASE_PATH . '/includes/files/student_importer.php';
 
 use App\Core\Request;
-use App\Services\EducationRepositoryInterface;
+use App\Core\Files\{UploadedFileHandler, StudentImporter};
+use App\Services\EducationService;
 
 class StudentImportController
 {
-  private EducationRepositoryInterface $_educationService;
+  private EducationService $_educationService;
 
-  public function __construct(EducationRepositoryInterface $educationService)
+  public function __construct(EducationService $educationService)
   {
     $this->_educationService = $educationService;
   }
@@ -27,7 +30,7 @@ class StudentImportController
       $handler = new UploadedFileHandler();
       $uploadedFile = $handler->processUpload($files['uploaded_file']);
       $result = StudentImporter::import($uploadedFile->tmpPath);
-    } catch (Exception $e) {
+    } catch (\RuntimeException $e) {
       $this->redirectWithError('Không thể đọc file: ' . $e->getMessage());
       return;
     }
@@ -66,7 +69,7 @@ class StudentImportController
       $this->_educationService->importStudents($mapped);
 
       flash('success', 'Nhập danh sách thành công!', count($rows) . ' sinh viên đã được thêm vào hệ thống.');
-    } catch (Exception $e) {
+    } catch (\RuntimeException $e) {
       $this->redirectWithError('Lỗi khi lưu dữ liệu: ' . $e->getMessage());
       return;
     }
@@ -128,9 +131,9 @@ class StudentImportController
     if (empty($raw))
       return null;
 
-    $dt = DateTime::createFromFormat('d/m/Y', $raw)
-      ?? DateTime::createFromFormat('j/n/Y', $raw)
-      ?? DateTime::createFromFormat('Y-m-d', $raw);
+    $dt = \DateTime::createFromFormat('d/m/Y', $raw)
+      ?? \DateTime::createFromFormat('j/n/Y', $raw)
+      ?? \DateTime::createFromFormat('Y-m-d', $raw);
 
     return $dt ? $dt->format('Y-m-d') : null;
   }
@@ -142,7 +145,7 @@ class StudentImportController
 
   private function redirectWithError(string $message): void
   {
-    $_SESSION['import_errors'] = [[$message]];  // kept: feeds the import error view, not a toast
+    $_SESSION['import_errors'] = [[$message]];
     header('Location: ' . url('admin/students/import'));
     exit;
   }

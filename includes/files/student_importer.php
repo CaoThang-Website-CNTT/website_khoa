@@ -1,6 +1,11 @@
 <?php
 
-require_once __DIR__ . '/xlsx_reader.php';
+namespace App\Core\Files;
+
+require_once BASE_PATH . '/includes/files/xlsx_reader.php';
+
+use App\Core\Files\XlsxReader;
+
 
 /**
  * Config cho import "Danh Sách Sinh Viên".
@@ -47,7 +52,7 @@ class StudentImporter
    *
    * @param string $filePath Đường dẫn tuyệt đối tới file .xlsx.
    * @return array Mảng chứa 'class_name' và 'students'.
-   * @throws RuntimeException Báo lỗi từ XlsxReader nếu file sai định dạng.
+   * @throws \RuntimeException Báo lỗi từ XlsxReader nếu file sai định dạng.
    */
   public static function import(string $filePath): array
   {

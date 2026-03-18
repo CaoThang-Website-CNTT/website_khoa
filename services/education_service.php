@@ -2,22 +2,20 @@
 
 namespace App\Services;
 
-require_once __DIR__ . '/../models/account.php';
-require_once __DIR__ . '/../models/student.php';
-require_once __DIR__ . '/../models/teacher.php';
-require_once __DIR__ . '/../models/classroom.php';
-require_once __DIR__ . '/../db/database.php';
+require_once BASE_PATH . '/models/account.php';
+require_once BASE_PATH . '/models/student.php';
+require_once BASE_PATH . '/models/teacher.php';
+require_once BASE_PATH . '/models/classroom.php';
+require_once BASE_PATH . '/db/database.php';
 
-use App\Models\Account;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Classroom;
 use Database;
 use PDO;
-use Exception;
 
 
-interface EducationRepositoryInterface
+interface IEducationRepository
 {
   // Student
   /** @return Student[] */
@@ -46,7 +44,7 @@ interface EducationRepositoryInterface
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
 }
 
-class EducationService implements EducationRepositoryInterface
+class EducationService implements IEducationRepository
 {
   private $db;
 

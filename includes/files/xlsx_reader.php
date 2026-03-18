@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Core\Files;
+
 /**
  * Trình đọc file .xlsx cơ bản bằng PHP thuần.
  * Phân tích cấu trúc file ZIP của định dạng OOXML (sharedStrings, workbook rels, sheet XML) và cung cấp các hàm đơn giản để lấy dữ liệu từng ô.
@@ -24,7 +26,7 @@ class XlsxReader
   /**
    * Mở file XLSX và trả về đối tượng XlsxReader đã sẵn sàng để truy vấn.
    *
-   * @throws RuntimeException Nếu không tìm thấy file, file ZIP lỗi hoặc thiếu XML.
+   * @throws \RuntimeException Nếu không tìm thấy file, file ZIP lỗi hoặc thiếu XML.
    */
   public static function open(string $filePath): self
   {
@@ -130,12 +132,12 @@ class XlsxReader
   private function load(string $filePath): void
   {
     if (!file_exists($filePath)) {
-      throw new RuntimeException("Không tìm thấy file: {$filePath}");
+      throw new \RuntimeException("Không tìm thấy file: {$filePath}");
     }
 
     $zip = new ZipArchive();
     if ($zip->open($filePath) !== true) {
-      throw new RuntimeException("Không thể mở file XLSX (không phải định dạng ZIP hợp lệ): {$filePath}");
+      throw new \RuntimeException("Không thể mở file XLSX (không phải định dạng ZIP hợp lệ): {$filePath}");
     }
 
     try {
@@ -162,7 +164,7 @@ class XlsxReader
 
     $sxe = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
-      throw new RuntimeException("Lỗi phân tích cú pháp xl/sharedStrings.xml.");
+      throw new \RuntimeException("Lỗi phân tích cú pháp xl/sharedStrings.xml.");
     }
 
     $strings = [];
@@ -192,7 +194,7 @@ class XlsxReader
     $path = $this->resolveFirstSheetPath($zip);
     $content = $zip->getFromName($path);
     if ($content === false) {
-      throw new RuntimeException("Không tìm thấy XML của sheet tại: {$path}");
+      throw new \RuntimeException("Không tìm thấy XML của sheet tại: {$path}");
     }
     return $content;
   }
@@ -212,12 +214,12 @@ class XlsxReader
           return $candidate;
         }
       }
-      throw new RuntimeException("Không tìm thấy sheet: thiếu file xl/_rels/workbook.xml.rels.");
+      throw new \RuntimeException("Không tìm thấy sheet: thiếu file xl/_rels/workbook.xml.rels.");
     }
 
     $sxe = simplexml_load_string($relsXml, 'SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
-      throw new RuntimeException("Lỗi phân tích cú pháp xl/_rels/workbook.xml.rels.");
+      throw new \RuntimeException("Lỗi phân tích cú pháp xl/_rels/workbook.xml.rels.");
     }
 
     foreach ($sxe->Relationship as $rel) {
@@ -230,7 +232,7 @@ class XlsxReader
       }
     }
 
-    throw new RuntimeException("Không tìm thấy liên kết sheet nào trong xl/_rels/workbook.xml.rels.");
+    throw new \RuntimeException("Không tìm thấy liên kết sheet nào trong xl/_rels/workbook.xml.rels.");
   }
 
   /**
@@ -247,7 +249,7 @@ class XlsxReader
   {
     $sxe = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
-      throw new RuntimeException("Lỗi phân tích cú pháp XML của sheet.");
+      throw new \RuntimeException("Lỗi phân tích cú pháp XML của sheet.");
     }
 
     $cells = [];

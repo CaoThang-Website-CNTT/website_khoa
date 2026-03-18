@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-require_once __DIR__ . '/../models/category.php';
-require_once __DIR__ . '/../db/database.php';
+require_once BASE_PATH . '/models/category.php';
+require_once BASE_PATH . '/db/database.php';
 
 use App\Models\Category;
 use Database;
@@ -12,7 +12,7 @@ use PDO;
 // ============================================================================
 // Interface
 // ============================================================================
-interface CategoryRepositoryInterface
+interface ICategoryRepository
 {
   /** @return Category[] */
   public function getAll(): array;
@@ -33,7 +33,7 @@ interface CategoryRepositoryInterface
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool;
 }
 
-class CategoryService implements CategoryRepositoryInterface
+class CategoryService implements ICategoryRepository
 {
   private $db;
 
