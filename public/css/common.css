@@ -344,6 +344,10 @@
   padding: 0 1rem;
 }
 
+.card__content > .alert {
+  margin-block-end: 1rem;
+}
+
 .card__footer {
   display: flex;
   flex-direction: column;

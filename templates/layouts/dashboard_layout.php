@@ -30,7 +30,6 @@
     <?php include_once __DIR__ . '/../components/dashboard_footer.php'; ?>
     <!-- ========== Dashboard Footer End =========== -->
   </main>
-  <?php include_once __DIR__ . '/../components/flash_alert.php'; ?>
   <!-- ======== main-wrapper end =========== -->
 
   <!-- ========= Dashboard Scripts ======== -->
