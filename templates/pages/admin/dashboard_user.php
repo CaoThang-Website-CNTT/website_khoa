@@ -31,9 +31,9 @@ ob_start(); ?>
     </thead>
     <tbody>
       <?php if (!empty($students)): ?>
-        <?php foreach ($students as $index => $user): ?>
+        <?php foreach ($students as $user): ?>
           <tr onclick="window.location.href='<?= url('admin/students/edit/' . $user->account_id) ?>'">
-            <td class="data-table__id">#<?= $index + 1 ?></td>
+            <td class="data-table__id">#<?= $user->account->id ?></td>
             <td><?= htmlspecialchars($user->full_name ?? 'N/A') ?></td>
             <td><?= htmlspecialchars($user->account->email ?? 'N/A') ?></td>
             <td><?= htmlspecialchars($user->gender ?? 'N/A') ?></td>
