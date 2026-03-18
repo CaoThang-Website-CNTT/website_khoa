@@ -6,13 +6,13 @@ require_once __DIR__ . '/../models/category.php';
 use App\Core\Request;
 use App\Models\Category;
 use App\Utils\Validator;
-use App\Services\CategoryRepositoryInterface;
+use App\Services\CategoryService;
 
 class CategoryController
 {
   private $_categoryService;
 
-  public function __construct(CategoryRepositoryInterface $categoryService)
+  public function __construct(CategoryService $categoryService)
   {
     $this->_categoryService = $categoryService;
   }

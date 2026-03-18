@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Core;
 
 class Request
 {
-
   /**
    * Request headers (lấy từ $_SERVER)
    * @var array
@@ -27,21 +27,29 @@ class Request
    * @var array
    */
   protected array $files;
+
+  /**
+   * Lưu thông tin Server và Host Env (Chủ yếu để lấy Request Method)
+   * @var array
+   */
+  protected array $server;
+
   public function __construct(
     array $query = [],
-    array $body = [],   // rename from $request to $body
+    array $body = [],
     array $files = [],
     array $server = [],
   ) {
     $this->query = $query;
-    $this->body = $body;   // now correctly assigned
+    $this->body = $body;
     $this->files = $this->normaliseFiles($files);
+    $this->server = $server;
     $this->headers = $this->parseHeaders($server);
   }
 
   /**
    * Tạo một Request từ các biến cục bộ của PHP (Snapshot tại thời điểm lấy)
-   * @return Request
+   * @return static
    */
   public static function capture(): static
   {
@@ -52,16 +60,28 @@ class Request
       $_SERVER,
     );
   }
+
   // ===================================
   // HTTP Method
   // ===================================
 
+  /**
+   * Lấy HTTP method của request hiện tại.
+   * Hỗ trợ method spoofing qua header X-HTTP-Method-Override hoặc input ẩn _method
+   * @return string VD: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
+   */
   public function method(): string
   {
     $method = strtoupper($this->server['REQUEST_METHOD'] ?? 'GET');
 
     if ($method === 'POST') {
-      $override = $this->header('X-HTTP-Method-Override') ?? $this->body['_method'];
+      // Do HTML form chỉ hỗ trợ GET/POST nên ta dùng Method Spoofing
+      // bằng cách tạo input:hidden với name="_method" hoặc set trên Header
+      // để có thể lưu khi các method như PUT/PATCH/DELETE
+
+      // Kiểm tra trên Header (AJAX) và input thường
+      $override = $this->header('X-HTTP-Method-Override') ?? ($this->body['_method'] ?? null);
+
       if ($override) {
         $method = strtoupper($override);
       }
@@ -70,14 +90,43 @@ class Request
     return $method;
   }
 
-  public function getMethod(): string
+  /**
+   * Kiểm tra HTTP method của request có khớp với method cho trước không
+   * @param string $method HTTP method cần kiểm tra. VD: 'GET', 'POST'
+   * @return bool
+   */
+  public function isMethod(string $method): bool
   {
-    return $this->method();
+    return $this->method() === strtoupper($method);
+  }
+
+  /**
+   * Lấy URI của request, không bao gồm query string
+   * @return string VD: '/students/42'
+   */
+  public function uri(): string
+  {
+    return strtok($this->server['REQUEST_URI'] ?? '/', '?') ?: '/';
+  }
+
+  /**
+   * Lấy URI đầy đủ của request, bao gồm cả query string
+   * @return string VD: '/students/42?tab=grades'
+   */
+  public function fullUri(): string
+  {
+    return $this->server['REQUEST_URI'] ?? '/';
   }
 
   // ===================================
   // Header
   // ===================================
+
+  /**
+   * Parse các HTTP header từ mảng $_SERVER thành định dạng chuẩn hóa
+   * @param array $server Mảng $_SERVER
+   * @return array Mảng header với key đã được chuẩn hóa về chữ thường. VD: ['content-type' => 'application/json']
+   */
   protected function parseHeaders(array $server): array
   {
     $headers = [];
@@ -94,6 +143,13 @@ class Request
 
     return $headers;
   }
+
+  /**
+   * Lấy một hoặc tất cả HTTP header của request
+   * @param string|null $key Tên header cần lấy (không phân biệt hoa thường). Null để lấy tất cả
+   * @param mixed $default Giá trị mặc định nếu header không tồn tại
+   * @return mixed Giá trị header hoặc toàn bộ mảng header nếu $key là null
+   */
   public function header(?string $key = null, mixed $default = null): mixed
   {
     if ($key === null) {
@@ -105,6 +161,10 @@ class Request
     return $this->headers[$normalized] ?? $default;
   }
 
+  /**
+   * Lấy Bearer token từ Authorization header
+   * @return string|null Token nếu tồn tại, null nếu không có hoặc không đúng định dạng Bearer
+   */
   public function bearerToken(): ?string
   {
     $auth = $this->header('authorization') ?? '';
@@ -116,26 +176,105 @@ class Request
     return null;
   }
 
+  /**
+   * Kiểm tra request có phải là AJAX không dựa vào header X-Requested-With
+   * @return bool
+   */
+  public function isAjax(): bool
+  {
+    return strtolower($this->header('x-requested-with', '')) === 'xmlhttprequest';
+  }
+
+  /**
+   * Đọc và parse JSON body từ request (thường dùng với fetch/axios)
+   * Kết quả được cache lại để tránh đọc php://input nhiều lần
+   * @param string|null $key Tên field cần lấy. Null để lấy toàn bộ
+   * @param mixed $default Giá trị mặc định nếu key không tồn tại
+   * @return mixed Giá trị field hoặc toàn bộ mảng đã parse nếu $key là null
+   */
+  public function json(?string $key = null, mixed $default = null): mixed
+  {
+    static $parsed = null;
+
+    if ($parsed === null) {
+      $raw = file_get_contents('php://input');
+      $parsed = json_decode($raw, true) ?? [];
+    }
+
+    if ($key === null)
+      return $parsed;
+    return $parsed[$key] ?? $default;
+  }
+
+  /**
+   * Lấy một hoặc tất cả query string parameter ($_GET)
+   * @param string|null $key Tên parameter cần lấy. Null để lấy tất cả
+   * @param mixed $default Giá trị mặc định nếu key không tồn tại
+   * @return mixed Giá trị parameter hoặc toàn bộ mảng query nếu $key là null
+   */
+  public function query(?string $key = null, mixed $default = null): mixed
+  {
+    if ($key === null)
+      return $this->query;
+    return $this->query[$key] ?? $default;
+  }
+
   // ===================================
   // Body
   // ===================================
+
+  /**
+   * Lấy toàn bộ POST body parameters ($_POST)
+   * @return array
+   */
   public function all(): array
   {
     return $this->body;
   }
 
+  /**
+   * Lấy một giá trị từ POST body theo key
+   * @param string $key Tên field cần lấy
+   * @param mixed $default Giá trị mặc định nếu key không tồn tại
+   * @return mixed
+   */
   public function input(string $key, mixed $default = null): mixed
   {
     return $this->body[$key] ?? $default;
   }
 
+  /**
+   * Lấy giá trị input cũ từ session để tái hiện form sau khi validation thất bại
+   * Yêu cầu controller phải lưu $_SESSION['old_input'] trước khi redirect
+   * @param string $key Tên field cần lấy
+   * @param mixed $default Giá trị mặc định nếu key không tồn tại
+   * @return mixed
+   */
+  public function old(string $key, mixed $default = null): mixed
+  {
+    $old = $_SESSION['old_input'] ?? [];
+    return $old[$key] ?? $default;
+  }
+
   // ===================================
   // File
   // ===================================
+
+  /**
+   * Lấy thông tin một file được upload theo key
+   * @param string $key Tên input file
+   * @return mixed Mảng thông tin file hoặc null nếu không tồn tại
+   */
   public function file(string $key): mixed
   {
     return $this->files[$key] ?? null;
   }
+
+  /**
+   * Kiểm tra request có chứa file upload hợp lệ theo key không
+   * @param string $key Tên input file
+   * @return bool
+   */
   public function hasFile(string $key): bool
   {
     $file = $this->file($key);
@@ -146,14 +285,20 @@ class Request
 
     return false;
   }
+
+  /**
+   * Lấy tất cả file được upload trong request
+   * @return array
+   */
   public function allFiles(): array
   {
     return $this->files;
   }
+
   /**
-   * Chuẩn hóa các file từ $_FILE thành 1 định dạng thống nhất
-   * @param array $files
-   * @return array
+   * Chuẩn hóa các file từ $_FILES thành 1 định dạng thống nhất
+   * @param array $files Mảng $_FILES gốc từ PHP
+   * @return array Mảng file đã chuẩn hóa, mỗi phần tử có các key: name, type, tmp_name, error, size
    */
   protected function normaliseFiles(array $files): array
   {
@@ -182,4 +327,3 @@ class Request
     return $result;
   }
 }
-?>

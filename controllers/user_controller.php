@@ -3,13 +3,13 @@
 require_once __DIR__ . '/../utils/request_validator.php';
 require_once __DIR__ . '/../models/student.php';
 
-use App\Services\EducationRepositoryInterface;
+use App\Services\EducationService;
 
 class UserController
 {
   private $_educationService;
 
-  public function __construct(EducationRepositoryInterface $educationService)
+  public function __construct(EducationService $educationService)
   {
     $this->_educationService = $educationService;
   }

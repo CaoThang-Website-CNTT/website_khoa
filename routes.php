@@ -1,9 +1,4 @@
 <?php
-
-use App\Core\Router;
-
-$router = new Router();
-
 $router->get('/', ['SiteController', 'index']);
 $router->get('/admin', ['UserController', 'index']);
 
@@ -29,5 +24,3 @@ $router->get('/admin/categories/{id}', ['CategoryController', 'edit']);
 $router->post('/admin/categories', ['CategoryController', 'store']);
 $router->post('/admin/categories/{id}', ['CategoryController', 'update']);
 $router->post('/admin/categories/delete/{id}', ['CategoryController', 'destroy']);
-
-return $router;
