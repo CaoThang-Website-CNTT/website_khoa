@@ -275,7 +275,13 @@ body {
   background-color: initial;
 }
 
-.header .header-right .profile-box .dropdown-menu .author-info .content a:hover {
+.header
+  .header-right
+  .profile-box
+  .dropdown-menu
+  .author-info
+  .content
+  a:hover {
   background: initial;
 }
 
@@ -317,7 +323,7 @@ body {
   object-fit: cover;
 }
 
-.header .header-right .profile-box .profile-info .info>div:last-child {
+.header .header-right .profile-box .profile-info .info > div:last-child {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -440,19 +446,23 @@ body {
   transition: var(--dash-sidebar-transition);
 }
 
-.sidebar__item--has-children>.sidebar__link[data-state="collapsed"] .sidebar__link-cadet {
+.sidebar__item--has-children
+  > .sidebar__link[data-state="collapsed"]
+  .sidebar__link-cadet {
   transform: rotate(90deg);
 }
 
 .sidebar__link:hover,
-.sidebar__item.active>.sidebar__link,
-.sidebar__item--has-children>.sidebar__link[data-state="expanded"] {
+.sidebar__item.active > .sidebar__link,
+.sidebar__item--has-children > .sidebar__link[data-state="expanded"] {
   color: var(--primary);
 }
 
 .sidebar__link:hover .sidebar__icon,
-.sidebar__item.active>.sidebar__link .sidebar__icon,
-.sidebar__item--has-children>.sidebar__link[data-state="expanded"] .sidebar__icon {
+.sidebar__item.active > .sidebar__link .sidebar__icon,
+.sidebar__item--has-children
+  > .sidebar__link[data-state="expanded"]
+  .sidebar__icon {
   color: var(--primary);
 }
 
@@ -465,11 +475,13 @@ body {
   padding: 0 1rem 0.75rem 3.5rem;
 }
 
-.sidebar__dropdown> :not(:last-child) {
+.sidebar__dropdown > :not(:last-child) {
   margin-block-end: 0.75rem;
 }
 
-.sidebar__item--has-children>.sidebar__link[data-state="expanded"]+.sidebar__dropdown {
+.sidebar__item--has-children
+  > .sidebar__link[data-state="expanded"]
+  + .sidebar__dropdown {
   display: block;
   opacity: 1;
   visibility: visible;
@@ -524,8 +536,8 @@ body {
 }
 
 @media only screen and (min-width: 992px) and (max-width: 1199px),
-only screen and (min-width: 768px) and (max-width: 991px),
-(max-width: 767px) {
+  only screen and (min-width: 768px) and (max-width: 991px),
+  (max-width: 767px) {
   .main-wrapper {
     margin-left: 0;
   }
@@ -555,6 +567,9 @@ only screen and (min-width: 768px) and (max-width: 991px),
 
 /* ========== Title Wrapper Styling ========== */
 .title-wrapper .title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--foreground);
 }
 

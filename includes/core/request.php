@@ -260,6 +260,12 @@ class Request
   {
     $_SESSION['flash'] = compact('type', 'title', 'desc');
   }
+  public function getFlash()
+  {
+    $flash = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    return $flash;
+  }
 
   public function oldInputs(?array $includedKeys, ?array $excludedKeys): void
   {

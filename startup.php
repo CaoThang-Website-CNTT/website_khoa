@@ -16,7 +16,6 @@ require_once BASE_PATH . '/services/category_service.php';
 // Controllers
 require_once BASE_PATH . '/controllers/site_controller.php';
 require_once BASE_PATH . '/controllers/dashboard_controller.php';
-require_once BASE_PATH . '/controllers/user_controller.php';
 require_once BASE_PATH . '/controllers/student_controller.php';
 require_once BASE_PATH . '/controllers/student_import_controller.php';
 require_once BASE_PATH . '/controllers/teacher_controller.php';

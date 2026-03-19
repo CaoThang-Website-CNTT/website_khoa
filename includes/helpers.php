@@ -1,4 +1,7 @@
 <?php
+
+use App\Core\Request;
+
 if (!defined('APP_URL')) {
   $projectDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', str_replace('\\', '/', __DIR__ . '/../'));
   $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . rtrim($projectDir, '/') . '/';
@@ -12,4 +15,15 @@ if (!defined('APP_URL')) {
 function url(string $path = ''): string
 {
   return APP_URL . ltrim($path, '/');
+}
+
+function request(): Request
+{
+  static $instance = null;
+
+  if ($instance === null) {
+    $instance = Request::capture();
+  }
+
+  return $instance;
 }

@@ -17,3 +17,12 @@
 
 
 <link rel="shortcut icon" href="<?= url('assets/images/favicon.svg') ?>" type="image/x-icon" />
+
+<script src="<?= url('/public/js/toast.js') ?>"></script>
+
+<script>
+  // Khởi tạo toast
+  document.addEventListener('DOMContentLoaded', () => {
+    window.toast = new Toast({ position: 'bottom-right', });
+  });
+</script>
