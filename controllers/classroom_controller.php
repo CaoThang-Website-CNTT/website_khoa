@@ -31,4 +31,17 @@ class ClassroomController
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
+  public function edit($id)
+  {
+    $classroom = $this->_educationService->getClassroomById($id);
+    if (!$classroom) {
+      die("Không thấy lớp học với id: $id");
+    }
+    $professions = $this->_educationService->getAllProfessions();
+    $majorsOfProfession = $this->_educationService->getMajorsByProfessionId($classroom->profession_id);
+    ob_start();
+    require_once __DIR__ . '/../templates/pages/admin/classroom_detail.php';
+    $content = ob_get_clean();
+    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+  }
 }
