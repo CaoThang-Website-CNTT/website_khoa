@@ -85,7 +85,7 @@ function errorFor($field, $errors)
             </option>
             <?php foreach ($classrooms as $classroom): ?>
               <option value=<?= htmlspecialchars($classroom->id) ?>>
-                <?= htmlspecialchars($classroom->name); ?>
+                <?= htmlspecialchars($classroom->short_name); ?>
               </option>
             <?php endforeach; ?>
           </select>

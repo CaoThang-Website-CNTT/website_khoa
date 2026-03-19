@@ -83,15 +83,16 @@ function errorFor($field, $errors)
         <div class="field">
           <label for="classroom_id">Classroom *</label>
           <select id="classroom_id"
-            class="field__input  <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>" name="classroom_id">
+            class="field__input  <?= isset($errors['classroom_id']) ? 'field__input--error' : '' ?>"
+            name="classroom_id">
             <option value="" disabled hidden <?= is_null($student?->classroom_id) ? 'selected' : '' ?>>
               -- Chọn lớp học--
             </option>
             <span><?= $student->classroom_id ?></span>
             <?php foreach ($classrooms as $classroom): ?>
-              <option value="<?= $classroom->id ?>" <?= ($student?->classroom_id == $classroom->id) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($classroom->name) ?>
-              </option>
+            <option value="<?= $classroom->id ?>" <?= ($student?->classroom_id == $classroom->id) ? 'selected' : '' ?>>
+              <?= htmlspecialchars($classroom->short_name) ?>
+            </option>
             <?php endforeach; ?>
           </select>
           <?= errorFor('classroom_id', $errors) ?>
@@ -131,35 +132,35 @@ function errorFor($field, $errors)
 <div class="modal-overlay" data-modal-close></div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector('#detail-form');
-    const updateBtn = document.querySelector('#update-submit-btn');
-    const deleteBtn = document.querySelector('#delete-submit-btn');
-    const confirmBtn = document.querySelector('#confirm-modal-btn');
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector('#detail-form');
+  const updateBtn = document.querySelector('#update-submit-btn');
+  const deleteBtn = document.querySelector('#delete-submit-btn');
+  const confirmBtn = document.querySelector('#confirm-modal-btn');
 
-    const modal = new Modal("#confirm-modal");
-    const closeTriggers = document.querySelectorAll('[data-modal-close]');
+  const modal = new Modal("#confirm-modal");
+  const closeTriggers = document.querySelectorAll('[data-modal-close]');
 
-    let pendingActionUrl = '';
+  let pendingActionUrl = '';
 
-    console.log(modal)
+  console.log(modal)
 
-    // Update Btn Event Listener
-    updateBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      pendingActionUrl = form.getAttribute('action');
-    });
-
-    // Delete Btn Event Listener
-    deleteBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      pendingActionUrl = deleteBtn.getAttribute('formaction');
-    });
-
-    // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function() {
-      form.action = pendingActionUrl;
-      form.submit();
-    });
+  // Update Btn Event Listener
+  updateBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    pendingActionUrl = form.getAttribute('action');
   });
+
+  // Delete Btn Event Listener
+  deleteBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    pendingActionUrl = deleteBtn.getAttribute('formaction');
+  });
+
+  // Confirm Btn Event Listener
+  confirmBtn.addEventListener('click', function() {
+    form.action = pendingActionUrl;
+    form.submit();
+  });
+});
 </script>

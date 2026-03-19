@@ -118,12 +118,12 @@ class StudentImportController
   private function resolveClassroom(string $name): int
   {
     foreach ($this->_educationService->getAllClassrooms() as $classroom) {
-      if (trim($classroom->name) === $name) {
+      if (trim($classroom->short_name) === $name) {
         return $classroom->id;
       }
     }
 
-    return $this->_educationService->createClassroom(['name' => $name]);
+    return $this->_educationService->createClassroom(['short_name' => $name]);
   }
   private function normalizeDate(string $raw): ?string
   {
