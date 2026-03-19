@@ -48,6 +48,7 @@ interface EducationRepositoryInterface
   public function getClassrooms(int $page, int $limit = 15): array;
   public function getClassroomById(int $id): ?Classroom;
   public function createClassroom(array $classroom): int;
+  public function deleteClassroom(int $id): bool;
 
   public function getAllProfessions(): array;
   public function getMajorsByProfessionId(int $id): array;
@@ -437,7 +438,7 @@ class EducationService implements EducationRepositoryInterface
 
     $sql = "SELECT 
               c.*,
-              p.id AS pro_id, p.full_name as pro_full_name, p.short_name AS pro_short_name, 
+              p.id AS pro_id, p.full_name as pro_full_name, p.short_name AS pro_short_name, p.level as pro_level,
               p.created_at AS pro_created_at, p.updated_at AS pro_updated_at, p.deleted_at AS pro_deleted_at, m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, 
               m.created_at AS maj_created_at, m.updated_at AS maj_updated_at, m.deleted_at AS maj_deleted_at
             FROM classrooms c 
@@ -465,7 +466,7 @@ class EducationService implements EducationRepositoryInterface
   {
     $sql = "SELECT  
               c.*,
-              p.id AS pro_id, p.full_name as pro_full_name, p.short_name AS pro_short_name, 
+              p.id AS pro_id, p.full_name as pro_full_name, p.short_name AS pro_short_name, p.level as pro_level, 
               p.created_at AS pro_created_at, p.updated_at AS pro_updated_at, p.deleted_at AS pro_deleted_at, m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, 
               m.created_at AS maj_created_at, m.updated_at AS maj_updated_at, m.deleted_at AS maj_deleted_at
             FROM classrooms c 
@@ -484,6 +485,11 @@ class EducationService implements EducationRepositoryInterface
     $stmt = $this->db->prepare("INSERT INTO `classrooms` (name) VALUES (:name)");
     $stmt->execute([':name' => $classroom['name']]);
     return (int) $this->db->lastInsertId();
+  }
+  public function deleteClassroom(int $id): bool
+  {
+    $sql = "UPDATE `classrooms` SET deleted_at = NOW() WHERE id = :id";
+    return $this->db->prepare($sql)->execute([':id' => $id]);
   }
 
   public function getMajorsByProfessionId($id): array

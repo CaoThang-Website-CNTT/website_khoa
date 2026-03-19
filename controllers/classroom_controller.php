@@ -44,4 +44,16 @@ class ClassroomController
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
   }
+  public function destroy($id)
+  {
+    $isSuccess = $this->_educationService->deleteClassroom($id);
+    if ($isSuccess) {
+      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Xoá lớp học thành công!'];
+    } else {
+      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra, vui lòng thử lại.'];
+    }
+
+    header("Location: " . url('admin/classrooms'));
+    exit;
+  }
 }
