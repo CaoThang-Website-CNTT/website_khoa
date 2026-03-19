@@ -256,6 +256,28 @@ class Request
     return $old[$key] ?? $default;
   }
 
+  public function flash(string $type, string $title, string $desc = ""): void
+  {
+    $_SESSION['flash'] = compact('type', 'title', 'desc');
+  }
+
+  public function oldInputs(?array $includedKeys, ?array $excludedKeys): void
+  {
+    if ($includedKeys !== null) {
+      $_SESSION['old_input'] = array_intersect_key(
+        $this->body,
+        array_flip($includedKeys)
+      );
+    } elseif ($excludedKeys !== null) {
+      $_SESSION['old_input'] = array_diff_key(
+        $this->body,
+        array_flip($excludedKeys)
+      );
+    } else {
+      $_SESSION['old_input'] = $this->body;
+    }
+  }
+
   // ===================================
   // File
   // ===================================
