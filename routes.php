@@ -8,7 +8,7 @@ use App\Controllers\TeacherController;
 use App\Controllers\CategoryController;
 
 $router->get('/', [SiteController::class, 'index']);
-$router->get('/admin', [UserController::class, 'index']);
+$router->get('/admin', [DashboardController::class, 'index']);
 
 // Users
 $router->get('/admin/users', [UserController::class, 'index']);
