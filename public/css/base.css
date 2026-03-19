@@ -347,7 +347,6 @@
   button {
     cursor: pointer;
     border: none;
-    outline: none;
     background: transparent;
   }
 }
@@ -444,6 +443,11 @@
     border-radius: var(--radius-lg);
     border: 1px solid transparent;
     font-weight: var(--fw-medium);
+  }
+
+  .btn:focus-within {
+    outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
+    outline-offset: 2px;
   }
 
   .btn[data-size="sm"] {

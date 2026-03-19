@@ -1,20 +1,20 @@
 <?php
-if (session_status() === PHP_SESSION_NONE)
-  session_start();
-
-$errors = $_SESSION['errors'] ?? [];
-$old_data = $_SESSION['old_data'] ?? [];
-unset($_SESSION['errors'], $_SESSION['old_data']);
-function errorFor($field, $errors)
-{
-  if (isset($errors[$field])) {
-    return '<span class="field__error">'
-      . htmlspecialchars($errors[$field][0]) .
-      '</span>';
-  }
-  return '';
-}
+$errors = request()->getErrors() ?? [];
+$old_input = request()->getOldInputs() ?? [];
+$errors = [
+  'email' => ['Mã số sinh viên không được để trống.'],
+  'full_name' => ['Họ và tên không được để trống.'],
+  'phone' => ['Số điện thoại không hợp lệ, vui lòng nhập đúng định dạng.'],
+  'gender' => ['Vui lòng chọn giới tính.'],
+  'dob' => ['Ngày sinh không hợp lệ.'],
+  'classroom_id' => ['Vui lòng chọn lớp học.'],
+];
 ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
+
 <div class="detail-panel card shadow">
   <div class="card__header">
     <div class="card__title">
@@ -30,78 +30,68 @@ function errorFor($field, $errors)
     ?>
     <form id="user-add-form" method="POST" action="<?= url('admin/teachers/store') ?>">
       <div class="field-group">
-        <div class="field">
-          <label for="email">Email *</label>
+        <div class="field" data-field-required>
+          <label for="email">Email</label>
           <input id="email" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
             type="email" name="email" value="">
-          <?= errorFor('email', $errors) ?>
         </div>
 
-        <div class="field">
-          <label for="password">Password *</label>
+        <div class="field" data-field-required>
+          <label for="password">Password</label>
           <input id="password" class="field__input <?= isset($errors['password']) ? 'field__input--error' : '' ?>"
             type="password" name="password" value="">
-          <?= errorFor('password', $errors) ?>
         </div>
 
-        <div class="field">
-          <label for="password_comfirmation">Password Comfirmation *</label>
+        <div class="field" data-field-required>
+          <label for="password_comfirmation">Password Comfirmation</label>
           <input id="password_comfirmation"
             class="field__input <?= isset($errors['password_comfirmation']) ? 'field__input--error' : '' ?>"
             type="password" name="password_comfirmation" value="">
-          <?= errorFor('password_comfirmation', $errors) ?>
         </div>
 
-        <div class="field">
-          <label for="full_name">Full Name *</label>
+        <div class="field" data-field-required>
+          <label for="full_name">Full Name</label>
           <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
             type="text" name="full_name" value="">
-          <?= errorFor('full_name', $errors) ?>
         </div>
 
-        <div class="field">
-          <label for="gender">Gender *</label>
+        <div class="field" data-field-required>
+          <label for="gender">Gender</label>
           <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
             name="gender">
             <option value="male">Nam</option>
             <option value="female">Nữ</option>
           </select>
-          <?= errorFor('gender', $errors) ?>
         </div>
 
-        <div class="field">
-          <label for="dob">Date of Birth *</label>
+        <div class="field" data-field-required>
+          <label for="dob">Date of Birth</label>
           <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
             name="dob" value="">
-          <?= errorFor('dob', $errors) ?>
         </div>
 
-        <div class="field">
-          <label for="phone">Phone *</label>
+        <div class="field" data-field-required>
+          <label for="phone">Phone</label>
           <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="tel"
             name="phone" value="">
-          <?= errorFor('phone', $errors) ?>
         </div>
 
-        <div class="field">
-          <label for="start_date">Start Date *</label>
+        <div class="field" data-field-required>
+          <label for="start_date">Start Date</label>
           <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
             type="date" name="start_date" value="">
-          <?= errorFor('start_date', $errors) ?>
         </div>
 
         <div class="field">
           <label for="title">Title</label>
           <input id="title" class="field__input <?= isset($errors['title']) ? 'field__input--error' : '' ?>" type="text"
             name="title" value="">
-          <?= errorFor('title', $errors) ?>
         </div>
 
         <div class="field">
           <label for="department">Department</label>
           <input id="department" class="field__input <?= isset($errors['department']) ? 'field__input--error' : '' ?>"
             type="text" name="department" value="">
-          <?= errorFor('department', $errors) ?>
         </div>
 
     </form>

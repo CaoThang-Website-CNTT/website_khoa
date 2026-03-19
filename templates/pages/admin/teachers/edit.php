@@ -1,20 +1,12 @@
 <?php
-if (session_status() === PHP_SESSION_NONE)
-  session_start();
-
-$errors = $_SESSION['errors'] ?? [];
-$old_data = $_SESSION['old_data'] ?? [];
-unset($_SESSION['errors'], $_SESSION['old_data']);
-function errorFor($field, $errors)
-{
-  if (isset($errors[$field])) {
-    return '<span class="field__error">'
-      . htmlspecialchars($errors[$field][0]) .
-      '</span>';
-  }
-  return '';
-}
+$errors = request()->getErrors() ?? [];
+$old_input = request()->getOldInputs() ?? [];
 ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
+
 <div class="detail-panel card shadow">
   <div class="card__header">
     <div class="card__title">
@@ -35,10 +27,9 @@ function errorFor($field, $errors)
       <div class="field-group">
 
         <div class="field">
-          <label for="full_name">Full Name *</label>
+          <label for="full_name">Full Name</label>
           <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="text" name="full_name" value="<?= htmlspecialchars($teacher->full_name ?? '') ?>">
-          <?= errorFor('full_name', $errors) ?>
+            type="text" name="full_name" value="<?= htmlspecialchars($teacher->full_name ?? '') ?>" required>
         </div>
 
         <div class="field">
@@ -48,48 +39,42 @@ function errorFor($field, $errors)
         </div>
 
         <div class="field">
-          <label for="gender">Gender *</label>
+          <label for="gender">Gender</label>
           <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
-            name="gender">
+            name="gender" required>
             <option value="Male" <?= ($teacher?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
             <option value="Female" <?= ($teacher?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
           </select>
-          <?= errorFor('gender', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="dob">Date of Birth *</label>
+          <label for="dob">Date of Birth</label>
           <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
-            name="dob" value="<?= htmlspecialchars($teacher->dob ?? '') ?>">
-          <?= errorFor('dob', $errors) ?>
+            name="dob" value="<?= htmlspecialchars($teacher->dob ?? '') ?>" required>
         </div>
 
         <div class="field">
-          <label for="phone">Phone *</label>
+          <label for="phone">Phone</label>
           <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="text"
-            name="phone" value="<?= htmlspecialchars($teacher->phone ?? '') ?>">
-          <?= errorFor('phone', $errors) ?>
+            name="phone" value="<?= htmlspecialchars($teacher->phone ?? '') ?>" required>
         </div>
 
         <div class="field">
-          <label for="start_date">Start Date *</label>
+          <label for="start_date">Start Date</label>
           <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
-            type="date" name="start_date" value="<?= htmlspecialchars($teacher->start_date ?? '') ?>">
-          <?= errorFor('start_date', $errors) ?>
+            type="date" name="start_date" value="<?= htmlspecialchars($teacher->start_date ?? '') ?>" required>
         </div>
 
         <div class="field">
           <label for="title">Title</label>
           <input id="title" class="field__input <?= isset($errors['title']) ? 'field__input--error' : '' ?>" type="text"
             name="title" value="<?= htmlspecialchars($teacher->title ?? '') ?>">
-          <?= errorFor('title', $errors) ?>
         </div>
 
         <div class="field">
           <label for="department">Department</label>
           <input id="department" class="field__input <?= isset($errors['department']) ? 'field__input--error' : '' ?>"
             type="text" name="department" value="<?= htmlspecialchars($teacher->department ?? '') ?>">
-          <?= errorFor('department', $errors) ?>
         </div>
 
       </div>

@@ -286,6 +286,47 @@
   color: var(--foreground);
 }
 
+.field[data-field-required] label::after {
+  content: "*";
+  margin-left: 0.25rem;
+  color: var(--destructive);
+}
+
+.field__input {
+  height: 2rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.25rem 0.625rem;
+  line-height: 1.5;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.field__input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.field__input:focus-within {
+  outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.field[data-field-invalid] .field__input {
+  border-color: var(--destructive);
+}
+
+.field__error {
+  color: var(--destructive);
+  font-size: var(--text-sm);
+}
+
+.field__error svg {
+  width: var(--text-sm);
+  height: var(--text-sm);
+  vertical-align: baseline;
+  margin-right: 0.25rem;
+}
+
 /* ==========================================================================
    CARD
    ========================================================================== */
@@ -508,38 +549,6 @@
 
 .uni-name {
   color: var(--muted-foreground);
-}
-
-.field__input {
-  height: 2rem;
-  width: 100%;
-  min-width: 0;
-  padding: 0.25rem 0.625rem;
-
-  line-height: 1.5;
-
-  border: 1px solid var(--input);
-  border-radius: var(--radius-md);
-  outline: none;
-}
-
-.field__input::placeholder {
-  color: var(--muted-foreground);
-}
-
-.field__input:focus-within {
-  outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
-}
-
-.field__input--error {
-  border-color: #fa5656;
-}
-
-.field__error {
-  color: red;
-  font-size: 0.85em;
-  display: block;
-  margin-top: 6px;
 }
 
 .search-bar {

@@ -1,21 +1,11 @@
 <?php
-if (session_status() === PHP_SESSION_NONE)
-  session_start();
-
-$errors = $_SESSION['errors'] ?? [];
-$old_data = $_SESSION['old_data'] ?? [];
-unset($_SESSION['errors'], $_SESSION['old_data']);
-
-function errorFor($field, $errors)
-{
-  if (isset($errors[$field])) {
-    return '<span class="field__error">'
-      . htmlspecialchars($errors[$field][0]) .
-      '</span>';
-  }
-  return '';
-}
+$errors = request()->getErrors() ?? [];
+$old_input = request()->getOldInputs() ?? [];
 ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 
 <div class="detail-panel card shadow">
   <div class="card__header">
@@ -45,54 +35,49 @@ function errorFor($field, $errors)
         </div>
 
         <div class="field">
-          <label for="full_name">Full Name *</label>
+          <label for="full_name">Full Name</label>
           <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="text" name="full_name" value="<?= htmlspecialchars($student->full_name ?? '') ?>">
-          <?= errorFor('full_name', $errors) ?>
+            type="text" name="full_name" value="<?= htmlspecialchars($student->full_name ?? '') ?>" required>
         </div>
 
         <div class="field">
-          <label for="gender">Gender *</label>
+          <label for="gender">Gender</label>
           <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
-            name="gender">
+            name="gender" required>
             <option value="Male" <?= ($student?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
             <option value="Female" <?= ($student?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
           </select>
-          <?= errorFor('gender', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="dob">Date of Birth *</label>
+          <label for="dob">Date of Birth</label>
           <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
-            name="dob" value="<?= htmlspecialchars($student->dob ?? '') ?>">
-          <?= errorFor('dob', $errors) ?>
+            name="dob" value="<?= htmlspecialchars($student->dob ?? '') ?>" required>
         </div>
 
         <div class="field">
-          <label for="phone">Phone *</label>
+          <label for="phone">Phone</label>
           <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="text"
-            name="phone" value="<?= htmlspecialchars($student->phone ?? '') ?>">
-          <?= errorFor('phone', $errors) ?>
+            name="phone" value="<?= htmlspecialchars($student->phone ?? '') ?>" required>
         </div>
 
         <div class="field">
           <label for="major">Major</label>
           <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
             name="major" value="<?= htmlspecialchars($student->major ?? '') ?>">
-          <?= errorFor('major', $errors) ?>
         </div>
 
         <div class="field">
           <label for="birth_place">Birth Place</label>
           <input id="birth_place" class="field__input <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>"
             type="text" name="birth_place" value="<?= htmlspecialchars($student->birth_place ?? '') ?>">
-          <?= errorFor('birth_place', $errors) ?>
         </div>
 
         <div class="field">
-          <label for="classroom_id">Classroom *</label>
+          <label for="classroom_id">Classroom</label>
           <select id="classroom_id"
-            class="field__input <?= isset($errors['classroom_id']) ? 'field__input--error' : '' ?>" name="classroom_id">
+            class="field__input <?= isset($errors['classroom_id']) ? 'field__input--error' : '' ?>" name="classroom_id"
+            required>
             <option value="" disabled hidden <?= is_null($student?->classroom_id) ? 'selected' : '' ?>>
               -- Chọn lớp học --
             </option>
@@ -102,7 +87,6 @@ function errorFor($field, $errors)
               </option>
             <?php endforeach; ?>
           </select>
-          <?= errorFor('classroom_id', $errors) ?>
         </div>
 
       </div>
