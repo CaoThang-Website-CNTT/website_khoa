@@ -38,18 +38,16 @@ function errorFor($field, $errors)
         </div>
 
         <div class="field">
-          <label for="level">Level *</label>
+          <label for="level">Level</label>
           <select id="level" class="field__input  <?= isset($errors['level']) ? 'field__input--error' : '' ?>"
-            name="level">
-            <option value="" disabled hidden <?= is_null($classroom?->level) ? 'selected' : '' ?>>
+            name="level" disabled>
+            <option value="" disabled hidden <?= is_null($classroom?->profession->level) ? 'selected' : '' ?>>
               -- Chọn bậc học--
             </option>
-            <option value="CĐ"
-              <?= (mb_strtoupper($classroom?->level, 'UTF-8') === mb_strtoupper(LEVELS['CĐ'], 'UTF-8')) ? 'selected' : '' ?>>
+            <option value="CĐ" <?= $classroom?->profession?->level === 'CĐ' ? 'selected' : '' ?>>
               <?= htmlspecialchars(LEVELS['CĐ']) ?>
             </option>
-            <option value="CĐN"
-              <?= (mb_strtoupper($classroom?->level, 'UTF-8') === mb_strtoupper(LEVELS['CĐN'], 'UTF-8')) ? 'selected' : '' ?>>
+            <option value="CĐN" <?= $classroom?->profession?->level === 'CĐN' ? 'selected' : '' ?>>
               <?= htmlspecialchars(LEVELS['CĐN']) ?>
             </option>
           </select>

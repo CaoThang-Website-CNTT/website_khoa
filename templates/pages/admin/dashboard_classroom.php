@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../components/pagination.php';
+require_once __DIR__ . '/../../../config/constants.php';
 
 use App\Components\Pagination;
 // ── Build panels via output buffering ──────────────────────────────────────
@@ -15,7 +16,7 @@ ob_start(); ?>
     <div class="col-6 col-md-6 flex gap-2">
 
       <div>
-        <a href="<?= url('admin/students/create') ?>" data-variant="primary" data-size="md" class="btn">
+        <a href="<?= url('admin/classrooms/create') ?>" data-variant="primary" data-size="md" class="btn">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
             <path
               d="M256 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 160-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0 0 160c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160 160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-160z" />
@@ -56,9 +57,9 @@ ob_start(); ?>
       <tr onclick="window.location.href='<?= url('admin/classrooms/edit/' . $classroom->id) ?>'">
         <td class="data-table__id">#<?= $index + 1 ?></td>
         <td><?= htmlspecialchars($classroom->short_name ?? 'N/A') ?></td>
-        <td><?= htmlspecialchars($classroom->level ?? 'N/A') ?></td>
+        <td><?= htmlspecialchars(LEVELS[$classroom?->profession?->level] ?? 'N/A') ?></td>
         <td><?= htmlspecialchars($classroom->class_of ?? 'N/A') ?></td>
-        <td><?= htmlspecialchars($classroom->profession->full_name ?? 'N/A') ?></td>
+        <td><?= htmlspecialchars($classroom?->profession?->full_name ?? 'N/A') ?></td>
         <td><?= htmlspecialchars($classroom->major->full_name ?? 'N/A') ?></td>
       </tr>
       <?php endforeach; ?>
