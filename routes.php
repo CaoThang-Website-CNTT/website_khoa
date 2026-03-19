@@ -1,5 +1,6 @@
 <?php
 
+use App\Controllers\DashboardController;
 use App\Controllers\SiteController;
 use App\Controllers\UserController;
 use App\Controllers\StudentController;
