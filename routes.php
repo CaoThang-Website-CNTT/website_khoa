@@ -13,7 +13,7 @@ $router->get('/admin', [DashboardController::class, 'index']);
 // Students
 $router->get('/admin/students', [StudentController::class, 'index']);
 $router->get('/admin/students/create', [StudentController::class, 'create']);
-$router->post('/admin/students/store', [StudentController::class, 'store']);
+$router->post('/admin/students', [StudentController::class, 'store']);
 $router->get('/admin/students/import', [StudentController::class, 'import']);
 $router->post('/admin/students/import', [StudentImportController::class, 'store']);
 $router->get('/admin/students/{id}', [StudentController::class, 'edit']);
@@ -23,7 +23,7 @@ $router->post('/admin/students/delete/{id}', [StudentController::class, 'destroy
 // Teachers
 $router->get('/admin/teachers', [TeacherController::class, 'index']);
 $router->get('/admin/teachers/create', [TeacherController::class, 'create']);
-$router->post('/admin/teachers/store', [TeacherController::class, 'store']);
+$router->post('/admin/teachers', [TeacherController::class, 'store']);
 $router->get('/admin/teachers/{id}', [TeacherController::class, 'edit']);
 $router->post('/admin/teachers/{id}', [TeacherController::class, 'update']);
 $router->post('/admin/teachers/delete/{id}', [TeacherController::class, 'destroy']);

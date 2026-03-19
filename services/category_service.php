@@ -43,17 +43,39 @@ class CategoryService implements ICategoryRepository
   }
 
   /**
-   * Lấy tất cả danh mục chưa bị xóa, sắp xếp theo parent_id rồi id.
+   * Lấy tất cả danh mục chưa bị xóa theo thứ tự cây (cha trước, con sau).
+   * Sử dụng Recursive CTE để duyệt cây và tính depth, path cho mỗi node.
+   * Kết quả được sắp xếp theo path — đảm bảo đúng thứ tự ở mọi độ sâu.
    *
    * @public
-   * @return Category[]
+   * @return Category[] Danh sách danh mục đã được sắp xếp phẳng theo cấu trúc cây
    */
   public function getAll(): array
   {
     $stmt = $this->db->prepare("
-      SELECT * FROM `categories`
-      WHERE `deleted_at` IS NULL
-      ORDER BY `parent_id` ASC, `id` ASC
+      WITH RECURSIVE category_tree AS (
+        -- Anchor: root nodes (parent_id IS NULL)
+        SELECT
+          *,
+          0 AS depth,
+          CAST(LPAD(id, 10, '0') AS CHAR(1000)) AS path
+        FROM `categories`
+        WHERE `parent_id` IS NULL
+          AND `deleted_at` IS NULL
+
+        UNION ALL
+
+        -- Recursive: children join to their parent
+        SELECT
+          c.*,
+          ct.depth + 1,
+          CONCAT(ct.path, '/', LPAD(c.id, 10, '0'))
+        FROM `categories` c
+        INNER JOIN category_tree ct ON c.parent_id = ct.id
+        WHERE c.deleted_at IS NULL
+      )
+      SELECT * FROM category_tree
+      ORDER BY path
     ");
     $stmt->execute();
 

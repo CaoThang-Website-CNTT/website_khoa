@@ -11,6 +11,7 @@ class Category
     public ?string $description,
     public ?int $parent_id,
     public ?string $meta,
+    public ?string $type,
     public ?string $created_at,
     public ?string $updated_at,
     public ?string $deleted_at,
@@ -18,8 +19,10 @@ class Category
     // Referenced data
     public ?Category $parent_category = null,
 
-    // Độ sâu (thuộc tính tự do của models không phản ánh schema)
+    // Thuộc tính tự do của models không phản ánh schema)
+    // có thể đến từ kết quả query
     public int $depth = 0,
+    public ?string $path = null,
   ) {
   }
 
@@ -37,9 +40,11 @@ class Category
       description: $data['description'] ?? null,
       parent_id: isset($data['parent_id']) ? (int) $data['parent_id'] : null,
       meta: isset($data['meta']) ? json_decode($data['meta'], true) : null,
+      type: $data['type'] ?? null,
       created_at: $data['created_at'] ?? null,
       updated_at: $data['updated_at'] ?? null,
       deleted_at: $data['deleted_at'] ?? null,
+      depth: (int) ($data['depth'] ?? 0),
     );
   }
 }

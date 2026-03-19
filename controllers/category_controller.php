@@ -2,15 +2,16 @@
 
 namespace App\Controllers;
 
+require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/category.php';
 
+use App\Core\Controller;
 use App\Core\Request;
-use App\Models\Category;
 use App\Core\Validator;
 use App\Services\CategoryService;
 
-class CategoryController
+class CategoryController extends Controller
 {
   private $_categoryService;
 
@@ -21,35 +22,33 @@ class CategoryController
 
   public function index()
   {
-    $categories = $this->flattenTree($this->_categoryService->getAll());
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/category/index.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $categories = $this->_categoryService->getAll();
+    $this->render("admin/category/index", [
+      "categories" => $categories
+    ], layout: 'dashboard_layout');
   }
 
   public function create()
   {
-    $categories = $this->flattenTree($this->_categoryService->getAll());
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/category/create.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $categories = $this->_categoryService->getAll();
+    $this->render("admin/category/create", [
+      "categories" => $categories
+    ], layout: 'dashboard_layout');
   }
 
   public function edit(string $id)
   {
     $category = $this->_categoryService->getById((int) $id);
-    $categories = $this->flattenTree($this->_categoryService->getAll());
+    $categories = $this->_categoryService->getAll();
 
     if (!$category) {
       die("Không tìm thấy danh mục với id: $id");
     }
 
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/category/edit.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $this->render("admin/category/edit", [
+      "category" => $category,
+      "categories" => $categories
+    ], layout: 'dashboard_layout');
   }
 
   public function store(Request $request)
@@ -65,7 +64,9 @@ class CategoryController
     ];
 
     if (!$validator->validate($data, $rules)) {
-      return $this->redirectWithError($validator->getErrors(), url('admin/categories/create'));
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
+      return $this->redirect('admin/categories/create');
     }
 
     // Auto-generate slug nếu để trống
@@ -75,7 +76,9 @@ class CategoryController
 
     if (!$this->_categoryService->isSlugUnique($data['slug'])) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
-      return $this->redirectWithError($validator->getErrors(), url('admin/categories/create'));
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
+      return $this->redirect('admin/categories/create');
     }
 
     $newId = $this->_categoryService->create([
@@ -86,13 +89,12 @@ class CategoryController
     ]);
 
     if ($newId) {
-      flash('success', 'Tạo danh mục thành công!');
+      $request->flash('success', 'Tạo danh mục thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/categories/create'));
-    exit;
+    return $this->redirect('admin/categories/create');
   }
 
   public function update(string $id, Request $request)
@@ -114,7 +116,9 @@ class CategoryController
     ];
 
     if (!$validator->validate($data, $rules)) {
-      return $this->redirectWithError($validator->getErrors(), url('admin/categories/' . $id . '/edit'));
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
+      return $this->redirect('admin/categories/' . $id);
     }
 
     if (empty($data['slug'])) {
@@ -123,7 +127,9 @@ class CategoryController
 
     if (!$this->_categoryService->isSlugUnique($data['slug'], (int) $id)) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
-      return $this->redirectWithError($validator->getErrors(), url('admin/categories/' . $id . '/edit'));
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
+      return $this->redirect('admin/categories/' . $id);
     }
 
     $isSuccess = $this->_categoryService->update((int) $id, [
@@ -134,36 +140,25 @@ class CategoryController
     ]);
 
     if ($isSuccess) {
-      flash('success', 'Cập nhật danh mục thành công!');
+      $request->flash('success', 'Cập nhật danh mục thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/categories/' . $id));
-    exit;
+    return $this->redirect('admin/categories/' . $id);
   }
 
-  public function destroy(string $id)
+  public function destroy(string $id, Request $request)
   {
     $isSuccess = $this->_categoryService->delete((int) $id);
 
     if ($isSuccess) {
-      flash('success', 'Xoá danh mục thành công!');
+      $request->flash('success', 'Xoá danh mục thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/categories'));
-    exit;
-  }
-
-  // ── Private helpers ───────────────────────────────────────────────────────
-
-  private function redirectWithError(array $errors, string $redirectUrl): void
-  {
-    $_SESSION['errors'] = $errors;
-    header('Location: ' . $redirectUrl);
-    exit;
+    return $this->redirect('admin/categories');
   }
 
   private function generateSlug(string $name): string
@@ -187,45 +182,5 @@ class CategoryController
         )
       )
     );
-  }
-
-  /**
-   * Sắp xếp phẳng danh sách category theo thứ tự cha trước, con sau.
-   *
-   * @param Category[] $categories
-   * @return Category[]
-   */
-  private function flattenTree(array $categories): array
-  {
-    $map = [];
-    $children = [];
-    $roots = [];
-
-    foreach ($categories as $category) {
-      $map[$category->id] = $category;
-    }
-
-    foreach ($categories as $category) {
-      if ($category->parent_id === null) {
-        $roots[] = $category;
-      } else {
-        $children[$category->parent_id][] = $category;
-      }
-    }
-
-    $result = [];
-    $walk = function (Category $node, int $depth) use (&$walk, &$result, $children) {
-      $node->depth = $depth;
-      $result[] = $node;
-      foreach ($children[$node->id] ?? [] as $child) {
-        $walk($child, $depth + 1);
-      }
-    };
-
-    foreach ($roots as $root) {
-      $walk($root, 0);
-    }
-
-    return $result;
   }
 }

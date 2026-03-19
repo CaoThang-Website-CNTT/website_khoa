@@ -1,14 +1,6 @@
 <?php
 $errors = request()->getErrors() ?? [];
 $old_input = request()->getOldInputs() ?? [];
-$errors = [
-  'email' => ['Mã số sinh viên không được để trống.'],
-  'full_name' => ['Họ và tên không được để trống.'],
-  'phone' => ['Số điện thoại không hợp lệ, vui lòng nhập đúng định dạng.'],
-  'gender' => ['Vui lòng chọn giới tính.'],
-  'dob' => ['Ngày sinh không hợp lệ.'],
-  'classroom_id' => ['Vui lòng chọn lớp học.'],
-];
 ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
@@ -28,7 +20,7 @@ $errors = [
     <?php
     include BASE_PATH . '/templates/components/flash_alert.php';
     ?>
-    <form id="user-add-form" method="POST" action="<?= url('admin/teachers/store') ?>">
+    <form id="user-add-form" method="POST" action="<?= url('admin/teachers') ?>">
       <div class="field-group">
         <div class="field" data-field-required>
           <label for="email">Email</label>

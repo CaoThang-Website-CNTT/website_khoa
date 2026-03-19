@@ -1,18 +1,11 @@
 <?php
-if (session_status() === PHP_SESSION_NONE)
-  session_start();
-
-$errors = $_SESSION['errors'] ?? [];
-$old = $_SESSION['old_data'] ?? [];
-unset($_SESSION['errors'], $_SESSION['old_data']);
-
-function errorFor(string $field, array $errors): string
-{
-  return isset($errors[$field])
-    ? '<span class="field__error">' . htmlspecialchars($errors[$field][0]) . '</span>'
-    : '';
-}
+$errors = request()->getErrors() ?? [];
+$old_input = request()->getOldInputs() ?? [];
 ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 
 <div class="detail-panel card shadow">
   <div class="card__header">
@@ -26,7 +19,7 @@ function errorFor(string $field, array $errors): string
 
   <div class="card__content">
     <?php
-    include dirname(__DIR__, 3) . '/components/flash_alert.php';
+    include BASE_PATH . '/templates/components/flash_alert.php';
     ?>
 
     <form id="category-create-form" method="POST" action="<?= url('admin/categories') ?>">
@@ -37,14 +30,12 @@ function errorFor(string $field, array $errors): string
           <label for="name">Tên danh mục</label>
           <input id="name" class="field__input <?= isset($errors['name']) ? 'field__input--error' : '' ?>" type="text"
             name="name">
-          <?= errorFor('name', $errors) ?>
         </div>
 
         <div class="field">
           <label for="slug">Slug</label>
           <input id="slug" class="field__input <?= isset($errors['slug']) ? 'field__input--error' : '' ?>" type="text"
             name="slug">
-          <?= errorFor('slug', $errors) ?>
         </div>
 
         <div class="field">
@@ -63,7 +54,6 @@ function errorFor(string $field, array $errors): string
               </option>
             <?php endforeach; ?>
           </select>
-          <?= errorFor('parent_id', $errors) ?>
         </div>
 
         <div class="field">
@@ -71,7 +61,6 @@ function errorFor(string $field, array $errors): string
           <textarea id="description"
             class="field__input <?= isset($errors['description']) ? 'field__input--error' : '' ?>" name="description"
             rows="4"></textarea>
-          <?= errorFor('description', $errors) ?>
         </div>
 
       </div>
