@@ -23,4 +23,6 @@ $router->get('/admin/teachers/edit/{id}', ['TeacherController', 'edit']);
 $router->post('/admin/teachers/update/{id}', ['TeacherController', 'update']);
 $router->post('/admin/teachers/delete/{id}', ['TeacherController', 'destroy']);
 
+$router->get('/admin/classrooms', ['ClassroomController', 'index']);
+
 return $router;

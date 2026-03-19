@@ -39,6 +39,9 @@
           <li class="sidebar__dropdown-item">
             <a href="<?= url('admin/users') ?>" class="sidebar__dropdown-link">Quản Lý Tài Khoản</a>
           </li>
+          <li class="sidebar__dropdown-item">
+            <a href="<?= url('admin/classrooms') ?>" class="sidebar__dropdown-link">Quản Lý Lớp Học</a>
+          </li>
         </ul>
       </li>
       <div class="sidebar__divider">

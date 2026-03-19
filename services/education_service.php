@@ -41,6 +41,7 @@ interface EducationRepositoryInterface
   // Classroom
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
+  public function getClassrooms(int $page, int $limit = 15): array;
   public function createClassroom(array $classroom): int;
 
   // Helper
@@ -414,6 +415,42 @@ class EducationService implements EducationRepositoryInterface
     $stmt->execute();
 
     return array_map(fn($row) => Classroom::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  public function getClassrooms(int $page, int $limit = 15): array
+  {
+    $offset = (max(1, $page) - 1) * $limit;
+
+    $countSql = "SELECT COUNT(*) FROM classrooms c 
+                LEFT JOIN professions p ON c.profession_id = p.id 
+                LEFT JOIN majors m ON c.major_id = m.id 
+                WHERE c.deleted_at IS NULL AND p.deleted_at IS NULL AND m.deleted_at IS NULL";
+    $totalRows = $this->db->query($countSql)->fetchColumn();
+
+    $sql = "SELECT 
+              c.*,
+              p.id AS pro_id, p.full_name as pro_full_name, p.short_name AS pro_short_name, 
+              p.created_at AS pro_created_at, p.updated_at AS pro_updated_at, p.deleted_at AS pro_deleted_at, m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, 
+              m.created_at AS maj_created_at, m.updated_at AS maj_updated_at, m.deleted_at AS maj_deleted_at
+            FROM classrooms c 
+            LEFT JOIN professions p ON c.profession_id = p.id 
+            LEFT JOIN majors m ON c.major_id = m.id 
+            WHERE c.deleted_at IS NULL AND p.deleted_at IS NULL AND m.deleted_at IS NULL
+            ORDER BY c.class_of DESC
+            LIMIT :limit OFFSET :offset";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $items = array_map(fn($row) => Classroom::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return [
+      'data' => $items,
+      'total_rows' => (int)$totalRows,
+      'current_page' => $page,
+      'last_page' => ceil($totalRows / $limit)
+    ];
   }
 
   public function createClassroom(array $classroom): int
