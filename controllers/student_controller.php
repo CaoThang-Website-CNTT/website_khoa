@@ -2,15 +2,17 @@
 
 namespace App\Controllers;
 
+require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/utils/request_validator.php';
 require_once BASE_PATH . '/models/student.php';
 
+use App\Core\Controller;
 use App\Core\Request;
 use App\Models\Student;
 use App\Utils\Validator;
 use App\Services\EducationService;
 
-class StudentController
+class StudentController extends Controller
 {
   private $_educationService;
 
@@ -22,26 +24,24 @@ class StudentController
   public function index()
   {
     $students = $this->_educationService->getAllStudents(1);
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/dashboard_user.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $this->render("admin/students/index", [
+      'students' => $students
+    ], layout: "dashboard_layout");
   }
 
   public function create()
   {
     $classrooms = $this->_educationService->getAllClassrooms();
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/user_new.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $this->render("admin/students/create", [
+      'classrooms' => $classrooms
+    ], layout: "dashboard_layout");
   }
 
   public function store(Request $request)
   {
     $data = $request->all();
-
     $validator = new Validator();
+
     $rules = [
       'student_id' => ['required', 'mssv', 'max:10'],
       'full_name' => ['required', 'max:255'],
@@ -54,23 +54,23 @@ class StudentController
     ];
 
     if (!$validator->validate($data, $rules)) {
-      return $this->redirectWithError($validator->getErrors(), $data);
+      return $this->redirect('admin/students/create');
     }
 
     if (!$this->_educationService->isStudentIdUnique($data['student_id'])) {
       $validator->addError('student_id', 'Mã số sinh viên này đã tồn tại trong hệ thống.');
-      return $this->redirectWithError($validator->getErrors(), $data);
+      return $this->redirect('admin/students/create');
     }
 
     $newStudentId = $this->_educationService->createStudent($data, 'Khoacntt@123');
 
     if ($newStudentId) {
-      flash('success', 'Tạo mới sinh viên thành công!');
+      $request->flash('success', 'Tạo mới sinh viên thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/students'));
+    $this->redirect('admin/students/create');
     exit;
   }
 
@@ -81,10 +81,11 @@ class StudentController
       die("Không thấy sinh viên với id: $id");
     }
     $classrooms = $this->_educationService->getAllClassrooms();
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/user_detail.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+
+    $this->render("admin/students/edit", [
+      'student' => $student,
+      'classrooms' => $classrooms
+    ], layout: "dashboard_layout");
   }
 
   public function update($id, Request $request)
@@ -104,7 +105,7 @@ class StudentController
 
     if (!$validator->validate($data, $rules)) {
       $data['account_id'] = $id;
-      return $this->redirectWithError($validator->getErrors(), $data);
+      return $this->redirect('admin/students/' . $id);
     }
 
     $student = new Student(
@@ -122,47 +123,30 @@ class StudentController
     $isSuccess = $this->_educationService->updateStudent((int) $id, $student);
 
     if ($isSuccess) {
-      flash('success', 'Cập nhật sinh viên thành công!');
+      $request->flash('success', 'Cập nhật sinh viên thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/students'));
+    $this->redirect('admin/students/' . $id);
     exit;
   }
 
-  public function destroy($id)
+  public function destroy($id, Request $request)
   {
     $isSuccess = $this->_educationService->deleteStudent($id);
 
     if ($isSuccess) {
-      flash('success', 'Xoá sinh viên thành công!');
+      $request->flash('success', 'Xoá sinh viên thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/students'));
-    exit;
+    return $this->redirect('admin/users/');
   }
 
   public function import()
   {
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/dashboard_user_import.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
-  }
-
-  private function redirectWithError(array $errors, array $oldData)
-  {
-    $_SESSION['errors'] = $errors;
-    $_SESSION['old_data'] = $oldData;
-
-    if (isset($oldData['account_id'])) {
-      header('Location: ' . url('admin/students/edit/' . $oldData['account_id']));
-    } else {
-      header('Location: ' . url('admin/students/create'));
-    }
-    exit;
+    $this->render('admin/students/import', layout: 'dashboard_layout');
   }
 }

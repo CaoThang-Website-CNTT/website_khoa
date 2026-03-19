@@ -5,12 +5,13 @@ namespace App\Controllers;
 require_once BASE_PATH . '/utils/request_validator.php';
 require_once BASE_PATH . '/models/teacher.php';
 
+use App\Core\Controller;
 use App\Core\Request;
 use App\Models\Teacher;
 use App\Utils\Validator;
 use App\Services\EducationService;
 
-class TeacherController
+class TeacherController extends Controller
 {
   private $_educationService;
 
@@ -22,18 +23,14 @@ class TeacherController
   public function index()
   {
     $teachers = $this->_educationService->getAllTeachers(1);
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/dashboard_teacher.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $this->render('admin/teachers/index', [
+      'teachers' => $teachers
+    ], layout: 'dashboard_layout');
   }
 
   public function create()
   {
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/teacher_new.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $this->render("admin/teachers/create", layout: 'dashboard_layout');
   }
 
   public function store(Request $request)
@@ -51,28 +48,27 @@ class TeacherController
       'dob' => ['required', 'date'],
       'title' => ['max:150'],
       'department' => ['max:255'],
-      'start_date' => ['required', 'date'],  // fixed: was 'required, date' (single string — never validates)
+      'start_date' => ['required', 'date'],
     ];
 
     if (!$validator->validate($data, $rules)) {
-      return $this->redirectWithError($validator->getErrors(), $data);
+      return $this->redirect('admin/teachers/create');
     }
 
     if ($this->_educationService->isEmailUnique($data['email']) === false) {
       $validator->addError('email', 'Email này đã tồn tại trong hệ thống.');
-      return $this->redirectWithError($validator->getErrors(), $data);
+      return $this->redirect('admin/teachers/create');
     }
 
     $newTeacherId = $this->_educationService->createTeacher($data, $data['password']);
 
     if ($newTeacherId) {
-      flash('success', 'Tạo mới giảng viên thành công!');
+      $request->flash('success', 'Tạo mới giảng viên thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/teachers'));
-    exit;
+    return $this->redirect('admin/teachers/create');
   }
 
   public function edit($id)
@@ -81,10 +77,9 @@ class TeacherController
     if (!$teacher) {
       die("Không thấy giảng viên với id: $id");
     }
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/teacher_detail.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+    $this->render("admin/teachers/edit", [
+      "teacher" => $teacher,
+    ], layout: 'dashboard_layout');
   }
 
   public function update($id, Request $request)
@@ -99,12 +94,12 @@ class TeacherController
       'dob' => ['required', 'date'],
       'title' => ['max:150'],
       'department' => ['max:255'],
-      'start_date' => ['required', 'date'],  // fixed: same bug as store()
+      'start_date' => ['required', 'date'],
     ];
 
     if (!$validator->validate($data, $rules)) {
       $data['account_id'] = $id;
-      return $this->redirectWithError($validator->getErrors(), $data);
+      return $this->redirect('admin/teachers/' . $id);
     }
 
     $teacher = new Teacher(
@@ -121,39 +116,24 @@ class TeacherController
     $isSuccess = $this->_educationService->updateTeacher((int) $id, $teacher);
 
     if ($isSuccess) {
-      flash('success', 'Cập nhật giảng viên thành công!');
+      $request->flash('success', 'Cập nhật giảng viên thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/teachers'));
-    exit;
+    return $this->redirect('admin/teachers/' . $id);
   }
 
-  public function destroy($id)
+  public function destroy($id, Request $request)
   {
     $isSuccess = $this->_educationService->deleteTeacher($id);
 
     if ($isSuccess) {
-      flash('success', 'Xoá giảng viên thành công!');
+      $request->flash('success', 'Xoá giảng viên thành công!');
     } else {
-      flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    header('Location: ' . url('admin/teachers'));
-    exit;
-  }
-
-  private function redirectWithError(array $errors, array $oldData)
-  {
-    $_SESSION['errors'] = $errors;
-    $_SESSION['old_data'] = $oldData;
-
-    if (isset($oldData['account_id'])) {
-      header('Location: ' . url('admin/teachers/edit/' . $oldData['account_id']));
-    } else {
-      header('Location: ' . url('admin/teachers/create'));
-    }
-    exit;
+    return $this->redirect('admin/users');
   }
 }

@@ -5,9 +5,10 @@ namespace App\Controllers;
 require_once BASE_PATH . '/utils/request_validator.php';
 require_once BASE_PATH . '/models/student.php';
 
+use App\Core\Controller;
 use App\Services\EducationService;
 
-class UserController
+class UserController extends Controller
 {
   private $_educationService;
 
@@ -20,9 +21,10 @@ class UserController
   {
     $students = $this->_educationService->getAllStudents(1);
     $teachers = $this->_educationService->getAllTeachers(1);
-    ob_start();
-    require_once __DIR__ . '/../templates/pages/admin/dashboard_user.php';
-    $content = ob_get_clean();
-    require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+
+    $this->render("admin/users/index", [
+      'students' => $students,
+      'teachers' => $teachers,
+    ], layout: "dashboard_layout");
   }
 }
