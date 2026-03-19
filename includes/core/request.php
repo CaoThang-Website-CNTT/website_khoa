@@ -243,19 +243,6 @@ class Request
     return $this->body[$key] ?? $default;
   }
 
-  /**
-   * Lấy giá trị input cũ từ session để tái hiện form sau khi validation thất bại
-   * Yêu cầu controller phải lưu $_SESSION['old_input'] trước khi redirect
-   * @param string $key Tên field cần lấy
-   * @param mixed $default Giá trị mặc định nếu key không tồn tại
-   * @return mixed
-   */
-  public function old(string $key, mixed $default = null): mixed
-  {
-    $old = $_SESSION['old_input'] ?? [];
-    return $old[$key] ?? $default;
-  }
-
   public function flash(string $type, string $title, string $desc = ""): void
   {
     $_SESSION['flash'] = compact('type', 'title', 'desc');
@@ -267,7 +254,7 @@ class Request
     return $flash;
   }
 
-  public function oldInputs(?array $includedKeys, ?array $excludedKeys): void
+  public function flashOldInputs(?array $includedKeys = null, ?array $excludedKeys = null): void
   {
     if ($includedKeys !== null) {
       $_SESSION['old_input'] = array_intersect_key(
@@ -282,6 +269,25 @@ class Request
     } else {
       $_SESSION['old_input'] = $this->body;
     }
+  }
+
+  public function getOldInputs(): array
+  {
+    $olds = $_SESSION['old_input'] ?? [];
+    unset($_SESSION['old_input']);
+    return $olds;
+  }
+
+  public function flashErrors(array $errors): void
+  {
+    $_SESSION['errors'] = $errors;
+  }
+
+  public function getErrors(): array
+  {
+    $errors = $_SESSION['errors'] ?? [];
+    unset($_SESSION['errors']);
+    return $errors;
   }
 
   // ===================================

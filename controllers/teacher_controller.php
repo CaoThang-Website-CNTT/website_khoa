@@ -2,13 +2,13 @@
 
 namespace App\Controllers;
 
-require_once BASE_PATH . '/utils/request_validator.php';
+require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/teacher.php';
 
 use App\Core\Controller;
 use App\Core\Request;
 use App\Models\Teacher;
-use App\Utils\Validator;
+use App\Core\Validator;
 use App\Services\EducationService;
 
 class TeacherController extends Controller
@@ -52,11 +52,15 @@ class TeacherController extends Controller
     ];
 
     if (!$validator->validate($data, $rules)) {
+      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/create');
     }
 
     if ($this->_educationService->isEmailUnique($data['email']) === false) {
       $validator->addError('email', 'Email này đã tồn tại trong hệ thống.');
+      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/create');
     }
 
@@ -99,6 +103,8 @@ class TeacherController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $data['account_id'] = $id;
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/' . $id);
     }
 

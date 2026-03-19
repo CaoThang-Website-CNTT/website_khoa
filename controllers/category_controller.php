@@ -2,12 +2,12 @@
 
 namespace App\Controllers;
 
-require_once BASE_PATH . '/utils/request_validator.php';
+require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/category.php';
 
 use App\Core\Request;
 use App\Models\Category;
-use App\Utils\Validator;
+use App\Core\Validator;
 use App\Services\CategoryService;
 
 class CategoryController

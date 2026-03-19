@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Utils;
+namespace App\Core;
 
 class Validator
 {
@@ -50,7 +50,7 @@ class Validator
         }
         break;
       case 'max':
-        $max = (int)$param;
+        $max = (int) $param;
         if (mb_strlen($value, 'UTF-8') > $max) {
           $this->addError($field, "Không được vượt quá $max ký tự.");
         }

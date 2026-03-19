@@ -3,13 +3,13 @@
 namespace App\Controllers;
 
 require_once BASE_PATH . "/includes/core/controller.php";
-require_once BASE_PATH . '/utils/request_validator.php';
+require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/student.php';
 
 use App\Core\Controller;
 use App\Core\Request;
 use App\Models\Student;
-use App\Utils\Validator;
+use App\Core\Validator;
 use App\Services\EducationService;
 
 class StudentController extends Controller
@@ -54,11 +54,15 @@ class StudentController extends Controller
     ];
 
     if (!$validator->validate($data, $rules)) {
+      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/create');
     }
 
     if (!$this->_educationService->isStudentIdUnique($data['student_id'])) {
       $validator->addError('student_id', 'Mã số sinh viên này đã tồn tại trong hệ thống.');
+      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/create');
     }
 
@@ -105,6 +109,8 @@ class StudentController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $data['account_id'] = $id;
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/' . $id);
     }
 

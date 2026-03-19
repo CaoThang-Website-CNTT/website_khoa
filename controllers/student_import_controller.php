@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-require_once BASE_PATH . '/utils/request_validator.php';
 require_once BASE_PATH . '/includes/core/request.php';
 require_once BASE_PATH . '/models/student.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
