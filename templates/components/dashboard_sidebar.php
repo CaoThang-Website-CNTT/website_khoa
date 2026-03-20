@@ -45,6 +45,9 @@
           <li class="sidebar__dropdown-item">
             <a href="<?= url('admin/categories') ?>" class="sidebar__dropdown-link">Quản Lý Danh Mục</a>
           </li>
+          <li class="sidebar__dropdown-item">
+            <a href="<?= url('admin/menus') ?>" class="sidebar__dropdown-link">Quản Lý Menu</a>
+          </li>
         </ul>
       </li>
       <div class="sidebar__divider">
