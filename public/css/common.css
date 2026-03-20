@@ -45,7 +45,7 @@
     transition: transform 0.3s ease;
   }
 
-  .bouncy-btn:hover {
+  .bouncy-btn:not(:disabled):hover {
     transform: translateY(2px);
   }
   /* ==========================================================================
@@ -154,8 +154,8 @@
     color: var(--primary);
   }
 
-  .btn[data-variant="outline"]:hover,
-  .btn[data-variant="outline-alt"]:hover {
+  .btn[data-variant="outline"]:not(:disabled):hover,
+  .btn[data-variant="outline-alt"]:not(:disabled):hover {
     background: var(--muted);
   }
 
@@ -164,7 +164,7 @@
     color: var(--destructive);
   }
 
-  .btn[data-variant="destructive"]:hover {
+  .btn[data-variant="destructive"]:not(:disabled):hover {
     background: color-mix(in oklab, var(--destructive) 20%, transparent);
   }
 
@@ -636,7 +636,7 @@
     height: 12px;
   }
 
-  .badge[data-variant="default"] {
+  .badge[data-variant="primary"] {
     background-color: var(--primary);
     color: var(--primary-foreground);
     border-color: transparent;

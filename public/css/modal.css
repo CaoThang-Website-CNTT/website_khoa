@@ -5,6 +5,7 @@
   top: 50%;
   left: 50%;
   z-index: 100;
+  min-width: 20rem;
   transform: translate(-50%, -50%);
   background: var(--background);
   border-radius: var(--radius-lg);
@@ -41,7 +42,7 @@
 }
 
 .modal[data-state="open"],
-.modal[data-state="open"] ~ .modal-overlay {
+.modal[data-state="open"] + .modal-overlay {
   display: grid;
 }
 
@@ -50,7 +51,7 @@
 }
 
 .modal[data-state="closed"],
-.modal[data-state="closed"] ~ .modal-overlay {
+.modal[data-state="closed"] + .modal-overlay {
   display: none;
 }
 

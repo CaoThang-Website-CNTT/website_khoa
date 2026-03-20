@@ -26,10 +26,6 @@ class Modal {
       ...options
     };
 
-    /** 
-     * @type {HTMLElement|null} 
-     * @private 
-     */
     this.overlay = null;
 
     this._init();
