@@ -573,7 +573,7 @@ body {
   color: var(--foreground);
 }
 
-/* ========== User Table Styling ========== */
+/* ========== Data Table Styling ========== */
 .table-wrapper {
   overflow-x: auto;
   background: var(--card);
@@ -661,4 +661,30 @@ body {
 
 .detail-panel-container .detail-panel {
   flex: 1;
+}
+
+.detail-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.detail-layout__main {
+  flex: 1.6;
+  min-width: 0;
+}
+
+.detail-layout__sidebar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-layout--reverse .detail-layout__main {
+  order: 2;
+}
+.detail-layout--reverse .detail-layout__sidebar {
+  order: 1;
 }

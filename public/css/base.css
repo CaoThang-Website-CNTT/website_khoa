@@ -388,132 +388,6 @@
 }
 
 /* ==========================================================================
-   COMPONENTS
-   ========================================================================== */
-@layer components {
-  .image {
-    width: 100%;
-    height: 100%;
-    display: block;
-    transition: transform 0.4s ease;
-  }
-
-  .image-wrapper:hover .image {
-    transform: scale(1.05);
-  }
-
-  .link-hover--standout:hover {
-    color: var(--primary);
-    transform: translateY(2px);
-  }
-
-  .link-hover--underline {
-    padding-bottom: 2px;
-  }
-
-  /* Animated underline (from center) */
-  .link-hover--underline::after {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 1.5px;
-    bottom: 0;
-    left: 50%;
-    background-color: currentColor;
-    transition:
-      width 0.25s ease,
-      left 0.25s ease;
-    transform: translateX(-50%);
-  }
-
-  .link-hover--underline:hover::after {
-    width: 100%;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    font-size: var(--text-sm);
-    line-height: var(--text-sm-line-height);
-    padding-inline: 0.625rem;
-    background-clip: padding-box;
-    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: var(--radius-lg);
-    border: 1px solid transparent;
-    font-weight: var(--fw-medium);
-  }
-
-  .btn:focus-within {
-    outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
-    outline-offset: 2px;
-  }
-
-  .btn[data-size="sm"] {
-    height: 1.75rem;
-  }
-
-  .btn[data-size="md"] {
-    height: 2rem;
-  }
-
-  .btn[data-size="lg"] {
-    height: 2.25rem;
-  }
-
-  .btn svg {
-    color: currentColor;
-    fill: currentColor;
-    stroke: currentColor;
-    width: 0.875rem;
-    height: 0.875rem;
-  }
-
-  .btn[data-variant="primary"] {
-    background: var(--primary);
-    color: var(--primary-foreground);
-  }
-
-  .btn[data-variant="secondary"] {
-    background: var(--secondary);
-    color: var(--secondary-foreground);
-  }
-
-  .btn[data-variant="outline"],
-  .btn[data-variant="outline-alt"] {
-    border-color: var(--border);
-    background: var(--background);
-  }
-
-  .btn[data-variant="outline-alt"] {
-    color: var(--primary);
-  }
-
-  .btn[data-variant="outline"]:hover,
-  .btn[data-variant="outline-alt"]:hover {
-    background: var(--muted);
-  }
-
-  .btn[data-variant="destructive"] {
-    background: color-mix(in oklab, var(--destructive) 10%, transparent);
-    color: var(--destructive);
-  }
-
-  .btn[data-variant="destructive"]:hover {
-    background: color-mix(in oklab, var(--destructive) 20%, transparent);
-  }
-
-  .bouncy-btn {
-    transition: transform 0.3s ease;
-  }
-
-  .bouncy-btn:hover {
-    transform: translateY(2px);
-  }
-}
-
-/* ==========================================================================
    LAYOUT UTILITIES
    ========================================================================== */
 @layer layout {
@@ -934,6 +808,11 @@
   .text-7xl {
     font-size: var(--text-7xl);
     line-height: var(--text-7xl-line-height);
+  }
+
+  /* Font Family */
+  .font-mono {
+    font-family: monospace;
   }
 
   /* Typography - Font Weight */
@@ -1384,6 +1263,68 @@
   .my-16 {
     margin-top: 4rem;
     margin-bottom: 4rem;
+  }
+
+  .space-x-1 > * + * {
+    margin-inline-start: 0.25rem;
+  }
+  .space-x-2 > * + * {
+    margin-inline-start: 0.5rem;
+  }
+  .space-x-3 > * + * {
+    margin-inline-start: 0.75rem;
+  }
+  .space-x-4 > * + * {
+    margin-inline-start: 1rem;
+  }
+  .space-x-5 > * + * {
+    margin-inline-start: 1.25rem;
+  }
+  .space-x-6 > * + * {
+    margin-inline-start: 1.5rem;
+  }
+  .space-x-8 > * + * {
+    margin-inline-start: 2rem;
+  }
+  .space-x-10 > * + * {
+    margin-inline-start: 2.5rem;
+  }
+  .space-x-12 > * + * {
+    margin-inline-start: 3rem;
+  }
+  .space-x-16 > * + * {
+    margin-inline-start: 4rem;
+  }
+
+  .space-y-1 > * + * {
+    margin-block-start: 0.25rem;
+  }
+  .space-y-2 > * + * {
+    margin-block-start: 0.5rem;
+  }
+  .space-y-3 > * + * {
+    margin-block-start: 0.75rem;
+  }
+  .space-y-4 > * + * {
+    margin-block-start: 1rem;
+  }
+  .space-y-5 > * + * {
+    margin-block-start: 1.25rem;
+  }
+  .space-y-6 > * + * {
+    margin-block-start: 1.5rem;
+  }
+  .space-y-8 > * + * {
+    margin-block-start: 2rem;
+  }
+  .space-y-10 > * + * {
+    margin-block-start: 2.5rem;
+  }
+  .space-y-12 > * + * {
+    margin-block-start: 3rem;
+  }
+  .space-y-16 > * + * {
+    margin-block-start: 4rem;
   }
 
   /* Spacing - Padding */

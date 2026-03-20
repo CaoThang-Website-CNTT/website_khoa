@@ -41,7 +41,7 @@
 }
 
 .modal[data-state="open"],
-.modal[data-state="open"] + .modal-overlay {
+.modal[data-state="open"] ~ .modal-overlay {
   display: grid;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .modal[data-state="closed"],
-.modal[data-state="closed"] + .modal-overlay {
+.modal[data-state="closed"] ~ .modal-overlay {
   display: none;
 }
 
