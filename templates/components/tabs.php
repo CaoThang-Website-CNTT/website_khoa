@@ -29,7 +29,7 @@ $activeTab = $activeTab ?? $tabs[0]['key'];
         data-tabs-trigger="<?= htmlspecialchars($tab['key']) ?>" class="tabs__trigger">
         <?= htmlspecialchars($tab['label']) ?>
         <?php if (!empty($tab['badge'])): ?>
-          <span class="tabs__badge badge" data-variant="default">
+          <span class="tabs__badge badge" data-variant="primary">
             <?= (int) $tab['badge'] ?>
           </span>
         <?php endif; ?>

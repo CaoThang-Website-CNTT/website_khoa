@@ -18,7 +18,8 @@ class Student
     // Referenced Account data
     public ?Account $account = null,
     public ?Classroom $classroom = null
-  ) {}
+  ) {
+  }
   /**
    * Tự động mapping trường dữ liệu DB
    * @param array $data

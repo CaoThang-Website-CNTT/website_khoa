@@ -35,20 +35,17 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field" data-field-required>
           <label for="student_id">Student ID</label>
-          <input id="student_id" class="field__input <?= isset($errors['student_id']) ? 'field__input--error' : '' ?>"
-            type="text" name="student_id" value="">
+          <input id="student_id" class="field__input" type="text" name="student_id" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="full_name">Full Name</label>
-          <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="text" name="full_name" value="">
+          <input id="full_name" class="field__input" type="text" name="full_name" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="gender">Gender</label>
-          <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
-            name="gender">
+          <select id="gender" class="field__input" name="gender">
             <option value="male">Nam</option>
             <option value="female">Nữ</option>
           </select>
@@ -56,20 +53,17 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field" data-field-required>
           <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
-            name="dob" value="">
+          <input id="dob" class="field__input" type="date" name="dob" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="phone">Phone</label>
-          <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="tel"
-            name="phone" value="">
+          <input id="phone" class="field__input" type="tel" name="phone" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="classroom_id">Classroom</label>
-          <select id="classroom_id"
-            class="field__input <?= isset($errors['classroom_id']) ? 'field__input--error' : '' ?>" name="classroom_id">
+          <select id="classroom_id" class="field__input" name="classroom_id">
             <option value="" selected>
               -- Chọn lớp học--
             </option>
@@ -83,14 +77,12 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="major">Major</label>
-          <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
-            name="major" value="">
+          <input id="major" class="field__input" type="text" name="major" value="">
         </div>
 
         <div class="field">
           <label for="birth_place">Birth Place</label>
-          <input id="birth_place" class="field__input <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>"
-            type="text" name="birth_place" value="">
+          <input id="birth_place" class="field__input" type="text" name="birth_place" value="">
         </div>
       </div>
     </form>

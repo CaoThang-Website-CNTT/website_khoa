@@ -54,7 +54,7 @@
             <td><?= htmlspecialchars($category->slug ?? 'N/A') ?></td>
             <td>
               <?php if ($category->type === 'const'): ?>
-                <span class="badge" data-variant="default">Hệ thống</span>
+                <span class="badge" data-variant="primary">Hệ thống</span>
               <?php else: ?>
                 <span class="badge" data-variant="secondary">Tùy chỉnh</span>
               <?php endif; ?>

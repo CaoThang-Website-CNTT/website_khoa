@@ -36,14 +36,13 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="full_name">Full Name</label>
-          <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="text" name="full_name" value="<?= htmlspecialchars($student->full_name ?? '') ?>" required>
+          <input id="full_name" class="field__input" type="text" name="full_name"
+            value="<?= htmlspecialchars($student->full_name ?? '') ?>" required>
         </div>
 
         <div class="field">
           <label for="gender">Gender</label>
-          <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
-            name="gender" required>
+          <select id="gender" class="field__input" name="gender" required>
             <option value="Male" <?= ($student?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
             <option value="Female" <?= ($student?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
           </select>
@@ -51,33 +50,31 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
-            name="dob" value="<?= htmlspecialchars($student->dob ?? '') ?>" required>
+          <input id="dob" class="field__input" type="date" name="dob"
+            value="<?= htmlspecialchars($student->dob ?? '') ?>" required>
         </div>
 
         <div class="field">
           <label for="phone">Phone</label>
-          <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="text"
-            name="phone" value="<?= htmlspecialchars($student->phone ?? '') ?>" required>
+          <input id="phone" class="field__input" type="text" name="phone"
+            value="<?= htmlspecialchars($student->phone ?? '') ?>" required>
         </div>
 
         <div class="field">
           <label for="major">Major</label>
-          <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
-            name="major" value="<?= htmlspecialchars($student->major ?? '') ?>">
+          <input id="major" class="field__input" type="text" name="major"
+            value="<?= htmlspecialchars($student->major ?? '') ?>">
         </div>
 
         <div class="field">
           <label for="birth_place">Birth Place</label>
-          <input id="birth_place" class="field__input <?= isset($errors['birth_place']) ? 'field__input--error' : '' ?>"
-            type="text" name="birth_place" value="<?= htmlspecialchars($student->birth_place ?? '') ?>">
+          <input id="birth_place" class="field__input" type="text" name="birth_place"
+            value="<?= htmlspecialchars($student->birth_place ?? '') ?>">
         </div>
 
         <div class="field">
           <label for="classroom_id">Classroom</label>
-          <select id="classroom_id"
-            class="field__input <?= isset($errors['classroom_id']) ? 'field__input--error' : '' ?>" name="classroom_id"
-            required>
+          <select id="classroom_id" class="field__input" name="classroom_id" required>
             <option value="" disabled hidden <?= is_null($student?->classroom_id) ? 'selected' : '' ?>>
               -- Chọn lớp học --
             </option>
@@ -145,7 +142,7 @@ $old_input = request()->getOldInputs() ?? [];
 
 <div class="modal-overlay" data-modal-close></div>
 
-<!-- Hidden delete form — no formaction hack needed -->
+<!-- Hidden delete form -->
 <form id="student-delete-form" method="POST" action="<?= url('admin/students/delete/' . $student->account_id) ?>"
   style="display:none">
 </form>

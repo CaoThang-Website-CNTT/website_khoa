@@ -28,20 +28,17 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="name">Tên danh mục</label>
-          <input id="name" class="field__input <?= isset($errors['name']) ? 'field__input--error' : '' ?>" type="text"
-            name="name">
+          <input id="name" class="field__input" type="text" name="name">
         </div>
 
         <div class="field">
           <label for="slug">Slug</label>
-          <input id="slug" class="field__input <?= isset($errors['slug']) ? 'field__input--error' : '' ?>" type="text"
-            name="slug">
+          <input id="slug" class="field__input" type="text" name="slug">
         </div>
 
         <div class="field">
           <label for="parent_id">Danh mục cha</label>
-          <select id="parent_id" class="field__input <?= isset($errors['parent_id']) ? 'field__input--error' : '' ?>"
-            name="parent_id">
+          <select id="parent_id" class="field__input" name="parent_id">
             <option value="">-- Không có (danh mục gốc) --</option>
             <?php foreach ($categories as $category): ?>
               <?php
@@ -58,9 +55,7 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="description">Mô tả</label>
-          <textarea id="description"
-            class="field__input <?= isset($errors['description']) ? 'field__input--error' : '' ?>" name="description"
-            rows="4"></textarea>
+          <textarea id="description" class="field__input" name="description" rows="4"></textarea>
         </div>
 
       </div>

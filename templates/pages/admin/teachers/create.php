@@ -24,33 +24,27 @@ $old_input = request()->getOldInputs() ?? [];
       <div class="field-group">
         <div class="field" data-field-required>
           <label for="email">Email</label>
-          <input id="email" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="email" name="email" value="">
+          <input id="email" class="field__input" type="email" name="email" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="password">Password</label>
-          <input id="password" class="field__input <?= isset($errors['password']) ? 'field__input--error' : '' ?>"
-            type="password" name="password" value="">
+          <input id="password" class="field__input" type="password" name="password" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="password_comfirmation">Password Comfirmation</label>
-          <input id="password_comfirmation"
-            class="field__input <?= isset($errors['password_comfirmation']) ? 'field__input--error' : '' ?>"
-            type="password" name="password_comfirmation" value="">
+          <input id="password_comfirmation" class="field__input" type="password" name="password_comfirmation" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="full_name">Full Name</label>
-          <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="text" name="full_name" value="">
+          <input id="full_name" class="field__input" type="text" name="full_name" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="gender">Gender</label>
-          <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
-            name="gender">
+          <select id="gender" class="field__input" name="gender">
             <option value="male">Nam</option>
             <option value="female">Nữ</option>
           </select>
@@ -58,32 +52,27 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field" data-field-required>
           <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
-            name="dob" value="">
+          <input id="dob" class="field__input" type="date" name="dob" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="phone">Phone</label>
-          <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="tel"
-            name="phone" value="">
+          <input id="phone" class="field__input" type="tel" name="phone" value="">
         </div>
 
         <div class="field" data-field-required>
           <label for="start_date">Start Date</label>
-          <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
-            type="date" name="start_date" value="">
+          <input id="start_date" class="field__input" type="date" name="start_date" value="">
         </div>
 
         <div class="field">
           <label for="title">Title</label>
-          <input id="title" class="field__input <?= isset($errors['title']) ? 'field__input--error' : '' ?>" type="text"
-            name="title" value="">
+          <input id="title" class="field__input" type="text" name="title" value="">
         </div>
 
         <div class="field">
           <label for="department">Department</label>
-          <input id="department" class="field__input <?= isset($errors['department']) ? 'field__input--error' : '' ?>"
-            type="text" name="department" value="">
+          <input id="department" class="field__input" type="text" name="department" value="">
         </div>
 
     </form>

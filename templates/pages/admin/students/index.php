@@ -15,7 +15,7 @@
     <div class="col-6 col-md-6">
       <h2 class="title text-2xl font-semibold">
         Sinh Viên
-        <span class="badge" data-variant="default">
+        <span class="badge" data-variant="primary">
           <?= (int) count($students ?? []) ?>
         </span>
       </h2>

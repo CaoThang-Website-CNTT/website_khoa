@@ -263,7 +263,7 @@ ob_start();
           <img class="wcu__feature-card-image image"
             src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Trường Cao Thắng">
           <div class="wcu__feature-card-content absolute inset-0 flex flex-col justify-end items-start p-8">
-            <span class="wcu__feature-card-badge badge mb-3" data-variant="default">
+            <span class="wcu__feature-card-badge badge mb-3" data-variant="primary">
               Nổi bật
             </span>
             <h3 class="wcu__feature-card-title text-3xl font-semibold mb-4">

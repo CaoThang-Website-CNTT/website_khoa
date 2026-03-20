@@ -28,8 +28,8 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="full_name">Full Name</label>
-          <input id="full_name" class="field__input <?= isset($errors['full_name']) ? 'field__input--error' : '' ?>"
-            type="text" name="full_name" value="<?= htmlspecialchars($teacher->full_name ?? '') ?>" required>
+          <input id="full_name" class="field__input" type="text" name="full_name"
+            value="<?= htmlspecialchars($teacher->full_name ?? '') ?>" required>
         </div>
 
         <div class="field">
@@ -40,8 +40,7 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="gender">Gender</label>
-          <select id="gender" class="field__input <?= isset($errors['gender']) ? 'field__input--error' : '' ?>"
-            name="gender" required>
+          <select id="gender" class="field__input" name="gender" required>
             <option value="Male" <?= ($teacher?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
             <option value="Female" <?= ($teacher?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
           </select>
@@ -49,32 +48,32 @@ $old_input = request()->getOldInputs() ?? [];
 
         <div class="field">
           <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input <?= isset($errors['dob']) ? 'field__input--error' : '' ?>" type="date"
-            name="dob" value="<?= htmlspecialchars($teacher->dob ?? '') ?>" required>
+          <input id="dob" class="field__input" type="date" name="dob"
+            value="<?= htmlspecialchars($teacher->dob ?? '') ?>" required>
         </div>
 
         <div class="field">
           <label for="phone">Phone</label>
-          <input id="phone" class="field__input <?= isset($errors['phone']) ? 'field__input--error' : '' ?>" type="text"
-            name="phone" value="<?= htmlspecialchars($teacher->phone ?? '') ?>" required>
+          <input id="phone" class="field__input" name="phone" value="<?= htmlspecialchars($teacher->phone ?? '') ?>"
+            required>
         </div>
 
         <div class="field">
           <label for="start_date">Start Date</label>
-          <input id="start_date" class="field__input <?= isset($errors['start_date']) ? 'field__input--error' : '' ?>"
-            type="date" name="start_date" value="<?= htmlspecialchars($teacher->start_date ?? '') ?>" required>
+          <input id="start_date" class="field__input" type="date" name="start_date"
+            value="<?= htmlspecialchars($teacher->start_date ?? '') ?>" required>
         </div>
 
         <div class="field">
           <label for="title">Title</label>
-          <input id="title" class="field__input <?= isset($errors['title']) ? 'field__input--error' : '' ?>" type="text"
-            name="title" value="<?= htmlspecialchars($teacher->title ?? '') ?>">
+          <input id="title" class="field__input" type="text" name="title"
+            value="<?= htmlspecialchars($teacher->title ?? '') ?>">
         </div>
 
         <div class="field">
           <label for="department">Department</label>
-          <input id="department" class="field__input <?= isset($errors['department']) ? 'field__input--error' : '' ?>"
-            type="text" name="department" value="<?= htmlspecialchars($teacher->department ?? '') ?>">
+          <input id="department" class="field__input" type="text" name="department"
+            value="<?= htmlspecialchars($teacher->department ?? '') ?>">
         </div>
 
       </div>

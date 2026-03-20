@@ -35,20 +35,19 @@ $isConst = $category->type === 'const';
 
         <div class="field" <?= !$isConst ? 'data-field-required' : '' ?>>
           <label for="name">Tên danh mục</label>
-          <input id="name" class="field__input <?= isset($errors['name']) ? 'field__input--error' : '' ?>" type="text"
-            name="name" value="<?= htmlspecialchars($category->name) ?>" <?= $isConst ? 'disabled' : '' ?>>
+          <input id="name" class="field__input" type="text" name="name" value="<?= htmlspecialchars($category->name) ?>"
+            <?= $isConst ? 'disabled' : '' ?>>
         </div>
 
         <div class="field">
           <label for="slug">Slug</label>
-          <input id="slug" class="field__input <?= isset($errors['slug']) ? 'field__input--error' : '' ?>" type="text"
-            name="slug" value="<?= htmlspecialchars($category->slug ?? '') ?>" <?= $isConst ? 'disabled' : '' ?>>
+          <input id="slug" class="field__input" type="text" name="slug"
+            value="<?= htmlspecialchars($category->slug ?? '') ?>" <?= $isConst ? 'disabled' : '' ?>>
         </div>
 
         <div class="field">
           <label for="parent_id">Danh mục cha</label>
-          <select id="parent_id" class="field__input <?= isset($errors['parent_id']) ? 'field__input--error' : '' ?>"
-            name="parent_id" <?= $isConst ? 'disabled' : '' ?>>
+          <select id="parent_id" class="field__input" name="parent_id" <?= $isConst ? 'disabled' : '' ?>>
             <option value="">-- Không có (danh mục gốc) --</option>
             <?php foreach ($categories as $cat): ?>
               <?php if ($cat->id === $category->id)
@@ -62,9 +61,7 @@ $isConst = $category->type === 'const';
 
         <div class="field">
           <label for="description">Mô tả</label>
-          <textarea id="description"
-            class="field__input <?= isset($errors['description']) ? 'field__input--error' : '' ?>" name="description"
-            rows="4" <?= $isConst ? 'disabled' : '' ?>><?= htmlspecialchars($category->description ?? '') ?></textarea>
+          <textarea id="description" class="field__input" name="description" rows="4" <?= $isConst ? 'disabled' : '' ?>><?= htmlspecialchars($category->description ?? '') ?></textarea>
         </div>
 
       </div>
