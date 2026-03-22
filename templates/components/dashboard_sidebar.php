@@ -48,6 +48,9 @@
           <li class="sidebar__dropdown-item">
             <a href="<?= url('admin/menus') ?>" class="sidebar__dropdown-link">Quản Lý Menu</a>
           </li>
+          <li class="sidebar__dropdown-item">
+            <a href="<?= url('admin/web_settings') ?>" class="sidebar__dropdown-link">Quản Lý Web Settings</a>
+          </li>
         </ul>
       </li>
       <div class="sidebar__divider">

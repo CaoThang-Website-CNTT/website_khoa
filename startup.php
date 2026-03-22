@@ -5,6 +5,7 @@ define('BASE_PATH', __DIR__);
 // Core
 require_once BASE_PATH . '/includes/core/request.php';
 require_once BASE_PATH . '/includes/core/router.php';
+require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
 
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';
@@ -13,6 +14,7 @@ require_once BASE_PATH . '/includes/helpers.php';
 require_once BASE_PATH . '/services/education_service.php';
 require_once BASE_PATH . '/services/category_service.php';
 require_once BASE_PATH . '/services/menu_service.php';
+require_once BASE_PATH . '/services/web_setting_service.php';
 
 // Controllers
 require_once BASE_PATH . '/controllers/site_controller.php';
@@ -22,3 +24,4 @@ require_once BASE_PATH . '/controllers/student_import_controller.php';
 require_once BASE_PATH . '/controllers/teacher_controller.php';
 require_once BASE_PATH . '/controllers/category_controller.php';
 require_once BASE_PATH . '/controllers/menu_controller.php';
+require_once BASE_PATH . '/controllers/web_setting_controller.php';

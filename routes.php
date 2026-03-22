@@ -1,12 +1,6 @@
 <?php
 
-use App\Controllers\DashboardController;
-use App\Controllers\MenuController;
-use App\Controllers\SiteController;
-use App\Controllers\StudentController;
-use App\Controllers\StudentImportController;
-use App\Controllers\TeacherController;
-use App\Controllers\CategoryController;
+use App\Controllers\{DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController};
 
 $router->get('/', [SiteController::class, 'index']);
 $router->get('/admin', [DashboardController::class, 'index']);
@@ -52,3 +46,11 @@ $router->post('/admin/menus/{menuId}/items/reorder', [MenuController::class, 're
 $router->get('/admin/menus/{menuId}/items/{itemId}', [MenuController::class, 'editItem']);
 $router->post('/admin/menus/{menuId}/items/{itemId}', [MenuController::class, 'updateItem']);
 $router->post('/admin/menus/{menuId}/items/delete/{itemId}', [MenuController::class, 'destroyItem']);
+
+// Web Settings
+$router->get('/admin/web_settings', [WebSettingsController::class, 'index']);
+$router->get('/admin/web_settings/create', [WebSettingsController::class, 'create']);
+$router->post('/admin/web_settings', [WebSettingsController::class, 'store']);
+$router->get('/admin/web_settings/{group}/edit', [WebSettingsController::class, 'edit']);
+$router->post('/admin/web_settings/{group}', [WebSettingsController::class, 'batchUpdate']);
+$router->post('/admin/web_settings/delete/{id}', [WebSettingsController::class, 'destroy']);
