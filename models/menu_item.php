@@ -4,9 +4,6 @@ namespace App\Models;
 
 class MenuItem
 {
-  /** @var MenuItem[] */
-  public array $children = [];
-
   public function __construct(
     public int $id,
     public int $menu_id,
@@ -22,6 +19,8 @@ class MenuItem
     public ?int $depth = null,
     public ?string $path = null,
 
+    /** @var MenuItem[] */
+    public array $children = [],
     public string $order_state = 'can_reorder'
   ) {
   }

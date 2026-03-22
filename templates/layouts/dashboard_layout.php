@@ -2,22 +2,22 @@
 <html lang="en">
 
 <head>
-  <?php include_once __DIR__ . '/../partials/dashboard_head.php'; ?>
+  <?php include_once BASE_PATH . '/templates/partials/dashboard_head.php'; ?>
 </head>
 
 <body>
   <!-- ======== Preloader =========== -->
-  <?php include_once __DIR__ . '/../components/preloader.php'; ?>
+  <?php include_once BASE_PATH . '/templates/components/preloader.php'; ?>
   <!-- ======== Preloader End =========== -->
 
   <!-- ======== Dashboard Sidebar =========== -->
-  <?php include_once __DIR__ . '/../components/dashboard_sidebar.php'; ?>
+  <?php include_once BASE_PATH . '/templates/components/dashboard_sidebar.php'; ?>
   <!-- ======== Dashboard Sidebar End =========== -->
 
   <!-- ======== main-wrapper start =========== -->
   <main class="main-wrapper">
     <!-- ========== Dashboard Header ========== -->
-    <?php include_once __DIR__ . '/../components/dashboard_header.php'; ?>
+    <?php include_once BASE_PATH . '/templates/components/dashboard_header.php'; ?>
     <!-- ========== Dashboard Header End ========== -->
 
     <!-- Main content -->
@@ -27,13 +27,13 @@
       </div>
     </section>
     <!-- ========== Dashboard Footer =========== -->
-    <?php include_once __DIR__ . '/../components/dashboard_footer.php'; ?>
+    <?php include_once BASE_PATH . '/templates/components/dashboard_footer.php'; ?>
     <!-- ========== Dashboard Footer End =========== -->
   </main>
   <!-- ======== main-wrapper end =========== -->
 
   <!-- ========= Dashboard Scripts ======== -->
-  <?php include_once __DIR__ . '/../partials/dashboard_scripts.php'; ?>
+  <?php include_once BASE_PATH . '/templates/partials/dashboard_scripts.php'; ?>
   <!-- ========= Dashboard Scripts End ======== -->
 
 </body>

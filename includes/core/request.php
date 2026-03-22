@@ -118,6 +118,20 @@ class Request
     return $this->server['REQUEST_URI'] ?? '/';
   }
 
+  /**
+   * Lấy path của request, đã strip base path prefix.
+   * Dùng để so sánh với URL trong menu mà không bị ảnh hưởng bởi subfolder.
+   * VD: REQUEST_URI=/website_khoa/gioi-thieu → path()=/gioi-thieu
+   * @return string
+   */
+  public function path(): string
+  {
+    $uri = $this->uri();
+    $basePath = rtrim(dirname($this->server['SCRIPT_NAME'] ?? ''), '/');
+    $path = $basePath ? str_replace($basePath, '', $uri) : $uri;
+    return '/' . ltrim($path, '/') ?: '/';
+  }
+
   // ===================================
   // Header
   // ===================================
