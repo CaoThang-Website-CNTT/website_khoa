@@ -29,6 +29,7 @@ $router->post('/admin/classrooms/delete/{id}', ['ClassroomController', 'destroy'
 $router->get('/admin/classrooms/create', ['ClassroomController', 'create']);
 $router->post('/admin/classrooms/store', ['ClassroomController', 'store']);
 
+// TODO: tên tạm thời, cần thống nhất lại
 $router->get('/api/specializations', ['SpecializationController', 'getByMajor']);
 $router->get('/api/majors', ['MajorController', 'getMajorsByLevel']);
 $router->post('/api/majors', ['MajorController', 'store']);
