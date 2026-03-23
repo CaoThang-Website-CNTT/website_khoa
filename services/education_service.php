@@ -471,9 +471,9 @@ class EducationService implements EducationRepositoryInterface
 
     $sql = "SELECT 
               c.*,
-              p.id AS maj_id, p.full_name as maj_full_name, p.short_name AS maj_short_name, p.level as maj_level,
-              p.created_at AS maj_created_at, p.updated_at AS maj_updated_at, p.deleted_at AS maj_deleted_at, m.id AS spe_id, m.full_name as spe_full_name, m.short_name AS spe_short_name, 
-              m.created_at AS spe_created_at, m.updated_at AS spe_updated_at, m.deleted_at AS spe_deleted_at
+              m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, m.level as maj_level,
+              m.created_at AS maj_created_at, m.updated_at AS maj_updated_at, m.deleted_at AS maj_deleted_at, s.id AS spe_id, s.full_name as spe_full_name, s.short_name AS spe_short_name, 
+              s.created_at AS spe_created_at, s.updated_at AS spe_updated_at, s.deleted_at AS spe_deleted_at
             FROM classrooms c 
             LEFT JOIN majors m ON c.major_id = m.id 
             LEFT JOIN specializations s ON c.specialization_id = s.id 
