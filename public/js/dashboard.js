@@ -1,41 +1,87 @@
-(function () {
-  /* ========= Add Box Shadow in Header on Scroll ======== */
-  window.addEventListener("scroll", function () {
-    const header = document.querySelector(".header");
-    if (window.scrollY > 0) {
-      header.classList.add("shadow");
-    } else {
-      header.classList.remove("shadow");
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebarHandler = new SidebarHandler();
+  sidebarHandler.init();
+});
+
+class SidebarHandler {
+  constructor() {
+    this._triggers = document.querySelectorAll(".sidebar__trigger");
+    this._container = document.querySelector(".sidebar__container");
+  }
+
+  /**
+   * Khởi tạo trạng thái và sự kiện cho tất cả sidebar trigger.
+   */
+  init() {
+    if (!this._triggers.length || !this._container) return;
+
+    this._setDefaultState();
+    this._bindEvents();
+  }
+
+  // ── private ────────────────────────────────────────────────────
+
+  /**
+   * Đặt data-state mặc định cho container nếu chưa có.
+   * Đồng bộ aria-expanded lên tất cả trigger.
+   * @private
+   */
+  _setDefaultState() {
+    if (!this._container.dataset.state) {
+      this._container.dataset.state = "expanded";
     }
-  });
 
-  /* ========= sidebar toggle ======== */
-  const sidebar = document.querySelector("#sidebar");
-  const mainWrapper = document.querySelector(".main-wrapper");
-  const menuToggleButton = document.querySelector("#menu-toggle");
+    this._syncTriggers();
+  }
 
-  menuToggleButton.addEventListener("click", () => {
-    sidebar.classList.toggle("active");
-    mainWrapper.classList.toggle("active");
-  });
-
-  // =========== COLLAPSE TOGGLE =============
-  const collapseToggles = document.querySelectorAll('[data-toggle="collapse"]');
-
-  collapseToggles.forEach(toggle => {
-    toggle.addEventListener('click', function (e) {
-      e.preventDefault();
-      const targetId = this.getAttribute('data-target');
-
-      // Kiểm tra có tồn tại dropdown không
-      // tránh tình trạng thay đổi state nhưng không có dropdown
-      if (targetId) {
-        const currentState = this.getAttribute('data-state') || 'collapsed';
-        const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed';
-
-        this.dataset.state = newState;
-        this.dataset.ariaExpanded = newState === 'expanded';
-      }
+  /**
+   * Gắn sự kiện click và keyboard lên tất cả trigger.
+   * @private
+   */
+  _bindEvents() {
+    this._triggers.forEach(trigger => {
+      trigger.addEventListener("click", () => {
+        this._handleToggle()
+      });
     });
-  })
-})();
+  }
+
+  /**
+   * Đảo ngược trạng thái mở/đóng của sidebar.
+   * @private
+   */
+  _handleToggle() {
+    const isExpanded = this._container.dataset.state === "expanded";
+    if (!isExpanded) this._open();
+    else this._close();
+  }
+
+  /**
+   * Mở sidebar và đồng bộ tất cả trigger.
+   * @private
+   */
+  _open() {
+    this._container.dataset.state = "expanded";
+    this._syncTriggers();
+  }
+
+  /**
+   * Đóng sidebar và đồng bộ tất cả trigger.
+   * @private
+   */
+  _close() {
+    this._container.dataset.state = "collapsed";
+    this._syncTriggers();
+  }
+
+  /**
+   * Đồng bộ aria-expanded trên tất cả trigger với trạng thái hiện tại của container.
+   * @private
+   */
+  _syncTriggers() {
+    const isExpanded = this._container.dataset.state === "expanded";
+    this._triggers.forEach(trigger => {
+      trigger.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+    });
+  }
+}

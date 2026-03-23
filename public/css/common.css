@@ -172,6 +172,24 @@
   }
 
   /* ==========================================================================
+   COLLAPSIBLE
+   ========================================================================== */
+  .collapsible__content {
+    --collapsible-content-height: 0;
+
+    height: var(--collapsible-content-height);
+    font-size: var(--text-sm);
+  }
+
+  .collapsible__content[data-state="closed"] {
+    display: none;
+  }
+
+  .collapsible__content[data-state="open"] {
+    display: block;
+  }
+
+  /* ==========================================================================
    ALERT (Server Side) & TOAST (Client Side)
    ========================================================================== */
   /* Variants */
