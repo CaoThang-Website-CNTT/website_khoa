@@ -53,10 +53,13 @@ interface EducationRepositoryInterface
   public function getAllMajors(): array;
   public function getSpecializationsByMajorId(int $id): array;
   public function getMajorsByLevel(string $level): array;
+  public function createMajor(array $data): int;
+  public function createSpecialization(array $data): int;
 
   // Helper
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
+  public function isClassroomShortNameUnique(string $name, ?int $excludeClassroomId = null): bool;
 }
 
 class EducationService implements EducationRepositoryInterface
@@ -124,6 +127,35 @@ class EducationService implements EducationRepositoryInterface
     $stmt = $this->db->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchColumn() == 0;
+  }
+  public function isClassroomShortNameUnique(string $name, ?int $excludeClassroomId = null): bool
+  {
+    $sql = "SELECT COUNT(*) FROM classrooms WHERE short_name = :short_name AND deleted_at IS NULL";
+    $params = [':short_name' => $name];
+
+    if ($excludeClassroomId) {
+      $sql .= " AND id != :exclude_id";
+      $params[':exclude_id'] = $excludeClassroomId;
+    }
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchColumn() == 0;
+  }
+  public function isMajorShortNameExists(string $shortName, string $level): bool
+  {
+    $sql = "SELECT COUNT(*) FROM `majors` WHERE `short_name` = :short_name AND `level` = :level AND deleted_at IS NULL";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':short_name' => $shortName, ':level' => $level]);
+    return $stmt->fetchColumn() > 0;
+  }
+
+  public function isSpecializationShortNameExists(string $shortName, int $majorId): bool
+  {
+    $sql = "SELECT COUNT(*) FROM `specializations` WHERE `short_name` = :short_name AND `major_id` = :major_id AND deleted_at IS NULL";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':short_name' => $shortName, ':major_id' => $majorId]);
+    return $stmt->fetchColumn() > 0;
   }
 
   // ===================================
@@ -483,8 +515,44 @@ class EducationService implements EducationRepositoryInterface
 
   public function createClassroom(array $classroom): int
   {
-    $stmt = $this->db->prepare("INSERT INTO `classrooms` (name) VALUES (:name)");
-    $stmt->execute([':name' => $classroom['name']]);
+    $sql = "INSERT INTO `classrooms` (`major_id`, `class_of`, `specialization_id`, `letter`, `short_name`, `created_at`, `updated_at`) VALUES 
+            (:major_id, :class_of, :specialization_id, :letter, :short_name, :created_at, :updated_at)";
+    $stmt = $this->db->prepare($sql);
+    $now = date('Y-m-d H:i:s');
+    $stmt->execute([
+      ':major_id' => $classroom['major_id'],
+      ':class_of' => $classroom['class_of'],
+      ':specialization_id' => isset($classroom['specialization_id']) ? $classroom['specialization_id'] : NULL,
+      ':letter' => $classroom['letter'] ?? '',
+      ':short_name' => $classroom['short_name'],
+      ':created_at' => $now,
+      ':updated_at' => $now
+    ]);
+    return (int) $this->db->lastInsertId();
+  }
+  public function createMajor(array $data): int
+  {
+    $sql = "INSERT INTO `majors` (`full_name`, `short_name`, `level`, `created_at`, `updated_at`) 
+          VALUES (:full_name, :short_name, :level, NOW(), NOW())";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+      ':full_name' => $data['full_name'],
+      ':short_name' => $data['short_name'],
+      ':level' => $data['level']
+    ]);
+    return (int) $this->db->lastInsertId();
+  }
+
+  public function createSpecialization(array $data): int
+  {
+    $sql = "INSERT INTO `specializations` (`major_id`, `full_name`, `short_name`, `created_at`, `updated_at`) 
+          VALUES (:major_id, :full_name, :short_name, NOW(), NOW())";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+      ':major_id' => $data['major_id'],
+      ':full_name' => $data['full_name'],
+      ':short_name' => $data['short_name']
+    ]);
     return (int) $this->db->lastInsertId();
   }
   public function deleteClassroom(int $id): bool

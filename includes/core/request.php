@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Core;
 
 class Request
@@ -30,12 +31,12 @@ class Request
 
   public function __construct(
     array $query = [],
-    array $request = [],
+    array $body = [],
     array $files = [],
     array $server = [],
   ) {
     $this->query = $query;
-    $this->request = $request;
+    $this->body = $body;
     $this->files = $this->normaliseFiles($files);
     $this->headers = $this->parseHeaders($server);
   }
@@ -169,5 +170,12 @@ class Request
 
     return $result;
   }
+  /**
+   * Lấy tất cả dữ liệu form
+   * @return array
+   */
+  public function all(): array
+  {
+    return array_merge($this->query, $this->body);
+  }
 }
-?>

@@ -10,6 +10,8 @@ require_once __DIR__ . '/controllers/student_controller.php';
 require_once __DIR__ . '/controllers/student_import_controller.php';
 require_once __DIR__ . '/controllers/teacher_controller.php';
 require_once __DIR__ . '/controllers/classroom_controller.php';
+require_once __DIR__ . '/controllers/specialization_controller.php';
+require_once __DIR__ . '/controllers/major_controller.php';
 
 use App\Services\EducationService;
 

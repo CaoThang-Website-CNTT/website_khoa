@@ -26,4 +26,11 @@ $router->post('/admin/teachers/delete/{id}', ['TeacherController', 'destroy']);
 $router->get('/admin/classrooms', ['ClassroomController', 'index']);
 $router->get('/admin/classrooms/edit/{id}', ['ClassroomController', 'edit']);
 $router->post('/admin/classrooms/delete/{id}', ['ClassroomController', 'destroy']);
+$router->get('/admin/classrooms/create', ['ClassroomController', 'create']);
+$router->post('/admin/classrooms/store', ['ClassroomController', 'store']);
+
+$router->get('/api/specializations', ['SpecializationController', 'getByMajor']);
+$router->get('/api/majors', ['MajorController', 'getMajorsByLevel']);
+$router->post('/api/majors', ['MajorController', 'store']);
+$router->post('/api/specializations', ['SpecializationController', 'store']);
 return $router;
