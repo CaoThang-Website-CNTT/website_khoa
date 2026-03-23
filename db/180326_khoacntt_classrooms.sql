@@ -13,7 +13,7 @@ CREATE TABLE `classrooms` (
 CREATE TABLE `majors` (
   `id` bigint PRIMARY KEY AUTO_INCREMENT,
   `full_name` varchar(100),
-  `short_name` varchar(20),
+  `short_name` varchar(20) UNIQUE,
   `level` varchar(5),
   `updated_at` datetime,
   `created_at` datetime,
@@ -24,7 +24,7 @@ CREATE TABLE `specializations` (
   `id` bigint PRIMARY KEY AUTO_INCREMENT,
   `major_id` bigint,
   `full_name` varchar(100),
-  `short_name` varchar(20),
+  `short_name` varchar(20) UNIQUE,
   `updated_at` datetime,
   `created_at` datetime,
   `deleted_at` datetime
@@ -42,10 +42,14 @@ ALTER TABLE `classrooms` ADD FOREIGN KEY (`specialization_id`) REFERENCES `speci
 INSERT INTO `majors` (`full_name`, `short_name`, `level`, `created_at`) VALUES
 ('Tin học', 'TH', 'CĐ', NOW()),
 ('Công nghệ thông tin', 'CNTT', 'CĐ', NOW()),
-('Quản trị mạng', 'QTM', 'CĐN', NOW()),
+('Quản trị mạng máy tính', 'QTM', 'CĐN', NOW()),
+('Kỹ thuật sửa chữa, lắp ráp máy tính', 'SCMT', 'CĐN', NOW()),
 ('Nhiệt lạnh', 'NL', 'CĐ', NOW()),
-('Điện, điện tử', 'ĐĐT', 'CĐ', NOW()),
-('Công nghệ ô tô', 'OTO', 'CĐ', NOW());
+('Công nghệ Kỹ thuật Điện, Điện tử', 'ĐĐT', 'CĐ', NOW()),
+('Công nghệ Kỹ thuật Điện tử - Viễn thông', 'ĐTVT', 'CĐ', NOW()),
+('Công nghệ Kỹ thuật Cơ khí', 'CK', 'CĐ', NOW()),
+('Công nghệ Kỹ thuật ô tô', 'OTO', 'CĐ', NOW());
+('Công nghệ Kỹ thuật Điền khiển và Tự động hoá', 'TĐ', 'CĐ', NOW());
 
 INSERT INTO `specializations` (`major_id`, `full_name`, `short_name`, `created_at`) VALUES
 (1, 'Lập trình Website', 'WEB', NOW()),

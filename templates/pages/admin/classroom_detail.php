@@ -31,27 +31,16 @@ function errorFor($field, $errors)
   <form id="detail-form" action="<?= url('admin/classrooms/update/') . $classroom?->id ?>" method="POST">
     <div class="card__content">
       <div class="field-group">
-        <div class="field" data-field-disabled data-field-readonly>
-          <label for="short_name">Short Name</label>
+        <div class="field">
+          <label for="short_name">Short Name (auto generate)</label>
           <input id="short_name" class="field__input" type="text" name="short_name"
-            value="<?= htmlspecialchars($classroom->short_name ?? '') ?>" disabled>
+            value="<?= htmlspecialchars($classroom->short_name ?? 'N/A') ?>" readonly disabled>
         </div>
 
         <div class="field">
-          <label for="level">Level</label>
-          <select id="level" class="field__input  <?= isset($errors['level']) ? 'field__input--error' : '' ?>"
-            name="level" disabled>
-            <option value="" disabled hidden <?= is_null($classroom?->major->level) ? 'selected' : '' ?>>
-              -- Chọn bậc học--
-            </option>
-            <option value="CĐ" <?= $classroom?->major?->level === 'CĐ' ? 'selected' : '' ?>>
-              <?= htmlspecialchars(LEVELS['CĐ']) ?>
-            </option>
-            <option value="CĐN" <?= $classroom?->major?->level === 'CĐN' ? 'selected' : '' ?>>
-              <?= htmlspecialchars(LEVELS['CĐN']) ?>
-            </option>
-          </select>
-          <?= errorFor('level', $errors) ?>
+          <label for="level">Level *</label>
+          <input id="level" class="field__input" value="<?= htmlspecialchars(LEVELS[$major['level']]) ?>" readonly
+            disabled>
         </div>
 
         <div class="field">
@@ -60,41 +49,48 @@ function errorFor($field, $errors)
             type="number" min="1" max="999" name="class_of" value="<?= htmlspecialchars($classroom->class_of ?? '') ?>">
           <?= errorFor('class_of', $errors) ?>
         </div>
+        <div class="field-group">
+          <div class="field">
+            <input id="major_id" name="major_id" value="<?= $major['id'] ?>" hidden readonly>
+            <label>Major Full Name *</label>
+            <input id="major_full_name" name="major_full_name"
+              class="field__input <?= isset($errors['major_full_name']) ? 'field__input--error' : '' ?>"
+              value="<?= htmlspecialchars($old_data['major_full_name'] ?? $major['full_name']) ?>"
+              data-original="<?= htmlspecialchars($major['full_name']) ?>">
+            <?= errorFor('major_full_name', $errors) ?>
+          </div>
 
-        <div class="field">
-          <label for="major_id">Major *</label>
-          <select id="major_id"
-            class="field__input <?= isset($errors['major_id']) ? 'field__input--error' : '' ?>"
-            name="major_id">
-            <option value="" disabled hidden <?= is_null($classroom?->major_id) ? 'selected' : '' ?>>
-              -- Chọn Ngành/Nghề --
-            </option>
-            <?php foreach ($majors as $major): ?>
-              <option value="<?= $major->id ?>"
-                <?= ($classroom?->major_id == $major->id) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($major->full_name) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <?= errorFor('major_id', $errors) ?>
+          <div class="field">
+            <label>Major Short Name</label>
+            <input id="maj_short" class="field__input" value="<?= htmlspecialchars($major['short_name']) ?>" readonly
+              disabled>
+          </div>
         </div>
+        <?php if ($major['level'] !== 'CĐN' && $specialization): ?>
+        <div class="field-group">
+          <input id="specialization_id" name="specialization_id" value="<?= $specialization['id'] ?>" hidden readonly>
+          <div class="field">
+            <label>Specialization Full Name *</label>
+            <input id="spec_full_name" name="spec_full_name"
+              class="field__input <?= isset($errors['spec_full_name']) ? 'field__input--error' : '' ?>"
+              value="<?= htmlspecialchars($old_data['spec_full_name'] ?? $specialization['full_name']) ?>"
+              data-original="<?= htmlspecialchars($specialization['full_name']) ?>">
+            <?= errorFor('spec_full_name', $errors) ?>
+          </div>
 
+          <div class="field">
+            <label>Specialization Short Name</label>
+            <input id="spec_short" class="field__input" value="<?= htmlspecialchars($specialization['short_name']) ?>"
+              readonly disabled>
+          </div>
+        </div>
+        <?php endif; ?>
         <div class="field">
-          <label for="specialization_id">Specialization</label>
-          <select id="specialization_id"
-            class="field__input <?= isset($errors['specialization_id']) ? 'field__input--error' : '' ?>"
-            name="major_id">
-            <option value="" disabled hidden <?= is_null($classroom?->specialization_id) ? 'selected' : '' ?>>
-              -- Chọn Chuyên Ngành (Cho hệ Cao đẳng) --
-            </option>
-            <?php foreach ($specializationsOfMajor as $specialization): ?>
-              <option value="<?= $specialization->id ?>"
-                <?= ($classroom?->specialization_id == $specialization->id) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($specialization->full_name ?? 'N/A') ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <?= errorFor('specialization_id', $errors) ?>
+          <label>Letter</label>
+          <input id="letter" name="letter"
+            class="field__input <?= isset($errors['letter']) ? 'field__input--error' : '' ?>"
+            value="<?= htmlspecialchars($old_data['letter'] ?? $classroom->letter) ?>">
+          <?= errorFor('letter', $errors) ?>
         </div>
       </div>
     </div>
@@ -112,7 +108,10 @@ function errorFor($field, $errors)
   <div class="modal__header">
     <h2 class="modal__title">Bạn có chắc</h2>
     <p class="modal__description">
-      Những thao tác này sẽ không thể hoàn tác.
+    <p>Nếu bạn chỉnh sửa tên đầy đủ của Ngành hoặc Chuyên ngành.</p>
+    <p>Việc này sẽ làm cập nhật tên của TẤT CẢ các lớp học khác đang thuộc Ngành / Chuyên ngành này
+      trong hệ thống.</p>
+    <p>Bạn có chắc chắn muốn tiếp tục lưu thay đổi không?</p>
     </p>
   </div>
 
@@ -129,37 +128,38 @@ function errorFor($field, $errors)
   </button>
 </div>
 <div class="modal-overlay" data-modal-close></div>
+<script src="<?= url('/public/js/classroom_edit.js') ?>"></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector('#detail-form');
-    const updateBtn = document.querySelector('#update-submit-btn');
-    const deleteBtn = document.querySelector('#delete-submit-btn');
-    const confirmBtn = document.querySelector('#confirm-modal-btn');
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector('#detail-form');
+  const updateBtn = document.querySelector('#update-submit-btn');
+  const deleteBtn = document.querySelector('#delete-submit-btn');
+  const confirmBtn = document.querySelector('#confirm-modal-btn');
 
-    const modal = new Modal("#confirm-modal");
-    const closeTriggers = document.querySelectorAll('[data-modal-close]');
+  const modal = new Modal("#confirm-modal");
+  const closeTriggers = document.querySelectorAll('[data-modal-close]');
 
-    let pendingActionUrl = '';
+  let pendingActionUrl = '';
 
-    console.log(modal)
+  console.log(modal)
 
-    // Update Btn Event Listener
-    updateBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      pendingActionUrl = form.getAttribute('action');
-    });
-
-    // Delete Btn Event Listener
-    deleteBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      pendingActionUrl = deleteBtn.getAttribute('formaction');
-    });
-
-    // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function() {
-      form.action = pendingActionUrl;
-      form.submit();
-    });
+  // Update Btn Event Listener
+  updateBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    pendingActionUrl = form.getAttribute('action');
   });
+
+  // Delete Btn Event Listener
+  deleteBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    pendingActionUrl = deleteBtn.getAttribute('formaction');
+  });
+
+  // Confirm Btn Event Listener
+  confirmBtn.addEventListener('click', function() {
+    form.action = pendingActionUrl;
+    form.submit();
+  });
+});
 </script>

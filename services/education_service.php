@@ -55,6 +55,11 @@ interface EducationRepositoryInterface
   public function getMajorsByLevel(string $level): array;
   public function createMajor(array $data): int;
   public function createSpecialization(array $data): int;
+  public function getMajorById(int $id): ?array;
+  public function getSpecializationById(int $id): ?array;
+  public function updateClassroomInfo(int $id, array $data): bool;
+  public function updateMajorFullName(int $id, string $fullName): bool;
+  public function updateSpecializationFullName(int $id, string $fullName): bool;
 
   // Helper
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
@@ -586,5 +591,41 @@ class EducationService implements EducationRepositoryInterface
     $stmt->execute();
 
     return array_map(fn($row) => Major::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+  public function getMajorById(int $id): ?array
+  {
+    $stmt = $this->db->prepare("SELECT * FROM majors WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+  }
+
+  public function getSpecializationById(int $id): ?array
+  {
+    $stmt = $this->db->prepare("SELECT * FROM specializations WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+  }
+
+  public function updateClassroomInfo(int $id, array $data): bool
+  {
+    $sql = "UPDATE classrooms SET class_of = :class_of, letter = :letter, short_name = :short_name, updated_at = NOW() WHERE id = :id";
+    return $this->db->prepare($sql)->execute([
+      ':class_of' => $data['class_of'],
+      ':letter' => $data['letter'] ?? '',
+      ':short_name' => $data['short_name'],
+      ':id' => $id
+    ]);
+  }
+
+  public function updateMajorFullName(int $id, string $fullName): bool
+  {
+    return $this->db->prepare("UPDATE majors SET full_name = :full_name, updated_at = NOW() WHERE id = :id")
+      ->execute([':full_name' => $fullName, ':id' => $id]);
+  }
+
+  public function updateSpecializationFullName(int $id, string $fullName): bool
+  {
+    return $this->db->prepare("UPDATE specializations SET full_name = :full_name, updated_at = NOW() WHERE id = :id")
+      ->execute([':full_name' => $fullName, ':id' => $id]);
   }
 }

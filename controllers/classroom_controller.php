@@ -36,14 +36,73 @@ class ClassroomController
   {
     $classroom = $this->_educationService->getClassroomById($id);
     if (!$classroom) {
-      die("Không thấy lớp học với id: $id");
+      die("Không tìm thấy lớp học với id: $id");
     }
-    $majors = $this->_educationService->getAllMajors();
-    $specializationsOfMajor = $this->_educationService->getSpecializationsByMajorId($classroom->major_id);
+
+    $major = $this->_educationService->getMajorById($classroom->major_id);
+    $specialization = $classroom->specialization_id ? $this->_educationService->getSpecializationById($classroom->specialization_id) : null;
+
     ob_start();
     require_once __DIR__ . '/../templates/pages/admin/classroom_detail.php';
     $content = ob_get_clean();
     require_once __DIR__ . '/../templates/layouts/dashboard_layout.php';
+  }
+  public function update($id)
+  {
+    $data = $_POST;
+    $validator = new Validator();
+
+    // Các rule cơ bản
+    $rules = [
+      'class_of' => ['required', 'numeric'],
+      'short_name' => ['required'],
+      'major_full_name' => ['required']
+    ];
+
+    if (!empty($data['specialization_id'])) {
+      $rules['spec_full_name'] = ['required'];
+      $rules['letter'] = ['required', 'max:1'];
+    }
+
+    if (!$validator->validate($data, $rules)) {
+      var_dump($validator->getErrors());
+      die();
+      return $this->redirectWithError($validator->getErrors(), $data);
+    }
+    // var_dump($data);
+    // die();
+
+    // Xử lý Letter nếu trống
+    $data['letter'] = isset($data['letter']) ? trim($data['letter']) : '';
+
+    // Kiểm tra trùng lặp classroom.short_name MỚI nếu có thay đổi
+    $classroom = $this->_educationService->getClassroomById($id);
+    if ($classroom->short_name !== $data['short_name']) {
+      if (!$this->_educationService->isClassroomShortNameUnique($data['short_name'])) {
+        $validator->addError('short_name', 'Tên viết tắt lớp này đã tồn tại.');
+        return $this->redirectWithError($validator->getErrors(), $data);
+      }
+    }
+
+    // Cập nhật tên Ngành
+    $this->_educationService->updateMajorFullName($data['major_id'], $data['major_full_name']);
+
+    // Cập nhật tên Chuyên Ngành nếu có
+    if (!empty($data['specialization_id']) && !empty($data['spec_full_name'])) {
+      $this->_educationService->updateSpecializationFullName($data['specialization_id'], $data['spec_full_name']);
+    }
+
+    $success = $this->_educationService->updateClassroomInfo($id, $data);
+
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if ($success) {
+      $_SESSION['flash_message'] = ['type' => 'success', 'content' => 'Cập nhật thông tin lớp học thành công!'];
+    } else {
+      $_SESSION['flash_message'] = ['type' => 'error', 'content' => 'Có lỗi xảy ra khi cập nhật.'];
+    }
+
+    header("Location: " . url('admin/classrooms'));
+    exit;
   }
   public function destroy($id)
   {
