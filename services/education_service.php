@@ -6,16 +6,16 @@ require_once __DIR__ . '/../models/account.php';
 require_once __DIR__ . '/../models/student.php';
 require_once __DIR__ . '/../models/teacher.php';
 require_once __DIR__ . '/../models/classroom.php';
-require_once __DIR__ . '/../models/profession.php';
 require_once __DIR__ . '/../models/major.php';
+require_once __DIR__ . '/../models/specialization.php';
 require_once __DIR__ . '/../db/database.php';
 
 use App\Models\Account;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Classroom;
-use App\Models\Profession;
 use App\Models\Major;
+use App\Models\Specialization;
 use Database;
 use PDO;
 use Exception;
@@ -50,8 +50,9 @@ interface EducationRepositoryInterface
   public function createClassroom(array $classroom): int;
   public function deleteClassroom(int $id): bool;
 
-  public function getAllProfessions(): array;
-  public function getMajorsByProfessionId(int $id): array;
+  public function getAllMajors(): array;
+  public function getSpecializationsByMajorId(int $id): array;
+  public function getMajorsByLevel(string $level): array;
 
   // Helper
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
@@ -431,21 +432,21 @@ class EducationService implements EducationRepositoryInterface
     $offset = (max(1, $page) - 1) * $limit;
 
     $countSql = "SELECT COUNT(*) FROM classrooms c 
-                LEFT JOIN professions p ON c.profession_id = p.id 
                 LEFT JOIN majors m ON c.major_id = m.id 
-                WHERE c.deleted_at IS NULL AND p.deleted_at IS NULL AND m.deleted_at IS NULL";
+                LEFT JOIN specializations s ON c.specialization_id = s.id 
+                WHERE c.deleted_at IS NULL AND s.deleted_at IS NULL AND m.deleted_at IS NULL";
     $totalRows = $this->db->query($countSql)->fetchColumn();
 
     $sql = "SELECT 
               c.*,
-              p.id AS pro_id, p.full_name as pro_full_name, p.short_name AS pro_short_name, p.level as pro_level,
-              p.created_at AS pro_created_at, p.updated_at AS pro_updated_at, p.deleted_at AS pro_deleted_at, m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, 
-              m.created_at AS maj_created_at, m.updated_at AS maj_updated_at, m.deleted_at AS maj_deleted_at
+              p.id AS maj_id, p.full_name as maj_full_name, p.short_name AS maj_short_name, p.level as maj_level,
+              p.created_at AS maj_created_at, p.updated_at AS maj_updated_at, p.deleted_at AS maj_deleted_at, m.id AS spe_id, m.full_name as spe_full_name, m.short_name AS spe_short_name, 
+              m.created_at AS spe_created_at, m.updated_at AS spe_updated_at, m.deleted_at AS spe_deleted_at
             FROM classrooms c 
-            LEFT JOIN professions p ON c.profession_id = p.id 
             LEFT JOIN majors m ON c.major_id = m.id 
-            WHERE c.deleted_at IS NULL AND p.deleted_at IS NULL AND m.deleted_at IS NULL
-            ORDER BY c.class_of DESC
+            LEFT JOIN specializations s ON c.specialization_id = s.id 
+            WHERE c.deleted_at IS NULL AND s.deleted_at IS NULL AND m.deleted_at IS NULL
+            ORDER BY c.class_of DESC, c.letter DESC
             LIMIT :limit OFFSET :offset";
 
     $stmt = $this->db->prepare($sql);
@@ -466,13 +467,13 @@ class EducationService implements EducationRepositoryInterface
   {
     $sql = "SELECT  
               c.*,
-              p.id AS pro_id, p.full_name as pro_full_name, p.short_name AS pro_short_name, p.level as pro_level, 
-              p.created_at AS pro_created_at, p.updated_at AS pro_updated_at, p.deleted_at AS pro_deleted_at, m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, 
-              m.created_at AS maj_created_at, m.updated_at AS maj_updated_at, m.deleted_at AS maj_deleted_at
+              m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, m.level as maj_level, 
+              m.created_at AS maj_created_at, m.updated_at AS maj_updated_at, m.deleted_at AS maj_deleted_at, s.id AS spe_id, s.full_name as spe_full_name, s.short_name AS spe_short_name, 
+              s.created_at AS spe_created_at, s.updated_at AS spe_updated_at, s.deleted_at AS spe_deleted_at
             FROM classrooms c 
-            LEFT JOIN professions p ON c.profession_id = p.id 
             LEFT JOIN majors m ON c.major_id = m.id 
-            WHERE c.`id` = :id AND c.deleted_at IS NULL AND p.deleted_at IS NULL AND m.deleted_at IS NULL";
+            LEFT JOIN specializations s ON c.specialization_id = s.id 
+            WHERE c.`id` = :id AND c.deleted_at IS NULL AND s.deleted_at IS NULL AND m.deleted_at IS NULL";
 
     $stmt = $this->db->prepare($sql);
     $stmt->execute(['id' => $id]);
@@ -492,21 +493,30 @@ class EducationService implements EducationRepositoryInterface
     return $this->db->prepare($sql)->execute([':id' => $id]);
   }
 
-  public function getMajorsByProfessionId($id): array
+  public function getSpecializationsByMajorId($id): array
   {
-    $sql = "SELECT * FROM `majors`
-            WHERE profession_id = :id AND deleted_at IS NULL";
+    $sql = "SELECT * FROM `specializations`
+            WHERE major_id = :id AND deleted_at IS NULL";
     $stmt = $this->db->prepare($sql);
     $stmt->bindValue(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
+    return array_map(fn($row) => specialization::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+  public function getMajorsByLevel($level): array
+  {
+    $sql = "SELECT * FROM `majors`
+            WHERE level LIKE :level AND deleted_at IS NULL";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':level', $level, PDO::PARAM_STR);
+    $stmt->execute();
     return array_map(fn($row) => Major::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
-  public function getAllProfessions(): array
+  public function getAllMajors(): array
   {
-    $stmt = $this->db->prepare("SELECT * FROM `professions`
+    $stmt = $this->db->prepare("SELECT * FROM `majors`
                                 WHERE deleted_at IS NULL");
     $stmt->execute();
 
-    return array_map(fn($row) => Profession::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return array_map(fn($row) => Major::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 }

@@ -41,13 +41,13 @@ function errorFor($field, $errors)
           <label for="level">Level</label>
           <select id="level" class="field__input  <?= isset($errors['level']) ? 'field__input--error' : '' ?>"
             name="level" disabled>
-            <option value="" disabled hidden <?= is_null($classroom?->profession->level) ? 'selected' : '' ?>>
+            <option value="" disabled hidden <?= is_null($classroom?->major->level) ? 'selected' : '' ?>>
               -- Chọn bậc học--
             </option>
-            <option value="CĐ" <?= $classroom?->profession?->level === 'CĐ' ? 'selected' : '' ?>>
+            <option value="CĐ" <?= $classroom?->major?->level === 'CĐ' ? 'selected' : '' ?>>
               <?= htmlspecialchars(LEVELS['CĐ']) ?>
             </option>
-            <option value="CĐN" <?= $classroom?->profession?->level === 'CĐN' ? 'selected' : '' ?>>
+            <option value="CĐN" <?= $classroom?->major?->level === 'CĐN' ? 'selected' : '' ?>>
               <?= htmlspecialchars(LEVELS['CĐN']) ?>
             </option>
           </select>
@@ -62,37 +62,39 @@ function errorFor($field, $errors)
         </div>
 
         <div class="field">
-          <label for="profession_id">Profession *</label>
-          <select id="profession_id"
-            class="field__input <?= isset($errors['profession_id']) ? 'field__input--error' : '' ?>"
-            name="profession_id">
-            <option value="" disabled hidden <?= is_null($classroom?->profession_id) ? 'selected' : '' ?>>
+          <label for="major_id">Major *</label>
+          <select id="major_id"
+            class="field__input <?= isset($errors['major_id']) ? 'field__input--error' : '' ?>"
+            name="major_id">
+            <option value="" disabled hidden <?= is_null($classroom?->major_id) ? 'selected' : '' ?>>
               -- Chọn Ngành/Nghề --
             </option>
-            <?php foreach ($professions as $profession): ?>
-            <option value="<?= $profession->id ?>"
-              <?= ($classroom?->profession_id == $profession->id) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($profession->full_name) ?>
-            </option>
-            <?php endforeach; ?>
-          </select>
-          <?= errorFor('profession_id', $errors) ?>
-        </div>
-
-        <div class="field">
-          <label for="major_id">Major</label>
-          <select id="major_id" class="field__input <?= isset($errors['major_id']) ? 'field__input--error' : '' ?>"
-            name="profession_id">
-            <option value="" disabled hidden <?= is_null($classroom?->major_id) ? 'selected' : '' ?>>
-              -- Chọn Chuyên Ngành (Cho hệ Cao đẳng) --
-            </option>
-            <?php foreach ($majorsOfProfession as $major): ?>
-            <option value="<?= $major->id ?>" <?= ($classroom?->major_id == $major->id) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($major->full_name ?? 'N/A') ?>
-            </option>
+            <?php foreach ($majors as $major): ?>
+              <option value="<?= $major->id ?>"
+                <?= ($classroom?->major_id == $major->id) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($major->full_name) ?>
+              </option>
             <?php endforeach; ?>
           </select>
           <?= errorFor('major_id', $errors) ?>
+        </div>
+
+        <div class="field">
+          <label for="specialization_id">Specialization</label>
+          <select id="specialization_id"
+            class="field__input <?= isset($errors['specialization_id']) ? 'field__input--error' : '' ?>"
+            name="major_id">
+            <option value="" disabled hidden <?= is_null($classroom?->specialization_id) ? 'selected' : '' ?>>
+              -- Chọn Chuyên Ngành (Cho hệ Cao đẳng) --
+            </option>
+            <?php foreach ($specializationsOfMajor as $specialization): ?>
+              <option value="<?= $specialization->id ?>"
+                <?= ($classroom?->specialization_id == $specialization->id) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($specialization->full_name ?? 'N/A') ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <?= errorFor('specialization_id', $errors) ?>
         </div>
       </div>
     </div>
@@ -129,35 +131,35 @@ function errorFor($field, $errors)
 <div class="modal-overlay" data-modal-close></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.querySelector('#detail-form');
-  const updateBtn = document.querySelector('#update-submit-btn');
-  const deleteBtn = document.querySelector('#delete-submit-btn');
-  const confirmBtn = document.querySelector('#confirm-modal-btn');
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector('#detail-form');
+    const updateBtn = document.querySelector('#update-submit-btn');
+    const deleteBtn = document.querySelector('#delete-submit-btn');
+    const confirmBtn = document.querySelector('#confirm-modal-btn');
 
-  const modal = new Modal("#confirm-modal");
-  const closeTriggers = document.querySelectorAll('[data-modal-close]');
+    const modal = new Modal("#confirm-modal");
+    const closeTriggers = document.querySelectorAll('[data-modal-close]');
 
-  let pendingActionUrl = '';
+    let pendingActionUrl = '';
 
-  console.log(modal)
+    console.log(modal)
 
-  // Update Btn Event Listener
-  updateBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    pendingActionUrl = form.getAttribute('action');
+    // Update Btn Event Listener
+    updateBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      pendingActionUrl = form.getAttribute('action');
+    });
+
+    // Delete Btn Event Listener
+    deleteBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      pendingActionUrl = deleteBtn.getAttribute('formaction');
+    });
+
+    // Confirm Btn Event Listener
+    confirmBtn.addEventListener('click', function() {
+      form.action = pendingActionUrl;
+      form.submit();
+    });
   });
-
-  // Delete Btn Event Listener
-  deleteBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    pendingActionUrl = deleteBtn.getAttribute('formaction');
-  });
-
-  // Confirm Btn Event Listener
-  confirmBtn.addEventListener('click', function() {
-    form.action = pendingActionUrl;
-    form.submit();
-  });
-});
 </script>

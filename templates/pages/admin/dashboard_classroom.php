@@ -44,10 +44,10 @@ ob_start(); ?>
           <h6>Class Of</h6>
         </th>
         <th>
-          <h6>Profession</h6>
+          <h6>Major</h6>
         </th>
         <th>
-          <h6>Major</h6>
+          <h6>Specialization</h6>
         </th>
       </tr>
     </thead>
@@ -57,10 +57,10 @@ ob_start(); ?>
       <tr onclick="window.location.href='<?= url('admin/classrooms/edit/' . $classroom->id) ?>'">
         <td class="data-table__id">#<?= $index + 1 ?></td>
         <td><?= htmlspecialchars($classroom->short_name ?? 'N/A') ?></td>
-        <td><?= htmlspecialchars(LEVELS[$classroom?->profession?->level] ?? 'N/A') ?></td>
+        <td><?= htmlspecialchars(LEVELS[$classroom?->major?->level] ?? 'N/A') ?></td>
         <td><?= htmlspecialchars($classroom->class_of ?? 'N/A') ?></td>
-        <td><?= htmlspecialchars($classroom?->profession?->full_name ?? 'N/A') ?></td>
-        <td><?= htmlspecialchars($classroom->major->full_name ?? 'N/A') ?></td>
+        <td><?= htmlspecialchars($classroom?->major?->full_name ?? 'N/A') ?></td>
+        <td><?= htmlspecialchars($classroom->specialization->full_name ?? 'N/A') ?></td>
       </tr>
       <?php endforeach; ?>
       <?php else: ?>

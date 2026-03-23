@@ -67,10 +67,11 @@ function errorFor($field, $errors)
         </div>
 
         <div class="field">
-          <label for="major">Major</label>
-          <input id="major" class="field__input <?= isset($errors['major']) ? 'field__input--error' : '' ?>" type="text"
-            name="major" value="<?= htmlspecialchars($student->major ?? '') ?>">
-          <?= errorFor('major', $errors) ?>
+          <label for="specialization">Specialization</label>
+          <input id="specialization"
+            class="field__input <?= isset($errors['specialization']) ? 'field__input--error' : '' ?>" type="text"
+            name="specialization" value="<?= htmlspecialchars($student->specialization ?? '') ?>">
+          <?= errorFor('specialization', $errors) ?>
         </div>
 
         <div class="field">

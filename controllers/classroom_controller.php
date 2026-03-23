@@ -37,8 +37,8 @@ class ClassroomController
     if (!$classroom) {
       die("Không thấy lớp học với id: $id");
     }
-    $professions = $this->_educationService->getAllProfessions();
-    $majorsOfProfession = $this->_educationService->getMajorsByProfessionId($classroom->profession_id);
+    $majors = $this->_educationService->getAllMajors();
+    $specializationsOfMajor = $this->_educationService->getSpecializationsByMajorId($classroom->major_id);
     ob_start();
     require_once __DIR__ . '/../templates/pages/admin/classroom_detail.php';
     $content = ob_get_clean();
