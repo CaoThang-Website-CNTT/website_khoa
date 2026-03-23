@@ -22,10 +22,13 @@ CREATE TABLE `web_settings` (
 -- ============================================================================
 -- SAMPLE DATA
 -- ============================================================================
+-- group: general
 INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `default_value`, `label`, `description`, `autoload`, `is_locked`, `sort_order`) VALUES
-('site_title', 'general', 'string', 'Khoa Công Nghệ Thông Tin', NULL, 'Tên Website', 'Hiển thị trên tab trình duyệt và header', 1, 1, 1),
+('site_title', 'general', 'string', 'KHOA CÔNG NGHỆ THÔNG TIN', NULL, 'Tên Website', 'Hiển thị trên tab trình duyệt và header', 1, 1, 1),
 ('posts_per_page', 'general', 'int', '10', '10', 'Bài Viết Mỗi Trang', NULL, 1, 0, 4),
 ('site_under_maintenance', 'general', 'bool', '0', '0', 'Chế Độ Bảo Trì', 'Bật sẽ hiển thị trang bảo trì cho visitor', 1, 0, 5);
+
+-- group: homepage
 INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `default_value`, `label`, `description`, `autoload`, `sort_order`) VALUES
 ('homepage.hero_title', 'homepage', 'string', 'Chào Mừng Đến Với Khoa CNTT', NULL, 'Tiêu Đề Hero Banner', NULL, 1, 1),
 ('homepage.hero_subtitle', 'homepage', 'text', 'Đào tạo nguồn nhân lực chất lượng cao trong lĩnh vực Công nghệ Thông tin.', NULL, 'Mô Tả Hero Banner', NULL, 1, 2),
@@ -35,16 +38,20 @@ INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `default_value`, `l
 ('homepage.news_count', 'homepage', 'int', '6', '6', 'Số Bài Tin Tức Trang Chủ', NULL, 1, 7),
 ('homepage.show_stats', 'homepage', 'bool', '1', '1', 'Hiển Thị Thống Kê', 'Sinh viên, giảng viên, ...', 1, 8),
 ('homepage.stats', 'homepage', 'json', '[{"label":"Sinh viên","value":"2500+"},{"label":"Giảng viên","value":"120"},{"label":"Chương trình","value":"8"},{"label":"Năm thành lập","value":"1995"}]', NULL, 'Số Liệu Thống Kê', 'Mảng JSON: [{label, value}]', 0, 9);
+
+-- group: contact
 INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `default_value`, `label`, `autoload`, `sort_order`) VALUES
-('contact.address', 'contact', 'text', '01 Võ Văn Ngân, Thủ Đức, TP. Hồ Chí Minh', NULL, 'Địa Chỉ', 1, 1),
-('contact.phone', 'contact', 'string', '(028) 3896 8641', NULL, 'Số Điện Thoại', 1, 2),
-('contact.email', 'contact', 'email', 'khoacntt@university.edu.vn', NULL, 'Email Liên Hệ', 1, 3);
+('contact.address', 'contact', 'text', 'Lầu 7 - Dãy F, 65 Huỳnh Thúc Kháng, Phường Sài Gòn, TP.HCM, Việt Nam', NULL, 'Địa Chỉ', 1, 1),
+('contact.phone', 'contact', 'string', '+84 (08) 3821 2360', NULL, 'Số Điện Thoại', 1, 2),
+('contact.email', 'contact', 'email', 'cntt@caothang.edu.vn', NULL, 'Email Liên Hệ', 1, 3),
+('contact.description', 'contact', 'text', 'Trang web chính thức của Khoa Công Nghệ Thông Tin - Trường Cao Đẳng Kỹ Thuật Cao Thắng.', NULL, 'Mô Tả Ngắn (Footer)', 1, 4);
+
+-- group: social
 INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `default_value`, `label`, `autoload`, `sort_order`) VALUES
-('social.facebook', 'social', 'url', 'https://facebook.com/khoacntt', NULL, 'Facebook', 1, 1),
-('social.youtube', 'social', 'url', NULL, NULL, 'YouTube', 1, 2),
-('social.twitter', 'social', 'url', NULL, NULL, 'Twitter / X', 1, 3),
-('social.linkedin', 'social', 'url', NULL, NULL, 'LinkedIn', 1, 4),
-('social.zalo', 'social', 'url', NULL, NULL, 'Zalo OA', 1, 5);
+('social.facebook', 'social', 'url', NULL, NULL, 'Facebook', 1, 1),
+('social.youtube', 'social', 'url', NULL, NULL, 'YouTube', 1, 2);
+
+-- group: seo
 INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `default_value`, `label`, `description`, `autoload`, `sort_order`) VALUES
-('seo.meta_title', 'seo', 'string', 'Khoa Công Nghệ Thông Tin', 'Khoa Công Nghệ Thông Tin', 'Meta Title Mặc Định', 'Khuyến nghị tối đa 60 ký tự', 1, 1),
-('seo.meta_description', 'seo', 'text', 'Trang web chính thức của Khoa Công Nghệ Thông Tin.', NULL, 'Meta Description', 'Khuyến nghị tối đa 160 ký tự', 1, 2);
+('seo.meta_title', 'seo', 'string', 'Khoa CNTT - Trường CĐ Kỹ Thuật Cao Thắng', 'Khoa CNTT - Trường CĐ Kỹ Thuật Cao Thắng', 'Meta Title Mặc Định', 'Khuyến nghị tối đa 60 ký tự', 1, 1),
+('seo.meta_description', 'seo', 'text', 'Trang web chính thức của Khoa Công Nghệ Thông Tin - Trường Cao Đẳng Kỹ Thuật Cao Thắng.', NULL, 'Meta Description', 'Khuyến nghị tối đa 160 ký tự', 1, 2);
