@@ -59,9 +59,7 @@ function renderDropdownItem(
           <?= htmlspecialchars($item->label) ?>
         </a>
         <?php if ($hasChildren): ?>
-          <svg class="dropdown__chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true" width="16" height="16">
-            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <i class="fa-solid fa-chevron-down dropdown__chevron"></i>
         <?php endif; ?>
       </div>
 

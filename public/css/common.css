@@ -126,12 +126,15 @@
     height: 2.25rem;
   }
 
-  .btn svg {
+  .btn svg,
+  .btn .fa-solid,
+  .btn .fa-brand {
     color: currentColor;
     fill: currentColor;
     stroke: currentColor;
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--text-sm);
+    height: var(--text-sm);
+    font-size: var(--text-sm);
   }
 
   .btn[data-variant="primary"] {
@@ -319,14 +322,18 @@
     padding-right: 4.5rem;
   }
 
-  .alert:has(svg),
-  .toast:has(svg) {
+  .alert:has(svg, .fa-solid, .fa-brand),
+  .toast:has(svg, .fa-solid, .fa-brand) {
     column-gap: 0.5rem;
     grid-template-columns: auto 1fr;
   }
 
   .alert svg,
-  .toast svg {
+  .alert .fa-solid,
+  .alert .fa-brand,
+  .toast svg,
+  .toast .fa-solid,
+  .toast .fa-brand {
     width: 1rem;
     height: 1rem;
     flex-shrink: 0;
@@ -386,7 +393,8 @@
     margin-block-end: 0.5rem;
   }
 
-  .toast[data-variant="loading"] svg {
+  .toast[data-variant="loading"] svg,
+  .toast[data-variant="loading"] .fa-solid {
     translate: 0 0.125rem;
     animation: spin 1s linear infinite;
   }
@@ -477,7 +485,9 @@
     font-size: var(--text-sm);
   }
 
-  .field__error svg {
+  .field__error svg,
+  .field__error .fa-solid,
+  .field__error .fa-brand {
     width: var(--text-sm);
     height: var(--text-sm);
     vertical-align: baseline;
@@ -659,7 +669,9 @@
     box-shadow: 0 0 0 3px var(--ring) / 0.5;
   }
 
-  .badge > svg {
+  .badge > svg,
+  .badge > .fa-solid,
+  .badge > .fa-brand {
     pointer-events: none;
     flex-shrink: 0;
     width: 12px;
@@ -704,9 +716,10 @@
     outline: none;
   }
 
-  .dropdown__trigger svg {
-    width: 1rem;
-    height: 1rem;
+  .dropdown__trigger svg,
+  .dropdown__trigger .fa-solid,
+  .dropdown__trigger .fa-brand {
+    font-size: var(--text-xs);
     flex-shrink: 0;
   }
 
@@ -829,7 +842,9 @@
     border: none;
   }
 
-  .dropdown__item svg {
+  .dropdown__item svg,
+  .dropdown__item .fa-solid,
+  .dropdown__item .fa-brand {
     width: 1rem;
     height: 1rem;
     margin-left: auto;
@@ -933,8 +948,7 @@
     padding: 0.5rem 1rem;
   }
 
-  .navbar__item-content .dropdown__item:hover,
-  .navbar__item-content .dropdown__item:hover svg {
+  .navbar__item-content .dropdown__item:hover {
     color: var(--primary-foreground);
     background: var(--primary);
   }

@@ -442,14 +442,14 @@ body {
 .sidebar__link-cadet {
   display: flex;
   align-items: center;
-  transform: rotate(-90deg);
+  transform: rotate(-180deg);
   transition: var(--dash-sidebar-transition);
 }
 
 .sidebar__item--has-children
   > .sidebar__link[data-state="collapsed"]
   .sidebar__link-cadet {
-  transform: rotate(90deg);
+  transform: rotate(0);
 }
 
 .sidebar__link:hover,

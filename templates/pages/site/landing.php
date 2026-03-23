@@ -98,17 +98,11 @@ ob_start();
       <!-- Controls -->
       <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--prev"
         id="prevBtn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round"></path>
-        </svg>
+        <i class="fa-solid fa-angle-left"></i>
       </button>
       <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--next"
         id="nextBtn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round"></path>
-        </svg>
+        <i class="fa-solid fa-angle-right"></i>
       </button>
 
       <!-- Indicators -->
@@ -276,13 +270,7 @@ ob_start();
             </p>
             <a href="#" class="wcu__feature-card-link text-base font-normal">
               Khám phá ngay
-              <svg class="wcu__feature-card-link-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"
-                fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5.83334 5.83325H14.1667V14.1666" stroke="currentColor" stroke-width="1.66667"
-                  stroke-linecap="round" stroke-linejoin="round"></path>
-                <path d="M5.83334 14.1666L14.1667 5.83325" stroke="currentColor" stroke-width="1.66667"
-                  stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </a>
           </div>
         </div>
@@ -313,13 +301,7 @@ ob_start();
 
         <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
           <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
-            <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 18L22 12L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round"></path>
-              <path d="M8 6L2 12L8 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
+            <i class="fa-solid fa-code wcu__perk-item-icon"></i>
           </div>
           <h4 class="wcu__perk-item-title text-base font-semibold mb-2">
             Công nghệ tiên tiến
@@ -331,21 +313,7 @@ ob_start();
 
         <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
           <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
-            <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M16 21V19C16 17.9391 15.5786 16.9217 14.8284 16.1716C14.0783 15.4214 13.0609 15 12 15H6C4.93913 15 3.92172 15.4214 3.17157 16.1716C2.42143 16.9217 2 17.9391 2 19V21"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path
-                d="M16 3.12793C16.8578 3.3503 17.6174 3.85119 18.1597 4.55199C18.702 5.25279 18.9962 6.11382 18.9962 6.99993C18.9962 7.88604 18.702 8.74707 18.1597 9.44787C17.6174 10.1487 16.8578 10.6496 16 10.8719"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path
-                d="M22 20.9999V18.9999C21.9993 18.1136 21.7044 17.2527 21.1614 16.5522C20.6184 15.8517 19.8581 15.3515 19 15.1299"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path
-                d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
+            <i class="fa-solid fa-user-group wcu__perk-item-icon"></i>
           </div>
           <h4 class="wcu__perk-item-title text-base font-semibold text-foreground mb-2">
             Cộng đồng Mạnh mẽ
@@ -357,15 +325,7 @@ ob_start();
 
         <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
           <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
-            <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M15.477 12.8899L16.992 21.4159C17.009 21.5163 16.9949 21.6195 16.9516 21.7116C16.9084 21.8038 16.838 21.8806 16.7499 21.9317C16.6619 21.9828 16.5603 22.0058 16.4588 21.9976C16.3573 21.9894 16.2607 21.9504 16.182 21.8859L12.602 19.1989C12.4292 19.0698 12.2192 19 12.0035 19C11.7878 19 11.5778 19.0698 11.405 19.1989L7.819 21.8849C7.74032 21.9493 7.64386 21.9882 7.54249 21.9964C7.44112 22.0046 7.33967 21.9817 7.25166 21.9308C7.16365 21.8798 7.09327 21.8032 7.04991 21.7112C7.00656 21.6192 6.99228 21.5162 7.009 21.4159L8.523 12.8899"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path
-                d="M12 14C15.3137 14 18 11.3137 18 8C18 4.68629 15.3137 2 12 2C8.68629 2 6 4.68629 6 8C6 11.3137 8.68629 14 12 14Z"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
+            <i class="fa-solid fa-award wcu__perk-item-icon"></i>
           </div>
           <h4 class="wcu__perk-item-title text-base font-semibold text-foreground mb-2">
             Chất lượng Quốc tế
@@ -377,19 +337,7 @@ ob_start();
 
         <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
           <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
-            <svg class="wcu__perk-item-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M4.5 16.5001C3 17.7601 2.5 21.5001 2.5 21.5001C2.5 21.5001 6.24 21.0001 7.5 19.5001C8.21 18.6601 8.2 17.3701 7.41 16.5901C7.02131 16.2191 6.50929 16.0047 5.97223 15.9881C5.43516 15.9715 4.91088 16.1538 4.5 16.5001Z"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path
-                d="M12 15L9 12C9.53214 10.6194 10.2022 9.29607 11 8.05C12.1652 6.18699 13.7876 4.65305 15.713 3.5941C17.6384 2.53514 19.8027 1.98637 22 2C22 4.72 21.22 9.5 16 13C14.7369 13.7987 13.3968 14.4687 12 15Z"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path d="M9 12H4C4 12 4.55 8.97002 6 8.00002C7.62 6.92002 11 8.00002 11 8.00002" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              <path d="M12 15V20C12 20 15.03 19.45 16 18C17.08 16.38 16 13 16 13" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
+            <i class="fa-solid fa-rocket wcu__perk-item-icon"></i>
           </div>
           <h4 class="wcu__perk-item-title text-base font-semibold text-foreground mb-2">
             Khởi nghiệp
@@ -453,15 +401,7 @@ ob_start();
       <div class="stats__grid flex gap-6">
         <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
           <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
-            <svg class="stats__stat-card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M15.477 12.8899L16.992 21.4159C17.009 21.5163 16.9949 21.6195 16.9516 21.7116C16.9084 21.8038 16.838 21.8806 16.7499 21.9317C16.6619 21.9828 16.5603 22.0058 16.4588 21.9976C16.3573 21.9894 16.2607 21.9504 16.182 21.8859L12.602 19.1989C12.4292 19.0698 12.2192 19 12.0035 19C11.7878 19 11.5778 19.0698 11.405 19.1989L7.819 21.8849C7.74032 21.9493 7.64386 21.9882 7.54249 21.9964C7.44112 22.0046 7.33967 21.9817 7.25166 21.9308C7.16365 21.8798 7.09327 21.8032 7.04991 21.7112C7.00656 21.6192 6.99228 21.5162 7.009 21.4159L8.523 12.8899"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              <path
-                d="M12 14C15.3137 14 18 11.3137 18 8C18 4.68629 15.3137 2 12 2C8.68629 2 6 4.68629 6 8C6 11.3137 8.68629 14 12 14Z"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <i class="fa-solid fa-award stats__stat-card-icon"></i>
           </div>
           <div class="flex flex-col gap-1 items-center">
             <h3 class="stats__stat-card-number text-5xl font-bold">50+</h3>
@@ -473,17 +413,7 @@ ob_start();
         </div>
         <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
           <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
-            <svg class="stats__stat-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M24.99 12.7424C25.1989 12.6503 25.3761 12.4989 25.4998 12.307C25.6234 12.1152 25.6881 11.8912 25.6857 11.663C25.6834 11.4347 25.6141 11.2121 25.4865 11.0229C25.3589 10.8336 25.1786 10.6859 24.9678 10.5981L14.9683 6.04342C14.6644 5.90476 14.3341 5.83301 14 5.83301C13.6659 5.83301 13.3357 5.90476 13.0317 6.04342L3.03334 10.5934C2.82564 10.6844 2.64894 10.8339 2.52487 11.0237C2.40079 11.2135 2.33472 11.4353 2.33472 11.6621C2.33472 11.8888 2.40079 12.1107 2.52487 12.3005C2.64894 12.4903 2.82564 12.6398 3.03334 12.7308L13.0317 17.2901C13.3357 17.4288 13.6659 17.5005 14 17.5005C14.3341 17.5005 14.6644 17.4288 14.9683 17.2901L24.99 12.7424Z"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M25.6667 11.6667V18.6667" stroke="currentColor" stroke-width="2.33333" stroke-linecap="round"
-                stroke-linejoin="round" />
-              <path
-                d="M7 14.5833V18.6666C7 19.5948 7.7375 20.4851 9.05025 21.1415C10.363 21.7978 12.1435 22.1666 14 22.1666C15.8565 22.1666 17.637 21.7978 18.9497 21.1415C20.2625 20.4851 21 19.5948 21 18.6666V14.5833"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <i class="fa-solid fa-graduation-cap stats__stat-card-icon"></i>
           </div>
           <div class="flex flex-col gap-1 items-center">
             <h3 class="stats__stat-card-number text-5xl font-bold">10K+</h3>
@@ -493,15 +423,7 @@ ob_start();
         </div>
         <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
           <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
-            <svg class="stats__stat-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M18.6666 23.3333V4.66659C18.6666 4.04775 18.4208 3.45425 17.9832 3.01667C17.5456 2.57908 16.9522 2.33325 16.3333 2.33325H11.6666C11.0478 2.33325 10.4543 2.57908 10.0167 3.01667C9.57915 3.45425 9.33331 4.04775 9.33331 4.66659V23.3333"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-              <path
-                d="M23.3333 7H4.66665C3.37798 7 2.33331 8.04467 2.33331 9.33333V21C2.33331 22.2887 3.37798 23.3333 4.66665 23.3333H23.3333C24.622 23.3333 25.6666 22.2887 25.6666 21V9.33333C25.6666 8.04467 24.622 7 23.3333 7Z"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <i class="fa-solid fa-briefcase stats__stat-card-icon"></i>
           </div>
           <div class="flex flex-col gap-1 items-center">
             <h3 class="stats__stat-card-number text-5xl font-bold">95%</h3>
@@ -511,21 +433,7 @@ ob_start();
         </div>
         <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
           <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
-            <svg class="stats__stat-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M25.13 17.5H19.8333C19.2145 17.5 18.621 17.7458 18.1834 18.1834C17.7458 18.621 17.5 19.2145 17.5 19.8333V25.13"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-              <path
-                d="M8.16663 3.89673V5.8334C8.16663 6.76165 8.53538 7.65189 9.19175 8.30827C9.84813 8.96465 10.7384 9.3334 11.6666 9.3334C12.2855 9.3334 12.879 9.57923 13.3165 10.0168C13.7541 10.4544 14 11.0479 14 11.6667C14 12.9501 15.05 14.0001 16.3333 14.0001C16.9521 14.0001 17.5456 13.7542 17.9832 13.3166C18.4208 12.8791 18.6666 12.2856 18.6666 11.6667C18.6666 10.3834 19.7166 9.3334 21 9.3334H24.6983"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-              <path
-                d="M12.8334 25.6083V20.9999C12.8334 20.3811 12.5876 19.7876 12.15 19.35C11.7124 18.9124 11.1189 18.6666 10.5001 18.6666C9.88122 18.6666 9.28773 18.4208 8.85014 17.9832C8.41256 17.5456 8.16672 16.9521 8.16672 16.3333V15.1666C8.16672 14.5477 7.92089 13.9543 7.48331 13.5167C7.04572 13.0791 6.45223 12.8333 5.83339 12.8333H2.39172"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-              <path
-                d="M14 25.6666C20.4434 25.6666 25.6667 20.4432 25.6667 13.9999C25.6667 7.5566 20.4434 2.33325 14 2.33325C7.55672 2.33325 2.33337 7.5566 2.33337 13.9999C2.33337 20.4432 7.55672 25.6666 14 25.6666Z"
-                stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <i class="fa-solid fa-earth-americas stats__stat-card-icon"></i>
           </div>
           <div class="flex flex-col gap-1 items-center">
             <h3 class="stats__stat-card-number text-5xl font-bold">20+</h3>
@@ -538,14 +446,7 @@ ob_start();
         <div class="stats__benefit-card flex-1 flex flex-col gap-6 p-8 rounded-3xl">
           <div class="stats__benefit-card-header flex gap-4 items-center">
             <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full">
-              <svg class="stats__benefit-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
-                xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 8.16675V24.5001" stroke="currentColor" stroke-width="2.33333" stroke-linecap="round"
-                  stroke-linejoin="round" />
-                <path
-                  d="M3.49999 21C3.19058 21 2.89383 20.8771 2.67504 20.6583C2.45624 20.4395 2.33333 20.1428 2.33333 19.8333V4.66667C2.33333 4.35725 2.45624 4.0605 2.67504 3.84171C2.89383 3.62292 3.19058 3.5 3.49999 3.5H9.33333C10.571 3.5 11.758 3.99167 12.6332 4.86683C13.5083 5.742 14 6.92899 14 8.16667C14 6.92899 14.4917 5.742 15.3668 4.86683C16.242 3.99167 17.429 3.5 18.6667 3.5H24.5C24.8094 3.5 25.1062 3.62292 25.325 3.84171C25.5437 4.0605 25.6667 4.35725 25.6667 4.66667V19.8333C25.6667 20.1428 25.5437 20.4395 25.325 20.6583C25.1062 20.8771 24.8094 21 24.5 21H17.5C16.5717 21 15.6815 21.3687 15.0251 22.0251C14.3687 22.6815 14 23.5717 14 24.5C14 23.5717 13.6312 22.6815 12.9749 22.0251C12.3185 21.3687 11.4283 21 10.5 21H3.49999Z"
-                  stroke="currentColor" stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+              <i class="fa-solid fa-building-columns stats__benefit-card-icon"></i>
             </div>
             <h3 class="stats__benefit-card-title text-2xl font-semibold">
               Chương trình Đào tạo Tiên tiến
@@ -582,13 +483,7 @@ ob_start();
         <div class="stats__benefit-card flex-1 flex flex-col gap-6 p-8 rounded-3xl">
           <div class="stats__benefit-card-header flex gap-4 items-center">
             <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full">
-              <svg class="stats__benefit-card-icon" width="28" height="28" viewBox="0 0 28 28" fill="none"
-                xmlns="http://www.w3.org/2000/svg">
-                <path d="M18.6667 8.16675H25.6667V15.1667" stroke="currentColor" stroke-width="2.33333"
-                  stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M25.6666 8.16675L15.75 18.0834L9.91665 12.2501L2.33331 19.8334" stroke="currentColor"
-                  stroke-width="2.33333" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+              <i class="fa-solid fa-arrow-trend-up stats__benefit-card-icon"></i>
             </div>
             <h3 class="stats__benefit-card-title text-2xl font-semibold">
               Phát triển Nghề nghiệp
@@ -675,18 +570,7 @@ ob_start();
                   Nổi bật
                 </span>
                 <span class="news-card__date flex items-center gap-1 text-base">
-                  <svg class="news-card__date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                    viewBox="0 0 16 16" fill="none">
-                    <path d="M5.33333 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                      stroke-linejoin="round"></path>
-                    <path d="M10.6667 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                      stroke-linejoin="round"></path>
-                    <path
-                      d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V13.3332C2 14.0696 2.59695 14.6665 3.33333 14.6665H12.6667C13.403 14.6665 14 14.0696 14 13.3332V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665Z"
-                      stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-                    <path d="M2 6.6665H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    </path>
-                  </svg>
+                  <i class="fa-regular fa-calendar news-card__date-icon"></i>
                   15/01/2025
                 </span>
               </div>
@@ -700,13 +584,6 @@ ob_start();
               <a href="#" data-variant="outline-alt"
                 class="news-card__link flex items-center gap-2 text-base px-4 py-2 btn bouncy-btn rounded-full">
                 Đọc thêm
-                <svg class="news-card__link-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4.16666 10H15.8333" stroke="currentColor" stroke-width="1.66667" stroke-linecap="round"
-                    stroke-linejoin="round"></path>
-                  <path d="M10 4.1665L15.8333 9.99984L10 15.8332" stroke="currentColor" stroke-width="1.66667"
-                    stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
               </a>
             </div>
           </div>
@@ -725,18 +602,7 @@ ob_start();
                     Thành tích
                   </span>
                   <span class="news-card__date flex items-center gap-1 text-sm">
-                    <svg class="news-card__date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                      viewBox="0 0 16 16" fill="none">
-                      <path d="M5.33333 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path d="M10.6667 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path
-                        d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V13.3332C2 14.0696 2.59695 14.6665 3.33333 14.6665H12.6667C13.403 14.6665 14 14.0696 14 13.3332V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665Z"
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-                      <path d="M2 6.6665H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      </path>
-                    </svg>
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
                     15/01/2025
                   </span>
                 </div>
@@ -763,18 +629,7 @@ ob_start();
                     Thành tích
                   </span>
                   <span class="news-card__date flex items-center gap-1 text-sm">
-                    <svg class="news-card__date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                      viewBox="0 0 16 16" fill="none">
-                      <path d="M5.33333 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path d="M10.6667 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path
-                        d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V13.3332C2 14.0696 2.59695 14.6665 3.33333 14.6665H12.6667C13.403 14.6665 14 14.0696 14 13.3332V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665Z"
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-                      <path d="M2 6.6665H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      </path>
-                    </svg>
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
                     15/01/2025
                   </span>
                 </div>
@@ -801,18 +656,7 @@ ob_start();
                     Thành tích
                   </span>
                   <span class="news-card__date flex items-center gap-1 text-sm">
-                    <svg class="news-card__date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                      viewBox="0 0 16 16" fill="none">
-                      <path d="M5.33333 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path d="M10.6667 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path
-                        d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V13.3332C2 14.0696 2.59695 14.6665 3.33333 14.6665H12.6667C13.403 14.6665 14 14.0696 14 13.3332V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665Z"
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-                      <path d="M2 6.6665H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      </path>
-                    </svg>
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
                     15/01/2025
                   </span>
                 </div>
@@ -861,18 +705,7 @@ ob_start();
                     Thành tích
                   </span>
                   <span class="news-card__date flex items-center gap-1 text-sm">
-                    <svg class="news-card__date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                      viewBox="0 0 16 16" fill="none">
-                      <path d="M5.33333 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path d="M10.6667 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path
-                        d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V13.3332C2 14.0696 2.59695 14.6665 3.33333 14.6665H12.6667C13.403 14.6665 14 14.0696 14 13.3332V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665Z"
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-                      <path d="M2 6.6665H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      </path>
-                    </svg>
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
                     15/01/2025
                   </span>
                 </div>
@@ -898,18 +731,7 @@ ob_start();
                     Thành tích
                   </span>
                   <span class="news-card__date flex items-center gap-1 text-sm">
-                    <svg class="news-card__date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                      viewBox="0 0 16 16" fill="none">
-                      <path d="M5.33333 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path d="M10.6667 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path
-                        d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V13.3332C2 14.0696 2.59695 14.6665 3.33333 14.6665H12.6667C13.403 14.6665 14 14.0696 14 13.3332V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665Z"
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-                      <path d="M2 6.6665H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      </path>
-                    </svg>
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
                     15/01/2025
                   </span>
                 </div>
@@ -935,18 +757,7 @@ ob_start();
                     Thành tích
                   </span>
                   <span class="news-card__date flex items-center gap-1 text-sm">
-                    <svg class="news-card__date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                      viewBox="0 0 16 16" fill="none">
-                      <path d="M5.33333 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path d="M10.6667 1.3335V4.00016" stroke="currentColor" stroke-linecap="round"
-                        stroke-linejoin="round"></path>
-                      <path
-                        d="M12.6667 2.6665H3.33333C2.59695 2.6665 2 3.26346 2 3.99984V13.3332C2 14.0696 2.59695 14.6665 3.33333 14.6665H12.6667C13.403 14.6665 14 14.0696 14 13.3332V3.99984C14 3.26346 13.403 2.6665 12.6667 2.6665Z"
-                        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
-                      <path d="M2 6.6665H14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                      </path>
-                    </svg>
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
                     15/01/2025
                   </span>
                 </div>

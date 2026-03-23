@@ -11,9 +11,7 @@ class FormHandler {
     this._old = window.__old__ ?? {};
 
     this._icons = {
-      error: `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zm0-192a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm0-192c-18.2 0-32.7 15.5-31.4 33.7l7.4 104c.9 12.6 11.4 22.3 23.9 22.3 12.6 0 23-9.7 23.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z"/></svg>
-    `
+      error: `<i class="fa-solid fa-circle-exclamation"></i>`
     }
   }
 

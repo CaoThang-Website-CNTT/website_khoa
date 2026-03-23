@@ -18,7 +18,7 @@ class Toast {
 
   /**
    * Tập hợp icon SVG đại diện cho từng trạng thái toast.
-   * Sử dụng Font Awesome SVG, viewBox 512x512.
+   * Sử dụng Font Awesome SVG.
    * Được dùng trong `_template()` để render icon tương ứng với `type`.
    *
    * @static

@@ -15,6 +15,10 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <link rel="preload" as="style" href="<?= url('public/css/common.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/base.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/main.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/fontawesome.min.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/solid.min.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/regular.min.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/brands.min.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/fonts.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
