@@ -101,10 +101,7 @@ function renderSettingInput(object $setting): void
     </div>
     <div class="flex gap-2">
       <a href="<?= url('admin/web_settings/create') ?>" data-variant="primary" data-size="md" class="btn">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-          <path
-            d="M256 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 160-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0 0 160c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160 160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-160z" />
-        </svg>
+        <i class="fa-solid fa-plus"></i>
         Thêm setting
       </a>
     </div>
