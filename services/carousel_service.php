@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-require_once BASE_PATH . '/models/Carousel.php';
-require_once BASE_PATH . '/models/CarouselSlide.php';
+require_once BASE_PATH . '/models/carousel.php';
+require_once BASE_PATH . '/models/carousel_slide.php';
 require_once BASE_PATH . '/db/database.php';
 
 use App\Models\Carousel;
