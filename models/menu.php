@@ -19,7 +19,7 @@ class Menu
   /**
    * Tự động mapping trường dữ liệu DB
    * @param array $data
-   * @return Category
+   * @return Menu
    */
   public static function fromArray(array $data): self
   {
