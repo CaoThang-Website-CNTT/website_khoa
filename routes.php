@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController};
+use App\Controllers\{DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController};
 
 $router->get('/', [SiteController::class, 'index']);
 $router->get('/admin', [DashboardController::class, 'index']);
@@ -54,3 +54,21 @@ $router->post('/admin/web_settings', [WebSettingsController::class, 'store']);
 $router->get('/admin/web_settings/{group}/edit', [WebSettingsController::class, 'edit']);
 $router->post('/admin/web_settings/{group}', [WebSettingsController::class, 'batchUpdate']);
 $router->post('/admin/web_settings/delete/{id}', [WebSettingsController::class, 'destroy']);
+
+// Carousel
+// Carousels
+$router->get('/admin/carousels', [CarouselController::class, 'index']);
+$router->get('/admin/carousels/create', [CarouselController::class, 'create']);
+$router->post('/admin/carousels', [CarouselController::class, 'store']);
+$router->get('/admin/carousels/{id}', [CarouselController::class, 'edit']);
+$router->post('/admin/carousels/{id}', [CarouselController::class, 'update']);
+$router->post('/admin/carousels/delete/{id}', [CarouselController::class, 'destroy']);
+
+// Carousel Slides
+$router->get('/admin/carousels/{carouselId}/slides', [CarouselController::class, 'slides']);
+$router->get('/admin/carousels/{carouselId}/slides/create', [CarouselController::class, 'createSlide']);
+$router->post('/admin/carousels/{carouselId}/slides', [CarouselController::class, 'storeSlide']);
+$router->post('/admin/carousels/{carouselId}/slides/reorder', [CarouselController::class, 'reorder']);
+$router->get('/admin/carousels/{carouselId}/slides/{slideId}', [CarouselController::class, 'editSlide']);
+$router->post('/admin/carousels/{carouselId}/slides/{slideId}', [CarouselController::class, 'updateSlide']);
+$router->post('/admin/carousels/{carouselId}/slides/delete/{slideId}', [CarouselController::class, 'destroySlide']);

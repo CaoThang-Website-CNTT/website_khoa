@@ -26,3 +26,4 @@ require_once BASE_PATH . '/controllers/teacher_controller.php';
 require_once BASE_PATH . '/controllers/category_controller.php';
 require_once BASE_PATH . '/controllers/menu_controller.php';
 require_once BASE_PATH . '/controllers/web_setting_controller.php';
+require_once BASE_PATH . '/controllers/carousel_controller.php';

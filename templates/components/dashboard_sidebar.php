@@ -100,6 +100,9 @@
                     <li class="sidebar__menu-sub-item">
                       <a href="<?= url('admin/menus') ?>" class="sidebar__menu-sub-item-btn">Menu</a>
                     </li>
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('admin/carousels') ?>" class="sidebar__menu-sub-item-btn">Carousel</a>
+                    </li>
                   </ul>
                 </div>
               </div>
