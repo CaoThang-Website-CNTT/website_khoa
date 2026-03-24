@@ -19,7 +19,7 @@ interface IMenuRepository
   // -- Menus ------------------------------------------------------------------
 
   /** @return Menu[] */
-  public function getAllMenus(): array;
+  public function getAllMenus(int $pageTo, int $limit = 15): array;
 
   public function getMenuById(int $id): ?Menu;
   public function getMenuByKey(string $key): ?Menu;
@@ -27,6 +27,7 @@ interface IMenuRepository
   public function createMenu(array $data): int;
   public function updateMenu(int $id, array $data): bool;
   public function deleteMenu(int $id): bool;
+  public function getTotalMenusCount(): int;
 
   public function isKeyUnique(string $key, ?int $excludeId = null): bool;
 
@@ -54,7 +55,6 @@ interface IMenuRepository
   public function createItem(array $data): int;
   public function updateItem(int $id, array $data): bool;
   public function deleteItem(int $id): bool;
-
   public function reorderItems(int $moveId, string $direction): bool;
 }
 
@@ -80,12 +80,18 @@ class MenuService implements IMenuRepository
    * @public
    * @return Menu[]
    */
-  public function getAllMenus(): array
+  public function getAllMenus(int $pageTo, int $limit = 15): array
   {
+    $offset = (max(1, $pageTo) - 1) * $limit;
+
     $stmt = $this->db->prepare("
       SELECT * FROM `menus`
       ORDER BY `sort_order` ASC, `id` ASC
+      LIMIT :limit OFFSET :offset
     ");
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
     $stmt->execute();
 
     return array_map(fn($row) => Menu::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -223,6 +229,16 @@ class MenuService implements IMenuRepository
     $stmt->execute($params);
 
     return $stmt->fetchColumn() == 0;
+  }
+  public function getTotalMenusCount(): int
+  {
+    $sql = "SELECT COUNT(m.id) 
+            FROM `menus` m
+            WHERE m.`deleted_at` IS NULL";
+
+    $stmt = $this->db->query($sql);
+
+    return (int) $stmt->fetchColumn();
   }
 
   // --------------------------------------------------------------------------

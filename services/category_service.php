@@ -15,7 +15,7 @@ use PDO;
 interface ICategoryRepository
 {
   /** @return Category[] */
-  public function getAll(int $pageTo, int $limit = 15): array;
+  public function getAllCategories(int $pageTo, int $limit = 15): array;
 
   /** @return Category[] */
   public function getRoots(): array;
@@ -51,7 +51,7 @@ class CategoryService implements ICategoryRepository
    * @public
    * @return Category[] Danh sách danh mục đã được sắp xếp phẳng theo cấu trúc cây
    */
-  public function getAll(int $pageTo, int $limit = 15): array
+  public function getAllCategories(int $pageTo, int $limit = 15): array
   {
     $offset = (max(1, $pageTo) - 1) * $limit;
 

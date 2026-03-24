@@ -25,7 +25,7 @@ class CategoryController extends Controller
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $categories = $this->_categoryService->getAll($currentPage);
+    $categories = $this->_categoryService->getAllCategories($currentPage);
     $total = $this->_categoryService->getTotalCategoriesCount();
 
     $page = new Page($total, 15, $currentPage);
@@ -38,7 +38,7 @@ class CategoryController extends Controller
 
   public function create()
   {
-    $categories = $this->_categoryService->getAll();
+    $categories = $this->_categoryService->getAllCategories();
     $this->render("admin/categories/create", [
       "categories" => $categories
     ], layout: 'dashboard_layout');
@@ -47,7 +47,7 @@ class CategoryController extends Controller
   public function edit(string $id)
   {
     $category = $this->_categoryService->getById((int) $id);
-    $categories = $this->_categoryService->getAll();
+    $categories = $this->_categoryService->getAllCategories();
 
     if (!$category) {
       die("Không tìm thấy danh mục với id: $id");

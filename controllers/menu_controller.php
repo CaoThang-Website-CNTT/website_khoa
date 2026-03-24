@@ -8,13 +8,14 @@ require_once BASE_PATH . '/models/menu.php';
 require_once BASE_PATH . '/models/menu_item.php';
 
 use App\Core\Controller;
+use App\Core\Page;
 use App\Core\Request;
 use App\Core\Validator;
 use App\Services\MenuService;
 
 class MenuController extends Controller
 {
-  private $_menuService;
+  private MenuService $_menuService;
 
   public function __construct(MenuService $menuService)
   {
@@ -25,12 +26,18 @@ class MenuController extends Controller
   // Menus
   // ============================================================================
 
-  public function index()
+  public function index(Request $request)
   {
-    $menus = $this->_menuService->getAllMenus();
+    $currentPage = $request->query('page') ?? 1;
+
+    $menus = $this->_menuService->getAllMenus($currentPage);
+    $total = $this->_menuService->getTotalMenusCount();
+
+    $page = new Page($total, 15, $currentPage);
 
     $this->render('admin/menus/index', [
       'menus' => $menus,
+      'page' => $page
     ], layout: 'dashboard_layout');
   }
 

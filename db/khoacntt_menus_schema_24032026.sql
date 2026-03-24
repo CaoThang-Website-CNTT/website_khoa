@@ -13,7 +13,8 @@ CREATE TABLE `menus` (
   `type`        ENUM('const','custom') NOT NULL DEFAULT 'const' COMMENT 'const = tĩnh do dev định nghĩa, custom = do admin tạo',
   `sort_order`  TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `created_at`  DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at`  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` DATETIME COMMENT 'Thời gian xóa (xóa mềm)'
 );
 
 CREATE TABLE `menu_items` (
