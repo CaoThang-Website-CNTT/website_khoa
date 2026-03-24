@@ -7,31 +7,39 @@ require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/category.php';
 
 use App\Core\Controller;
+use App\Core\Page;
 use App\Core\Request;
 use App\Core\Validator;
 use App\Services\CategoryService;
 
 class CategoryController extends Controller
 {
-  private $_categoryService;
+  private CategoryService $_categoryService;
 
   public function __construct(CategoryService $categoryService)
   {
     $this->_categoryService = $categoryService;
   }
 
-  public function index()
+  public function index(Request $request)
   {
-    $categories = $this->_categoryService->getAll();
-    $this->render("admin/category/index", [
-      "categories" => $categories
+    $currentPage = $request->query('page') ?? 1;
+
+    $categories = $this->_categoryService->getAll($currentPage);
+    $total = $this->_categoryService->getTotalCategoriesCount();
+
+    $page = new Page($total, 15, $currentPage);
+
+    $this->render("admin/categories/index", [
+      "categories" => $categories,
+      "page" => $page
     ], layout: 'dashboard_layout');
   }
 
   public function create()
   {
     $categories = $this->_categoryService->getAll();
-    $this->render("admin/category/create", [
+    $this->render("admin/categories/create", [
       "categories" => $categories
     ], layout: 'dashboard_layout');
   }
@@ -45,7 +53,7 @@ class CategoryController extends Controller
       die("Không tìm thấy danh mục với id: $id");
     }
 
-    $this->render("admin/category/edit", [
+    $this->render("admin/categories/edit", [
       "category" => $category,
       "categories" => $categories
     ], layout: 'dashboard_layout');

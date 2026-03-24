@@ -15,7 +15,7 @@ use PDO;
 interface ICategoryRepository
 {
   /** @return Category[] */
-  public function getAll(): array;
+  public function getAll(int $pageTo, int $limit = 15): array;
 
   /** @return Category[] */
   public function getRoots(): array;
@@ -29,6 +29,7 @@ interface ICategoryRepository
   public function create(array $data): int;
   public function update(int $id, array $data): bool;
   public function delete(int $id): bool;
+  public function getTotalCategoriesCount(): int;
 
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool;
 }
@@ -50,8 +51,10 @@ class CategoryService implements ICategoryRepository
    * @public
    * @return Category[] Danh sách danh mục đã được sắp xếp phẳng theo cấu trúc cây
    */
-  public function getAll(): array
+  public function getAll(int $pageTo, int $limit = 15): array
   {
+    $offset = (max(1, $pageTo) - 1) * $limit;
+
     $stmt = $this->db->prepare("
       WITH RECURSIVE category_tree AS (
         -- Anchor: root nodes (parent_id IS NULL)
@@ -76,7 +79,11 @@ class CategoryService implements ICategoryRepository
       )
       SELECT * FROM category_tree
       ORDER BY path
+      LIMIT :limit OFFSET :offset
     ");
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
     $stmt->execute();
 
     return array_map(fn($row) => Category::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -252,5 +259,15 @@ class CategoryService implements ICategoryRepository
     $stmt->execute($params);
 
     return $stmt->fetchColumn() == 0;
+  }
+  public function getTotalCategoriesCount(): int
+  {
+    $sql = "SELECT COUNT(c.id) 
+            FROM `categories` c
+            WHERE c.`deleted_at` IS NULL";
+
+    $stmt = $this->db->query($sql);
+
+    return (int) $stmt->fetchColumn();
   }
 }

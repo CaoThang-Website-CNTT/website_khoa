@@ -258,9 +258,9 @@ class EducationService implements IEducationRepository
   // ===================================
   public function getTotalTeachersCount(): int
   {
-    $sql = "SELECT COUNT(s.account_id) 
-            FROM `teachers` s
-            INNER JOIN `accounts` a ON s.`account_id` = a.`id`
+    $sql = "SELECT COUNT(t.account_id) 
+            FROM `teachers` t
+            INNER JOIN `accounts` a ON t.`account_id` = a.`id`
             WHERE a.`deleted_at` IS NULL";
 
     $stmt = $this->db->query($sql);

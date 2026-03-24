@@ -1,3 +1,14 @@
+<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php if ($flash = request()->getFlash()): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      toast.<?= ($flash['type']) ?>(
+        '<?= $flash['title'] ?>',
+        '<?= $flash['desc'] ?>'
+      );
+    });
+  </script>
+<?php endif; ?>
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
@@ -66,4 +77,5 @@
       <?php endif; ?>
     </tbody>
   </table>
+  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
 </div>
