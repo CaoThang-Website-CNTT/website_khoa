@@ -15,7 +15,7 @@ use PDO;
 interface ICategoryRepository
 {
   /** @return Category[] */
-  public function getAllCategories(int $pageTo, int $limit = 15): array;
+  public function getAllCategories(?int $pageTo = null, ?int $limit = null): array;
 
   /** @return Category[] */
   public function getRoots(): array;
@@ -51,11 +51,9 @@ class CategoryService implements ICategoryRepository
    * @public
    * @return Category[] Danh sách danh mục đã được sắp xếp phẳng theo cấu trúc cây
    */
-  public function getAllCategories(int $pageTo, int $limit = 15): array
+  public function getAllCategories(?int $pageTo = null, ?int $limit = 15): array
   {
-    $offset = (max(1, $pageTo) - 1) * $limit;
-
-    $stmt = $this->db->prepare("
+    $sql = "
       WITH RECURSIVE category_tree AS (
         -- Anchor: root nodes (parent_id IS NULL)
         SELECT
@@ -79,10 +77,19 @@ class CategoryService implements ICategoryRepository
       )
       SELECT * FROM category_tree
       ORDER BY path
-      LIMIT :limit OFFSET :offset
-    ");
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    ";
+
+    if ($pageTo !== null && $limit !== null) {
+      $offset = (max(1, $pageTo) - 1) * $limit;
+      $sql .= " LIMIT :limit OFFSET :offset";
+    }
+
+    $stmt = $this->db->prepare($sql);
+
+    if ($pageTo !== null && $limit !== null) {
+      $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+      $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    }
 
     $stmt->execute();
 
