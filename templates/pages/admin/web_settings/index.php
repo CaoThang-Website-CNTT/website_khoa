@@ -48,22 +48,19 @@
     </thead>
     <tbody>
       <?php if (!empty($groups)): ?>
-        <?php $index = 1;
-        foreach ($groups as $groupName => $settings): ?>
+        <?php
+        foreach ($groups as $index => $group): ?>
           <?php
-          $total = count($settings);
-          $autoloaded = count(array_filter($settings, fn($s) => $s->autoload));
-          $locked = count(array_filter($settings, fn($s) => $s->is_locked));
           ?>
-          <tr onclick="window.location.href='<?= url('admin/web_settings/' . $groupName . '/edit') ?>'">
+          <tr onclick="window.location.href='<?= url('admin/web_settings/' . $group['name'] . '/edit') ?>'">
             <td class="data-table__id">#<?= $index++ ?></td>
             <td>
-              <code><?= htmlspecialchars($groupName) ?></code>
+              <code><?= htmlspecialchars($group['name']) ?></code>
             </td>
-            <td><?= $total ?></td>
+            <td><?= $group['total'] ?></td>
             <td>
-              <?php if ($locked > 0): ?>
-                <span class="badge" data-variant="primary"><?= $locked ?> khoá</span>
+              <?php if ($group['is_locked'] > 0): ?>
+                <span class="badge" data-variant="primary"><?= $group['is_locked'] ?> khoá</span>
               <?php else: ?>
                 <span class="badge" data-variant="secondary">Không có</span>
               <?php endif; ?>
@@ -77,4 +74,5 @@
       <?php endif; ?>
     </tbody>
   </table>
+  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
 </div>

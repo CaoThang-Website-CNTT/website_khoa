@@ -59,11 +59,12 @@ interface IWebSettingRepository
    * Trả về false ngay lập tức nếu setting có is_locked = 1.
    */
   public function deleteSetting(int $id): bool;
+  public function getTotalGroupsCount(): int;
 
   public function isKeyUnique(string $key, ?int $excludeId = null): bool;
 
   /** @return string[] Danh sách group đang tồn tại, dùng cho datalist gợi ý */
-  public function getGroups(): array;
+  public function getAllGroups(?int $pageTo = null, ?int $limit = null): array;
 }
 
 // ============================================================================
@@ -90,6 +91,7 @@ class WebSettingsService implements IWebSettingRepository
    */
   public function getAllSettings(): array
   {
+
     $stmt = $this->db->prepare("
       SELECT * FROM `web_settings`
       ORDER BY `group` ASC, `sort_order` ASC, `id` ASC
@@ -336,6 +338,18 @@ class WebSettingsService implements IWebSettingRepository
     return $stmt->execute([':id' => $id]);
   }
 
+  public function getTotalGroupsCount(): int
+  {
+    $sql = "
+      SELECT COUNT(DISTINCT `group`)
+      FROM `web_settings`
+    ";
+
+    $stmt = $this->db->query($sql);
+
+    return (int) $stmt->fetchColumn();
+  }
+
   /**
    * Kiểm tra key có duy nhất trong bảng web_settings hay không.
    * Có thể loại trừ một ID cụ thể khi dùng cho trường hợp cập nhật.
@@ -369,15 +383,30 @@ class WebSettingsService implements IWebSettingRepository
    * @public
    * @return string[] VD: ['contact', 'general', 'homepage', 'seo', 'social']
    */
-  public function getGroups(): array
+  public function getAllGroups(?int $pageTo = null, ?int $limit = null): array
   {
-    $stmt = $this->db->prepare("
-      SELECT DISTINCT `group` FROM `web_settings`
+    $sql = "
+      SELECT `group` as name, COUNT(id) as total, is_locked
+      FROM `web_settings`
+      GROUP BY `group`
       ORDER BY `group` ASC
-    ");
+    ";
+
+    if ($pageTo !== null && $limit !== null) {
+      $offset = (max(1, $pageTo) - 1) * $limit;
+      $sql .= " LIMIT :limit OFFSET :offset";
+    }
+
+    $stmt = $this->db->prepare($sql);
+
+    if ($pageTo !== null && $limit !== null) {
+      $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+      $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    }
+
     $stmt->execute();
 
-    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
   // --------------------------------------------------------------------------

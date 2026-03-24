@@ -7,6 +7,7 @@ require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/web_setting.php';
 
 use App\Core\Controller;
+use App\Core\Page;
 use App\Core\Request;
 use App\Core\Validator;
 
@@ -47,18 +48,18 @@ class WebSettingsController extends Controller
    * Hiển thị danh sách các nhóm setting.
    * Mỗi group hiển thị như một thẻ/row, click vào để vào trang batch-edit.
    */
-  public function index(): void
+  public function index(Request $request): void
   {
-    $all = $this->_settingsService->getAllSettings();
+    $currentPage = $request->query('page') ?? 1;
 
-    // Gom settings theo group, giữ nguyên thứ tự sort_order từ service.
-    $groups = [];
-    foreach ($all as $setting) {
-      $groups[$setting->group][] = $setting;
-    }
+    $groups = $this->_settingsService->getAllGroups();
+    $total = $this->_settingsService->getTotalGroupsCount();
+
+    $page = new Page($total, 15, $currentPage);
 
     $this->render('admin/web_settings/index', [
       'groups' => $groups,
+      'page' => $page
     ], layout: 'dashboard_layout');
   }
 
@@ -73,7 +74,7 @@ class WebSettingsController extends Controller
   {
     $this->render('admin/web_settings/create', [
       'allowedTypes' => self::ALLOWED_TYPES,
-      'groups' => $this->_settingsService->getGroups(),
+      'groups' => $this->_settingsService->getAllGroups(),
     ], layout: 'dashboard_layout');
   }
 
