@@ -44,7 +44,7 @@ $old_input = request()->getOldInputs() ?? [];
               <div class="shrink-0 flex flex-col overflow-hidden rounded-xl border">
                 <form method="POST" action="<?= url('admin/carousels/' . $carousel->id . '/slides/reorder') ?>">
                   <?php if ($canUp): ?>
-                    <input type="hidden" name="move_id" value="<?= $slide->id ?>">
+                    <input type="hidden" name="move_id" value="<?= $carousel->id ?>">
                     <input type="hidden" name="direction" value="up">
                   <?php endif; ?>
                   <button type="<?= $canUp ? 'submit' : 'button' ?>" data-variant="outline" data-size="md"
@@ -53,7 +53,7 @@ $old_input = request()->getOldInputs() ?? [];
 
                 <form method="POST" action="<?= url('admin/carousels/' . $carousel->id . '/slides/reorder') ?>">
                   <?php if ($canDown): ?>
-                    <input type="hidden" name="move_id" value="<?= $slide->id ?>">
+                    <input type="hidden" name="move_id" value="<?= $carousel->id ?>">
                     <input type="hidden" name="direction" value="down">
                   <?php endif; ?>
                   <button type="<?= $canDown ? 'submit' : 'button' ?>" data-variant="outline" data-size="md"

@@ -497,11 +497,11 @@ class MenuService implements IMenuRepository
     ]);
     $neighbour = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // No neighbour in that direction — already at the boundary
+    // Kiểm tra biên
     if (!$neighbour)
       return false;
 
-    // Swap sort_order between the two items in a transaction
+    // Swap sort_order của 2 item trong một transaction
     $swap = $this->db->prepare("
       UPDATE `menu_items` SET
         `sort_order` = :sort_order,

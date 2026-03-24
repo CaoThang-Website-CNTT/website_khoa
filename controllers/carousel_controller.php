@@ -9,6 +9,7 @@ require_once BASE_PATH . '/models/carousel_slide.php';
 
 use App\Core\Controller;
 use App\Core\Request;
+use App\Core\Page;
 use App\Core\Validator;
 use App\Services\CarouselService;
 
@@ -20,11 +21,18 @@ class CarouselController extends Controller
   {
     $this->_carouselService = $carouselService;
   }
-  public function index()
+  public function index(Request $request)
   {
+    $currentPage = $request->query('page') ?? 1;
+
     $carousels = $this->_carouselService->getAll();
+    $total = $this->_carouselService->getTotalCarouselsCount();
+
+    $page = new Page($total, 15, $currentPage);
+
     $this->render("admin/carousels/index", [
-      "carousels" => $carousels
+      "carousels" => $carousels,
+      "page" => $page
     ], layout: 'dashboard_layout');
   }
 
@@ -287,20 +295,25 @@ class CarouselController extends Controller
 
   public function reorder(string $carouselId, Request $request)
   {
-    $orderedIds = $request->input('orderedIds');
+    $data = $request->all();
+    $moveId = !empty($data['move_id']) ? (int) $data['move_id'] : null;
+    $direction = $data['direction'] ?? null;
 
-    if (!is_array($orderedIds) || empty($orderedIds)) {
+
+    if (!$moveId || !in_array($direction, ['up', 'down'])) {
       $request->flash('error', 'Dữ liệu sắp xếp không hợp lệ.');
-      return $this->redirect("admin/carousels/{$carouselId}/slides");
+      return $this->redirect('admin/carousels/' . $carouselId);
     }
 
-    if ($this->_carouselService->reorderSlides($orderedIds)) {
+    $isSuccess = $this->_carouselService->reorderSlides($moveId, $direction);
+
+    if ($isSuccess) {
       $request->flash('success', 'Đã cập nhật thứ tự slide.');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra khi sắp xếp.');
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect("admin/carousels/{$carouselId}/slides");
+    return $this->redirect('admin/carousels/' . $carouselId);
   }
   private function generateSlug(string $name): string
   {

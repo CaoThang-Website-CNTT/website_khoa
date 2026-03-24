@@ -47,9 +47,6 @@
                       <a href="<?= url('admin/posts') ?>" class="sidebar__menu-sub-item-btn">Bài Viết</a>
                     </li>
                     <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/sliders') ?>" class="sidebar__menu-sub-item-btn">Slider</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
                       <a href="<?= url('admin/categories') ?>" class="sidebar__menu-sub-item-btn">Danh Mục</a>
                     </li>
                   </ul>

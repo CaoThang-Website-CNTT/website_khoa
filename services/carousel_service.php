@@ -40,8 +40,9 @@ interface ICarouselRepository
   public function createSlide(array $data): int;
   public function updateSlide(int $id, array $data): bool;
   public function deleteSlide(int $id): bool;
+  public function getTotalCarouselsCount(): int;
 
-  public function reorderSlides(array $orderedIds): bool;
+  public function reorderSlides(int $moveId, string $direction): bool;
 }
 
 class CarouselService implements ICarouselRepository
@@ -378,33 +379,99 @@ class CarouselService implements ICarouselRepository
     return $stmt->execute([':id' => $id]);
   }
 
+  public function getTotalCarouselsCount(): int
+  {
+    $sql = "
+      SELECT COUNT(*)
+      FROM `carousels`
+    ";
+
+    $stmt = $this->db->query($sql);
+
+    return (int) $stmt->fetchColumn();
+  }
+
   /**
    * Cập nhật lại sort_order cho danh sách slides theo thứ tự mảng ID truyền vào.
    * Dùng cho tính năng drag-and-drop sắp xếp slide trong admin.
    *
    * @public
-   * @param array $orderedIds Mảng ID slide theo thứ tự mới, ví dụ: [3, 1, 2]
+   * @param int $moveId ID của carousel_slide cần di chuyển
+   * @param string $direction 'up' hoặc 'down'
    * @return bool True nếu toàn bộ cập nhật thành công
    */
-  public function reorderSlides(array $orderedIds): bool
+  public function reorderSlides(int $moveId, string $direction): bool
   {
+    // 1. Lấy slide cần di chuyển
+    $stmt = $this->db->prepare("
+      SELECT `id`, `sort_order`
+      FROM `carousel_slides`
+      WHERE `id` = :id AND `deleted_at` IS NULL
+    ");
+    $stmt->execute([':id' => $moveId]);
+    $target = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$target) {
+      return false;
+    }
+
+    // 2. Tìm slide kề cạnh
+    // Up   → slide có sort_order lớn nhất nhưng nhỏ hơn target
+    // Down → slide có sort_order nhỏ nhất nhưng lớn hơn target
+    if ($direction === 'up') {
+      $stmt = $this->db->prepare("
+        SELECT `id`, `sort_order`
+        FROM `carousel_slides`
+        WHERE `sort_order` < :sort_order
+          AND `deleted_at` IS NULL
+        ORDER BY `sort_order` DESC
+        LIMIT 1
+      ");
+    } else {
+      $stmt = $this->db->prepare("
+        SELECT `id`, `sort_order`
+        FROM `carousel_slides`
+        WHERE `sort_order` > :sort_order
+          AND `deleted_at` IS NULL
+        ORDER BY `sort_order` ASC
+        LIMIT 1
+      ");
+    }
+
+    $stmt->execute([':sort_order' => $target['sort_order']]);
+    $neighbour = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Kiểm tra biên (đã ở trên cùng hoặc dưới cùng)
+    if (!$neighbour) {
+      return false;
+    }
+
+    // 3. Swap sort_order của 2 slide trong một transaction
     $this->db->beginTransaction();
 
     try {
-      $stmt = $this->db->prepare("
-    UPDATE `carousel_slides` SET `sort_order` = :sort_order
-    WHERE `id` = :id AND `deleted_at` IS NULL
-   ");
+      $swap = $this->db->prepare("
+        UPDATE `carousel_slides` SET
+          `sort_order` = :sort_order,
+          `updated_at` = NOW()
+        WHERE `id` = :id AND `deleted_at` IS NULL
+      ");
 
-      foreach ($orderedIds as $order => $id) {
-        $stmt->execute([
-          ':sort_order' => $order + 1,
-          ':id' => $id,
-        ]);
-      }
+      // Cập nhật target thành sort_order của neighbour
+      $swap->execute([
+        ':sort_order' => $neighbour['sort_order'],
+        ':id' => $target['id']
+      ]);
+
+      // Cập nhật neighbour thành sort_order của target
+      $swap->execute([
+        ':sort_order' => $target['sort_order'],
+        ':id' => $neighbour['id']
+      ]);
 
       $this->db->commit();
       return true;
+
     } catch (\Exception $e) {
       $this->db->rollBack();
       return false;
