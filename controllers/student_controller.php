@@ -7,6 +7,7 @@ require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/student.php';
 
 use App\Core\Controller;
+use App\Core\Page;
 use App\Core\Request;
 use App\Models\Student;
 use App\Core\Validator;
@@ -14,18 +15,25 @@ use App\Services\EducationService;
 
 class StudentController extends Controller
 {
-  private $_educationService;
+  private EducationService $_educationService;
 
   public function __construct(EducationService $educationService)
   {
     $this->_educationService = $educationService;
   }
 
-  public function index()
+  public function index(Request $request)
   {
-    $students = $this->_educationService->getAllStudents(1);
+    $currentPage = $request->query('page') ?? 1;
+
+    $students = $this->_educationService->getAllStudents($currentPage);
+    $total = $this->_educationService->getTotalStudentsCount();
+
+    $page = new Page($total, 15, $currentPage);
+
     $this->render("admin/students/index", [
-      'students' => $students
+      'students' => $students,
+      'page' => $page,
     ], layout: "dashboard_layout");
   }
 

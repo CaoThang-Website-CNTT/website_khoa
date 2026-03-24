@@ -6,6 +6,7 @@ define('BASE_PATH', __DIR__);
 require_once BASE_PATH . '/includes/core/request.php';
 require_once BASE_PATH . '/includes/core/router.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
+require_once BASE_PATH . '/includes/core/page.php';
 
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';

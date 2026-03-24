@@ -77,4 +77,5 @@
       <?php endif; ?>
     </tbody>
   </table>
+  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
 </div>

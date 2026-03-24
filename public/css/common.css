@@ -582,6 +582,79 @@
   }
 
   /* ==========================================================================
+   PAGINATION
+   ========================================================================== */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+  }
+
+  .pagination-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pagination-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    text-decoration: none;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .pagination-item:first-child .pagination-link,
+  .pagination-item:last-child .pagination-link {
+    width: fit-content;
+    padding: 0 0.5rem;
+  }
+
+  .pagination-link:hover:not([data-disabled]):not(
+      .pagination-link[data-active]
+    ) {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  .pagination-link[data-active] {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: var(--fw-medium);
+    pointer-events: none;
+  }
+
+  .pagination-link[data-disabled] {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+
+  .pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--muted-foreground);
+  }
+
+  /* ==========================================================================
    TABS
    ========================================================================== */
   .tabs {

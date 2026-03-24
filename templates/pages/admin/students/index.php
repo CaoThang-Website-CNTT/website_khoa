@@ -22,7 +22,6 @@
     </div>
 
     <div class="flex gap-2">
-
       <div>
         <a href="<?= url('admin/students/create') ?>" data-variant="primary" data-size="md" class="btn">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
@@ -70,7 +69,7 @@
         <?php foreach ($students as $index => $user): ?>
           <tr onclick="window.location.href='<?= url('admin/students/' . $user->account_id) ?>'">
             <td class="data-table__id">#
-              <?= $index + 1 ?>
+              <?= htmlspecialchars($user->account_id ?? 'N/A') ?>
             </td>
             <td>
               <?= htmlspecialchars($user->full_name ?? 'N/A') ?>
@@ -96,4 +95,5 @@
       <?php endif; ?>
     </tbody>
   </table>
+  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
 </div>

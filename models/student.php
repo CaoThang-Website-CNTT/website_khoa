@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Core\Model;
+
 class Student
 {
   public function __construct(

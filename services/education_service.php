@@ -25,6 +25,7 @@ interface IEducationRepository
   public function updateStudent(int $id, Student $student): bool;
   public function deleteStudent(int $id): bool;
   public function importStudents(array $students): void;
+  public function getTotalStudentsCount(): int;
 
   // Teacher
   /** @return Teacher[] */
@@ -33,6 +34,8 @@ interface IEducationRepository
   public function createTeacher(array $teacher, string $rawPassword): int;
   public function updateTeacher(int $id, Teacher $teacher): bool;
   public function deleteTeacher(int $id): bool;
+  public function getTotalTeachersCount(): int;
+
 
   // Classroom
   /** @return Classroom[] */
@@ -114,6 +117,17 @@ class EducationService implements IEducationRepository
   // ===================================
   // Student Methods
   // ===================================
+  public function getTotalStudentsCount(): int
+  {
+    $sql = "SELECT COUNT(s.account_id) 
+            FROM `students` s
+            INNER JOIN `accounts` a ON s.`account_id` = a.`id`
+            WHERE a.`deleted_at` IS NULL";
+
+    $stmt = $this->db->query($sql);
+
+    return (int) $stmt->fetchColumn();
+  }
 
   public function getAllStudents(int $pageTo, int $limit = 15): array
   {
@@ -242,6 +256,17 @@ class EducationService implements IEducationRepository
   // ===================================
   // Teacher Methods
   // ===================================
+  public function getTotalTeachersCount(): int
+  {
+    $sql = "SELECT COUNT(s.account_id) 
+            FROM `teachers` s
+            INNER JOIN `accounts` a ON s.`account_id` = a.`id`
+            WHERE a.`deleted_at` IS NULL";
+
+    $stmt = $this->db->query($sql);
+
+    return (int) $stmt->fetchColumn();
+  }
 
   public function getAllTeachers(int $pageTo, int $limit = 15): array
   {
