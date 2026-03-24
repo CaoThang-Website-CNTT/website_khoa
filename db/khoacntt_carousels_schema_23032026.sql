@@ -1,7 +1,8 @@
 -- ============================================================================
 -- CAROUSEL SCHEMA
 -- ============================================================================
-
+DROP TABLE IF EXISTS `carousel_slides`;
+DROP TABLE IF EXISTS `carousels`;
 CREATE TABLE carousels (
  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
  name VARCHAR(100) NOT NULL COMMENT 'Nhãn cho UI, e.g. "Landing Page"',
@@ -9,7 +10,8 @@ CREATE TABLE carousels (
  is_active TINYINT(1) NOT NULL DEFAULT 1,
  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
- PRIMARY KEY (id)
+ PRIMARY KEY (id),
+ deleted_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE carousel_slides (
@@ -29,6 +31,7 @@ CREATE TABLE carousel_slides (
  is_active TINYINT(1) NOT NULL DEFAULT 1,
  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ deleted_at TIMESTAMP NULL DEFAULT NULL,
  PRIMARY KEY (id),
  CONSTRAINT fk_slide_carousel FOREIGN KEY (carousel_id) REFERENCES carousels(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
