@@ -41,7 +41,7 @@ CREATE TABLE carousel_slides (
 -- ============================================================================
 
 INSERT INTO carousels (name, slug)
-VALUES ('Landing Page', 'landing_page');
+VALUES ('Landing Page', 'landing-page');
 
 INSERT INTO carousel_slides
  (carousel_id, title, title_highlight, description, image_path, image_alt, cta_label, cta_url, cta_variant, sort_order, is_active)

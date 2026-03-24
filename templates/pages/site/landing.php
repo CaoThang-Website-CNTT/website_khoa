@@ -1,117 +1,85 @@
 <?php
-ob_start();
+function renderCarousel(array $carouselSlides): void
+{
+  if (empty($carouselSlides)) {
+    return;
+  }
+  ?>
+  <div class="carousel py-8 relative" id="landingCarousel">
+    <div class="carousel__inner flex" id="carouselInner">
+
+      <?php foreach ($carouselSlides as $slide): ?>
+        <?php
+        // Bỏ qua các slide không được kích hoạt
+        if (!$slide->isActive())
+          continue;
+        ?>
+
+        <div class="carousel__item flex justify-between items-center gap-8">
+
+          <?php if ($slide->isCustom()): ?>
+            <?= $slide->custom_html ?>
+          <?php else: ?>
+
+            <div class="carousel__content flex flex-col gap-6">
+              <h2 class="carousel__title text-6xl font-normal">
+                <?= htmlspecialchars($slide->title) ?>
+                <?php if (!empty($slide->title_highlight)): ?>
+                  <span class="text-6xl">
+                    <?= htmlspecialchars($slide->title_highlight) ?>
+                  </span>
+                <?php endif; ?>
+              </h2>
+
+              <?php if (!empty($slide->description)): ?>
+                <p class="carousel__description">
+                  <?= nl2br(htmlspecialchars($slide->description)) ?>
+                </p>
+              <?php endif; ?>
+
+              <?php if ($slide->hasCta()): ?>
+                <div>
+                  <a href="<?= htmlspecialchars(url($slide->cta_url)) ?>"
+                    data-variant="<?= htmlspecialchars($slide->cta_variant) ?>"
+                    class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block <?= $slide->cta_variant === 'secondary' ? 'bouncy-btn' : '' ?>">
+                    <?= htmlspecialchars($slide->cta_label) ?>
+                  </a>
+                </div>
+              <?php endif; ?>
+            </div>
+
+            <div class="image-wrapper carousel__image-wrapper rounded-3xl">
+              <img src="<?= htmlspecialchars($slide->image_path) ?>"
+                alt="<?= htmlspecialchars($slide->image_alt ?: $slide->title) ?>" class="image carousel__image">
+            </div>
+
+          <?php endif; ?>
+        </div>
+      <?php endforeach; ?>
+
+    </div>
+
+    <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--prev"
+      id="prevBtn">
+      <i class="fa-solid fa-angle-left"></i>
+    </button>
+    <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--next"
+      id="nextBtn">
+      <i class="fa-solid fa-angle-right"></i>
+    </button>
+
+    <div class="carousel__indicators z-10 flex justify-center gap-2" id="indicators">
+    </div>
+
+    <script src="<?= url('public/js/carousel.js') ?>"></script>
+  </div>
+  <?php
+}
 ?>
 <!-- HERO-SECTION: START -->
 <section class="relative" id="hero-section">
   <div class="container">
-    <div class="carousel py-8 relative" id="learningCarousel">
-      <div class="carousel__inner flex" id="carouselInner">
-        <div class="carousel__item flex justify-between items-center gap-8">
-          <div class="carousel__content flex flex-col gap-6">
-            <h2 class="carousel__title text-6xl font-normal">
-              Môi trường học tập
-              <span class="text-6xl">Chuyên nghiệp &amp; Sáng tạo</span>
-            </h2>
-            <p class="carousel__description">
-              Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác,
-              với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận
-              tâm.
-            </p>
-            <div>
-              <a href="#" data-variant="secondary"
-                class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block bouncy-btn">Tìm
-                hiểu thêm</a>
-            </div>
-          </div>
-
-          <div class="image-wrapper carousel__image-wrapper rounded-3xl">
-            <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Lecture hall with students"
-              class="image carousel__image">
-          </div>
-        </div>
-        <div class="carousel__item flex justify-between items-center gap-8">
-          <div class="carousel__content flex flex-col gap-6">
-            <h2 class="carousel__title text-6xl font-normal">
-              Công nghệ tiên tiến
-              <span class="text-6xl">Hỗ trợ học tập 24/7</span>
-            </h2>
-            <p class="carousel__description">
-              Hệ thống học trực tuyến hiện đại, tài liệu số hóa đầy đủ, và
-              phòng lab công nghệ cao giúp bạn học mọi lúc, mọi nơi.
-            </p>
-            <div>
-              <a href="#" class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block">Khám phá
-                ngay</a>
-            </div>
-          </div>
-
-          <div class="image-wrapper carousel__image-wrapper rounded-3xl">
-            <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?..." alt="Modern computer lab"
-              class="image carousel__image">
-          </div>
-        </div>
-        <div class="carousel__item flex justify-between items-center gap-8">
-          <div class="carousel__content flex flex-col gap-6">
-            <h2 class="carousel__title text-6xl font-normal">
-              Môi trường học tập
-              <span class="text-6xl">Chuyên nghiệp &amp; Sáng tạo</span>
-            </h2>
-            <p class="carousel__description">
-              Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác,
-              với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận
-              tâm.
-            </p>
-            <div>
-              <a href="#" class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block">Tìm hiểu
-                thêm</a>
-            </div>
-          </div>
-
-          <div class="image-wrapper carousel__image-wrapper rounded-3xl">
-            <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Lecture hall with students"
-              class="image carousel__image">
-          </div>
-        </div>
-        <div class="carousel__item flex justify-between items-center gap-8">
-          <div class="carousel__content flex flex-col gap-6">
-            <h2 class="carousel__title text-6xl font-normal">
-              Công nghệ tiên tiến
-              <span class="text-6xl">Hỗ trợ học tập 24/7</span>
-            </h2>
-            <p class="carousel__description">
-              Hệ thống học trực tuyến hiện đại, tài liệu số hóa đầy đủ, và
-              phòng lab công nghệ cao giúp bạn học mọi lúc, mọi nơi.
-            </p>
-            <div>
-              <a href="#" class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block">Khám phá
-                ngay</a>
-            </div>
-          </div>
-
-          <div class="image-wrapper carousel__image-wrapper rounded-3xl">
-            <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?..." alt="Modern computer lab"
-              class="image carousel__image">
-          </div>
-        </div>
-      </div>
-
-      <!-- Controls -->
-      <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--prev"
-        id="prevBtn">
-        <i class="fa-solid fa-angle-left"></i>
-      </button>
-      <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--next"
-        id="nextBtn">
-        <i class="fa-solid fa-angle-right"></i>
-      </button>
-
-      <!-- Indicators -->
-      <div class="carousel__indicators z-10 flex justify-center gap-2" id="indicators">
-      </div>
-
-      <!-- Thêm Script -->
-      <script src="./public/js/carousel.js"></script>
-    </div>
+    <?php renderCarousel($carouselSlides); ?>
   </div>
   <!-- Wave -->
   <div class="wave-container">
@@ -778,8 +746,3 @@ ob_start();
   </div>
 </section>
 <!-- NEWSFEED-SECTION: END -->
-<?php
-$content = ob_get_clean();
-
-require 'templates/layouts/site_layout.php';
-?>

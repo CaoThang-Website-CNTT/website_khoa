@@ -5,11 +5,12 @@ namespace App\Controllers;
 require_once BASE_PATH . "/includes/core/controller.php";
 
 use App\Core\Controller;
-use App\Services\{MenuService, WebSettingsService};
+use App\Services\{CarouselService, MenuService, WebSettingsService};
 
 class SiteController extends Controller
 {
   private MenuService $_menuService;
+  private CarouselService $_carouselService;
   private WebSettingsService $_settingService;
 
   /**
@@ -32,9 +33,11 @@ class SiteController extends Controller
 
   public function __construct(
     MenuService $menuService,
+    CarouselService $carouselService,
     WebSettingsService $settingService,
   ) {
     $this->_menuService = $menuService;
+    $this->_carouselService = $carouselService;
     $this->_settingService = $settingService;
 
     $this->_loadSettings();
@@ -49,11 +52,13 @@ class SiteController extends Controller
     $menu = $this->_menuService->getItemsTree(
       $this->_menuService->getMenuByKey('main_nav')->id
     );
+    $carouselSlides = $this->_carouselService->getBySlug("landing-page")->slides;
 
     $this->render('site/landing', [
       'menu' => $menu,
+      'carouselSlides' => $carouselSlides,
       'settings' => $this->_settings,
-    ]);
+    ], "site_layout");
   }
 
   // ============================================================================
