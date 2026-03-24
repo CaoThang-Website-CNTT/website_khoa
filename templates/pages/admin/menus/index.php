@@ -20,7 +20,7 @@
         </span>
       </h2>
     </div>
-    <div class="col-6 col-md-6 flex gap-2">
+    <div class="flex gap-2">
       <a href="<?= url('admin/menus/create') ?>" data-variant="primary" data-size="md" class="btn">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
           <path

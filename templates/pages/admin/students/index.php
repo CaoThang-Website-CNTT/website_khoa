@@ -21,7 +21,7 @@
       </h2>
     </div>
 
-    <div class="col-6 col-md-6 flex gap-2">
+    <div class="flex gap-2">
 
       <div>
         <a href="<?= url('admin/students/create') ?>" data-variant="primary" data-size="md" class="btn">
