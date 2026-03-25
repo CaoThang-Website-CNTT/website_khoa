@@ -2,216 +2,160 @@
 
 namespace App\Services;
 
-require_once BASE_PATH . '/models/account.php';
 require_once BASE_PATH . '/models/student.php';
-require_once BASE_PATH . '/db/database.php';
+require_once BASE_PATH . '/models/account.php';
+require_once BASE_PATH . '/models/classroom.php';
+require_once BASE_PATH . '/stores/student_store.php';
+require_once BASE_PATH . '/stores/account_store.php';
+require_once BASE_PATH . '/stores/classroom_store.php';
+require_once BASE_PATH . '/services/account_service.php';
+require_once BASE_PATH . '/includes/core/pageable.php';
 
-use App\Models\Student;
-use Database;
-use PDO;
+use App\Models\{Student, Classroom};
+use App\Stores\{StudentStore, AccountStore, ClassroomStore};
+use App\Services\AccountService;
+use App\Core\Pageable;
 
-class StudentService
+interface IStudentService
 {
-  private $db;
+  /** @return Pageable */
+  public function getStudentsPaginated(int $page, int $limit = 15): Pageable;
 
-  public function __construct()
-  {
-    $this->db = Database::getInstance()->getConnection();
+  public function isStudentIdUnique(string $studentId): bool;
+
+  public function createStudent(array $data, string $password): int;
+
+  public function getStudentById(int $id): ?Student;
+
+  /** @return Classroom[] */
+  public function getAllClassrooms(): array;
+
+  public function updateStudent(int $id, array $data): bool;
+
+  public function deleteStudent(int $id): bool;
+}
+
+class StudentService implements IStudentService
+{
+  private StudentStore $_studentStore;
+  private AccountStore $_accountStore;
+  private ClassroomStore $_classroomStore;
+  private AccountService $_accountService;
+
+  public function __construct(
+    StudentStore $studentStore,
+    AccountStore $accountStore,
+    ClassroomStore $classroomStore,
+    AccountService $accountService
+  ) {
+    $this->_studentStore = $studentStore;
+    $this->_accountStore = $accountStore;
+    $this->_classroomStore = $classroomStore;
+    $this->_accountService = $accountService;
   }
 
-  private function createAccount(string $email, string $rawPassword, string $role): int
+  /** @return Pageable */
+  public function getStudentsPaginated(int $page, int $limit = 15): Pageable
   {
-    $now = date('Y-m-d H:i:s');
-    $sql = "INSERT INTO `accounts` (email, password_hash, role, created_at, updated_at) 
-                VALUES (:email, :password, :role, :created, :updated)";
+    $students = $this->_studentStore->getPaginated($page, $limit);
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':email' => $email,
-      ':password' => password_hash($rawPassword, PASSWORD_DEFAULT),
-      ':role' => $role,
-      ':created' => $now,
-      ':updated' => $now
-    ]);
+    // Eager load classrooms, accounts
+    $classroomIds = array_filter(array_column($students, 'classroom_id'));
+    $accountIds = array_filter(array_column($students, 'account_id'));
 
-    return (int) $this->db->lastInsertId();
-  }
+    $classrooms = $this->_classroomStore->getByIds($classroomIds);
+    $accounts = $this->_accountStore->getByIds($accountIds);
 
-  private function touchAccount(int $accountId): void
-  {
-    $sql = "UPDATE `accounts` SET updated_at = NOW() WHERE id = :id";
-    $this->db->prepare($sql)->execute([':id' => $accountId]);
-  }
+    $classroomMap = array_column($classrooms, null, 'id');
+    $accountMap = array_column($accounts, null, 'id');
 
-  private function softDeleteAccount(int $accountId): bool
-  {
-    $sql = "UPDATE `accounts` SET deleted_at = NOW() WHERE id = :id";
-    return $this->db->prepare($sql)->execute([':id' => $accountId]);
-  }
-
-  public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool
-  {
-    $sql = "SELECT COUNT(*) FROM students WHERE student_id = :student_id";
-    $params = [':student_id' => $studentId];
-
-    if ($excludeAccountId) {
-      $sql .= " AND account_id != :exclude_id";
-      $params[':exclude_id'] = $excludeAccountId;
+    foreach ($students as $student) {
+      if ($student->classroom_id && isset($classroomMap[$student->classroom_id])) {
+        $student->classroom = $classroomMap[$student->classroom_id];
+      }
+      if ($student->account_id && isset($accountMap[$student->account_id])) {
+        $student->account = $accountMap[$student->account_id];
+      }
     }
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchColumn() == 0;
+    $total = $this->_studentStore->getTotalCount();
+    return new Pageable($students, $total, $limit, $page);
   }
 
-  public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool
+  public function isStudentIdUnique(string $studentId): bool
   {
-    $sql = "SELECT COUNT(*) FROM accounts WHERE email = :email AND deleted_at IS NULL";
-    $params = [':email' => $email];
+    return $this->_studentStore->isStudentIdUnique($studentId);
+  }
 
-    if ($excludeAccountId) {
-      $sql .= " AND id != :exclude_id";
-      $params[':exclude_id'] = $excludeAccountId;
+  public function createStudent(array $data, string $password): int
+  {
+    // Create account
+    $accountId = $this->_accountService->createAccount($data['email'], $password, 'student');
+    if (!$accountId) {
+      throw new \Exception('Failed to create account');
     }
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchColumn() == 0;
-  }
+    // Create student
+    $student = new Student();
+    $student->account_id = $accountId;
+    $student->student_id = $data['student_id'];
+    $student->classroom_id = $data['classroom_id'] ?? null;
+    $student->full_name = $data['full_name'];
+    $student->gender = $data['gender'];
+    $student->dob = $data['dob'] ?? null;
+    $student->phone = $data['phone'] ?? null;
+    $student->address = $data['address'] ?? null;
+    $student->major = $data['major'] ?? null;
+    $student->status = $data['status'] ?? 'Đang học';
 
-  public function getTotalStudentsCount(): int
-  {
-    $sql = "SELECT COUNT(s.account_id) 
-                FROM `students` s
-                INNER JOIN `accounts` a ON s.`account_id` = a.`id`
-                WHERE a.`deleted_at` IS NULL";
-
-    $stmt = $this->db->query($sql);
-    return (int) $stmt->fetchColumn();
-  }
-
-  /** @return Student[] */
-  public function getAllStudents(int $pageTo, int $limit = 15): array
-  {
-    $offset = (max(1, $pageTo) - 1) * $limit;
-
-    $sql = "SELECT 
-                    s.*,
-                    a.id AS acc_id, a.email as acc_email, a.role AS acc_role, 
-                    a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
-                FROM `students` s
-                INNER JOIN `accounts` a ON s.`account_id` = a.`id`
-                WHERE a.`deleted_at` IS NULL 
-                LIMIT :limit OFFSET :offset";
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-
-    return array_map(fn($row) => Student::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return $this->_studentStore->create($student);
   }
 
   public function getStudentById(int $id): ?Student
   {
-    $sql = "SELECT s.*, a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
-                       a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
-                FROM `students` s 
-                INNER JOIN `accounts` a ON s.`account_id` = a.`id`
-                WHERE s.`account_id` = :id AND a.`deleted_at` IS NULL";
+    $student = $this->_studentStore->getById($id);
+    if (!$student) {
+      return null;
+    }
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute(['id' => $id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Eager load classroom, account
+    if ($student->classroom_id) {
+      $student->classroom = $this->_classroomStore->getById($student->classroom_id);
+    }
+    if ($student->account_id) {
+      $student->account = $this->_accountStore->getById($student->account_id);
+    }
 
-    return $row ? Student::fromArray($row) : null;
+    return $student;
   }
 
-  public function createStudent(array $student, string $rawPassword): int
+  /** @return Classroom[] */
+  public function getAllClassrooms(): array
   {
-    return Database::getInstance()->transaction(function () use ($student, $rawPassword): int {
-      $email = $student['student_id'] . "@caothang.edu.vn";
-      $accId = $this->createAccount($email, $rawPassword, 'student');
-
-      $sql = "INSERT INTO `students` 
-                        (account_id, student_id, full_name, gender, dob, phone, classroom_id, major, birth_place) 
-                    VALUES 
-                        (:acc_id, :code, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)";
-
-      $this->db->prepare($sql)->execute([
-        ':acc_id' => $accId,
-        ':code' => $student['student_id'],
-        ':name' => $student['full_name'],
-        ':gender' => $student['gender'],
-        ':dob' => $student['dob'],
-        ':phone' => $student['phone'],
-        ':classroom_id' => $student['classroom_id'],
-        ':major' => $student['major'],
-        ':birth_place' => $student['birth_place'],
-      ]);
-
-      return $accId;
-    });
+    return $this->_classroomStore->getAll();
   }
 
-  public function updateStudent(int $id, Student $student): bool
+  public function updateStudent(int $id, array $data): bool
   {
-    return Database::getInstance()->transaction(function () use ($id, $student): bool {
-      $this->touchAccount($id);
+    $student = $this->_studentStore->getById($id);
+    if (!$student) {
+      return false;
+    }
 
-      $sql = "UPDATE `students` SET 
-                        full_name    = :name,
-                        gender       = :gender,
-                        dob          = :dob,
-                        phone        = :phone,
-                        classroom_id = :classroom_id,
-                        major        = :major,
-                        birth_place  = :birth_place
-                      WHERE account_id = :id";
+    $student->full_name = $data['full_name'] ?? $student->full_name;
+    $student->gender = $data['gender'] ?? $student->gender;
+    $student->dob = $data['dob'] ?? $student->dob;
+    $student->phone = $data['phone'] ?? $student->phone;
+    $student->address = $data['address'] ?? $student->address;
+    $student->major = $data['major'] ?? $student->major;
+    $student->status = $data['status'] ?? $student->status;
+    $student->classroom_id = $data['classroom_id'] ?? $student->classroom_id;
 
-      return $this->db->prepare($sql)->execute([
-        ':name' => $student->full_name,
-        ':gender' => $student->gender,
-        ':dob' => $student->dob,
-        ':phone' => $student->phone,
-        ':classroom_id' => $student->classroom_id,
-        ':major' => $student->major,
-        ':birth_place' => $student->birth_place,
-        ':id' => $id,
-      ]);
-    });
+    return $this->_studentStore->update($student);
   }
 
   public function deleteStudent(int $id): bool
   {
-    return $this->softDeleteAccount($id);
-  }
-
-  public function importStudents(array $rows): void
-  {
-    Database::getInstance()->transaction(function () use ($rows): void {
-      $sql = "INSERT INTO `students` 
-                        (account_id, student_id, full_name, gender, dob, phone, classroom_id, major, birth_place)
-                    VALUES 
-                        (:acc_id, :code, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)";
-      $stmt = $this->db->prepare($sql);
-
-      foreach ($rows as $row) {
-        $email = $row['student_id'] . "@caothang.edu.vn";
-        $accId = $this->createAccount($email, $row['password'] ?? $row['student_id'], 'student');
-
-        $stmt->execute([
-          ':acc_id' => $accId,
-          ':code' => $row['student_id'],
-          ':name' => $row['full_name'],
-          ':gender' => $row['gender'],
-          ':dob' => $row['dob'],
-          ':phone' => $row['phone'],
-          ':classroom_id' => $row['classroom_id'],
-          ':major' => $row['major'],
-          ':birth_place' => $row['birth_place'],
-        ]);
-      }
-    });
+    return $this->_studentStore->softDelete($id);
   }
 }
