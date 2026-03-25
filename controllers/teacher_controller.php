@@ -10,23 +10,23 @@ use App\Core\Page;
 use App\Core\Request;
 use App\Models\Teacher;
 use App\Core\Validator;
-use App\Services\EducationService;
+use App\Services\TeacherService;
 
 class TeacherController extends Controller
 {
-  private $_educationService;
+  private $_teacherService;
 
-  public function __construct(EducationService $educationService)
+  public function __construct(TeacherService $teacherService)
   {
-    $this->_educationService = $educationService;
+    $this->_teacherService = $teacherService;
   }
 
   public function index(Request $request)
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $teachers = $this->_educationService->getAllTeachers($currentPage);
-    $total = $this->_educationService->getTotalTeachersCount();
+    $teachers = $this->_teacherService->getAllTeachers($currentPage);
+    $total = $this->_teacherService->getTotalTeachersCount();
 
     $page = new Page($total, 15, $currentPage);
 
@@ -65,14 +65,14 @@ class TeacherController extends Controller
       return $this->redirect('admin/teachers/create');
     }
 
-    if ($this->_educationService->isEmailUnique($data['email']) === false) {
+    if ($this->_teacherService->isEmailUnique($data['email']) === false) {
       $validator->addError('email', 'Email này đã tồn tại trong hệ thống.');
       $request->flashOldInputs(excludedKeys: ['password']);
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/create');
     }
 
-    $newTeacherId = $this->_educationService->createTeacher($data, $data['password']);
+    $newTeacherId = $this->_teacherService->createTeacher($data, $data['password']);
 
     if ($newTeacherId) {
       $request->flash('success', 'Tạo mới giảng viên thành công!');
@@ -85,7 +85,7 @@ class TeacherController extends Controller
 
   public function edit($id)
   {
-    $teacher = $this->_educationService->getTeacherById($id);
+    $teacher = $this->_teacherService->getTeacherById($id);
     if (!$teacher) {
       die("Không thấy giảng viên với id: $id");
     }
@@ -127,7 +127,7 @@ class TeacherController extends Controller
       start_date: $data['start_date'],
     );
 
-    $isSuccess = $this->_educationService->updateTeacher((int) $id, $teacher);
+    $isSuccess = $this->_teacherService->updateTeacher((int) $id, $teacher);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật giảng viên thành công!');
@@ -140,7 +140,7 @@ class TeacherController extends Controller
 
   public function destroy($id, Request $request)
   {
-    $isSuccess = $this->_educationService->deleteTeacher($id);
+    $isSuccess = $this->_teacherService->deleteTeacher($id);
 
     if ($isSuccess) {
       $request->flash('success', 'Xoá giảng viên thành công!');

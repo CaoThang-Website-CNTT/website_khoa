@@ -12,7 +12,8 @@ require_once BASE_PATH . '/includes/core/page.php';
 require_once BASE_PATH . '/includes/helpers.php';
 
 // Services
-require_once BASE_PATH . '/services/education_service.php';
+require_once BASE_PATH . '/services/student_service.php';
+require_once BASE_PATH . '/services/teacher_service.php';
 require_once BASE_PATH . '/services/classroom_service.php';
 require_once BASE_PATH . '/services/category_service.php';
 require_once BASE_PATH . '/services/menu_service.php';

@@ -11,23 +11,23 @@ use App\Core\Page;
 use App\Core\Request;
 use App\Models\Student;
 use App\Core\Validator;
-use App\Services\EducationService;
+use App\Services\StudentService;
 
 class StudentController extends Controller
 {
-  private EducationService $_educationService;
+  private StudentService $_studentService;
 
-  public function __construct(EducationService $educationService)
+  public function __construct(StudentService $studentService)
   {
-    $this->_educationService = $educationService;
+    $this->_studentService = $studentService;
   }
 
   public function index(Request $request)
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $students = $this->_educationService->getAllStudents($currentPage);
-    $total = $this->_educationService->getTotalStudentsCount();
+    $students = $this->_studentService->getAllStudents($currentPage);
+    $total = $this->_studentService->getTotalStudentsCount();
 
     $page = new Page($total, 15, $currentPage);
 
@@ -39,7 +39,7 @@ class StudentController extends Controller
 
   public function create()
   {
-    $classrooms = $this->_educationService->getAllClassrooms();
+    $classrooms = $this->_studentService->getAllClassrooms();
     $this->render("admin/students/create", [
       'classrooms' => $classrooms
     ], layout: "dashboard_layout");
@@ -67,14 +67,14 @@ class StudentController extends Controller
       return $this->redirect('admin/students/create');
     }
 
-    if (!$this->_educationService->isStudentIdUnique($data['student_id'])) {
+    if (!$this->_studentService->isStudentIdUnique($data['student_id'])) {
       $validator->addError('student_id', 'Mã số sinh viên này đã tồn tại trong hệ thống.');
       $request->flashOldInputs(excludedKeys: ['password']);
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/create');
     }
 
-    $newStudentId = $this->_educationService->createStudent($data, 'Khoacntt@123');
+    $newStudentId = $this->_studentService->createStudent($data, 'Khoacntt@123');
 
     if ($newStudentId) {
       $request->flash('success', 'Tạo mới sinh viên thành công!');
@@ -88,11 +88,11 @@ class StudentController extends Controller
 
   public function edit($id)
   {
-    $student = $this->_educationService->getStudentById($id);
+    $student = $this->_studentService->getStudentById($id);
     if (!$student) {
       die("Không thấy sinh viên với id: $id");
     }
-    $classrooms = $this->_educationService->getAllClassrooms();
+    $classrooms = $this->_studentService->getAllClassrooms();
 
     $this->render("admin/students/edit", [
       'student' => $student,
@@ -134,7 +134,7 @@ class StudentController extends Controller
       birth_place: $data['birth_place'],
     );
 
-    $isSuccess = $this->_educationService->updateStudent((int) $id, $student);
+    $isSuccess = $this->_studentService->updateStudent((int) $id, $student);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật sinh viên thành công!');
@@ -148,7 +148,7 @@ class StudentController extends Controller
 
   public function destroy($id, Request $request)
   {
-    $isSuccess = $this->_educationService->deleteStudent($id);
+    $isSuccess = $this->_studentService->deleteStudent($id);
 
     if ($isSuccess) {
       $request->flash('success', 'Xoá sinh viên thành công!');
