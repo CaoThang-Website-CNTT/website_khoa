@@ -1,6 +1,9 @@
 -- ============================================================================
 -- CLASSROOMS SCHEMA
 -- ============================================================================
+DROP TABLE IF EXISTS `majors`;
+DROP TABLE IF EXISTS `specializations`;
+DROP TABLE IF EXISTS `classrooms`;
 
 CREATE TABLE `majors` (
   `id` bigint PRIMARY KEY AUTO_INCREMENT COMMENT 'Khóa chính',
@@ -16,10 +19,12 @@ CREATE TABLE `specializations` (
   `id` bigint PRIMARY KEY AUTO_INCREMENT COMMENT 'Khóa chính',
   `major_id` bigint COMMENT 'ID ngành học chứa chuyên ngành này',
   `full_name` varchar(100) COMMENT 'Tên chuyên ngành đầy đủ (VD: Lập trình Website)',
-  `short_name` varchar(20) UNIQUE COMMENT 'Tên viết tắt của chuyên ngành (VD: WEB, DĐ)',
+  `short_name` varchar(20) COMMENT 'Tên viết tắt của chuyên ngành (VD: WEB, DĐ)',
   `updated_at` datetime COMMENT 'Thời gian cập nhật',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời gian tạo',
   `deleted_at` datetime COMMENT 'Thời gian xóa (Xóa mềm)'
+
+  UNIQUE KEY `unique_spec_per_major` (`major_id`, `short_name`)
 ) COMMENT='Bảng lưu trữ danh sách các chuyên ngành thuộc ngành học';
 
 CREATE TABLE `classrooms` (
