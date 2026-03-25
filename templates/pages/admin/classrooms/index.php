@@ -9,7 +9,6 @@
     });
   </script>
 <?php endif; ?>
-<?php print_r($classrooms); ?>
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
@@ -55,7 +54,7 @@
     <tbody>
       <?php if (!empty($classrooms)): ?>
         <?php foreach ($classrooms as $index => $classroom): ?>
-          <tr onclick="window.location.href='<?= url('admin/classrooms/') ?>'">
+          <tr onclick="window.location.href='<?= url('admin/classrooms/' . $classroom->id) ?>'">
             <td class="data-table__id">#
               <?= htmlspecialchars($classroom->id ?? 'N/A') ?>
             </td>

@@ -17,6 +17,7 @@ interface IClassroomRepository
   public function getClassrooms(int $page, int $limit = 15): array;
   public function getClassroomById(int $id): ?Classroom;
   public function createClassroom(array $classroom): int;
+  public function updateClassroom(int $id, array $data): bool;
   public function deleteClassroom(int $id): bool;
   public function getTotalClassroomsCount(): int;
 
@@ -208,6 +209,21 @@ class ClassroomService implements IClassroomRepository
     $stmt = $this->db->prepare("SELECT * FROM specializations WHERE id = :id");
     $stmt->execute([':id' => $id]);
     return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+  }
+
+  public function updateClassroom(int $id, array $data): bool
+  {
+    $sql = "UPDATE classrooms SET major_id = :major_id, specialization_id = :specialization_id, class_of = :class_of, letter = :letter, short_name = :short_name, updated_at = NOW() WHERE id = :id";
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->bindValue(':major_id', $data['major_id'], PDO::PARAM_INT);
+    $stmt->bindValue(':specialization_id', isset($data['specialization_id']) && !empty($data['specialization_id']) ? $data['specialization_id'] : null, PDO::PARAM_INT);
+    $stmt->bindValue(':class_of', $data['class_of'], PDO::PARAM_INT);
+    $stmt->bindValue(':letter', $data['letter'] ?? '', PDO::PARAM_STR);
+    $stmt->bindValue(':short_name', $data['short_name'], PDO::PARAM_STR);
+    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
+    return $stmt->execute();
   }
 
   public function updateClassroomInfo(int $id, array $data): bool
