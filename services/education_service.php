@@ -19,7 +19,7 @@ interface IEducationRepository
 {
   // Student
   /** @return Student[] */
-  public function getAllStudents(int $pageTo, int $limit = 15): array;
+  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'DESC'): array;
   public function getStudentById(int $id): ?Student;
   public function createStudent(array $student, string $rawPassword): int;
   public function updateStudent(int $id, Student $student): bool;
@@ -129,9 +129,21 @@ class EducationService implements IEducationRepository
     return (int) $stmt->fetchColumn();
   }
 
-  public function getAllStudents(int $pageTo, int $limit = 15): array
+  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'ASC'): array
   {
     $offset = (max(1, $pageTo) - 1) * $limit;
+
+    $allowedSortColumns = [
+      'account_id' => 's.account_id',
+      'full_name'  => 's.full_name',
+      'email'      => 'a.email',
+      'gender'     => 's.gender',
+      'dob'        => 's.dob',
+      'phone'      => 's.phone'
+    ];
+
+    $orderBy = $allowedSortColumns[$sortCol] ?? 's.account_id';
+    $direction = strtoupper($sortDir) === 'ASC' ? 'ASC' : 'DESC';
 
     $sql = "SELECT 
                 s.*,
@@ -140,6 +152,7 @@ class EducationService implements IEducationRepository
             FROM `students` s
             INNER JOIN `accounts` a ON s.`account_id` = a.`id`
             WHERE a.`deleted_at` IS NULL 
+            ORDER BY {$orderBy} {$direction}
             LIMIT :limit OFFSET :offset";
 
     $stmt = $this->db->prepare($sql);

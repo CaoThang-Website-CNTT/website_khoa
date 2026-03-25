@@ -1,0 +1,40 @@
+.tm {
+  width: 100%;
+  position: relative;
+}
+.tm__row--loading,
+.tm__row--empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted);
+}
+.tm__row--error {
+  text-align: center;
+  padding: 2rem;
+  color: var(--destructive);
+  font-weight: 500;
+}
+.tm__head-cell {
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+.tm__head-cell--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.tm__head-cell--sortable:hover {
+  background-color: var(--muted);
+}
+.tm__sort-icon {
+  font-size: 0.8em;
+  color: var(--muted-foreground);
+  margin-left: 4px;
+  display: inline-block;
+}
+.tm__row--clickable {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.tm__row--clickable:hover {
+  background-color: var(--muted);
+}

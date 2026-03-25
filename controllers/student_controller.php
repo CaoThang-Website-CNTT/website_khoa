@@ -5,6 +5,7 @@ namespace App\Controllers;
 require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/student.php';
+require_once BASE_PATH . '/includes/response.php';
 
 use App\Core\Controller;
 use App\Core\Page;
@@ -22,19 +23,33 @@ class StudentController extends Controller
     $this->_educationService = $educationService;
   }
 
-  public function index(Request $request)
+  public function index()
+  {
+    $this->render("admin/students/index", layout: "dashboard_layout");
+  }
+  public function apiIndex(Request $request)
   {
     $currentPage = $request->query('page') ?? 1;
+    $sortCol = $request->query('sort') ?? 'account_id';
+    $sortDir = $request->query('dir') ?? 'ASC';
+    $limit = 15;
 
-    $students = $this->_educationService->getAllStudents($currentPage);
+    $students = $this->_educationService->getAllStudents($currentPage, $limit, $sortCol, $sortDir);
     $total = $this->_educationService->getTotalStudentsCount();
 
-    $page = new Page($total, 15, $currentPage);
+    try {
+      $students = $this->_educationService->getAllStudents($currentPage, $limit, $sortCol, $sortDir);
+      $total = $this->_educationService->getTotalStudentsCount();
 
-    $this->render("admin/students/index", [
-      'students' => $students,
-      'page' => $page,
-    ], layout: "dashboard_layout");
+      $responseData = [
+        'items'       => $students,
+        'currentPage' => (int)$currentPage,
+        'totalPages'  => ceil($total / $limit)
+      ];
+      jsonResponse($responseData, 'Lấy danh sách thành công', true);
+    } catch (\Exception $e) {
+      jsonResponse([], 'Có lỗi xảy ra khi lấy dữ liệu', false, [$e->getMessage()]);
+    }
   }
 
   public function create()

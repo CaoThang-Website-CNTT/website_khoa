@@ -72,3 +72,7 @@ $router->post('/admin/carousels/{carouselId}/slides/reorder', [CarouselControlle
 $router->get('/admin/carousels/{carouselId}/slides/{slideId}', [CarouselController::class, 'editSlide']);
 $router->post('/admin/carousels/{carouselId}/slides/{slideId}', [CarouselController::class, 'updateSlide']);
 $router->post('/admin/carousels/{carouselId}/slides/delete/{slideId}', [CarouselController::class, 'destroySlide']);
+
+//TODO: thống nhất lại cách đặt tên cho các route api
+$router->get('/api/students', [StudentController::class, 'apiIndex']);
+//

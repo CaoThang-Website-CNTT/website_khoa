@@ -233,8 +233,7 @@ class MenuService implements IMenuRepository
   public function getTotalMenusCount(): int
   {
     $sql = "SELECT COUNT(m.id) 
-            FROM `menus` m
-            WHERE m.`deleted_at` IS NULL";
+            FROM `menus` m";
 
     $stmt = $this->db->query($sql);
 

@@ -42,58 +42,48 @@
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
-<div class="table-wrapper shadow rounded-md">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>
-          <h6>Name</h6>
-        </th>
-        <th>
-          <h6>Email</h6>
-        </th>
-        <th>
-          <h6>Gender</h6>
-        </th>
-        <th>
-          <h6>Date of Birth</h6>
-        </th>
-        <th>
-          <h6>Phone</h6>
-        </th>
+<table id="student-table" class="data-table tm">
+  <thead>
+    <tr>
+      <th data-sort="account_id">ID</th>
+      <th data-sort="full_name">Họ Tên</th>
+      <th data-sort="email">Email</th>
+      <th data-sort="gender">Giới tính</th>
+      <th data-sort="dob">Ngày sinh</th>
+      <th data-sort="phone">Điện thoại</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+<nav role="navigation" aria-label="pagination" class="pagination">
+  <ul class="pagination-content" id="student-pagination"></ul>
+</nav>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tableManager = new TableManager({
+      tableSelector: '#student-table',
+      paginationSelector: '#student-pagination',
+      apiUrl: '<?= url("api/students") ?>',
+      defaultSort: 'account_id',
+      defaultDir: 'ASC',
+      renderRow: function(student) {
+        const detailUrl = `<?= url('admin/students/') ?>${student.account_id}`;
+
+        return `
+      <tr class="tm__row tm__row--clickable" onclick="window.location.href='${detailUrl}'">
+        <td class="data-table__id">#${student.account_id || 'N/A'}</td>
+        <td>${student.full_name || 'N/A'}</td>
+        <td>${student.account?.email || 'N/A'}</td>
+        <td>${student.gender || 'N/A'}</td>
+        <td>${student.dob || 'N/A'}</td>
+        <td>${student.phone || 'N/A'}</td>
       </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($students)): ?>
-        <?php foreach ($students as $index => $user): ?>
-          <tr onclick="window.location.href='<?= url('admin/students/' . $user->account_id) ?>'">
-            <td class="data-table__id">#
-              <?= htmlspecialchars($user->account_id ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($user->full_name ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($user->account->email ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($user->gender ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($user->dob ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($user->phone ?? 'N/A') ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="6" class="text-center">No students found.</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
-</div>
+      `;
+      }
+    });
+    tableManager.loadData(1);
+  });
+</script>

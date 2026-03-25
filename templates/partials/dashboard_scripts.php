@@ -1,4 +1,5 @@
 <!-- ========= All Javascript files linkup ======== -->
+<script src="<?= url('/public/js/table-manager.js') ?>"></script>
 <script src="<?= url('/public/js/dashboard.js') ?>"></script>
 <script src="<?= url('/public/js/modal.js') ?>"></script>
 <script src="<?= url('/public/js/form.js') ?>"></script>
