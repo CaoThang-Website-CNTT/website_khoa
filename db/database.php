@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../config/config.php';
+require_once BASE_PATH . '/config/config.php';
 
 class Database
 {
-  private static $instance = null;
-  private $connection;
+  private static ?Database $instance = null;
+  private PDO $connection;
 
   private function __construct()
   {

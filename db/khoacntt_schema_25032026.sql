@@ -1,6 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. DROP TABLES (Xóa theo thứ tự ngược lại để tránh lỗi khóa ngoại)
+-- 1. DROP TABLES
 DROP TABLE IF EXISTS `web_settings`;
 DROP TABLE IF EXISTS `menu_items`;
 DROP TABLE IF EXISTS `menus`;
@@ -17,7 +17,7 @@ DROP TABLE IF EXISTS `majors`;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================================================
--- SCHEMA 1: ACADEMIC STRUCTURE (Ngành, Chuyên Ngành, Lớp)
+-- PHẦN 1: TẠO CẤU TRÚC BẢNG (KHÔNG CÓ KHÓA NGOẠI)
 -- ============================================================================
 
 CREATE TABLE `majors` (
@@ -25,9 +25,9 @@ CREATE TABLE `majors` (
   `full_name` varchar(100) COMMENT 'Tên ngành học đầy đủ',
   `short_name` varchar(20) UNIQUE COMMENT 'Tên viết tắt (VD: TH, CNTT)',
   `level` varchar(5) COMMENT 'Hệ đào tạo (VD: CĐ, CĐN)',
-  `updated_at` datetime COMMENT 'Thời gian cập nhật',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời gian tạo',
-  `deleted_at` datetime COMMENT 'Xóa mềm'
+  `updated_at` datetime,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `deleted_at` datetime
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `specializations` (
@@ -38,34 +38,26 @@ CREATE TABLE `specializations` (
   `updated_at` datetime,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `deleted_at` datetime,
-
-  CONSTRAINT `unique_spec_per_major` UNIQUE KEY (`major_id`, `short_name`),
-  CONSTRAINT `fk_spec_major` FOREIGN KEY (`major_id`) REFERENCES `majors` (`id`) ON DELETE CASCADE
+  CONSTRAINT `unique_spec_per_major` UNIQUE KEY (`major_id`, `short_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `classrooms` (
   `id` bigint PRIMARY KEY AUTO_INCREMENT,
   `major_id` bigint NOT NULL,
-  `class_of` int COMMENT 'Khóa học (VD: 23)',
   `specialization_id` bigint NULL,
+  `homeroom_teacher_id` bigint NULL COMMENT 'Giáo viên chủ nhiệm',
+  `class_of` int COMMENT 'Khóa học (VD: 23)',
   `letter` varchar(1) NULL,
-  `short_name` varchar(20) UNIQUE COMMENT 'Mã lớp (VD: CĐ TH 23 WEB C)',
+  `short_name` varchar(50) UNIQUE COMMENT 'Mã lớp',
   `updated_at` datetime,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `deleted_at` datetime,
-  CONSTRAINT `fk_class_major` FOREIGN KEY (`major_id`) REFERENCES `majors` (`id`),
-  CONSTRAINT `fk_class_spec` FOREIGN KEY (`specialization_id`) REFERENCES `specializations` (`id`)
+  `deleted_at` datetime
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
--- ============================================================================
--- SCHEMA 2: USER MANAGEMENT (Tài khoản, Giảng viên, Sinh viên)
--- ============================================================================
 
 CREATE TABLE `accounts` (
   `id` bigint PRIMARY KEY AUTO_INCREMENT,
   `email` varchar(255) UNIQUE,
-  `password_hash` varchar(500),
+  `password_hash` varchar(500) comment "2y hash",
   `role` enum('student','teacher','admin'),
   `updated_at` datetime,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -73,36 +65,47 @@ CREATE TABLE `accounts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `teachers` (
-  `account_id` bigint PRIMARY KEY,
+  `id` bigint AUTO_INCREMENT PRIMARY KEY,
+  `account_id` bigint UNIQUE,
+  `staff_code` varchar(10) UNIQUE NOT NULL,
   `full_name` varchar(255),
   `gender` enum('male','female'),
   `dob` date,
   `phone` varchar(15),
+  `address` text null,
+  `national_id` varchar(12) UNIQUE comment 'CCCD của GV',
   `degree` varchar(150),
+  `position` VARCHAR(100) NULL comment 'Chức vụ',
   `title` varchar(150),
   `department` varchar(150),
+  `contract_type` ENUM('full_time', 'part_time', 'visiting', 'contract') NOT NULL DEFAULT 'full_time',
   `start_date` date,
-  CONSTRAINT `fk_teacher_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE
+  `end_date` date null,
+  `notes` text null,
+  `updated_at` datetime,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `deleted_at` datetime
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `students` (
-  `account_id` bigint PRIMARY KEY,
-  `student_id` varchar(10) UNIQUE,
+  `id` bigint AUTO_INCREMENT PRIMARY KEY,
+  `account_id` bigint UNIQUE,
+  `student_id` varchar(10) UNIQUE NOT NULL,
   `full_name` varchar(255),
   `gender` enum('male','female'),
   `dob` date,
   `phone` varchar(15),
   `classroom_id` bigint,
-  `major` varchar(150) COMMENT 'Lưu text hoặc có thể tham chiếu trực tiếp major_id',
+  `address` text null,
+  `national_id` varchar(12) UNIQUE comment 'CCCD của SV',
+  `major` varchar(150) COMMENT 'Lưu text',
   `birth_place` varchar(255),
-  CONSTRAINT `fk_student_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_student_class` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE SET NULL
+  `status` ENUM('Đang học', 'Đã tốt nghiệp', 'Tạm ngưng', 'Thôi học') DEFAULT 'Đang học',
+  `notes` text null,
+  `updated_at` datetime,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `deleted_at` datetime
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
--- ============================================================================
--- SCHEMA 3: CONTENT & TAXONOMY (Danh mục, Carousel)
--- ============================================================================
 
 CREATE TABLE `categories` (
     `id`          INT AUTO_INCREMENT PRIMARY KEY,
@@ -114,8 +117,7 @@ CREATE TABLE `categories` (
     `meta`        JSON NULL,
     `created_at`  DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at`  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at`  DATETIME,
-    CONSTRAINT `fk_category_parent` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL
+    `deleted_at`  DATETIME
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `carousels` (
@@ -145,14 +147,8 @@ CREATE TABLE `carousel_slides` (
  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
- `deleted_at` TIMESTAMP NULL DEFAULT NULL,
- CONSTRAINT `fk_slide_carousel` FOREIGN KEY (`carousel_id`) REFERENCES `carousels` (`id`) ON DELETE CASCADE
+ `deleted_at` TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
--- ============================================================================
--- SCHEMA 4: UI & CONFIGURATION (Menu, Cấu hình web)
--- ============================================================================
 
 CREATE TABLE `menus` (
   `id`          TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -175,9 +171,7 @@ CREATE TABLE `menu_items` (
   `sort_order`  TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `created_at`  DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at`  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `deleted_at`  DATETIME,
-  CONSTRAINT `fk_item_menu` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_item_parent` FOREIGN KEY (`parent_id`) REFERENCES `menu_items` (`id`) ON DELETE CASCADE
+  `deleted_at`  DATETIME
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `web_settings` (
@@ -196,3 +190,37 @@ CREATE TABLE `web_settings` (
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ============================================================================
+-- PHẦN 2: THIẾT LẬP TẤT CẢ KHÓA NGOẠI (ALTER TABLE)
+-- ============================================================================
+
+-- 1. Academic Structure
+ALTER TABLE `specializations` 
+  ADD CONSTRAINT `fk_spec_major` FOREIGN KEY (`major_id`) REFERENCES `majors` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `classrooms` 
+  ADD CONSTRAINT `fk_class_major` FOREIGN KEY (`major_id`) REFERENCES `majors` (`id`),
+  ADD CONSTRAINT `fk_class_spec` FOREIGN KEY (`specialization_id`) REFERENCES `specializations` (`id`),
+  ADD CONSTRAINT `fk_class_teacher` FOREIGN KEY (`homeroom_teacher_id`) REFERENCES `teachers` (`id`) ON DELETE SET NULL;
+
+-- 2. User Management
+ALTER TABLE `teachers` 
+  ADD CONSTRAINT `fk_teacher_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `students` 
+  ADD CONSTRAINT `fk_student_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_student_class` FOREIGN KEY (`classroom_id`) REFERENCES `classrooms` (`id`) ON DELETE SET NULL;
+
+-- 3. Content & Taxonomy
+ALTER TABLE `categories` 
+  ADD CONSTRAINT `fk_category_parent` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL;
+
+ALTER TABLE `carousel_slides` 
+  ADD CONSTRAINT `fk_slide_carousel` FOREIGN KEY (`carousel_id`) REFERENCES `carousels` (`id`) ON DELETE CASCADE;
+
+-- 4. UI Structure
+ALTER TABLE `menu_items` 
+  ADD CONSTRAINT `fk_item_menu` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_item_parent` FOREIGN KEY (`parent_id`) REFERENCES `menu_items` (`id`) ON DELETE CASCADE;
