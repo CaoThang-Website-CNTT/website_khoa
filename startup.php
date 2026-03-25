@@ -11,6 +11,12 @@ require_once BASE_PATH . '/includes/core/pageable.php';
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';
 
+// Store
+require_once BASE_PATH . '/stores/account_store.php';
+require_once BASE_PATH . '/stores/classroom_store.php';
+require_once BASE_PATH . '/stores/student_store.php';
+require_once BASE_PATH . '/stores/teacher_store.php';
+
 // Services
 require_once BASE_PATH . '/services/student_service.php';
 require_once BASE_PATH . '/services/teacher_service.php';

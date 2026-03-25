@@ -65,8 +65,8 @@
       </tr>
     </thead>
     <tbody>
-      <?php if (!empty($students)): ?>
-        <?php foreach ($students as $index => $user): ?>
+      <?php if (!empty($data->getItems())): ?>
+        <?php foreach ($data->getItems() as $index => $user): ?>
           <tr onclick="window.location.href='<?= url('admin/students/' . $user->account_id) ?>'">
             <td class="data-table__id">#
               <?= htmlspecialchars($user->account_id ?? 'N/A') ?>
@@ -95,5 +95,8 @@
       <?php endif; ?>
     </tbody>
   </table>
-  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
+  <?php
+  $page = $data;
+  include BASE_PATH . '/templates/components/pagination.php'
+    ?>
 </div>

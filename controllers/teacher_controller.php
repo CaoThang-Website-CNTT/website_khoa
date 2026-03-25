@@ -3,12 +3,9 @@
 namespace App\Controllers;
 
 require_once BASE_PATH . '/includes/core/request_validator.php';
-require_once BASE_PATH . '/models/teacher.php';
 
 use App\Core\Controller;
-use App\Core\Page;
 use App\Core\Request;
-use App\Models\Teacher;
 use App\Core\Validator;
 use App\Services\TeacherService;
 
@@ -25,14 +22,10 @@ class TeacherController extends Controller
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $teachers = $this->_teacherService->getAllTeachers($currentPage);
-    $total = $this->_teacherService->getTotalTeachersCount();
-
-    $page = new Page($total, 15, $currentPage);
+    $data = $this->_teacherService->getAllTeachers($currentPage);
 
     $this->render('admin/teachers/index', [
-      'teachers' => $teachers,
-      'page' => $page,
+      'data' => $data,
     ], layout: 'dashboard_layout');
   }
 
@@ -116,18 +109,7 @@ class TeacherController extends Controller
       return $this->redirect('admin/teachers/' . $id);
     }
 
-    $teacher = new Teacher(
-      account_id: (int) $id,
-      full_name: $data['full_name'],
-      gender: $data['gender'],
-      dob: $data['dob'],
-      phone: $data['phone'],
-      title: $data['title'],
-      department: $data['department'],
-      start_date: $data['start_date'],
-    );
-
-    $isSuccess = $this->_teacherService->updateTeacher((int) $id, $teacher);
+    $isSuccess = $this->_teacherService->updateTeacher((int) $id, $data);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật giảng viên thành công!');
@@ -148,6 +130,6 @@ class TeacherController extends Controller
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/users');
+    return $this->redirect('admin/teachers');
   }
 }

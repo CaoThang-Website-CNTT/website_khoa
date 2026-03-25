@@ -7,39 +7,35 @@ require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/student.php';
 
 use App\Core\Controller;
-use App\Core\Page;
 use App\Core\Request;
-use App\Models\Student;
 use App\Core\Validator;
-use App\Services\StudentService;
+use App\Services\{StudentService, ClassroomService};
 
 class StudentController extends Controller
 {
   private StudentService $_studentService;
+  private ClassroomService $_classroomService;
 
-  public function __construct(StudentService $studentService)
+  public function __construct(StudentService $studentService, ClassroomService $classroomService)
   {
     $this->_studentService = $studentService;
+    $this->_classroomService = $classroomService;
   }
 
   public function index(Request $request)
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $students = $this->_studentService->getAllStudents($currentPage);
-    $total = $this->_studentService->getTotalStudentsCount();
-
-    $page = new Page($total, 15, $currentPage);
+    $data = $this->_studentService->getStudentsPaginated($currentPage, 15);
 
     $this->render("admin/students/index", [
-      'students' => $students,
-      'page' => $page,
+      'data' => $data,
     ], layout: "dashboard_layout");
   }
 
   public function create()
   {
-    $classrooms = $this->_studentService->getAllClassrooms();
+    $classrooms = $this->_classroomService->getAllClassrooms();
     $this->render("admin/students/create", [
       'classrooms' => $classrooms
     ], layout: "dashboard_layout");
@@ -74,7 +70,7 @@ class StudentController extends Controller
       return $this->redirect('admin/students/create');
     }
 
-    $newStudentId = $this->_studentService->createStudent($data, 'Khoacntt@123');
+    $newStudentId = $this->_studentService->createStudent($data, $data['national_id']);
 
     if ($newStudentId) {
       $request->flash('success', 'Tạo mới sinh viên thành công!');
@@ -122,19 +118,7 @@ class StudentController extends Controller
       return $this->redirect('admin/students/' . $id);
     }
 
-    $student = new Student(
-      account_id: (int) $id,
-      student_id: 0,
-      full_name: $data['full_name'],
-      gender: $data['gender'],
-      dob: $data['dob'],
-      phone: $data['phone'],
-      classroom_id: (int) $data['classroom_id'],
-      major: $data['major'],
-      birth_place: $data['birth_place'],
-    );
-
-    $isSuccess = $this->_studentService->updateStudent((int) $id, $student);
+    $isSuccess = $this->_studentService->updateStudent((int) $id, $data);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật sinh viên thành công!');
@@ -156,7 +140,7 @@ class StudentController extends Controller
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/users/');
+    return $this->redirect('admin/students/');
   }
 
   public function import()
