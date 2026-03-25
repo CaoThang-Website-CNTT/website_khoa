@@ -18,6 +18,7 @@ interface IClassroomRepository
   public function getClassroomById(int $id): ?Classroom;
   public function createClassroom(array $classroom): int;
   public function deleteClassroom(int $id): bool;
+  public function getTotalClassroomsCount(): int;
 
   /** @return Major[] */
   public function getAllMajors(): array;
@@ -67,12 +68,6 @@ class ClassroomService implements IClassroomRepository
   {
     $offset = (max(1, $page) - 1) * $limit;
 
-    $countSql = "SELECT COUNT(*) FROM classrooms c 
-                LEFT JOIN majors m ON c.major_id = m.id 
-                LEFT JOIN specializations s ON c.specialization_id = s.id 
-                WHERE c.deleted_at IS NULL AND s.deleted_at IS NULL AND m.deleted_at IS NULL";
-    $totalRows = $this->db->query($countSql)->fetchColumn();
-
     $sql = "SELECT 
               c.*,
               m.id AS maj_id, m.full_name as maj_full_name, m.short_name AS maj_short_name, m.level as maj_level,
@@ -90,13 +85,7 @@ class ClassroomService implements IClassroomRepository
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
-    $items = array_map(fn($row) => Classroom::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
-    return [
-      'data' => $items,
-      'total_rows' => (int) $totalRows,
-      'current_page' => $page,
-      'last_page' => ceil($totalRows / $limit)
-    ];
+    return array_map(fn($row) => Classroom::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function getClassroomById(int $id): Classroom
@@ -139,6 +128,17 @@ class ClassroomService implements IClassroomRepository
   {
     $sql = "UPDATE `classrooms` SET deleted_at = NOW() WHERE id = :id";
     return $this->db->prepare($sql)->execute([':id' => $id]);
+  }
+
+  public function getTotalClassroomsCount(): int
+  {
+    $sql = "SELECT COUNT(*) 
+            FROM `classrooms` c
+            WHERE c.`deleted_at` IS NULL";
+
+    $stmt = $this->db->query($sql);
+
+    return (int) $stmt->fetchColumn();
   }
 
   public function getAllMajors(): array
