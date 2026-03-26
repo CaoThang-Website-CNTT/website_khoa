@@ -26,7 +26,7 @@ class StudentController extends Controller
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $data = $this->_studentService->getStudentsPaginated($currentPage, 15);
+    $data = $this->_studentService->getStudents($currentPage, 15);
 
     $this->render("admin/students/index", [
       'data' => $data,

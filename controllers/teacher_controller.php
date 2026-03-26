@@ -11,7 +11,7 @@ use App\Services\TeacherService;
 
 class TeacherController extends Controller
 {
-  private $_teacherService;
+  private TeacherService $_teacherService;
 
   public function __construct(TeacherService $teacherService)
   {
@@ -22,7 +22,7 @@ class TeacherController extends Controller
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $data = $this->_teacherService->getTeachersPaginated($currentPage);
+    $data = $this->_teacherService->getTeachers($currentPage);
 
     $this->render('admin/teachers/index', [
       'data' => $data,
