@@ -4,67 +4,35 @@ namespace App\Models;
 
 class Menu
 {
+  /**
+   * @param MenuItem[] $items Được gán bởi service (eager-load).
+   */
   public function __construct(
-    public int $id,
-    public string $type,
-    public string $key,
-    public string $label,
-    public ?string $description,
-    public int $sort_order,
-    public string $created_at,
-    public string $updated_at,
+    public ?int $id = null,
+    public string $key = '',
+    public string $label = '',
+    public ?string $description = null,
+    public string $type = 'const',   // 'const' | 'custom'
+    public int $sort_order = 0,
+    public ?string $created_at = null,
+    public ?string $updated_at = null,
+    public ?string $deleted_at = null,
+    public array $items = [],
   ) {
   }
 
-  /**
-   * Tự động mapping trường dữ liệu DB
-   * @param array $data
-   * @return Menu
-   */
-  public static function fromArray(array $data): self
+  public static function fromArray(array $row): static
   {
-    return new self(
-      id: (int) $data['id'],
-      type: $data['type'],
-      created_at: $data['created_at'],
-      key: $data['key'],
-      label: $data['label'],
-      description: $data['description'] ?? null,
-      sort_order: (int) $data['sort_order'],
-      updated_at: $data['updated_at'],
+    return new static(
+      id: isset($row['id']) ? (int) $row['id'] : null,
+      key: $row['key'],
+      label: $row['label'],
+      description: $row['description'] ?? null,
+      type: $row['type'] ?? 'const',
+      sort_order: isset($row['sort_order']) ? (int) $row['sort_order'] : 0,
+      created_at: $row['created_at'] ?? null,
+      updated_at: $row['updated_at'] ?? null,
+      deleted_at: $row['deleted_at'] ?? null,
     );
-  }
-
-  /**
-   * Kiểm tra menu có phải loại tĩnh do dev định nghĩa không.
-   * Menu loại này không được phép chỉnh sửa qua admin.
-   *
-   * @return bool
-   */
-  public function isConst(): bool
-  {
-    return $this->type === 'const';
-  }
-
-  /**
-   * Kiểm tra menu có phải loại do admin tạo không.
-   * Menu loại này được phép chỉnh sửa tự do qua admin.
-   *
-   * @return bool
-   */
-  public function isCustom(): bool
-  {
-    return $this->type === 'custom';
-  }
-
-  /**
-   * Kiểm tra menu có cho phép chỉnh sửa không.
-   * Dùng trong controller/view để guard các action update/delete.
-   *
-   * @return bool
-   */
-  public function isEditable(): bool
-  {
-    return $this->type === 'custom';
   }
 }

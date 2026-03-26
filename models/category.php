@@ -4,47 +4,49 @@ namespace App\Models;
 
 class Category
 {
+  /**
+   * @param ?string $meta Chuỗi JSON thô.
+   * @param ?Category $parent Được gán bởi service (eager-load).
+   * @param Category[] $children Được gán bởi service (eager-load).
+   */
   public function __construct(
-    public int $id,
-    public string $name,
-    public ?string $slug,
-    public ?string $description,
-    public ?int $parent_id,
-    public ?string $meta,
-    public ?string $type,
-    public ?string $created_at,
-    public ?string $updated_at,
-    public ?string $deleted_at,
-
-    // Referenced data
-    public ?Category $parent_category = null,
-
-    // Thuộc tính tự do của models không phản ánh schema)
-    // có thể đến từ kết quả query
-    public int $depth = 0,
-    public ?string $path = null,
+    public ?int $id = null,
+    public string $name = '',
+    public ?string $slug = null,
+    public string $type = 'custom',  // 'const' | 'custom'
+    public ?string $description = null,
+    public ?int $parent_id = null,
+    public ?string $meta = null,
+    public ?string $created_at = null,
+    public ?string $updated_at = null,
+    public ?string $deleted_at = null,
+    public ?Category $parent = null,
+    public array $children = [],
   ) {
   }
 
-  /**
-   * Tự động mapping trường dữ liệu DB
-   * @param array $data
-   * @return Category
-   */
-  public static function fromArray(array $data): self
+  public static function fromArray(array $row): static
   {
-    return new self(
-      id: $data['id'] ?? 0,
-      name: $data['name'] ?? '',
-      slug: $data['slug'] ?? null,
-      description: $data['description'] ?? null,
-      parent_id: isset($data['parent_id']) ? (int) $data['parent_id'] : null,
-      meta: isset($data['meta']) ? json_decode($data['meta'], true) : null,
-      type: $data['type'] ?? null,
-      created_at: $data['created_at'] ?? null,
-      updated_at: $data['updated_at'] ?? null,
-      deleted_at: $data['deleted_at'] ?? null,
-      depth: (int) ($data['depth'] ?? 0),
+    return new static(
+      id: isset($row['id']) ? (int) $row['id'] : null,
+      name: $row['name'],
+      slug: $row['slug'] ?? null,
+      type: $row['type'] ?? 'custom',
+      description: $row['description'] ?? null,
+      parent_id: isset($row['parent_id']) ? (int) $row['parent_id'] : null,
+      meta: $row['meta'] ?? null,
+      created_at: $row['created_at'] ?? null,
+      updated_at: $row['updated_at'] ?? null,
+      deleted_at: $row['deleted_at'] ?? null,
     );
+  }
+
+  /** Giải mã JSON của trường meta, trả về mảng (mảng rỗng nếu null hoặc không hợp lệ). */
+  public function metaArray(): array
+  {
+    if ($this->meta === null) {
+      return [];
+    }
+    return json_decode($this->meta, true) ?? [];
   }
 }
