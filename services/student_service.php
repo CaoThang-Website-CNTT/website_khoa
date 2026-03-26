@@ -19,19 +19,13 @@ use App\Core\Pageable;
 interface IStudentService
 {
   /** @return Pageable */
-  public function getStudentsPaginated(int $page, int $limit = 15): Pageable;
-
+  public function getStudents(int $page, int $limit = 15): Pageable;
   public function isStudentIdUnique(string $studentId): bool;
-
   public function createStudent(array $data, string $password): int;
-
   public function getStudentById(int $id): ?Student;
-
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
-
   public function updateStudent(int $id, array $data): bool;
-
   public function deleteStudent(int $id): bool;
 }
 
@@ -40,22 +34,19 @@ class StudentService implements IStudentService
   private StudentStore $_studentStore;
   private AccountStore $_accountStore;
   private ClassroomStore $_classroomStore;
-  private AccountService $_accountService;
 
   public function __construct(
     StudentStore $studentStore,
     AccountStore $accountStore,
     ClassroomStore $classroomStore,
-    AccountService $accountService
   ) {
     $this->_studentStore = $studentStore;
     $this->_accountStore = $accountStore;
     $this->_classroomStore = $classroomStore;
-    $this->_accountService = $accountService;
   }
 
   /** @return Pageable */
-  public function getStudentsPaginated(int $page, int $limit = 15): Pageable
+  public function getStudents(int $page, int $limit = 15): Pageable
   {
     $students = $this->_studentStore->getPaginated($page, $limit);
 
@@ -90,7 +81,7 @@ class StudentService implements IStudentService
   public function createStudent(array $data, string $password): int
   {
     // Create account
-    $accountId = $this->_accountService->createAccount($data['email'], $password, 'student');
+    $accountId = $this->_accountStore->create($data['email'], $password, 'student');
     if (!$accountId) {
       throw new \Exception('Failed to create account');
     }

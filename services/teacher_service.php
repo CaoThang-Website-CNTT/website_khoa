@@ -16,18 +16,12 @@ use App\Core\Pageable;
 interface ITeacherService
 {
   /** @return Pageable */
-  /** @return Pageable */
-  public function getTeachersPaginated(int $page, int $limit = 15): Pageable;
+  public function getTeachers(int $page, int $limit = 15): Pageable;
   public function getTotalTeachersCount(): int;
-
   public function isEmailUnique(string $email): bool;
-
   public function createTeacher(array $data, string $password): int;
-
   public function getTeacherById(int $id): ?Teacher;
-
   public function updateTeacher(int $id, array $data): bool;
-
   public function deleteTeacher(int $id): bool;
 }
 
@@ -45,9 +39,9 @@ class TeacherService implements ITeacherService
   }
 
   /** @return Pageable */
-  public function getTeachersPaginated(int $page, int $limit = 15): Pageable
+  public function getTeachers(int $page, int $limit = 15): Pageable
   {
-    $teachers = $this->_teacherStore->getAll($page, $limit);
+    $teachers = $this->_teacherStore->getPaginated($page, $limit);
     $total = $this->_teacherStore->getTotalCount();
     return new Pageable($teachers, $total, $limit, $page);
   }
