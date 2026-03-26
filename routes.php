@@ -51,9 +51,9 @@ $router->post('/admin/menus/delete/{id}', [MenuController::class, 'destroy']);
 $router->get('/admin/menus/{menuId}/items/create', [MenuController::class, 'createItem']);
 $router->post('/admin/menus/{menuId}/items', [MenuController::class, 'storeItem']);
 $router->post('/admin/menus/{menuId}/items/reorder', [MenuController::class, 'reorderItems']);
-$router->get('/admin/menus/{menuId}/items/{itemId}', [MenuController::class, 'editItem']);
-$router->post('/admin/menus/{menuId}/items/{itemId}', [MenuController::class, 'updateItem']);
-$router->post('/admin/menus/{menuId}/items/delete/{itemId}', [MenuController::class, 'destroyItem']);
+$router->get('/admin/menu-items/{itemId}/edit', [MenuController::class, 'editItem']);
+$router->post('/admin/menu-items/{itemId}', [MenuController::class, 'updateItem']);
+$router->post('/admin/menu-items/{itemId}/delete', [MenuController::class, 'destroyItem']);
 
 // Web Settings
 $router->get('/admin/web_settings', [WebSettingsController::class, 'index']);

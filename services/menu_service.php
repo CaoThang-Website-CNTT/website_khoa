@@ -20,14 +20,17 @@ interface IMenuService
   public function getMenus(int $page, int $limit = 15): Pageable;
   public function getMenuWithItems(int $id): ?Menu;
   public function getMenuByKeyWithItems(string $key): ?Menu;
+  public function getMenuById(int $id): ?Menu;
   public function createMenu(array $data): int;
   public function updateMenu(int $id, array $data): bool;
   public function deleteMenu(int $id): bool;
 
   // ── Menu Items ─────────────────────────────────────────────────────────────
+  public function getItemById(int $id): ?MenuItem;
   public function addItem(int $menuId, array $data): int;
   public function updateItem(int $id, array $data): bool;
   public function removeItem(int $id): bool;
+  /** $orderMap = [itemId => sortOrder, ...] */
   public function reorderItems(array $orderMap): bool;
 }
 
@@ -83,6 +86,11 @@ class MenuService implements IMenuService
     return $menu;
   }
 
+  public function getMenuById(int $id): ?Menu
+  {
+    return $this->_menuStore->getById($id);
+  }
+
   public function createMenu(array $data): int
   {
     $key = $data['key'];
@@ -124,11 +132,24 @@ class MenuService implements IMenuService
 
   public function deleteMenu(int $id): bool
   {
-    return $this->_menuStore->softDelete($id);
+    $menuDeleted = $this->_menuStore->softDelete($id);
+
+    if ($menuDeleted) {
+      $items = $this->_menuStore->getItemsByMenuId($id);
+
+      foreach ($items as $item) {
+        $this->_menuStore->softDeleteItem($item->id);
+      }
+    }
+
+    return $menuDeleted;
   }
 
   // ── Menu Items ─────────────────────────────────────────────────────────────
-
+  public function getItemById(int $id): ?MenuItem
+  {
+    return $this->_menuStore->getItemById($id);
+  }
   public function addItem(int $menuId, array $data): int
   {
     if ($this->_menuStore->getById($menuId) === null) {

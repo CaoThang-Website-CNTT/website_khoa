@@ -30,14 +30,10 @@ class MenuController extends Controller
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $menus = $this->_menuService->getAllMenus($currentPage);
-    $total = $this->_menuService->getTotalMenusCount();
-
-    $page = new Page($total, 15, $currentPage);
+    $data = $this->_menuService->getMenus($currentPage, 15);
 
     $this->render('admin/menus/index', [
-      'menus' => $menus,
-      'page' => $page
+      'data' => $data,
     ], layout: 'dashboard_layout');
   }
 
@@ -64,20 +60,14 @@ class MenuController extends Controller
       return $this->redirect('admin/menus/create');
     }
 
-    if (!$this->_menuService->isKeyUnique($data['key'])) {
+    try {
+      $newId = $this->_menuService->createMenu($data);
+    } catch (\InvalidArgumentException $e) {
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/menus/create');
     }
-
-    $newId = $this->_menuService->createMenu([
-      'key' => $data['key'],
-      'label' => $data['label'],
-      'description' => $data['description'] ?? null,
-      'type' => 'custom',
-      'sort_order' => !empty($data['sort_order']) ? (int) $data['sort_order'] : 0,
-    ]);
 
     if ($newId) {
       $request->flash('success', 'Tạo nhóm menu thành công!');
@@ -88,25 +78,22 @@ class MenuController extends Controller
     return $this->redirect('admin/menus');
   }
 
-  public function edit(string $id)
+  public function edit($id)
   {
-    $menu = $this->_menuService->getMenuById((int) $id);
+    $menu = $this->_menuService->getMenuWithItems($id);
 
     if (!$menu) {
       $this->abort(404);
     }
 
-    $items = $this->_menuService->getItemsTree((int) $id);
-
     $this->render('admin/menus/edit', [
       'menu' => $menu,
-      'items' => $items,
     ], layout: 'dashboard_layout');
   }
 
-  public function update(string $id, Request $request)
+  public function update($id, Request $request)
   {
-    $menu = $this->_menuService->getMenuById((int) $id);
+    $menu = $this->_menuService->getMenuWithItems($id);
 
     if (!$menu) {
       $this->abort(404);
@@ -133,19 +120,14 @@ class MenuController extends Controller
       return $this->redirect('admin/menus/' . $id);
     }
 
-    if (!$this->_menuService->isKeyUnique($data['key'], (int) $id)) {
+    try {
+      $isSuccess = $this->_menuService->createMenu($data);
+    } catch (\InvalidArgumentException $e) {
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/menus/' . $id);
     }
-
-    $isSuccess = $this->_menuService->updateMenu((int) $id, [
-      'key' => $data['key'],
-      'label' => $data['label'],
-      'description' => $data['description'] ?? null,
-      'sort_order' => !empty($data['sort_order']) ? (int) $data['sort_order'] : 0,
-    ]);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật nhóm menu thành công!');
@@ -156,9 +138,9 @@ class MenuController extends Controller
     return $this->redirect('admin/menus/' . $id);
   }
 
-  public function destroy(string $id, Request $request)
+  public function destroy($id, Request $request)
   {
-    $menu = $this->_menuService->getMenuById((int) $id);
+    $menu = $this->_menuService->getMenuWithItems($id);
 
     if (!$menu) {
       $this->abort(404);
@@ -169,7 +151,7 @@ class MenuController extends Controller
       return $this->redirect('admin/menus');
     }
 
-    $isSuccess = $this->_menuService->deleteMenu((int) $id);
+    $isSuccess = $this->_menuService->deleteMenu($id);
 
     if ($isSuccess) {
       $request->flash('success', 'Xóa nhóm menu thành công!');
@@ -184,19 +166,16 @@ class MenuController extends Controller
   // Menu Items
   // ============================================================================
 
-  public function createItem(string $menuId)
+  public function createItem($menuId)
   {
-    $menu = $this->_menuService->getMenuById((int) $menuId);
+    $menu = $this->_menuService->getMenuWithItems($menuId);
 
     if (!$menu) {
       $this->abort(404);
     }
 
-    $items = $this->_menuService->getItemsFlat((int) $menuId);
-
-    $this->render('admin/menus/items/create', [
+    $this->render('admin/menus-items/create', [
       'menu' => $menu,
-      'items' => $items,
     ], layout: 'dashboard_layout');
   }
 
@@ -224,13 +203,14 @@ class MenuController extends Controller
       return $this->redirect('admin/menus/' . $menuId . '/items/create');
     }
 
-    $newId = $this->_menuService->createItem([
-      'menu_id' => (int) $menuId,
-      'parent_id' => !empty($data['parent_id']) ? (int) $data['parent_id'] : null,
-      'label' => $data['label'],
-      'url' => $data['url'],
-      'sort_order' => !empty($data['sort_order']) ? (int) $data['sort_order'] : null,
-    ]);
+    try {
+      $newId = $this->_menuService->addItem($menuId, $data);
+    } catch (\InvalidArgumentException $e) {
+      $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
+      return $this->redirect('admin/menus/' . $menuId);
+    }
 
     if ($newId) {
       $request->flash('success', 'Thêm mục menu thành công!');
@@ -241,42 +221,22 @@ class MenuController extends Controller
     return $this->redirect('admin/menus/' . $menuId);
   }
 
-  public function editItem(string $menuId, string $itemId)
+  public function editItem($itemId)
   {
-    $menu = $this->_menuService->getMenuById((int) $menuId);
-
-    if (!$menu) {
-      $this->abort(404);
-    }
-
-    $item = $this->_menuService->getItemById((int) $itemId);
+    $item = $this->_menuService->getItemById($itemId);
 
     if (!$item) {
       $this->abort(404);
     }
 
-    // Loại trừ chính item đang edit khỏi danh sách parent — tránh circular reference
-    $items = array_values(array_filter(
-      $this->_menuService->getItemsFlat((int) $menuId),
-      fn($i) => $i->id !== $item->id
-    ));
-
-    $this->render('admin/menus/items/edit', [
-      'menu' => $menu,
+    $this->render('admin/menus-items/edit', [
       'item' => $item,
-      'items' => $items,
     ], layout: 'dashboard_layout');
   }
 
-  public function updateItem(string $menuId, string $itemId, Request $request)
+  public function updateItem($itemId, Request $request)
   {
-    $menu = $this->_menuService->getMenuById((int) $menuId);
-
-    if (!$menu) {
-      $this->abort(404);
-    }
-
-    $item = $this->_menuService->getItemById((int) $itemId);
+    $item = $this->_menuService->getItemById($itemId);
 
     if (!$item) {
       $this->abort(404);
@@ -295,7 +255,7 @@ class MenuController extends Controller
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
-      return $this->redirect('admin/menus/' . $menuId . '/items/' . $itemId);
+      return $this->redirect('admin/menu-items/' . $itemId);
     }
 
     $isSuccess = $this->_menuService->updateItem((int) $itemId, [
@@ -311,40 +271,45 @@ class MenuController extends Controller
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/menus/' . $menuId . '/items/' . $itemId);
+    return $this->redirect('admin/menu-items/' . $itemId);
   }
 
-  public function destroyItem(string $menuId, string $itemId, Request $request)
+  public function destroyItem($itemId, Request $request)
   {
-    $item = $this->_menuService->getItemById((int) $itemId);
+    $item = $this->_menuService->getItemById($itemId);
 
     if (!$item) {
       $this->abort(404);
     }
 
-    $isSuccess = $this->_menuService->deleteItem((int) $itemId);
+    $isSuccess = $this->_menuService->removeItem($itemId);
 
     if ($isSuccess) {
-      $request->flash('success', 'Xóa mục menu thành công!');
+      $request->flash('success', 'Xóa menu item thành công!');
     } else {
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/menus/' . $menuId);
+    return $this->redirect('admin/menus/' . $item->parent_id);
   }
 
-  public function reorderItems(string $menuId, Request $request)
+  public function reorderItems($menuId, Request $request)
   {
     $data = $request->all();
-    $moveId = !empty($data['move_id']) ? (int) $data['move_id'] : null;
-    $direction = $data['direction'] ?? null;
 
-    if (!$moveId || !in_array($direction, ['up', 'down'])) {
+    $orderMap = $data['order_map'] ?? [];
+
+    if (empty($orderMap) || !is_array($orderMap)) {
       $request->flash('error', 'Dữ liệu sắp xếp không hợp lệ.');
       return $this->redirect('admin/menus/' . $menuId);
     }
 
-    $isSuccess = $this->_menuService->reorderItems($moveId, $direction);
+    $cleanOrderMap = [];
+    foreach ($orderMap as $itemId => $sortOrder) {
+      $cleanOrderMap[(int) $itemId] = (int) $sortOrder;
+    }
+
+    $isSuccess = $this->_menuService->reorderItems($cleanOrderMap);
 
     if ($isSuccess) {
       $request->flash('success', 'Đã cập nhật thứ tự menu.');

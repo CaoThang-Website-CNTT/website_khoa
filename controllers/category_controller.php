@@ -7,7 +7,6 @@ require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . '/models/category.php';
 
 use App\Core\Controller;
-use App\Core\Page;
 use App\Core\Request;
 use App\Core\Validator;
 use App\Services\CategoryService;
@@ -25,14 +24,10 @@ class CategoryController extends Controller
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $categories = $this->_categoryService->getAllCategories($currentPage);
-    $total = $this->_categoryService->getTotalCategoriesCount();
-
-    $page = new Page($total, 15, $currentPage);
+    $data = $this->_categoryService->getCategories($currentPage, 15);
 
     $this->render("admin/categories/index", [
-      "categories" => $categories,
-      "page" => $page
+      'data' => $data,
     ], layout: 'dashboard_layout');
   }
 
@@ -44,14 +39,15 @@ class CategoryController extends Controller
     ], layout: 'dashboard_layout');
   }
 
-  public function edit(string $id)
+  public function edit($id)
   {
-    $category = $this->_categoryService->getById((int) $id);
-    $categories = $this->_categoryService->getAllCategories();
+    $category = $this->_categoryService->getCategoryById($id);
 
     if (!$category) {
-      die("Không tìm thấy danh mục với id: $id");
+      return $this->abort(404);
     }
+
+    $categories = $this->_categoryService->getAllCategories();
 
     $this->render("admin/categories/edit", [
       "category" => $category,
@@ -77,11 +73,6 @@ class CategoryController extends Controller
       return $this->redirect('admin/categories/create');
     }
 
-    // Auto-generate slug nếu để trống
-    if (empty($data['slug'])) {
-      $data['slug'] = $this->generateSlug($data['name']);
-    }
-
     if (!$this->_categoryService->isSlugUnique($data['slug'])) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
       $request->flashOldInputs();
@@ -89,12 +80,14 @@ class CategoryController extends Controller
       return $this->redirect('admin/categories/create');
     }
 
-    $newId = $this->_categoryService->create([
-      'name' => $data['name'],
-      'slug' => $data['slug'],
-      'description' => $data['description'] ?? null,
-      'parent_id' => !empty($data['parent_id']) ? (int) $data['parent_id'] : null,
-    ]);
+    try {
+      $newId = $this->_categoryService->createCategory($data);
+    } catch (\InvalidArgumentException $e) {
+      $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
+      return $this->redirect('admin/categories/create');
+    }
 
     if ($newId) {
       $request->flash('success', 'Tạo danh mục thành công!');
@@ -105,14 +98,14 @@ class CategoryController extends Controller
     return $this->redirect('admin/categories/create');
   }
 
-  public function update(string $id, Request $request)
+  public function update($id, Request $request)
   {
     $data = $request->all();
 
-    $category = $this->_categoryService->getById((int) $id);
+    $category = $this->_categoryService->getCategoryById($id);
 
     if (!$category) {
-      die("Không tìm thấy danh mục với id: $id");
+      return $this->abort(404);
     }
 
     $validator = new Validator();
@@ -129,23 +122,14 @@ class CategoryController extends Controller
       return $this->redirect('admin/categories/' . $id);
     }
 
-    if (empty($data['slug'])) {
-      $data['slug'] = $this->generateSlug($data['name']);
-    }
-
-    if (!$this->_categoryService->isSlugUnique($data['slug'], (int) $id)) {
+    try {
+      $isSuccess = $this->_categoryService->updateCategory($id, $data);
+    } catch (\InvalidArgumentException $e) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/categories/' . $id);
     }
-
-    $isSuccess = $this->_categoryService->update((int) $id, [
-      'name' => $data['name'],
-      'slug' => $data['slug'],
-      'description' => $data['description'] ?? null,
-      'parent_id' => !empty($data['parent_id']) ? (int) $data['parent_id'] : null,
-    ]);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật danh mục thành công!');
@@ -156,9 +140,9 @@ class CategoryController extends Controller
     return $this->redirect('admin/categories/' . $id);
   }
 
-  public function destroy(string $id, Request $request)
+  public function destroy($id, Request $request)
   {
-    $isSuccess = $this->_categoryService->delete((int) $id);
+    $isSuccess = $this->_categoryService->deleteCategory($id);
 
     if ($isSuccess) {
       $request->flash('success', 'Xoá danh mục thành công!');
@@ -167,28 +151,5 @@ class CategoryController extends Controller
     }
 
     return $this->redirect('admin/categories');
-  }
-
-  private function generateSlug(string $name): string
-  {
-    return strtolower(
-      preg_replace(
-        '/\s+/',
-        '-',
-        preg_replace(
-          '/[^a-z0-9\s-]/',
-          '',
-          str_replace(
-            'đ',
-            'd',
-            iconv(
-              'UTF-8',
-              'ASCII//TRANSLIT',
-              mb_strtolower(trim($name))
-            )
-          )
-        )
-      )
-    );
   }
 }

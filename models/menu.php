@@ -35,4 +35,9 @@ class Menu
       deleted_at: $row['deleted_at'] ?? null,
     );
   }
+
+  public function isEditable(): bool
+  {
+    return $this->type === "custom";
+  }
 }
