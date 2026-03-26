@@ -38,6 +38,7 @@ class StudentStore extends Store implements IStudentStore
     $stmt = $this->db->prepare("
       SELECT *
       FROM `students`
+      WHERE deleted_at IS NULL
     ");
 
     $stmt->execute();
@@ -52,6 +53,7 @@ class StudentStore extends Store implements IStudentStore
     $sql = "
       SELECT *
       FROM `students`
+      WHERE deleted_at IS NULL
       LIMIT :limit OFFSET :offset
     ";
 

@@ -60,6 +60,7 @@ class TeacherStore extends Store implements ITeacherStore
     $sql = "
       SELECT *
       FROM `teachers`
+      WHERE deleted_at IS NULL
       LIMIT :limit OFFSET :offset
     ";
 
