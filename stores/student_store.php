@@ -13,22 +13,14 @@ interface IStudentStore
 {
   /** @return Student[] */
   public function getAll(): array;
-
   /** @return Student[] */
   public function getPaginated(int $pageTo, int $limit = 15): array;
-
   public function getById(int $id): ?Student;
-
   public function create(Student $student): int;
-
   public function update(Student $student): bool;
-
   public function softDelete(int $id): bool;
-
   public function getTotalCount(): int;
-
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
-
 }
 class StudentStore extends Store implements IStudentStore
 {

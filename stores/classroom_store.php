@@ -15,46 +15,30 @@ interface IClassroomStore
 {
   /** @return Classroom[] */
   public function getAll(): array;
-
   /** @return Classroom[] */
   public function getPaginated(int $page, int $limit = 15): array;
-
   public function getById(int $id): ?Classroom;
-
   /** @return Classroom[] */
   public function getByIds(array $ids): array;
-
   public function create(Classroom $classroom): int;
-
   public function update(Classroom $classroom): bool;
-
   public function softDelete(int $id): bool;
-
   public function getTotalCount(): int;
-
   public function isShortNameUnique(string $shortName, ?int $excludeId = null): bool;
 
   // Majors and Specializations
   /** @return Major[] */
   public function getAllMajors(): array;
-
   public function getMajorById(int $id): ?Major;
-
   public function createMajor(Major $major): int;
-
   public function updateMajor(Major $major): bool;
-
   public function softDeleteMajor(int $id): bool;
 
   /** @return Specialization[] */
   public function getSpecializationsByMajorId(int $majorId): array;
-
   public function getSpecializationById(int $id): ?Specialization;
-
   public function createSpecialization(Specialization $specialization): int;
-
   public function updateSpecialization(Specialization $specialization): bool;
-
   public function softDeleteSpecialization(int $id): bool;
 }
 

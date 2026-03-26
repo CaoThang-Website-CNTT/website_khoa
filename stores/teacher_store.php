@@ -12,43 +12,31 @@ use PDO;
 interface ITeacherStore
 {
   /** @return Teacher[] */
-  public function getAll(int $pageTo, int $limit = 15): array;
-
+  public function getAll(): array;
   /** @return Teacher[] */
   public function getPaginated(int $pageTo, int $limit = 15): array;
-
   public function getById(int $id): ?Teacher;
-
   /** @return Teacher[] */
   public function getByIds(array $ids): array;
-
   public function getByStaffCode(string $staffCode): ?Teacher;
-
   public function create(Teacher $teacher): int;
-
   public function update(Teacher $teacher): bool;
-
   public function softDelete(int $id): bool;
-
   public function getTotalCount(): int;
 }
 
 class TeacherStore extends Store implements ITeacherStore
 {
   /** @return Teacher[] */
-  public function getAll(int $pageTo, int $limit = 15): array
+  public function getAll(): array
   {
-    $offset = (max(1, $pageTo) - 1) * $limit;
-
     $sql = "
-      SELECT * FROM `teachers`
+      SELECT *
+      FROM `teachers`
       WHERE `deleted_at` IS NULL
-      LIMIT :limit OFFSET :offset
     ";
 
     $stmt = $this->db->prepare($sql);
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
     return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
