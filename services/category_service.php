@@ -2,279 +2,145 @@
 
 namespace App\Services;
 
+require_once BASE_PATH . '/stores/category_store.php';
 require_once BASE_PATH . '/models/category.php';
-require_once BASE_PATH . '/db/database.php';
+require_once BASE_PATH . '/includes/helpers.php';
+require_once BASE_PATH . '/includes/core/pageable.php';
 
+use App\Stores\CategoryStore;
 use App\Models\Category;
-use Database;
-use PDO;
+use App\Core\Pageable;
 
-// ============================================================================
-// Interface
-// ============================================================================
-interface ICategoryRepository
+interface ICategoryService
 {
   /** @return Category[] */
-  public function getAllCategories(?int $pageTo = null, ?int $limit = null): array;
-
-  /** @return Category[] */
-  public function getRoots(): array;
-
-  /** @return Category[] */
-  public function getChildren(int $parentId): array;
-
-  public function getById(int $id): ?Category;
-  public function getBySlug(string $slug): ?Category;
-
-  public function create(array $data): int;
-  public function update(int $id, array $data): bool;
-  public function delete(int $id): bool;
-  public function getTotalCategoriesCount(): int;
-
+  public function getAllCategories(): array;
+  /** @return Pageable */
+  public function getCategories(int $page, int $limit = 15): Pageable;
+  public function getCategoriesTree(): array;
+  public function getCategoryById(int $id): ?Category;
+  public function getCategoryBySlug(string $slug): ?Category;
+  public function createCategory(array $data): int;
+  public function updateCategory(int $id, array $data): bool;
+  public function deleteCategory(int $id): bool;
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool;
 }
 
-class CategoryService implements ICategoryRepository
+class CategoryService implements ICategoryService
 {
-  private $db;
+  private CategoryStore $_categoryStore;
 
-  public function __construct()
+  public function __construct(CategoryStore $categoryStore)
   {
-    $this->db = Database::getInstance()->getConnection();
+    $this->_categoryStore = $categoryStore;
   }
 
-  /**
-   * Lấy tất cả danh mục chưa bị xóa theo thứ tự cây (cha trước, con sau).
-   * Sử dụng Recursive CTE để duyệt cây và tính depth, path cho mỗi node.
-   * Kết quả được sắp xếp theo path — đảm bảo đúng thứ tự ở mọi độ sâu.
-   *
-   * @public
-   * @return Category[] Danh sách danh mục đã được sắp xếp phẳng theo cấu trúc cây
-   */
-  public function getAllCategories(?int $pageTo = null, ?int $limit = 15): array
+  /** @return Category[] */
+  public function getAllCategories(): array
   {
-    $sql = "
-      WITH RECURSIVE category_tree AS (
-        -- Anchor: root nodes (parent_id IS NULL)
-        SELECT
-          *,
-          0 AS depth,
-          CAST(LPAD(id, 10, '0') AS CHAR(1000)) AS path
-        FROM `categories`
-        WHERE `parent_id` IS NULL
-          AND `deleted_at` IS NULL
+    return $this->_categoryStore->getAll();
+  }
 
-        UNION ALL
+  public function getCategories(int $page, int $limit = 15): Pageable
+  {
+    $menus = $this->_categoryStore->getPaginated($page, $limit);
+    $total = $this->_categoryStore->getTotalCount();
+    return new Pageable($menus, $total, $limit, $page);
+  }
 
-        -- Recursive: children join to their parent
-        SELECT
-          c.*,
-          ct.depth + 1,
-          CONCAT(ct.path, '/', LPAD(c.id, 10, '0'))
-        FROM `categories` c
-        INNER JOIN category_tree ct ON c.parent_id = ct.id
-        WHERE c.deleted_at IS NULL
-      )
-      SELECT * FROM category_tree
-      ORDER BY path
-    ";
+  /** @return Category[] */
+  public function getCategoriesTree(): array
+  {
+    $all = $this->_categoryStore->getAll();
 
-    if ($pageTo !== null && $limit !== null) {
-      $offset = (max(1, $pageTo) - 1) * $limit;
-      $sql .= " LIMIT :limit OFFSET :offset";
+    // Đánh index theo id để gán con với độ phức tạp O(1)
+    $map = [];
+    foreach ($all as $cat) {
+      $cat->children = [];
+      $map[$cat->id] = $cat;
     }
 
-    $stmt = $this->db->prepare($sql);
-
-    if ($pageTo !== null && $limit !== null) {
-      $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-      $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $roots = [];
+    foreach ($map as $cat) {
+      if ($cat->parent_id !== null && isset($map[$cat->parent_id])) {
+        $map[$cat->parent_id]->children[] = $cat;
+      } else {
+        $roots[] = $cat;
+      }
     }
 
-    $stmt->execute();
-
-    return array_map(fn($row) => Category::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return $roots;
   }
 
-  /**
-   * Lấy các danh mục gốc.
-   *
-   * @public
-   * @return Category[]
-   */
-  public function getRoots(): array
+  public function getCategoryById(int $id): ?Category
   {
-    $stmt = $this->db->prepare("
-      SELECT * FROM `categories`
-      WHERE `parent_id` IS NULL AND `deleted_at` IS NULL
-      ORDER BY `id` ASC
-    ");
-    $stmt->execute();
-
-    return array_map(fn($row) => Category::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return $this->_categoryStore->getById($id);
   }
 
-  /**
-   * Lấy các danh mục con trực tiếp của một danh mục cha.
-   *
-   * @public
-   * @param int $parentId ID của danh mục cha
-   * @return Category[]
-   */
-  public function getChildren(int $parentId): array
+  public function getCategoryBySlug(string $slug): ?Category
   {
-    $stmt = $this->db->prepare("
-      SELECT * FROM `categories`
-      WHERE `parent_id` = :parent_id AND `deleted_at` IS NULL
-      ORDER BY `id` ASC
-    ");
-    $stmt->execute([':parent_id' => $parentId]);
-
-    return array_map(fn($row) => Category::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return $this->_categoryStore->getBySlug($slug);
   }
 
-  /**
-   * Tìm một danh mục theo ID.
-   *
-   * @public
-   * @param int $id ID của danh mục
-   * @return Category|null Trả về null nếu không tìm thấy hoặc đã bị xóa
-   */
-  public function getById(int $id): ?Category
+  public function createCategory(array $data): int
   {
-    $stmt = $this->db->prepare("
-      SELECT * FROM `categories`
-      WHERE `id` = :id AND `deleted_at` IS NULL
-    ");
-    $stmt->execute([':id' => $id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $slug = $data['slug'] ?? generateSlug($data['name']);
 
-    return $row ? Category::fromArray($row) : null;
+    if (!$this->_categoryStore->isSlugUnique($slug)) {
+      throw new \InvalidArgumentException("Slug '$slug' đã tồn tại.");
+    }
+
+    $category = new Category();
+    $category->name = $data['name'];
+    $category->slug = $slug;
+    $category->type = $data['type'] ?? 'custom';
+    $category->description = $data['description'] ?? null;
+    $category->parent_id = isset($data['parent_id']) ? (int) $data['parent_id'] : null;
+    $category->meta = isset($data['meta'])
+      ? (is_string($data['meta']) ? $data['meta'] : json_encode($data['meta']))
+      : null;
+
+    return $this->_categoryStore->create($category);
   }
 
-  /**
-   * Tìm một danh mục theo slug.
-   *
-   * @public
-   * @param string $slug Slug của danh mục
-   * @return Category|null Trả về null nếu không tìm thấy hoặc đã bị xóa
-   */
-  public function getBySlug(string $slug): ?Category
+  public function updateCategory(int $id, array $data): bool
   {
-    $stmt = $this->db->prepare("
-      SELECT * FROM `categories`
-      WHERE `slug` = :slug AND `deleted_at` IS NULL
-    ");
-    $stmt->execute([':slug' => $slug]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $category = $this->_categoryStore->getById($id);
+    if ($category === null) {
+      return false;
+    }
 
-    return $row ? Category::fromArray($row) : null;
+    if (isset($data['slug']) && $data['slug'] !== $category->slug) {
+      if (!$this->_categoryStore->isSlugUnique($data['slug'], $id)) {
+        throw new \InvalidArgumentException("Slug '{$data['slug']}' đã tồn tại.");
+      }
+      $category->slug = $data['slug'];
+    }
+
+    $category->name = $data['name'] ?? $category->name;
+    $category->type = $data['type'] ?? $category->type;
+    $category->description = $data['description'] ?? $category->description;
+    $category->parent_id = array_key_exists('parent_id', $data)
+      ? (isset($data['parent_id']) ? (int) $data['parent_id'] : null)
+      : $category->parent_id;
+
+    if (array_key_exists('meta', $data)) {
+      $category->meta = is_string($data['meta'])
+        ? $data['meta']
+        : json_encode($data['meta']);
+    }
+
+    return $this->_categoryStore->update($category);
   }
 
-  /**
-   * Tạo mới một danh mục.
-   *
-   * @public
-   * @param array $data Dữ liệu danh mục gồm name, slug, description, parent_id, meta
-   * @return int ID của danh mục vừa tạo
-   */
-  public function create(array $data): int
+  public function deleteCategory(int $id): bool
   {
-    $stmt = $this->db->prepare("
-      INSERT INTO `categories` (`name`, `slug`, `description`, `parent_id`, `meta`)
-      VALUES (:name, :slug, :description, :parent_id, :meta)
-    ");
-    $stmt->execute([
-      ':name' => $data['name'],
-      ':slug' => $data['slug'] ?? null,
-      ':description' => $data['description'] ?? null,
-      ':parent_id' => $data['parent_id'] ?? null,
-      ':meta' => isset($data['meta']) ? json_encode($data['meta']) : null,
-    ]);
-
-    return (int) $this->db->lastInsertId();
+    return $this->_categoryStore->softDelete($id);
   }
 
-  /**
-   * Cập nhật thông tin một danh mục theo ID.
-   *
-   * @public
-   * @param int $id ID của danh mục cần cập nhật
-   * @param array $data Dữ liệu mới gồm name, slug, description, parent_id, meta
-   * @return bool True nếu cập nhật thành công
-   */
-  public function update(int $id, array $data): bool
-  {
-    $stmt = $this->db->prepare("
-      UPDATE `categories` SET
-        `name`        = :name,
-        `slug`        = :slug,
-        `description` = :description,
-        `parent_id`   = :parent_id,
-        `meta`        = :meta,
-        `updated_at`  = NOW()
-      WHERE `id` = :id AND `deleted_at` IS NULL
-    ");
-
-    return $stmt->execute([
-      ':name' => $data['name'],
-      ':slug' => $data['slug'] ?? null,
-      ':description' => $data['description'] ?? null,
-      ':parent_id' => $data['parent_id'] ?? null,
-      ':meta' => isset($data['meta']) ? json_encode($data['meta']) : null,
-      ':id' => $id,
-    ]);
-  }
-
-  /**
-   * Xóa mềm một danh mục bằng cách ghi nhận thời gian xóa.
-   *
-   * @public
-   * @param int $id ID của danh mục cần xóa
-   * @return bool True nếu xóa thành công
-   */
-  public function delete(int $id): bool
-  {
-    $stmt = $this->db->prepare("
-      UPDATE `categories` SET `deleted_at` = NOW()
-      WHERE `id` = :id AND `deleted_at` IS NULL
-    ");
-
-    return $stmt->execute([':id' => $id]);
-  }
-
-  /**
-   * Kiểm tra slug có duy nhất trong bảng categories hay không.
-   * Có thể loại trừ một ID cụ thể khi dùng cho trường hợp cập nhật.
-   *
-   * @public
-   * @param string $slug Slug cần kiểm tra
-   * @param int|null $excludeId ID danh mục cần loại trừ (dùng khi update)
-   * @return bool True nếu slug chưa được dùng
-   */
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool
   {
-    $sql = "SELECT COUNT(*) FROM `categories` WHERE `slug` = :slug AND `deleted_at` IS NULL";
-    $params = [':slug' => $slug];
-
-    if ($excludeId) {
-      $sql .= " AND `id` != :exclude_id";
-      $params[':exclude_id'] = $excludeId;
-    }
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($params);
-
-    return $stmt->fetchColumn() == 0;
+    return $this->_categoryStore->isSlugUnique($slug, $excludeId);
   }
-  public function getTotalCategoriesCount(): int
-  {
-    $sql = "SELECT COUNT(c.id) 
-            FROM `categories` c
-            WHERE c.`deleted_at` IS NULL";
 
-    $stmt = $this->db->query($sql);
-
-    return (int) $stmt->fetchColumn();
-  }
 }
