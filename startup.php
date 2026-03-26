@@ -18,6 +18,8 @@ require_once BASE_PATH . '/stores/student_store.php';
 require_once BASE_PATH . '/stores/teacher_store.php';
 require_once BASE_PATH . '/stores/category_store.php';
 require_once BASE_PATH . '/stores/menu_store.php';
+require_once BASE_PATH . '/stores/web_setting_store.php';
+require_once BASE_PATH . '/stores/carousel_store.php';
 
 // Services
 require_once BASE_PATH . '/services/student_service.php';

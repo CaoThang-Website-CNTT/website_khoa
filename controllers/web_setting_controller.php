@@ -1,8 +1,10 @@
 <?php
 namespace App\Controllers;
+
 require_once BASE_PATH . '/includes/core/controller.php';
 require_once BASE_PATH . '/includes/core/request_validator.php';
-require_once BASE_PATH . '/services/web_settings_service.php';
+require_once BASE_PATH . '/services/web_setting_service.php';
+
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Validator;

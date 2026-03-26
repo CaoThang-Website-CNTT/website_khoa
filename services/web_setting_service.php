@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-require_once BASE_PATH . '/stores/web_settings_store.php';
+require_once BASE_PATH . '/stores/web_setting_store.php';
 require_once BASE_PATH . '/models/web_setting.php';
 
 use App\Stores\WebSettingsStore;
