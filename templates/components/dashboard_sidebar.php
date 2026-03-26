@@ -70,6 +70,9 @@
                       <a href="<?= url('admin/students') ?>" class="sidebar__menu-sub-item-btn">Sinh Viên</a>
                     </li>
                     <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('admin/classrooms') ?>" class="sidebar__menu-sub-item-btn">Lớp Học</a>
+                    </li>
+                    <li class="sidebar__menu-sub-item">
                       <a href="<?= url('admin/teachers') ?>" class="sidebar__menu-sub-item-btn">Giảng Viên</a>
                     </li>
                   </ul>

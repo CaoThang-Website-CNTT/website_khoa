@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController};
+use App\Controllers\{DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController};
 
 $router->get('/', [SiteController::class, 'index']);
 $router->get('/admin', [DashboardController::class, 'index']);
@@ -22,6 +22,14 @@ $router->post('/admin/teachers', [TeacherController::class, 'store']);
 $router->get('/admin/teachers/{id}', [TeacherController::class, 'edit']);
 $router->post('/admin/teachers/{id}', [TeacherController::class, 'update']);
 $router->post('/admin/teachers/delete/{id}', [TeacherController::class, 'destroy']);
+
+// Classrooms
+$router->get('/admin/classrooms', [ClassroomController::class, 'index']);
+$router->get('/admin/classrooms/create', [ClassroomController::class, 'create']);
+$router->post('/admin/classrooms', [ClassroomController::class, 'store']);
+$router->get('/admin/classrooms/{id}', [ClassroomController::class, 'edit']);
+$router->post('/admin/classrooms/{id}', [ClassroomController::class, 'update']);
+$router->post('/admin/classrooms/delete/{id}', [ClassroomController::class, 'destroy']);
 
 // Categories
 $router->get('/admin/categories', [CategoryController::class, 'index']);
