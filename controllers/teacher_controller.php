@@ -22,7 +22,7 @@ class TeacherController extends Controller
   {
     $currentPage = $request->query('page') ?? 1;
 
-    $data = $this->_teacherService->getAllTeachers($currentPage);
+    $data = $this->_teacherService->getTeachersPaginated($currentPage);
 
     $this->render('admin/teachers/index', [
       'data' => $data,

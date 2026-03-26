@@ -14,6 +14,9 @@ interface ITeacherStore
   /** @return Teacher[] */
   public function getAll(int $pageTo, int $limit = 15): array;
 
+  /** @return Teacher[] */
+  public function getPaginated(int $pageTo, int $limit = 15): array;
+
   public function getById(int $id): ?Teacher;
 
   /** @return Teacher[] */
@@ -50,7 +53,23 @@ class TeacherStore extends Store implements ITeacherStore
 
     return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
+  public function getPaginated(int $pageTo, int $limit = 15): array
+  {
+    $offset = (max(1, $pageTo) - 1) * $limit;
 
+    $sql = "
+      SELECT *
+      FROM `teachers`
+      LIMIT :limit OFFSET :offset
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
   public function getById(int $id): ?Teacher
   {
     $sql = "

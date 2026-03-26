@@ -16,8 +16,8 @@ use App\Core\Pageable;
 interface ITeacherService
 {
   /** @return Pageable */
-  public function getAllTeachers(int $page, int $limit = 15): Pageable;
-
+  /** @return Pageable */
+  public function getTeachersPaginated(int $page, int $limit = 15): Pageable;
   public function getTotalTeachersCount(): int;
 
   public function isEmailUnique(string $email): bool;
@@ -45,7 +45,7 @@ class TeacherService implements ITeacherService
   }
 
   /** @return Pageable */
-  public function getAllTeachers(int $page, int $limit = 15): Pageable
+  public function getTeachersPaginated(int $page, int $limit = 15): Pageable
   {
     $teachers = $this->_teacherStore->getAll($page, $limit);
     $total = $this->_teacherStore->getTotalCount();
