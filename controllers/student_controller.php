@@ -32,14 +32,12 @@ class StudentController extends Controller
     $currentPage = $request->query('page') ?? 1;
     $sortCol = $request->query('sort') ?? 'account_id';
     $sortDir = $request->query('dir') ?? 'ASC';
+    $search = $request->query('search') ?? '';
     $limit = 15;
 
-    $students = $this->_educationService->getAllStudents($currentPage, $limit, $sortCol, $sortDir);
-    $total = $this->_educationService->getTotalStudentsCount();
-
     try {
-      $students = $this->_educationService->getAllStudents($currentPage, $limit, $sortCol, $sortDir);
-      $total = $this->_educationService->getTotalStudentsCount();
+      $students = $this->_educationService->getAllStudents($currentPage, $limit, $sortCol, $sortDir, $search);
+      $total = $this->_educationService->getTotalStudentsCount($search);
 
       $responseData = [
         'items'       => $students,

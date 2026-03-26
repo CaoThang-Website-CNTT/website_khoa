@@ -19,13 +19,13 @@ interface IEducationRepository
 {
   // Student
   /** @return Student[] */
-  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'DESC'): array;
+  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'DESC', string $search = ''): array;
   public function getStudentById(int $id): ?Student;
   public function createStudent(array $student, string $rawPassword): int;
   public function updateStudent(int $id, Student $student): bool;
   public function deleteStudent(int $id): bool;
   public function importStudents(array $students): void;
-  public function getTotalStudentsCount(): int;
+  public function getTotalStudentsCount(string $search = ''): int;
 
   // Teacher
   /** @return Teacher[] */
@@ -117,22 +117,32 @@ class EducationService implements IEducationRepository
   // ===================================
   // Student Methods
   // ===================================
-  public function getTotalStudentsCount(): int
+  public function getTotalStudentsCount(string $search = ''): int
   {
     $sql = "SELECT COUNT(s.account_id) 
             FROM `students` s
             INNER JOIN `accounts` a ON s.`account_id` = a.`id`
             WHERE a.`deleted_at` IS NULL";
 
-    $stmt = $this->db->query($sql);
+    if (!empty($search)) {
+      $sql .= " AND (s.full_name LIKE :s1 OR s.student_id LIKE :s2 OR a.email LIKE :s3)";
+    }
+
+    $stmt = $this->db->prepare($sql);
+    if (!empty($search)) {
+      $term = "%$search%";
+      $stmt->bindValue(':s1', $term);
+      $stmt->bindValue(':s2', $term);
+      $stmt->bindValue(':s3', $term);
+    }
+    $stmt->execute();
 
     return (int) $stmt->fetchColumn();
   }
 
-  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'ASC'): array
+  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'ASC', string $search = ''): array
   {
     $offset = (max(1, $pageTo) - 1) * $limit;
-
     $allowedSortColumns = [
       'account_id' => 's.account_id',
       'full_name'  => 's.full_name',
@@ -151,13 +161,24 @@ class EducationService implements IEducationRepository
                 a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
             FROM `students` s
             INNER JOIN `accounts` a ON s.`account_id` = a.`id`
-            WHERE a.`deleted_at` IS NULL 
-            ORDER BY {$orderBy} {$direction}
-            LIMIT :limit OFFSET :offset";
+            WHERE a.`deleted_at` IS NULL";
+
+    if (!empty($search)) {
+      $sql .= " AND (s.full_name LIKE :s1 OR s.student_id LIKE :s2 OR a.email LIKE :s3)";
+    }
+
+    $sql .= " ORDER BY {$orderBy} {$direction} LIMIT :limit OFFSET :offset";
 
     $stmt = $this->db->prepare($sql);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+    if (!empty($search)) {
+      $term = "%$search%";
+      $stmt->bindValue(':s1', $term);
+      $stmt->bindValue(':s2', $term);
+      $stmt->bindValue(':s3', $term);
+    }
     $stmt->execute();
 
     return array_map(fn($row) => Student::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));

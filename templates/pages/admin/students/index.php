@@ -42,6 +42,13 @@
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
+<div class="tm-toolbar">
+  <div class="search-bar flex items-center px-4 gap-2 rounded-xl text-sm">
+    <i class="fa-brands fa-sistrix"></i>
+    <input class="search-bar__input" type="text" placeholder="Tìm tên, MSSV, email" id="student-search"
+      autocomplete="off" autocorrect="off">
+  </div>
+</div>
 <table id="student-table" class="data-table tm">
   <thead>
     <tr>
@@ -69,6 +76,7 @@
       apiUrl: '<?= url("api/students") ?>',
       defaultSort: 'account_id',
       defaultDir: 'ASC',
+      searchSelector: '#student-search',
       renderRow: function(student) {
         const detailUrl = `<?= url('admin/students/') ?>${student.account_id}`;
 

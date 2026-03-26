@@ -17,6 +17,31 @@ class TableManager {
     this.sortCol = config.defaultSort || "id";
     this.sortDir = config.defaultDir || "ASC";
     this.initSortableHeaders();
+    // Tìm kiếm
+    this.searchTerm = "";
+    if (config.searchSelector) {
+      this.initSearch(config.searchSelector);
+    }
+  }
+  debounce(func, timeout = 500) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        func.apply(this, args);
+      }, timeout);
+    };
+  }
+  initSearch(selector) {
+    const searchInput = document.querySelector(selector);
+    if (!searchInput) return;
+
+    const handleSearch = this.debounce((e) => {
+      this.searchTerm = e.target.value.trim();
+      this.loadData(1);
+    });
+
+    searchInput.addEventListener("input", handleSearch);
   }
   initSortableHeaders() {
     const headers = document.querySelectorAll(
@@ -79,6 +104,11 @@ class TableManager {
 
       url.searchParams.append("sort", this.sortCol);
       url.searchParams.append("dir", this.sortDir);
+
+      if (this.searchTerm) {
+        url.searchParams.append("search", this.searchTerm);
+      }
+      console.log(url);
 
       const response = await fetch(url);
       const result = await response.json();
