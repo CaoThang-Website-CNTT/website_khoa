@@ -16,7 +16,7 @@
       <h2 class="title text-2xl font-semibold">
         Sinh Viên
         <span class="badge" data-variant="primary">
-          <?= (int) count($students ?? []) ?>
+          <?= $data->getTotal() ?>
         </span>
       </h2>
     </div>
@@ -24,17 +24,11 @@
     <div class="flex gap-2">
       <div>
         <a href="<?= url('admin/students/create') ?>" data-variant="primary" data-size="md" class="btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-            <path
-              d="M256 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 160-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0 0 160c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160 160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-160z" />
-          </svg>
+          <i class="fa-solid fa-plus"></i>
           Thêm
         </a>
         <a href="<?= url('admin/students/import') ?>" data-variant="outline" data-size="md" class="btn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-            <path
-              d="M64 0C28.7 0 0 28.7 0 64l0 240 182.1 0-31-31c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l72 72c9.4 9.4 9.4 24.6 0 33.9l-72 72c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l31-31-182.1 0 0 96c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-277.5c0-17-6.7-33.3-18.7-45.3L258.7 18.7C246.7 6.7 230.5 0 213.5 0L64 0zM325.5 176L232 176c-13.3 0-24-10.7-24-24L208 58.5 325.5 176z" />
-          </svg>
+          <i class="fa-solid fa-file-import"></i>
           Nhập
         </a>
       </div>
@@ -51,7 +45,7 @@
           <h6>Name</h6>
         </th>
         <th>
-          <h6>Email</h6>
+          <h6>MSSV</h6>
         </th>
         <th>
           <h6>Gender</h6>
@@ -66,31 +60,31 @@
     </thead>
     <tbody>
       <?php if (!empty($data->getItems())): ?>
-        <?php foreach ($data->getItems() as $index => $user): ?>
-          <tr onclick="window.location.href='<?= url('admin/students/' . $user->account_id) ?>'">
-            <td class="data-table__id">#
-              <?= htmlspecialchars($user->account_id ?? 'N/A') ?>
+        <?php foreach ($data->getItems() as $index => $student): ?>
+          <tr onclick="window.location.href='<?= url('admin/students/' . $student->account_id) ?>'">
+            <td class="data-table__id">
+              <?= '#' . htmlspecialchars($student->id ?? 'N/A') ?>
             </td>
             <td>
-              <?= htmlspecialchars($user->full_name ?? 'N/A') ?>
+              <?= htmlspecialchars($student->full_name ?? 'N/A') ?>
             </td>
             <td>
-              <?= htmlspecialchars($user->account->email ?? 'N/A') ?>
+              <?= htmlspecialchars($student->student_id ?? 'N/A') ?>
             </td>
             <td>
-              <?= htmlspecialchars($user->gender ?? 'N/A') ?>
+              <?= htmlspecialchars($student->gender ?? 'N/A') ?>
             </td>
             <td>
-              <?= htmlspecialchars($user->dob ?? 'N/A') ?>
+              <?= htmlspecialchars($student->dob ?? 'N/A') ?>
             </td>
             <td>
-              <?= htmlspecialchars($user->phone ?? 'N/A') ?>
+              <?= htmlspecialchars($student->phone ?? 'N/A') ?>
             </td>
           </tr>
         <?php endforeach; ?>
       <?php else: ?>
         <tr>
-          <td colspan="6" class="text-center">No students found.</td>
+          <td colspan="6" class="text-center">Không tìm thấy Sinh Viên nào.</td>
         </tr>
       <?php endif; ?>
     </tbody>

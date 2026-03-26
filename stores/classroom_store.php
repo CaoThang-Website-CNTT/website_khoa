@@ -30,6 +30,8 @@ interface IClassroomStore
   /** @return Major[] */
   public function getAllMajors(): array;
   public function getMajorById(int $id): ?Major;
+  /** @return Major[] */
+  public function getByMajorIds(array $majorIds): array;
   public function createMajor(Major $major): int;
   public function updateMajor(Major $major): bool;
   public function softDeleteMajor(int $id): bool;
@@ -37,6 +39,8 @@ interface IClassroomStore
   /** @return Specialization[] */
   public function getSpecializationsByMajorId(int $majorId): array;
   public function getSpecializationById(int $id): ?Specialization;
+  /** @return Specialization[]*/
+  public function getBySpecializationIds(array $specializationIds): array;
   public function createSpecialization(Specialization $specialization): int;
   public function updateSpecialization(Specialization $specialization): bool;
   public function softDeleteSpecialization(int $id): bool;
@@ -232,6 +236,27 @@ class ClassroomStore extends Store implements IClassroomStore
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Major::fromArray($row) : null;
   }
+  /** @return Major[] */
+  public function getByMajorIds(array $majorIds): array
+  {
+    if (empty($majorIds)) {
+      return [];
+    }
+
+    $placeholders = str_repeat('?,', count($majorIds) - 1) . '?';
+
+    $sql = "
+      SELECT *
+      FROM majors
+      WHERE id IN ($placeholders) AND deleted_at IS NULL
+      ORDER BY level, full_name
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($majorIds);
+
+    return array_map(fn($row) => Major::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
 
   public function createMajor(Major $major): int
   {
@@ -301,6 +326,28 @@ class ClassroomStore extends Store implements IClassroomStore
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Specialization::fromArray($row) : null;
+  }
+
+  /** @return Specialization[] */
+  public function getBySpecializationIds(array $specializationIds): array
+  {
+    if (empty($specializationIds)) {
+      return [];
+    }
+
+    $placeholders = str_repeat('?,', count($specializationIds) - 1) . '?';
+
+    $sql = "
+      SELECT *
+      FROM specializations
+      WHERE id IN ($placeholders) AND deleted_at IS NULL
+      ORDER BY full_name
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($specializationIds);
+
+    return array_map(fn($row) => Specialization::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function createSpecialization(Specialization $specialization): int

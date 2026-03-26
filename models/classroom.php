@@ -5,12 +5,13 @@ namespace App\Models;
 class Classroom
 {
   public function __construct(
-    public int $id,
-    public int $major_id,
-    public int $class_of,
-    public ?int $specialization_id,
-    public ?string $letter,
-    public string $short_name,
+    public ?int $id = null,
+    public ?int $major_id = null,
+    public ?int $class_of = null,
+    public ?int $specialization_id = null,
+    public ?string $letter = null,
+    public string $short_name = '',
+
     public ?string $created_at = null,
     public ?string $updated_at = null,
     public ?string $deleted_at = null,
