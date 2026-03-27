@@ -5,8 +5,8 @@ function renderCarousel(array $carouselSlides): void
     return;
   }
   ?>
-  <div class="carousel py-8 relative" id="landingCarousel">
-    <div class="carousel__inner flex" id="carouselInner">
+  <div class="carousel py-8" id="landingCarousel">
+    <div class="carousel__inner" id="carouselInner">
 
       <?php foreach ($carouselSlides as $slide): ?>
         <?php
@@ -40,8 +40,7 @@ function renderCarousel(array $carouselSlides): void
               <?php if ($slide->hasCta()): ?>
                 <div>
                   <a href="<?= htmlspecialchars(url($slide->cta_url)) ?>"
-                    data-variant="<?= htmlspecialchars($slide->cta_variant) ?>"
-                    class="carousel__btn px-8 py-2 rounded-3xl text-sm font-medium inline-block <?= $slide->cta_variant === 'secondary' ? 'bouncy-btn' : '' ?>">
+                    data-variant="<?= htmlspecialchars($slide->cta_variant) ?>" class="btn px-8 py-2 rounded-3xl bouncy-btn">
                     <?= htmlspecialchars($slide->cta_label) ?>
                   </a>
                 </div>
@@ -59,19 +58,15 @@ function renderCarousel(array $carouselSlides): void
 
     </div>
 
-    <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--prev"
-      id="prevBtn">
+    <button class="carousel__control carousel__control--prev">
       <i class="fa-solid fa-angle-left"></i>
     </button>
-    <button class="carousel__control absolute rounded-full flex justify-center items-center carousel__control--next"
-      id="nextBtn">
+    <button class="carousel__control carousel__control--next">
       <i class="fa-solid fa-angle-right"></i>
     </button>
 
-    <div class="carousel__indicators z-10 flex justify-center gap-2" id="indicators">
+    <div class="carousel__indicators">
     </div>
-
-    <script src="<?= url('public/js/carousel.js') ?>"></script>
   </div>
   <?php
 }

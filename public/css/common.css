@@ -1001,6 +1001,136 @@
     flex-shrink: 0;
   }
 
+  /* ==========================================================================
+   DROPDOWN
+   ========================================================================== */
+  .carousel {
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--primary-foreground);
+  }
+
+  .carousel__inner {
+    display: flex;
+    transition: transform 0.6s ease-in-out;
+    width: 100%;
+  }
+
+  .carousel__item {
+    min-width: 100%;
+    padding: 2rem 6rem;
+  }
+
+  @media (max-width: 992px) {
+    .carousel__item {
+      flex-direction: column;
+      text-align: center;
+      gap: 2rem;
+    }
+  }
+
+  .carousel__content {
+    flex: 1;
+  }
+
+  .carousel__title {
+    color: var(--primary-foreground);
+  }
+
+  .carousel__title span {
+    color: var(--primary-alt);
+  }
+
+  .carousel__description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.95;
+  }
+
+  .carousel__btn {
+    background: var(--secondary);
+    color: var(--secondary-foreground-alt);
+  }
+
+  .carousel__image-wrapper {
+    flex: 1;
+    max-width: 50%;
+    overflow: hidden;
+    box-shadow: var(--shadow-2xl);
+  }
+
+  .carousel__control {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: color-mix(in oklab, var(--input) 25%, transparent);
+    border-radius: calc(infinity * 1px);
+    color: var(--primary-foreground);
+    border: none;
+    width: 3rem;
+    height: 3rem;
+    cursor: pointer;
+    transition: all 250ms ease;
+    backdrop-filter: blur(4px);
+  }
+
+  .carousel__control:hover {
+    background-color: color-mix(in oklab, var(--input) 40%, transparent);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .carousel__control--prev {
+    left: 0.5rem;
+  }
+
+  .carousel__control--next {
+    right: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .carousel__control--prev {
+      left: 1rem;
+    }
+
+    .carousel__control--next {
+      right: 1rem;
+    }
+
+    .carousel__control {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+
+  .carousel__indicators {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    z-index: 10;
+    bottom: 1rem;
+    left: 50%;
+  }
+
+  .carousel__indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: var(--primary-foreground);
+    opacity: 0.4;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .carousel__indicator[data-state="active"],
+  .carousel__indicator:hover {
+    opacity: 1;
+    background-color: var(--primary-foreground);
+  }
+
   .banner {
     color: var(--primary-foreground);
     background: var(--banner-background);

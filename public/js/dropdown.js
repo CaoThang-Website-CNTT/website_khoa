@@ -402,7 +402,7 @@ class DropdownHandler {
   _isOverflowing(panel, left, top) {
     const { VIEWPORT_MARGIN: margin } = DropdownHandler;
     if (typeof isInViewport === 'function') {
-      return !isInViewport(panel, -margin);
+      return !Utils.isInViewport(panel, -margin);
     }
     const viewportWidth = document.documentElement.clientWidth;
     const viewportHeight = document.documentElement.clientHeight;

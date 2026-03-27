@@ -23,7 +23,6 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
-<link rel="stylesheet" href="<?= url('public/css/carousel.css') ?>">
 
 <!-- ========== All JS files linkup ========= -->
 <script src="<?= url('/public/js/utils.js') ?>"></script>

@@ -1,4 +1,5 @@
 <!-- ========= All Javascript files linkup ======== -->
+<script src="<?= url('/public/js/utils.js') ?>"></script>
 <script src="<?= url('/public/js/dashboard.js') ?>"></script>
 <script src="<?= url('/public/js/modal.js') ?>"></script>
 <script src="<?= url('/public/js/switch.js') ?>"></script>
