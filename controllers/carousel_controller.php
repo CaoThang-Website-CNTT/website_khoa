@@ -20,10 +20,10 @@ class CarouselController extends Controller
     $this->_carouselService = $carouselService;
   }
 
-  public function index(Request $request)
+  public function index()
   {
-    $page = $this->_carouselService->getPaginated((int) ($request->query('page') ?? 1));
-    $this->render('admin/carousels/index', ['page' => $page], layout: 'dashboard_layout');
+    $data = $this->_carouselService->getAllWithSlides();
+    $this->render('admin/carousels/index', ['data' => $data], layout: 'dashboard_layout');
   }
 
   public function create()

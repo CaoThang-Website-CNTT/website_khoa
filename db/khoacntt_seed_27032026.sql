@@ -258,7 +258,8 @@ INSERT INTO `categories` (`id`, `name`, `slug`, `type`, `parent_id`) VALUES
 INSERT INTO `carousels` (`id`, `name`, `slug`) VALUES
 (1, 'Slider Trang chủ', 'home-slider'),
 (2, 'Slider Tuyển sinh', 'admission-slider'),
-(3, 'Slider Hoạt động Đoàn', 'youth-union-slider');
+(3, 'Slider Hoạt động Đoàn', 'youth-union-slider'),
+(4, 'Landing Page', 'landing-page');
 
 INSERT INTO `carousel_slides` (`carousel_id`, `title`, `image_path`, `sort_order`) VALUES
 -- Home Slider (8 slides)
@@ -284,6 +285,36 @@ INSERT INTO `carousel_slides` (`carousel_id`, `title`, `image_path`, `sort_order
 (3, 'Hiến máu tình nguyện', '/uploads/slides/youth4.jpg', 4),
 (3, 'Văn nghệ chào mừng 20/11', '/uploads/slides/youth5.jpg', 5),
 (3, 'Lễ ra quân thanh niên xung kích', '/uploads/slides/youth6.jpg', 6);
+
+INSERT INTO `carousel_slides`
+  (`carousel_id`, `title`, `title_highlight`, `description`, `image_path`, `image_alt`, `cta_label`, `cta_url`, `cta_variant`, `sort_order`, `is_active`)
+VALUES
+  (
+    4,
+    'Môi trường học tập',
+    'Chuyên nghiệp & Sáng tạo',
+    'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.',
+    'https://images.unsplash.com/photo-1524178232363-1fb2b075b655',
+    'Lecture hall with students',
+    'Tìm hiểu thêm',
+    '#',
+    'secondary',
+    1,
+    1
+  ),
+  (
+    4,
+    'Công nghệ tiên tiến',
+    'Hỗ trợ học tập 24/7',
+    'Hệ thống học trực tuyến hiện đại, tài liệu số hóa đầy đủ, và phòng lab công nghệ cao giúp bạn học mọi lúc, mọi nơi.',
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4',
+    'Modern computer lab',
+    'Khám phá ngay',
+    '#',
+    'primary',
+    2,
+    1
+  );
 
 
 -- ----------------------------------------------------------------------------

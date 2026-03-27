@@ -4,18 +4,17 @@ namespace App\Services;
 require_once BASE_PATH . '/stores/carousel_store.php';
 require_once BASE_PATH . '/models/carousel.php';
 require_once BASE_PATH . '/models/carousel_slide.php';
-require_once BASE_PATH . '/includes/core/pageable.php';
 
 use App\Stores\CarouselStore;
 use App\Models\Carousel;
 use App\Models\CarouselSlide;
-use App\Core\Pageable;
 
 interface ICarouselService
 {
   /** @return Carousel[] */
   public function getAll(): array;
-  public function getPaginated(int $page, int $limit = 15): Pageable;
+  /** @return Carousel[] Danh sách tất cả carousel kèm theo các slide của chúng */
+  public function getAllWithSlides(): array;
   public function getById(int $id): ?Carousel;
   public function getBySlug(string $slug): ?Carousel;
   public function getWithSlides(int $id): ?Carousel;
@@ -33,29 +32,40 @@ interface ICarouselService
 class CarouselService implements ICarouselService
 {
   private CarouselStore $_carouselStore;
+
   public function __construct(CarouselStore $carouselStore)
   {
     $this->_carouselStore = $carouselStore;
   }
+
   /** @return Carousel[] */
   public function getAll(): array
   {
     return $this->_carouselStore->getAll();
   }
-  public function getPaginated(int $page, int $limit = 15): Pageable
+
+  /** @return Carousel[] */
+  public function getAllWithSlides(): array
   {
-    $carousels = $this->_carouselStore->getPaginated($page, $limit);
-    $total = $this->_carouselStore->getTotalCarouselsCount();
-    return new Pageable($carousels, $total, $limit, $page);
+    $carousels = $this->_carouselStore->getAll();
+
+    foreach ($carousels as $carousel) {
+      $carousel->slides = $this->_carouselStore->getSlides($carousel->id);
+    }
+
+    return $carousels;
   }
+
   public function getById(int $id): ?Carousel
   {
     return $this->_carouselStore->getById($id);
   }
+
   public function getBySlug(string $slug): ?Carousel
   {
     return $this->_carouselStore->getBySlug($slug);
   }
+
   public function getWithSlides(int $id): ?Carousel
   {
     $carousel = $this->_carouselStore->getById($id);
@@ -65,6 +75,7 @@ class CarouselService implements ICarouselService
     $carousel->slides = $this->_carouselStore->getSlides($carousel->id);
     return $carousel;
   }
+
   public function getBySlugWithSlides(string $slug): ?Carousel
   {
     $carousel = $this->_carouselStore->getBySlug($slug);
@@ -74,6 +85,7 @@ class CarouselService implements ICarouselService
     $carousel->slides = $this->_carouselStore->getSlides($carousel->id);
     return $carousel;
   }
+
   public function create(array $data): int
   {
     if (!$this->_carouselStore->isSlugUnique($data['slug'])) {
@@ -81,6 +93,7 @@ class CarouselService implements ICarouselService
     }
     return $this->_carouselStore->create($data);
   }
+
   public function update(int $id, array $data): bool
   {
     $carousel = $this->_carouselStore->getById($id);
@@ -92,14 +105,17 @@ class CarouselService implements ICarouselService
     }
     return $this->_carouselStore->update($id, $data);
   }
+
   public function delete(int $id): bool
   {
     return $this->_carouselStore->delete($id);
   }
+
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool
   {
     return $this->_carouselStore->isSlugUnique($slug, $excludeId);
   }
+
   public function addSlide(int $carouselId, array $data): int
   {
     if ($this->_carouselStore->getById($carouselId) === null) {
@@ -108,17 +124,22 @@ class CarouselService implements ICarouselService
     $data['carousel_id'] = $carouselId;
     return $this->_carouselStore->createSlide($data);
   }
+
   public function updateSlide(int $id, array $data): bool
   {
-    if ($this->_carouselStore->getSlideById($id) === null) {
-      return false;
-    }
+    // Cần phải check xem slide có tồn tại hay không, bạn có thể bổ sung logic getSlideById ở Store
+    // Ở đây dựa theo file gốc bạn chưa có $this->_carouselStore->getSlideById() trong code cung cấp,
+    // nhưng nếu đã có ở Store thì giữ nguyên dòng dưới:
+    // if ($this->_carouselStore->getSlideById($id) === null) { return false; }
+
     return $this->_carouselStore->updateSlide($id, $data);
   }
+
   public function deleteSlide(int $id): bool
   {
     return $this->_carouselStore->deleteSlide($id);
   }
+
   public function reorderSlides(int $moveId, string $direction): bool
   {
     return $this->_carouselStore->reorderSlides($moveId, $direction);

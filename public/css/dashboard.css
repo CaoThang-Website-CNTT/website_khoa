@@ -375,3 +375,74 @@ body {
 .detail-layout--reverse .detail-layout__sidebar {
   order: 1;
 }
+
+.carousel-card {
+  padding: 0;
+}
+
+.carousel-card .carousel__item {
+  position: relative;
+  padding: 0;
+}
+
+.carousel-card .carousel__content {
+  position: absolute;
+  left: 1rem;
+  bottom: 1.75rem;
+  z-index: 15;
+}
+
+.carousel-card .carousel__description {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  width: 40%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
+}
+
+.carousel-card .carousel__image-wrapper {
+  background-color: black;
+  width: 100%;
+  height: 20rem;
+  max-width: unset;
+  box-shadow: none;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+
+.carousel-card .carousel__image-wrapper::after {
+  position: absolute;
+  content: "";
+  inset: 0 0;
+  background: color-mix(in oklab, black 25%, transparent);
+}
+
+.carousel-card .carousel__control {
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  color: var(--input);
+  border: 2px solid var(--input);
+  z-index: 15;
+}
+
+.carousel-card .carousel__indicators {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 0.25rem;
+}
+
+.carousel-card .carousel__indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.carousel-card .carousel__indicator[data-state="active"] {
+  width: 1rem;
+  border-radius: var(--radius-lg);
+}

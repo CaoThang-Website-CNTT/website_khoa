@@ -8,14 +8,13 @@
     });
   </script>
 <?php endif; ?>
-
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
     <div>
       <h2 class="title text-2xl font-semibold">
         Quản lý Carousel
         <span class="badge" data-variant="primary">
-          <?= (int) count($carousels ?? []) ?>
+          <?= count($data ?? []); ?>
         </span>
       </h2>
     </div>
@@ -27,53 +26,77 @@
     </div>
   </div>
 </div>
-<div class="table-wrapper">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>
-          <h6>ID</h6>
-        </th>
-        <th>
-          <h6>Tên Carousel</h6>
-        </th>
-        <th>
-          <h6>Slug</h6>
-        </th>
-        <th>
-          <h6>Trạng thái</h6>
-        </th>
-        <th>
-          <h6>Ngày tạo</h6>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($carousels)): ?>
-        <?php foreach ($carousels as $carousel): ?>
-          <tr onclick="window.location.href='<?= url('admin/carousels/' . $carousel->id) ?>'"
-            class="cursor-pointer hover:bg-slate-50">
-            <td class="data-table__id">#<?= $carousel->id ?></td>
-            <td class="font-medium"><?= htmlspecialchars($carousel->name ?? 'N/A') ?></td>
-            <td>
-              <code><?= htmlspecialchars($carousel->slug ?? 'N/A') ?></code>
-            </td>
-            <td>
-              <?php if ($carousel->isActive()): ?>
-                <span class="badge" data-variant="success">Đang hoạt động</span>
-              <?php else: ?>
-                <span class="badge" data-variant="secondary">Đã ẩn</span>
-              <?php endif; ?>
-            </td>
-            <td><?= date('d/m/Y H:i', strtotime($carousel->created_at)) ?></td>
-          </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="5" class="text-center py-4">Chưa có carousel nào.</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
+<div class="grid grid-cols-2 gap-2">
+  <?php if (!empty($data)): ?>
+    <?php foreach ($data as $index => $carousel): ?>
+      <div class="carousel-card card shadow">
+        <?= renderCarousel($carousel->id, $carousel->slides); ?>
+        <div class="card__header"></div>
+        <div class="card__content">
+          <div class="card__title">
+            <?= $carousel->name ?>
+          </div>
+          <div class="card__description">
+            <?= $carousel->slug ?>
+          </div>
+        </div>
+        <div class="card__footer">
+          <div class="flex justify-between">
+            <?= $carousel->updated_at ?>
+            <?php if ($carousel->is_active): ?>
+              <span class="badge" data-variant="primary">Đang hoạt động</span>
+            <?php else: ?>
+              <span class="badge" data-variant="desctructive">Ngừng hoạt động</span>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
 </div>
+<?php
+function renderCarousel(string $id, array $carouselSlides): void
+{
+  if (empty($carouselSlides)) {
+    return;
+  }
+  ?>
+  <div class="carousel" id=<?= "carousel-" . $id ?>>
+    <a href="<?= url("admin/carousels/" . $id) ?>" class="carousel__inner" id=<?= "carouselInner-" . $id ?>>
+      <?php foreach ($carouselSlides as $index => $slide): ?>
+        <?php
+        // Bỏ qua các slide không được kích hoạt
+        if (!$slide->isActive())
+          continue;
+        ?>
+        <div class="carousel__item">
+
+          <div class="carousel__content">
+            <div class="carousel__title">
+              <?= $slide->title ?>
+            </div>
+            <p class="carousel__description">
+              <?= $slide->description ?>
+            </p>
+          </div>
+          <div class="carousel__image-wrapper">
+            <img src="<?= htmlspecialchars($slide->image_path) ?>"
+              alt="<?= htmlspecialchars($slide->image_alt ?: $slide->title) ?>" class="image carousel__image">
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </a>
+
+    <button class="carousel__control carousel__control--prev">
+      <i class="fa-solid fa-angle-left"></i>
+    </button>
+    <button class="carousel__control carousel__control--next">
+      <i class="fa-solid fa-angle-right"></i>
+    </button>
+
+    <div class="carousel__indicators">
+    </div>
+  </div>
+  <?php
+}
+?>
