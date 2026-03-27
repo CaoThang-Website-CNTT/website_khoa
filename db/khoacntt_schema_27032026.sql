@@ -178,6 +178,7 @@ CREATE TABLE `web_settings` (
   `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `key` VARCHAR(120) NOT NULL UNIQUE,
   `group` VARCHAR(60) NOT NULL DEFAULT 'general',
+  `group_label` VARCHAR(60) NOT NULL DEFAULT 'General',
   `type` ENUM('string','text','email','url','json','bool','int','float','datetime') NOT NULL DEFAULT 'string',
   `value` MEDIUMTEXT NULL,
   `default_value` TEXT NULL,

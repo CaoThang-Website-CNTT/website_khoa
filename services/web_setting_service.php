@@ -24,6 +24,10 @@ interface IWebSettingsService
   public function isKeyUnique(string $key, ?int $excludeId = null): bool;
   public function getAllGroups(?int $pageTo = null, ?int $limit = null): array;
   public function getTotalGroupsCount(): int;
+  /**
+   * @return array[] Each entry: ['name' => string, 'group_label' => string, 'total' => int, 'settings' => WebSetting[]]
+   */
+  public function getGroupsWithSettings(): array;
   public function validateByType(WebSetting $setting, mixed $value): ?string;
 }
 
@@ -105,6 +109,19 @@ class WebSettingsService implements IWebSettingsService
   public function getTotalGroupsCount(): int
   {
     return $this->_store->getTotalGroupsCount();
+  }
+  public function getGroupsWithSettings(): array
+  {
+    $groups = $this->_store->getAllGroups();
+    $allSettings = $this->getAllSettings();
+    $settingsByGroup = [];
+    foreach ($allSettings as $setting) {
+      $settingsByGroup[$setting->group][] = $setting->toArray();
+    }
+    foreach ($groups as &$group) {
+      $group['settings'] = $settingsByGroup[$group['name']] ?? [];
+    }
+    return $groups;
   }
   public function validateByType(WebSetting $setting, mixed $value): ?string
   {

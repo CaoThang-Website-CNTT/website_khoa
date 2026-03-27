@@ -134,7 +134,7 @@ class WebSettingsStore extends Store implements IWebSettingStore
   }
   public function getAllGroups(?int $pageTo = null, ?int $limit = null): array
   {
-    $sql = "SELECT `group` as name, COUNT(id) as total FROM `web_settings` GROUP BY `group` ORDER BY `group` ASC";
+    $sql = "SELECT `group` as name, `group_label`, COUNT(id) as total FROM `web_settings` GROUP BY `group` ORDER BY `group` ASC";
     if ($pageTo !== null && $limit !== null) {
       $offset = (max(1, $pageTo) - 1) * $limit;
       $sql .= " LIMIT :limit OFFSET :offset";

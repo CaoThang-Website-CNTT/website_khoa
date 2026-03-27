@@ -13,10 +13,12 @@
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
     <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">Categories</h2>
-      <?php
-      include BASE_PATH . '/templates/components/flash_alert.php';
-      ?>
+      <h2 class="title text-2xl font-semibold">
+        Categories
+        <span class="badge" data-variant="primary">
+          <?= $data->getTotal(); ?>
+        </span>
+      </h2>
     </div>
     <div class="flex gap-2">
       <a href="<?= url('admin/categories/create') ?>" data-variant="primary" data-size="md" class="btn">
@@ -47,17 +49,11 @@
       </tr>
     </thead>
     <tbody>
-      <?php if (!empty($categories)): ?>
-        <?php foreach ($categories as $category): ?>
+      <?php if (!empty($data->getItems())): ?>
+        <?php foreach ($data->getItems() as $category): ?>
           <tr onclick="window.location.href='<?= url('admin/categories/' . $category->id) ?>'">
             <td>
-              <?php
-              $parent = $category->parent_id;
-              $indentClass = 'ml-' . $category->depth * 4;
-              ?>
-              <span class="<?= $indentClass ?>">
-                <?= htmlspecialchars($category->name) ?>
-              </span>
+              <?= htmlspecialchars($category->name) ?>
             </td>
             <td><?= htmlspecialchars($category->slug ?? 'N/A') ?></td>
             <td>
@@ -67,15 +63,25 @@
                 <span class="badge" data-variant="secondary">Tùy chỉnh</span>
               <?php endif; ?>
             </td>
+            <td>
+              <?php if (!isset($category->parent_id)): ?>
+                <span class="badge" data-variant="primary">Cha</span>
+              <?php else: ?>
+                <span class="badge" data-variant="secondary">Con</span>
+              <?php endif; ?>
+            </td>
             <td><?= htmlspecialchars($category->description ?? 'N/A') ?></td>
           </tr>
         <?php endforeach; ?>
       <?php else: ?>
         <tr>
-          <td colspan="5" class="text-center">No categories found.</td>
+          <td colspan="5" class="text-center">Không tìm thấy Danh Mục nào.</td>
         </tr>
       <?php endif; ?>
     </tbody>
   </table>
-  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
+  <?php
+  $page = $data;
+  include BASE_PATH . '/templates/components/pagination.php'
+    ?>
 </div>

@@ -63,4 +63,24 @@ class WebSetting
 
     return $setting;
   }
+  public function toArray(): array
+  {
+    return [
+      'id' => $this->id,
+      'key' => $this->key,
+      'group' => $this->group,
+      'type' => $this->type,
+      'value' => $this->value,
+      'default_value' => $this->default_value,
+      'label' => $this->label,
+      'description' => $this->description,
+      'autoload' => $this->autoload,
+      'is_locked' => $this->is_locked,
+      'sort_order' => $this->sort_order,
+      'created_at' => $this->created_at,
+      'updated_at' => $this->updated_at,
+      'updated_by' => $this->updated_by,
+      'cast_value' => $this->cast_value,
+    ];
+  }
 }

@@ -16,14 +16,14 @@
       <h2 class="title text-2xl font-semibold">
         Menu
         <span class="badge" data-variant="primary">
-          <?= (int) count($menus ?? []) ?>
+          <?= $data->getTotal(); ?>
         </span>
       </h2>
     </div>
     <div class="flex gap-2">
       <a href="<?= url('admin/menus/create') ?>" data-variant="primary" data-size="md" class="btn">
         <i class="fa-solid fa-plus"></i>
-        Tạo menu mới
+        Thêm
       </a>
     </div>
   </div>
@@ -34,7 +34,6 @@
   <table class="data-table">
     <thead>
       <tr>
-        <th></th>
         <th>
           <h6>Tên menu</h6>
         </th>
@@ -53,41 +52,33 @@
       </tr>
     </thead>
     <tbody>
-      <?php if (!empty($menus)): ?>
-        <?php foreach ($menus as $index => $menu): ?>
+      <?php if (!empty($data->getItems())): ?>
+        <?php foreach ($data->getItems() as $index => $menu): ?>
           <tr onclick="window.location.href='<?= url('admin/menus/' . $menu->id) ?>'">
-            <td class="data-table__id">#<?= $index + 1 ?></td>
             <td><?= htmlspecialchars($menu->label ?? 'N/A') ?></td>
             <td>
               <code><?= htmlspecialchars($menu->key ?? 'N/A') ?></code>
             </td>
             <td>
-              <?php if ($menu->isConst()): ?>
+              <?php if (!$menu->isEditable()): ?>
                 <span class="badge" data-variant="primary">Hệ thống</span>
               <?php else: ?>
                 <span class="badge" data-variant="secondary">Tuỳ chỉnh</span>
               <?php endif; ?>
             </td>
             <td><?= (int) ($menu->itemCount ?? 0) ?> mục</td>
-            <td><?= htmlspecialchars($menu->description ?? '—') ?></td>
+            <td><?= htmlspecialchars($menu->description ?? 'N/A') ?></td>
           </tr>
         <?php endforeach; ?>
       <?php else: ?>
         <tr>
-          <td colspan="6" class="text-center">Chưa có menu nào.</td>
+          <td colspan="6" class="text-center">Không tìm thấy Menu nào.</td>
         </tr>
       <?php endif; ?>
     </tbody>
   </table>
-  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
+  <?php
+  $page = $data;
+  include BASE_PATH . '/templates/components/pagination.php'
+    ?>
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    <?php foreach ($menus as $menu): ?>
-      <?php if ($menu->isEditable()): ?>
-        new Modal('#delete-modal-<?= $menu->id ?>');
-      <?php endif; ?>
-    <?php endforeach; ?>
-  });
-</script>

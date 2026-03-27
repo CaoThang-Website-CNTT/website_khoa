@@ -204,28 +204,27 @@ INSERT INTO `students` (`id`, `account_id`, `student_id`, `full_name`, `gender`,
 -- ----------------------------------------------------------------------------
 -- 2.7 BẢNG WEB_SETTINGS (CẤU HÌNH WEB - 20 Dòng)
 -- ----------------------------------------------------------------------------
-INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `label`) VALUES
-('site_name', 'general', 'string', 'Trường Cao đẳng Kỹ thuật Cao Thắng', 'Tên trường/khoa'),
-('site_logo', 'general', 'url', '/images/logo.png', 'Logo website'),
-('site_favicon', 'general', 'url', '/images/favicon.ico', 'Favicon website'),
-('contact_hotline', 'contact', 'string', '028 3821 2360', 'Hotline liên hệ'),
-('contact_email', 'contact', 'email', 'phongdaotao@caothang.edu.vn', 'Email hỗ trợ'),
-('address_main', 'contact', 'text', '65 Huỳnh Thúc Kháng, P.Bến Nghé, Q.1, TP.HCM', 'Địa chỉ trụ sở'),
-('social_facebook', 'social', 'url', 'https://facebook.com/caothang.edu.vn', 'Link Facebook'),
-('social_youtube', 'social', 'url', 'https://youtube.com/caothang', 'Link Youtube'),
-('seo_meta_desc', 'seo', 'text', 'Trường CĐ Kỹ thuật Cao Thắng đào tạo đa ngành nghề, uy tín chất lượng.', 'SEO Description'),
-('seo_meta_keywords', 'seo', 'text', 'cao thang, cd ky thuat, cntt, o to, co khi', 'SEO Keywords'),
-('maintenance_mode', 'system', 'bool', '0', 'Bảo trì hệ thống'),
-('pagination_limit', 'ui', 'int', '15', 'Số bài viết / trang'),
-('theme_color_primary', 'ui', 'string', '#1E3A8A', 'Màu chủ đạo (Primary)'),
-('theme_color_secondary', 'ui', 'string', '#F59E0B', 'Màu phụ (Secondary)'),
-('admission_status', 'system', 'bool', '1', 'Đang mở đợt tuyển sinh'),
-('notification_banner', 'ui', 'text', 'Thông báo: Lịch thi học kỳ I năm 2026 đã được cập nhật!', 'Banner thông báo nổi bật'),
-('copyright_text', 'general', 'string', '© 2026 Cao Thang Technical College. All rights reserved.', 'Chữ ký bản quyền footer'),
-('google_analytics_id', 'seo', 'string', 'G-XXXXXXXXXX', 'Mã Google Analytics'),
-('allow_student_registration', 'system', 'bool', '0', 'Cho phép SV tự đăng ký tài khoản'),
-('default_student_password', 'system', 'string', 'caothang@123', 'Mật khẩu mặc định khi reset');
-
+INSERT INTO `web_settings` (`key`, `group`, `group_label`, `type`, `value`, `label`) VALUES
+('site_name', 'general', 'General', 'string', 'Trường Cao đẳng Kỹ thuật Cao Thắng', 'Tên trường/khoa'),
+('site_logo', 'general', 'General', 'url', '/images/logo.png', 'Logo website'),
+('site_favicon', 'general', 'General', 'url', '/images/favicon.ico', 'Favicon website'),
+('contact_hotline', 'contact', 'Contact', 'string', '028 3821 2360', 'Hotline liên hệ'),
+('contact_email', 'contact', 'Contact', 'email', 'phongdaotao@caothang.edu.vn', 'Email hỗ trợ'),
+('address_main', 'contact', 'Contact', 'text', '65 Huỳnh Thúc Kháng, P.Bến Nghé, Q.1, TP.HCM', 'Địa chỉ trụ sở'),
+('social_facebook', 'social', 'Social', 'url', 'https://facebook.com/caothang.edu.vn', 'Link Facebook'),
+('social_youtube', 'social', 'Social', 'url', 'https://youtube.com/caothang', 'Link Youtube'),
+('seo_meta_desc', 'seo', 'SEO', 'text', 'Trường CĐ Kỹ thuật Cao Thắng đào tạo đa ngành nghề, uy tín chất lượng.', 'SEO Description'),
+('seo_meta_keywords', 'seo', 'SEO', 'text', 'cao thang, cd ky thuat, cntt, o to, co khi', 'SEO Keywords'),
+('maintenance_mode', 'system', 'System', 'bool', '0', 'Bảo trì hệ thống'),
+('pagination_limit', 'ui', 'UI', 'int', '15', 'Số bài viết / trang'),
+('theme_color_primary', 'ui', 'UI', 'string', '#1E3A8A', 'Màu chủ đạo (Primary)'),
+('theme_color_secondary', 'ui', 'UI', 'string', '#F59E0B', 'Màu phụ (Secondary)'),
+('admission_status', 'system', 'System', 'bool', '1', 'Đang mở đợt tuyển sinh'),
+('notification_banner', 'ui', 'UI', 'text', 'Thông báo: Lịch thi học kỳ I năm 2026 đã được cập nhật!', 'Banner thông báo nổi bật'),
+('copyright_text', 'general', 'General', 'string', '© 2026 Cao Thang Technical College. All rights reserved.', 'Chữ ký bản quyền footer'),
+('google_analytics_id', 'seo', 'SEO', 'string', 'G-XXXXXXXXXX', 'Mã Google Analytics'),
+('allow_student_registration', 'system', 'System', 'bool', '0', 'Cho phép SV tự đăng ký tài khoản'),
+('default_student_password', 'system', 'System', 'string', 'caothang@123', 'Mật khẩu mặc định khi reset');
 
 -- ----------------------------------------------------------------------------
 -- 2.8 BẢNG CATEGORIES (DANH MỤC TIN TỨC - 20 Danh mục có phân cấp)

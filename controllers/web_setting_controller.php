@@ -20,8 +20,8 @@ class WebSettingsController extends Controller
   }
   public function index()
   {
-    $groups = $this->_settingsService->getAllGroups();
-    $this->render('admin/web_settings/index', ['groups' => $groups], layout: 'dashboard_layout');
+    $groups = $this->_settingsService->getGroupsWithSettings();
+    $this->render('admin/web_settings/index', ['data' => $groups], layout: 'dashboard_layout');
   }
   public function create()
   {
