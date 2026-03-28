@@ -7,7 +7,6 @@
 <link rel="preload" as="style" href="<?= url('public/css/fonts.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/base.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/common.css') ?>">
-<link rel="preload" as="style" href="<?= url('public/css/modal.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/dashboard.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/fontawesome/fontawesome.min.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/fontawesome/solid.min.css') ?>">
@@ -16,7 +15,6 @@
 <link rel="stylesheet" href="<?= url('public/css/fonts.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
-<link rel="stylesheet" href="<?= url('public/css/modal.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/dashboard.css') ?>">
 
 

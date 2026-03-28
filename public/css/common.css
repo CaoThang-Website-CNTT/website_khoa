@@ -570,6 +570,122 @@
     margin-right: 0.25rem;
   }
 
+  .modal {
+    display: grid;
+    gap: 1rem;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 100;
+    min-width: 20rem;
+    transform: translate(-50%, -50%);
+    background: var(--background);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    transform-origin: center center;
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translate3d(-50%, -50%, 0) scale(0, 0);
+      filter: blur(0);
+      display: none;
+    }
+  }
+
+  @keyframes exit {
+    from {
+      opacity: 1;
+      transform: translate3d(-50%, -50%, 0) scale(1, 1);
+      filter: blur(0);
+      display: grid;
+    }
+    to {
+      opacity: 0;
+      transform: translate3d(-50%, -50%, 0) scale(0.95, 0.95);
+      filter: blur(1rem);
+      display: none;
+    }
+  }
+
+  /* ==========================================================================
+   MODAL
+   ========================================================================== */
+  .modal[data-state="open"] {
+    animation: enter 0.15s ease 0s normal;
+  }
+
+  .modal[data-state="open"],
+  .modal[data-state="open"] + .modal-overlay {
+    display: grid;
+  }
+
+  .modal[data-state="closed"] {
+    animation: exit 0.15s ease-out 0s normal;
+  }
+
+  .modal[data-state="closed"],
+  .modal[data-state="closed"] + .modal-overlay {
+    display: none;
+  }
+
+  body:has(.modal[data-state="open"]) {
+    overflow: hidden;
+  }
+
+  .modal__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal__title {
+    font-weight: var(--fw-medium);
+  }
+
+  .modal__description {
+    color: var(--muted-foreground);
+  }
+
+  .modal__footer {
+    display: flex;
+    justify-content: end;
+    gap: 0.5rem;
+    padding: 1rem;
+    margin: 0 -1rem -1rem;
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+    background: var(--muted);
+  }
+
+  .modal__close {
+    width: 1.75rem;
+    height: 1.75rem;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .modal__close svg,
+  .modal__close .fa-solid {
+    font-size: var(--text-base);
+    width: var(--text-base);
+    height: var(--text-base);
+  }
+
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, black 10%, transparent);
+    backdrop-filter: blur(2px);
+    z-index: 90;
+  }
+
+  .modal-overlay[data-state="closed"] {
+    display: none;
+  }
+
   /* ==========================================================================
    CARD
    ========================================================================== */

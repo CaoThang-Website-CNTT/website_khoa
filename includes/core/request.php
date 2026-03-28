@@ -132,6 +132,26 @@ class Request
     return '/' . ltrim($path, '/') ?: '/';
   }
 
+  public function previous($fallback = 'index.php')
+  {
+    $referer = $_SERVER['HTTP_REFERER'] ?? null;
+
+    if (!$referer) {
+      return $fallback;
+    }
+
+    // Parse the URL to check the host
+    $refererHost = parse_url($referer, PHP_URL_HOST);
+    $currentHost = $_SERVER['HTTP_HOST'];
+
+    // Only return the referer if it's from our own domain
+    if ($refererHost === $currentHost) {
+      return htmlspecialchars($referer, ENT_QUOTES, 'UTF-8');
+    }
+
+    return $fallback;
+  }
+
   // ===================================
   // Header
   // ===================================
