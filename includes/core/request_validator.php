@@ -10,7 +10,18 @@ class Validator
   {
     foreach ($rules as $field => $fieldRules) {
       $value = $data[$field] ?? null;
+
+      $isEmpty = $value === null || trim((string) $value) === '';
+      if ($isEmpty && in_array('nullable', $fieldRules)) {
+        continue;
+      }
+
       foreach ($fieldRules as $rule) {
+        // Skip 'nullable' rule vì đã xử lý ở trên
+        if ($rule === 'nullable') {
+          continue;
+        }
+
         $this->applyRule($field, $value, $rule, $data);
       }
     }
@@ -30,14 +41,12 @@ class Validator
           $this->addError($field, "Trường này không được để trống.");
         }
         break;
-
       case 'password':
         $pattern = '/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/';
         if ($value && !preg_match($pattern, $value)) {
           $this->addError($field, "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.");
         }
         break;
-
       case 'same':
         $otherField = $param;
         if ($value !== ($data[$otherField] ?? null)) {
@@ -55,9 +64,16 @@ class Validator
           $this->addError($field, "Không được vượt quá $max ký tự.");
         }
         break;
-      case 'mssv':
-        if ($value && !preg_match('/^\d{10}$/', $value)) {
-          $this->addError($field, "Mã số sinh viên phải đúng 10 chữ số.");
+      case 'size':
+        $size = (int) $param;
+        if ($value && mb_strlen((string) $value, 'UTF-8') !== $size) {
+          $this->addError($field, "Phải có chính xác $size ký tự.");
+        }
+        break;
+      case 'in':
+        $allowed = explode(',', $param);
+        if ($value && !in_array((string) $value, $allowed, true)) {
+          $this->addError($field, "Giá trị đã chọn không hợp lệ.");
         }
         break;
       case 'phone':
