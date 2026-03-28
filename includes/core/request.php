@@ -132,24 +132,35 @@ class Request
     return '/' . ltrim($path, '/') ?: '/';
   }
 
-  public function previous($fallback = 'index.php')
+  /**
+   * Lấy URL trước đó (Referer), có xử lý chống vòng lặp (Refresh Trap) và Open Redirect.
+   * @param string $fallback Đường dẫn dự phòng nếu không có referer hợp lệ
+   * @return string
+   */
+  public function previous(string $fallback = 'index'): string
   {
-    $referer = $_SERVER['HTTP_REFERER'] ?? null;
+    $referer = $this->server['HTTP_REFERER'] ?? null;
 
     if (!$referer) {
       return $fallback;
     }
 
-    // Parse the URL to check the host
-    $refererHost = parse_url($referer, PHP_URL_HOST);
-    $currentHost = $_SERVER['HTTP_HOST'];
+    $protocol = (!empty($this->server['HTTPS']) && $this->server['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $this->server['HTTP_HOST'] ?? 'localhost';
+    $uri = $this->server['REQUEST_URI'] ?? '/';
+    $currentUrl = $protocol . '://' . $host . $uri;
 
-    // Only return the referer if it's from our own domain
-    if ($refererHost === $currentHost) {
-      return htmlspecialchars($referer, ENT_QUOTES, 'UTF-8');
+    $refererHost = parse_url($referer, PHP_URL_HOST);
+
+    if ($refererHost !== $host) {
+      return $fallback;
     }
 
-    return $fallback;
+    if ($referer === $currentUrl) {
+      return $fallback;
+    }
+
+    return htmlspecialchars($referer, ENT_QUOTES, 'UTF-8');
   }
 
   // ===================================

@@ -27,7 +27,7 @@ class FormHandler {
       if (!fieldInput) return;
 
       const rules = this._getFieldRules(field.dataset);
-      rules.forEach(rule => this._applyRule(field, fieldInput, rule));
+      rules.forEach(rule => this._applyRule(fieldInput, rule));
 
       this._fillOld(fieldInput);
 
@@ -44,13 +44,16 @@ class FormHandler {
    * Lấy các data attribute bắt đầu với "field".
    * @private
    * @param {DOMStringMap} dataset - Thuộc tính dataset của một element (field).
-   * @returns {string[]} Mảng các data attribute đã được lấy.
+   * @returns {Array<{type: string, value: string}>} Mảng các data attribute đã được lấy.
    */
   _getFieldRules(dataset) {
     const rules = [];
     for (const key in dataset) {
       if (key.startsWith("field")) {
-        rules.push(key);
+        rules.push({
+          type: key,
+          value: dataset[key]
+        });
       }
     }
     return rules;
@@ -59,20 +62,36 @@ class FormHandler {
   /**
    * Áp dụng rule lên các field input.
    * @private
-   * @param {HTMLElement} field - Field của input sẽ áp dụng.
    * @param {HTMLElement} input - Input element sẽ áp dụng.
-   * @param {string} ruleType - Loại rule sẽ được áp dụng.
+   * @param {Object} rule - Loại rule sẽ được áp dụng.
    */
-  _applyRule(field, input, ruleType) {
-    switch (ruleType) {
+  _applyRule(input, rule) {
+    const { type, value } = rule;
+    const isNumericOrDate = ['number', 'range', 'date', 'month', 'week', 'time', 'datetime-local'].includes(input.type);
+
+    switch (type) {
       case "fieldReadonly":
-        input.readOnly = true;
+        input.readOnly = value !== "false";
         break;
       case "fieldDisabled":
-        input.disabled = true;
+        input.disabled = value !== "false";
         break;
       case "fieldRequired":
-        input.required = true;
+        input.required = value !== "false";
+        break;
+      case "fieldMin":
+        if (isNumericOrDate) {
+          input.min = value;
+        } else {
+          input.minLength = value;
+        }
+        break;
+      case "fieldMax":
+        if (isNumericOrDate) {
+          input.max = value;
+        } else {
+          input.maxLength = value;
+        }
         break;
       default:
         console.warn(`FormHandler: Không nhận dạng được ruleType "${ruleType}"`);
