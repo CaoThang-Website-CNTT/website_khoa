@@ -15,4 +15,14 @@ class Utils {
       rect.right <= (window.innerWidth || document.documentElement.clientWidth) + offset
     );
   }
+  static toCleanAscii(str) {
+    if (!str) return "";
+
+    return str
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d");
+  }
 }
