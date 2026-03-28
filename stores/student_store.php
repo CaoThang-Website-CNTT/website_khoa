@@ -16,7 +16,7 @@ interface IStudentStore
   /** @return Student[] */
   public function getPaginated(int $pageTo, int $limit = 15): array;
   public function getById(int $id): ?Student;
-  public function create(Student $student): int;
+  public function create(Student $student): Student;
   public function update(Student $student): bool;
   public function softDelete(int $id): bool;
   public function getTotalCount(): int;
@@ -73,26 +73,48 @@ class StudentStore extends Store implements IStudentStore
     return $row ? Student::fromArray($row) : null;
   }
 
-  public function create(Student $data): int
+  public function create(Student $student): Student
   {
     $sql = "
       INSERT INTO `students` 
-      (account_id, student_id, full_name, gender, dob, phone, classroom_id, major, birth_place) 
+      (
+        account_id, student_id, full_name, gender, dob, 
+        national_id, phone, address, classroom_id, 
+        birth_place, notes, status, major
+      ) 
       VALUES 
-      (:acc_id, :student_id, :name, :gender, :dob, :phone, :classroom_id, :major, :birth_place)
+      (
+        :acc_id, :student_id, :name, :gender, :dob, 
+        :nat_id, :phone, :address, :class_id, 
+        :birth_place, :notes, :status, :major
+      )
     ";
 
-    return $this->db->prepare($sql)->execute([
-      ':acc_id' => $data->account_id,
-      ':student_id' => $data->student_id,
-      ':name' => $data->full_name,
-      ':gender' => $data->gender,
-      ':dob' => $data->dob,
-      ':phone' => $data->phone,
-      ':classroom_id' => $data->classroom_id ?? null,
-      ':major' => $data->major ?? null,
-      ':birth_place' => $data->birth_place ?? null,
+    $stmt = $this->db->prepare($sql);
+    $success = $stmt->execute([
+      ':acc_id' => $student->account_id,
+      ':student_id' => $student->student_id,
+      ':name' => $student->full_name,
+      ':gender' => $student->gender,
+      ':dob' => $student->dob,
+      ':nat_id' => $student->national_id,
+      ':phone' => $student->phone,
+      ':address' => $student->address,
+      ':class_id' => $student->classroom_id,
+      ':birth_place' => $student->birth_place,
+      ':notes' => $student->notes,
+      ':status' => $student->status,
+
+      ':major' => $student->major,
     ]);
+
+    if (!$success) {
+      throw new \Exception('Không thể lưu sinh viên vào cơ sở dữ liệu.');
+    }
+
+    $student->id = (int) $this->db->lastInsertId();
+
+    return $student;
   }
 
   public function update(Student $data): bool
@@ -148,7 +170,7 @@ class StudentStore extends Store implements IStudentStore
       SELECT COUNT(*)
       FROM `students`
       WHERE `student_id` = :id
-      AND `delete_at` IS NULL
+      AND `deleted_at` IS NULL
     ";
     $params = [':id' => $id];
 

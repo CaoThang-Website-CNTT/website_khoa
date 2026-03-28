@@ -13,15 +13,15 @@ require_once BASE_PATH . '/includes/core/pageable.php';
 
 use App\Models\{Student, Classroom};
 use App\Stores\{StudentStore, AccountStore, ClassroomStore};
-use App\Services\AccountService;
 use App\Core\Pageable;
+use Database;
 
 interface IStudentService
 {
   /** @return Pageable */
   public function getStudents(int $page, int $limit = 15): Pageable;
   public function isStudentIdUnique(string $studentId): bool;
-  public function createStudent(array $data, string $password): int;
+  public function createStudent(array $data): Student;
   public function getStudentById(int $id): ?Student;
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
@@ -78,28 +78,61 @@ class StudentService implements IStudentService
     return $this->_studentStore->isStudentIdUnique($studentId);
   }
 
-  public function createStudent(array $data, string $password): int
+  public function createStudent(array $data): Student
   {
-    // Create account
-    $accountId = $this->_accountStore->create($data['email'], $password, 'student');
-    if (!$accountId) {
-      throw new \Exception('Failed to create account');
-    }
+    return Database::getInstance()->transaction(function () use ($data) {
+      // Check mail
+      // Nếu email tồn tại, kiểm tra unique nó
+      // Còn không thì tạo MSSV@caothang.edu.vn
+      if (isset($data['email'])) {
+        if (!$this->_accountStore->isEmailUnique($data['email'])) {
+          throw new \Exception('Email này đã tồn tại trong hệ thống.');
+        }
+      } else {
+        $data['email'] = $data['student_id'] . '@caothang.edu.vn';
+      }
 
-    // Create student
-    $student = new Student();
-    $student->account_id = $accountId;
-    $student->student_id = $data['student_id'];
-    $student->classroom_id = $data['classroom_id'] ?? null;
-    $student->full_name = $data['full_name'];
-    $student->gender = $data['gender'];
-    $student->dob = $data['dob'] ?? null;
-    $student->phone = $data['phone'] ?? null;
-    $student->address = $data['address'] ?? null;
-    $student->major = $data['major'] ?? null;
-    $student->status = $data['status'] ?? 'Đang học';
+      // Create account
+      $accountId = $this->_accountStore->create($data['email'], $data['national_id'], 'student');
+      if (!$accountId) {
+        throw new \Exception('Tạo tài khoản thất bại');
+      }
 
-    return $this->_studentStore->create($student);
+      $major = $this->_classroomStore->getMajorById($data['classroom_id'])->id;
+      if (!$major) {
+        throw new \Exception('Lớp học không hợp lệ. Không tồn tại ngành học cho lớp này.');
+      }
+
+      // Create student
+      // 'full_name' => ['required', 'max:255'],
+      //   'dob' => ['required', 'date'],
+      //   'birth_place' => ['max:255'],
+      //   'national_id' => ['required', 'size:12'],
+      //   'gender' => ['required', 'in:male,female'],
+      //   'student_id' => ['required', 'size:10'],
+      //   'phone' => ['required', 'phone', 'max:15'],
+      //   'address' => ['required'],
+      //   'classroom_id' => ['required'],
+      //   'notes' => ['nullable'],
+      //   'status' => ['required', 'in:Đang học,Đã tốt nghiệp,Tạm ngưng,Thôi học']
+      $student = new Student(
+        account_id: $accountId,
+        student_id: $data['student_id'],
+        full_name: $data['full_name'],
+        gender: $data['gender'],
+        dob: $data['dob'],
+        national_id: $data['national_id'],
+        phone: $data['phone'],
+        address: $data['address'],
+        classroom_id: $data['classroom_id'],
+        birth_place: $data['birth_place'],
+        notes: $data['notes'] ?? null,
+        status: $data['status'],
+        major: $major,
+      );
+
+      return $this->_studentStore->create($student);
+    });
   }
 
   public function getStudentById(int $id): ?Student

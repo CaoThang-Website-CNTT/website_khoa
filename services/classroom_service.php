@@ -13,6 +13,8 @@ use App\Core\Pageable;
 
 interface IClassroomService
 {
+  /** @return Classroom[] */
+  public function getAllClassrooms(): array;
   public function getClassroomsPaginated(int $page, int $limit = 15): Pageable;
   public function getClassroomById(int $id): ?Classroom;
   public function createClassroom(array $data): int;
@@ -33,6 +35,11 @@ class ClassroomService implements IClassroomService
   public function __construct(ClassroomStore $classroomStore)
   {
     $this->_classroomStore = $classroomStore;
+  }
+  /** @return Classroom[] */
+  public function getAllClassrooms(): array
+  {
+    return $this->_classroomStore->getAll();
   }
   public function getClassroomsPaginated(int $page, int $limit = 15): Pageable
   {

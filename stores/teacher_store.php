@@ -19,7 +19,7 @@ interface ITeacherStore
   /** @return Teacher[] */
   public function getByIds(array $ids): array;
   public function getByStaffCode(string $staffCode): ?Teacher;
-  public function create(Teacher $teacher): int;
+  public function create(Teacher $teacher): Teacher;
   public function update(Teacher $teacher): bool;
   public function softDelete(int $id): bool;
   public function getTotalCount(): int;
@@ -108,7 +108,7 @@ class TeacherStore extends Store implements ITeacherStore
     return $row ? Teacher::fromArray($row) : null;
   }
 
-  public function create(Teacher $teacher): int
+  public function create(Teacher $teacher): Teacher
   {
     $sql = "
       INSERT INTO `teachers` (
@@ -124,15 +124,17 @@ class TeacherStore extends Store implements ITeacherStore
       )
     ";
 
-    $this->db->prepare($sql)->execute([
+    $stmt = $this->db->prepare($sql);
+    $success = $stmt->execute([
       ':acc_id' => $teacher->account_id,
-      ':staff_code' => $teacher->staff_code,
       ':full_name' => $teacher->full_name,
-      ':gender' => $teacher->gender,
       ':dob' => $teacher->dob,
       ':national_id' => $teacher->national_id,
+      ':gender' => $teacher->gender,
       ':phone' => $teacher->phone,
       ':address' => $teacher->address,
+
+      ':staff_code' => $teacher->staff_code,
       ':degree' => $teacher->degree,
       ':position' => $teacher->position,
       ':title' => $teacher->title,
@@ -143,7 +145,13 @@ class TeacherStore extends Store implements ITeacherStore
       ':notes' => $teacher->notes,
     ]);
 
-    return (int) $this->db->lastInsertId();
+    if (!$success) {
+      throw new \Exception('Không thể lưu giảng viên vào cơ sở dữ liệu.');
+    }
+
+    $teacher->id = (int) $this->db->lastInsertId();
+
+    return $teacher;
   }
 
   public function update(Teacher $teacher): bool
