@@ -2,7 +2,8 @@ class TableManager {
   constructor(config) {
     this.apiUrl = config.apiUrl;
     this.tableSelector = config.tableSelector;
-    this.tbody = document.querySelector(`${config.tableSelector} tbody`);
+    this.tableElement = document.querySelector(config.tableSelector);
+    this.tbody = this.tableElement.querySelector("tbody");
     this.paginationContainer = document.querySelector(
       config.paginationSelector,
     );
@@ -16,12 +17,20 @@ class TableManager {
     // Trạng thái sắp xếp
     this.sortCol = config.defaultSort || "id";
     this.sortDir = config.defaultDir || "ASC";
-    this.initSortableHeaders();
     // Tìm kiếm
     this.searchTerm = "";
     if (config.searchSelector) {
       this.initSearch(config.searchSelector);
     }
+    // Quản lý Filters
+    this.filterConfigs = config.filters || [];
+    this.activeFilters = {}; // Lưu trữ value: { 'classroom_id': Set(['1', '2']) }
+    this.filterOptions = {}; // Lưu trữ toàn bộ data gốc để map Label cho Pills
+
+    this.filterConfigs.forEach((f) => {
+      this.activeFilters[f.key] = new Set();
+      this.filterOptions[f.key] = [];
+    });
   }
   debounce(func, timeout = 500) {
     let timer;
@@ -31,6 +40,244 @@ class TableManager {
         func.apply(this, args);
       }, timeout);
     };
+  }
+  async init(searchPlaceholder = "Tìm kiếm...") {
+    await this.initToolbar(searchPlaceholder);
+    this.initSortableHeaders();
+    this.loadData(1);
+  }
+  async initToolbar(searchPlaceholder) {
+    const toolbar = document.createElement("div");
+    toolbar.className = "tm-toolbar";
+
+    // BLOCK: Search và Filters Dropdown
+    const topRow = document.createElement("div");
+    topRow.className = "tm-toolbar__main";
+
+    // Render khung Search
+    const searchWrapper = document.createElement("div");
+    searchWrapper.className = "tm-toolbar__search";
+    searchWrapper.innerHTML = `
+      <i class="fa-solid fa-magnifying-glass tm-toolbar__search-icon"></i>
+      <input type="text" class="tm-toolbar__search-input" placeholder="${searchPlaceholder}">
+    `;
+    searchWrapper.querySelector("input").addEventListener(
+      "input",
+      this.debounce((e) => {
+        this.searchTerm = removeVietnameseTones(e.target.value.trim());
+        this.loadData(1);
+      }),
+    );
+    topRow.appendChild(searchWrapper);
+
+    // Render Toolbar
+    this.tableElement.parentNode.insertBefore(toolbar, this.tableElement);
+
+    // Xử lý tất cả các API Filters
+    const filterPromises = this.filterConfigs.map((filter) =>
+      this.buildFilterDropdown(filter, topRow),
+    );
+    await Promise.all(filterPromises);
+
+    toolbar.appendChild(topRow);
+    // BLOCK: Hiển thị Các option filter được chọn
+    this.pillsContainer = document.createElement("div");
+    this.pillsContainer.className = "tm-pills";
+    toolbar.appendChild(this.pillsContainer);
+
+    // Click ra ngoài để đóng popover
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".tm-filter")) {
+        document
+          .querySelectorAll(".tm-filter__popover")
+          .forEach((p) => p.classList.remove("tm-filter__popover--active"));
+      }
+    });
+
+    this.renderActivePills();
+  }
+
+  async buildFilterDropdown(filter, container) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "tm-filter";
+    wrapper.setAttribute("data-key", filter.key);
+
+    const btn = document.createElement("button");
+    btn.className = "tm-filter__btn";
+    btn.innerHTML = `<i class="fa-solid fa-circle-plus"></i> ${filter.label}`;
+
+    const popover = document.createElement("div");
+    popover.className = "tm-filter__popover";
+    popover.innerHTML = `
+      <div class="tm-filter__search-box">
+        <input type="text" placeholder="Tìm ${filter.label.toLowerCase()}...">
+      </div>
+      <div class="tm-filter__list"></div>
+      <div class="tm-filter__empty tm-hidden">Không tìm thấy kết quả</div>
+    `;
+
+    wrapper.appendChild(btn);
+    wrapper.appendChild(popover);
+    container.appendChild(wrapper);
+
+    // Toggle Popover
+    btn.addEventListener("click", () => {
+      const isActive = popover.classList.contains("tm-filter__popover--active");
+      document
+        .querySelectorAll(".tm-filter__popover")
+        .forEach((p) => p.classList.remove("tm-filter__popover--active"));
+
+      if (!isActive) {
+        popover.classList.add("tm-filter__popover--active");
+        const rect = btn.getBoundingClientRect();
+        if (rect.left + 240 > window.innerWidth) {
+          popover.style.right = "0";
+          popover.style.left = "auto";
+        } else {
+          popover.style.left = "0";
+          popover.style.right = "auto";
+        }
+      }
+    });
+
+    // Lấy Option
+    let options = [];
+    if (filter.type === "static") {
+      options = filter.options;
+    } else if (filter.type === "api") {
+      try {
+        const res = await fetch(filter.url);
+        const json = await res.json();
+        if (json.success) options = json.data;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    this.filterOptions[filter.key] = options;
+
+    // Mặc định chọn 1 lớp đầu tiên (niên khóa mới nhất do server trả ra)
+    if (filter.autoSelectFirst && options.length > 0) {
+      this.activeFilters[filter.key].add(options[0].value.toString());
+    }
+
+    const listContainer = popover.querySelector(".tm-filter__list");
+    const emptyState = popover.querySelector(".tm-filter__empty");
+    const searchInput = popover.querySelector(".tm-filter__search-box input");
+
+    const renderList = (items) => {
+      listContainer.innerHTML = "";
+      if (items.length === 0) {
+        listContainer.classList.add("tm-hidden");
+        emptyState.classList.remove("tm-hidden");
+      } else {
+        listContainer.classList.remove("tm-hidden");
+        emptyState.classList.add("tm-hidden");
+
+        items.forEach((opt) => {
+          const isChecked = this.activeFilters[filter.key].has(
+            opt.value.toString(),
+          );
+          const itemHtml = `
+              <label class="tm-filter__item">
+                <input type="checkbox" value="${opt.value}" ${isChecked ? "checked" : ""}>
+                <span>${opt.label}</span>
+              </label>
+            `;
+          listContainer.insertAdjacentHTML("beforeend", itemHtml);
+        });
+
+        listContainer.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+          cb.addEventListener("change", (e) => {
+            if (e.target.checked)
+              this.activeFilters[filter.key].add(e.target.value);
+            else this.activeFilters[filter.key].delete(e.target.value);
+
+            this.renderActivePills();
+            this.loadData(1);
+          });
+        });
+      }
+    };
+
+    // Render danh sách ban đầu
+    renderList(options);
+
+    searchInput.addEventListener("input", (e) => {
+      const text = removeVietnameseTones(e.target.value.toLowerCase());
+
+      const filtered = options.filter((o) =>
+        removeVietnameseTones(o.label.toLowerCase()).includes(text),
+      );
+      renderList(filtered);
+    });
+  }
+  renderActivePills() {
+    this.pillsContainer.innerHTML = "";
+    let hasAnyFilter = false;
+
+    Object.keys(this.activeFilters).forEach((key) => {
+      const selectedSet = this.activeFilters[key];
+      if (selectedSet.size === 0) return;
+      hasAnyFilter = true;
+
+      // Map từng ID lấy ra Label từ filterOptions
+      selectedSet.forEach((val) => {
+        const option = this.filterOptions[key].find(
+          (o) => o.value.toString() === val.toString(),
+        );
+        if (!option) return;
+
+        const countHtml =
+          option.count !== undefined
+            ? `<span class="tm-pill__count">(${option.count})</span>`
+            : "";
+
+        const pill = document.createElement("div");
+        pill.className = "tm-pill";
+        pill.innerHTML = `
+          <span>${option.label} ${countHtml}</span>
+          <button class="tm-pill__remove"><i class="fa-solid fa-xmark"></i></button>
+        `;
+
+        // Click dấu X để xóa active option
+        pill.querySelector(".tm-pill__remove").addEventListener("click", () => {
+          this.activeFilters[key].delete(val);
+          this.syncCheckboxUI(key);
+          this.renderActivePills();
+          this.loadData(1);
+        });
+
+        this.pillsContainer.appendChild(pill);
+      });
+    });
+
+    // Nút Clean All
+    if (hasAnyFilter) {
+      const cleanBtn = document.createElement("button");
+      cleanBtn.className = "tm-pill tm-pill--clean";
+      cleanBtn.textContent = "Clean filter";
+      cleanBtn.addEventListener("click", () => {
+        Object.keys(this.activeFilters).forEach((k) =>
+          this.activeFilters[k].clear(),
+        );
+        this.filterConfigs.forEach((f) => this.syncCheckboxUI(f.key));
+        this.renderActivePills();
+        this.loadData(1);
+      });
+      this.pillsContainer.appendChild(cleanBtn);
+    }
+  }
+
+  // Đồng bộ lại Checkbox trong Dropdown khi Pill bị xóa
+  syncCheckboxUI(filterKey) {
+    const wrapper = document.querySelector(
+      `.tm-filter[data-key="${filterKey}"]`,
+    );
+    if (!wrapper) return;
+    wrapper.querySelectorAll(`input[type="checkbox"]`).forEach((cb) => {
+      cb.checked = this.activeFilters[filterKey].has(cb.value);
+    });
   }
   initSearch(selector) {
     const searchInput = document.querySelector(selector);
@@ -93,36 +340,42 @@ class TableManager {
    * @returns
    */
   async loadData(page = 1) {
+    const isCleanFilter = this.filterConfigs.some(
+      (f) => f.required && this.activeFilters[f.key].size === 0,
+    );
+    if (isCleanFilter) {
+      this.tbody.innerHTML = `<tr><td colspan="10" class="text-center p-4 tm__row--empty"">Không có dữ liệu. Vui lòng chọn ít nhất 1 lớp học để xem danh sách.</td></tr>`;
+      this.paginationContainer.innerHTML = "";
+      return;
+    }
+
     if (this.isLoading) return;
     this.isLoading = true;
-    this.tbody.innerHTML = `<tr><td colspan="10" class="tm__row--loading">Đang tải dữ liệu...</td></tr>`;
+    this.tbody.innerHTML = `<tr><td colspan="10" class="text-center p-4">Đang tải dữ liệu...</td></tr>`;
 
     try {
-      // Nối thêm tham số page vào URL
       const url = new URL(this.apiUrl, window.location.origin);
       url.searchParams.append("page", page);
-
       url.searchParams.append("sort", this.sortCol);
       url.searchParams.append("dir", this.sortDir);
 
-      if (this.searchTerm) {
-        url.searchParams.append("search", this.searchTerm);
+      if (this.searchTerm) url.searchParams.append("search", this.searchTerm);
+
+      // Gắn filter vào API (vd: &classroom_id[]=1&classroom_id[]=2)
+      for (const [key, setValues] of Object.entries(this.activeFilters)) {
+        setValues.forEach((val) => url.searchParams.append(`${key}[]`, val));
       }
-      console.log(url);
 
       const response = await fetch(url);
       const result = await response.json();
+
       if (result.success) {
         this.currentPage = result.data.currentPage;
-
         this.updateTable(result.data.items);
         this.updatePagination(result.data.totalPages);
-      } else {
-        this.tbody.innerHTML = `<tr><td colspan="10" class="tm__row--error">${result.message || "Lỗi dữ liệu từ máy chủ"}</td></tr>`;
       }
     } catch (error) {
-      console.error("Lỗi tải dữ liệu:", error);
-      this.tbody.innerHTML = `<tr><td colspan="10" class="tm__row--error">Lỗi kết nối máy chủ!</td></tr>`;
+      this.tbody.innerHTML = `<tr><td colspan="10" class="text-danger p-4">Lỗi kết nối máy chủ!</td></tr>`;
     } finally {
       this.isLoading = false;
     }

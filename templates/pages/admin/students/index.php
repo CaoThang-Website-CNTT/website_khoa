@@ -42,13 +42,6 @@
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
-<div class="tm-toolbar">
-  <div class="search-bar flex items-center px-4 gap-2 rounded-xl text-sm">
-    <i class="fa-brands fa-sistrix"></i>
-    <input class="search-bar__input" type="text" placeholder="Tìm tên, MSSV, email" id="student-search"
-      autocomplete="off" autocorrect="off">
-  </div>
-</div>
 <table id="student-table" class="data-table tm">
   <thead>
     <tr>
@@ -56,8 +49,8 @@
       <th data-sort="full_name">Họ Tên</th>
       <th data-sort="email">Email</th>
       <th data-sort="gender">Giới tính</th>
-      <th data-sort="dob">Ngày sinh</th>
       <th data-sort="phone">Điện thoại</th>
+      <th data-sort="classroom_name">Lớp</th>
     </tr>
   </thead>
   <tbody>
@@ -70,13 +63,20 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const tableManager = new TableManager({
+    const tm = new TableManager({
       tableSelector: '#student-table',
       paginationSelector: '#student-pagination',
       apiUrl: '<?= url("api/students") ?>',
       defaultSort: 'account_id',
       defaultDir: 'ASC',
-      searchSelector: '#student-search',
+      filters: [{
+        key: 'classroom_id',
+        label: 'Lớp học',
+        type: 'api',
+        url: '<?= url("api/classrooms") ?>',
+        required: true, // Bắt buộc phải chọn (nếu rỗng = không có dữ liệu)
+        autoSelectFirst: true // Tự động chọn option đầu tiên
+      }],
       renderRow: function(student) {
         const detailUrl = `<?= url('admin/students/') ?>${student.account_id}`;
 
@@ -86,12 +86,14 @@
         <td>${student.full_name || 'N/A'}</td>
         <td>${student.account?.email || 'N/A'}</td>
         <td>${student.gender || 'N/A'}</td>
-        <td>${student.dob || 'N/A'}</td>
         <td>${student.phone || 'N/A'}</td>
+        <td>
+          <span class="badge" data-variant="secondary">${student?.classroom?.short_name || 'N/A'}</span>
+        </td>
       </tr>
       `;
       }
     });
-    tableManager.loadData(1);
+    tm.init('Tìm tên, MSSV, Email...');
   });
 </script>

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 require_once BASE_PATH . '/models/major.php';
@@ -59,7 +60,20 @@ class ClassroomService implements IClassroomRepository
 
   public function getAllClassrooms(): array
   {
-    $stmt = $this->db->prepare("SELECT * FROM `classrooms`");
+    $sql = "
+      SELECT c.*, COUNT(st.account_id) AS student_count 
+      FROM classrooms c 
+      LEFT JOIN (
+      	SELECT s.*
+          FROM students s
+          LEFT JOIN accounts a ON a.id = s.account_id
+          WHERE a.deleted_at IS NULL
+      ) as st ON c.id = st.classroom_id
+      WHERE c.deleted_at IS NULL
+      GROUP BY c.id 
+      ORDER BY c.class_of DESC
+    ";
+    $stmt = $this->db->prepare($sql);
     $stmt->execute();
 
     return array_map(fn($row) => Classroom::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -249,4 +263,3 @@ class ClassroomService implements IClassroomRepository
       ->execute([':full_name' => $fullName, ':id' => $id]);
   }
 }
-?>

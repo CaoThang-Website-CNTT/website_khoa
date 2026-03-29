@@ -34,10 +34,15 @@ class StudentController extends Controller
     $sortDir = $request->query('dir') ?? 'ASC';
     $search = $request->query('search') ?? '';
     $limit = 15;
+    // Lấy các tham số filter từ URL (Dạng array: &gender[]=Nam&classroom_id[]=1)
+    $filters = [
+      'gender' => $request->query('gender') ?? [],
+      'classroom_id' => $request->query('classroom_id') ?? []
+    ];
 
     try {
-      $students = $this->_educationService->getAllStudents($currentPage, $limit, $sortCol, $sortDir, $search);
-      $total = $this->_educationService->getTotalStudentsCount($search);
+      $students = $this->_educationService->getAllStudents($currentPage, $limit, $sortCol, $sortDir, $search, $filters);
+      $total = $this->_educationService->getTotalStudentsCount($search, $filters);
 
       $responseData = [
         'items'       => $students,

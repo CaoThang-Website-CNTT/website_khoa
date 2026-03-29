@@ -20,8 +20,7 @@ class Student
     // Referenced Account data
     public ?Account $account = null,
     public ?Classroom $classroom = null
-  ) {
-  }
+  ) {}
   /**
    * Tự động mapping trường dữ liệu DB
    * @param array $data
@@ -39,7 +38,8 @@ class Student
       classroom_id: $data['classroom_id'] ?? null,
       major: $data['major'] ?? null,
       birth_place: $data['birth_place'] ?? null,
-      account: isset($data['acc_email']) ? Account::fromArray($data, 'acc_') : null
+      account: isset($data['acc_email']) ? Account::fromArray($data, 'acc_') : null,
+      classroom: isset($data['cla_id']) ? Classroom::fromArray($data, 'cla_') : null
     );
   }
 }

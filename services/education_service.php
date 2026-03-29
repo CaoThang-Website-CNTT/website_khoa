@@ -113,72 +113,80 @@ class EducationService implements IEducationRepository
     $stmt->execute($params);
     return $stmt->fetchColumn() == 0;
   }
+  private function buildStudentFilterQuery(string &$sql, array &$params, string $search, array $filters)
+  {
+    if (!empty($search)) {
+      $sql .= " AND (s.full_name LIKE :s1 OR s.student_id LIKE :s2 OR a.email LIKE :s3)";
+      $term = "%$search%";
+      $params[':s1'] = $term;
+      $params[':s2'] = $term;
+      $params[':s3'] = $term;
+    }
 
+    // Lọc theo Lớp học (Multi-select)
+    if (!empty($filters['classroom_id']) && is_array($filters['classroom_id'])) {
+      $cKeys = [];
+      foreach ($filters['classroom_id'] as $i => $c) {
+        $key = ":class_$i";
+        $cKeys[] = $key;
+        $params[$key] = $c;
+      }
+      $sql .= " AND s.classroom_id IN (" . implode(',', $cKeys) . ")";
+    }
+  }
   // ===================================
   // Student Methods
   // ===================================
-  public function getTotalStudentsCount(string $search = ''): int
+  public function getTotalStudentsCount(string $search = '', array $filters = []): int
   {
-    $sql = "SELECT COUNT(s.account_id) 
-            FROM `students` s
-            INNER JOIN `accounts` a ON s.`account_id` = a.`id`
-            WHERE a.`deleted_at` IS NULL";
+    $sql = "SELECT COUNT(s.account_id) FROM `students` s INNER JOIN `accounts` a ON s.`account_id` = a.`id` WHERE a.`deleted_at` IS NULL";
+    $params = [];
 
-    if (!empty($search)) {
-      $sql .= " AND (s.full_name LIKE :s1 OR s.student_id LIKE :s2 OR a.email LIKE :s3)";
-    }
+    $this->buildStudentFilterQuery($sql, $params, $search, $filters);
 
     $stmt = $this->db->prepare($sql);
-    if (!empty($search)) {
-      $term = "%$search%";
-      $stmt->bindValue(':s1', $term);
-      $stmt->bindValue(':s2', $term);
-      $stmt->bindValue(':s3', $term);
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
     }
     $stmt->execute();
-
     return (int) $stmt->fetchColumn();
   }
 
-  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'ASC', string $search = ''): array
+  public function getAllStudents(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'ASC', string $search = '', array $filters = []): array
   {
     $offset = (max(1, $pageTo) - 1) * $limit;
     $allowedSortColumns = [
       'account_id' => 's.account_id',
-      'full_name'  => 's.full_name',
-      'email'      => 'a.email',
-      'gender'     => 's.gender',
-      'dob'        => 's.dob',
-      'phone'      => 's.phone'
+      'full_name' => 's.full_name',
+      'email' => 'a.email',
+      'gender' => 's.gender',
+      'dob' => 's.dob',
+      'phone' => 's.phone'
     ];
-
     $orderBy = $allowedSortColumns[$sortCol] ?? 's.account_id';
     $direction = strtoupper($sortDir) === 'ASC' ? 'ASC' : 'DESC';
 
-    $sql = "SELECT 
-                s.*,
-                a.id AS acc_id, a.email as acc_email, a.role AS acc_role, 
-                a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
-            FROM `students` s
-            INNER JOIN `accounts` a ON s.`account_id` = a.`id`
-            WHERE a.`deleted_at` IS NULL";
+    $sql = "SELECT s.*, 
+              a.id AS acc_id, 
+              a.email as acc_email, 
+              c.id AS cla_id, 
+              c.short_name AS cla_short_name 
+            FROM `students` s 
+            INNER JOIN `accounts` a ON s.`account_id` = a.`id` 
+            LEFT JOIN `classrooms` c ON s.`classroom_id` = c.`id`
+            WHERE a.`deleted_at` IS NULL AND c.`deleted_at` IS NULL";
+    $params = [];
 
-    if (!empty($search)) {
-      $sql .= " AND (s.full_name LIKE :s1 OR s.student_id LIKE :s2 OR a.email LIKE :s3)";
-    }
+    $this->buildStudentFilterQuery($sql, $params, $search, $filters);
 
     $sql .= " ORDER BY {$orderBy} {$direction} LIMIT :limit OFFSET :offset";
 
     $stmt = $this->db->prepare($sql);
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-
-    if (!empty($search)) {
-      $term = "%$search%";
-      $stmt->bindValue(':s1', $term);
-      $stmt->bindValue(':s2', $term);
-      $stmt->bindValue(':s3', $term);
-    }
     $stmt->execute();
 
     return array_map(fn($row) => Student::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));

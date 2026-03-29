@@ -22,7 +22,24 @@ class ClassroomController extends Controller
   {
     $this->_classroomService = $classroomService;
   }
+  public function apiIndex(Request $request)
+  {
+    try {
+      $classrooms = $this->_classroomService->getAllClassrooms();
+      // Format dữ liệu trả về cho Dropdown Filter: { value, label }
+      $data = array_map(function ($c) {
+        return [
+          'value' => $c->id,
+          'label' => $c->short_name,
+          'count' => $c->student_count
+        ];
+      }, $classrooms);
 
+      jsonResponse($data, 'Thành công', true);
+    } catch (\Exception $e) {
+      jsonResponse([], 'Lỗi hệ thống', false, [$e->getMessage()]);
+    }
+  }
   public function index(Request $request)
   {
     $currentPage = $request->query('page') ?? 1;
