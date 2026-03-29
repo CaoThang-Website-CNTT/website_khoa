@@ -68,7 +68,7 @@ class TeacherService implements ITeacherService
           throw new \Exception('Email này đã tồn tại trong hệ thống.');
         }
       } else {
-        $data['email'] = strtolower(str_replace(' ', '', $data['full_name'])) . '@caothang.edu.vn';
+        $data['email'] = str_replace('-', '', generateSlug($data['full_name'])) . '@caothang.edu.vn';
       }
 
       // Create account

@@ -16,8 +16,10 @@ class StudentController extends Controller
   private StudentService $_studentService;
   private ClassroomService $_classroomService;
 
-  public function __construct(StudentService $studentService, ClassroomService $classroomService)
-  {
+  public function __construct(
+    StudentService $studentService,
+    ClassroomService $classroomService
+  ) {
     $this->_studentService = $studentService;
     $this->_classroomService = $classroomService;
   }
@@ -44,36 +46,45 @@ class StudentController extends Controller
   public function store(Request $request)
   {
     $data = $request->all();
-    $validator = new Validator();
 
+    $validator = new Validator();
     $rules = [
-      'student_id' => ['required', 'mssv', 'max:10'],
       'full_name' => ['required', 'max:255'],
-      'phone' => ['required', 'phone', 'max:15'],
-      'gender' => ['required'],
       'dob' => ['required', 'date'],
-      'major' => ['max:150'],
+      'birth_place' => ['required', 'max:255'],
+      'national_id' => ['required', 'size:12'],
+      'gender' => ['required', 'in:male,female'],
+      'phone' => ['required', 'phone', 'max:15'],
+      'address' => ['required'],
+
+      'student_id' => ['required', 'size:10'],
       'classroom_id' => ['required'],
-      'birth_place' => ['max:255'],
+      'notes' => ['nullable'],
+
+      'status' => ['required', 'in:Đang học,Đã tốt nghiệp,Tạm ngưng,Thôi học']
     ];
 
     if (!$validator->validate($data, $rules)) {
-      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/create');
     }
 
     if (!$this->_studentService->isStudentIdUnique($data['student_id'])) {
       $validator->addError('student_id', 'Mã số sinh viên này đã tồn tại trong hệ thống.');
-      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/create');
     }
 
-    $newStudentId = $this->_studentService->createStudent($data, $data['national_id']);
+    $newStudent = $this->_studentService->createStudent($data);
 
-    if ($newStudentId) {
-      $request->flash('success', 'Tạo mới sinh viên thành công!');
+    if ($newStudent) {
+      $request->flash(
+        'success',
+        'Tạo mới sinh viên thành công!',
+        'Sinh viên có mã #' . $newStudent->student_id . ' đã được tạo.'
+      );
     } else {
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }

@@ -38,7 +38,7 @@ class Validator
     switch ($rule) {
       case 'required':
         if (is_null($value) || trim($value) === '') {
-          $this->addError($field, "Trường này không được để trống.");
+          $this->addError($field, "Ô này không được để trống.");
         }
         break;
       case 'password':

@@ -40,35 +40,45 @@ class TeacherController extends Controller
 
     $validator = new Validator();
     $rules = [
-      'email' => ['required', 'email', 'max:255'],
-      'password' => ['required', 'password'],
-      'password_comfirmation' => ['required', 'same:password'],
       'full_name' => ['required', 'max:255'],
-      'phone' => ['required', 'phone', 'max:15'],
-      'gender' => ['required'],
       'dob' => ['required', 'date'],
-      'title' => ['max:150'],
-      'department' => ['max:255'],
+      'national_id' => ['required', 'size:12'],
+      'gender' => ['required', 'in:male,female'],
+      'phone' => ['required', 'phone', 'max:15'],
+      'address' => ['required'],
+
+      'staff_code' => ['required', 'size:10'],
+      'degree' => ['required', 'max:255'],
+      'title' => ['nullable', 'max:150'],
+      'position' => ['required', 'max:255'],
+      'department' => ['required', 'max:255'],
+      'contract_type' => ['required', 'in:full_time,part_time,visiting,contract'],
       'start_date' => ['required', 'date'],
+      'end_date' => ['required', 'date'],
+      'notes' => ['nullable'],
     ];
 
     if (!$validator->validate($data, $rules)) {
-      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/create');
     }
 
     if ($this->_teacherService->isEmailUnique($data['email']) === false) {
       $validator->addError('email', 'Email này đã tồn tại trong hệ thống.');
-      $request->flashOldInputs(excludedKeys: ['password']);
+      $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/create');
     }
 
-    $newTeacherId = $this->_teacherService->createTeacher($data, $data['password']);
+    $newTeacher = $this->_teacherService->createTeacher($data);
 
-    if ($newTeacherId) {
-      $request->flash('success', 'Tạo mới giảng viên thành công!');
+    if ($newTeacher) {
+      $request->flash(
+        'success',
+        'Tạo mới giảng viên thành công!',
+        'Giảng viên có mã #' . $newTeacher->staff_code . ' đã được tạo.'
+      );
     } else {
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
