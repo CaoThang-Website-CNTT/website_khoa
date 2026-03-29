@@ -5,24 +5,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
 class FormHandler {
   constructor() {
-    this._fields = document.querySelectorAll(".field");
-    this._form = document.querySelector("form:has(.field-group, .field)");
+    this._form = document.querySelector("form:has(.field-group, .field, .radio-group)");
     this._errors = window.__errors__ ?? {};
     this._old = window.__old__ ?? {};
 
     this._icons = {
       error: `<i class="fa-solid fa-circle-exclamation"></i>`
-    }
+    };
   }
-
-  /**
-   * Khởi tạo các logic liên quan đến form.
-   * @private
-   */
   init() {
-    if (!this._fields.length) return;
+    // Xử lý các loại field chuyên biệt
+    this._initFields();
+    this._initRadioGroups();
+  }
+  _initFields() {
+    // Lọc lấy các field <input /> thông thường
+    const fields = [...document.querySelectorAll(".field")].filter(
+      field => !field.closest(".radio-group")
+    );
 
-    this._fields.forEach(field => {
+    fields.forEach(field => {
       const fieldInput = field.querySelector(".field__input");
       if (!fieldInput) return;
 
@@ -43,27 +45,23 @@ class FormHandler {
   /**
    * Lấy các data attribute bắt đầu với "field".
    * @private
-   * @param {DOMStringMap} dataset - Thuộc tính dataset của một element (field).
-   * @returns {Array<{type: string, value: string}>} Mảng các data attribute đã được lấy.
+   * @param {DOMStringMap} dataset
+   * @returns {Array<{type: string, value: string}>}
    */
   _getFieldRules(dataset) {
     const rules = [];
     for (const key in dataset) {
       if (key.startsWith("field")) {
-        rules.push({
-          type: key,
-          value: dataset[key]
-        });
+        rules.push({ type: key, value: dataset[key] });
       }
     }
     return rules;
   }
 
   /**
-   * Áp dụng rule lên các field input.
    * @private
-   * @param {HTMLElement} input - Input element sẽ áp dụng.
-   * @param {Object} rule - Loại rule sẽ được áp dụng.
+   * @param {HTMLElement} input
+   * @param {{ type: string, value: string }} rule
    */
   _applyRule(input, rule) {
     const { type, value } = rule;
@@ -80,29 +78,19 @@ class FormHandler {
         input.required = value !== "false";
         break;
       case "fieldMin":
-        if (isNumericOrDate) {
-          input.min = value;
-        } else {
-          input.minLength = value;
-        }
+        input[isNumericOrDate ? 'min' : 'minLength'] = value;
         break;
       case "fieldMax":
-        if (isNumericOrDate) {
-          input.max = value;
-        } else {
-          input.maxLength = value;
-        }
+        input[isNumericOrDate ? 'max' : 'maxLength'] = value;
         break;
       default:
-        console.warn(`FormHandler: Không nhận dạng được ruleType "${ruleType}"`);
+        console.warn(`FormHandler: Không nhận dạng được ruleType "${type}"`);
     }
   }
-
   /**
-   * Điền lại giá trị cũ vào input từ dữ liệu old input của session trước.
-   * Hỗ trợ các loại input: text, select, checkbox, radio.
+   * Điền lại giá trị cũ. Hỗ trợ: text, select, checkbox, radio, hidden, textarea.
    * @private
-   * @param {HTMLElement} input - Input element cần điền lại giá trị.
+   * @param {HTMLElement} input
    */
   _fillOld(input) {
     const value = this._old[input.name];
@@ -122,52 +110,126 @@ class FormHandler {
       input.value = value;
     }
   }
-
   /**
-   * Hiển thị thông báo lỗi cho một field và đánh dấu trạng thái không hợp lệ.
-   * Nếu field đã có lỗi trước đó, lỗi cũ sẽ bị xoá trước khi render lỗi mới.
+   * Render error span ngay sau anchor element, đánh dấu field container invalid.
+   * Dùng :scope > .field__error để tránh nhầm với error của nested elements.
    * @private
-   * @param {HTMLElement} field - Field container chứa input cần hiển thị lỗi.
-   * @param {HTMLElement} input - Input element tương ứng với field.
-   * @param {string|string[]} messages - Thông báo lỗi hoặc mảng thông báo lỗi. Chỉ hiển thị thông báo đầu tiên.
+   * @param {HTMLElement} field - Container nhận data-field-invalid / aria-invalid.
+   * @param {HTMLElement} anchor - Element mà span sẽ insertAdjacentElement('afterend').
+   * @param {string|string[]} messages
    */
-  _renderError(field, input, messages) {
+  _renderError(field, anchor, messages) {
     const message = Array.isArray(messages) ? messages[0] : messages;
 
-    field.dataset.fieldInvalid = true;
-    field.ariaInvalid = true;
-
-    field.querySelector('.field__error')?.remove();
+    field.ariaInvalid = "true";
+    field.querySelector(':scope > .field__error')?.remove();
 
     const span = document.createElement('span');
     span.className = 'field__error';
     span.innerHTML = this._icons['error'];
     span.appendChild(document.createTextNode(message));
-    input.insertAdjacentElement('afterend', span);
+    anchor.insertAdjacentElement('afterend', span);
   }
-
   /**
-   * Xoá trạng thái lỗi của một field, bao gồm thuộc tính data-field-invalid,
-   * aria-invalid và phần tử thông báo lỗi .field__error.
+   * Xoá trạng thái lỗi của một field container.
    * @private
-   * @param {HTMLElement} field - Field container cần xoá trạng thái lỗi.
+   * @param {HTMLElement} field
    */
   _clearError(field) {
-    delete field.dataset.fieldInvalid;
-    field.ariaInvalid = false;
-    field.querySelector('.field__error')?.remove();
+    field.removeAttribute('aria-invalid');
+    field.querySelector(':scope > .field__error')?.remove();
   }
-
   /**
-   * Gắn sự kiện tự động xoá lỗi khi người dùng bắt đầu nhập liệu vào input.
-   * Lắng nghe cả sự kiện `input` (text, textarea) và `change` (select, checkbox, radio).
    * @private
-   * @param {HTMLElement} field - Field container chứa input.
-   * @param {HTMLElement} input - Input element cần gắn sự kiện.
+   * @param {HTMLElement} field
+   * @param {HTMLElement} input
    */
   _bindClearOnInput(field, input) {
     const clear = () => this._clearError(field);
     input.addEventListener('input', clear);
     input.addEventListener('change', clear);
+  }
+  _initRadioGroups() {
+    const groups = document.querySelectorAll(".radio-group");
+    if (!groups.length) return;
+
+    groups.forEach(group => {
+      const name = group.dataset.radioName;
+      if (!name) return;
+
+      const radioBtns = group.querySelectorAll('button.radio-group__item');
+      if (!radioBtns.length) return;
+
+      this._fillOldRadio(group, name, radioBtns);
+
+      if (this._errors[name]) {
+        this._renderRadioError(group, radioBtns, this._errors[name]);
+      }
+
+      group.addEventListener('radio:change', () => {
+        this._clearRadioError(group, radioBtns);
+      });
+    });
+  }
+  /**
+   * Điền lại old value cho radio group:
+   * cập nhật data-state trên từng button và value của hidden input (nếu đã tồn tại).
+   *
+   * Lưu ý thứ tự khởi tạo: FormHandler nên chạy trước RadioHandler.
+   * RadioHandler._setDefaultState sẽ thấy data-state đã được set và bỏ qua,
+   * nhưng vẫn tạo hidden input với data-radio-default-value. Ta override lại
+   * hidden input value sau đó thông qua sự kiện nếu cần.
+   * @private
+   * @param {HTMLElement} group
+   * @param {string} name
+   * @param {NodeList} radioBtns
+   */
+  _fillOldRadio(group, name, radioBtns) {
+    const oldValue = this._old[name];
+    if (oldValue === undefined) return;
+
+    const strOld = String(oldValue);
+    radioBtns.forEach(btn => {
+      btn.dataset.state = btn.value === strOld ? "checked" : "unchecked";
+    });
+
+    const hiddenInput = group.querySelector('input[type="hidden"]');
+    if (hiddenInput) hiddenInput.value = strOld;
+  }
+  /**
+   * Render lỗi cho radio group.
+   * - data-field-invalid + aria-invalid trên .radio-group container
+   * - aria-invalid trên mỗi button.radio-group__item
+   * - Một .field__error span duy nhất là direct child của .radio-group,
+   * @private
+   * @param {HTMLElement} group
+   * @param {NodeList} radioBtns
+   * @param {string|string[]} messages
+   */
+  _renderRadioError(group, radioBtns, messages) {
+    const message = Array.isArray(messages) ? messages[0] : messages;
+
+    group.ariaInvalid = "true";
+    radioBtns.forEach(btn => btn.ariaInvalid = "true");
+
+    group.querySelector(':scope > .field__error')?.remove();
+
+    const span = document.createElement('span');
+    span.className = 'field__error';
+    span.innerHTML = this._icons['error'];
+    span.appendChild(document.createTextNode(message));
+
+    group.insertAdjacentElement('afterend', span);
+  }
+  /**
+   * Xoá trạng thái lỗi của radio group và tất cả button.
+   * @private
+   * @param {HTMLElement} group
+   * @param {NodeList} radioBtns
+   */
+  _clearRadioError(group, radioBtns) {
+    group.removeAttribute('aria-invalid');
+    radioBtns.forEach(btn => btn.ariaInvalid = null);
+    group.querySelector(':scope > .field__error')?.remove();
   }
 }

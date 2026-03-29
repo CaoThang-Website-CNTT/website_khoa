@@ -6,92 +6,241 @@ $old_input = request()->getOldInputs() ?? [];
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
-
-<div class="detail-panel card shadow">
-  <div class="card__header">
-    <div class="card__title">
-      <h6>Create new Student</h6>
+<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php if ($flash = request()->getFlash()): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      toast.<?= ($flash['type']) ?>(
+        '<?= $flash['title'] ?>',
+        '<?= $flash['desc'] ?>'
+      );
+    });
+  </script>
+<?php endif; ?>
+<!-- ========== title-wrapper start ========== -->
+<div class="title-wrapper">
+  <div class="flex justify-between items-center">
+    <div class="col-6 col-md-6">
+      <h2 class="title text-2xl font-semibold">
+        Thêm sinh viên mới
+      </h2>
+      <p>Điền thông tin sinh viên mới vào các trường dưới đây</p>
     </div>
-    <div class="card__description">
-      This is creating new Student form
-    </div>
-  </div>
-  <div class="card__content">
-    <?php
-    include BASE_PATH . '/templates/components/flash_alert.php';
-    ?>
-    <form id="user-add-form" method="POST" action="<?= url('admin/students/store') ?>">
-      <div class="field-group">
-        <div class="field" data-field-required>
-          <label for="email">Email</label>
-          <input id="email" class="field__input" type="text" name="email"
-            value="Mặc định sẽ có dạng: mssv@caothang.edu.vn">
-        </div>
 
-        <div class="field" data-field-required>
-          <label for="password">Password</label>
-          <input id="password" class="field__input" type="text" name="password" value="Mặc định là: Khoacntt@123">
-        </div>
-
-        <div class="field" data-field-required>
-          <label for="student_id">Student ID</label>
-          <input id="student_id" class="field__input" type="text" name="student_id" value="">
-        </div>
-
-        <div class="field" data-field-required>
-          <label for="full_name">Full Name</label>
-          <input id="full_name" class="field__input" type="text" name="full_name" value="">
-        </div>
-
-        <div class="field" data-field-required>
-          <label for="gender">Gender</label>
-          <select id="gender" class="field__input" name="gender">
-            <option value="male">Nam</option>
-            <option value="female">Nữ</option>
-          </select>
-        </div>
-
-        <div class="field" data-field-required>
-          <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input" type="date" name="dob" value="">
-        </div>
-
-        <div class="field" data-field-required>
-          <label for="phone">Phone</label>
-          <input id="phone" class="field__input" type="tel" name="phone" value="">
-        </div>
-
-        <div class="field" data-field-required>
-          <label for="classroom_id">Classroom</label>
-          <select id="classroom_id" class="field__input" name="classroom_id">
-            <option value="" selected>
-              -- Chọn lớp học--
-            </option>
-            <?php foreach ($classrooms as $classroom): ?>
-              <option value=<?= htmlspecialchars($classroom->id) ?>>
-                <?= htmlspecialchars($classroom->name); ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="major">Major</label>
-          <input id="major" class="field__input" type="text" name="major" value="">
-        </div>
-
-        <div class="field">
-          <label for="birth_place">Birth Place</label>
-          <input id="birth_place" class="field__input" type="text" name="birth_place" value="">
-        </div>
+    <div class="flex gap-2">
+      <div>
+        <a href="<?= request()->previous(fallback: 'admin/students') ?>" data-variant="outline" data-size="lg"
+          class="btn">
+          <i class="fa-solid fa-chevron-left"></i>
+          Quay lại
+        </a>
       </div>
-    </form>
-  </div>
-  <div class="card__footer">
-    <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary"
-      data-size="lg" class="w-full btn">Thêm</button>
+      <div>
+        <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary"
+          data-size="lg" class="w-full btn">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Thêm
+        </button>
+      </div>
+    </div>
   </div>
 </div>
+<!-- ========== title-wrapper end ========== -->
+<form class="detail-layout" id="student-add-form" action="<?= url('admin/students') ?>" method="POST">
+  <div class="detail-layout__main">
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Thông tin cá nhân</legend>
+          <p class="field__description">
+            Vui lòng điền đầy đủ thông tin cá nhân của sinh viên. Những trường có dấu * là bắt buộc.
+          </p>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div class="field-group">
+            <div class="field" data-field-required>
+              <label class="field__label" for="full_name">Họ và tên</label>
+              <input id="full_name" class="field__input" type="text" name="full_name" placeholder="Nguyễn Văn An"
+                value="">
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div class="field" data-field-required>
+                <label class="field__label" for="dob">Ngày Sinh</label>
+                <input id="dob" class="field__input" type="date" name="dob" value="">
+              </div>
+
+              <div class="field" data-field-required>
+                <label class="field__label" for="birth_place">Nơi sinh</label>
+                <input id="birth_place" class="field__input" type="text" name="birth_place" placeholder="TPHCM"
+                  value="">
+              </div>
+
+              <div class="field" data-field-required data-field-max="12">
+                <label class="field__label" for="national_id">CCCD</label>
+                <input id="national_id" class="field__input" type="text" name="national_id" placeholder="12 số"
+                  value="">
+              </div>
+            </div>
+
+            <fieldset class="field__set">
+              <legend class="field__label">Giới tính</legend>
+              <div class="radio-group" data-field-required data-radio-name="gender">
+                <label class="field__label">
+                  <div class="field" data-orientation="horizontal">
+                    <button id="gender-male" class="radio-group__item" type="button" role="radio" value="male"></button>
+                    <div class="field__title">
+                      Nam
+                    </div>
+                  </div>
+                </label>
+                <label class="field__label">
+                  <div class="field" data-orientation="horizontal">
+                    <button id="gender-female" class="radio-group__item" type="button" role="radio"
+                      value="female"></button>
+                    <div class="field__title">
+                      Nữ
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field" data-field-required data-field-max="10">
+              <label class="field__label" for="phone">Số điện thoại</label>
+              <input id="phone" class="field__input" type="tel" name="phone" placeholder="0901234567" value="">
+            </div>
+
+
+            <div class="field" data-field-required>
+              <label class="field__label" for="address">Địa chỉ thường trú</label>
+              <textarea id="address" class="field__input" type="tel" name="address"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" value=""></textarea>
+            </div>
+
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Thông tin sinh viên</legend>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div class="field-group">
+
+            <div class="field" data-field-required data-field-max="10">
+              <label class="field__label" for="student_id">MSSV</label>
+              <input id="student_id" class="field__input" type="text" name="student_id" value="">
+            </div>
+
+            <div class="field" data-field-required>
+              <label class="field__label" for="classroom_id">Lớp học</label>
+              <select id="classroom_id" class="field__input" name="classroom_id">
+                <option value="" selected>
+                  -- Chọn lớp học--
+                </option>
+                <?php foreach ($classrooms as $classroom): ?>
+                  <option value=<?= htmlspecialchars($classroom->id) ?>>
+                    <?= htmlspecialchars($classroom->short_name); ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field__label">Ghi chú</label>
+              <textarea id="notes" class="field__input" type="tel" name="notes" placeholder="Ghi chú về sinh viên này"
+                value=""></textarea>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Tài khoản sinh viên</legend>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div class="field-group">
+
+            <div class="field" data-field-required data-field-readonly>
+              <label class="field__label" for="email">Email</label>
+              <input id="email" class="field__input" type="text" name="email" value="">
+              <p class="field__description">Email sẽ được tự động tạo theo định dạng MSSV@caothang.edu.vn</p>
+            </div>
+
+            <div class="field" data-field-required data-field-readonly>
+              <label class="field__label" for="password">Mật khẩu</label>
+              <input id="password" class="field__input" type="password" name="password" value="0306231298">
+              <p class="field__description">Mật khẩu mặc định là CCCD</p>
+            </div>
+
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+  <div class="detail-layout__sidebar">
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Trạng thái sinh viên</legend>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <fieldset class="field__set">
+            <legend class="field__label">Trạng thái</legend>
+            <div class="radio-group" data-field-required data-radio-name="status">
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-studying" class="radio-group__item" type="button" role="radio"
+                    value="Đang học"></button>
+                  <div class="field__title">
+                    Đang học
+                  </div>
+                </div>
+              </label>
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-graduated" class="radio-group__item" type="button" role="radio"
+                    value="Đã tốt nghiệp"></button>
+                  <div class="field__title">
+                    Đã tốt nghiệp
+                  </div>
+                </div>
+              </label>
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-suspended" class="radio-group__item" type="button" role="radio"
+                    value="Tạm ngưng"></button>
+                  <div class="field__title">
+                    Tạm ngưng
+                  </div>
+                </div>
+              </label>
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-dropped_out" class="radio-group__item" type="button" role="radio"
+                    value="Thôi học"></button>
+                  <div class="field__title">
+                    Thôi học
+                  </div>
+                </div>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+</form>
+
 <!-- Add confirm modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
@@ -113,30 +262,30 @@ $old_input = request()->getOldInputs() ?? [];
     </svg>
   </button>
 </div>
-<div class="modal-overlay" data-modal-close></div>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector('#user-add-form');
-    const createBtn = document.querySelector('#create-submit-btn');
+    const form = document.querySelector('#student-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
 
-    const modal = new Modal("#confirm-modal");
-    const closeTriggers = document.querySelectorAll('[data-modal-close]');
+    const studentIdInput = document.querySelector('#student_id');
+    const nationalIdInput = document.querySelector('#national_id');
 
-    let pendingActionUrl = '';
+    const emailInput = document.querySelector('#email');
+    const passwordInput = document.querySelector('#password');
 
-    console.log(modal)
+    studentIdInput.addEventListener('input', function () {
+      const studentId = this.value.trim();
+      emailInput.value = studentId ? `${studentId}@caothang.edu.vn` : '';
+    });
 
-    // Create Btn Event Listener
-    createBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      pendingActionUrl = form.getAttribute('action');
+    nationalIdInput.addEventListener('input', function () {
+      const nationalId = this.value.trim();
+      passwordInput.value = nationalId ? nationalId : '';
     });
 
     // Confirm Btn Event Listener
     confirmBtn.addEventListener('click', function () {
-      form.action = pendingActionUrl;
       form.submit();
     });
   });

@@ -92,6 +92,21 @@
   }
 
   /* ==========================================================================
+   SEPARATOR
+   ========================================================================== */
+  .separator {
+    height: 1px;
+    background: var(--border);
+    border: none;
+  }
+
+  .separator[data-orientation="vertical"] {
+    width: 1px;
+    height: auto;
+    align-self: stretch;
+  }
+
+  /* ==========================================================================
    BUTTON
    ========================================================================== */
   .btn {
@@ -205,6 +220,51 @@
 
   .switch__thumb[data-state="checked"] {
     transform: translateX(calc(100% - 2px));
+  }
+
+  /* ==========================================================================
+   RADIO GROUP
+   ========================================================================== */
+  .radio-group {
+    width: 100%;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  button.radio-group__item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 1rem;
+    height: 1rem;
+    border-radius: calc(infinity * 1px);
+    border: 1px solid var(--input);
+    outline: none;
+  }
+
+  button.radio-group__item::after {
+    aspect-ratio: 1 / 1;
+    width: 0.5rem;
+    height: 0.5rem;
+    content: "";
+    position: absolute;
+    inset: 50% 50%;
+    transform: translate(-50%, -50%);
+    border-radius: calc(infinity * 1px);
+  }
+
+  button.radio-group__item[data-state="checked"] {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+
+  button.radio-group__item[data-state="checked"]::after {
+    background: var(--primary-foreground);
+  }
+
+  button.radio-group__item[aria-invalid="true"] {
+    color: var(--destructive);
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--destructive) 20%, transparent);
   }
 
   /* ==========================================================================
@@ -456,6 +516,25 @@
   /* ==========================================================================
    FIELD
    ========================================================================== */
+  .field__set {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .field__legend {
+    font-size: var(--text-base);
+  }
+
+  .field__set > .field__legend,
+  .field__set > .field__label {
+    margin-bottom: 0.375rem;
+  }
+
+  .field__legend + .field__description {
+    margin-top: -0.375rem;
+  }
+
   .field-group {
     display: flex;
     flex-direction: column;
@@ -470,6 +549,11 @@
 
   .field[data-orientation="horizontal"] {
     flex-direction: row;
+    align-items: center;
+  }
+
+  .field:has(.field__content) {
+    align-items: start;
   }
 
   .field__content {
@@ -480,10 +564,30 @@
   }
 
   .field__label {
+    display: flex;
+    gap: 0.5rem;
+    width: fit-content;
+    user-select: none;
     line-height: 1.375;
     font-weight: var(--fw-medium);
     font-size: var(--text-sm);
     color: var(--foreground);
+  }
+
+  .field__label:has(.field) {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+  }
+
+  .field__label .field {
+    padding: 0.675rem;
+  }
+
+  .field__label:has(.radio-group__item[data-state="checked"]) {
+    color: var(--primary);
+    background: color-mix(in oklab, var(--primary) 5%, transparent);
+    border-color: var(--primary);
   }
 
   .field__description {
@@ -493,9 +597,10 @@
     text-wrap: balance;
   }
 
-  .field[data-field-required] label::after {
+  .field[data-field-required] .field__label::after,
+  .field__label:has(+ [data-field-required])::after {
     content: "*";
-    margin-left: 0.25rem;
+    margin-left: -0.25rem;
     color: var(--destructive);
   }
 
@@ -548,8 +653,13 @@
     outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
   }
 
-  .field[data-field-invalid] .field__input {
+  .field[aria-invalid] .field__input,
+  .radio-group[aria-invalid] .field__label {
     border-color: var(--destructive);
+  }
+
+  .radio-group[aria-invalid] .field__label {
+    color: var(--destructive);
   }
 
   .field[data-orientation="horizontal"] .field__input {
@@ -570,6 +680,9 @@
     margin-right: 0.25rem;
   }
 
+  /* ==========================================================================
+   MODAL
+   ========================================================================== */
   .modal {
     display: grid;
     gap: 1rem;
@@ -609,9 +722,6 @@
     }
   }
 
-  /* ==========================================================================
-   MODAL
-   ========================================================================== */
   .modal[data-state="open"] {
     animation: enter 0.15s ease 0s normal;
   }
@@ -1098,13 +1208,6 @@
     color: var(--muted-foreground);
     user-select: none;
     line-height: 1;
-  }
-
-  .dropdown__separator {
-    height: 1px;
-    background: var(--border);
-    margin: 0.25rem -0.25rem;
-    border: none;
   }
 
   .dropdown__item svg,
