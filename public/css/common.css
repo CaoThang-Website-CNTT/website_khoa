@@ -653,6 +653,20 @@
     outline: 2px solid color-mix(in oklab, var(--ring) 50%, transparent);
   }
 
+  .field__input:disabled,
+  .field__input[readonly],
+  .field[data-field-readonly] .field__input,
+  .field[data-field-disabled] .field__input {
+    background: color-mix(in oklab, var(--input) 50%, transparent);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .field__input:disabled,
+  .field[data-field-disabled] .field__input {
+    cursor: not-allowed;
+  }
+
   .field[aria-invalid] .field__input,
   .radio-group[aria-invalid] .field__label {
     border-color: var(--destructive);

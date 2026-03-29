@@ -10,6 +10,7 @@ require_once BASE_PATH . '/includes/core/pageable.php';
 use App\Stores\CategoryStore;
 use App\Models\Category;
 use App\Core\Pageable;
+use Database;
 
 interface ICategoryService
 {
@@ -20,7 +21,7 @@ interface ICategoryService
   public function getCategoriesTree(): array;
   public function getCategoryById(int $id): ?Category;
   public function getCategoryBySlug(string $slug): ?Category;
-  public function createCategory(array $data): int;
+  public function createCategory(array $data): ?Category;
   public function updateCategory(int $id, array $data): bool;
   public function deleteCategory(int $id): bool;
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool;
@@ -82,25 +83,35 @@ class CategoryService implements ICategoryService
     return $this->_categoryStore->getBySlug($slug);
   }
 
-  public function createCategory(array $data): int
+  public function createCategory(array $data): ?Category
   {
-    $slug = $data['slug'] ?? generateSlug($data['name']);
+    return Database::getInstance()->transaction(function () use ($data) {
+      // Check slug
+      // Nếu slug tồn tại, kiểm tra unique nó
+      // Còn không thì tạo từ tên danh mục
+      $slug = $data['slug'] ?? generateSlug($data['name']);
+      if (!$this->_categoryStore->isSlugUnique($slug)) {
+        throw new \InvalidArgumentException("Slug '$slug' đã tồn tại.");
+      }
 
-    if (!$this->_categoryStore->isSlugUnique($slug)) {
-      throw new \InvalidArgumentException("Slug '$slug' đã tồn tại.");
-    }
+      // 'name' => ['required', 'max:255'],
+      // 'slug' => ['nullable', 'max:255'],
+      // 'description' => ['nullable'],
+      // 'meta' => ['json'],
+      // 'parent_id' => ['nullable'],
+      $category = new Category(
+        name: $data['name'],
+        slug: $slug,
+        description: $data['description'] ?? null,
+        parent_id: (!empty($data['parent_id'])) ? (int) $data['parent_id'] : null,
+        meta: !empty($data['meta'])
+        ? (is_array($data['meta']) ? json_encode($data['meta']) : $data['meta'])
+        : null
+      );
+      print_r($data);
 
-    $category = new Category();
-    $category->name = $data['name'];
-    $category->slug = $slug;
-    $category->type = $data['type'] ?? 'custom';
-    $category->description = $data['description'] ?? null;
-    $category->parent_id = isset($data['parent_id']) ? (int) $data['parent_id'] : null;
-    $category->meta = isset($data['meta'])
-      ? (is_string($data['meta']) ? $data['meta'] : json_encode($data['meta']))
-      : null;
-
-    return $this->_categoryStore->create($category);
+      return $this->_categoryStore->create($category);
+    });
   }
 
   public function updateCategory(int $id, array $data): bool

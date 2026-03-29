@@ -20,7 +20,7 @@ interface ITeacherService
   public function getTeachers(int $page, int $limit = 15): Pageable;
   public function getTotalTeachersCount(): int;
   public function isEmailUnique(string $email): bool;
-  public function createTeacher(array $data): Teacher;
+  public function createTeacher(array $data): ?Teacher;
   public function getTeacherById(int $id): ?Teacher;
   public function updateTeacher(int $id, array $data): bool;
   public function deleteTeacher(int $id): bool;
@@ -57,7 +57,7 @@ class TeacherService implements ITeacherService
     return $this->_accountStore->isEmailUnique($email);
   }
 
-  public function createTeacher(array $data): Teacher
+  public function createTeacher(array $data): ?Teacher
   {
     return Database::getInstance()->transaction(function () use ($data) {
       // Check mail

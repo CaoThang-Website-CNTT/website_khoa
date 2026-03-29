@@ -21,7 +21,7 @@ interface ICategoryStore
   public function getByType(string $type): array;
   public function getById(int $id): ?Category;
   public function getBySlug(string $slug): ?Category;
-  public function create(Category $category): int;
+  public function create(Category $category): ?Category;
   public function update(Category $category): bool;
   public function softDelete(int $id): bool;
   public function getTotalCount(): int;
@@ -130,22 +130,28 @@ class CategoryStore extends Store implements ICategoryStore
     return $row ? Category::fromArray($row) : null;
   }
 
-  public function create(Category $category): int
+  public function create(Category $category): ?Category
   {
-    $stmt = $this->db->prepare("
-      INSERT INTO `categories` (name, slug, type, description, parent_id, meta)
-      VALUES (:name, :slug, :type, :description, :parent_id, :meta)
-    ");
-    $stmt->execute([
+    $sql = "
+      INSERT INTO `categories` (name, slug, description, parent_id, meta)
+      VALUES (:name, :slug, :description, :parent_id, :meta)
+    ";
+    $stmt = $this->db->prepare($sql);
+    $success = $stmt->execute([
       ':name' => $category->name,
       ':slug' => $category->slug,
-      ':type' => $category->type,
       ':description' => $category->description,
       ':parent_id' => $category->parent_id,
       ':meta' => $category->meta,
     ]);
 
-    return (int) $this->db->lastInsertId();
+    if (!$success) {
+      throw new \Exception('Không thể lưu danh mục vào cơ sở dữ liệu.');
+    }
+
+    $category->id = (int) $this->db->lastInsertId();
+
+    return $category;
   }
 
   public function update(Category $category): bool

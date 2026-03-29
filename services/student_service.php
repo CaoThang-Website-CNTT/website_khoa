@@ -21,7 +21,7 @@ interface IStudentService
   /** @return Pageable */
   public function getStudents(int $page, int $limit = 15): Pageable;
   public function isStudentIdUnique(string $studentId): bool;
-  public function createStudent(array $data): Student;
+  public function createStudent(array $data): ?Student;
   public function getStudentById(int $id): ?Student;
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
@@ -78,7 +78,7 @@ class StudentService implements IStudentService
     return $this->_studentStore->isStudentIdUnique($studentId);
   }
 
-  public function createStudent(array $data): Student
+  public function createStudent(array $data): ?Student
   {
     return Database::getInstance()->transaction(function () use ($data) {
       // Check mail

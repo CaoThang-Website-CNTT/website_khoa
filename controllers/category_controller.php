@@ -62,9 +62,10 @@ class CategoryController extends Controller
     $validator = new Validator();
     $rules = [
       'name' => ['required', 'max:255'],
-      'slug' => ['max:255'],
-      'description' => ['max:5000'],
-      'parent_id' => [],
+      'slug' => ['nullable', 'max:255'],
+      'description' => ['nullable'],
+      'meta' => ['json'],
+      'parent_id' => ['nullable'],
     ];
 
     if (!$validator->validate($data, $rules)) {
@@ -73,24 +74,14 @@ class CategoryController extends Controller
       return $this->redirect('admin/categories/create');
     }
 
-    if (!$this->_categoryService->isSlugUnique($data['slug'])) {
-      $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
-      $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
-      return $this->redirect('admin/categories/create');
-    }
+    $newCategory = $this->_categoryService->createCategory($data);
 
-    try {
-      $newId = $this->_categoryService->createCategory($data);
-    } catch (\InvalidArgumentException $e) {
-      $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
-      $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
-      return $this->redirect('admin/categories/create');
-    }
-
-    if ($newId) {
-      $request->flash('success', 'Tạo danh mục thành công!');
+    if ($newCategory) {
+      $request->flash(
+        'success',
+        'Tạo danh mục thành công!',
+        'Danh mục ' . $newCategory->name . ' đã được tạo.'
+      );
     } else {
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }

@@ -86,6 +86,18 @@ class Validator
           $this->addError($field, "Ngày tháng không hợp lệ.");
         }
         break;
+      case 'json':
+        if ($value) {
+          if (!is_string($value)) {
+            $this->addError($field, "Trường này phải là một chuỗi JSON.");
+          } else {
+            json_decode($value);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+              $this->addError($field, "Trường này phải là một chuỗi JSON hợp lệ.");
+            }
+          }
+        }
+        break;
     }
   }
 
