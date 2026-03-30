@@ -9,14 +9,19 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Validator;
 use App\Services\ClassroomService;
+use App\Services\TeacherService;
 
 class ClassroomController extends Controller
 {
   private ClassroomService $_classroomService;
+  private TeacherService $_teacherService;
 
-  public function __construct(ClassroomService $classroomService)
-  {
+  public function __construct(
+    ClassroomService $classroomService,
+    TeacherService $teacherService
+  ) {
     $this->_classroomService = $classroomService;
+    $this->_teacherService = $teacherService;
   }
 
   public function index(Request $request)
@@ -33,9 +38,13 @@ class ClassroomController extends Controller
   public function create()
   {
     $majors = $this->_classroomService->getAllMajors();
+    $specializations = $this->_classroomService->getAllSpecializations();
+    $teachers = $this->_teacherService->getAllTeachers();
 
     $this->render('admin/classrooms/create', [
       'majors' => $majors,
+      'specializations' => $specializations,
+      'teachers' => $teachers,
     ], layout: 'dashboard_layout');
   }
 
@@ -46,9 +55,11 @@ class ClassroomController extends Controller
 
     $rules = [
       'major_id' => ['required'],
+      'specialization_id' => ['nullable'],
       'class_of' => ['required'],
-      'letter' => ['max:1'],
-      'specialization_id' => [],
+      'letter' => ['size:1'],
+      'short_name' => ['required'],
+      'homeroom_teacher_id' => ['required'],
     ];
 
     if (!$validator->validate($data, $rules)) {
@@ -57,10 +68,14 @@ class ClassroomController extends Controller
       return $this->redirect('admin/classrooms/create');
     }
 
-    $newClassroomId = $this->_classroomService->createClassroom($data);
+    $newClassroom = $this->_classroomService->createClassroom($data);
 
-    if ($newClassroomId) {
-      $request->flash('success', 'Lớp học đã được tạo thành công!');
+    if ($newClassroom) {
+      $request->flash(
+        'success',
+        'Lớp học đã được tạo thành công!',
+        'Lớp ' . $newClassroom->short_name . ' đã được tạo.'
+      );
     } else {
       $request->flash('error', 'Có lỗi xảy ra, không thể tạo lớp học.');
     }

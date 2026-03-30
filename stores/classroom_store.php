@@ -20,7 +20,7 @@ interface IClassroomStore
   public function getById(int $id): ?Classroom;
   /** @return Classroom[] */
   public function getByIds(array $ids): array;
-  public function create(Classroom $classroom): int;
+  public function create(Classroom $classroom): ?Classroom;
   public function update(Classroom $classroom): bool;
   public function softDelete(int $id): bool;
   public function getTotalCount(): int;
@@ -40,6 +40,8 @@ interface IClassroomStore
   public function getSpecializationsByMajorId(int $majorId): array;
   public function getSpecializationById(int $id): ?Specialization;
   /** @return Specialization[]*/
+  public function getAllSpecializations(): array;
+  /** @return Specialization[] */
   public function getBySpecializationIds(array $specializationIds): array;
   public function createSpecialization(Specialization $specialization): int;
   public function updateSpecialization(Specialization $specialization): bool;
@@ -130,7 +132,7 @@ class ClassroomStore extends Store implements IClassroomStore
     return array_map(fn($row) => Classroom::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
-  public function create(Classroom $classroom): int
+  public function create(Classroom $classroom): ?Classroom
   {
     $sql = "
       INSERT INTO classrooms (major_id, class_of, specialization_id, letter, short_name, created_at, updated_at)
@@ -138,7 +140,7 @@ class ClassroomStore extends Store implements IClassroomStore
     ";
 
     $stmt = $this->db->prepare($sql);
-    $stmt->execute([
+    $success = $stmt->execute([
       ':major_id' => $classroom->major_id,
       ':class_of' => $classroom->class_of,
       ':specialization_id' => $classroom->specialization_id,
@@ -146,7 +148,13 @@ class ClassroomStore extends Store implements IClassroomStore
       ':short_name' => $classroom->short_name,
     ]);
 
-    return (int) $this->db->lastInsertId();
+    if (!$success) {
+      throw new \Exception('Không thể lưu sinh viên vào cơ sở dữ liệu.');
+    }
+
+    $classroom->id = (int) $this->db->lastInsertId();
+
+    return $classroom;
   }
 
   public function update(Classroom $classroom): bool
@@ -305,6 +313,19 @@ class ClassroomStore extends Store implements IClassroomStore
   }
 
   // Specializations
+  /** @return Specialization[] */
+  public function getAllSpecializations(): array
+  {
+    $stmt = $this->db->prepare("
+      SELECT s.*, m.short_name AS major_short_name
+      FROM specializations s
+      JOIN majors m ON s.major_id = m.id
+      WHERE s.deleted_at IS NULL AND m.deleted_at IS NULL
+      ORDER BY s.full_name
+    ");
+    $stmt->execute();
+    return array_map(fn($row) => Specialization::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
   /** @return Specialization[] */
   public function getSpecializationsByMajorId(int $majorId): array
   {

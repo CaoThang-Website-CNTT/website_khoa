@@ -17,13 +17,15 @@ interface IClassroomService
   public function getAllClassrooms(): array;
   public function getClassroomsPaginated(int $page, int $limit = 15): Pageable;
   public function getClassroomById(int $id): ?Classroom;
-  public function createClassroom(array $data): int;
+  public function createClassroom(array $data): ?Classroom;
   public function updateClassroom(int $id, array $data): bool;
   public function deleteClassroom(int $id): bool;
   public function isShortNameUnique(string $shortName, ?int $excludeId = null): bool;
   /** @return Major[] */
   public function getAllMajors(): array;
   public function getMajorById(int $id): ?Major;
+  /** @return Specialization[] */
+  public function getAllSpecializations(): array;
   /** @return Specialization[] */
   public function getSpecializationsByMajorId(int $majorId): array;
   public function getSpecializationById(int $id): ?Specialization;
@@ -68,7 +70,7 @@ class ClassroomService implements IClassroomService
   {
     return $this->_classroomStore->getById($id);
   }
-  public function createClassroom(array $data): int
+  public function createClassroom(array $data): ?Classroom
   {
     $major = $this->_classroomStore->getMajorById((int) $data['major_id']);
     if (!$major) {
@@ -80,12 +82,13 @@ class ClassroomService implements IClassroomService
     if (!$classCode) {
       throw new \InvalidArgumentException('Mã lớp không hợp lệ. Vui lòng kiểm tra lại ngành/chuyên ngành/năm học.');
     }
-    $classroom = new Classroom();
-    $classroom->major_id = (int) $data['major_id'];
-    $classroom->specialization_id = !empty($data['specialization_id']) ? (int) $data['specialization_id'] : null;
-    $classroom->class_of = (int) $data['class_of'];
-    $classroom->letter = $data['letter'] ?? '';
-    $classroom->short_name = $classCode;
+    $classroom = new Classroom(
+      major_id: (int) $data['major_id'],
+      specialization_id: !empty($data['specialization_id']) ? (int) $data['specialization_id'] : null,
+      class_of: (int) $data['class_of'],
+      letter: $data['letter'] ?? '',
+      short_name: $classCode
+    );
     return $this->_classroomStore->create($classroom);
   }
   public function updateClassroom(int $id, array $data): bool
@@ -123,6 +126,11 @@ class ClassroomService implements IClassroomService
     return $this->_classroomStore->getMajorById($id);
   }
   /** @return Specialization[] */
+  public function getAllSpecializations(): array
+  {
+    return $this->_classroomStore->getAllSpecializations();
+  }
+  /** @return Specialization[] */
   public function getSpecializationsByMajorId(int $majorId): array
   {
     return $this->_classroomStore->getSpecializationsByMajorId($majorId);
@@ -148,9 +156,6 @@ class ClassroomService implements IClassroomService
     }
     if (empty($level) || empty($year) || empty($shortName)) {
       return null;
-    }
-    if (strlen($year) === 2) {
-      $year = '20' . $year;
     }
     if (strlen($year) !== 4 || !is_numeric($year)) {
       return null;

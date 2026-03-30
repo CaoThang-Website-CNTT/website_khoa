@@ -16,6 +16,8 @@ use Database;
 
 interface ITeacherService
 {
+  /** @return Teacher[] */
+  public function getAllTeachers(): array;
   /** @return Pageable */
   public function getTeachers(int $page, int $limit = 15): Pageable;
   public function getTotalTeachersCount(): int;
@@ -38,7 +40,11 @@ class TeacherService implements ITeacherService
     $this->_teacherStore = $teacherStore;
     $this->_accountStore = $accountStore;
   }
-
+  /** @return Teacher[] */
+  public function getAllTeachers(): array
+  {
+    return $this->_teacherStore->getAll();
+  }
   /** @return Pageable */
   public function getTeachers(int $page, int $limit = 15): Pageable
   {
