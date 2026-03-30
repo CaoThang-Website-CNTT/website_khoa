@@ -32,7 +32,7 @@ interface IMenuStore
   public function createItem(MenuItem $item): int;
   public function updateItem(MenuItem $item): bool;
   public function softDeleteItem(int $id): bool;
-  /** Cập nhật sort_order hàng loạt: ['id' => sort_order, ...] */
+  /** Cập nhật sort_order hàng loạt: [itemId => sortOrder, ...] */
   public function reorderItems(array $orderMap): bool;
 }
 
@@ -53,20 +53,19 @@ class MenuStore extends Store implements IMenuStore
 
     return array_map(fn($row) => Menu::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
+
   /** @return Menu[] */
   public function getPaginated(int $pageTo, int $limit = 15): array
   {
     $offset = (max(1, $pageTo) - 1) * $limit;
 
-    $sql = "
+    $stmt = $this->db->prepare("
       SELECT *
       FROM `menus`
       WHERE deleted_at IS NULL
       ORDER BY sort_order ASC, id ASC
       LIMIT :limit OFFSET :offset
-    ";
-
-    $stmt = $this->db->prepare($sql);
+    ");
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -105,7 +104,7 @@ class MenuStore extends Store implements IMenuStore
   public function create(Menu $menu): int
   {
     $this->db->prepare("
-      INSERT INTO `menus` (`key`, label, description, type, sort_order)
+      INSERT INTO `menus` (`key`, `label`, `description`, `type`, `sort_order`)
       VALUES (:key, :label, :description, :type, :sort_order)
     ")->execute([
           ':key' => $menu->key,
@@ -123,11 +122,11 @@ class MenuStore extends Store implements IMenuStore
     return $this->db->prepare("
       UPDATE `menus` SET
         `key`       = :key,
-        label       = :label,
-        description = :description,
-        type        = :type,
-        sort_order  = :sort_order,
-        updated_at  = NOW()
+        `label`     = :label,
+        `description` = :description,
+        `type`      = :type,
+        `sort_order` = :sort_order,
+        `updated_at` = NOW()
       WHERE id = :id AND deleted_at IS NULL
     ")->execute([
           ':key' => $menu->key,
@@ -165,13 +164,7 @@ class MenuStore extends Store implements IMenuStore
 
   public function getTotalCount(): int
   {
-    $sql = "
-      SELECT COUNT(id)
-      FROM `menus`
-      WHERE `deleted_at` IS NULL
-    ";
-
-    $stmt = $this->db->query($sql);
+    $stmt = $this->db->query("SELECT COUNT(id) FROM `menus` WHERE `deleted_at` IS NULL");
     return (int) $stmt->fetchColumn();
   }
 
@@ -208,7 +201,7 @@ class MenuStore extends Store implements IMenuStore
   public function createItem(MenuItem $item): int
   {
     $this->db->prepare("
-      INSERT INTO `menu_items` (menu_id, parent_id, label, url, sort_order)
+      INSERT INTO `menu_items` (`menu_id`, `parent_id`, `label`, `url`, `sort_order`)
       VALUES (:menu_id, :parent_id, :label, :url, :sort_order)
     ")->execute([
           ':menu_id' => $item->menu_id,
@@ -225,11 +218,11 @@ class MenuStore extends Store implements IMenuStore
   {
     return $this->db->prepare("
       UPDATE `menu_items` SET
-        parent_id  = :parent_id,
-        label      = :label,
-        url        = :url,
-        sort_order = :sort_order,
-        updated_at = NOW()
+        `parent_id`  = :parent_id,
+        `label`      = :label,
+        `url`        = :url,
+        `sort_order` = :sort_order,
+        `updated_at` = NOW()
       WHERE id = :id AND deleted_at IS NULL
     ")->execute([
           ':parent_id' => $item->parent_id,

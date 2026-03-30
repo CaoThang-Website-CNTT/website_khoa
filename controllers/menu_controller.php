@@ -46,6 +46,7 @@ class MenuController extends Controller
   {
     $data = $request->all();
 
+    // ── 1. Validate menu fields ───────────────────────────────────────────
     $validator = new Validator();
     $rules = [
       'key' => ['required', 'max:60'],
@@ -60,22 +61,52 @@ class MenuController extends Controller
       return $this->redirect('admin/menus/create');
     }
 
-    try {
-      $newId = $this->_menuService->createMenu($data);
-    } catch (\InvalidArgumentException $e) {
+    // ── 2. Key uniqueness ─────────────────────────────────────────────────
+    if (!$this->_menuService->isKeyUnique($data['key'])) {
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/menus/create');
     }
 
-    if ($newId) {
-      $request->flash('success', 'Tạo nhóm menu thành công!');
-    } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+    // ── 3. Validate each inline item (label + url required) ───────────────
+    $rawItems = is_array($data['items'] ?? null) ? $data['items'] : [];
+    foreach ($rawItems as $i => $item) {
+      if (empty($item['label'])) {
+        $validator->addError("items.{$i}.label", 'Mục ' . ($i + 1) . ': nhãn không được để trống.');
+      }
+      if (empty($item['url'])) {
+        $validator->addError("items.{$i}.url", 'Mục ' . ($i + 1) . ': URL không được để trống.');
+      }
     }
 
-    return $this->redirect('admin/menus');
+    if ($validator->hasErrors()) {
+      $request->flashOldInputs();
+      $request->flashErrors($validator->getErrors());
+      return $this->redirect('admin/menus/create');
+    }
+
+    // ── 4. Delegate to service ────────────────────────────────────────────
+    try {
+      $newMenu = $this->_menuService->create([
+        'key' => $data['key'],
+        'label' => $data['label'],
+        'description' => $data['description'] ?? null,
+        'sort_order' => $data['sort_order'] ?? 0,
+        'items' => $rawItems,
+      ]);
+
+      $itemCount = count($newMenu->items);
+      $request->flash(
+        'success',
+        'Tạo nhóm menu thành công!',
+        "Menu \"{$newMenu->label}\" đã được tạo" . ($itemCount ? " với {$itemCount} mục." : '.')
+      );
+      return $this->redirect('admin/menus/' . $newMenu->id);
+    } catch (\Exception $e) {
+      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      return $this->redirect('admin/menus/create');
+    }
   }
 
   public function edit($id)
@@ -121,7 +152,7 @@ class MenuController extends Controller
     }
 
     try {
-      $isSuccess = $this->_menuService->createMenu($data);
+      $isSuccess = $this->_menuService->updateMenu((int) $id, $data);
     } catch (\InvalidArgumentException $e) {
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
@@ -200,16 +231,16 @@ class MenuController extends Controller
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
-      return $this->redirect('admin/menus/' . $menuId . '/items/create');
+      return $this->redirect('admin/menus/create');
     }
 
     try {
-      $newId = $this->_menuService->addItem($menuId, $data);
+      $newId = $this->_menuService->addItem((int) $menuId, $data);
     } catch (\InvalidArgumentException $e) {
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
-      return $this->redirect('admin/menus/' . $menuId);
+      return $this->redirect('admin/menus/create');
     }
 
     if ($newId) {
@@ -218,7 +249,7 @@ class MenuController extends Controller
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/menus/' . $menuId);
+    return $this->redirect('admin/menus/create');
   }
 
   public function editItem($itemId)
@@ -290,7 +321,7 @@ class MenuController extends Controller
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/menus/' . $item->parent_id);
+    return $this->redirect('admin/menus/' . $item->menu_id);
   }
 
   public function reorderItems($menuId, Request $request)
