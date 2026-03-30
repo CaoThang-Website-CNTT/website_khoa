@@ -106,6 +106,11 @@ class Validator
     $this->errors[$field][] = $message;
   }
 
+  public function hasErrors(): bool
+  {
+    return !empty($this->errors);
+  }
+
   public function getErrors(): array
   {
     return $this->errors;

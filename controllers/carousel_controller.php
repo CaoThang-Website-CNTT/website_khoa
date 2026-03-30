@@ -34,28 +34,52 @@ class CarouselController extends Controller
   public function store(Request $request)
   {
     $data = $request->all();
+
     $validator = new Validator();
-    if (!$validator->validate($data, ['name' => ['required', 'max:255'], 'slug' => ['max:255']])) {
+    $rule = [
+      'name' => ['required', 'max:255'],
+    ];
+
+    if (!$validator->validate($data, $rule)) {
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/create');
     }
-    if (empty($data['slug'])) {
-      $data['slug'] = generateSlug($data['name']);
+
+    $rawSlides = is_array($data['slides'] ?? null) ? $data['slides'] : [];
+    foreach ($rawSlides as $i => $slide) {
+      if (empty($slide['title'])) {
+        $validator->addError("slides.{$i}.title", "Slide " . ($i + 1) . ": tiêu đề không được để trống.");
+      }
+      if (empty($slide['image_path'])) {
+        $validator->addError("slides.{$i}.image_path", "Slide " . ($i + 1) . ": đường dẫn ảnh không được để trống.");
+      }
     }
-    if (!$this->_carouselService->isSlugUnique($data['slug'])) {
+
+    $slug = trim($data['slug'] ?? '');
+    if ($slug !== '' && !$this->_carouselService->isSlugUnique($slug)) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
+    }
+
+    if ($validator->hasErrors()) {
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/create');
     }
-    $newId = $this->_carouselService->create([
+
+    $newCarousel = $this->_carouselService->create([
       'name' => $data['name'],
-      'slug' => $data['slug'],
+      'slug' => $slug,
       'is_active' => !empty($data['is_active']) ? 1 : 0,
+      'slides' => $rawSlides,
     ]);
-    if ($newId) {
-      $request->flash('success', 'Tạo carousel thành công!');
+
+    if ($newCarousel) {
+      $request->flash(
+        'success',
+        'Tạo carousel thành công!',
+        'Carousel ' . $newCarousel->name . ' đã được tạo.'
+      );
     } else {
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }

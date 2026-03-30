@@ -8,6 +8,8 @@ require_once BASE_PATH . '/models/carousel_slide.php';
 use App\Stores\CarouselStore;
 use App\Models\Carousel;
 use App\Models\CarouselSlide;
+use Database;
+
 
 interface ICarouselService
 {
@@ -19,7 +21,7 @@ interface ICarouselService
   public function getBySlug(string $slug): ?Carousel;
   public function getWithSlides(int $id): ?Carousel;
   public function getBySlugWithSlides(string $slug): ?Carousel;
-  public function create(array $data): int;
+  public function create(array $data): ?Carousel;
   public function update(int $id, array $data): bool;
   public function delete(int $id): bool;
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool;
@@ -86,12 +88,64 @@ class CarouselService implements ICarouselService
     return $carousel;
   }
 
-  public function create(array $data): int
+  public function create(array $data): ?Carousel
   {
-    if (!$this->_carouselStore->isSlugUnique($data['slug'])) {
-      throw new \InvalidArgumentException("Slug '{$data['slug']}' đã tồn tại.");
-    }
-    return $this->_carouselStore->create($data);
+    return Database::getInstance()->transaction(function () use ($data) {
+
+      $slug = trim($data['slug'] ?? '');
+      if ($slug === '') {
+        $slug = generateSlug($data['name']);
+      }
+
+      if (!$this->_carouselStore->isSlugUnique($slug)) {
+        throw new \InvalidArgumentException("Slug '{$slug}' đã tồn tại.");
+      }
+
+      $rawSlides = is_array($data['slides'] ?? null) ? $data['slides'] : [];
+      $slides = array_values(array_map(function (array $slide) {
+        $customHtml = trim($slide['custom_html'] ?? '');
+        $useCustomHtml = !empty($slide['use_custom_html'])
+          ? 1
+          : ($customHtml !== '' ? 1 : 0);
+
+        return [
+          'title' => trim($slide['title']),
+          'title_highlight' => $this->nullIfEmpty($slide['title_highlight'] ?? ''),
+          'description' => $this->nullIfEmpty($slide['description'] ?? ''),
+          'image_path' => trim($slide['image_path']),
+          'image_alt' => trim($slide['image_alt'] ?? ''),
+          'cta_label' => $this->nullIfEmpty($slide['cta_label'] ?? ''),
+          'cta_url' => $this->nullIfEmpty($slide['cta_url'] ?? ''),
+          'cta_variant' => in_array($slide['cta_variant'] ?? '', ['primary', 'secondary', 'outline'])
+            ? $slide['cta_variant']
+            : 'primary',
+          'custom_html' => $useCustomHtml ? $customHtml : null,
+          'use_custom_html' => $useCustomHtml,
+          'sort_order' => (int) ($slide['sort_order'] ?? 0),
+          'is_active' => !empty($slide['is_active']) ? 1 : 0,
+        ];
+      }, $rawSlides));
+
+      $carouselId = $this->_carouselStore->create([
+        'name' => trim($data['name']),
+        'slug' => $slug,
+        'is_active' => !empty($data['is_active']) ? 1 : 0,
+      ]);
+
+      foreach ($slides as $slide) {
+        $this->_carouselStore->createSlide(['carousel_id' => $carouselId] + $slide);
+      }
+
+      $carousel = $this->_carouselStore->getById($carouselId);
+      $carousel->slides = $this->_carouselStore->getSlides($carouselId);
+      return $carousel;
+    });
+  }
+
+  private function nullIfEmpty(string $value): ?string
+  {
+    $v = trim($value);
+    return $v !== '' ? $v : null;
   }
 
   public function update(int $id, array $data): bool
