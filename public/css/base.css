@@ -52,6 +52,38 @@
     --text-6xl-line-height: 1;
     --text-7xl-line-height: 1;
 
+    /* Letter Spacing */
+    /* 5% của font size (chiều thu hẹp) */
+    --tracking-tighter: -0.05em;
+    /* 2.5% của font size (chiều thu hẹp) */
+    --tracking-tight: -0.025em;
+    /* 2.5% của font size  */
+    --tracking-wide: 0.025em;
+    /* 10% của font size  */
+    --tracking-widest: 0.1em;
+
+    /* Container Sizes */
+    /* 320px */
+    --container-xs: 20rem;
+    /* 384px */
+    --container-sm: 24rem;
+    /* 448px */
+    --container-md: 28rem;
+    /* 512px */
+    --container-lg: 32rem;
+    /* 576px */
+    --container-xl: 36rem;
+    /* 672px */
+    --container-2xl: 42rem;
+    /* 768px */
+    --container-3xl: 48rem;
+    /* 896px */
+    --container-4xl: 56rem;
+    /* 1024px */
+    --container-5xl: 64rem;
+    /* 1280px */
+    --container-6xl: 72rem;
+
     /* Border Radius */
     --radius-xs: 0.125rem;
     /* 2px */
