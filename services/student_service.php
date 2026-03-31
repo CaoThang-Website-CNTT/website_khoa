@@ -183,8 +183,8 @@ class StudentService implements IStudentService
     return $this->_studentStore->update($student);
   }
 
-  public function deleteStudent(int $id): bool
+  public function deleteStudent($student_id): bool
   {
-    return $this->_studentStore->softDelete($id);
+    return $this->_studentStore->softDelete($student_id);
   }
 }

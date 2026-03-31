@@ -300,7 +300,7 @@ $old_input = request()->getOldInputs() ?? [];
 
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Chắc
+    <button id="delete-confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Chắc
       chắn</button>
   </div>
 
@@ -309,10 +309,12 @@ $old_input = request()->getOldInputs() ?? [];
   </button>
 </div>
 
+<form action="<?= url('admin/students/delete/' . $student->student_id) ?>" method="POST" id="delete-form"></form>
+
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector('#student-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
+    const deleteConfirmBtn = document.querySelector('#delete-confirm-modal-btn');
 
     const studentIdInput = document.querySelector('#student_id');
     const nationalIdInput = document.querySelector('#national_id');
@@ -332,7 +334,14 @@ $old_input = request()->getOldInputs() ?? [];
 
     // Confirm Btn Event Listener
     confirmBtn.addEventListener('click', function () {
+      const form = document.querySelector('#student-add-form');
       form.submit();
+    });
+
+    // Delete Btn Event Listener
+    deleteConfirmBtn.addEventListener('click', function () {
+      const deleteForm = document.querySelector('#delete-form');
+      deleteForm.submit();
     });
   });
 </script>

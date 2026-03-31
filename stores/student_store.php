@@ -177,15 +177,26 @@ class StudentStore extends Store implements IStudentStore
     return $success;
   }
 
-  public function softDelete(int $id): bool
+  public function softDelete($student_id): bool
   {
     $sql = "
-      UPDATE `accounts` SET
-      `deleted_at` = NOW(), 
-      WHERE `student_id` = :id AND `deleted_at` IS NULL
+      UPDATE `accounts`
+      INNER JOIN `students` ON `accounts`.`id` = `students`.`account_id`
+      SET
+        `accounts`.`deleted_at` = NOW(),
+        `students`.`deleted_at` = NOW(),
+        `students`.`status` = N'Thôi học'
+      WHERE `students`.`student_id` = :id;
     ";
+    $stmt = $this->db->prepare($sql);
 
-    return $this->db->prepare($sql)->execute([':id' => $id]);
+    $stmt->execute([':id' => $student_id]);
+
+    if ($stmt->rowCount() === 0) {
+      throw new \Exception("Không tìm thấy sinh viên mã: " . $student_id);
+    }
+
+    return true;
   }
   public function isStudentIdUnique(string $id, ?int $excludeId = null): bool
   {

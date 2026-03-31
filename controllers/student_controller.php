@@ -151,9 +151,9 @@ class StudentController extends Controller
     exit;
   }
 
-  public function destroy($id, Request $request)
+  public function destroy($student_id, Request $request)
   {
-    $isSuccess = $this->_studentService->deleteStudent($id);
+    $isSuccess = $this->_studentService->deleteStudent($student_id);
 
     if ($isSuccess) {
       $request->flash('success', 'Xoá sinh viên thành công!');
@@ -161,7 +161,7 @@ class StudentController extends Controller
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/students/');
+    return $this->redirect('admin/students');
   }
 
   public function import()
