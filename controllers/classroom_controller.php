@@ -92,11 +92,19 @@ class ClassroomController extends Controller
       return $this->redirect('admin/classrooms');
     }
 
-    $specializations = $this->_classroomService->getSpecializationsByMajorId($classroom->major_id);
+    $majors = $this->_classroomService->getAllMajors();
+    $specializations = $this->_classroomService->getAllSpecializations();
+    $teachers = $this->_teacherService->getAllTeachers();
+    $classroom->homeroomTeacher = current(array_filter(
+      $teachers,
+      fn($t) => $t->id === $classroom->homeroom_teacher_id
+    )) ?: null;
 
     $this->render('admin/classrooms/edit', [
       'classroom' => $classroom,
+      'majors' => $majors,
       'specializations' => $specializations,
+      'teachers' => $teachers,
     ], layout: 'dashboard_layout');
   }
 
@@ -106,12 +114,12 @@ class ClassroomController extends Controller
     $validator = new Validator();
 
     $rules = [
+      'major_id' => ['required'],
+      'specialization_id' => ['nullable'],
       'class_of' => ['required'],
-      'letter' => ['max:1'],
+      'letter' => ['size:1'],
       'short_name' => ['required'],
-      'major_level' => ['required'],
-      'major_short' => ['required'],
-      'specialization_id' => [],
+      'homeroom_teacher_id' => ['required'],
     ];
 
     if (!$validator->validate($data, $rules)) {
@@ -120,7 +128,7 @@ class ClassroomController extends Controller
       return $this->redirect("admin/classrooms/{$id}");
     }
 
-    $isSuccess = $this->_classroomService->updateClassroom((int) $id, $data);
+    $isSuccess = $this->_classroomService->updateClassroom($id, $data);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật lớp học thành công!');
@@ -133,13 +141,6 @@ class ClassroomController extends Controller
 
   public function destroy($id, Request $request)
   {
-    $classroom = $this->_classroomService->getClassroomById((int) $id);
-
-    if (!$classroom) {
-      $request->flash('error', 'Lớp học không tồn tại.');
-      return $this->redirect('admin/classrooms');
-    }
-
     $isSuccess = $this->_classroomService->deleteClassroom((int) $id);
 
     if ($isSuccess) {

@@ -87,7 +87,8 @@ class ClassroomService implements IClassroomService
       specialization_id: !empty($data['specialization_id']) ? (int) $data['specialization_id'] : null,
       class_of: (int) $data['class_of'],
       letter: $data['letter'] ?? '',
-      short_name: $classCode
+      short_name: $classCode,
+      homeroom_teacher_id: !empty($data['homeroom_teacher_id']) ? (int) $data['homeroom_teacher_id'] : null,
     );
     return $this->_classroomStore->create($classroom);
   }
@@ -95,17 +96,46 @@ class ClassroomService implements IClassroomService
   {
     $classroom = $this->_classroomStore->getById($id);
     if ($classroom === null) {
-      return false;
+      throw new \InvalidArgumentException('Lớp học không tồn tại.');
     }
-    $classCode = $this->_buildClassCode($data);
-    if (!$classCode || $classCode !== trim($data['short_name'])) {
-      throw new \InvalidArgumentException('Mã lớp không khớp với quy tắc. Vui lòng kiểm tra lại.');
+
+    $needRebuildCode = false;
+
+    // Nếu major_id được cập nhật, cần lấy thông tin major để build lại mã lớp
+    if (isset($data['major_id']) && $data['major_id'] != $classroom->major_id) {
+      $major = $this->_classroomStore->getMajorById((int) $data['major_id']);
+      if (!$major) {
+        throw new \InvalidArgumentException('Ngành học không tồn tại.');
+      }
+      $data['major_level'] = $major->level;
+      $data['major_short'] = $major->short_name;
+
+      $needRebuildCode = true;
     }
+
+    // Nếu specialization_id được cập nhật, cần lấy thông tin specialization để build lại mã lớp
+    if (isset($data['specialization_id']) && $data['specialization_id'] != $classroom->specialization_id) {
+      if (!empty($data['specialization_id'])) {
+        $spec = $this->_classroomStore->getSpecializationById((int) $data['specialization_id']);
+        if (!$spec) {
+          throw new \InvalidArgumentException('Chuyên ngành không tồn tại.');
+        }
+        $data['major_short'] = $spec->short_name . ($data['major_short'] ?? '');
+      }
+
+      $needRebuildCode = true;
+    }
+
+    $classCode = $needRebuildCode ? $this->_buildClassCode($data) ?? '' : $classroom->short_name;
+
     $classroom->major_id = (int) $data['major_id'];
     $classroom->specialization_id = !empty($data['specialization_id']) ? (int) $data['specialization_id'] : null;
     $classroom->class_of = (int) $data['class_of'];
     $classroom->letter = $data['letter'] ?? '';
     $classroom->short_name = $classCode;
+    $classroom->homeroom_teacher_id = !empty($data['homeroom_teacher_id']) ? (int) $data['homeroom_teacher_id'] : null;
+
+
     return $this->_classroomStore->update($classroom);
   }
   public function deleteClassroom(int $id): bool

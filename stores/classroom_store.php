@@ -54,12 +54,10 @@ class ClassroomStore extends Store implements IClassroomStore
   public function getAll(): array
   {
     $sql = "
-      SELECT c.*, m.id AS maj_id, m.full_name AS maj_full_name, m.short_name AS maj_short_name, m.level AS maj_level, s.id AS spe_id, s.full_name AS spe_full_name, s.short_name AS spe_short_name
-      FROM classrooms c
-      LEFT JOIN majors m ON c.major_id = m.id
-      LEFT JOIN specializations s ON c.specialization_id = s.id
-      WHERE c.deleted_at IS NULL AND m.deleted_at IS NULL AND (s.deleted_at IS NULL OR s.id IS NULL)
-      ORDER BY c.class_of DESC, c.letter DESC
+      SELECT *
+      FROM classrooms
+      WHERE deleted_at IS NULL
+      ORDER BY class_of DESC, letter DESC
     ";
 
     $stmt = $this->db->prepare($sql);
@@ -74,12 +72,10 @@ class ClassroomStore extends Store implements IClassroomStore
     $offset = (max(1, $page) - 1) * $limit;
 
     $sql = "
-      SELECT c.*, m.id AS maj_id, m.full_name AS maj_full_name, m.short_name AS maj_short_name, m.level AS maj_level, s.id AS spe_id, s.full_name AS spe_full_name, s.short_name AS spe_short_name
-      FROM classrooms c
-      LEFT JOIN majors m ON c.major_id = m.id
-      LEFT JOIN specializations s ON c.specialization_id = s.id
-      WHERE c.deleted_at IS NULL AND m.deleted_at IS NULL AND (s.deleted_at IS NULL OR s.id IS NULL)
-      ORDER BY c.class_of DESC, c.letter DESC
+      SELECT *
+      FROM classrooms
+      WHERE deleted_at IS NULL
+      ORDER BY class_of DESC, letter DESC
       LIMIT :limit OFFSET :offset
     ";
 
@@ -94,11 +90,9 @@ class ClassroomStore extends Store implements IClassroomStore
   public function getById(int $id): ?Classroom
   {
     $sql = "
-      SELECT c.*, m.id AS maj_id, m.full_name AS maj_full_name, m.short_name AS maj_short_name, m.level AS maj_level, s.id AS spe_id, s.full_name AS spe_full_name, s.short_name AS spe_short_name
-      FROM classrooms c
-      LEFT JOIN majors m ON c.major_id = m.id
-      LEFT JOIN specializations s ON c.specialization_id = s.id
-      WHERE c.id = :id AND c.deleted_at IS NULL AND m.deleted_at IS NULL AND (s.deleted_at IS NULL OR s.id IS NULL)
+      SELECT *
+      FROM classrooms
+      WHERE id = :id AND deleted_at IS NULL
     ";
 
     $stmt = $this->db->prepare($sql);
@@ -118,12 +112,10 @@ class ClassroomStore extends Store implements IClassroomStore
     $placeholders = str_repeat('?,', count($ids) - 1) . '?';
 
     $sql = "
-      SELECT c.*, m.id AS maj_id, m.full_name AS maj_full_name, m.short_name AS maj_short_name, m.level AS maj_level, s.id AS spe_id, s.full_name AS spe_full_name, s.short_name AS spe_short_name
-      FROM classrooms c
-      LEFT JOIN majors m ON c.major_id = m.id
-      LEFT JOIN specializations s ON c.specialization_id = s.id
-      WHERE c.id IN ($placeholders) AND c.deleted_at IS NULL AND m.deleted_at IS NULL AND (s.deleted_at IS NULL OR s.id IS NULL)
-      ORDER BY c.class_of DESC, c.letter DESC
+      SELECT *
+      FROM classrooms
+      WHERE id IN ($placeholders) AND deleted_at IS NULL
+      ORDER BY class_of DESC, letter DESC
     ";
 
     $stmt = $this->db->prepare($sql);
@@ -166,26 +158,34 @@ class ClassroomStore extends Store implements IClassroomStore
       specialization_id = :specialization_id,
       letter = :letter,
       short_name = :short_name,
+      homeroom_teacher_id = :homeroom_teacher_id,
       updated_at = NOW()
       WHERE id = :id AND deleted_at IS NULL
     ";
 
     $stmt = $this->db->prepare($sql);
-    return $stmt->execute([
+    $success = $stmt->execute([
       ':major_id' => $classroom->major_id,
       ':class_of' => $classroom->class_of,
       ':specialization_id' => $classroom->specialization_id,
       ':letter' => $classroom->letter,
       ':short_name' => $classroom->short_name,
+      ':homeroom_teacher_id' => $classroom->homeroom_teacher_id,
       ':id' => $classroom->id,
     ]);
+
+    if (!$success) {
+      throw new \Exception('Không thể cập nhật lớp trong cơ sở dữ liệu');
+    }
+
+    return true;
   }
 
   public function softDelete(int $id): bool
   {
     $stmt = $this->db->prepare("
       UPDATE classrooms SET
-      deleted_at = NOW() WHERE id = :id
+      deleted_at = NOW() WHERE id = :id and deleted_at IS NULL
     ");
     return $stmt->execute([':id' => $id]);
   }
