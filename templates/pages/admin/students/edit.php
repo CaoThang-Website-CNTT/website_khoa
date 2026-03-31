@@ -38,7 +38,7 @@ $old_input = request()->getOldInputs() ?? [];
         </a>
       </div>
       <div>
-        <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary"
+        <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
           data-size="lg" class="btn">
           <i class="fa-solid fa-floppy-disk"></i>
           Lưu thay đổi
@@ -55,7 +55,7 @@ $old_input = request()->getOldInputs() ?? [];
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
-<form class="detail-layout" id="student-add-form" action="<?= url('admin/students/' . $student->student_id) ?>"
+<form class="detail-layout" id="student-edit-form" action="<?= url('admin/students/' . $student->student_id) ?>"
   method="POST">
   <div class="detail-layout__main">
     <div class="card shadow">
@@ -265,6 +265,19 @@ $old_input = request()->getOldInputs() ?? [];
           <dt>Lần cuối cập nhật</dt>
           <dd><?= htmlspecialchars($student->updated_at ? $student->updated_at : "Không có") ?></dd>
         </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Trạng thái dữ liệu</dt>
+          <dd>
+            <?php if ($student->deleted_at): ?>
+              <span class="badge" data-variant="destructive">
+                Đã xóa
+              </span>
+            <?php else: ?>
+              <span class="badge" data-variant="primary">Hoạt động</span>
+            <?php endif; ?>
+          </dd>
+        </dl>
       </div>
     </div>
 </form>
@@ -334,7 +347,7 @@ $old_input = request()->getOldInputs() ?? [];
 
     // Confirm Btn Event Listener
     confirmBtn.addEventListener('click', function () {
-      const form = document.querySelector('#student-add-form');
+      const form = document.querySelector('#student-edit-form');
       form.submit();
     });
 

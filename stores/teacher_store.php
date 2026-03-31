@@ -177,7 +177,8 @@ class TeacherStore extends Store implements ITeacherStore
       WHERE `id` = :id AND `deleted_at` IS NULL
     ";
 
-    return $this->db->prepare($sql)->execute([
+    $stmt = $this->db->prepare($sql);
+    $success = $stmt->execute([
       ':staff_code' => $teacher->staff_code,
       ':full_name' => $teacher->full_name,
       ':gender' => $teacher->gender,
@@ -188,13 +189,19 @@ class TeacherStore extends Store implements ITeacherStore
       ':degree' => $teacher->degree,
       ':position' => $teacher->position,
       ':title' => $teacher->title,
-      ':dept' => $teacher->department,
-      ':contract' => $teacher->contract_type,
+      ':department' => $teacher->department,
+      ':contract_type' => $teacher->contract_type,
       ':start_date' => $teacher->start_date,
       ':end_date' => $teacher->end_date,
       ':notes' => $teacher->notes,
       ':id' => $teacher->id,
     ]);
+
+    if (!$success) {
+      throw new \Exception('Không thể cập nhật giảng viên trong cơ sở dữ liệu.');
+    }
+
+    return true;
   }
 
   public function softDelete(int $id): bool

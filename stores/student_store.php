@@ -171,7 +171,7 @@ class StudentStore extends Store implements IStudentStore
     ]);
 
     if (!$success) {
-      throw new \Exception('Không thể lưu sinh viên vào cơ sở dữ liệu.');
+      throw new \Exception('Không thể cập nhật sinh viên trong cơ sở dữ liệu.');
     }
 
     return $success;

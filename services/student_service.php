@@ -164,7 +164,7 @@ class StudentService implements IStudentService
     // Check student tồn tại
     $student = $this->_studentStore->getByStudentId($student_id);
     if (!$student) {
-      return false;
+      throw new \Exception('Không tồn tại sinh viên này');
     }
 
     $student->full_name = $data['full_name'] ?? $student->full_name;

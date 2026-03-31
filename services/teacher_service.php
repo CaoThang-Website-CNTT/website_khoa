@@ -143,14 +143,42 @@ class TeacherService implements ITeacherService
   {
     $teacher = $this->_teacherStore->getById($id);
     if (!$teacher) {
-      return false;
+      throw new \Exception('Không tồn tại giảng viên này');
     }
 
+    //   'full_name' => ['required', 'max:255'],
+    //   'dob' => ['required', 'date'],
+    //   'national_id' => ['required', 'size:12'],
+    //   'gender' => ['required', 'in:male,female'],
+    //   'phone' => ['required', 'phone', 'max:15'],
+    //   'address' => ['required'],
+
+    //   'staff_code' => ['required', 'size:10'],
+    //   'degree' => ['required', 'max:255'],
+    //   'title' => ['nullable', 'max:150'],
+    //   'position' => ['required', 'max:255'],
+    //   'department' => ['required', 'max:255'],
+    //   'contract_type' => ['required', 'in:full-time,part-time,visiting,contract'],
+    //   'start_date' => ['required', 'date'],
+    //   'end_date' => ['required', 'date'],
+    //   'notes' => ['nullable'],
+    // ];
     $teacher->full_name = $data['full_name'] ?? $teacher->full_name;
+    $teacher->dob = $data['dob'] ?? $teacher->dob;
+    $teacher->national_id = $data['national_id'] ?? $teacher->national_id;
     $teacher->gender = $data['gender'] ?? $teacher->gender;
+    $teacher->phone = $data['phone'] ?? $teacher->phone;
+    $teacher->address = $data['address'] ?? $teacher->address;
+
+    $teacher->staff_code = $data['staff_code'] ?? $teacher->staff_code;
     $teacher->degree = $data['degree'] ?? $teacher->degree;
+    $teacher->title = $data['title'] ?? $teacher->title;
     $teacher->position = $data['position'] ?? $teacher->position;
+    $teacher->department = $data['department'] ?? $teacher->department;
     $teacher->contract_type = $data['contract_type'] ?? $teacher->contract_type;
+    $teacher->start_date = $data['start_date'] ?? $teacher->start_date;
+    $teacher->end_date = $data['end_date'] ?? $teacher->end_date;
+    $teacher->notes = $data['notes'] ?? $teacher->notes;
 
     return $this->_teacherStore->update($teacher);
   }

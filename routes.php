@@ -13,7 +13,7 @@ $router->get('/admin/students/import', [StudentController::class, 'import']);
 $router->post('/admin/students/import', [StudentImportController::class, 'store']);
 $router->get('/admin/students/{student_id}', [StudentController::class, 'edit']);
 $router->post('/admin/students/{student_id}', [StudentController::class, 'update']);
-$router->post('/admin/students/delete/{id}', [StudentController::class, 'destroy']);
+$router->post('/admin/students/delete/{student_id}', [StudentController::class, 'destroy']);
 
 // Teachers
 $router->get('/admin/teachers', [TeacherController::class, 'index']);
