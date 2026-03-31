@@ -31,13 +31,16 @@ require_once BASE_PATH . '/services/web_setting_service.php';
 require_once BASE_PATH . '/services/carousel_service.php';
 
 // Controllers
-require_once BASE_PATH . '/controllers/site_controller.php';
-require_once BASE_PATH . '/controllers/dashboard_controller.php';
-require_once BASE_PATH . '/controllers/student_controller.php';
-require_once BASE_PATH . '/controllers/student_import_controller.php';
-require_once BASE_PATH . '/controllers/teacher_controller.php';
-require_once BASE_PATH . '/controllers/classroom_controller.php';
-require_once BASE_PATH . '/controllers/category_controller.php';
-require_once BASE_PATH . '/controllers/menu_controller.php';
-require_once BASE_PATH . '/controllers/web_setting_controller.php';
-require_once BASE_PATH . '/controllers/carousel_controller.php';
+// Web
+require_once BASE_PATH . '/controllers/web/site_controller.php';
+require_once BASE_PATH . '/controllers/web/dashboard_controller.php';
+require_once BASE_PATH . '/controllers/web/student_controller.php';
+require_once BASE_PATH . '/controllers/web/student_import_controller.php';
+require_once BASE_PATH . '/controllers/web/teacher_controller.php';
+require_once BASE_PATH . '/controllers/web/classroom_controller.php';
+require_once BASE_PATH . '/controllers/web/category_controller.php';
+require_once BASE_PATH . '/controllers/web/menu_controller.php';
+require_once BASE_PATH . '/controllers/web/web_setting_controller.php';
+require_once BASE_PATH . '/controllers/web/carousel_controller.php';
+
+// Api
