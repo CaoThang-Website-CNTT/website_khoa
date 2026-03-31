@@ -115,7 +115,7 @@ $old_input = request()->getOldInputs() ?? [];
 
             <div class="field" data-field-required>
               <label class="field__label" for="address">Địa chỉ thường trú</label>
-              <textarea id="address" class="field__input" type="tel" name="address"
+              <textarea id="address" class="field__input" name="address"
                 placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" value=""></textarea>
             </div>
 

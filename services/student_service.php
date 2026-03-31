@@ -22,7 +22,7 @@ interface IStudentService
   public function getStudents(int $page, int $limit = 15): Pageable;
   public function isStudentIdUnique(string $studentId): bool;
   public function createStudent(array $data): ?Student;
-  public function getStudentById(int $id): ?Student;
+  public function getStudentByStudentId(int $student_id): ?Student;
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
   public function updateStudent(int $id, array $data): bool;
@@ -135,9 +135,9 @@ class StudentService implements IStudentService
     });
   }
 
-  public function getStudentById(int $id): ?Student
+  public function getStudentByStudentId($student_id): ?Student
   {
-    $student = $this->_studentStore->getById($id);
+    $student = $this->_studentStore->getByStudentId($student_id);
     if (!$student) {
       return null;
     }
@@ -159,21 +159,26 @@ class StudentService implements IStudentService
     return $this->_classroomStore->getAll();
   }
 
-  public function updateStudent(int $id, array $data): bool
+  public function updateStudent($student_id, array $data): bool
   {
-    $student = $this->_studentStore->getById($id);
+    // Check student tồn tại
+    $student = $this->_studentStore->getByStudentId($student_id);
     if (!$student) {
       return false;
     }
 
     $student->full_name = $data['full_name'] ?? $student->full_name;
-    $student->gender = $data['gender'] ?? $student->gender;
     $student->dob = $data['dob'] ?? $student->dob;
+    $student->birth_place = $data['birth_place'] ?? $student->birth_place;
+    $student->national_id = $data['national_id'] ?? $student->national_id;
+    $student->gender = $data['gender'] ?? $student->gender;
     $student->phone = $data['phone'] ?? $student->phone;
     $student->address = $data['address'] ?? $student->address;
-    $student->major = $data['major'] ?? $student->major;
-    $student->status = $data['status'] ?? $student->status;
+
+    $student->student_id = $data['student_id'] ?? $student->student_id;
     $student->classroom_id = $data['classroom_id'] ?? $student->classroom_id;
+    $student->notes = $data['notes'] ?? $student->notes;
+    $student->status = $data['status'] ?? $student->status;
 
     return $this->_studentStore->update($student);
   }

@@ -11,8 +11,8 @@ $router->get('/admin/students/create', [StudentController::class, 'create']);
 $router->post('/admin/students', [StudentController::class, 'store']);
 $router->get('/admin/students/import', [StudentController::class, 'import']);
 $router->post('/admin/students/import', [StudentImportController::class, 'store']);
-$router->get('/admin/students/{id}', [StudentController::class, 'edit']);
-$router->post('/admin/students/{id}', [StudentController::class, 'update']);
+$router->get('/admin/students/{student_id}', [StudentController::class, 'edit']);
+$router->post('/admin/students/{student_id}', [StudentController::class, 'update']);
 $router->post('/admin/students/delete/{id}', [StudentController::class, 'destroy']);
 
 // Teachers

@@ -369,6 +369,15 @@ body {
   order: 1;
 }
 
+.metadata-card dt {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+}
+.metadata-card dd {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
 .carousel-card {
   padding: 0;
 }

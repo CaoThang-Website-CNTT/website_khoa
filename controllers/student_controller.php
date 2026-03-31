@@ -93,11 +93,16 @@ class StudentController extends Controller
     exit;
   }
 
-  public function edit($id)
+  public function edit($student_id, Request $request)
   {
-    $student = $this->_studentService->getStudentById($id);
+    $student = $this->_studentService->getStudentByStudentId($student_id);
     if (!$student) {
-      die("Không thấy sinh viên với id: $id");
+      $request->flash(
+        'error',
+        'Không tìm thấy Sinh Viên #' . $student_id . '!',
+        'Hãy thử lại sau.'
+      );
+      $this->redirect('admin/students');
     }
     $classrooms = $this->_studentService->getAllClassrooms();
 
@@ -107,29 +112,34 @@ class StudentController extends Controller
     ], layout: "dashboard_layout");
   }
 
-  public function update($id, Request $request)
+  public function update($student_id, Request $request)
   {
     $data = $request->all();
 
     $validator = new Validator();
     $rules = [
       'full_name' => ['required', 'max:255'],
-      'phone' => ['phone', 'max:15'],
-      'major' => ['max:150'],
-      'gender' => ['required'],
       'dob' => ['required', 'date'],
+      'birth_place' => ['required', 'max:255'],
+      'national_id' => ['required', 'size:12'],
+      'gender' => ['required', 'in:male,female'],
+      'phone' => ['required', 'phone', 'max:15'],
+      'address' => ['required'],
+
+      'student_id' => ['required', 'size:10'],
       'classroom_id' => ['required'],
-      'birth_place' => ['max:255'],
+      'notes' => ['nullable'],
+
+      'status' => ['required', 'in:Đang học,Đã tốt nghiệp,Tạm ngưng,Thôi học']
     ];
 
     if (!$validator->validate($data, $rules)) {
-      $data['account_id'] = $id;
       $request->flashOldInputs();
       $request->flashErrors($validator->getErrors());
-      return $this->redirect('admin/students/' . $id);
+      return $this->redirect('admin/students/' . $student_id);
     }
 
-    $isSuccess = $this->_studentService->updateStudent((int) $id, $data);
+    $isSuccess = $this->_studentService->updateStudent($student_id, $data);
 
     if ($isSuccess) {
       $request->flash('success', 'Cập nhật sinh viên thành công!');
@@ -137,7 +147,7 @@ class StudentController extends Controller
       $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    $this->redirect('admin/students/' . $id);
+    $this->redirect('admin/students/' . $student_id);
     exit;
   }
 

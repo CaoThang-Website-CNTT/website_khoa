@@ -61,7 +61,7 @@
     <tbody>
       <?php if (!empty($data->getItems())): ?>
         <?php foreach ($data->getItems() as $index => $student): ?>
-          <tr onclick="window.location.href='<?= url('admin/students/' . $student->account_id) ?>'">
+          <tr onclick="window.location.href='<?= url('admin/students/' . $student->student_id) ?>'">
             <td class="data-table__id">
               <?= '#' . htmlspecialchars($student->id ?? 'N/A') ?>
             </td>

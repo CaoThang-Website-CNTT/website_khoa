@@ -7,154 +7,332 @@ $old_input = request()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<div class="detail-panel card shadow">
-  <div class="card__header">
-    <div class="card__title">
-      <h6>
-        Student
-        <span class="font-bold">#<?= htmlspecialchars($student->account_id ?? '') ?></span>
-      </h6>
+<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php if ($flash = request()->getFlash()): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      toast.<?= ($flash['type']) ?>(
+        '<?= $flash['title'] ?>',
+        '<?= $flash['desc'] ?>'
+      );
+    });
+  </script>
+<?php endif; ?>
+<!-- ========== title-wrapper start ========== -->
+<div class="title-wrapper">
+  <div class="flex justify-between items-center">
+    <div class="col-6 col-md-6">
+      <h2 class="title text-2xl font-semibold">
+        Thông tin sinh viên
+        <?= '#' . htmlspecialchars($student->student_id) ?>
+      </h2>
+      <p>Cập nhật thông tin sinh viên tại trang này.</p>
     </div>
-    <div class="card__description">
-      This is student detail form
-    </div>
-  </div>
 
-  <div class="card__content">
-    <?php
-    include BASE_PATH . '/templates/components/flash_alert.php';
-    ?>
-    <form id="student-edit-form" action="<?= url('admin/students/' . $student->account_id) ?>" method="POST">
-
-      <div class="field-group">
-
-        <div class="field" data-field-disabled data-field-readonly>
-          <label for="student_id">Student ID</label>
-          <input id="student_id" class="field__input" type="text" name="student_id"
-            value="<?= htmlspecialchars($student->student_id ?? '') ?>" disabled>
-        </div>
-
-        <div class="field">
-          <label for="full_name">Full Name</label>
-          <input id="full_name" class="field__input" type="text" name="full_name"
-            value="<?= htmlspecialchars($student->full_name ?? '') ?>" required>
-        </div>
-
-        <div class="field">
-          <label for="gender">Gender</label>
-          <select id="gender" class="field__input" name="gender" required>
-            <option value="Male" <?= ($student?->gender == 'Nam') ? 'selected' : '' ?>>Nam</option>
-            <option value="Female" <?= ($student?->gender == 'Nữ') ? 'selected' : '' ?>>Nữ</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="dob">Date of Birth</label>
-          <input id="dob" class="field__input" type="date" name="dob"
-            value="<?= htmlspecialchars($student->dob ?? '') ?>" required>
-        </div>
-
-        <div class="field">
-          <label for="phone">Phone</label>
-          <input id="phone" class="field__input" type="text" name="phone"
-            value="<?= htmlspecialchars($student->phone ?? '') ?>" required>
-        </div>
-
-        <div class="field">
-          <label for="major">Major</label>
-          <input id="major" class="field__input" type="text" name="major"
-            value="<?= htmlspecialchars($student->major ?? '') ?>">
-        </div>
-
-        <div class="field">
-          <label for="birth_place">Birth Place</label>
-          <input id="birth_place" class="field__input" type="text" name="birth_place"
-            value="<?= htmlspecialchars($student->birth_place ?? '') ?>">
-        </div>
-
-        <div class="field">
-          <label for="classroom_id">Classroom</label>
-          <select id="classroom_id" class="field__input" name="classroom_id" required>
-            <option value="" disabled hidden <?= is_null($student?->classroom_id) ? 'selected' : '' ?>>
-              -- Chọn lớp học --
-            </option>
-            <?php foreach ($classrooms as $classroom): ?>
-              <option value="<?= $classroom->id ?>" <?= ($student?->classroom_id == $classroom->id) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($classroom->name) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
+    <div class="flex gap-2">
+      <div>
+        <a href="<?= request()->previous(fallback: 'admin/students') ?>" data-variant="outline" data-size="lg"
+          class="btn">
+          <i class="fa-solid fa-chevron-left"></i>
+          Quay lại
+        </a>
       </div>
-    </form>
-  </div>
-
-  <div class="card__footer">
-    <button data-modal-trigger="#confirm-modal" id="update-submit-btn" type="button" data-variant="primary"
-      data-size="lg" class="w-full btn">
-      Lưu thay đổi
-    </button>
-    <button data-modal-trigger="#delete-modal" id="delete-submit-btn" type="button" data-variant="destructive"
-      data-size="lg" class="w-full btn">
-      Xóa
-    </button>
+      <div>
+        <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary"
+          data-size="lg" class="btn">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Lưu thay đổi
+        </button>
+      </div>
+      <div>
+        <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
+          data-size="lg" class="btn">
+          <i class="fa-solid fa-trash"></i>
+          Xóa
+        </button>
+      </div>
+    </div>
   </div>
 </div>
+<!-- ========== title-wrapper end ========== -->
+<form class="detail-layout" id="student-add-form" action="<?= url('admin/students/' . $student->student_id) ?>"
+  method="POST">
+  <div class="detail-layout__main">
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Thông tin cá nhân</legend>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div class="field-group">
+            <div class="field" data-field-required>
+              <label class="field__label" for="full_name">Họ và tên</label>
+              <input id="full_name" class="field__input" type="text" name="full_name" placeholder="Nguyễn Văn An"
+                value="<?= htmlspecialchars($student->full_name) ?>">
+            </div>
 
-<!-- Confirm update modal -->
+            <div class="grid grid-cols-3 gap-4">
+              <div class="field" data-field-required>
+                <label class="field__label" for="dob">Ngày Sinh</label>
+                <input id="dob" class="field__input" type="date" name="dob"
+                  value="<?= htmlspecialchars($student->dob) ?>">
+              </div>
+
+              <div class="field" data-field-required>
+                <label class="field__label" for="birth_place">Nơi sinh</label>
+                <input id="birth_place" class="field__input" type="text" name="birth_place" placeholder="TPHCM"
+                  value="<?= htmlspecialchars($student->birth_place) ?>">
+              </div>
+
+              <div class="field" data-field-required data-field-max="12">
+                <label class="field__label" for="national_id">CCCD</label>
+                <input id="national_id" class="field__input" type="text" name="national_id" placeholder="12 số"
+                  value="<?= htmlspecialchars($student->national_id) ?>">
+              </div>
+            </div>
+
+            <fieldset class="field__set">
+              <legend class="field__label">Giới tính</legend>
+              <div class="radio-group" data-field-required data-radio-name="gender"
+                data-radio-default-value="<?= htmlspecialchars($student->gender) ?>">
+                <label class="field__label">
+                  <div class="field" data-orientation="horizontal">
+                    <button id="gender-male" class="radio-group__item" type="button" role="radio" value="male"></button>
+                    <div class="field__title">
+                      Nam
+                    </div>
+                  </div>
+                </label>
+                <label class="field__label">
+                  <div class="field" data-orientation="horizontal">
+                    <button id="gender-female" class="radio-group__item" type="button" role="radio"
+                      value="female"></button>
+                    <div class="field__title">
+                      Nữ
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field" data-field-required data-field-max="10">
+              <label class="field__label" for="phone">Số điện thoại</label>
+              <input id="phone" class="field__input" type="tel" name="phone" placeholder="0901234567"
+                value="<?= htmlspecialchars($student->phone) ?>">
+            </div>
+
+
+            <div class="field" data-field-required>
+              <label class="field__label" for="address">Địa chỉ thường trú</label>
+              <textarea id="address" class="field__input" name="address"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"><?= htmlspecialchars($student->address) ?></textarea>
+            </div>
+
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Thông tin sinh viên</legend>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div class="field-group">
+
+            <div class="field" data-field-required data-field-max="10">
+              <label class="field__label" for="student_id">MSSV</label>
+              <input id="student_id" class="field__input" type="text" name="student_id"
+                value="<?= htmlspecialchars($student->student_id) ?>">
+            </div>
+
+            <div class="field" data-field-required>
+              <label class="field__label" for="classroom_id">Lớp học</label>
+              <select id="classroom_id" class="field__input" name="classroom_id">
+                <option value="">
+                  -- Chọn lớp học--
+                </option>
+                <?php foreach ($classrooms as $classroom): ?>
+                  <option value=<?= htmlspecialchars($classroom->id) ?>   <?= $classroom->id === $student->classroom_id ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($classroom->short_name); ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field__label">Ghi chú</label>
+              <textarea id="notes" class="field__input" type="tel" name="notes" placeholder="Ghi chú về sinh viên này"
+                value="<?= $student->notes ?>"></textarea>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Tài khoản sinh viên</legend>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div class="field-group">
+
+            <div class="field" data-field-required data-field-readonly>
+              <label class="field__label" for="email">Email</label>
+              <input id="email" class="field__input" type="text" name="email"
+                value="<?= htmlspecialchars($student->account->email) ?>">
+              <p class="field__description">Email sẽ được tự động tạo theo định dạng MSSV@caothang.edu.vn</p>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+  <div class="detail-layout__sidebar">
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <legend class="field__legend">Trạng thái sinh viên</legend>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <fieldset class="field__set">
+            <legend class="field__label">Trạng thái</legend>
+            <div class="radio-group" data-field-required data-radio-name="status"
+              data-radio-default-value="<?= htmlspecialchars($student->status) ?>">
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-studying" class="radio-group__item" type="button" role="radio"
+                    value="Đang học"></button>
+                  <div class="field__title">
+                    Đang học
+                  </div>
+                </div>
+              </label>
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-graduated" class="radio-group__item" type="button" role="radio"
+                    value="Đã tốt nghiệp"></button>
+                  <div class="field__title">
+                    Đã tốt nghiệp
+                  </div>
+                </div>
+              </label>
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-suspended" class="radio-group__item" type="button" role="radio"
+                    value="Tạm ngưng"></button>
+                  <div class="field__title">
+                    Tạm ngưng
+                  </div>
+                </div>
+              </label>
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="status-dropped_out" class="radio-group__item" type="button" role="radio"
+                    value="Thôi học"></button>
+                  <div class="field__title">
+                    Thôi học
+                  </div>
+                </div>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+      </fieldset>
+    </div>
+    <!-- Metadata -->
+    <div class="metadata-card card shadow">
+      <div class="card__header">
+        Thông tin
+      </div>
+      <hr class="separator">
+      <div class="card__content space-y-4">
+        <dl class="flex justify-between">
+          <dt>ID</dt>
+          <dd><?= htmlspecialchars($student->id) ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Được tạo vào</dt>
+          <dd><?= htmlspecialchars($student->created_at) ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Lần cuối cập nhật</dt>
+          <dd><?= htmlspecialchars($student->updated_at ? $student->updated_at : "Không có") ?></dd>
+        </dl>
+      </div>
+    </div>
+</form>
+
+<!-- Add confirm modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
-    <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
-  </div>
-  <div class="modal__footer">
-    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu</button>
-  </div>
-  <button class="modal__close" type="button" data-modal-close>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-      <path
-        d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z" />
-    </svg>
-  </button>
-</div>
-
-<!-- Confirm delete modal -->
-<div class="modal" id="delete-modal" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h2 class="modal__title">Xác nhận xóa</h2>
+    <h2 class="modal__title">Bạn có chắc</h2>
     <p class="modal__description">
-      Sinh viên <strong><?= htmlspecialchars($student->full_name ?? '') ?></strong> sẽ bị xóa và không thể khôi phục.
+      Những thao tác này sẽ không thể hoàn tác.
     </p>
   </div>
+
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-    <button id="delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xóa</button>
+    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Chắc
+      chắn</button>
   </div>
+
   <button class="modal__close" type="button" data-modal-close>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-      <path
-        d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z" />
-    </svg>
+    <i class="fa-solid fa-xmark"></i>
   </button>
 </div>
 
-<div class="modal-overlay" data-modal-close></div>
+<!-- Delete confirm modal -->
+<div class="modal" id="delete-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h2 class="modal__title">Bạn có chắc</h2>
+    <p class="modal__description">
+      Những thao tác này sẽ không thể hoàn tác.
+    </p>
+  </div>
 
-<!-- Hidden delete form -->
-<form id="student-delete-form" method="POST" action="<?= url('admin/students/delete/' . $student->account_id) ?>"
-  style="display:none">
-</form>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Chắc
+      chắn</button>
+  </div>
+
+  <button class="modal__close" type="button" data-modal-close>
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const editForm = document.querySelector('#student-edit-form');
-    const deleteForm = document.querySelector('#student-delete-form');
+    const form = document.querySelector('#student-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
-    const deleteBtn = document.querySelector('#delete-confirm-btn');
 
-    confirmBtn.addEventListener('click', () => editForm.submit());
-    deleteBtn.addEventListener('click', () => deleteForm.submit());
+    const studentIdInput = document.querySelector('#student_id');
+    const nationalIdInput = document.querySelector('#national_id');
+
+    const emailInput = document.querySelector('#email');
+    const passwordInput = document.querySelector('#password');
+
+    studentIdInput.addEventListener('input', function () {
+      const studentId = this.value.trim();
+      emailInput.value = studentId ? `${studentId}@caothang.edu.vn` : '';
+    });
+
+    nationalIdInput.addEventListener('input', function () {
+      const nationalId = this.value.trim();
+      passwordInput.value = nationalId ? nationalId : '';
+    });
+
+    // Confirm Btn Event Listener
+    confirmBtn.addEventListener('click', function () {
+      form.submit();
+    });
   });
 </script>

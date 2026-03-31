@@ -16,6 +16,7 @@ interface IStudentStore
   /** @return Student[] */
   public function getPaginated(int $pageTo, int $limit = 15): array;
   public function getById(int $id): ?Student;
+  public function getByStudentId(int $student_id): ?Student;
   public function create(Student $student): Student;
   public function update(Student $student): bool;
   public function softDelete(int $id): bool;
@@ -62,7 +63,7 @@ class StudentStore extends Store implements IStudentStore
     $sql = "
       SELECT * 
       FROM `students`
-      WHERE `student_id` = :id
+      WHERE `id` = :id
       LIMIT 1
     ";
 
@@ -72,7 +73,22 @@ class StudentStore extends Store implements IStudentStore
 
     return $row ? Student::fromArray($row) : null;
   }
+  public function getByStudentId($student_id): ?Student
+  {
+    $sql = "
+      SELECT * 
+      FROM `students`
+      WHERE `student_id` = :id
+      LIMIT 1
+    ";
 
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['id' => $student_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $row ? Student::fromArray($row) : null;
+
+  }
   public function create(Student $student): Student
   {
     $sql = "
@@ -137,7 +153,8 @@ class StudentStore extends Store implements IStudentStore
       WHERE `id` = :id
     ";
 
-    return $this->db->prepare($sql)->execute([
+    $stmt = $this->db->prepare($sql);
+    $success = $stmt->execute([
       ':student_id' => $data->student_id,
       ':full_name' => $data->full_name,
       ':gender' => $data->gender,
@@ -152,6 +169,12 @@ class StudentStore extends Store implements IStudentStore
       ':notes' => $data->notes ?? null,
       ':id' => $data->id,
     ]);
+
+    if (!$success) {
+      throw new \Exception('Không thể lưu sinh viên vào cơ sở dữ liệu.');
+    }
+
+    return $success;
   }
 
   public function softDelete(int $id): bool
