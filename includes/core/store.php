@@ -1,7 +1,7 @@
 <?php
 namespace App\Core;
 
-require_once BASE_PATH . '/db/database.php';
+require_once BASE_PATH . '/includes/core/database.php';
 
 use Database;
 use PDO;

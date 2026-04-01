@@ -3,6 +3,18 @@
 define('BASE_PATH', __DIR__);
 
 // Core
+// Database
+require_once BASE_PATH . '/includes/core/database.php';
+// Schema
+require_once BASE_PATH . '/includes/core/schema/column_definition.php';
+require_once BASE_PATH . '/includes/core/schema/foreign_definition.php';
+require_once BASE_PATH . '/includes/core/schema/table_builder.php';
+// Schema Compiler
+require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
+require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
+// Migration
+require_once BASE_PATH . '/includes/core/migration/migration_runner.php';
+
 require_once BASE_PATH . '/includes/core/request.php';
 require_once BASE_PATH . '/includes/core/router.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';

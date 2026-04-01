@@ -2,7 +2,6 @@
 namespace App\Stores;
 
 require_once BASE_PATH . '/models/web_setting.php';
-require_once BASE_PATH . '/db/database.php';
 
 use App\Core\Store;
 use App\Models\WebSetting;

@@ -23,7 +23,6 @@ class Database
     } catch (PDOException $e) {
       die("Lỗi kết nối DB: " . $e->getMessage());
     }
-    ;
   }
 
   public static function getInstance()
