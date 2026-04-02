@@ -31,8 +31,8 @@ return new class extends BaseMigration {
     $schema->create('menu_items', function (TableBuilder $table) {
       $table->id();
 
-      $table->bigInt('menu_id');
-      $table->bigInt('parent_id')->nullable();
+      $table->bigInt('menu_id')->unsigned();
+      $table->bigInt('parent_id')->unsigned()->nullable();
 
       $table->varchar('label', 150);
       $table->varchar('url', 500);
@@ -59,8 +59,8 @@ return new class extends BaseMigration {
   {
     $schema->disableForeignKeys();
 
+    $schema->drop('menu_items');
     $schema->drop('menus');
-    $schema->date('menu_items');
 
     $schema->enableForeignKeys();
   }

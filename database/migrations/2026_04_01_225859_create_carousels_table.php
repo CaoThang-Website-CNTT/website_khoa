@@ -25,7 +25,7 @@ return new class extends BaseMigration {
     $schema->create('carousel_slides', function (TableBuilder $table) {
       $table->id();
 
-      $table->bigInt('carousel_id');
+      $table->bigInt('carousel_id')->unsigned();
 
       $table->varchar('title', 255);
       $table->varchar('title_highlight', 255)->nullable();

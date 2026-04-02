@@ -9,8 +9,20 @@ return new class extends BaseMigration {
    */
   public function forward(TableBuilder $schema): void
   {
+    //Department
+    $schema->create('departments', function ($table) {
+      $table->id();
+
+      $table->varchar('full_name', 150)->comment('Tên khoa (VD: Khoa Công nghệ thông tin)');
+      $table->varchar('short_name', 20)->unique()->comment('Mã khoa (VD: CNTT)');
+      $table->text('description')->nullable();
+
+      $table->timestamps();
+      $table->softDeletes();
+    });
+
     // Teachers
-    $schema->create('teachers', function ($table) {
+    $schema->create('teachers', function (TableBuilder $table) {
       $table->id();
 
       $table->bigInt('account_id')->unique()->nullable();
@@ -46,7 +58,7 @@ return new class extends BaseMigration {
         'Phó khoa'
       ])->default('Giáo viên')->comment('Chức vụ hành chính');
 
-      $table->bigInt('department_id')->nullable();
+      $table->bigInt('department_id')->unsigned()->nullable();
 
       $table->enum('contract_type', ['full_time', 'part_time', 'visiting', 'contract'])
         ->default('full_time');
@@ -63,18 +75,6 @@ return new class extends BaseMigration {
         ->references('id')
         ->on('departments')
         ->onDelete('set null');
-    });
-
-    //Department
-    $schema->create('departments', function ($table) {
-      $table->id();
-
-      $table->varchar('full_name', 150)->comment('Tên khoa (VD: Khoa Công nghệ thông tin)');
-      $table->varchar('short_name', 20)->unique()->comment('Mã khoa (VD: CNTT)');
-      $table->text('description')->nullable();
-
-      $table->timestamps();
-      $table->softDeletes();
     });
   }
   public function back(TableBuilder $schema): void

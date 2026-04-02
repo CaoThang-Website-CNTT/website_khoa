@@ -2,14 +2,23 @@
 namespace App\Core\Schema\Compiler;
 
 use App\Core\Schema\ColumnDefinition;
-use App\Core\Schema\Compiler\BaseSQLCompiler;
+use App\Core\Schema\ForeignDefinition;
 
 class MySQLCompiler extends BaseSQLCompiler
 {
-  protected function wrap(string $value): string
+  public function wrap(string $value): string
   {
+    if ($value === '*')
+      return '*';
+
+    // Handle 'table.column'
+    if (str_contains($value, '.')) {
+      return implode('.', array_map(fn($p) => "`$p`", explode('.', $value)));
+    }
+
     return "`$value`";
   }
+
   protected function buildCreateTableString(string $table, string $body): string
   {
     return sprintf(
@@ -18,30 +27,42 @@ class MySQLCompiler extends BaseSQLCompiler
       $body
     );
   }
+
+  protected function compileLimit(int $limit, int $offset): string
+  {
+    return $offset !== null ? "LIMIT $offset, $limit" : "LIMIT $limit";
+  }
+
   public function compileColumn(ColumnDefinition $column): string
   {
     $attr = $column->attributes;
     $sql = sprintf("%s %s", $this->wrap($column->name), $this->getType($column));
 
-    if ($attr['unsigned'])
+    if ($attr['unsigned'] ?? false)
       $sql .= " UNSIGNED";
 
-    $sql .= ($attr['nullable']) ? " NULL" : " NOT NULL";
+    $sql .= ($attr['nullable'] ?? false) ? " NULL" : " NOT NULL";
 
-    if ($attr['default'] !== null) {
+    if (($attr['default'] ?? null) !== null) {
       $sql .= " DEFAULT " . $this->formatDefaultValue($attr['default']);
     }
 
-    if ($attr['auto_increment'])
+    if ($column->getOnUpdate() !== null) {
+      $sql .= " ON UPDATE " . $column->getOnUpdate();
+    }
+
+    if ($attr['auto_increment'] ?? false)
       $sql .= " AUTO_INCREMENT";
-    if ($attr['primary'])
+    if ($attr['primary'] ?? false)
       $sql .= " PRIMARY KEY";
-    if ($attr['unique'])
+    if ($attr['unique'] ?? false)
       $sql .= " UNIQUE";
-    if ($attr['comment'] !== null) {
+
+    if (($attr['comment'] ?? null) !== null) {
       $comment = str_replace("'", "''", $attr['comment']);
       $sql .= " COMMENT '" . $comment . "'";
     }
+    // echo "\n" . $sql . "\n";
 
     return $sql;
   }
@@ -49,29 +70,29 @@ class MySQLCompiler extends BaseSQLCompiler
   protected function getType(ColumnDefinition $column): string
   {
     $type = strtolower($column->type);
-    $len = $column->attributes['length'] ?? 255;
-    $p = $column->attributes['precision'] ?? 8;
-    $s = $column->attributes['scale'] ?? 2;
+    $attr = $column->attributes;
+    $len = $attr['length'] ?? 255;
 
     return match ($type) {
       'varchar' => "VARCHAR($len)",
       'char' => "CHAR($len)",
-      'decimal' => "DECIMAL($p,$s)",
+      'decimal' => "DECIMAL(" . ($attr['precision'] ?? 8) . "," . ($attr['scale'] ?? 2) . ")",
       'tinyint' => "TINYINT($len)",
       'int', 'bigint', 'mediumint', 'smallint',
       'text', 'longtext', 'mediumtext', 'json',
       'date', 'datetime', 'timestamp', 'time' => strtoupper($type),
-      'enum' => "ENUM('" . implode("','", $column->attributes['allowed']) . "')",
+      'enum' => "ENUM('" . implode("','", $attr['allowed'] ?? []) . "')",
       default => "TEXT",
     };
   }
 
-  public function compileCommand(mixed $command): ?string
+  public function compileCommand(mixed $command, string $fromTable): ?string
   {
     if ($command instanceof ForeignDefinition) {
+      $constraintName = "fk_" . $fromTable . "_" . $command->getColumn();
       return sprintf(
         "CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s",
-        $this->wrap("fk_" . $command->getColumn()),
+        $this->wrap($constraintName),
         $this->wrap($command->getColumn()),
         $this->wrap($command->getOnTable()),
         $this->wrap($command->getReferences()),
@@ -81,9 +102,7 @@ class MySQLCompiler extends BaseSQLCompiler
     }
 
     if (is_array($command)) {
-      $wrappedCols = array_map([$this, 'wrap'], $command['columns']);
-      $cols = implode(', ', $wrappedCols);
-
+      $cols = implode(', ', array_map([$this, 'wrap'], $command['columns']));
       return match ($command['type']) {
         'index' => "INDEX ($cols)",
         'unique' => "UNIQUE INDEX ($cols)",

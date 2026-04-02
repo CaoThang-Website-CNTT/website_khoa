@@ -24,7 +24,7 @@ return new class extends BaseMigration {
       $table->longText('description')
         ->nullable();
 
-      $table->bigInt('parent_id')
+      $table->bigInt('parent_id')->unsigned()
         ->nullable()
         ->comment('ID của danh mục cha (Self-referencing)');
 

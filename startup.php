@@ -9,11 +9,10 @@ require_once BASE_PATH . '/includes/core/database.php';
 require_once BASE_PATH . '/includes/core/schema/column_definition.php';
 require_once BASE_PATH . '/includes/core/schema/foreign_definition.php';
 require_once BASE_PATH . '/includes/core/schema/table_builder.php';
+require_once BASE_PATH . '/includes/core/schema/query_builder.php';
 // Schema Compiler
 require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
-// Migration
-require_once BASE_PATH . '/includes/migration/migration_runner.php';
 
 require_once BASE_PATH . '/includes/core/request.php';
 require_once BASE_PATH . '/includes/core/router.php';

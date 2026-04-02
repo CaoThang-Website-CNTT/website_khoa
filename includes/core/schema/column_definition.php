@@ -18,6 +18,7 @@ class ColumnDefinition
     'comment' => null,
     'allowed' => [] // Cho ENUMs
   ];
+  protected ?string $onUpdate = null;
 
   public function __construct(string $name, string $type, array $params = [])
   {
@@ -52,5 +53,16 @@ class ColumnDefinition
   {
     $this->attributes['unique'] = true;
     return $this;
+  }
+
+  public function onUpdate(string $value): self
+  {
+    $this->onUpdate = $value;
+    return $this;
+  }
+
+  public function getOnUpdate(): ?string
+  {
+    return $this->onUpdate;
   }
 }

@@ -25,7 +25,11 @@ class ForeignDefinition
     $this->referencesColumn = $column;
     return $this;
   }
-
+  /**
+   * [cascade, set null, restrict]
+   * @param string $action
+   * @return ForeignDefinition
+   */
   public function onDelete(string $action): self
   {
     $this->onDelete = strtoupper($action); // CASCADE, SET NULL, RESTRICT

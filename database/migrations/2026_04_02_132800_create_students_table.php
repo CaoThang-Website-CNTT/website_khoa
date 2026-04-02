@@ -9,10 +9,10 @@ return new class extends BaseMigration {
    */
   public function forward(TableBuilder $schema): void
   {
-    $schema->create('students', function ($table) {
+    $schema->create('students', function (TableBuilder $table) {
       $table->id();
 
-      $table->bigInt('account_id')->unique();
+      $table->bigInt('account_id')->unsigned()->unique();
 
       $table->varchar('full_name', 255);
       $table->enum('gender', ['male', 'female']);
@@ -27,7 +27,7 @@ return new class extends BaseMigration {
       $table->varchar('student_id', 10)
         ->unique()
         ->comment('Mã số sinh viên (Duy nhất)');
-      $table->bigInt('classroom_id');
+      $table->bigInt('classroom_id')->unsigned();
       $table->varchar('major', 150)
         ->comment('Chuyên ngành đào tạo (Lưu text)');
       $table->enum('status', ['Đang học', 'Đã tốt nghiệp', 'Tạm ngưng', 'Thôi học'])
@@ -39,14 +39,13 @@ return new class extends BaseMigration {
 
       // FK
       $table->foreign('account_id')
-        ->on('accounts')
         ->references('id')
+        ->on('accounts')
         ->onDelete('cascade');
 
       $table->foreign('classroom_id')
-        ->on('classrooms')
         ->references('id')
-        ->onDelete('set null');
+        ->on('classrooms');
     });
   }
   public function back(TableBuilder $schema): void

@@ -7,7 +7,7 @@ interface ITableBuilder
    * Primary Key & Identity
    */
   public function id(string $name = 'id'): ColumnDefinition;
-  public function primary(string|array $columns): self;
+  public function primary(string|array $columns): static;
 
   /**
    * Numeric Types
@@ -39,7 +39,7 @@ interface ITableBuilder
   public function timestamp(string $name): ColumnDefinition;
   public function time(string $name): ColumnDefinition;
   public function year(string $name): ColumnDefinition;
-  public function timestamps(): self;
+  public function timestamps(): static;
 
   /**
    * Specialized Types
@@ -52,16 +52,16 @@ interface ITableBuilder
   /**
    * Constraints & Indexes
    */
-  public function index(string|array $columns, ?string $name = null): self;
-  public function unique(string|array $columns, ?string $name = null): self;
+  public function index(string|array $columns, ?string $name = null): static;
+  public function unique(string|array $columns, ?string $name = null): static;
   public function foreign(string $column): ForeignDefinition;
 
   /**
    * Helpers
    */
-  public function disableForeignKeys(): self;
-  public function enableForeignKeys(): self;
-  public function drop(string $name): self;
+  public function disableForeignKeys(): static;
+  public function enableForeignKeys(): static;
+  public function drop(string $name): static;
   public function getColumns(): array;
   public function getTable(): string;
   public function getTablesToCreate(): array;
@@ -200,10 +200,11 @@ class TableBuilder implements ITableBuilder
     return $this->addColumn('year', $name);
   }
 
-  public function timestamps(): self
+  public function timestamps(): static
   {
-    $this->timestamp('created_at')->nullable();
-    $this->timestamp('updated_at')->nullable();
+    $this->timestamp('created_at')->default('CURRENT_TIMESTAMP');
+    $this->timestamp('updated_at')->default('CURRENT_TIMESTAMP')->onUpdate('CURRENT_TIMESTAMP');
+    ;
     return $this;
   }
 
@@ -232,19 +233,19 @@ class TableBuilder implements ITableBuilder
   /**
    * Constraints & Indexes
    */
-  public function primary(string|array $columns): self
+  public function primary(string|array $columns): static
   {
     $this->commands[] = ['type' => 'primary', 'columns' => (array) $columns];
     return $this;
   }
 
-  public function index(string|array $columns, ?string $name = null): self
+  public function index(string|array $columns, ?string $name = null): static
   {
     $this->commands[] = ['type' => 'index', 'columns' => (array) $columns, 'name' => $name];
     return $this;
   }
 
-  public function unique(string|array $columns, ?string $name = null): self
+  public function unique(string|array $columns, ?string $name = null): static
   {
     $this->commands[] = ['type' => 'unique', 'columns' => (array) $columns, 'name' => $name];
     return $this;
@@ -257,19 +258,19 @@ class TableBuilder implements ITableBuilder
     return $spec;
   }
 
-  public function disableForeignKeys(): self
+  public function disableForeignKeys(): static
   {
     $this->commands[] = "SET FOREIGN_KEY_CHECKS = 0;";
     return $this;
   }
 
-  public function enableForeignKeys(): self
+  public function enableForeignKeys(): static
   {
     $this->commands[] = "SET FOREIGN_KEY_CHECKS = 1;";
     return $this;
   }
 
-  public function drop(string $tableNameName): self
+  public function drop(string $tableNameName): static
   {
     $this->commands[] = "DROP TABLE IF EXISTS `$tableNameName`;";
     return $this;

@@ -39,9 +39,15 @@ return new class extends BaseMigration {
       $table->tinyInt('is_locked')->default(0);
 
       $table->smallInt('sort_order')->default(0);
-      $table->bigInt('updated_by')->nullable();
+      $table->bigInt('updated_by')->unsigned()->nullable();
 
       $table->timestamps();
+
+      // Foreign Key
+      $table->foreign('updated_by')
+        ->references('id')
+        ->on('accounts')
+        ->onDelete('set null');
     });
   }
   public function back(TableBuilder $schema): void
