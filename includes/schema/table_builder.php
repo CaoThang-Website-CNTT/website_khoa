@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\Schema;
+namespace App\Schema;
 
 interface ITableBuilder
 {

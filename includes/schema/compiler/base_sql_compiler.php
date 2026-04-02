@@ -1,7 +1,7 @@
 <?php
-namespace App\Core\Schema\Compiler;
+namespace App\Schema\Compiler;
 
-use App\Core\Schema\{TableBuilder, ColumnDefinition, ForeignDefinition};
+use App\Schema\{TableBuilder, ColumnDefinition, ForeignDefinition};
 
 interface ISQLCompiler
 {

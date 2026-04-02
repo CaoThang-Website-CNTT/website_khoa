@@ -1,5 +1,5 @@
 <?php
-namespace App\Core\Migration;
+namespace App\Migration;
 
 use Database;
 use PDO;

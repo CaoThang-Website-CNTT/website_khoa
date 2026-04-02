@@ -1,8 +1,8 @@
 <?php
-namespace App\Core\Migration;
+namespace App\Migration;
 
-use App\Core\Schema\TableBuilder;
-use App\Core\Schema\Compiler\ISQLCompiler;
+use App\Schema\TableBuilder;
+use App\Schema\Compiler\ISQLCompiler;
 use App\Console\ConsoleColor;
 use Database;
 

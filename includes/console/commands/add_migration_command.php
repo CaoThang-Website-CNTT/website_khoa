@@ -55,8 +55,8 @@ class AddMigrationCommand extends BaseCommand
   {
     return "<?php
 
-use App\Core\Migration\BaseMigration;
-use App\Core\Schema\TableBuilder;
+use App\Migration\BaseMigration;
+use App\Schema\TableBuilder;
 
 return new class extends BaseMigration
 {

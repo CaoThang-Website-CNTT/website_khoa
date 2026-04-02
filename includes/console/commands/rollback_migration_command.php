@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Core\Migration\MigrationRunner;
-use App\Core\Schema\Compiler\MySQLCompiler;
+use App\Migration\MigrationRunner;
+use App\Schema\Compiler\MySQLCompiler;
 use App\Console\ConsoleColor;
 
 class RollbackMigrationCommand extends BaseCommand

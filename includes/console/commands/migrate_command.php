@@ -3,8 +3,8 @@ namespace App\Console\Commands;
 
 use App\Console\Commands\BaseCommand;
 use App\Console\ConsoleColor;
-use App\Core\Migration\MigrationRunner;
-use App\Core\Schema\Compiler\MySQLCompiler;
+use App\Migration\MigrationRunner;
+use App\Schema\Compiler\MySQLCompiler;
 
 class MigrateCommand extends BaseCommand
 {

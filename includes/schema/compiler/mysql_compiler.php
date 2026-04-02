@@ -1,8 +1,8 @@
 <?php
-namespace App\Core\Schema\Compiler;
+namespace App\Schema\Compiler;
 
-use App\Core\Schema\ColumnDefinition;
-use App\Core\Schema\Compiler\BaseSQLCompiler;
+use App\Schema\ColumnDefinition;
+use App\Schema\Compiler\BaseSQLCompiler;
 
 class MySQLCompiler extends BaseSQLCompiler
 {
