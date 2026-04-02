@@ -23,17 +23,33 @@ class TeacherController extends Controller
 
   public function index(Request $request)
   {
+    $this->render('admin/teachers/index', layout: 'dashboard_layout');
+  }
+  public function apiIndex(Request $request)
+  {
     $currentPage = $request->query('page') ?? 1;
+    $sortCol = $request->query('sort') ?? 'account_id';
+    $sortDir = $request->query('dir') ?? 'ASC';
+    $search = $request->query('search') ?? '';
+    $limit = 15;
 
-    $teachers = $this->_educationService->getAllTeachers($currentPage);
-    $total = $this->_educationService->getTotalTeachersCount();
+    // $filters = [
+    //   'x' => $request->query('x') ?? [],
+    // ];
 
-    $page = new Page($total, 15, $currentPage);
+    try {
+      $students = $this->_educationService->getAllTeachers($currentPage, $limit, $sortCol, $sortDir, $search);
+      $total = $this->_educationService->getTotalTeachersCount($search);
 
-    $this->render('admin/teachers/index', [
-      'teachers' => $teachers,
-      'page' => $page,
-    ], layout: 'dashboard_layout');
+      $responseData = [
+        'items'       => $students,
+        'currentPage' => (int)$currentPage,
+        'totalPages'  => ceil($total / $limit)
+      ];
+      jsonResponse($responseData, 'Lấy danh sách thành công', true);
+    } catch (\Exception $e) {
+      jsonResponse([], 'Có lỗi xảy ra khi lấy dữ liệu', false, [$e->getMessage()]);
+    }
   }
 
   public function create()
@@ -122,6 +138,7 @@ class TeacherController extends Controller
       gender: $data['gender'],
       dob: $data['dob'],
       phone: $data['phone'],
+      degree: $data['degree'],
       title: $data['title'],
       department: $data['department'],
       start_date: $data['start_date'],

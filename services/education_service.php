@@ -134,6 +134,17 @@ class EducationService implements IEducationRepository
       $sql .= " AND s.classroom_id IN (" . implode(',', $cKeys) . ")";
     }
   }
+  private function buildTeacherFilterQuery(string &$sql, array &$params, string $search, array $filters)
+  {
+    if (!empty($search)) {
+      $sql .= " AND (t.full_name LIKE :s1 OR t.degree LIKE :s2 OR t.title LIKE :s3 OR t.department LIKE :s4)";
+      $term = "%$search%";
+      $params[':s1'] = $term;
+      $params[':s2'] = $term;
+      $params[':s3'] = $term;
+      $params[':s4'] = $term;
+    }
+  }
   // ===================================
   // Student Methods
   // ===================================
@@ -160,8 +171,8 @@ class EducationService implements IEducationRepository
       'full_name' => 's.full_name',
       'email' => 'a.email',
       'gender' => 's.gender',
-      'dob' => 's.dob',
-      'phone' => 's.phone'
+      'phone' => 's.phone',
+      'classroom_name' => 'c.short_name'
     ];
     $orderBy = $allowedSortColumns[$sortCol] ?? 's.account_id';
     $direction = strtoupper($sortDir) === 'ASC' ? 'ASC' : 'DESC';
@@ -298,31 +309,56 @@ class EducationService implements IEducationRepository
   // ===================================
   // Teacher Methods
   // ===================================
-  public function getTotalTeachersCount(): int
+  public function getTotalTeachersCount(string $search = '', array $filters = []): int
   {
     $sql = "SELECT COUNT(t.account_id) 
             FROM `teachers` t
             INNER JOIN `accounts` a ON t.`account_id` = a.`id`
             WHERE a.`deleted_at` IS NULL";
 
-    $stmt = $this->db->query($sql);
+    $params = [];
 
+    $this->buildTeacherFilterQuery($sql, $params, $search, $filters);
+
+    $stmt = $this->db->prepare($sql);
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
+    $stmt->execute();
     return (int) $stmt->fetchColumn();
   }
 
-  public function getAllTeachers(int $pageTo, int $limit = 15): array
+  public function getAllTeachers(int $pageTo, int $limit = 15, string $sortCol = 'account_id', string $sortDir = 'ASC', string $search = '', array $filters = []): array
   {
     $offset = (max(1, $pageTo) - 1) * $limit;
+    $allowedSortColumns = [
+      'account_id' => 't.account_id',
+      'full_name' => 't.full_name',
+      'email' => 'a.email',
+      'phone' => 't.phone',
+      'degree' => 't.degree',
+      'title' => 't.title',
+      'department' => 't.department'
+    ];
+
+    $orderBy = $allowedSortColumns[$sortCol] ?? 't.account_id';
+    $direction = strtoupper($sortDir) === 'ASC' ? 'ASC' : 'DESC';
 
     $sql = "SELECT t.*, 
                   a.id AS acc_id, a.email AS acc_email, a.role AS acc_role, 
                   a.created_at AS acc_created_at, a.updated_at AS acc_updated_at, a.deleted_at AS acc_deleted_at
             FROM `teachers` t
             INNER JOIN `accounts` a ON t.`account_id` = a.`id`
-            WHERE a.`deleted_at` IS NULL
-            LIMIT :limit OFFSET :offset";
+            WHERE a.`deleted_at` IS NULL";
+    $params = [];
+    $this->buildTeacherFilterQuery($sql, $params, $search, $filters);
+
+    $sql .= " ORDER BY {$orderBy} {$direction} LIMIT :limit OFFSET :offset";
 
     $stmt = $this->db->prepare($sql);
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();

@@ -36,46 +36,59 @@
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
-<div class="table-wrapper shadow rounded-md">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>
-          <h6>Name</h6>
-        </th>
-        <th>
-          <h6>Email</h6>
-        </th>
-        <th>
-          <h6>Gender</h6>
-        </th>
-        <th>
-          <h6>Date of Birth</h6>
-        </th>
-        <th>
-          <h6>Phone</h6>
-        </th>
+<table id="teacher-table" class="data-table tm">
+  <thead>
+    <tr>
+      <th data-sort="account_id">
+        <h6>ID</h6>
+      </th>
+      <th data-sort="full_name">
+        <h6>Họ tên</h6>
+      </th>
+      <th data-sort="email">
+        <h6>Email</h6>
+      </th>
+      <th data-sort="degree">
+        <h6>Học hàm/học vị</h6>
+      </th>
+      <th data-sort="title">
+        <h6>Chức danh</h6>
+      </th>
+      <th data-sort="department">
+        <h6>Bộ môn</h6>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+<nav role="navigation" aria-label="pagination" class="pagination">
+  <ul class="pagination-content" id="teacher-pagination"></ul>
+</nav>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tm = new TableManager({
+      tableSelector: '#teacher-table',
+      paginationSelector: '#teacher-pagination',
+      apiUrl: '<?= url("api/teachers") ?>',
+      defaultSort: 'account_id',
+      defaultDir: 'ASC',
+      renderRow: function(teacher) {
+        const detailUrl = `<?= url('admin/teachers/') ?>${teacher.account_id}`;
+
+        return `
+      <tr class="tm__row tm__row--clickable" onclick="window.location.href='${detailUrl}'">
+        <td class="data-table__id">#${teacher.account_id || 'N/A'}</td>
+        <td>${teacher.full_name || 'N/A'}</td>
+        <td>${teacher.account?.email || 'N/A'}</td>
+        <td>${teacher.degree || 'N/A'}</td>
+        <td>${teacher.title || 'N/A'}</td>
+        <td>${teacher.department || 'N/A'}</td>
       </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($teachers)): ?>
-        <?php foreach ($teachers as $index => $user): ?>
-          <tr onclick="window.location.href='<?= url('admin/teachers/' . $user->account_id) ?>'">
-            <td class="data-table__id">#<?= $index + 1 ?></td>
-            <td><?= htmlspecialchars($user->full_name ?? 'N/A') ?></td>
-            <td><?= htmlspecialchars($user->account->email ?? 'N/A') ?></td>
-            <td><?= htmlspecialchars($user->gender ?? 'N/A') ?></td>
-            <td><?= htmlspecialchars($user->dob ?? 'N/A') ?></td>
-            <td><?= htmlspecialchars($user->phone ?? 'N/A') ?></td>
-          </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="6" class="text-center">No teachers found.</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-  <?php include BASE_PATH . '/templates/components/pagination.php' ?>
-</div>
+      `;
+      }
+    });
+    tm.init('Tìm tên, chức danh, bộ môn...');
+  });
+</script>

@@ -83,4 +83,5 @@ $router->post('/admin/carousels/{carouselId}/slides/delete/{slideId}', [Carousel
 
 //TODO: thống nhất lại cách đặt tên cho các route api
 $router->get('/api/students', [StudentController::class, 'apiIndex']);
+$router->get('/api/teachers', [TeacherController::class, 'apiIndex']);
 $router->get('/api/classrooms', [ClassroomController::class, 'apiIndex']);

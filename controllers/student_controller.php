@@ -36,7 +36,6 @@ class StudentController extends Controller
     $limit = 15;
     // Lấy các tham số filter từ URL (Dạng array: &gender[]=Nam&classroom_id[]=1)
     $filters = [
-      'gender' => $request->query('gender') ?? [],
       'classroom_id' => $request->query('classroom_id') ?? []
     ];
 
