@@ -7,6 +7,8 @@ require_once BASE_PATH . '/models/student.php';
 
 use App\Core\Store;
 use App\Models\Student;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 use PDO;
 
 interface IStudentStore
@@ -41,18 +43,14 @@ class StudentStore extends Store implements IStudentStore
   /** @return Student[] */
   public function getPaginated(int $pageTo, int $limit = 15): array
   {
-    $offset = (max(1, $pageTo) - 1) * $limit;
+    $builder = new QueryBuilder(new MySQLCompiler());
 
-    $sql = "
-      SELECT *
-      FROM `students`
-      WHERE deleted_at IS NULL
-      LIMIT :limit OFFSET :offset
-    ";
+    $query = $builder->from('students')
+      ->select('*')
+      ->is('deleted_at', null)
+      ->range(($pageTo - 1) * $limit, $pageTo * $limit - 1);
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt = $this->db->prepare($query->toSql());
     $stmt->execute();
 
     return array_map(fn($row) => Student::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -91,84 +89,64 @@ class StudentStore extends Store implements IStudentStore
   }
   public function create(Student $student): Student
   {
-    $sql = "
-      INSERT INTO `students` 
-      (
-        account_id, student_id, full_name, gender, dob, 
-        national_id, phone, address, classroom_id, 
-        birth_place, notes, status, major
-      ) 
-      VALUES 
-      (
-        :acc_id, :student_id, :name, :gender, :dob, 
-        :nat_id, :phone, :address, :class_id, 
-        :birth_place, :notes, :status, :major
-      )
-    ";
+    $builder = new QueryBuilder(new MySQLCompiler());
 
-    $stmt = $this->db->prepare($sql);
-    $success = $stmt->execute([
-      ':acc_id' => $student->account_id,
-      ':student_id' => $student->student_id,
-      ':name' => $student->full_name,
-      ':gender' => $student->gender,
-      ':dob' => $student->dob,
-      ':nat_id' => $student->national_id,
-      ':phone' => $student->phone,
-      ':address' => $student->address,
-      ':class_id' => $student->classroom_id,
-      ':birth_place' => $student->birth_place,
-      ':notes' => $student->notes,
-      ':status' => $student->status,
+    $data = [
+      'account_id' => $student->account_id,
+      'student_id' => $student->student_id,
+      'full_name' => $student->full_name,
+      'gender' => $student->gender,
+      'dob' => $student->dob,
+      'national_id' => $student->national_id,
+      'phone' => $student->phone,
+      'address' => $student->address,
+      'classroom_id' => $student->classroom_id,
+      'birth_place' => $student->birth_place,
+      'notes' => $student->notes,
+      'status' => $student->status,
+      'major' => $student->major,
+    ];
 
-      ':major' => $student->major,
-    ]);
+    $query = $builder->from('students')->insert($data);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $success = $stmt->execute($query->getBindings());
 
     if (!$success) {
       throw new \Exception('Không thể lưu sinh viên vào cơ sở dữ liệu.');
     }
 
     $student->id = (int) $this->db->lastInsertId();
-
     return $student;
   }
 
   public function update(Student $data): bool
   {
-    $sql = "
-      UPDATE `students` SET 
-        `student_id`   = :student_id,
-        `full_name`    = :full_name,
-        `gender`       = :gender,
-        `dob`          = :dob,
-        `phone`        = :phone,
-        `classroom_id` = :classroom_id,
-        `address`      = :address,
-        `national_id`  = :national_id,
-        `major`        = :major,
-        `birth_place`  = :birth_place,
-        `status`       = :status,
-        `notes`        = :notes,
-        `updated_at`   = NOW()
-      WHERE `id` = :id
-    ";
+    $builder = new QueryBuilder(new MySQLCompiler());
 
-    $stmt = $this->db->prepare($sql);
-    $success = $stmt->execute([
-      ':student_id' => $data->student_id,
-      ':full_name' => $data->full_name,
-      ':gender' => $data->gender,
-      ':dob' => $data->dob,
-      ':phone' => $data->phone,
-      ':classroom_id' => $data->classroom_id ?? null,
-      ':address' => $data->address ?? null,
-      ':national_id' => $data->national_id ?? null,
-      ':major' => $data->major ?? null,
-      ':birth_place' => $data->birth_place ?? null,
-      ':status' => $data->status ?? 'Đang học',
-      ':notes' => $data->notes ?? null,
-      ':id' => $data->id,
-    ]);
+    $fields = [
+      'student_id' => $data->student_id,
+      'full_name' => $data->full_name,
+      'gender' => $data->gender,
+      'dob' => $data->dob,
+      'phone' => $data->phone,
+      'classroom_id' => $data->classroom_id ?? null,
+      'address' => $data->address ?? null,
+      'national_id' => $data->national_id ?? null,
+      'major' => $data->major ?? null,
+      'birth_place' => $data->birth_place ?? null,
+      'status' => $data->status ?? 'Đang học',
+      'notes' => $data->notes ?? null,
+      'updated_at' => date('Y-m-d H:i:s'),
+    ];
+
+    $query = $builder
+      ->from('students')
+      ->eq('id', $data->id)
+      ->update($fields);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $success = $stmt->execute($query->getBindings());
 
     if (!$success) {
       throw new \Exception('Không thể cập nhật sinh viên trong cơ sở dữ liệu.');

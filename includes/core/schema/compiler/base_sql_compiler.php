@@ -12,6 +12,8 @@ interface ISQLCompiler
 
   // Query (DML) methods
   public function compileSelect(string $table, array $columns, array $wheres, array $joins, array $orders, ?int $limit, ?int $offset): string;
+  public function compileInsert(string $table, array $data): string;
+  public function compileUpdate(string $table, array $data, array $wheres): string;
 }
 
 abstract class BaseSQLCompiler implements ISQLCompiler
@@ -77,6 +79,35 @@ abstract class BaseSQLCompiler implements ISQLCompiler
       }
     }
     return implode(' ', $sql);
+  }
+
+  public function compileInsert(string $table, array $data): string
+  {
+    $columns = implode(', ', array_map([$this, 'wrap'], array_keys($data)));
+    $placeholders = implode(', ', array_fill(0, count($data), '?'));
+
+    return sprintf(
+      "INSERT INTO %s (%s) VALUES (%s)",
+      $this->wrap($table),
+      $columns,
+      $placeholders
+    );
+  }
+
+  public function compileUpdate(string $table, array $data, array $wheres): string
+  {
+    $sets = implode(', ', array_map(
+      fn($col) => $this->wrap($col) . ' = ?',
+      array_keys($data)
+    ));
+
+    $sql = sprintf("UPDATE %s SET %s", $this->wrap($table), $sets);
+
+    if (!empty($wheres)) {
+      $sql .= ' WHERE ' . $this->compileWheres($wheres);
+    }
+
+    return $sql;
   }
 
   protected function formatDefaultValue(mixed $value): string
