@@ -1,5 +1,5 @@
 <?php
-namespace App\Schema;
+namespace App\Core\Schema;
 
 class ColumnDefinition
 {

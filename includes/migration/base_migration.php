@@ -1,7 +1,7 @@
 <?php
 namespace App\Migration;
 
-use App\Schema\TableBuilder;
+use App\Core\Schema\TableBuilder;
 
 abstract class BaseMigration
 {
