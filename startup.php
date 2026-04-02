@@ -14,10 +14,12 @@ require_once BASE_PATH . '/includes/core/schema/query_builder.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 
-require_once BASE_PATH . '/includes/core/request.php';
 require_once BASE_PATH . '/includes/core/router.php';
-require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
+require_once BASE_PATH . '/includes/core/request.php';
+require_once BASE_PATH . '/includes/core/request_validator.php';
+require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/pageable.php';
+require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
 
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';

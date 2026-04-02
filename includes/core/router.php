@@ -13,6 +13,11 @@ class Router
    * @var array
    */
   private array $routes = [];
+  /**
+   * Danh sách các groups được gom nhóm
+   * @var array
+   */
+  private array $groupStack = [];
 
   // =========================================================================
   // Đăng ký Route
@@ -62,6 +67,20 @@ class Router
     $this->addRoute('DELETE', $path, $action);
   }
 
+  public function prefix(string $prefix): self
+  {
+    $prefix = '/' . trim($prefix, '/');
+    $this->groupStack[] = $prefix;
+    return $this;
+  }
+
+  public function group(callable $callback): void
+  {
+    $callback($this);
+
+    array_pop($this->groupStack);
+  }
+
   /**
    * Biên dịch URI pattern thành regex và lưu route vào danh sách.
    * Các tham số động dạng {param} được chuyển thành capture group trong regex,
@@ -73,6 +92,11 @@ class Router
    */
   private function addRoute(string $method, string $path, array $action): void
   {
+    $fullPrefix = implode('', $this->groupStack);
+
+    $path = $fullPrefix . '/' . ltrim($path, '/');
+    $path = ($path === '/') ? '/' : rtrim($path, '/');
+
     $paramNames = [];
 
     // Thay thế các tham số động bằng biểu thức chính quy

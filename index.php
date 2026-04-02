@@ -10,6 +10,7 @@ $request = Request::capture();
 $router = new Router();
 
 require_once BASE_PATH . '/routes.php';
+require_once BASE_PATH . '/api_routes.php';
 
 try {
   $router->dispatch($request);
