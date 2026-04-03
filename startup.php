@@ -10,12 +10,15 @@ require_once BASE_PATH . '/includes/core/schema/column_definition.php';
 require_once BASE_PATH . '/includes/core/schema/foreign_definition.php';
 require_once BASE_PATH . '/includes/core/schema/table_builder.php';
 require_once BASE_PATH . '/includes/core/schema/query_builder.php';
+require_once BASE_PATH . '/includes/core/schema/model.php';
 // Schema Compiler
 require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 
 require_once BASE_PATH . '/includes/core/router.php';
 require_once BASE_PATH . '/includes/core/request.php';
+require_once BASE_PATH . '/includes/core/response/response.php';
+require_once BASE_PATH . '/includes/core/response/json_response.php';
 require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/pageable.php';
@@ -57,3 +60,4 @@ require_once BASE_PATH . '/controllers/web/web_setting_controller.php';
 require_once BASE_PATH . '/controllers/web/carousel_controller.php';
 
 // Api
+require_once BASE_PATH . '/controllers/api/student_api_controller.php';

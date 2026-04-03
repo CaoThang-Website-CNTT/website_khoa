@@ -20,7 +20,7 @@ interface IStudentStore
   public function getById(int $id): ?Student;
   public function getByStudentId(int $student_id): ?Student;
   public function create(Student $student): Student;
-  public function update(Student $student): bool;
+  public function update(Student $student): Student;
   public function softDelete(int $id): bool;
   public function getTotalCount(): int;
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
@@ -120,29 +120,29 @@ class StudentStore extends Store implements IStudentStore
     return $student;
   }
 
-  public function update(Student $data): bool
+  public function update(Student $student): Student
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
     $fields = [
-      'student_id' => $data->student_id,
-      'full_name' => $data->full_name,
-      'gender' => $data->gender,
-      'dob' => $data->dob,
-      'phone' => $data->phone,
-      'classroom_id' => $data->classroom_id ?? null,
-      'address' => $data->address ?? null,
-      'national_id' => $data->national_id ?? null,
-      'major' => $data->major ?? null,
-      'birth_place' => $data->birth_place ?? null,
-      'status' => $data->status ?? 'Đang học',
-      'notes' => $data->notes ?? null,
+      'student_id' => $student->student_id,
+      'full_name' => $student->full_name,
+      'gender' => $student->gender,
+      'dob' => $student->dob,
+      'phone' => $student->phone,
+      'classroom_id' => $student->classroom_id ?? null,
+      'address' => $student->address ?? null,
+      'national_id' => $student->national_id ?? null,
+      'major' => $student->major ?? null,
+      'birth_place' => $student->birth_place ?? null,
+      'status' => $student->status ?? 'Đang học',
+      'notes' => $student->notes ?? null,
       'updated_at' => date('Y-m-d H:i:s'),
     ];
 
     $query = $builder
       ->from('students')
-      ->eq('id', $data->id)
+      ->eq('id', $student->id)
       ->update($fields);
 
     $stmt = $this->db->prepare($query->toSql());
@@ -152,7 +152,7 @@ class StudentStore extends Store implements IStudentStore
       throw new \Exception('Không thể cập nhật sinh viên trong cơ sở dữ liệu.');
     }
 
-    return $success;
+    return $student;
   }
 
   public function softDelete($student_id): bool
@@ -188,7 +188,7 @@ class StudentStore extends Store implements IStudentStore
 
     if ($excludeId) {
       $sql .= " AND student_id != :exclude_id";
-      $params[':student_id'] = $excludeId;
+      $params[':exclude_id'] = $excludeId;
     }
 
     $stmt = $this->db->prepare($sql);

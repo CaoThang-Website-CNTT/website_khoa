@@ -57,6 +57,17 @@ class Router
   }
 
   /**
+   * Đăng ký một route với HTTP method PATCH
+   * @param string $path Đường dẫn URI. VD: '/students/{id}'
+   * @param array $action Mảng [ControllerClass, 'methodName']
+   * @return void
+   */
+  public function patch(string $path, array $action): void
+  {
+    $this->addRoute('PATCH', $path, $action);
+  }
+
+  /**
    * Đăng ký một route với HTTP method DELETE
    * @param string $path Đường dẫn URI. VD: '/students/{id}'
    * @param array $action Mảng [ControllerClass, 'methodName']
@@ -172,7 +183,15 @@ class Router
         $routeParams
       );
 
-      call_user_func_array([$controller, $route['action']], $args);
+      $response = call_user_func_array([$controller, $route['action']], $args);
+      if ($response instanceof Response) {
+        $response->send();
+      } elseif (is_array($response) || is_object($response)) {
+        (new Response($response))->header('Content-Type', 'application/json')->send();
+      } else {
+        (new Response($response))->send();
+      }
+
       return;
     }
 

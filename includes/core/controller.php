@@ -7,6 +7,14 @@ abstract class Controller
   public function __construct()
   {
   }
+  protected function response($data = '', $status = 200, $headers = []): Response
+  {
+    return new Response($data, $status, $headers);
+  }
+  protected function json($data, $status = 200, string $message = ""): JsonResponse
+  {
+    return new JsonResponse($data, $message, $status);
+  }
   protected function redirect(string $url): never
   {
     header("Location: " . url($url));
@@ -31,13 +39,5 @@ abstract class Controller
     } else {
       require BASE_PATH . "/templates/pages/{$template}.php";
     }
-  }
-
-  protected function json(mixed $data, int $status = 200): never
-  {
-    http_response_code($status);
-    header('Content-Type: application/json');
-    echo json_encode($data);
-    exit;
   }
 }

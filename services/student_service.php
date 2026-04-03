@@ -25,7 +25,7 @@ interface IStudentService
   public function getStudentByStudentId(int $student_id): ?Student;
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
-  public function updateStudent(int $id, array $data): bool;
+  public function updateStudent(int $id, array $data): ?Student;
   public function deleteStudent(int $id): bool;
 }
 
@@ -159,12 +159,17 @@ class StudentService implements IStudentService
     return $this->_classroomStore->getAll();
   }
 
-  public function updateStudent($student_id, array $data): bool
+  public function updateStudent($student_id, array $data): Student
   {
     // Check student tồn tại
     $student = $this->_studentStore->getByStudentId($student_id);
     if (!$student) {
       throw new \Exception('Không tồn tại sinh viên này');
+    }
+    // Check major tồn tại
+    $major = $this->_classroomStore->getMajorById($data['classroom_id']);
+    if (!$major) {
+      throw new \RuntimeException('Lớp học không hợp lệ.', 422);
     }
 
     $student->full_name = $data['full_name'] ?? $student->full_name;
