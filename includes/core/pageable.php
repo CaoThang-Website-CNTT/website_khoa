@@ -127,7 +127,6 @@ class Pageable implements IteratorAggregate, Countable, JsonSerializable
       'links' => [
         'prev' => $this->prevPageUrl(),
         'next' => $this->nextPageUrl(),
-        'elements' => $this->getElements()
       ]
     ];
   }
