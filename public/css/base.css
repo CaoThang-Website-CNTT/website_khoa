@@ -1304,65 +1304,65 @@
   }
 
   .space-x-1 > * + * {
-    margin-inline-start: 0.25rem;
+    margin-left: 0.25rem;
   }
   .space-x-2 > * + * {
-    margin-inline-start: 0.5rem;
+    margin-left: 0.5rem;
   }
   .space-x-3 > * + * {
-    margin-inline-start: 0.75rem;
+    margin-left: 0.75rem;
   }
   .space-x-4 > * + * {
-    margin-inline-start: 1rem;
+    margin-left: 1rem;
   }
   .space-x-5 > * + * {
-    margin-inline-start: 1.25rem;
+    margin-left: 1.25rem;
   }
   .space-x-6 > * + * {
-    margin-inline-start: 1.5rem;
+    margin-left: 1.5rem;
   }
   .space-x-8 > * + * {
-    margin-inline-start: 2rem;
+    margin-left: 2rem;
   }
   .space-x-10 > * + * {
-    margin-inline-start: 2.5rem;
+    margin-left: 2.5rem;
   }
   .space-x-12 > * + * {
-    margin-inline-start: 3rem;
+    margin-left: 3rem;
   }
   .space-x-16 > * + * {
-    margin-inline-start: 4rem;
+    margin-left: 4rem;
   }
 
   .space-y-1 > * + * {
-    margin-block-start: 0.25rem;
+    margin-top: 0.25rem;
   }
   .space-y-2 > * + * {
-    margin-block-start: 0.5rem;
+    margin-top: 0.5rem;
   }
   .space-y-3 > * + * {
-    margin-block-start: 0.75rem;
+    margin-top: 0.75rem;
   }
   .space-y-4 > * + * {
-    margin-block-start: 1rem;
+    margin-top: 1rem;
   }
   .space-y-5 > * + * {
-    margin-block-start: 1.25rem;
+    margin-top: 1.25rem;
   }
   .space-y-6 > * + * {
-    margin-block-start: 1.5rem;
+    margin-top: 1.5rem;
   }
   .space-y-8 > * + * {
-    margin-block-start: 2rem;
+    margin-top: 2rem;
   }
   .space-y-10 > * + * {
-    margin-block-start: 2.5rem;
+    margin-top: 2.5rem;
   }
   .space-y-12 > * + * {
-    margin-block-start: 3rem;
+    margin-top: 3rem;
   }
   .space-y-16 > * + * {
-    margin-block-start: 4rem;
+    margin-top: 4rem;
   }
 
   /* Spacing - Padding */

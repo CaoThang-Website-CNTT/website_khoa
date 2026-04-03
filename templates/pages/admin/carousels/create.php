@@ -85,7 +85,7 @@ $old_input = request()->getOldInputs() ?? [];
         </div>
         <hr class="separator" />
         <div class="card__content">
-          <div id="slides-container">
+          <div id="slides-container" class="space-y-4">
             <!-- Slides will be injected here by JS -->
             <div id="slides-empty-hint" class="empty">
               <div class="empty__header">
@@ -130,9 +130,10 @@ $old_input = request()->getOldInputs() ?? [];
 
 <!-- Slide template -->
 <template id="slide-template">
-  <div class="slide-item card shadow" data-slide-index="">
+  <div class="slide-item card shadow" data-dnd-draggable data-slide-index="">
     <div class="card__header">
       <legend class="card__title field__legend">
+        <i class="fa-solid fa-grip-vertical"></i>
         Slide <span class="slide-number"></span>
       </legend>
       <button type="button" class="btn card__action remove-slide-btn" data-variant="destructive" data-size="sm">
@@ -246,6 +247,8 @@ $old_input = request()->getOldInputs() ?? [];
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    const manager = new DragDropManager();
+
     const form = document.querySelector('#carousel-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
     const nameInput = document.querySelector('#name');
@@ -259,8 +262,7 @@ $old_input = request()->getOldInputs() ?? [];
 
     nameInput.addEventListener('input', function () {
       slugInput.value = Utils.toCleanAscii(this.value)
-        .toLowerCase()
-        .trim()
+        .toLowerCase().trim()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-');
@@ -269,23 +271,26 @@ $old_input = request()->getOldInputs() ?? [];
     function reindexSlides() {
       const items = slidesContainer.querySelectorAll('.slide-item');
       emptyHint.style.display = items.length === 0 ? 'flex' : 'none';
-
       items.forEach((item, i) => {
-        const order = i + 1;
-        item.querySelector('.slide-number').textContent = order;
-        item.querySelector('.slide-sort-order').value = order;
+        item.querySelector('.slide-number').textContent = i + 1;
+        item.querySelector('.slide-sort-order').value = i + 1;
       });
+      manager.reindexGroup('slides');
     }
 
     addSlideBtn.addEventListener('click', () => {
       const index = slideCount++;
+      const id = 'slide-' + index;
+
       const clone = template.content.cloneNode(true);
       const el = clone.querySelector('.slide-item');
 
-      // Thay thế __INDEX__ placeholder trong tất cả các trường input của slide này
+      // Fill __INDEX__ placeholders
       el.querySelectorAll('[name]').forEach(input => {
         input.name = input.name.replace(/__INDEX__/g, index);
       });
+
+      el.dataset.slideIndex = id;
 
       const toggle = el.querySelector('.use-custom-html-toggle');
       const htmlField = el.querySelector('.custom-html-field');
@@ -293,19 +298,36 @@ $old_input = request()->getOldInputs() ?? [];
         htmlField.style.display = toggle.checked ? 'block' : 'none';
       });
 
-      // Remove slide
       el.querySelector('.remove-slide-btn').addEventListener('click', () => {
+        const s = manager.registry.draggables.get(id);
+        s?.destroy?.();
+
         el.remove();
         reindexSlides();
       });
 
       slidesContainer.appendChild(el);
+
+      new Sortable({
+        id,
+        element: el,
+        handle: el.querySelector('.card__header'),
+        group: 'slides',
+        index: slideCount - 1,
+      }, manager)
+
       reindexSlides();
     });
 
-    // ── Submit ───────────────────────────────────────────────────────────
-    confirmBtn.addEventListener('click', () => {
-      form.submit();
+    manager.monitor.addEventListener('dragend', e => {
+      const s = e.operation.source;
+      if (!e.canceled && isSortable(s)) {
+        s.initialIndex = s.index;
+        s.initialGroup = s.group;
+        reindexSlides();
+      }
     });
+
+    confirmBtn.addEventListener('click', () => form.submit());
   });
 </script>

@@ -1,0 +1,27 @@
+[data-dnd-draggable] [data-dnd-drag-handle="true"] {
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.sortable-item:active {
+  cursor: grabbing;
+}
+[data-dnd-draggable][data-is-dragging="true"] {
+  opacity: 0.3;
+}
+#dnd-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+#dnd-ghost [data-dnd-draggable] {
+  box-shadow: 0 0 0 1px var(--primary);
+  opacity: 1 !important;
+  cursor: grabbing !important;
+  transition: none !important;
+  pointer-events: none !important;
+}

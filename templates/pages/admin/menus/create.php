@@ -101,10 +101,17 @@ $old_input = request()->getOldInputs() ?? [];
         </div>
         <hr class="separator" />
         <div class="card__content">
-          <div id="items-container">
-            <p id="items-empty-hint" class="field__description" style="text-align:center; padding: 1.5rem 0;">
-              Chưa có mục nào. Nhấn "Thêm mục" để bắt đầu.
-            </p>
+          <div id="items-container" class="space-y-4">
+            <div id="items-empty-hint" class="empty">
+              <div class="empty__header">
+                <div class="empty__title">
+                  Chưa có item nào
+                </div>
+                <div class="empty__description">
+                  Nhấn "Thêm item" để tạo item mới.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </fieldset>
@@ -115,7 +122,7 @@ $old_input = request()->getOldInputs() ?? [];
 
 <!-- ── Item template (cloned by JS) ── -->
 <template id="item-template">
-  <div class="item-row card shadow" data-item-index="" style="margin-bottom: 1rem;">
+  <div class="item-row card shadow" data-dnd-draggable data-item-index="">
     <div class="card__header">
       <div class="flex justify-between items-center">
         <legend class="field__legend">
@@ -188,34 +195,45 @@ $old_input = request()->getOldInputs() ?? [];
     const emptyHint = document.querySelector('#items-empty-hint');
     const template = document.querySelector('#item-template');
 
+    // 1. Initialize your custom DragDropManager
+    const manager = new DragDropManager();
+
     // ── Key auto-format ───────────────────────────────────────────────────
     document.querySelector('#key').addEventListener('input', function () {
-      // Force snake_case: lowercase, spaces → underscore, strip invalid chars
       this.value = this.value
         .toLowerCase()
         .replace(/\s+/g, '_')
         .replace(/[^a-z0-9_]/g, '');
     });
 
-    // ── Item registry: { index, el, labelInput } ──────────────────────────
     let itemCount = 0;
-    const registry = []; // maintains insertion order, nulled on remove
 
-    // Rebuild all parent-ref dropdowns after any mutation
+    // Helper: Read the live DOM to get current visual order
+    function getLiveItems() {
+      return Array.from(container.querySelectorAll('.item-row'));
+    }
+
+    // Rebuild all parent-ref dropdowns based on current visual order
     function syncParentSelects() {
-      // Build option list from current live items
-      const options = registry
-        .filter(Boolean)
-        .map(entry => ({ value: entry.index, label: entry.labelInput.value.trim() || `Mục ${entry.index + 1}` }));
+      const liveItems = getLiveItems();
 
-      registry.filter(Boolean).forEach(entry => {
-        const sel = entry.el.querySelector('.parent-ref-select');
+      const options = liveItems.map((el, pos) => {
+        const index = el.dataset.itemIndex;
+        const labelInput = el.querySelector('.item-label');
+        return {
+          value: index,
+          label: labelInput.value.trim() || `Mục ${pos + 1}`
+        };
+      });
+
+      liveItems.forEach(el => {
+        const sel = el.querySelector('.parent-ref-select');
         const current = sel.value;
+        const currentIndex = el.dataset.itemIndex;
 
-        // Rebuild options, excluding self
         sel.innerHTML = '<option value="">-- Không có (mục gốc) --</option>';
         options
-          .filter(o => o.value !== entry.index)
+          .filter(o => o.value !== currentIndex)
           .forEach(o => {
             const opt = document.createElement('option');
             opt.value = o.value;
@@ -226,20 +244,32 @@ $old_input = request()->getOldInputs() ?? [];
       });
     }
 
-    // Reindex sort_order + item numbers after any mutation
+    // Reindex sort_order, item numbers, and sync the Manager's internal group
     function reindex() {
-      const live = registry.filter(Boolean);
-      emptyHint.style.display = live.length === 0 ? 'block' : 'none';
-      live.forEach((entry, pos) => {
-        entry.el.querySelector('.item-number').textContent = pos + 1;
-        entry.el.querySelector('.item-sort-order').value = pos;
+      const liveItems = getLiveItems();
+      emptyHint.style.display = liveItems.length === 0 ? 'block' : 'none';
+
+      liveItems.forEach((el, pos) => {
+        el.querySelector('.item-number').textContent = pos + 1;
+        el.querySelector('.item-sort-order').value = pos;
       });
+
       syncParentSelects();
+
+      // Update your dnd.js internal state to match the new DOM order
+      manager.reindexGroup('menu-items');
     }
+
+    // 2. Listen to your custom dragend event to trigger re-indexing
+    manager.monitor.addEventListener('dragend', () => {
+      reindex();
+    });
 
     // ── Add item ──────────────────────────────────────────────────────────
     addItemBtn.addEventListener('click', () => {
       const index = itemCount++;
+      const id = 'menu-item-' + index;
+
       const clone = template.content.cloneNode(true);
       const el = clone.querySelector('.item-row');
 
@@ -250,20 +280,29 @@ $old_input = request()->getOldInputs() ?? [];
       el.dataset.itemIndex = index;
 
       const labelInput = el.querySelector('.item-label');
-
-      // Live-update parent dropdowns when label changes
       labelInput.addEventListener('input', syncParentSelects);
 
-      // Remove
+      // Remove item
       el.querySelector('.remove-item-btn').addEventListener('click', () => {
-        const pos = registry.findIndex(e => e?.index === index);
-        if (pos !== -1) registry[pos] = null;
+        // 3. Properly destroy your custom Sortable instance before removing DOM node
+        const s = manager.registry.draggables.get(id);
+        s?.destroy?.();
+
         el.remove();
         reindex();
       });
 
-      registry.push({ index, el, labelInput });
       container.appendChild(el);
+
+      // 4. Initialize your custom Sortable for the new element
+      new Sortable({
+        id: id,
+        element: el,
+        handle: el.querySelector('.card__header'),
+        group: 'menu-items',
+        index: getLiveItems().length - 1
+      }, manager);
+
       reindex();
     });
 

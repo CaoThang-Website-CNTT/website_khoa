@@ -16,12 +16,14 @@
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/dashboard.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/dnd.css') ?>">
 
 
 <link rel="shortcut icon" href="<?= url('assets/images/favicon.svg') ?>" type="image/x-icon" />
 
 <script src="<?= url('/public/js/utils.js') ?>"></script>
 <script src="<?= url('/public/js/toast.js') ?>"></script>
+<script src="<?= url('/public/js/dnd.js') ?>"></script>
 
 <script>
   // Khởi tạo toast
