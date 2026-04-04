@@ -49,9 +49,27 @@ class AuthController extends Controller
       'settings' => $this->_settings,
     ], "auth_layout");
   }
-  public function googleOAuthCallback()
+  public function callback($providerName)
   {
+    if (session_status() === PHP_SESSION_NONE) {
+      session_start();
+    }
 
+    // Validate state to prevent CSRF
+    if (empty($_GET['state']) || $_GET['state'] !== ($_SESSION['oauth_state'] ?? '')) {
+      die('Invalid request or state mismatch.');
+    }
+
+    if (empty($_GET['code'])) {
+      die('Authorization code not provided.');
+    }
+
+    // Authenticate with Google
+    $googleUser = $this->_oauthService->authenticate($_GET['code']);
+
+    if (!$googleUser || !isset($googleUser['email'])) {
+      die('Failed to authenticate with Google.');
+    }
   }
   /**
    * Load tất cả settings thuộc PRELOAD_GROUPS vào $_settings.

@@ -3,6 +3,8 @@ session_start();
 
 require_once __DIR__ . '/startup.php';
 
+App\EnvLoader::load(BASE_PATH . '/.env.local');
+
 use App\Core\Request;
 use App\Core\Router;
 
