@@ -273,3 +273,8 @@
 .newsfeed__view-all-link {
   color: var(--primary);
 }
+
+.auth-form-card {
+  margin: 0 auto;
+  max-width: var(--container-md);
+}

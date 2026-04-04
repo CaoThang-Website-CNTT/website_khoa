@@ -1,11 +1,10 @@
 <?php
-// $settings được extract từ render() — available tự động
-// Fallback cho từng key đề phòng DB chưa seed hoặc setting bị xóa
+$headerMode = $headerMode ?? "full";
 $email = htmlspecialchars($settings['contact_email'] ?? '');
 $phone = htmlspecialchars($settings['contact_hotline'] ?? '');
 $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin');
 ?>
-<header class="z-50">
+<header class="z-50 shadow">
 
   <!-- BANNER: START -->
   <div class="banner py-2">
@@ -42,16 +41,19 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
             <div class="uni-name uppercase">TRƯỜNG CAO ĐẲNG KỸ THUẬT CAO THẮNG</div>
           </div>
         </div>
-        <div class="search-bar flex items-center px-4 gap-2 rounded-3xl text-sm">
-          <i class="fa-brands fa-sistrix"></i>
-          <input class="search-bar__input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
-        </div>
+        <?php if ($headerMode === "full"): ?>
+          <div class="search-bar flex items-center px-4 gap-2 rounded-3xl text-sm">
+            <i class="fa-brands fa-sistrix"></i>
+            <input class="search-bar__input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
+          </div>
+        <?php endif; ?>
       </div>
     </div>
 
-    <?php
-    require_once BASE_PATH . '/templates/components/site_nav.php';
-    renderNav($headerMenu);
+    <?php if ($headerMode === "full") {
+      require_once BASE_PATH . '/templates/components/site_nav.php';
+      renderNav($headerMenu);
+    }
     ?>
 
   </div>
