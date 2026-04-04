@@ -19,16 +19,30 @@ require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 
 require_once BASE_PATH . '/includes/core/router.php';
-require_once BASE_PATH . '/includes/core/request.php';
+require_once BASE_PATH . '/includes/core/request/request.php';
+require_once BASE_PATH . '/includes/core/request/request_validator.php';
 require_once BASE_PATH . '/includes/core/response/response.php';
 require_once BASE_PATH . '/includes/core/response/json_response.php';
-require_once BASE_PATH . '/includes/core/request_validator.php';
 require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/pageable.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
 
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';
+
+// Model
+require_once BASE_PATH . '/models/account.php';
+require_once BASE_PATH . '/models/carousel_slide.php';
+require_once BASE_PATH . '/models/carousel.php';
+require_once BASE_PATH . '/models/category.php';
+require_once BASE_PATH . '/models/classroom.php';
+require_once BASE_PATH . '/models/major.php';
+require_once BASE_PATH . '/models/menu_item.php';
+require_once BASE_PATH . '/models/menu.php';
+require_once BASE_PATH . '/models/specialization.php';
+require_once BASE_PATH . '/models/student.php';
+require_once BASE_PATH . '/models/teacher.php';
+require_once BASE_PATH . '/models/web_setting.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';

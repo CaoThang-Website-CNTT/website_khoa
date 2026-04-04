@@ -2,8 +2,6 @@
 
 namespace App\Controllers;
 
-require_once BASE_PATH . '/includes/core/request.php';
-require_once BASE_PATH . '/models/student.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
 require_once BASE_PATH . '/includes/files/xlsx_reader.php';
 require_once BASE_PATH . '/includes/files/student_importer.php';

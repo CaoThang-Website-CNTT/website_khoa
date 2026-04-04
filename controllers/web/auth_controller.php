@@ -1,9 +1,6 @@
 <?php
 namespace App\Controllers;
 
-require_once BASE_PATH . '/includes/core/controller.php';
-require_once BASE_PATH . '/includes/core/request_validator.php';
-
 use App\Core\Controller;
 use App\Services\{GoogleOAuthService, WebSettingsService};
 
