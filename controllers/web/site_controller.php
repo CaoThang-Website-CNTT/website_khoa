@@ -50,15 +50,15 @@ class SiteController extends Controller
   public function index(): void
   {
     // Sử dụng method mới: lấy thẳng menu cùng cây items của nó
-    $mainMenu = $this->_menuService->getMenuByKeyWithItems('main_nav');
-    $menuItemsTree = $mainMenu !== null ? $mainMenu->items : [];
+    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
 
     // Lấy slide carousel (Kèm fallback an toàn nếu chưa có dữ liệu)
     $carousel = $this->_carouselService->getBySlugWithSlides("landing-page");
     $carouselSlides = $carousel !== null ? $carousel->slides : [];
 
     $this->render('site/landing', [
-      'menu' => $menuItemsTree,
+      'headerMenu' => $headerMenuItems,
       'carouselSlides' => $carouselSlides,
       'settings' => $this->_settings,
     ], "site_layout");

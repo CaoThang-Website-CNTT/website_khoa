@@ -395,6 +395,13 @@
     margin: 0 auto;
   }
 
+  @media screen and (min-width: 1280px) {
+    .container {
+      width: 1280px;
+      max-width: 1280px;
+    }
+  }
+
   .container-wrapper {
     width: 1136px;
     max-width: 1136px;

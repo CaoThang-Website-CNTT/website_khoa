@@ -279,4 +279,19 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 (16, 3, NULL, 'Đăng ký học phần', '/sinhvien/dang-ky', 3),
 (17, 3, NULL, 'Biểu mẫu', '/sinhvien/bieu-mau', 4);
 
+-- ---------------------------------------------------------------------------- 
+-- 11. BẢNG CAROUSELS & CAROUSEL_SLIDES
+-- ---------------------------------------------------------------------------- 
+INSERT INTO `carousels` (`id`, `name`, `slug`, `is_active`) VALUES 
+(1, 'Trang chủ (Landing Page)', 'landing-page', 1);
+
+-- Thêm dữ liệu cho bảng carousel_slides (4 slides)
+INSERT INTO `carousel_slides` 
+(`id`, `carousel_id`, `title`, `title_highlight`, `description`, `image_path`, `cta_label`, `cta_url`, `custom_html`, `sort_order`) 
+VALUES
+(1, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80', 'Tìm hiểu thêm', NULL, NULL, 1),
+(2, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1920&q=80', 'Tìm hiểu thêm', NULL, NULL, 2),
+(3, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', 'https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1920&q=80', 'Tìm hiểu thêm', NULL, NULL, 3),
+(4, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1920&q=80', 'Tìm hiểu thêm', NULL, NULL, 4);
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -1,13 +1,13 @@
 <?php
 // $settings được extract từ render() — available tự động
 $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin');
-$desc = htmlspecialchars($settings['contact.description'] ?? '');
-$address = htmlspecialchars($settings['contact.address'] ?? '');
-$phone = htmlspecialchars($settings['contact.phone'] ?? '');
-$email = htmlspecialchars($settings['contact.email'] ?? '');
-$facebook = htmlspecialchars($settings['social.facebook'] ?? '');
-$youtube = htmlspecialchars($settings['social.youtube'] ?? '');
-$instagram = htmlspecialchars($settings['social.instagram'] ?? '');
+$desc = htmlspecialchars($settings['contact_description'] ?? '');
+$address = htmlspecialchars($settings['contact_address'] ?? '');
+$phone = htmlspecialchars($settings['contact_phone'] ?? '');
+$email = htmlspecialchars($settings['contact_email'] ?? '');
+$facebook = htmlspecialchars($settings['social_facebook'] ?? '');
+$youtube = htmlspecialchars($settings['social_youtube'] ?? '');
+$instagram = htmlspecialchars($settings['social_instagram'] ?? '');
 ?>
 <footer class="footer">
   <div class="footer__main-content container flex gap-16 py-12 px-4">

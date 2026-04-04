@@ -1,8 +1,8 @@
 <?php
 // $settings được extract từ render() — available tự động
 // Fallback cho từng key đề phòng DB chưa seed hoặc setting bị xóa
-$email = htmlspecialchars($settings['contact.email'] ?? '');
-$phone = htmlspecialchars($settings['contact.phone'] ?? '');
+$email = htmlspecialchars($settings['contact_email'] ?? '');
+$phone = htmlspecialchars($settings['contact_hotline'] ?? '');
 $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin');
 ?>
 <header class="z-50">
@@ -51,7 +51,7 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
 
     <?php
     require_once BASE_PATH . '/templates/components/site_nav.php';
-    renderNav($menu);
+    renderNav($headerMenu);
     ?>
 
   </div>
