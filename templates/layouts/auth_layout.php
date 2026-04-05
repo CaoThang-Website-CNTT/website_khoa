@@ -29,6 +29,9 @@
   ?>
   <!-- FOOTER: END -->
 
+  <!-- ========= Site Scripts ======== -->
+  <?php include_once BASE_PATH . '/templates/partials/site_scripts.php'; ?>
+  <!-- ========= Site Scripts End ======== -->
 
 </body>
 

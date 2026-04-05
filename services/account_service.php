@@ -6,10 +6,11 @@ require_once BASE_PATH . '/stores/account_store.php';
 
 use App\Models\Account;
 use App\Stores\{AccountStore};
+use Exception;
 
 interface IAccountService
 {
-  public function login(string $email, string $rawPassword): ?Account;
+  public function authenticateOAuthUser(array $oauthData): array;
   public function createAccount(string $email, string $rawPassword, string $role): int;
   public function changePassword(int $accountId, string $oldPassword, string $newPassword): bool;
   public function forceResetPassword(int $accountId, string $newPassword): bool;
@@ -26,17 +27,32 @@ class AccountService implements IAccountService
   {
     $this->_accountStore = $accountStore;
   }
-  public function login(string $email, string $rawPassword): ?Account
+  public function authenticateOAuthUser(array $oauthData): array
   {
-    $account = $this->_accountStore->findByEmail($email);
-
-    if ($account === null) {
-      return null;
+    // Check email hợp lệ
+    if (!$this->isEmailValid($oauthData["email"])) {
+      throw new Exception("Email không hợp lệ");
     }
 
-    if (password_verify($rawPassword, $account->password_hash)) {
-      return $account;
+    // Kiểm tra lần đầu đăng nhập
+    // Chưa có tài khoản trong CSDL
+    $user = $this->getByEmail($oauthData["email"]);
+
+    if (!$user) {
+      // Lấy ra role của user dựa trên email
+      $role = $this->determineRole($oauthData['email']);
+      return [
+        "user" => null,
+        "role" => $role,
+        "is_new" => true
+      ];
     }
+
+    return [
+      "user" => $user,
+      "role" => $user->role,
+      "is_new" => false
+    ];
   }
   public function createAccount(string $email, string $rawPassword, string $role): int
   {
@@ -83,5 +99,35 @@ class AccountService implements IAccountService
   public function deactivateAccount(int $accountId): bool
   {
     return $this->_accountStore->softDelete($accountId);
+  }
+  /**
+   * Xác định Role dựa trên định dạng email của trường.
+   */
+  public function determineRole(string $email): string
+  {
+    // Lấy phần username trước ký tự @
+    $username = strstr($email, '@', true);
+
+    if (!$username) {
+      return 'none';
+    }
+
+    // Kiểm tra Student: Phải là số và đúng 10 ký tự
+    if (ctype_digit($username) && strlen($username) === 10) {
+      return 'student';
+    }
+
+    // Kiểm tra Teacher: Là chuỗi (chữ cái), có thể bao gồm dấu chấm (vd: nva.it)
+    // Regex này kiểm tra chuỗi chỉ chứa chữ cái a-z và dấu chấm
+    if (preg_match('/^[a-z.]+$/i', $username)) {
+      return 'teacher';
+    }
+
+    return 'none';
+  }
+  public function isEmailValid(string $email): bool
+  {
+    $pattern = '/^([0-9]{10}|[a-z.]+)@caothang\.edu\.vn$/i';
+    return (bool) preg_match($pattern, $email);
   }
 }

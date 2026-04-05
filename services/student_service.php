@@ -98,7 +98,7 @@ class StudentService implements IStudentService
         throw new \Exception('Tạo tài khoản thất bại');
       }
 
-      $major = $this->_classroomStore->getMajorById($data['classroom_id'])->id;
+      $major = $this->_classroomStore->getMajorByClassroomId($data['classroom_id'])->id;
       if (!$major) {
         throw new \Exception('Lớp học không hợp lệ. Không tồn tại ngành học cho lớp này.');
       }

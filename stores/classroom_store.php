@@ -8,6 +8,8 @@ require_once BASE_PATH . '/models/major.php';
 require_once BASE_PATH . '/models/specialization.php';
 
 use App\Core\Store;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 use App\Models\{Classroom, Major, Specialization};
 use PDO;
 
@@ -30,6 +32,7 @@ interface IClassroomStore
   /** @return Major[] */
   public function getAllMajors(): array;
   public function getMajorById(int $id): ?Major;
+  public function getMajorByClassroomId(int $classroom_id): ?Major;
   /** @return Major[] */
   public function getByMajorIds(array $majorIds): array;
   public function createMajor(Major $major): int;
@@ -241,6 +244,22 @@ class ClassroomStore extends Store implements IClassroomStore
       WHERE id = :id AND deleted_at IS NULL
     ");
     $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ? Major::fromArray($row) : null;
+  }
+  public function getMajorByClassroomId(int $classroom_id): ?Major
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder
+      ->from('majors')
+      ->select('*')
+      ->join('classrooms', 'classrooms.id', '=', 'major_id')
+      ->eq('majors.id', $classroom_id);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Major::fromArray($row) : null;
   }
