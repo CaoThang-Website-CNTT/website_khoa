@@ -24,6 +24,7 @@ require_once BASE_PATH . '/includes/core/session/session.php';
 require_once BASE_PATH . './includes/core/middleware/pipeline.php';
 require_once BASE_PATH . './includes/core/middleware/base_middleware.php';
 require_once BASE_PATH . './includes/core/middleware/start_session.php';
+require_once BASE_PATH . './includes/core/middleware/verify_csrf_token.php';
 require_once BASE_PATH . '/includes/core/router.php';
 // Request
 require_once BASE_PATH . '/includes/core/request/request.php';

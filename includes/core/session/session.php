@@ -3,6 +3,15 @@ namespace App\Core;
 
 class Session
 {
+  /** Token CSRF */
+  public const KEY_CSRF = '_token';
+
+  /** User đã đăng nhập: ['account_id' => int, 'email' => string, 'role' => string] */
+  public const KEY_AUTH_USER = '_auth_user';
+
+  /** OAuth PKCE state (Google redirect) */
+  public const KEY_OAUTH_STATE = 'oauth_state';
+
   public function __construct()
   {
     if (session_status() === PHP_SESSION_NONE) {
@@ -24,7 +33,66 @@ class Session
 
   public function get($key)
   {
-    return $_SESSION[$key];
+    return $_SESSION[$key] ?? null;
+  }
+
+  public function forget(string|array $keys): void
+  {
+    foreach ((array) $keys as $key) {
+      unset($_SESSION[$key]);
+    }
+  }
+
+  public function csrfToken(): string
+  {
+    $existing = $this->get(self::KEY_CSRF);
+    if (is_string($existing) && $existing !== '') {
+      return $existing;
+    }
+    $token = bin2hex(random_bytes(40));
+    $this->put(self::KEY_CSRF, $token);
+    return $token;
+  }
+
+  /**
+   * @return array{account_id: int, email: string, role: string}|null
+   */
+  public function authUser(): ?array
+  {
+    $user = $this->get(self::KEY_AUTH_USER);
+    if (!is_array($user) || empty($user['account_id'])) {
+      return null;
+    }
+    return [
+      'account_id' => (int) $user['account_id'],
+      'email' => (string) ($user['email'] ?? ''),
+      'role' => (string) ($user['role'] ?? ''),
+    ];
+  }
+
+  public function isAuthenticated(): bool
+  {
+    return $this->authUser() !== null;
+  }
+
+  public function loginUser(int $accountId, string $email, string $role): void
+  {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+      session_regenerate_id(true);
+    }
+    $this->put(self::KEY_AUTH_USER, [
+      'account_id' => $accountId,
+      'email' => $email,
+      'role' => $role,
+    ]);
+  }
+
+  public function logoutUser(): void
+  {
+    $this->forget(self::KEY_AUTH_USER);
+    if (session_status() === PHP_SESSION_ACTIVE) {
+      session_regenerate_id(true);
+    }
   }
 
   public function flash($key, $value)

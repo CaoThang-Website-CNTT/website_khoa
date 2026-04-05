@@ -149,27 +149,27 @@ INSERT INTO `classrooms` (`id`, `major_id`, `specialization_id`, `homeroom_teach
 -- ---------------------------------------------------------------------------- 
 -- 6. BẢNG TEACHERS (Thêm dob và address)
 -- ---------------------------------------------------------------------------- 
-INSERT INTO `teachers` (`id`, `account_id`, `staff_code`, `full_name`, `gender`, `phone`, `national_id`, `degree`, `position`, `department_id`, `dob`, `address`) VALUES
-(1, 2, 'GV001', 'Nguyễn Văn Dũng', 'male', '0901000001', '079082000001', 'Tiến sĩ', 'Trưởng khoa', 1, '1978-05-12', '65 Huỳnh Thúc Kháng, Q.1, TP.HCM'),
-(2, 3, 'GV002', 'Lê Thị Mai', 'female', '0901000002', '079082000002', 'Thạc sĩ', 'Trưởng bộ môn', 5, '1985-11-20', '123 Nguyễn Thị Minh Khai, Q.3, TP.HCM'),
-(3, 4, 'GV003', 'Phạm Văn Hùng', 'male', '0901000003', '079082000003', 'Thạc sĩ', 'Giảng viên', 2, '1982-03-15', '45 Lê Văn Sỹ, Q.Phú Nhuận'),
-(4, 5, 'GV004', 'Trương Thị Lan', 'female', '0901000004', '079082000004', 'Thạc sĩ', 'Giảng viên', 5, '1987-07-08', '78 Võ Văn Tần, Q.3, TP.HCM'),
-(5, 6, 'GV005', 'Hoàng Văn Minh', 'male', '0901000005', '079082000005', 'Tiến sĩ', 'Phó trưởng khoa', 4, '1979-09-25', '12 Pasteur, Q.1, TP.HCM'),
-(6, 7, 'GV006', 'Hoàng Anh Tuấn', 'male', '0901000006', '079082000006', 'Thạc sĩ', 'Giảng viên', 1, '1984-01-30', '56 Nguyễn Đình Chiểu, Q.3'),
-(7, 8, 'GV007', 'Lê Minh Hương', 'female', '0901000007', '079082000007', 'Cử nhân', 'Trợ giảng', 3, '1990-06-14', '89 Bà Huyện Thanh Quan, Q.3'),
-(8, 9, 'GV008', 'Nguyễn Quốc Bình', 'male', '0901000008', '079082000008', 'Thạc sĩ', 'Giảng viên', 7, '1986-12-05', '34 Trần Quốc Thảo, Q.3'),
-(9, 10, 'GV009', 'Vũ Thị Thủy', 'female', '0901000009', '079082000009', 'Thạc sĩ', 'Giảng viên', 6, '1988-04-22', '67 Nguyễn Văn Trỗi, Q.Phú Nhuận'),
-(10, 11, 'GV010', 'Đinh Minh Khải', 'male', '0901000010', '079082000010', 'Tiến sĩ', 'Trưởng bộ môn', 9, '1975-08-10', '112 Lê Lợi, Q.1'),
-(11, 12, 'GV011', 'Phạm Thị Linh', 'female', '0901000011', '079082000011', 'Thạc sĩ', 'Giảng viên', 8, '1989-02-18', '45 Nguyễn Đình Chiểu, Q.3'),
-(12, 13, 'GV012', 'Nguyễn Thanh Sơn', 'male', '0901000012', '079082000012', 'Thạc sĩ', 'Giảng viên', 8, '1983-10-03', '23 Pasteur, Q.1'),
-(13, 14, 'GV013', 'Đặng Thúy Quỳnh', 'female', '0901000013', '079082000013', 'Thạc sĩ', 'Giảng viên', 5, '1986-05-27', '78 Võ Thị Sáu, Q.3'),
-(14, 15, 'GV014', 'Lý Hoàng Phong', 'male', '0901000014', '079082000014', 'Tiến sĩ', 'Trưởng bộ môn', 9, '1980-11-15', '90 Nguyễn Thị Minh Khai, Q.3'),
-(15, 16, 'GV015', 'Bùi Thị Ngọc', 'female', '0901000015', '079082000015', 'Thạc sĩ', 'Giảng viên', 10, '1987-09-09', '12 Nguyễn Văn Trỗi, Q.Phú Nhuận'),
-(16, 17, 'GV016', 'Đỗ Quang Hải', 'male', '0901000016', '079082000016', 'Thạc sĩ', 'Giảng viên', 10, '1984-07-21', '56 Lê Văn Sỹ, Q.Phú Nhuận'),
-(17, 18, 'GV017', 'Nguyễn Thu Trang', 'female', '0901000017', '079082000017', 'Thạc sĩ', 'Giảng viên', 6, '1989-03-12', '34 Bà Huyện Thanh Quan, Q.3'),
-(18, 19, 'GV018', 'Phan Văn Khoa', 'male', '0901000018', '079082000018', 'Tiến sĩ', 'Phó trưởng khoa', 2, '1977-06-05', '78 Huỳnh Thúc Kháng, Q.1'),
-(19, 20, 'GV019', 'Nguyễn Thị Thanh Anh', 'female', '0901000019', '079082000019', 'Thạc sĩ', 'Giảng viên', 7, '1985-01-18', '45 Võ Văn Tần, Q.3'),
-(20, 21, 'GV020', 'Lê Mạnh Cường', 'male', '0901000020', '079082000020', 'Thạc sĩ', 'Giảng viên', 1, '1982-08-30', '67 Nguyễn Đình Chiểu, Q.3');
+INSERT INTO `teachers` (`id`, `account_id`, `full_name`, `gender`, `phone`, `national_id`, `degree`, `position`, `department_id`, `dob`, `address`) VALUES
+(1, 2, 'Nguyễn Văn Dũng', 'male', '0901000001', '079082000001', 'Tiến sĩ', 'Trưởng khoa', 1, '1978-05-12', '65 Huỳnh Thúc Kháng, Q.1, TP.HCM'),
+(2, 3, 'Lê Thị Mai', 'female', '0901000002', '079082000002', 'Thạc sĩ', 'Trưởng bộ môn', 5, '1985-11-20', '123 Nguyễn Thị Minh Khai, Q.3, TP.HCM'),
+(3, 4, 'Phạm Văn Hùng', 'male', '0901000003', '079082000003', 'Thạc sĩ', 'Giảng viên', 2, '1982-03-15', '45 Lê Văn Sỹ, Q.Phú Nhuận'),
+(4, 5, 'Trương Thị Lan', 'female', '0901000004', '079082000004', 'Thạc sĩ', 'Giảng viên', 5, '1987-07-08', '78 Võ Văn Tần, Q.3, TP.HCM'),
+(5, 6, 'Hoàng Văn Minh', 'male', '0901000005', '079082000005', 'Tiến sĩ', 'Phó trưởng khoa', 4, '1979-09-25', '12 Pasteur, Q.1, TP.HCM'),
+(6, 7, 'Hoàng Anh Tuấn', 'male', '0901000006', '079082000006', 'Thạc sĩ', 'Giảng viên', 1, '1984-01-30', '56 Nguyễn Đình Chiểu, Q.3'),
+(7, 8, 'Lê Minh Hương', 'female', '0901000007', '079082000007', 'Cử nhân', 'Trợ giảng', 3, '1990-06-14', '89 Bà Huyện Thanh Quan, Q.3'),
+(8, 9, 'Nguyễn Quốc Bình', 'male', '0901000008', '079082000008', 'Thạc sĩ', 'Giảng viên', 7, '1986-12-05', '34 Trần Quốc Thảo, Q.3'),
+(9, 10, 'Vũ Thị Thủy', 'female', '0901000009', '079082000009', 'Thạc sĩ', 'Giảng viên', 6, '1988-04-22', '67 Nguyễn Văn Trỗi, Q.Phú Nhuận'),
+(10, 11, 'Đinh Minh Khải', 'male', '0901000010', '079082000010', 'Tiến sĩ', 'Trưởng bộ môn', 9, '1975-08-10', '112 Lê Lợi, Q.1'),
+(11, 12, 'Phạm Thị Linh', 'female', '0901000011', '079082000011', 'Thạc sĩ', 'Giảng viên', 8, '1989-02-18', '45 Nguyễn Đình Chiểu, Q.3'),
+(12, 13, 'Nguyễn Thanh Sơn', 'male', '0901000012', '079082000012', 'Thạc sĩ', 'Giảng viên', 8, '1983-10-03', '23 Pasteur, Q.1'),
+(13, 14, 'Đặng Thúy Quỳnh', 'female', '0901000013', '079082000013', 'Thạc sĩ', 'Giảng viên', 5, '1986-05-27', '78 Võ Thị Sáu, Q.3'),
+(14, 15, 'Lý Hoàng Phong', 'male', '0901000014', '079082000014', 'Tiến sĩ', 'Trưởng bộ môn', 9, '1980-11-15', '90 Nguyễn Thị Minh Khai, Q.3'),
+(15, 16, 'Bùi Thị Ngọc', 'female', '0901000015', '079082000015', 'Thạc sĩ', 'Giảng viên', 10, '1987-09-09', '12 Nguyễn Văn Trỗi, Q.Phú Nhuận'),
+(16, 17, 'Đỗ Quang Hải', 'male', '0901000016', '079082000016', 'Thạc sĩ', 'Giảng viên', 10, '1984-07-21', '56 Lê Văn Sỹ, Q.Phú Nhuận'),
+(17, 18, 'Nguyễn Thu Trang', 'female', '0901000017', '079082000017', 'Thạc sĩ', 'Giảng viên', 6, '1989-03-12', '34 Bà Huyện Thanh Quan, Q.3'),
+(18, 19, 'Phan Văn Khoa', 'male', '0901000018', '079082000018', 'Tiến sĩ', 'Phó trưởng khoa', 2, '1977-06-05', '78 Huỳnh Thúc Kháng, Q.1'),
+(19, 20, 'Nguyễn Thị Thanh Anh', 'female', '0901000019', '079082000019', 'Thạc sĩ', 'Giảng viên', 7, '1985-01-18', '45 Võ Văn Tần, Q.3'),
+(20, 21, 'Lê Mạnh Cường', 'male', '0901000020', '079082000020', 'Thạc sĩ', 'Giảng viên', 1, '1982-08-30', '67 Nguyễn Đình Chiểu, Q.3');
 
 
 -- ---------------------------------------------------------------------------- 

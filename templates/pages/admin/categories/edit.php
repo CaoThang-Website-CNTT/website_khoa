@@ -31,6 +31,7 @@ $isConst = $category->type === 'const';
     <?php include BASE_PATH . '/templates/components/flash_alert.php'; ?>
 
     <form id="category-edit-form" method="POST" action="<?= url('admin/categories/' . $category->id) ?>">
+      <?= csrf_field() ?>
       <div class="field-group">
 
         <div class="field" <?= !$isConst ? 'data-field-required' : '' ?>>
@@ -124,7 +125,7 @@ $isConst = $category->type === 'const';
   <div class="modal-overlay" data-modal-close></div>
 
   <form id="category-delete-form" method="POST" action="<?= url('admin/categories/delete/' . $category->id) ?>"
-    style="display:none"></form>
+    style="display:none"><?= csrf_field() ?></form>
 
 <?php endif; ?>
 

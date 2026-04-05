@@ -38,6 +38,7 @@
     ?>
 
     <form id="import-form" action=<?= url('admin/students/import') ?> method="POST" enctype="multipart/form-data">
+      <?= csrf_field() ?>
       <div class="field-group">
         <div class="field">
           <input id="import-file" class="field__input" type="file" name="uploaded_file" accept=".xlsx">

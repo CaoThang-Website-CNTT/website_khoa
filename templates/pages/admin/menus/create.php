@@ -40,6 +40,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ========== title-wrapper end ========== -->
 
 <form class="detail-layout" id="menu-add-form" action="<?= url('admin/menus') ?>" method="POST">
+  <?= csrf_field() ?>
   <div class="detail-layout__main">
 
     <!-- ── Card 1: Thông tin nhóm menu ── -->

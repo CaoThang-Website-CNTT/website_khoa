@@ -17,6 +17,23 @@ function url(string $path = ''): string
   return APP_URL . ltrim($path, '/');
 }
 
+/**
+ * Token CSRF hiện tại (tạo/lấy từ session). Dùng cho meta tag hoặc header AJAX.
+ */
+function csrf_token(): string
+{
+  return request()->session()->csrfToken();
+}
+
+/**
+ * Input ẩn `_token` cho form POST (giống @csrf của Laravel).
+ */
+function csrf_field(): string
+{
+  $t = htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8');
+  return '<input type="hidden" name="_token" value="' . $t . '">';
+}
+
 function request(): Request
 {
   static $instance = null;

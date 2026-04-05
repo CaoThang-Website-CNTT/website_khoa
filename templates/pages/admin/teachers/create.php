@@ -47,6 +47,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </div>
 <!-- ========== title-wrapper end ========== -->
 <form class="detail-layout" id="teacher-add-form" action="<?= url('admin/teachers') ?>" method="POST">
+  <?= csrf_field() ?>
   <div class="detail-layout__main">
     <div class="card shadow">
       <fieldset class="field__set">

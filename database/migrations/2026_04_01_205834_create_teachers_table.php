@@ -26,7 +26,6 @@ return new class extends BaseMigration {
       $table->id();
 
       $table->bigInt('account_id')->unique()->nullable();
-      $table->varchar('staff_code', 10)->unique();
       $table->varchar('full_name', 255);
 
       $table->enum('gender', ['male', 'female']);
@@ -59,9 +58,6 @@ return new class extends BaseMigration {
       ])->default('Giáo viên')->comment('Chức vụ hành chính');
 
       $table->bigInt('department_id')->unsigned()->nullable();
-
-      $table->enum('contract_type', ['full_time', 'part_time', 'visiting', 'contract'])
-        ->default('full_time');
 
       $table->date('start_date')->nullable();
       $table->date('end_date')->nullable();

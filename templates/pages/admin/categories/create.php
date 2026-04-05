@@ -49,6 +49,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ========== title-wrapper end ========== -->
 
 <form class="detail-layout" id="category-add-form" action="<?= url('admin/categories') ?>" method="POST">
+  <?= csrf_field() ?>
   <div class="detail-layout__main">
 
     <!-- ── Card 1: Thông tin danh mục ── -->

@@ -36,6 +36,7 @@ if (!empty($data)) {
 
     <div class="card shadow rounded-md">
       <form action="<?= url('admin/web_settings/' . $groupKey . '/batch-update') ?>" method="POST">
+        <?= csrf_field() ?>
         <div class="card__content">
           <div class="field-group">
             <?php if (!empty($group['settings'])): ?>

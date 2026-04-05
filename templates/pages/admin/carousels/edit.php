@@ -43,6 +43,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
               <div class="shrink-0 flex flex-col overflow-hidden rounded-xl border">
                 <form method="POST" action="<?= url('admin/carousels/' . $carousel->id . '/slides/reorder') ?>">
+                  <?= csrf_field() ?>
                   <?php if ($canUp): ?>
                     <input type="hidden" name="move_id" value="<?= $carousel->id ?>">
                     <input type="hidden" name="direction" value="up">
@@ -52,6 +53,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 </form>
 
                 <form method="POST" action="<?= url('admin/carousels/' . $carousel->id . '/slides/reorder') ?>">
+                  <?= csrf_field() ?>
                   <?php if ($canDown): ?>
                     <input type="hidden" name="move_id" value="<?= $carousel->id ?>">
                     <input type="hidden" name="direction" value="down">
@@ -119,6 +121,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
       <div class="card__content">
         <form id="carousel-edit-form" method="POST" action="<?= url('admin/carousels/' . $carousel->id) ?>">
+          <?= csrf_field() ?>
           <div class="field-group">
             <div class="field" data-field-required>
               <label for="name">Tên Carousel</label>
@@ -158,7 +161,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 </div>
 
-<form id="carousel-delete-form" method="POST" action="<?= url('admin/carousels/delete/' . $carousel->id) ?>"></form>
+<form id="carousel-delete-form" method="POST" action="<?= url('admin/carousels/delete/' . $carousel->id) ?>"><?= csrf_field() ?></form>
 
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">

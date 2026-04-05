@@ -6,7 +6,7 @@ App\EnvLoader::load(BASE_PATH . '/.env.local');
 use App\Core\Request;
 use App\Core\Router;
 use App\Core\Pipeline;
-use App\Core\Middleware\StartSession;
+use App\Core\Middleware\{StartSession, VerifyCsrfToken};
 
 $request = Request::capture();
 $router = new Router();
@@ -16,6 +16,7 @@ require_once BASE_PATH . '/api_routes.php';
 
 $globalMiddlewares = [
   StartSession::class,
+  VerifyCsrfToken::class,
 ];
 
 $dispatchToRouter = function ($req) use ($router) {

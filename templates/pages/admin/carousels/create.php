@@ -46,6 +46,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ========== title-wrapper end ========== -->
 
 <form class="detail-layout" id="carousel-add-form" action="<?= url('admin/carousels') ?>" method="POST">
+  <?= csrf_field() ?>
   <div class="detail-layout__main">
     <div class="card shadow">
       <fieldset class="field__set">

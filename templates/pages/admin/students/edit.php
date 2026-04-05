@@ -57,6 +57,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ========== title-wrapper end ========== -->
 <form class="detail-layout" id="student-edit-form" action="<?= url('admin/students/' . $student->student_id) ?>"
   method="POST">
+  <?= csrf_field() ?>
   <div class="detail-layout__main">
     <div class="card shadow">
       <fieldset class="field__set">
@@ -322,7 +323,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </button>
 </div>
 
-<form action="<?= url('admin/students/delete/' . $student->student_id) ?>" method="POST" id="delete-form"></form>
+<form action="<?= url('admin/students/delete/' . $student->student_id) ?>" method="POST" id="delete-form"><?= csrf_field() ?></form>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {

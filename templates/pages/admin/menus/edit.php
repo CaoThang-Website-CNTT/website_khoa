@@ -20,6 +20,7 @@ function renderMenuItems(array $items, object $menu, int $depth = 0): void
       <div class="shrink-0 flex flex-col overflow-hidden rounded-xl border">
 
         <form method="POST" action="<?= url('admin/menus/' . $menu->id . '/items/reorder') ?>">
+          <?= csrf_field() ?>
           <?php if ($canUp): ?>
             <input type="hidden" name="move_id" value="<?= $item->id ?>">
             <input type="hidden" name="direction" value="up">
@@ -29,6 +30,7 @@ function renderMenuItems(array $items, object $menu, int $depth = 0): void
         </form>
 
         <form method="POST" action="<?= url('admin/menus/' . $menu->id . '/items/reorder') ?>">
+          <?= csrf_field() ?>
           <?php if ($canDown): ?>
             <input type="hidden" name="move_id" value="<?= $item->id ?>">
             <input type="hidden" name="direction" value="down">
@@ -118,6 +120,7 @@ function renderMenuItems(array $items, object $menu, int $depth = 0): void
       </div>
       <div class="card__content">
         <form id="menu-edit-form" method="POST" action="<?= url('admin/menus/' . $menu->id) ?>">
+          <?= csrf_field() ?>
           <div class="field-group">
             <div class="field">
               <label for="label">Tên hiển thị</label>
