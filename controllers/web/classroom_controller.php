@@ -61,20 +61,20 @@ class ClassroomController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/classrooms/create');
     }
 
     $newClassroom = $this->_classroomService->createClassroom($data);
 
     if ($newClassroom) {
-      $request->flash(
+      $request->session()->flashNotify(
         'success',
         'Lớp học đã được tạo thành công!',
         'Lớp ' . $newClassroom->short_name . ' đã được tạo.'
       );
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, không thể tạo lớp học.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, không thể tạo lớp học.');
     }
 
     return $this->redirect('admin/classrooms/create');
@@ -85,7 +85,7 @@ class ClassroomController extends Controller
     $classroom = $this->_classroomService->getClassroomById((int) $id);
 
     if (!$classroom) {
-      $request->flash('error', 'Lớp học không tồn tại.');
+      $request->session()->flashNotify('error', 'Lớp học không tồn tại.');
       return $this->redirect('admin/classrooms');
     }
 
@@ -121,16 +121,16 @@ class ClassroomController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect("admin/classrooms/{$id}");
     }
 
     $isSuccess = $this->_classroomService->updateClassroom($id, $data);
 
     if ($isSuccess) {
-      $request->flash('success', 'Cập nhật lớp học thành công!');
+      $request->session()->flashNotify('success', 'Cập nhật lớp học thành công!');
     } else {
-      $request->flash('error', 'Cập nhật lớp học không thành công.');
+      $request->session()->flashNotify('error', 'Cập nhật lớp học không thành công.');
     }
 
     return $this->redirect("admin/classrooms/{$id}");
@@ -141,9 +141,9 @@ class ClassroomController extends Controller
     $isSuccess = $this->_classroomService->deleteClassroom((int) $id);
 
     if ($isSuccess) {
-      $request->flash('success', 'Xóa lớp học thành công!');
+      $request->session()->flashNotify('success', 'Xóa lớp học thành công!');
     } else {
-      $request->flash('error', 'Không thể xóa lớp học.');
+      $request->session()->flashNotify('error', 'Không thể xóa lớp học.');
     }
 
     return $this->redirect('admin/classrooms');

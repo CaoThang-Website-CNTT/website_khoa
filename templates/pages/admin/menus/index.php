@@ -1,4 +1,4 @@
-<?php if ($flash = request()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash()): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= $flash['type'] ?>(

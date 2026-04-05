@@ -62,27 +62,27 @@ class StudentController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/create');
     }
 
     if (!$this->_studentService->isStudentIdUnique($data['student_id'])) {
       $validator->addError('student_id', 'Mã số sinh viên này đã tồn tại trong hệ thống.');
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/create');
     }
 
     $newStudent = $this->_studentService->createStudent($data);
 
     if ($newStudent) {
-      $request->flash(
+      $request->session()->flashNotify(
         'success',
         'Tạo mới sinh viên thành công!',
         'Sinh viên có mã #' . $newStudent->student_id . ' đã được tạo.'
       );
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     $this->redirect('admin/students/create');
@@ -93,7 +93,7 @@ class StudentController extends Controller
   {
     $student = $this->_studentService->getStudentByStudentId($student_id);
     if (!$student) {
-      $request->flash(
+      $request->session()->flashNotify(
         'error',
         'Không tìm thấy Sinh Viên #' . $student_id . '!',
         'Hãy thử lại sau.'
@@ -131,16 +131,16 @@ class StudentController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/students/' . $student_id);
     }
 
     $isSuccess = $this->_studentService->updateStudent($student_id, $data);
 
     if ($isSuccess) {
-      $request->flash('success', 'Cập nhật sinh viên thành công!');
+      $request->session()->flashNotify('success', 'Cập nhật sinh viên thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     $this->redirect('admin/students/' . $student_id);
@@ -152,9 +152,9 @@ class StudentController extends Controller
     $isSuccess = $this->_studentService->deleteStudent($student_id);
 
     if ($isSuccess) {
-      $request->flash('success', 'Xoá sinh viên thành công!');
+      $request->session()->flashNotify('success', 'Xoá sinh viên thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     return $this->redirect('admin/students');

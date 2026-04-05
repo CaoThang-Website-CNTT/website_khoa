@@ -40,7 +40,7 @@ class CarouselController extends Controller
 
     if (!$validator->validate($data, $rule)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/create');
     }
 
@@ -61,7 +61,7 @@ class CarouselController extends Controller
 
     if ($validator->hasErrors()) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/create');
     }
 
@@ -73,13 +73,13 @@ class CarouselController extends Controller
     ]);
 
     if ($newCarousel) {
-      $request->flash(
+      $request->session()->flashNotify(
         'success',
         'Tạo carousel thành công!',
         'Carousel ' . $newCarousel->name . ' đã được tạo.'
       );
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect('admin/carousels/create');
   }
@@ -101,7 +101,7 @@ class CarouselController extends Controller
     $validator = new Validator();
     if (!$validator->validate($data, ['name' => ['required', 'max:255'], 'slug' => ['max:255']])) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/' . $id);
     }
     if (empty($data['slug'])) {
@@ -110,7 +110,7 @@ class CarouselController extends Controller
     if (!$this->_carouselService->isSlugUnique($data['slug'], (int) $id)) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/' . $id);
     }
     $isSuccess = $this->_carouselService->update((int) $id, [
@@ -119,9 +119,9 @@ class CarouselController extends Controller
       'is_active' => !empty($data['is_active']) ? 1 : 0,
     ]);
     if ($isSuccess) {
-      $request->flash('success', 'Cập nhật carousel thành công!');
+      $request->session()->flashNotify('success', 'Cập nhật carousel thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect('admin/carousels/' . $id);
   }
@@ -130,9 +130,9 @@ class CarouselController extends Controller
   {
     $isSuccess = $this->_carouselService->delete((int) $id);
     if ($isSuccess) {
-      $request->flash('success', 'Xoá carousel thành công!');
+      $request->session()->flashNotify('success', 'Xoá carousel thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect('admin/carousels');
   }
@@ -159,7 +159,7 @@ class CarouselController extends Controller
     $validator = new Validator();
     if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect("admin/carousels/{$carouselId}/slides/create");
     }
     $newSlideId = $this->_carouselService->addSlide((int) $carouselId, [
@@ -177,9 +177,9 @@ class CarouselController extends Controller
       'sort_order' => 0,
     ]);
     if ($newSlideId) {
-      $request->flash('success', 'Thêm slide thành công!');
+      $request->session()->flashNotify('success', 'Thêm slide thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect("admin/carousels/{$carouselId}/slides");
   }
@@ -199,7 +199,7 @@ class CarouselController extends Controller
     $validator = new Validator();
     if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect("admin/carousels/{$carouselId}/slides/{$slideId}");
     }
     $slide = $this->_carouselService->getSlideById((int) $slideId);
@@ -218,9 +218,9 @@ class CarouselController extends Controller
       'sort_order' => $request->input('sort_order', $slide->sort_order),
     ]);
     if ($isSuccess) {
-      $request->flash('success', 'Cập nhật slide thành công!');
+      $request->session()->flashNotify('success', 'Cập nhật slide thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect("admin/carousels/{$carouselId}/slides/{$slideId}");
   }
@@ -229,9 +229,9 @@ class CarouselController extends Controller
   {
     $isSuccess = $this->_carouselService->deleteSlide((int) $slideId);
     if ($isSuccess) {
-      $request->flash('success', 'Xoá slide thành công!');
+      $request->session()->flashNotify('success', 'Xoá slide thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect("admin/carousels/{$carouselId}");
   }
@@ -242,14 +242,14 @@ class CarouselController extends Controller
     $moveId = !empty($data['move_id']) ? (int) $data['move_id'] : null;
     $direction = $data['direction'] ?? null;
     if (!$moveId || !in_array($direction, ['up', 'down'])) {
-      $request->flash('error', 'Dữ liệu sắp xếp không hợp lệ.');
+      $request->session()->flashNotify('error', 'Dữ liệu sắp xếp không hợp lệ.');
       return $this->redirect('admin/carousels/' . $carouselId);
     }
     $isSuccess = $this->_carouselService->reorderSlides($moveId, $direction);
     if ($isSuccess) {
-      $request->flash('success', 'Đã cập nhật thứ tự slide.');
+      $request->session()->flashNotify('success', 'Đã cập nhật thứ tự slide.');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect('admin/carousels/' . $carouselId);
   }

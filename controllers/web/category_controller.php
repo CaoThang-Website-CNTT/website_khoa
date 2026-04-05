@@ -68,20 +68,20 @@ class CategoryController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/categories/create');
     }
 
     $newCategory = $this->_categoryService->createCategory($data);
 
     if ($newCategory) {
-      $request->flash(
+      $request->session()->flashNotify(
         'success',
         'Tạo danh mục thành công!',
         'Danh mục ' . $newCategory->name . ' đã được tạo.'
       );
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     return $this->redirect('admin/categories/create');
@@ -107,7 +107,7 @@ class CategoryController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/categories/' . $id);
     }
 
@@ -116,14 +116,14 @@ class CategoryController extends Controller
     } catch (\InvalidArgumentException $e) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/categories/' . $id);
     }
 
     if ($isSuccess) {
-      $request->flash('success', 'Cập nhật danh mục thành công!');
+      $request->session()->flashNotify('success', 'Cập nhật danh mục thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     return $this->redirect('admin/categories/' . $id);
@@ -134,9 +134,9 @@ class CategoryController extends Controller
     $isSuccess = $this->_categoryService->deleteCategory($id);
 
     if ($isSuccess) {
-      $request->flash('success', 'Xoá danh mục thành công!');
+      $request->session()->flashNotify('success', 'Xoá danh mục thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     return $this->redirect('admin/categories');

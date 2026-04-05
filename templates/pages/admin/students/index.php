@@ -1,5 +1,5 @@
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash()): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= ($flash['type']) ?>(

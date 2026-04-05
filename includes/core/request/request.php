@@ -4,6 +4,12 @@ namespace App\Core;
 
 class Request
 {
+  protected static $instance = null;
+  /**
+   * Thông tin của một session
+   * @var Session
+   */
+  protected Session $session;
   /**
    * Request headers (lấy từ $_SERVER)
    * @var array
@@ -53,12 +59,16 @@ class Request
    */
   public static function capture(): static
   {
-    return new static(
-      $_GET,
-      $_POST,
-      $_FILES,
-      $_SERVER,
-    );
+    if (self::$instance === null) {
+      self::$instance = new static(
+        $_GET,
+        $_POST,
+        $_FILES,
+        $_SERVER,
+      );
+    }
+
+    return self::$instance;
   }
 
   // ===================================
@@ -287,52 +297,30 @@ class Request
   {
     return $this->body[$key] ?? $default;
   }
-
-  public function flash(string $type, string $title, string $desc = ""): void
-  {
-    $_SESSION['flash'] = compact('type', 'title', 'desc');
-  }
-  public function getFlash()
-  {
-    $flash = $_SESSION['flash'] ?? null;
-    unset($_SESSION['flash']);
-    return $flash;
-  }
-
   public function flashOldInputs(?array $includedKeys = null, ?array $excludedKeys = null): void
   {
     if ($includedKeys !== null) {
-      $_SESSION['old_input'] = array_intersect_key(
+      $this->session->flashOldInputs(array_diff_key(
         $this->body,
         array_flip($includedKeys)
-      );
+      ));
     } elseif ($excludedKeys !== null) {
-      $_SESSION['old_input'] = array_diff_key(
+      $this->session->flashOldInputs(array_diff_key(
         $this->body,
         array_flip($excludedKeys)
-      );
+      ));
     } else {
-      $_SESSION['old_input'] = $this->body;
+      $this->session->flashOldInputs($this->body);
     }
   }
-
-  public function getOldInputs(): array
+  public function setSession(Session $session)
   {
-    $olds = $_SESSION['old_input'] ?? [];
-    unset($_SESSION['old_input']);
-    return $olds;
+    $this->session = $session;
   }
 
-  public function flashErrors(array $errors): void
+  public function session(): Session
   {
-    $_SESSION['errors'] = $errors;
-  }
-
-  public function getErrors(): array
-  {
-    $errors = $_SESSION['errors'] ?? [];
-    unset($_SESSION['errors']);
-    return $errors;
+    return $this->session;
   }
 
   // ===================================

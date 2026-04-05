@@ -1,6 +1,6 @@
 <?php
-$errors = request()->getErrors() ?? [];
-$old_input = request()->getOldInputs() ?? [];
+$errors = request()->session()->getErrors()() ?? [];
+$old_input = request()->session()->getOldInputs() ?? [];
 
 $isEditable = $menu->isEditable();
 ?>
@@ -63,7 +63,7 @@ function renderMenuItems(array $items, object $menu, int $depth = 0): void
 }
 ?>
 
-<?php if ($flash = request()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash()): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= $flash['type'] ?>(

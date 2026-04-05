@@ -58,27 +58,27 @@ class TeacherController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/create');
     }
 
     if ($this->_teacherService->isEmailUnique($data['email']) === false) {
       $validator->addError('email', 'Email này đã tồn tại trong hệ thống.');
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/create');
     }
 
     $newTeacher = $this->_teacherService->createTeacher($data);
 
     if ($newTeacher) {
-      $request->flash(
+      $request->session()->flashNotify(
         'success',
         'Tạo mới giảng viên thành công!',
         'Giảng viên có mã #' . $newTeacher->staff_code . ' đã được tạo.'
       );
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     return $this->redirect('admin/teachers/create');
@@ -122,16 +122,16 @@ class TeacherController extends Controller
     if (!$validator->validate($data, $rules)) {
       $data['account_id'] = $id;
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/teachers/' . $id);
     }
 
     $isSuccess = $this->_teacherService->updateTeacher($id, $data);
 
     if ($isSuccess) {
-      $request->flash('success', 'Cập nhật giảng viên thành công!');
+      $request->session()->flashNotify('success', 'Cập nhật giảng viên thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     return $this->redirect('admin/teachers/' . $id);
@@ -142,9 +142,9 @@ class TeacherController extends Controller
     $isSuccess = $this->_teacherService->deleteTeacher($id);
 
     if ($isSuccess) {
-      $request->flash('success', 'Xoá giảng viên thành công!');
+      $request->session()->flashNotify('success', 'Xoá giảng viên thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
     return $this->redirect('admin/teachers');

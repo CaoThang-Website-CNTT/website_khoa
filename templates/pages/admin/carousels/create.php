@@ -1,13 +1,13 @@
 <?php
-$errors = request()->getErrors() ?? [];
-$old_input = request()->getOldInputs() ?? [];
+$errors = request()->session()->getErrors()() ?? [];
+$old_input = request()->session()->getOldInputs() ?? [];
 ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<?php if ($flash = request()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash()): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= ($flash['type']) ?>(

@@ -40,19 +40,19 @@ class WebSettingsController extends Controller
       ])
     ) {
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/web_settings/create');
     }
     if (!in_array($data['type'], self::ALLOWED_TYPES, strict: true)) {
       $validator->addError('type', 'Loại dữ liệu không hợp lệ.');
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/web_settings/create');
     }
     if (!$this->_settingsService->isKeyUnique($data['key'])) {
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
-      $request->flashErrors($validator->getErrors());
+      $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/web_settings/create');
     }
     $newId = $this->_settingsService->createSetting([
@@ -68,10 +68,10 @@ class WebSettingsController extends Controller
       'sort_order' => !empty($data['sort_order']) ? (int) $data['sort_order'] : 0,
     ]);
     if ($newId) {
-      $request->flash('success', 'Tạo setting thành công!');
+      $request->session()->flashNotify('success', 'Tạo setting thành công!');
       return $this->redirect('admin/web_settings');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
       return $this->redirect('admin/web_settings/create');
     }
   }
@@ -103,10 +103,10 @@ class WebSettingsController extends Controller
       $this->_settingsService->updateSetting($setting->id, $this->_buildUpdatePayload($setting, $newValue));
     }
     if (!empty($errors)) {
-      $request->flashErrors($errors);
-      $request->flash('error', 'Một số cài đặt không hợp lệ, vui lòng kiểm tra lại.');
+      $request->session()->flashErrors($errors);
+      $request->session()->flashNotify('error', 'Một số cài đặt không hợp lệ, vui lòng kiểm tra lại.');
     } else {
-      $request->flash('success', 'Cập nhật cài đặt thành công!');
+      $request->session()->flashNotify('success', 'Cập nhật cài đặt thành công!');
     }
     return $this->redirect('admin/web_settings/' . $group . '/edit');
   }
@@ -116,14 +116,14 @@ class WebSettingsController extends Controller
     if (!$setting)
       $this->abort(404);
     if ($setting->is_locked) {
-      $request->flash('error', 'Setting này do hệ thống định nghĩa, không thể xóa.');
+      $request->session()->flashNotify('error', 'Setting này do hệ thống định nghĩa, không thể xóa.');
       return $this->redirect('admin/web_settings/' . $setting->group . '/edit');
     }
     $isSuccess = $this->_settingsService->deleteSetting((int) $id);
     if ($isSuccess) {
-      $request->flash('success', 'Xóa setting thành công!');
+      $request->session()->flashNotify('success', 'Xóa setting thành công!');
     } else {
-      $request->flash('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
     return $this->redirect('admin/web_settings/' . $setting->group . '/edit');
   }

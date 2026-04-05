@@ -1,6 +1,6 @@
 <?php
-$errors = request()->getErrors() ?? [];
-$old_input = request()->getOldInputs() ?? [];
+$errors = request()->session()->getErrors()() ?? [];
+$old_input = request()->session()->getOldInputs() ?? [];
 $isConst = $category->type === 'const';
 ?>
 <script>

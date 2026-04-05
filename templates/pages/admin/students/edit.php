@@ -1,6 +1,6 @@
 <?php
-$errors = request()->getErrors() ?? [];
-$old_input = request()->getOldInputs() ?? [];
+$errors = request()->session()->getErrors()() ?? [];
+$old_input = request()->session()->getOldInputs() ?? [];
 ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
@@ -8,7 +8,7 @@ $old_input = request()->getOldInputs() ?? [];
 </script>
 
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash()): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= ($flash['type']) ?>(
