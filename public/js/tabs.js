@@ -1,11 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const tabHandler = new TabHandler();
+  const tabHandler = new TabHandler({ syncParams: false });
   tabHandler.init();
 });
 
 class TabHandler {
-  constructor() {
-    this._tabs = document.querySelectorAll("[data-tabs]");
+  constructor(options) {
+    this._tabsList = document.querySelectorAll("[data-tabs]");
+
+    this.config = {
+      syncParams: false,
+      ...options
+    };
   }
 
   /**
@@ -13,67 +18,80 @@ class TabHandler {
    * @private
    */
   init() {
-    if (!this._tabs.length) return;
+    if (!this._tabsList.length) return;
 
-    this._tabs.forEach(tab => {
-      const tabId = tab.dataset.id;
-      const initialKey = this.resolveInitialKey(tab, tabId);
+    this._tabsList.forEach(tabs => {
+      const tabId = tabs.dataset.tabsId;
+      const initialKey = this.resolveInitialKey(tabs, tabId);
 
-      this.activate(tab, initialKey);
+      console.log(tabs, initialKey);
+      this.activate(tabs, initialKey);
 
-      tab.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
+      // Gán events cho tab triggers
+      tabs.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
         trigger.addEventListener("click", e => {
           e.preventDefault();
-          this.activate(tab, trigger.dataset.tabsTrigger);
+          this.activate(tabs, trigger.dataset.tabsTrigger);
         });
       });
     });
   }
-
+  /**
+   * Xác định tab có được phép đồng bộ URL không
+   * Dựa vào Global config HOẶC data-attribute trên HTML
+   */
+  canSyncParams(tabs) {
+    // Nếu global config là true, kiểm tra xem HTML có ghi đè bằng data-tabs-sync="false" không
+    return this.config.syncParams && tabs.dataset.tabsSync !== "false";
+  }
   /**
    * Xác định key khởi tạo — ưu tiên query param, fallback về data-active.
    * URL format: ?users=students&reports=monthly
    *
-   * @param {HTMLElement} tab
-   * @param {string} tabId
+   * @param {HTMLElement} tabs
+   * @param {string} tabPanelId
    * @returns {string}
    */
-  resolveInitialKey(tab, tabId) {
+  resolveInitialKey(tabs, tabPanelId) {
     const params = new URLSearchParams(window.location.search);
-    const paramKey = params.get(tabId);
+    const paramKey = params.get(tabPanelId);
 
     if (paramKey) {
-      const matched = tab.querySelector(`[data-tabs-panel="${paramKey}"]`);
+      const matched = tabs.querySelector(`[data-tabs-panel="${paramKey}"]`);
       if (matched) return paramKey;
     }
 
     return (
-      tab.dataset.active ??
-      tab.querySelector("[data-tabs-trigger]")?.dataset.tabsTrigger
+      tabs.dataset.tabsPanelActive ??
+      tabs.querySelector("[data-tabs-trigger]")?.dataset.tabsTrigger
     );
   }
 
   /**
    * Kích hoạt tab theo key.
-   * @param {HTMLElement} tab
+   * @param {HTMLElement} tabs
    * @param {string} key
    */
-  activate(tab, key) {
-    const tabId = tab.dataset.id;
+  activate(tabs, key) {
+    const tabsId = tabs.dataset.tabsId;
 
-    tab.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
+    // Bật active trên trigger
+    tabs.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
       const isActive = trigger.dataset.tabsTrigger === key;
-      trigger.dataset.state = isActive ? "active" : "idle";
+      trigger.dataset.tabsTriggerState = isActive ? "active" : "idle";
       trigger.setAttribute("aria-selected", isActive ? "true" : "false");
       trigger.setAttribute("tabindex", isActive ? "0" : "-1");
     });
 
-    tab.querySelectorAll("[data-tabs-panel]").forEach(panel => {
-      panel.dataset.state = panel.dataset.tabsPanel === key ? "active" : "idle";
+    // Bật panel
+    tabs.querySelectorAll("[data-tabs-panel]").forEach(panel => {
+      panel.dataset.tabsPanelState = panel.dataset.tabsPanel === key ? "active" : "idle";
     });
 
-    this.syncObservers(tabId, key);
-    this.syncParams(tabId, key);
+    this.syncObservers(tabsId, key);
+    if (this.canSyncParams(tabs) && tabsId) {
+      this.syncParams(tabsId, key);
+    }
   }
 
   /**
@@ -90,7 +108,7 @@ class TabHandler {
   syncObservers(tabId, key) {
     document.querySelectorAll(`[data-tabs-observe^="${tabId}:"]`).forEach(observer => {
       const [, observerKey] = observer.dataset.tabsObserve.split(":");
-      observer.dataset.state = observerKey === key ? "active" : "idle";
+      observer.dataset.tabsPanelState = observerKey === key ? "active" : "idle";
     });
   }
 

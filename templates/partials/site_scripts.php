@@ -4,3 +4,4 @@
 <script src="<?= url('/public/js/radio.js') ?>"></script>
 <script src="<?= url('/public/js/modal.js') ?>"></script>
 <script src="<?= url('/public/js/dropdown.js') ?>"></script>
+<script src="<?= url('/public/js/tabs.js') ?>"></script>

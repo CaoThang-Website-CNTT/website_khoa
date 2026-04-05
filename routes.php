@@ -8,6 +8,8 @@ $router->get('/admin', [DashboardController::class, 'index']);
 // Auth
 $router->get('/login', [AuthController::class, 'show']);
 $router->get('/login/oauth/callback', [AuthController::class, 'googleOAuthCallback']);
+$router->get('/onboarding', [AuthController::class, 'onboard']);
+$router->post('/onboarding', [AuthController::class, 'completeOnboarding']);
 
 $router->prefix('admin')->group(function ($router) {
   $router->get('/', [DashboardController::class, 'index']);

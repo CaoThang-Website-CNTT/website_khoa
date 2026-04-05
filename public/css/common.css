@@ -1020,15 +1020,15 @@
     outline: none;
   }
 
-  .tabs__panel[data-state="active"] {
+  .tabs__panel[data-tabs-panel-state="active"] {
     display: block;
   }
 
-  [data-tabs-observe][data-state="idle"] {
+  [data-tabs-observe][data-tabs-panel-state="idle"] {
     display: none;
   }
 
-  [data-tabs-observe][data-state="active"] {
+  [data-tabs-observe][data-tabs-panel-state="active"] {
     display: revert;
   }
 

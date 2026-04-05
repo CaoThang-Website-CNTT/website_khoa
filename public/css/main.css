@@ -278,3 +278,92 @@
   margin: 0 auto;
   max-width: var(--container-md);
 }
+
+.onboard-form-card,
+.onboard-progress {
+  margin: 0 auto;
+  max-width: var(--container-2xl);
+  margin-bottom: 2rem;
+}
+
+.onboard-progress__dots {
+  position: relative;
+  display: flex;
+  justify-content: space-around;
+  gap: 0.5rem;
+  margin-bottom: 3rem;
+}
+
+.onboard-progress__step-wrapper {
+  position: relative;
+}
+
+.onboard-progress__step-label {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12rem;
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
+.onboard-progress__dot {
+  cursor: not-allowed;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 1 / 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: var(--text-lg);
+  border-radius: calc(infinity * 1px);
+  color: var(--muted-foreground);
+  background: var(--muted);
+  /* border: 1px solid var(--border); */
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.onboard-progress__dot[data-tabs-trigger-state="active"],
+.onboard-progress__dot[data-steps-state="passed"] {
+  color: var(--primary-foreground);
+  background: var(--primary);
+  font-weight: var(--fw-medium);
+}
+
+.onboard-progress__line-placeholder {
+  background: var(--muted);
+  position: absolute;
+  inset: 50% 0 0;
+  transform: translateY(-50%);
+  height: 0.25rem;
+  z-index: -1;
+}
+
+.onboard-progress__line {
+  height: 100%;
+  width: 0;
+  background: var(--primary);
+}
+
+.onboard-review {
+  display: grid;
+  grid-template-columns: minmax(6rem, 10rem) 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.onboard-review dt {
+  margin: 0;
+  color: color-mix(in oklab, var(--color-fg, #111) 55%, transparent);
+  font-weight: 500;
+}
+
+.onboard-review dd {
+  margin: 0;
+  word-break: break-word;
+}
