@@ -7,7 +7,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<?php if ($flash = request()->session()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= $flash['type'] ?>(
@@ -161,7 +161,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 </div>
 
-<form id="carousel-delete-form" method="POST" action="<?= url('admin/carousels/delete/' . $carousel->id) ?>"><?= csrf_field() ?></form>
+<form id="carousel-delete-form" method="POST" action="<?= url('admin/carousels/delete/' . $carousel->id) ?>">
+  <?= csrf_field() ?></form>
 
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">

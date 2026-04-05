@@ -7,7 +7,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<?php if ($flash = request()->session()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= ($flash['type']) ?>(

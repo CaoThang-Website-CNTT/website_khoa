@@ -8,7 +8,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </script>
 
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->session()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= ($flash['type']) ?>(
@@ -361,7 +361,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </button>
 </div>
 
-<form action="<?= url('admin/teachers/delete/' . $teacher->id) ?>" method="POST" id="delete-form"><?= csrf_field() ?></form>
+<form action="<?= url('admin/teachers/delete/' . $teacher->id) ?>" method="POST" id="delete-form"><?= csrf_field() ?>
+</form>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {

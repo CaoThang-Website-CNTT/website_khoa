@@ -65,7 +65,7 @@ function renderMenuItems(array $items, object $menu, int $depth = 0): void
 }
 ?>
 
-<?php if ($flash = request()->session()->getFlash()): ?>
+<?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       toast.<?= $flash['type'] ?>(
