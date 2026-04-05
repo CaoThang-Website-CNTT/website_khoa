@@ -18,9 +18,17 @@ require_once BASE_PATH . '/includes/core/schema/model.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 
+// Session
+require_once BASE_PATH . '/includes/core/session/session.php';
+// Middelware
+require_once BASE_PATH . './includes/core/middleware/pipeline.php';
+require_once BASE_PATH . './includes/core/middleware/base_middleware.php';
+require_once BASE_PATH . './includes/core/middleware/start_session.php';
 require_once BASE_PATH . '/includes/core/router.php';
+// Request
 require_once BASE_PATH . '/includes/core/request/request.php';
 require_once BASE_PATH . '/includes/core/request/request_validator.php';
+// Response
 require_once BASE_PATH . '/includes/core/response/response.php';
 require_once BASE_PATH . '/includes/core/response/json_response.php';
 require_once BASE_PATH . "/includes/core/controller.php";
