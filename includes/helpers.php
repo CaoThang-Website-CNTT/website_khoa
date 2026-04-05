@@ -36,13 +36,7 @@ function csrf_field(): string
 
 function request(): Request
 {
-  static $instance = null;
-
-  if ($instance === null) {
-    $instance = Request::capture();
-  }
-
-  return $instance;
+  return Request::capture();
 }
 
 /**

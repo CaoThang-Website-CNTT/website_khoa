@@ -119,7 +119,7 @@ class Session
   }
   public function getOldInputs(): array
   {
-    return $this->getFlash("_old_input");
+    return $this->getFlash("_old_input") ?? [];
   }
 
   public function flashErrors(array $errors): void
@@ -129,7 +129,7 @@ class Session
 
   public function getErrors(): array
   {
-    return $this->getFlash('_errors');
+    return $this->getFlash('_errors') ?? [];
   }
   public function destroy(): void
   {
