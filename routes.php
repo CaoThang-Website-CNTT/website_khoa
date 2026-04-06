@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController};
+use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
 
 $router->get('/', [SiteController::class, 'index']);
 $router->get('/admin', [DashboardController::class, 'index']);
@@ -13,6 +13,11 @@ $router->post('/onboarding', [AuthController::class, 'completeOnboarding']);
 
 $router->prefix('admin')->group(function ($router) {
   $router->get('/', [DashboardController::class, 'index']);
+
+  // Posts
+  $router->prefix('posts')->group(function ($router) {
+    $router->get('/', [PostController::class, 'index']);
+  });
 
   // Students
   $router->prefix('students')->group(function ($router) {
