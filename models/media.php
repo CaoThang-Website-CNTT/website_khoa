@@ -18,4 +18,18 @@ class Media extends Model
     public ?string $updated_at = null,
     public ?Post $post = null,
   ) {}
+  public static function fromArray(array $row): static
+  {
+    return new static(
+      id: isset($row['id']) ? (int) $row['id'] : null,
+      file_name: $row['file_name'],
+      file_path: $row['file_path'],
+      mime_type: $row['mime_type'],
+      file_size: $row['file_size'],
+      alt_text: $row['alt_text'],
+      post_id: isset($row['post_id']) ? (int) $row['post_id'] : null,
+      created_at: $row['created_at'] ?? null,
+      updated_at: $row['updated_at'] ?? null,
+    );
+  }
 }
