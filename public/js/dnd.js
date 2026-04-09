@@ -1,882 +1,711 @@
 /**
  * ================================================
- * THƯ VIỆN DRAG & DROP (DND) - Vanilla JavaScript
+ * DnD.js — Drag & Drop Library, Vanilla JavaScript
  * ================================================
- * 
- * Hỗ trợ kéo thả bằng chuột + cảm ứng (touch)
- * Tính năng chính:
- *   - Draggable, Droppable, Sortable
- *   - Ghost element khi kéo
- *   - Optimistic reordering (sắp xếp ngay lập tức)
- *   - Hỗ trợ single list và multi-group
- * 
- * Cấu trúc file:
- *   1. Utilities & Helpers
- *   2. Sensor
- *   3. Collision Detection
- *   4. Registry
- *   5. DragDropManager (Core)
+ *
+ * Container-centric API, inspired by SortableJS.
+ * Gọi new DnD(containerEl, options) — children tự động có thể kéo.
+ *
+ * Tính năng:
+ *   - Same-list sort
+ *   - Multi-list transfer (group)
+ *   - Nested lists
+ *   - Drag handle
+ *   - Swap mode (plugin)
+ *   - Grid sort (auto-detect hướng)
+ *   - Ghost: full clone hoặc handle clone
+ *   - Auto-scroll khi kéo gần mép màn hình
+ *   - FLIP animation cho các items bị đẩy
+ *   - Callbacks trên instance + DnDMonitor event bus
+ *
+ * Cấu trúc:
+ *   1. EventBus          — global DnDMonitor
+ *   2. Global state      — STATE, Ghost, Scroller
+ *   3. flipSnapshot()    — FLIP animation helper
+ *   4. PointerSensor     — mouse + touch input
+ *   5. DnD               — container-centric orchestrator
  */
 
-/* ====================== UTILITIES ====================== */
-
-/**
- * EventMonitor - Quản lý việc thêm, xóa và phát sự kiện
- * Sử dụng Map + Set để lưu listeners, hỗ trợ cleanup dễ dàng
- */
-class EventMonitor {
+/* ================================================================
+   1. EventBus — global monitor, dùng DnDMonitor.on / off / emit
+   ================================================================ */
+class EventBus {
   #listeners = new Map();
 
-  /**
-   * Thêm listener cho một loại sự kiện
-   * @param {string} type - Tên sự kiện (dragstart, dragover, dragend, ...)
-   * @param {Function} fn - Hàm callback
-   * @returns {Function} Hàm để remove listener
-   */
-  addEventListener(type, fn) {
+  /** Thêm listener, trả về hàm unsubscribe */
+  on(type, fn) {
     if (!this.#listeners.has(type)) this.#listeners.set(type, new Set());
     this.#listeners.get(type).add(fn);
-    return () => this.removeEventListener(type, fn);
+    return () => this.off(type, fn);
   }
 
-  removeEventListener(type, fn) {
-    this.#listeners.get(type)?.delete(fn);
-  }
+  off(type, fn) { this.#listeners.get(type)?.delete(fn); }
 
-  /**
-   * Phát sự kiện đến tất cả listener
-   * @param {string} type 
-   * @param {*} event 
-   * @returns {*}
-   */
-  dispatch(type, event) {
-    for (const fn of this.#listeners.get(type) ?? []) fn(event);
+  emit(type, event) {
+    for (const fn of (this.#listeners.get(type) ?? [])) fn(event);
     return event;
   }
 }
 
-/* ====================== SENSOR ====================== */
+/** Singleton global bus */
+const DnDMonitor = new EventBus();
 
-/**
- * PointerSensor - Xử lý tương tác pointer (mouse + touch)
- * Hỗ trợ:
- *   - Mouse: kéo sau khi di chuyển vượt ngưỡng
- *   - Touch: giữ một lúc rồi mới kích hoạt kéo (tránh conflict với scroll)
- */
+/* ================================================================
+   2. Global shared state + singletons
+   ================================================================ */
+
+/** Trạng thái drag hiện tại — chia sẻ giữa tất cả DnD instances */
+const STATE = {
+  active: null,   // DnD instance đang drag
+  dragEl: null,   // Element đang kéo
+  fromEl: null,   // Container gốc của drag
+  fromIndex: -1,     // Vị trí ban đầu
+  swapEl: null,   // Element đang bị highlight (swap mode)
+  swapInst: null,   // DnD instance sở hữu swapEl
+  ghostClass: null,   // ghostClass đã apply (để remove đúng)
+  chosenClass: null,   // chosenClass đã apply
+};
+
+/** Registry: containerEl → DnD instance */
+const _instances = new WeakMap();
+
+/* ── Ghost overlay ────────────────────────────────────────────── */
+const Ghost = (() => {
+  let _el = null;
+  let _off = null;   // { x, y } cursor offset → top-left của clone
+
+  function ensureEl() {
+    if (_el) return;
+    _el = document.getElementById('dnd-ghost');
+    if (!_el) {
+      _el = document.createElement('div');
+      _el.id = 'dnd-ghost';
+      document.body.appendChild(_el);
+    }
+    // pointer-events:none là BẮT BUỘC — nếu không ghost chặn pointerup
+    // và _endDrag không bao giờ được gọi (drop bị stuck)
+    Object.assign(_el.style, {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      pointerEvents: 'none',
+      zIndex: '9999',
+      display: 'none',
+    });
+  }
+
+  return {
+    /**
+     * Spawn ghost từ itemEl hoặc handle của nó.
+     * @param {Element}      itemEl
+     * @param {{x,y}}        origin        - cursor position khi pointerdown
+     * @param {string|null}  handleSel     - CSS selector của handle
+     * @param {boolean}      ghostHandle   - true → clone handle thay vì item
+     */
+    spawn(itemEl, origin, handleSel, ghostHandle) {
+      ensureEl();
+      const src = (ghostHandle && handleSel)
+        ? (itemEl.querySelector(handleSel) ?? itemEl)
+        : itemEl;
+      const rect = src.getBoundingClientRect();
+      const clone = src.cloneNode(true);
+      clone.style.cssText =
+        `width:${rect.width}px;height:${rect.height}px;` +
+        `pointer-events:none;user-select:none;`;
+      _el.innerHTML = '';
+      _el.appendChild(clone);
+      _el.style.display = 'block';
+      _off = { x: origin.x - rect.left, y: origin.y - rect.top };
+      Ghost.move(origin);
+    },
+
+    move(pos) {
+      if (!_off || !_el) return;
+      _el.style.transform =
+        `translate(${pos.x - _off.x}px,${pos.y - _off.y}px)`;
+    },
+
+    destroy() {
+      if (_el) { _el.style.display = 'none'; _el.innerHTML = ''; }
+      _off = null;
+    },
+  };
+})();
+
+/* ── AutoScroller ─────────────────────────────────────────────── */
+const Scroller = (() => {
+  let _raf = null;
+  let _y = 0;
+  let _zone = 80;
+  let _speed = 16;
+  let _enabled = true;
+
+  function tick() {
+    _raf = requestAnimationFrame(() => { scroll(); tick(); });
+  }
+  function scroll() {
+    const vh = window.innerHeight;
+    let d = 0;
+    if (_y < _zone) d = -_speed * (1 - _y / _zone);
+    else if (_y > vh - _zone) d = _speed * (1 - (vh - _y) / _zone);
+    if (d !== 0) window.scrollBy({ top: d, behavior: 'instant' });
+  }
+
+  return {
+    configure(enabled, zone, speed) { _enabled = enabled; _zone = zone; _speed = speed; },
+    start() { if (_enabled && _raf == null) tick(); },
+    update(y) { _y = y; },
+    stop() { if (_raf != null) { cancelAnimationFrame(_raf); _raf = null; } },
+  };
+})();
+
+/* ================================================================
+   3. flipSnapshot — FLIP animation helper
+   Snapshot positions BEFORE DOM move, play animation AFTER.
+
+   Lý do phải tách 2 bước:
+   insertBefore/after gây reflow → reset mọi transform đang set.
+   Phải snapshot "first" trước, DOM move, rồi tính delta và play.
+   ================================================================ */
+function flipSnapshot(container, excludeEl, duration) {
+  const children = [...container.children].filter(c => c !== excludeEl);
+
+  // FIRST — đo vị trí trước khi DOM thay đổi
+  const tops = new Map(children.map(c => [c, c.getBoundingClientRect().top]));
+
+  // Trả về callback — gọi SAU khi DOM đã move
+  return function play() {
+    for (const [child, first] of tops) {
+      if (!child.isConnected) continue;
+      const last = child.getBoundingClientRect().top;  // LAST
+      const delta = first - last;
+      if (Math.abs(delta) < 1) continue;
+
+      // INVERT — snap về vị trí cũ, không transition
+      child.style.transition = 'none';
+      child.style.transform = `translateY(${delta}px)`;
+      void child.offsetHeight;  // force reflow
+
+      // PLAY — bật transition, animate về 0
+      child.style.transition = `transform ${duration}ms ease`;
+      child.style.transform = '';
+
+      const cleanup = () => {
+        child.style.transition = '';
+        child.style.transform = '';
+        child.removeEventListener('transitionend', cleanup);
+      };
+      child.addEventListener('transitionend', cleanup);
+    }
+  };
+}
+
+/* ================================================================
+   4. PointerSensor — event delegation on container element.
+   Một listener duy nhất trên container, xử lý tất cả children.
+   Hỗ trợ mouse + touch (Pointer Events API).
+   ================================================================ */
 class PointerSensor {
-  static MOUSE_THRESHOLD = 5;   // px trước khi mouse drag kích hoạt
-  static TOUCH_DELAY = 200;     // ms giữ để touch drag kích hoạt
-  static TOUCH_TOLERANCE = 8;   // px di chuyển tối đa khi đang hold touch
+  static MOUSE_THRESHOLD = 5;    // px before mouse drag activates
+  static TOUCH_DELAY = 200;  // ms hold before touch drag activates
+  static TOUCH_TOLERANCE = 8;    // px movement cancels touch hold
 
-  #manager;
-  #cleanups = new WeakMap();
+  /** @type {DnD} */ #dnd;
+  #cleanup = null;
 
-  constructor(manager) {
-    this.#manager = manager;
+  constructor(dnd) { this.#dnd = dnd; }
+
+  attach() {
+    const handler = (e) => this.#onDown(e);
+    this.#dnd.el.addEventListener('pointerdown', handler);
+    this.#cleanup = () => this.#dnd.el.removeEventListener('pointerdown', handler);
   }
 
-  /**
-   * Gắn sensor vào một draggable/sortable
-   * @param {Draggable|Sortable} draggable 
-   */
-  attach(draggable) {
-    const el = draggable.handle ?? draggable.element;
-    if (!el) return;
-    const onDown = (e) => this.#onPointerDown(e, draggable);
-    el.addEventListener("pointerdown", onDown);
-    this.#cleanups.set(draggable, () =>
-      el.removeEventListener("pointerdown", onDown),
-    );
-  }
+  detach() { this.#cleanup?.(); this.#cleanup = null; }
 
-  detach(draggable) {
-    this.#cleanups.get(draggable)?.();
-    this.#cleanups.delete(draggable);
-  }
+  #onDown(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-  /**
-   * Xử lý khi pointerdown (bắt đầu tương tác)
-   * @private
-   */
-  #onPointerDown(e, draggable) {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    if (draggable.disabled) return;
+    const opts = this.#dnd.options;
+    if (opts.disabled) return;
+
+    // Event delegation — tìm item cha gần nhất trong container này
+    const itemEl = this.#findItem(e.target);
+    if (!itemEl) return;
+
+    // Handle constraint: chỉ kéo được từ handle element
+    if (opts.handle) {
+      const h = itemEl.querySelector(opts.handle);
+      if (!h || !h.contains(e.target)) return;
+    }
+
+    // Filter constraint: một số item không được kéo
+    if (opts.filter && e.target.closest(opts.filter)) return;
+
     e.preventDefault();
 
-    const isTouch = e.pointerType === "touch";
+    const isTouch = e.pointerType === 'touch';
     const origin = { x: e.clientX, y: e.clientY };
-    let activated = false;
-    let holdTimer = null;
+    let active = false;
+    let timer = null;
 
     const activate = () => {
-      if (activated) return;
-      activated = true;
-      this.#manager._startDrag(draggable, origin, e);
+      if (active) return;
+      active = true;
+      this.#dnd._startDrag(itemEl, origin, e);
     };
 
-    if (isTouch) holdTimer = setTimeout(activate, PointerSensor.TOUCH_DELAY);
+    // Touch: activate sau delay, cancel nếu user di chuyển quá sớm
+    if (isTouch) timer = setTimeout(activate, PointerSensor.TOUCH_DELAY);
 
     const onMove = (ev) => {
-      const dist = Math.hypot(ev.clientX - origin.x, ev.clientY - origin.y);
-      if (isTouch && !activated) {
-        if (dist > PointerSensor.TOUCH_TOLERANCE) {
-          clearTimeout(holdTimer);
-          done();
-        }
+      const d = Math.hypot(ev.clientX - origin.x, ev.clientY - origin.y);
+      if (isTouch && !active) {
+        if (d > PointerSensor.TOUCH_TOLERANCE) { clearTimeout(timer); done(); }
         return;
       }
-      if (!isTouch && !activated && dist > PointerSensor.MOUSE_THRESHOLD)
-        activate();
-      if (activated) this.#manager._moveDrag(ev);
+      if (!isTouch && !active && d > PointerSensor.MOUSE_THRESHOLD) activate();
+      if (active) this.#dnd._moveDrag(ev);
     };
 
-    const onUp = (ev) => {
-      clearTimeout(holdTimer);
-      done();
-      if (activated) this.#manager._endDrag(ev, false);
-    };
-
-    const onCancel = (ev) => {
-      clearTimeout(holdTimer);
-      done();
-      if (activated) this.#manager._endDrag(ev, true);
-    };
-
+    const onUp = (ev) => { clearTimeout(timer); done(); if (active) this.#dnd._endDrag(ev, false); };
+    const onCancel = (ev) => { clearTimeout(timer); done(); if (active) this.#dnd._endDrag(ev, true); };
     const done = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
     };
 
-    window.addEventListener("pointermove", onMove, { passive: false });
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
-  }
-
-  destroy() { }
-}
-
-/* ====================== COLLISION DETECTION ====================== */
-
-/**
- * Collision - Các thuật toán phát hiện va chạm giữa ghost và droppable
- */
-class Collision {
-  /**
-   * Tính diện tích giao nhau giữa ghostRect và các droppable
-   * Trả về id của droppable có diện tích giao nhau lớn nhất
-   * @param {DOMRect} ghostRect 
-   * @param {Map<string, DOMRect>} droppableRects 
-   * @returns {string|null}
-   */
-  static rectIntersection(ghostRect, droppableRects) {
-    let best = null,
-      bestArea = 0;
-    for (const [id, rect] of droppableRects) {
-      const ox = Math.max(
-        0,
-        Math.min(ghostRect.right, rect.right) -
-        Math.max(ghostRect.left, rect.left),
-      );
-      const oy = Math.max(
-        0,
-        Math.min(ghostRect.bottom, rect.bottom) -
-        Math.max(ghostRect.top, rect.top),
-      );
-      const area = ox * oy;
-      if (area > bestArea) {
-        bestArea = area;
-        best = id;
-      }
-    }
-    return best;
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   }
 
   /**
-   * Tìm droppable gần nhất với trung tâm của ghost
-   * Thường cho kết quả mượt mà hơn rectIntersection
-   * @param {DOMRect} ghostRect 
-   * @param {Map<string, DOMRect>} droppableRects 
-   * @returns {string|null}
+   * Tìm direct child của container này chứa e.target.
+   * Quan trọng với nested lists: đảm bảo item thuộc đúng container.
+   *
+   * Walk từ e.target lên. Nếu gặp một nested DnD container (khác với
+   * container của chúng ta) TRƯỚC KHI tìm được direct child → item này
+   * thuộc nested instance, không phải chúng ta → return null.
    */
-  static closestCenter(ghostRect, droppableRects) {
-    const cx = (ghostRect.left + ghostRect.right) / 2;
-    const cy = (ghostRect.top + ghostRect.bottom) / 2;
-    let best = null,
-      bestDist = Infinity;
-    for (const [id, rect] of droppableRects) {
-      const d = Math.hypot(
-        cx - (rect.left + rect.right) / 2,
-        cy - (rect.top + rect.bottom) / 2,
-      );
-      if (d < bestDist) {
-        bestDist = d;
-        best = id;
-      }
+  #findItem(target) {
+    const container = this.#dnd.el;
+    const opts = this.#dnd.options;
+
+    let node = target;
+
+    // Walk up đến khi node là direct child của container
+    while (node && node.parentElement !== container) {
+      node = node.parentElement;
+      if (!node) return null;
+
+      // Nếu ta đi qua một element là root của nested DnD instance
+      // (và nó không phải container của chúng ta), thì item này thuộc
+      // nested → bail out. Note: ta kiểm tra PARENT vì ta vừa di lên.
+      if (node !== container && _instances.has(node)) return null;
     }
-    return best;
+
+    if (!node || node.parentElement !== container) return null;
+
+    // Check draggable selector (strip :scope > prefix nếu có)
+    if (opts.draggable) {
+      const sel = opts.draggable.replace(/^:scope\s*>\s*/, '');
+      if (sel && !node.matches(sel)) return null;
+    }
+
+    return node;
   }
 }
 
-/**
- * Registry - Quản lý đăng ký tất cả draggable và droppable
- */
-class Registry {
-  draggables = new Map();
-  droppables = new Map();
+/* ================================================================
+   5. DnD — container-centric orchestrator
 
-  /**
-   * Đăng ký một entity (Draggable, Droppable hoặc Sortable)
-   * @param {any} instance 
-   * @returns {Function} Hàm unregister
-   */
-  register(instance) {
-    if (instance._isDraggable) this.draggables.set(instance.id, instance);
-    if (instance._isDroppable) this.droppables.set(instance.id, instance);
-    return () => this.unregister(instance);
+   Static:
+     DnD.create(el, opts)  — factory
+     DnD.get(el)           — lấy instance từ element
+
+   Instance:
+     option(key, val)      — get/set option
+     toArray()             — lấy data-id của items theo thứ tự
+     destroy()             — huỷ instance
+   ================================================================ */
+class DnD {
+
+  /* ── static ───────────────────────────────────────────────── */
+
+  static get(el) { return _instances.get(el); }
+  static create(el, opts) { return new DnD(el, opts); }
+
+  /* ── private fields ───────────────────────────────────────── */
+
+  #el;       // container element
+  #opts;     // resolved options object
+  #sensor;   // PointerSensor
+
+  /* ── constructor ──────────────────────────────────────────── */
+
+  constructor(el, opts = {}) {
+    this.#el = el;
+    this.#opts = DnD.#resolveOpts(opts);
+    this.#sensor = new PointerSensor(this);
+    this.#sensor.attach();
+    _instances.set(el, this);
   }
 
-  unregister(instance) {
-    if (instance._isDraggable) this.draggables.delete(instance.id);
-    if (instance._isDroppable) this.droppables.delete(instance.id);
+  /* ── public API ───────────────────────────────────────────── */
+
+  get el() { return this.#el; }
+  get options() { return this.#opts; }
+
+  /** Get hoặc set option */
+  option(key, val) {
+    if (val === undefined) return this.#opts[key];
+    this.#opts[key] = val;
+    if (key === 'group') this.#opts.group = DnD.#resolveGroup(val);
   }
 
-  /**
-   * Lấy danh sách rect của tất cả droppable đang active
-   * @returns {Map<string, DOMRect>}
-   */
-  getDroppableRects() {
-    const map = new Map();
-    for (const [id, d] of this.droppables)
-      if (!d.disabled && d.element)
-        map.set(id, d.element.getBoundingClientRect());
-    return map;
-  }
-}
-/* ====================== CORE MANAGER ====================== */
-
-/**
- * DragDropManager - Trung tâm điều khiển toàn bộ hệ thống Drag & Drop
- * Quản lý: sensor, ghost, registry, operation state, và phát sự kiện
- */
-class DragDropManager {
-  monitor = new EventMonitor();
-  registry = new Registry();
-
-  /** 
-   * Trạng thái kéo thả hiện tại 
-   */
-  dragOperation = {
-    source: null,
-    target: null,
-    position: { initial: null, current: null },
-    status: "idle",
-    canceled: false,
-  };
-
-  #sensors = [];
-  #ghostEl = null;
-  #ghostOff = null;
-  #autoScroller = null;
-
-  /**
-   * @param {Object}   [options]
-   * @param {Array}    [options.sensors]            - Các sensor muốn dùng
-   * @param {Function} [options.collisionDetection] - Thuật toán collision
-   * @param {boolean}  [options.autoScroll]          - Tự cuộn khi kéo gần mép màn hình (mặc định true)
-   * @param {number}   [options.scrollZone]          - Vùng kích hoạt scroll tính từ mép viewport (px, mặc định 80)
-   * @param {number}   [options.scrollSpeed]         - Tốc độ cuộn tối đa (px/frame, mặc định 16)
-   */
-  constructor(options = {}) {
-    const SensorClasses = options.sensors ?? [PointerSensor];
-    this.#sensors = SensorClasses.map((S) => new S(this));
-    this.collisionDetection =
-      options.collisionDetection ?? Collision.closestCenter;
-
-    this.#autoScroller = new AutoScroller({
-      enabled: options.autoScroll ?? true,
-      scrollZone: options.scrollZone ?? 80,
-      scrollSpeed: options.scrollSpeed ?? 16,
-    });
-
-    // Tạo ghost element nếu chưa có
-    this.#ghostEl = document.getElementById("dnd-ghost");
-    if (!this.#ghostEl) {
-      const ghostEl = document.createElement('div');
-      ghostEl.id = 'dnd-ghost';
-      this.#ghostEl = ghostEl;
-      document.body.appendChild(ghostEl);
-    }
-
-    // Style cho ghost
-    this.#ghostEl.style.pointerEvents = 'none';
-    this.#ghostEl.style.position = 'fixed';
-    this.#ghostEl.style.top = '0';
-    this.#ghostEl.style.left = '0';
-    this.#ghostEl.style.zIndex = '9999';
-    this.#ghostEl.style.display = 'none';
+  /** Trả về mảng data-id của items theo thứ tự DOM hiện tại */
+  toArray() {
+    const sel = this.#opts.draggable?.replace(/^:scope\s*>\s*/, '') || null;
+    return [...this.#el.children]
+      .filter(c => !sel || c.matches(sel))
+      .map(c => c.dataset.id ?? '');
   }
 
-  // ====================== SENSOR ATTACH ======================
-  _attachSensors(entity) {
-    for (const s of this.#sensors) s.attach(entity);
-  }
-  _detachSensors(entity) {
-    for (const s of this.#sensors) s.detach(entity);
+  /** Huỷ hoàn toàn instance — remove listeners, xoá khỏi registry */
+  destroy() {
+    this.#sensor.detach();
+    _instances.delete(this.#el);
   }
 
-  // ====================== DRAG LIFECYCLE ======================
-  /**
-   * Bắt đầu kéo một draggable
-   * @private
-   */
-  _startDrag(draggable, origin, nativeEvent) {
-    const before = {
-      operation: this.dragOperation,
-      _prevented: false,
-      preventDefault() {
-        this._prevented = true;
-      },
-    };
-    this.monitor.dispatch("beforedragstart", before);
-    if (before._prevented) return;
+  /* ── drag lifecycle (gọi bởi PointerSensor) ──────────────── */
 
-    const op = this.dragOperation;
-    op.source = draggable;
-    op.target = null;
-    op.position = { initial: { ...origin }, current: { ...origin } };
-    op.status = "dragging";
-    op.canceled = false;
+  _startDrag(itemEl, origin, nativeEvent) {
+    if (STATE.active) return;  // đang có drag khác
 
-    draggable.element?.setAttribute('data-is-dragging', 'true');
-    this.#spawnGhost(draggable.element, origin, draggable.handle);
-    this.#autoScroller.start();
-    this.monitor.dispatch("dragstart", { operation: op, nativeEvent });
+    STATE.active = this;
+    STATE.dragEl = itemEl;
+    STATE.fromEl = this.#el;
+    STATE.fromIndex = this.#indexOf(itemEl, this.#el);
+    STATE.ghostClass = this.#opts.ghostClass || null;
+    STATE.chosenClass = this.#opts.chosenClass || null;
+
+    if (STATE.ghostClass) itemEl.classList.add(STATE.ghostClass);
+    if (STATE.chosenClass) itemEl.classList.add(STATE.chosenClass);
+
+    Ghost.spawn(itemEl, origin, this.#opts.handle, this.#opts.ghostHandle);
+    Scroller.configure(this.#opts.autoScroll, this.#opts.scrollZone, this.#opts.scrollSpeed);
+    Scroller.start();
+
+    this.#fire('start', { item: itemEl, from: this.#el, oldIndex: STATE.fromIndex, originalEvent: nativeEvent });
+    DnDMonitor.emit('dragstart', { instance: this, item: itemEl, from: this.#el, oldIndex: STATE.fromIndex });
   }
 
-  /**
-   * Khi đang kéo (pointermove)
-   * @private
-   */
   _moveDrag(nativeEvent) {
-    if (this.dragOperation.status !== "dragging") return;
-    const op = this.dragOperation;
+    if (!STATE.active || STATE.active !== this) return;
+
     const pos = { x: nativeEvent.clientX, y: nativeEvent.clientY };
-    op.position.current = pos;
-    this.#moveGhost(pos);
-    this.#autoScroller.update(pos);
+    Ghost.move(pos);
+    Scroller.update(pos.y);
 
-    const ghostRect = this.#ghostEl.firstElementChild
-      ? this.#ghostEl.firstElementChild.getBoundingClientRect()
-      : { left: pos.x, top: pos.y, right: pos.x + 1, bottom: pos.y + 1 };
+    // Tìm DnD instance tại vị trí con trỏ
+    const overInst = DnD.#instAtPoint(pos);
+    if (overInst) overInst.#onOver(pos, nativeEvent);
+  }
 
-    const rects = this.registry.getDroppableRects();
-    const overId = this.collisionDetection(ghostRect, rects);
-    const over =
-      overId != null ? (this.registry.droppables.get(overId) ?? null) : null;
+  _endDrag(nativeEvent, canceled) {
+    if (!STATE.active || STATE.active !== this) return;
 
-    if (op.target?.id !== (over?.id ?? null)) {
-      op.target?.element?.removeAttribute("data-dnd-overing");
-      op.target = over;
-      over?.element?.setAttribute("data-dnd-overing", "true");
-      this.monitor.dispatch("dragover", { operation: op, nativeEvent });
+    const { dragEl, fromEl, fromIndex } = STATE;
+    const toEl = dragEl.parentElement;
+    const toIndex = this.#indexOf(dragEl, toEl);
+    const srcInst = _instances.get(fromEl);
+    const toInst = _instances.get(toEl);
+
+    // Xoá classes — dùng STATE vì source/dest có thể khác options
+    if (STATE.ghostClass) dragEl.classList.remove(STATE.ghostClass);
+    if (STATE.chosenClass) dragEl.classList.remove(STATE.chosenClass);
+
+    // Swap mode: thực hiện actual DOM swap lúc drop
+    if (STATE.swapEl && STATE.swapInst) {
+      const swapEl = STATE.swapEl;
+      const swapInst = STATE.swapInst;
+      swapEl.classList.remove(swapInst.options.swapClass);
+
+      if (!canceled) {
+        // Đổi chỗ hai elements trong DOM
+        const swapContainer = swapEl.parentElement;
+        const play = flipSnapshot(swapContainer, null, swapInst.options.animation);
+
+        // Swap: insert dragEl trước swapEl, insert swapEl vào chỗ dragEl
+        const dragNext = dragEl.nextSibling;
+        const dragParent = dragEl.parentElement;
+        swapContainer.insertBefore(dragEl, swapEl);
+        if (dragNext) dragParent.insertBefore(swapEl, dragNext);
+        else dragParent.appendChild(swapEl);
+
+        play();
+      }
+
+      STATE.swapEl = null;
+      STATE.swapInst = null;
     }
 
-    this.monitor.dispatch("dragmove", {
-      operation: op,
-      nativeEvent,
-      to: pos,
-      by: {
-        x: pos.x - op.position.initial.x,
-        y: pos.y - op.position.initial.y,
-      },
-    });
-  }
+    Ghost.destroy();
+    Scroller.stop();
 
-  /**
-   * Kết thúc kéo (pointerup hoặc cancel)
-   * @private
-   */
-  _endDrag(nativeEvent, canceled = false) {
-    if (this.dragOperation.status !== "dragging") return;
-    const op = this.dragOperation;
-    op.status = "idle";
-    op.canceled = canceled;
+    if (!canceled) {
+      const moved = toEl !== fromEl;
+      const sorted = !moved && toIndex !== fromIndex;
 
-    op.source?.element?.removeAttribute("data-is-dragging");
-    op.target?.element?.removeAttribute("data-dnd-overing");
-    this.#autoScroller.stop();
-    this.#destroyGhost();
+      if (moved) {
+        // remove fires on the source container
+        if (srcInst) srcInst.#fire('remove', { item: dragEl, from: fromEl, oldIndex: fromIndex });
+        // add fires on the destination container
+        if (toInst) toInst.#fire('add', { item: dragEl, to: toEl, newIndex: toIndex, from: fromEl });
+      }
 
-    this.monitor.dispatch("dragend", {
-      operation: {
-        source: op.source,
-        target: op.target,
-        position: op.position,
-        status: op.status,
-        canceled,
-      },
-      canceled,
-      nativeEvent,
-    });
+      if (sorted) {
+        // sort/update fire on the container where reordering happened
+        if (toInst) toInst.#fire('sort', { item: dragEl, from: fromEl, to: toEl, oldIndex: fromIndex, newIndex: toIndex });
+        if (toInst) toInst.#fire('update', { item: dragEl, from: fromEl, to: toEl, oldIndex: fromIndex, newIndex: toIndex });
+      }
 
-    // Reset sau dispatch
-    op.source = null;
-    op.target = null;
-    op.position = { initial: null, current: null };
-    op.canceled = false;
-  }
-
-  /**
-   * Các action công khai để điều khiển từ bên ngoài (thường dùng bởi plugin)
-   */
-  get actions() {
-    const op = this.dragOperation;
-    return {
-      /**
-       * Đặt droppable đang được hover (thường dùng bởi OptimisticSortingPlugin)
-       * @param {string|null} id 
-       */
-      setDropTarget: (id) => {
-        op.target?.element?.removeAttribute("data-dnd-overing");
-        op.target =
-          id != null ? (this.registry.droppables.get(id) ?? null) : null;
-        op.target?.element?.setAttribute("data-dnd-overing", "true");
-      },
-    };
-  }
-
-  // ====================== GHOST MANAGEMENT ======================
-
-  /**
-   * Tạo ghost element khi bắt đầu kéo.
-   *
-   * Nếu draggable có handle:
-   *   Clone handle thay vì toàn bộ element — ghost nhỏ gọn,
-   *   bám theo con trỏ tại đúng vị trí handle.
-   *
-   * Nếu không có handle:
-   *   Clone toàn bộ element (hành vi gốc),
-   *   bám tại điểm người dùng bấm xuống.
-   *
-   * @param {Element}      element - Element chính của draggable/sortable
-   * @param {{x,y}}        origin  - Tọa độ con trỏ lúc pointerdown
-   * @param {Element|null} handle  - Handle element nếu có, null nếu không
-   */
-  #spawnGhost(element, origin, handle = null) {
-    if (!element || !this.#ghostEl) return;
-
-    // Clone handle nếu có, toàn bộ element nếu không
-    const source = element;
-    const rect = source.getBoundingClientRect();
-    const clone = source.cloneNode(true);
-
-    clone.style.cssText = `width:${rect.width}px;height:${rect.height}px;pointer-events:none;user-select:none;`;
-
-    this.#ghostEl.innerHTML = "";
-    this.#ghostEl.appendChild(clone);
-    this.#ghostEl.style.display = "block";
-
-    // Offset tính từ góc trên-trái của element được clone (handle hoặc full)
-    // Ghost sẽ luôn bám đúng vào điểm con trỏ bất kể dùng handle hay không
-    this.#ghostOff = { x: origin.x - rect.left, y: origin.y - rect.top };
-    this.#moveGhost(origin);
-  }
-
-  #moveGhost(pos) {
-    if (!this.#ghostOff || !this.#ghostEl) return;
-    this.#ghostEl.style.transform = `translate(${pos.x - this.#ghostOff.x}px,${pos.y - this.#ghostOff.y}px)`;
-  }
-
-  #destroyGhost() {
-    if (this.#ghostEl) {
-      this.#ghostEl.style.display = "none";
-      this.#ghostEl.innerHTML = "";
+      // end always fires on the instance that initiated the drag
+      this.#fire('end', {
+        item: dragEl, from: fromEl, to: toEl,
+        oldIndex: fromIndex, newIndex: toIndex, originalEvent: nativeEvent,
+      });
+      DnDMonitor.emit('dragend', {
+        instance: this, item: dragEl,
+        from: fromEl, to: toEl,
+        oldIndex: fromIndex, newIndex: toIndex, canceled,
+      });
     }
-    this.#ghostOff = null;
+
+    // Reset global state
+    STATE.active = null;
+    STATE.dragEl = null;
+    STATE.fromEl = null;
+    STATE.fromIndex = -1;
+    STATE.ghostClass = null;
+    STATE.chosenClass = null;
   }
+
+  /* ── private: over handling ───────────────────────────────── */
 
   /**
-   * Đồng bộ lại index của tất cả sortable trong một group
-   * Dùng sau khi thêm/xóa item bằng DOM thuần (không qua drag)
+   * Xử lý khi ghost đang di chuyển trên container này.
+   * Sort mode: tìm vị trí chèn và move DOM optimistically.
+   * Swap mode: highlight item sẽ bị swap.
    */
-  reindexGroup(group) {
-    const items = [];
-    for (const s of this.registry.draggables.values())
-      if (isSortable(s) && s.group === group) items.push(s);
+  #onOver(pos, nativeEvent) {
+    const { dragEl } = STATE;
+    if (!dragEl) return;
+    if (!this.#canReceive()) return;
+    // sort=false nghĩa là không cho sắp xếp lại trong cùng list
+    if (!this.#opts.sort && this.#el === STATE.fromEl) return;
 
-    items.sort((a, b) => {
-      if (!a.element || !b.element) return a.index - b.index;
-      const pos = a.element.compareDocumentPosition(b.element);
-      return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
-    });
+    const overItem = this.#closestItem(pos, dragEl);
 
-    items.forEach((s, i) => {
-      s.index = i;
-      s.initialIndex = i;
-    });
-  }
-
-  destroy() {
-    this.#autoScroller.stop();
-    for (const s of this.#sensors) s.destroy();
-    for (const d of this.registry.draggables.values()) d.destroy?.();
-    for (const d of this.registry.droppables.values()) d.destroy?.();
-  }
-}
-
-/* ====================== ENTITIES ====================== */
-
-/**
- * Draggable - Thực thể có thể kéo
- */
-class Draggable {
-  _isDraggable = true;
-  _isDroppable = false;
-
-  constructor(options, manager) {
-    this.id = options.id;
-    this.element = options.element ?? null;
-    this.handle = options.handle ?? null;
-    this.disabled = options.disabled ?? false;
-    this.data = options.data ?? {};
-    this._manager = manager;
-
-    if (manager && options.register !== false) {
-      manager.registry.register(this);
-      if (this.element) manager._attachSensors(this);
-    }
-  }
-
-  get isDragging() {
-    return this._manager?.dragOperation.source?.id === this.id;
-  }
-
-  destroy() {
-    this._manager?._detachSensors(this);
-    this._manager?.registry.unregister(this);
-  }
-}
-
-/**
- * Droppable - Thực thể có thể thả vào
- */
-class Droppable {
-  _isDraggable = false;
-  _isDroppable = true;
-
-  constructor(options, manager) {
-    this.id = options.id;
-    this.element = options.element ?? null;
-    this.disabled = options.disabled ?? false;
-    this.data = options.data ?? {};
-    this._manager = manager;
-    if (manager && options.register !== false) manager.registry.register(this);
-  }
-
-  get isOver() {
-    return this._manager?.dragOperation.target?.id === this.id;
-  }
-
-  destroy() {
-    this._manager?.registry.unregister(this);
-  }
-}
-
-const _pluginAttached = new WeakSet();
-
-/**
- * Sortable - Kết hợp cả Draggable + Droppable + tự động sắp xếp
- * Dùng cho danh sách có thể kéo thả để thay đổi thứ tự
- */
-class Sortable {
-  _isDraggable = true;
-  _isDroppable = true;
-  type = "sortable";
-
-  constructor(options, manager) {
-    this.id = options.id;
-    this.element = options.element ?? null;
-    this.handle = options.handle ?? null;
-    this.group = options.group ?? "default";
-    this.index = options.index ?? 0;
-    this.initialIndex = this.index;
-    this.initialGroup = this.group;
-    this.disabled = options.disabled ?? false;
-    this.data = options.data ?? {};
-    this._manager = manager;
-
-    manager.registry.register(this);
-    if (this.element) manager._attachSensors(this);
-
-    if (!_pluginAttached.has(manager)) {
-      _pluginAttached.add(manager);
-      manager.monitor.addEventListener("dragover", (e) =>
-        OptimisticSortingPlugin.onDragOver(e, manager),
-      );
-    }
-  }
-
-  get isDragging() {
-    return this._manager?.dragOperation.source?.id === this.id;
-  }
-  get isDropTarget() {
-    return this._manager?.dragOperation.target?.id === this.id;
-  }
-
-  destroy() {
-    this._manager?._detachSensors(this);
-    this._manager?.registry.unregister(this);
-  }
-}
-
-/**
- * Kiểm tra một instance có phải Sortable không
- * @param {*} x 
- * @returns {boolean}
- */
-function isSortable(x) {
-  return x?.type === "sortable";
-}
-
-/**
- * OptimisticSortingPlugin - Plugin tự động sắp xếp mượt mà
- * 
- * Đặc điểm chính:
- * - Reorder DOM ngay trong lúc kéo (dragover) thay vì chờ thả chuột
- * - Tạo animation đẩy item
- * - Hỗ trợ kéo trong cùng group và giữa các group khác nhau
- * - Luôn set target = source (đặc trưng của optimistic sorting)
- */
-class OptimisticSortingPlugin {
-  /**
-   * Handler chính cho event dragover
-   * @param {Object} event 
-   * @param {DragDropManager} manager 
-   */
-  static onDragOver(event, manager) {
-    const { source, target } = event.operation;
-    if (!source || !target) return;
-    if (!isSortable(source) || !isSortable(target)) return;
-    if (source.id === target.id) return;
-
-    if (source.group === target.group) {
-      OptimisticSortingPlugin._reorderSameGroup(source, target, manager);
+    if (this.#opts.swap) {
+      this.#doSwap(dragEl, overItem);
     } else {
-      OptimisticSortingPlugin._transferCrossGroup(source, target, manager);
+      this.#doSort(dragEl, overItem, pos, nativeEvent);
     }
-
-    manager.actions.setDropTarget(source.id);
   }
 
-  /**
-   * Sắp xếp lại thứ tự trong cùng một group
-   * @private
-   */
-  static _reorderSameGroup(source, target, manager) {
-    const group = OptimisticSortingPlugin._groupItems(manager, source.group);
-    const fromIdx = group.findIndex((s) => s.id === source.id);
-    const toIdx = group.findIndex((s) => s.id === target.id);
-    if (fromIdx === -1 || toIdx === -1) return;
+  #doSort(dragEl, overItem, pos, nativeEvent) {
+    if (!overItem || overItem === dragEl) return;
 
-    // FLIP bước 1: snapshot vị trí các sibling TRƯỚC khi DOM thay đổi
-    const playAnimation = OptimisticSortingPlugin._animateDisplaced(
-      group, fromIdx, toIdx, source.element
-    );
+    // onMove callback — return false để cancel
+    const moveResult = this.#opts.onMove?.({
+      to: this.#el, from: STATE.fromEl,
+      dragged: dragEl, related: overItem,
+      originalEvent: nativeEvent,
+    });
+    if (moveResult === false) return;
+
+    // Detect direction để quyết định insert trước hay sau
+    const dir = this.#detectDir();
+    const r = overItem.getBoundingClientRect();
+    const before = dir === 'horizontal'
+      ? pos.x < r.left + r.width / 2
+      : pos.y < r.top + r.height / 2;
+
+    // Bỏ qua nếu vị trí không thực sự thay đổi
+    if (before && overItem.previousSibling === dragEl) return;
+    if (!before && overItem.nextSibling === dragEl) return;
+
+    // FLIP step 1 — snapshot trước DOM move
+    const parent = overItem.parentElement ?? this.#el;
+    const playAnim = flipSnapshot(parent, dragEl, this.#opts.animation);
 
     // DOM move
-    const parent = target.element?.parentElement;
-    if (parent && source.element && target.element) {
-      if (fromIdx < toIdx) target.element.after(source.element);
-      else parent.insertBefore(source.element, target.element);
+    if (before) parent.insertBefore(dragEl, overItem);
+    else overItem.after(dragEl);
+
+    // FLIP step 2 — play animation sau DOM move
+    playAnim();
+  }
+
+  #doSwap(dragEl, overItem) {
+    // Clear highlight của swap target cũ
+    if (STATE.swapEl && STATE.swapEl !== overItem) {
+      const swapClass = STATE.swapInst ? STATE.swapInst.options.swapClass : '';
+      STATE.swapEl.classList.remove(swapClass);
+      STATE.swapEl = null;
+      STATE.swapInst = null;
     }
+    // dragEl được truyền vào đúng — dùng param, không dùng STATE trực tiếp
+    if (!overItem || overItem === dragEl) return;
 
-    // FLIP bước 2: đo vị trí mới, tính delta, chạy animation
-    playAnimation();
+    if (overItem !== STATE.swapEl) {
+      overItem.classList.add(this.#opts.swapClass);
+      STATE.swapEl = overItem;
+      STATE.swapInst = this;
+    }
+  }
 
-    group.splice(fromIdx, 1);
-    group.splice(toIdx, 0, source);
-    group.forEach((s, i) => {
-      s.index = i;
+  /* ── private: utilities ───────────────────────────────────── */
+
+  /**
+   * Tìm direct child của container này gần nhất với pos.
+   * Bỏ qua excludeEl (dragEl). Chỉ xét children match draggable selector.
+   * Dùng khoảng cách tới tâm item theo hướng được detect.
+   */
+  #closestItem(pos, excludeEl) {
+    const dir = this.#detectDir();
+    const sel = this.#opts.draggable?.replace(/^:scope\s*>\s*/, '') || null;
+    const items = [...this.#el.children].filter(c => {
+      if (c === excludeEl) return false;
+      if (sel && !c.matches(sel)) return false;
+      return true;
     });
+    if (!items.length) return null;
+
+    let best = null, bestDist = Infinity;
+    for (const item of items) {
+      const r = item.getBoundingClientRect();
+      const cx = (r.left + r.right) / 2;
+      const cy = (r.top + r.bottom) / 2;
+      const d = dir === 'horizontal'
+        ? Math.abs(pos.x - cx)
+        : Math.abs(pos.y - cy);
+      if (d < bestDist) { bestDist = d; best = item; }
+    }
+    return best;
   }
 
   /**
-   * Chuyển item từ group này sang group khác (cross-group)
-   * @private
+   * Auto-detect layout direction.
+   * So sánh top của 2 children đầu tiên (không tính dragEl):
+   * - Nếu chúng nằm cùng hàng (top gần bằng nhau) → horizontal (grid/flex-row)
+   * - Ngược lại → vertical (list)
    */
-  static _transferCrossGroup(source, target, manager) {
-    const srcItems = OptimisticSortingPlugin._groupItems(manager, source.group);
-    const tgtItems = OptimisticSortingPlugin._groupItems(manager, target.group);
-    const fromIdx = srcItems.findIndex((s) => s.id === source.id);
-    const toIdx = tgtItems.findIndex((s) => s.id === target.id);
-    if (fromIdx === -1 || toIdx === -1) return;
-
-    const tgtParent = target.element?.parentElement;
-    if (tgtParent && source.element && target.element) {
-      tgtParent.insertBefore(source.element, target.element);
-    }
-
-    srcItems.splice(fromIdx, 1);
-    srcItems.forEach((s, i) => {
-      s.index = i;
-    });
-
-    tgtItems.splice(toIdx, 0, source);
-    tgtItems.forEach((s, i) => {
-      s.index = i;
-    });
-
-    source.group = target.group;
+  #detectDir() {
+    if (this.#opts.direction !== 'auto') return this.#opts.direction;
+    const kids = [...this.#el.children].filter(c => c !== STATE.dragEl);
+    if (kids.length < 2) return 'vertical';
+    const r0 = kids[0].getBoundingClientRect();
+    const r1 = kids[1].getBoundingClientRect();
+    // Nếu hai item đầu tiên có top gần bằng nhau → chúng nằm cùng hàng
+    return Math.abs(r0.top - r1.top) < r0.height / 2 ? 'horizontal' : 'vertical';
   }
 
   /**
-   * Lấy danh sách sortable theo group và sắp xếp theo index
-   * @private
+   * Kiểm tra container này có thể nhận dragEl không.
+   * Dựa vào group option:
+   *   - Cùng container: phụ thuộc sort option
+   *   - Khác container: cùng group name hoặc put cho phép
    */
-  static _groupItems(manager, group) {
-    const items = [];
-    for (const s of manager.registry.draggables.values())
-      if (isSortable(s) && s.group === group) items.push(s);
-    return items.sort((a, b) => a.index - b.index);
+  #canReceive() {
+    const srcInst = _instances.get(STATE.fromEl);
+    const myGroup = this.#opts.group;
+    const srcGroup = srcInst?.options.group;
+
+    if (this.#el === STATE.fromEl) return this.#opts.sort;
+    if (!myGroup?.name || !srcGroup?.name) return false;
+
+    const { put } = myGroup;
+    if (put === false) return false;
+    if (put === true) return true;
+    if (Array.isArray(put)) return put.includes(srcGroup.name);
+    return myGroup.name === srcGroup.name;
   }
+
+  #indexOf(el, container) {
+    if (!container) return -1;
+    return [...container.children].indexOf(el);
+  }
+
+  /** Fire callback được cấu hình trong options */
+  #fire(type, data) {
+    const key = 'on' + type[0].toUpperCase() + type.slice(1);
+    this.#opts[key]?.({ ...data, target: this.#el });
+  }
+
+  /* ── static utilities ─────────────────────────────────────── */
 
   /**
-   * FLIP animation cho các sibling bị đẩy khi reorder.
-   *
-   * Trả về callback — gọi SAU KHI DOM đã move.
-   *
-   * Tại sao phải dùng callback hai bước:
-   *   - Nếu animate TRƯỚC DOM move: insertBefore/after gây reflow,
-   *     reset toàn bộ transform đang set → animation bị hủy.
-   *   - Nếu animate SAU DOM move mà không snapshot trước: không biết
-   *     item đã dịch bao nhiêu px để tính delta.
-   *   → Snapshot TRƯỚC, DOM move, rồi play SAU.
-   *
-   * @param {Array}   group    - Danh sách sortable trong group
-   * @param {number}  fromIdx  - Vị trí cũ của source
-   * @param {number}  toIdx    - Vị trí mới của source
-   * @param {Element} sourceEl - Element của source (bỏ qua, không animate)
-   * @returns {Function} Callback để gọi sau DOM move
-   * @private
+   * Tìm DnD instance tại điểm pos.
+   * Tạm ẩn ghost để elementFromPoint không bị chặn.
+   * Ưu tiên container sâu nhất (nested list).
    */
-  static _animateDisplaced(group, fromIdx, toIdx, sourceEl) {
-    const lo = Math.min(fromIdx, toIdx);
-    const hi = Math.max(fromIdx, toIdx);
+  static #instAtPoint(pos) {
+    const gEl = document.getElementById('dnd-ghost');
+    if (gEl) gEl.style.display = 'none';
+    const el = document.elementFromPoint(pos.x, pos.y);
+    if (gEl) gEl.style.display = 'block';
+    if (!el) return null;
 
-    // Chỉ animate các sibling trong vùng bị ảnh hưởng, bỏ qua source
-    const affected = group
-      .slice(lo, hi + 1)
-      .filter((s) => s.element && s.element !== sourceEl);
-
-    // FIRST — đo vị trí trước khi DOM thay đổi
-    const firstTops = new Map();
-    for (const s of affected) {
-      firstTops.set(s.id, s.element.getBoundingClientRect().top);
+    // Walk up DOM tìm container có DnD instance
+    let node = el;
+    while (node) {
+      const inst = _instances.get(node);
+      if (inst && !inst.options.disabled) return inst;
+      node = node.parentElement;
     }
-
-    // Trả về callback để gọi SAU khi DOM đã move
-    return () => {
-      for (const s of affected) {
-        const first = firstTops.get(s.id);
-        if (first == null || !s.element) continue;
-
-        // LAST — đo vị trí sau DOM move
-        const last = s.element.getBoundingClientRect().top;
-        const delta = first - last;
-        if (Math.abs(delta) < 1) continue;
-
-        // INVERT — snap về vị trí cũ, không transition
-        s.element.style.transition = "none";
-        s.element.style.transform = `translateY(${delta}px)`;
-
-        // Force reflow — browser commit trạng thái invert trước khi tiếp tục
-        void s.element.offsetHeight;
-
-        // PLAY — bật transition, xóa offset → browser animate từ delta về 0
-        s.element.style.transition = "transform 200ms ease";
-        s.element.style.transform = "";
-
-        // Dọn inline style sau khi animation kết thúc
-        const el = s.element;
-        const cleanup = () => {
-          el.style.transition = "";
-          el.style.transform = "";
-          el.removeEventListener("transitionend", cleanup);
-        };
-        el.addEventListener("transitionend", cleanup);
-      }
-    };
-  }
-}
-/* ====================== AUTO SCROLLER ====================== */
-
-/**
- * AutoScroller - Tự động cuộn trang khi con trỏ gần mép trên/dưới màn hình.
- *
- * Cách hoạt động:
- *   - Chạy vòng lặp requestAnimationFrame trong suốt thời gian kéo
- *   - Tính "cường độ" cuộn tuyến tính: 0 ở rìa vùng, 1 tại mép màn hình
- *   - Gọi window.scrollBy() mỗi frame với số pixel tỉ lệ cường độ đó
- *
- * @param {Object}  options
- * @param {boolean} options.enabled     - Bật/tắt (mặc định true)
- * @param {number}  options.scrollZone  - Chiều cao vùng kích hoạt tính từ mép viewport (px)
- * @param {number}  options.scrollSpeed - Tốc độ cuộn tối đa (px/frame, 1 frame ≈ 16ms)
- */
-class AutoScroller {
-  #enabled;
-  #scrollZone;
-  #scrollSpeed;
-  #rafId = null;
-  #cursorY = 0;
-
-  constructor(options = {}) {
-    this.#enabled = options.enabled ?? true;
-    this.#scrollZone = options.scrollZone ?? 80;
-    this.#scrollSpeed = options.scrollSpeed ?? 16;
+    return null;
   }
 
-  /** Gọi khi drag bắt đầu — khởi chạy RAF loop */
-  start() {
-    if (!this.#enabled || this.#rafId != null) return;
-    this.#tick();
+  /** Merge user options với defaults */
+  static #resolveOpts(opts) {
+    const resolved = Object.assign({
+      group: null,
+      sort: true,
+      disabled: false,
+      handle: null,
+      draggable: ':scope > *',
+      filter: null,
+      animation: 150,
+      ghostClass: 'dnd-ghost',
+      chosenClass: 'dnd-chosen',
+      ghostHandle: false,
+      swap: false,
+      swapClass: 'dnd-swap',
+      direction: 'auto',
+      autoScroll: true,
+      scrollZone: 80,
+      scrollSpeed: 16,
+      // callbacks
+      onStart: null,
+      onEnd: null,
+      onSort: null,
+      onAdd: null,
+      onRemove: null,
+      onMove: null,
+      onUpdate: null,
+    }, opts);
+    resolved.group = DnD.#resolveGroup(opts.group);
+    return resolved;
   }
 
-  /** Gọi mỗi pointermove để cập nhật vị trí con trỏ */
-  update(pos) {
-    this.#cursorY = pos.y;
-  }
-
-  /** Gọi khi drag kết thúc hoặc manager bị destroy — dừng RAF loop */
-  stop() {
-    if (this.#rafId != null) {
-      cancelAnimationFrame(this.#rafId);
-      this.#rafId = null;
-    }
-  }
-
-  #tick() {
-    this.#rafId = requestAnimationFrame(() => {
-      this.#scroll();
-      this.#tick();
-    });
-  }
-
-  #scroll() {
-    const vh = window.innerHeight;
-    const y = this.#cursorY;
-    const zone = this.#scrollZone;
-    let delta = 0;
-
-    if (y < zone) {
-      // Gần mép trên → cuộn lên; intensity = 1 tại y=0, giảm về 0 tại y=zone
-      delta = -this.#scrollSpeed * (1 - y / zone);
-    } else if (y > vh - zone) {
-      // Gần mép dưới → cuộn xuống
-      delta = this.#scrollSpeed * (1 - (vh - y) / zone);
-    }
-
-    if (delta !== 0) window.scrollBy({ top: delta, behavior: "instant" });
+  /** Normalise group: string → { name, pull, put } */
+  static #resolveGroup(g) {
+    if (!g) return { name: null, pull: false, put: false };
+    if (typeof g === 'string') return { name: g, pull: true, put: true };
+    return { name: g.name ?? null, pull: g.pull ?? true, put: g.put ?? true };
   }
 }
