@@ -1393,7 +1393,7 @@
   .empty__media {
     display: flex;
     justify-content: center;
-    align-self: center;
+    align-items: center;
     width: 2rem;
     height: 2rem;
     border-radius: var(--radius-lg);

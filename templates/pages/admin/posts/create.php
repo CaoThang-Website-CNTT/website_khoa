@@ -1,34 +1,34 @@
 <?php
 /**
- * create.php — Trang tạo / chỉnh sửa bài viết
- * 
- * Dùng chung cho cả create và edit mode.
- * Edit mode: $post được inject từ controller, chứa content_json đã decode.
- * Create mode: $post = null.
+ * create.php — Trang tạo bài viết (Block Editor)
+ *
+ * Layout: 3 cột full-height, dùng canva layout.
+ * $categories — mảng category.
  */
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 
-// Edit mode: controller inject $post (object), $post->content_json là array đã decode
 $isEdit = isset($post);
-$pageTitle = $isEdit ? 'Chỉnh sửa bài viết' : 'Thêm bài viết mới';
 $formAction = $isEdit ? url("admin/posts/{$post->id}") : url('admin/posts');
-$formMethod = 'POST'; // method spoofing qua hidden _method nếu cần PUT
 
-// Dữ liệu cũ cho input thường (title, slug...)
 $oldTitle = $old_input['title'] ?? ($post->title ?? '');
 $oldSlug = $old_input['slug'] ?? ($post->slug ?? '');
+$oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
 
-// Blocks để hydrate editor trong edit mode — JSON string để JS parse
 $initialBlocksJson = $isEdit
   ? json_encode($post->content_json ?? [], JSON_UNESCAPED_UNICODE)
   : '[]';
+
+$statusLabels = [
+  'draft' => 'Nháp',
+  'published' => 'Đã xuất bản',
+  'archived' => 'Lưu trữ',
+];
 ?>
 
 <script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
   window.__initialBlocks__ = <?= $initialBlocksJson ?>;
+  window.__isEdit__ = <?= $isEdit ? 'true' : 'false' ?>;
 </script>
 
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
@@ -39,284 +39,374 @@ $initialBlocksJson = $isEdit
   </script>
 <?php endif; ?>
 
-<!-- ── Title bar ─────────────────────────────────────────────────────────── -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div>
-      <h2 class="title text-2xl font-semibold">
-        <?= $pageTitle ?>
-      </h2>
-      <p>Điền thông tin và soạn nội dung bài viết bên dưới</p>
-    </div>
-    <div class="flex gap-2">
-      <a href="<?= request()->previous(fallback: 'admin/posts') ?>" data-variant="outline" data-size="lg" class="btn">
-        <i class="fa-solid fa-chevron-left"></i> Quay lại
+<!-- ════════════════════════════════════════════════════════════
+     EDITOR SHELL
+════════════════════════════════════════════════════════════ -->
+<div id="block-editor-shell">
+
+  <!-- ── TOPBAR ─────────────────────────────────────────────── -->
+  <div id="be-topbar">
+    <div id="be-topbar-left">
+      <a href="<?= request()->previous('admin/posts') ?>" class="btn" data-size="md" data-variant="outline">
+        <i class="fa-solid fa-chevron-left"></i>
+        Quay lại
       </a>
-      <button data-modal-trigger="#confirm-modal" type="button" data-variant="primary" data-size="lg" class="btn">
-        <i class="fa-solid fa-floppy-disk"></i>
-        <?= $isEdit ? 'Lưu thay đổi' : 'Thêm bài viết' ?>
+      <!-- Toggle left panel -->
+      <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-left"
+        title="Ẩn/hiện panel block">
+        <i class="fa-solid fa-cube"></i>
+        Blocks
+      </button>
+    </div>
+
+    <div id="be-topbar-center">
+      <input id="be-title-input" class="field__input be-post-title-input" type="text" placeholder="Tiêu đề bài viết..."
+        value="<?= htmlspecialchars($oldTitle) ?>" autocomplete="off">
+      <span class="badge" data-variant="<?= $oldStatus === 'published' ? 'primary' : 'secondary' ?>"
+        id="be-status-badge">
+        <?= $statusLabels[$oldStatus] ?? 'Nháp' ?>
+      </span>
+    </div>
+
+    <div id="be-topbar-right">
+      <!-- Toggle right panel -->
+      <button type="button" class="btn" data-size="md" id="be-toggle-right" title="Ẩn/hiện panel settings">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <button type="button" class="btn" data-variant="outline" data-size="md" id="be-preview-btn">Xem
+        trước</button>
+      <button type="button" class="btn" data-variant="secondary" data-size="md" id="be-save-btn">
+        <?= $isEdit ? 'Lưu thay đổi' : 'Lưu nháp' ?>
+      </button>
+      <button type="button" class="btn" d data-variant="primary" data-size="md" id="be-publish-btn">
+        Xuất bản
       </button>
     </div>
   </div>
-</div>
+  <!-- ── /TOPBAR ────────────────────────────────────────────── -->
 
-<!-- ── Form ───────────────────────────────────────────────────────────────── -->
-<form id="post-form" class="detail-layout" action="<?= $formAction ?>" method="<?= $formMethod ?>">
+  <!-- ════ START: BODY ════ -->
+  <div id="be-body">
+    <!-- ════ START: LEFT PANEL ════ -->
+    <!-- Tabs -->
+    <div id="be-left" class="be-panel" data-tabs data-tabs-id="be-left-panel" data-tabs-panel-active="be-blocks-panel"
+      data-tabs-sync="false">
+      <div class="tabs__list be-panel__tabs-list" role="tablist">
+        <button type="button" class="be-panel__tabs-trigger be-left-tab active"
+          data-tabs-trigger="be-blocks-panel">Blocks</button>
+        <button type="button" class="be-panel__tabs-trigger be-left-tab" data-tabs-trigger="be-list-view-panel">Cấu
+          trúc</button>
+      </div>
 
-  <?php if ($isEdit): ?>
-    <input type="hidden" name="_method" value="PUT">
-  <?php endif; ?>
+      <div class="be-panel__content">
+        <!-- Tab: Blocks -->
+        <div id="be-blocks-menu-panel" class="tabs__panel" data-tabs-panel="be-blocks-panel" role="tabpanel">
 
-  <!-- Hidden input nhận JSON từ BlockSerializer -->
-  <input type="hidden" name="content_json" id="content-json-input">
+          <div class="be-block-group">
+            <span class="be-block-group__label">Văn bản</span>
 
-  <!-- ── Main column ──────────────────────────────────────────────────────── -->
-  <div class="detail-layout__main">
-
-    <!-- Card: Thông tin cơ bản -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Thông tin bài viết</legend>
-          <p class="field__description">Những trường có dấu * là bắt buộc.</p>
-        </div>
-        <hr class="separator">
-        <div class="card__content">
-          <div class="field-group">
-
-            <div class="field" data-field-required>
-              <label class="field__label" for="title">Tiêu đề bài viết</label>
-              <input id="title" class="field__input" type="text" name="title" placeholder="Nhập tiêu đề bài viết..."
-                value="<?= htmlspecialchars($oldTitle) ?>">
-            </div>
-
-            <div class="field" data-field-readonly>
-              <label class="field__label" for="slug">Slug (đường dẫn SEO)</label>
-              <input id="slug" class="field__input" type="text" name="slug" placeholder="tieu-de-bai-viet"
-                value="<?= htmlspecialchars($oldSlug) ?>" readonly>
-              <p class="field__description">Tự động sinh từ tiêu đề. Chỉnh tay nếu cần.</p>
-            </div>
-
-          </div>
-        </div>
-      </fieldset>
-    </div>
-
-    <!-- Card: Block Editor -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <div class="flex justify-between items-center">
-            <div>
-              <legend class="field__legend">Nội dung bài viết</legend>
-              <p class="field__description">Thêm và sắp xếp các block nội dung.</p>
-            </div>
-            <!-- BlockToolbar sẽ được mount vào đây bởi JS -->
-            <div id="block-toolbar-mount"></div>
-          </div>
-        </div>
-        <hr class="separator">
-        <div class="card__content">
-          <!-- Container chứa danh sách block -->
-          <div id="block-list-container">
-            <div class="block-list__empty empty" style="display: flex;">
-              <div class="empty__header">
-                <div class="empty__title">Chưa có block nào</div>
-                <div class="empty__description">
-                  Nhấn "Thêm block" để bắt đầu soạn thảo.
+            <?php
+            // Render block type buttons từ PHP — thực ra JS sẽ attach addBlock(),
+            // nhưng render HTML từ PHP để trang không bị flash khi JS chưa load.
+            $blockTypes = [
+              ['type' => 'blocks/heading', 'label' => 'Tiêu đề', 'icon' => '<i class="fa-solid fa-heading"></i>', 'desc' => 'H2, H3, H4'],
+              ['type' => 'blocks/paragraph', 'label' => 'Đoạn văn', 'icon' => '<i class="fa-solid fa-paragraph"></i>', 'desc' => 'Văn bản thuần'],
+              ['type' => 'blocks/quote', 'label' => 'Trích dẫn', 'icon' => '<i class="fa-solid fa-quote-left"></i>', 'desc' => 'Blockquote'],
+            ];
+            foreach ($blockTypes as $bt):
+              ?>
+              <button type="button" class="btn be-block-btn" data-variant="outline" data-add-block="<?= $bt['type'] ?>">
+                <div class="be-block-btn__icon">
+                  <?= $bt['icon'] ?>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-    </div>
-
-  </div>
-
-  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
-  <div class="detail-layout__sidebar">
-
-    <!-- Card: Trạng thái xuất bản -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Trạng thái</legend>
-        </div>
-        <hr class="separator">
-        <div class="card__content">
-          <div class="field-group">
-            <div class="field">
-              <label class="field__label" for="status">Trạng thái bài viết</label>
-              <select id="status" class="field__input" name="status">
-                <option value="draft" <?= ($post->status ?? 'draft') === 'draft' ? 'selected' : '' ?>>Nháp</option>
-                <option value="published" <?= ($post->status ?? '') === 'published' ? 'selected' : '' ?>>Xuất bản
-                </option>
-                <option value="archived" <?= ($post->status ?? '') === 'archived' ? 'selected' : '' ?>>Lưu trữ</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-    </div>
-
-    <!-- Card: Danh mục -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Danh mục</legend>
-        </div>
-        <hr class="separator">
-        <div class="card__content">
-          <div class="field-group">
-            <?php foreach (($categories ?? []) as $cat): ?>
-              <div class="field" data-orientation="horizontal">
-                <label class="field__label" for="cat-<?= $cat->id ?>">
-                  <?= htmlspecialchars($cat->name) ?>
-                </label>
-                <input type="checkbox" class="field__input" id="cat-<?= $cat->id ?>" name="category_ids[]"
-                  value="<?= $cat->id ?>" <?= in_array($cat->id, $post->category_ids ?? []) ? 'checked' : '' ?>>
-              </div>
+                <div>
+                  <div class="be-block-btn__name">
+                    <?= $bt['label'] ?>
+                  </div>
+                </div>
+              </button>
             <?php endforeach; ?>
           </div>
         </div>
-      </fieldset>
-    </div>
 
-    <!-- Card: SEO -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">SEO</legend>
-          <p class="field__description">Để trống để tự động lấy từ nội dung.</p>
-        </div>
-        <hr class="separator">
-        <div class="card__content">
-          <div class="field-group">
-            <div class="field">
-              <label class="field__label" for="seo_title">Tiêu đề SEO</label>
-              <input id="seo_title" class="field__input" type="text" name="seo_title" maxlength="255"
-                value="<?= htmlspecialchars($post->seo_title ?? '') ?>">
-            </div>
-            <div class="field">
-              <label class="field__label" for="seo_desc">Mô tả SEO</label>
-              <textarea id="seo_desc" class="field__input" name="seo_desc" maxlength="500" rows="3"
-                placeholder="Để trống: tự lấy từ paragraph đầu tiên"><?= htmlspecialchars($post->seo_desc ?? '') ?></textarea>
+        <!-- Tab: Cấu trúc -->
+        <div id="be-list-view-panel" class="tabs__panel" data-tabs-panel="be-list-view-panel" role="tabpanel">
+          <div id="be-list-view-panel-empty-hint" class="empty">
+            <div class="empty__header">
+              <div class="empty__media">
+                <i class="fa-solid fa-cubes"></i>
+              </div>
+              <div class="empty__title">
+                Chưa có tiêu đề nào trong bài viết.
+              </div>
+              <div class="empty__description">
+                Nhấn "Thêm tiêu đề" để tạo cấu trúc mới.
+              </div>
             </div>
           </div>
         </div>
-      </fieldset>
+      </div>
+      <!-- END: LEFT PANEL -->
     </div>
 
-  </div>
-</form>
+    <!-- ════ CANVAS ════ -->
+    <div id="be-canvas-wrap">
+      <div id="be-canvas">
 
-<!-- ── Confirm Modal ──────────────────────────────────────────────────────── -->
-<div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h2 class="modal__title">Xác nhận lưu bài viết</h2>
-    <p class="modal__description">Kiểm tra lại nội dung trước khi lưu.</p>
+        <!-- Tiêu đề bài viết hiển thị trên canvas như trang public -->
+        <div class="be-canvas-title-area">
+          <h1 contenteditable="true" id="be-canvas-title" class="be-canvas-title">
+            <?= $oldTitle ? htmlspecialchars($oldTitle) : 'Tiêu đề bài viết' ?>
+          </h1>
+          <div class="be-canvas-meta">
+            <div class="be-canvas-meta__info">
+              <i class="fa-regular fa-user"></i>
+              Ban biên tập
+            </div>
+            <div class="be-canvas-meta__info">
+              <i class="fa-regular fa-calendar"></i>
+              <?= date('d/m/Y') ?>
+            </div>
+            <div class="be-canvas-meta__info">
+              <i class="fa-regular fa-clock"></i>
+              5 phút đọc
+            </div>
+            <div class="be-canvas-meta__info">
+              <i class="fa-regular fa-eye"></i>
+              100 lượt xem
+            </div>
+          </div>
+        </div>
+
+        <hr class="separator">
+
+        <!-- Danh sách block -->
+        <div id="be-block-list">
+          <!-- Empty state -->
+          <div id="be-canvas-empty-hint" class="empty">
+            <div class="empty__header">
+              <div class="empty__media">
+                <i class="fa-solid fa-feather"></i>
+              </div>
+              <div class="empty__title">
+                Bắt đầu soạn thảo
+              </div>
+              <div class="empty__description">
+                Chọn block từ panel bên trái để thêm nội dung.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /be-canvas-wrap -->
+
+    <!-- ════ START: RIGHT PANEL ════ -->
+    <!-- Tabs -->
+    <div id="be-right" class="be-panel" data-tabs data-tabs-id="be-right-panel"
+      data-tabs-panel-active="be-post-settings-panel" data-tabs-sync="false">
+      <div class="tabs__list be-panel__tabs-list" role="tablist">
+        <button type="button" class="be-panel__tabs-trigger be-right-tab" data-tabs-trigger="be-post-settings-panel">Bài
+          viết</button>
+        <button type="button" class="be-panel__tabs-trigger be-right-tab active"
+          data-tabs-trigger="be-block-settings-panel">Block</button>
+      </div>
+
+      <div class="be-panel__content">
+        <!-- Tab: Block settings -->
+        <div class="tabs__panel" data-tabs-panel="be-block-settings-panel" role="tabpanel" id="be-block-settings-panel">
+          <div id="be-block-settings-panel-empty-hint" class="empty">
+            <div class="empty__header">
+              <div class="empty__media">
+                <i class="fa-regular fa-square"></i>
+              </div>
+              <div class="empty__title">
+                Chưa chọn block
+              </div>
+              <div class="empty__description">
+                Chọn một block trong canvas để chỉnh sửa thuộc tính.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Post settings -->
+        <div class="tabs__panel" data-tabs-panel="be-post-settings-panel" role="tabpanel" id="be-post-settings-panel">
+          <div class="field-group">
+            <div class="field">
+              <span class="field__label">Tiêu đề SEO</span>
+              <input type="text" class="be-settings-input" name="seo_title"
+                value="<?= htmlspecialchars($post->seo_title ?? '') ?>" placeholder="Để trống: dùng tiêu đề bài viết"
+                maxlength="255">
+            </div>
+
+            <div class="field">
+              <span class="field__label">Tác giả</span>
+              <select class="be-settings-select" id="be-status-select" name="">
+                <option value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>Nháp</option>
+                <option value="published" <?= $oldStatus === 'published' ? 'selected' : '' ?>>Xuất bản</option>
+                <option value="archived" <?= $oldStatus === 'archived' ? 'selected' : '' ?>>Lưu trữ</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <span class="field__label">Trạng thái</span>
+              <select class="be-settings-select" id="be-status-select" name="">
+                <?php foreach (($categories ?? []) as $cat): ?>
+                  <div class="be-toggle-row">
+                    <input type="checkbox" id="cat-<?= $cat->id ?>" name="category_ids[]" value="<?= $cat->id ?>"
+                      <?= in_array($cat->id, $post->category_ids ?? []) ? 'checked' : '' ?>>
+                    <label class="be-toggle-label" for="cat-<?= $cat->id ?>" style="cursor:pointer">
+                      <?= htmlspecialchars($cat->name) ?>
+                    </label>
+                  </div>
+                <?php endforeach; ?>
+                <?php if (empty($categories)): ?>
+                  <div class="be-settings-hint">Chưa có danh mục nào.</div>
+                <?php endif; ?>
+                <option value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>Nháp</option>
+                <option value="published" <?= $oldStatus === 'published' ? 'selected' : '' ?>>Xuất bản</option>
+                <option value="archived" <?= $oldStatus === 'archived' ? 'selected' : '' ?>>Lưu trữ</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <span class="field__label">Slug</span>
+              <input type="text" class="be-settings-input" id="be-slug-input" value="<?= htmlspecialchars($oldSlug) ?>"
+                placeholder="duong-dan-bai-viet">
+              <div class="be-settings-hint">Tự sinh từ tiêu đề. Chỉnh tay nếu cần.</div>
+            </div>
+
+            <div class="field">
+              <span class="field__label">Danh mục</span>
+              <?php foreach (($categories ?? []) as $cat): ?>
+                <div class="be-toggle-row">
+                  <input type="checkbox" id="cat-<?= $cat->id ?>" name="category_ids[]" value="<?= $cat->id ?>"
+                    <?= in_array($cat->id, $post->category_ids ?? []) ? 'checked' : '' ?>>
+                  <label class="be-toggle-label" for="cat-<?= $cat->id ?>" style="cursor:pointer">
+                    <?= htmlspecialchars($cat->name) ?>
+                  </label>
+                </div>
+              <?php endforeach; ?>
+              <?php if (empty($categories)): ?>
+                <div class="be-settings-hint">Chưa có danh mục nào.</div>
+              <?php endif; ?>
+            </div>
+
+            <div class="field">
+              <span class="field__label">Mô tả</span>
+              <textarea class="be-settings-textarea" rows="3" name="seo_desc"
+                placeholder="Để trống: tự lấy từ đoạn văn đầu tiên"
+                maxlength="500"><?= htmlspecialchars($post->seo_desc ?? '') ?></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ════ END: RIGHT PANEL ════ -->
+
   </div>
-  <div class="modal__footer">
-    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">
-      Hủy
-    </button>
-    <button id="confirm-submit-btn" data-variant="primary" data-size="lg" class="btn" type="button">
-      Xác nhận
-    </button>
-  </div>
-  <button class="modal__close" type="button" data-modal-close>
-    <i class="fa-solid fa-xmark"></i>
-  </button>
+  <!-- ════ END: BODY ════ -->
 </div>
 
-<!-- ── Scripts ────────────────────────────────────────────────────────────── -->
-<!--
-  Load order (dnd.js đã được layout admin include sẵn):
-  1. block_registry.js  — phải đầu tiên (các module khác dùng BlockRegistry)
-  2. block_item.js      — dùng BlockRegistry
-  3. block_list.js      — dùng BlockItem + Sortable (từ dnd.js)
-  4. block_toolbar.js   — dùng BlockList + BlockRegistry
-  5. block_serializer.js — dùng BlockList + BlockRegistry
--->
-<script src="<?= url('public/js/editor/block_registry.js') ?>"></script>
-<script src="<?= url('public/js/editor/block_item.js') ?>"></script>
-<script src="<?= url('public/js/editor/block_list.js') ?>"></script>
-<script src="<?= url('public/js/editor/block_toolbar.js') ?>"></script>
-<script src="<?= url('public/js/editor/block_serializer.js') ?>"></script>
+<!-- /block-editor-shell -->
+
+<!-- ════════════════════════════════════════════════════════════
+     FORM SUBMIT (ẩn, không hiển thị)
+════════════════════════════════════════════════════════════ -->
+<form id="be-post-form" action="<?= $formAction ?>" method="POST" style="display:none">
+  <?php if ($isEdit): ?><input type="hidden" name="_method" value="PUT"><?php endif; ?>
+  <input type="hidden" name="content_json" id="be-content-json-input">
+  <input type="hidden" name="title" id="be-title-hidden">
+  <input type="hidden" name="slug" id="be-slug-hidden">
+  <input type="hidden" name="status" id="be-status-hidden">
+  <input type="hidden" name="seo_title" id="be-seo-title-hidden">
+  <input type="hidden" name="seo_desc" id="be-seo-desc-hidden">
+  <input type="hidden" name="author_id" id="be-show-author-hidden">
+  <input type="hidden" name="published_at" id="be-show-date-hidden">
+  <input type="hidden" name="read_time" id="be-show-readtime-hidden">
+  <input type="hidden" name="view_count" id="be-views-hidden">
+</form>
+
+<!-- ════════════════════════════════════════════════════════════
+     SCRIPTS
+     Load order:
+       1. block_registry.js   — types, renderPreview, renderSettings
+       2. block_editor.js     — core state + canvas + panels
+       3. block_serializer.js — serialize → form submit
+════════════════════════════════════════════════════════════ -->
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('be-toggle-left')?.addEventListener('click', () => {
+      document.getElementById('be-left')?.classList.toggle('collapsed');
+    });
+    document.getElementById('be-toggle-right')?.addEventListener('click', () => {
+      document.getElementById('be-right')?.classList.toggle('collapsed');
+    });
 
-    // ── Khởi tạo DnD manager (dùng chung pattern như carousel) ───────────────
-    const manager = new DragDropManager();
+    /* ── Khởi tạo Core ──────────────────────────────────────── */
+    const core = PageCore.create();
 
-    // ── Khởi tạo BlockList ────────────────────────────────────────────────────
-    const containerEl = document.querySelector('#block-list-container');
-    const blockList = createBlockList(containerEl, manager);
+    core.hydrate({
+      blocks: window.__initialBlocks__ ?? [],
+      meta: window.__initialMeta__ ?? {},
+    });
 
-    // ── Khởi tạo BlockToolbar và mount vào header ─────────────────────────────
-    const toolbar = createBlockToolbar(blockList);
-    const toolbarMount = document.querySelector('#block-toolbar-mount');
-    toolbarMount.appendChild(toolbar.el);
+    /* ── Khởi tạo DnD manager (dnd.js load sẵn trong layout) ── */
+    const dndManager = new DragDropManager();
 
-    // ── Hydrate blocks trong edit mode ────────────────────────────────────────
-    const initialBlocks = window.__initialBlocks__ ?? [];
-    if (initialBlocks.length > 0) {
-      // Sắp xếp theo order trước khi hydrate để đúng thứ tự
-      initialBlocks
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-        .forEach(block => {
-          if (BlockRegistry.has(block.type)) {
-            // Truyền _id để giữ nguyên id gốc (quan trọng cho việc track orphan media sau này)
-            blockList.add(block.type, { ...block.data, _id: block.id });
-          }
-        });
+    /* Lắng nghe dragend từ dnd.js → reorder core state */
+    dndManager.monitor.addEventListener('dragend', (e) => {
+      if (e.canceled || !isSortable(e.operation.source)) return;
+      /* Đọc thứ tự DOM hiện tại sau khi drag */
+      const orderedIds = [...document.querySelectorAll('.be-block-card')]
+        .map(el => el.dataset.id)
+        .filter(Boolean);
+      core.reorderBlocks(orderedIds);
+    });
+
+    /* ── Khởi tạo UI ─────────────────────────────────────────── */
+    EditorUI.init(core, dndManager, {
+      isEdit: window.__isEdit__,
+    });
+
+    /* ── Serializer ──────────────────────────────────────────── */
+    BlockSerializer.attachToForm(
+      document.getElementById('be-post-form'),
+      core,
+      {
+        contentJson: 'be-content-json-input',
+        title: 'be-title-hidden',
+        slug: 'be-slug-hidden',
+        status: 'be-status-hidden',
+        seoTitle: 'be-seo-title-hidden',
+        seoDesc: 'be-seo-desc-hidden',
+        authorId: 'be-show-author-hidden',
+        publishedAt: 'be-show-date-hidden',
+        readTime: 'be-show-readtime-hidden',
+        views: 'be-views-hidden',
+      }
+    );
+
+    /* ── Submit buttons ──────────────────────────────────────── */
+    function submit(overrideStatus) {
+      if (overrideStatus) {
+        document.getElementById('be-status-select').value = overrideStatus;
+      }
+      document.getElementById('be-post-form').requestSubmit();
     }
+    document.getElementById('be-save-btn')?.addEventListener('click', () => submit(null));
+    document.getElementById('be-publish-btn')?.addEventListener('click', () => submit('published'));
 
-    // ── Slug auto-generate từ title ───────────────────────────────────────────
-    const titleInput = document.querySelector('#title');
-    const slugInput = document.querySelector('#slug');
-    let slugManuallyEdited = <?= $isEdit ? 'true' : 'false' ?>; // edit mode: không ghi đè slug
+    <?php if ($isEdit): ?>
+      document.getElementById('be-preview-btn')?.addEventListener('click', () => {
+        window.open('<?= url("posts/{$post->slug}") ?>', '_blank');
+      });
+    <?php endif; ?>
 
-    titleInput.addEventListener('input', function () {
-      if (slugManuallyEdited) return;
-      slugInput.value = this.value
-        .toLowerCase().trim()
-        .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
-        .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
-        .replace(/[ìíịỉĩ]/g, 'i')
-        .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
-        .replace(/[ùúụủũưừứựửữ]/g, 'u')
-        .replace(/[ỳýỵỷỹ]/g, 'y')
-        .replace(/đ/g, 'd')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-    });
-
-    // Nếu user tự sửa slug thì không ghi đè nữa
-    slugInput.addEventListener('input', () => { slugManuallyEdited = true; });
-
-    // ── Gắn Serializer vào form ───────────────────────────────────────────────
-    const formEl = document.querySelector('#post-form');
-    const hiddenInput = document.querySelector('#content-json-input');
-
-    BlockSerializer.attachToForm(formEl, blockList, hiddenInput, {
-      onValidate(blocks) {
-        // Kiểm tra tất cả heading block phải có text
-        const emptyHeading = blocks.find(b => b.type === 'heading' && !b.data.text?.trim());
-        if (emptyHeading) {
-          alert('Có block Tiêu đề chưa được điền nội dung.');
-          return false;
-        }
-        return true;
-      },
-    });
-
-    // ── Submit qua confirm modal ──────────────────────────────────────────────
-    document.querySelector('#confirm-submit-btn').addEventListener('click', () => {
-      formEl.requestSubmit(); // trigger submit event (để serializer chạy) rồi submit
+    /* ── Cleanup ─────────────────────────────────────────────── */
+    window.addEventListener('beforeunload', () => {
+      document.body.classList.remove('block-editor-active');
     });
   });
 </script>
