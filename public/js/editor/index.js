@@ -10,3 +10,5 @@ registry.register(QuoteSchema, QuoteBlock);
 
 const manager = new EditorManager();
 manager.init();
+
+window.BeEditor = manager;

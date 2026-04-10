@@ -2,6 +2,12 @@
    BLOCK EDITOR — Gutenberg-style 3-column layout
    Khi editor active, nó override toàn bộ layout admin
    ============================================================= */
+:root {
+  --topbar-height: 3rem;
+
+  --left-panel-width: 15rem;
+  --right-panel-width: 20rem;
+}
 
 [contenteditable="true"]:focus {
   outline: none;
@@ -36,10 +42,14 @@
    TOPBAR
    ============================================================= */
 #be-topbar {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 3rem;
+  height: var(--topbar-height);
+  background: var(--background);
   padding: 0 1rem;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -83,22 +93,6 @@
   color: var(--be-text-muted, #9a9a97);
 }
 
-.be-status-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 100px;
-  border: 0.5px solid var(--be-border, rgba(0, 0, 0, 0.1));
-  color: var(--be-text-muted, #9a9a97);
-  background: var(--be-surface-2, #f5f5f3);
-  font-weight: 400;
-}
-
-.be-status-badge.published {
-  color: #166534;
-  background: #dcfce7;
-  border-color: #bbf7d0;
-}
-
 /* =============================================================
    BODY — 3 columns
    ============================================================= */
@@ -106,27 +100,62 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  background: #f0efeb;
 }
 
 /* =============================================================
    PANELS
    ============================================================= */
-.be-panel {
-  display: flex;
-  flex-direction: column;
-  width: 15rem;
-  box-shadow: var(--shadow-sm);
+.be-panel__wrapper {
   transition: all 0.2s ease;
 }
 
-#be-right {
-  width: 20rem;
+.be-panel__gap {
+  position: relative;
+  width: var(--left-panel-width);
+  transition: width 200ms ease;
 }
 
-#be-left[data-be-panel-state="collapsed"],
+.be-panel__gap:has(+ #be-right) {
+  width: var(--right-panel-width);
+}
+
+.be-panel {
+  width: var(--left-panel-width);
+  max-width: var(--left-panel-width);
+  height: 100svh;
+  position: fixed;
+  top: var(--topbar-height);
+  z-index: 10;
+  left: 0;
+  transition: left 200ms ease;
+  border-left: 1px solid var(--border);
+  background: var(--background);
+}
+
+#be-right {
+  width: var(--right-panel-width);
+  max-width: var(--right-panel-width);
+  left: unset;
+  right: 0;
+  border-left: unset;
+  border-right: 1px solid var(--border);
+  transition: right 200ms ease;
+}
+
+#be-left[data-be-panel-state="collapsed"] {
+  left: calc(-1 * var(--left-panel-width));
+}
+
 #be-right[data-be-panel-state="collapsed"] {
-  transform: translateX(-100%);
-  overflow: hidden;
+  right: calc(-1 * var(--right-panel-width));
+}
+
+.be-panel__wrapper:has(#be-left[data-be-panel-state="collapsed"])
+  .be-panel__gap,
+.be-panel__wrapper:has(#be-right[data-be-panel-state="collapsed"])
+  .be-panel__gap {
+  width: 0;
 }
 
 .be-panel__tabs-list {
@@ -202,8 +231,8 @@
 #be-canvas-wrap {
   flex: 1;
   overflow-y: auto;
+  margin-top: var(--topbar-height);
   padding: 1rem 2rem;
-  background: var(--be-canvas-bg, #f0efeb);
   display: flex;
   flex-direction: column;
   align-items: center;

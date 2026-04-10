@@ -53,18 +53,23 @@ export class EditorManager {
   #toolbar;
   /** @type {EditorListView} */
   #listView;
+  /** @type {EditorCanvasMetadata} */
+  #metadata;
 
   #blockList;
   #canvas;
   #activeBlockId;
   #isEmpty;
+  #isDirty;
 
-  constructor() {
+  constructor(initialMetaData = {}) {
     this.#bus = new EditorEventBus();
 
-    // Khởi tạo UI và Canvas
-    this.#ui = new EditorUI(this.#bus);
+    // Khởi tạo
+    this.#metadata = new EditorCanvasMetadata(this.#bus, initialMetaData);
     this.#canvas = new EditorCanvas(this.#bus);
+
+    this.#ui = new EditorUI(this.#bus);
     this.#toolbar = new EditorBlockToolbar(this.#bus, this.#canvas);
     this.#listView = new EditorListView(this.#bus, this.#canvas);
 
@@ -74,6 +79,7 @@ export class EditorManager {
     // Khởi tạo các State
     this.#activeBlockId = "";
     this.#isEmpty = true;
+    this.#isDirty = false;
 
   }
 
@@ -89,8 +95,6 @@ export class EditorManager {
 
     this.#initialRender();
     this.#initCanvas();
-    this.#initLeftPanel();
-    this.#initPanelToggle();
 
     this.#initKeyboardShortcuts();
 
@@ -138,27 +142,6 @@ export class EditorManager {
       if (this.#activeBlockId !== clickedId) {
         this.#bus.dispatch('block:selected', { blockId: clickedId });
       }
-    });
-  }
-
-  /**
-   * Khởi tạo left panel - block inventory
-   */
-  #initLeftPanel() {
-    document.querySelectorAll('[data-add-block]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.#canvas.addBlock(btn.dataset.addBlock);
-        console.log(this.#canvas.getBlocks());
-      });
-    });
-  }
-
-  #initPanelToggle() {
-    document.getElementById('be-toggle-left')?.addEventListener('click', () => {
-      document.getElementById('be-left')?.classList.toggle('collapsed');
-    });
-    document.getElementById('be-toggle-right')?.addEventListener('click', () => {
-      document.getElementById('be-right')?.classList.toggle('collapsed');
     });
   }
 
@@ -258,22 +241,18 @@ export class EditorManager {
       this.#activeBlockId = "";
     }
   }
+
+  getPayload() {
+    return {
+      meta: this.#metadata.getData(),
+      blocks: this.#canvas.getBlocks().map(block => block.data)
+    };
+  }
 }
 /** Quản lý các block hiện tại trong trang */
 class EditorCanvas {
   /** @type {EditorEventBus} */
   #bus;
-  #metadata = {
-    showAuthor: true,
-    showPublishDate: true,
-    showReadTime: true,
-    showViews: true,
-
-    author: null,
-    publishDate: null,
-    readTime: 0,
-    views: 0,
-  };
   /** 
    * @type {EditorBlock[]}
    * @private
@@ -282,13 +261,6 @@ class EditorCanvas {
 
   constructor(bus) {
     this.#bus = bus;
-  }
-
-  // ===========================
-  // Metadata API
-  // ===========================
-  getMeta() {
-    return { ...this.#metadata };
   }
 
   /**
@@ -451,7 +423,65 @@ class EditorCanvas {
 }
 /** Lưu các metadata */
 class EditorCanvasMetadata {
+  /** @type {EditorEventBus} */
+  #bus;
 
+  #data = {
+    title: '',
+    excerpt: '',
+    author_id: null,
+    status: 'draft',
+    category_ids: [],
+    featured_image: null,
+    showAuthor: true,
+    showPublishDate: true,
+    showReadTime: true
+  };
+
+  /**
+   * @param {EditorEventBus} bus 
+   * @param {object} initialData - Dữ liệu khởi tạo
+   */
+  constructor(bus, initialData = {}) {
+    this.#bus = bus;
+
+    this.#data = { ...this.#data, ...initialData };
+
+    this.#initEvents();
+  }
+
+  #initEvents() {
+    this.#bus.subscribe('meta:update_request', ({ key, value }) => {
+      this.setData(key, value);
+    });
+  }
+
+  /**
+   * Cập nhật một trường dữ liệu Meta cụ thể
+   * @param {string} key - Tên trường (ví dụ: 'title', 'status')
+   * @param {any} value - Giá trị mới
+   */
+  setData(key, value) {
+    if (this.#data[key] !== value) {
+      this.#data[key] = value;
+
+      console.log(`[EditorCanvasMetadata] Đã cập nhật "${key}":`, value);
+
+      this.#bus.dispatch('meta:updated', {
+        key,
+        value,
+        allMeta: this.getData()
+      });
+    }
+  }
+
+  /**
+   * Lấy toàn bộ dữ liệu Meta (Dùng khi lưu bài viết)
+   * Dùng spread operator để tránh bị tham chiếu (mutate) từ bên ngoài
+   */
+  getData() {
+    return { ...this.#data };
+  }
 }
 /** Bọc 1 block với drag handle */
 class EditorBlockWrapper {

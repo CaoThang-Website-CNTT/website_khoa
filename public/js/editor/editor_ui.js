@@ -3,24 +3,135 @@ import { EditorBlock } from './blocks/editor_block.js';
 
 /** Quản lý UI */
 export class EditorUI {
-  /**@type {BlockInspector} */
+  /** @type {BlockInspector} */
   #inspector;
-  /**@type {EditorEventBus} */
+  /** @type {EditorEventBus} */
   #bus;
+  /** @type {EditorCanvas} */
+  #canvas;
 
-  constructor(bus) {
+  constructor(bus, canvas) {
     this.#bus = bus;
+    this.#canvas = canvas;
     this.#inspector = new BlockInspector();
 
     // Tham chiếu các phần tử DOM
     this.leftPanel = document.querySelector('#be-left');
     this.rightPanel = document.querySelector('#be-right');
+
     this.blockSettingsPanel = document.querySelector("#be-block-settings-panel");
+    this.postSettingsPanel = document.querySelector("#be-post-settings-panel");
+
     this.canvasContainer = document.querySelector('#be-block-list');
 
     // Khởi tạo trạng thái UI
     this.leftPanelCollapsed = false;
     this.rightPanelCollapsed = false;
+
+    this.#initPanels();
+    this.#initPanelToggle();
+    this.#initMetaUIEvents();
+  }
+  /**
+ * Khởi tạo 2 panel
+ * Left panel - block inventory
+ */
+  #initPanels() {
+    document.querySelectorAll('[data-add-block]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.#canvas.addBlock(btn.dataset.addBlock);
+        console.log(this.#canvas.getBlocks());
+      });
+    });
+  }
+
+  #initPanelToggle() {
+    document.getElementById('be-toggle-left')?.addEventListener('click', () => {
+      const panelState = this.leftPanel?.dataset.bePanelState;
+      this.leftPanel?.setAttribute("data-be-panel-state", panelState === "collapsed" ? "open" : "collapsed");
+    });
+    document.getElementById('be-toggle-right')?.addEventListener('click', () => {
+      const panelState = this.rightPanel?.dataset.bePanelState;
+      this.rightPanel?.setAttribute("data-be-panel-state", panelState === "collapsed" ? "open" : "collapsed");
+    });
+  }
+
+  #initMetaUIEvents() {
+    const titleInput = document.querySelector('#be-canvas-title');
+    const authorSelect = document.querySelector('#be-author-select');
+    const statusSelect = document.querySelector('#be-status-select');
+    const excerptInput = document.querySelector('#be-excerpt-input');
+
+    if (titleInput) {
+      titleInput.addEventListener('input', (e) => {
+        const newTitle = e.target.innerText.trim();
+        this.#bus.dispatch('meta:update_request', { key: 'title', value: newTitle });
+      });
+
+      titleInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+        }
+      });
+    }
+
+    if (authorSelect) {
+      authorSelect.addEventListener('change', (e) => {
+        this.#bus.dispatch('meta:update_request', { key: 'author_id', value: e.target.value });
+      });
+    }
+
+    if (statusSelect) {
+      statusSelect.addEventListener('change', (e) => {
+        this.#bus.dispatch('meta:update_request', { key: 'status', value: e.target.value });
+      });
+    }
+
+    if (excerptInput) {
+      excerptInput.addEventListener('input', (e) => {
+        this.#bus.dispatch('meta:update_request', { key: 'excerpt', value: e.target.value });
+      });
+    }
+
+    this.#bus.subscribe('meta:updated', ({ key, value }) => {
+      this.#syncMetaUIToState(key, value);
+    });
+
+    if (this.tabPostBtn && this.tabBlockBtn) {
+      this.tabPostBtn.addEventListener('click', () => this.switchRightTab('post'));
+      this.tabBlockBtn.addEventListener('click', () => this.switchRightTab('block'));
+    }
+  }
+
+  #syncMetaUIToState(key, value) {
+    if (key === 'author_id') {
+      const select = document.querySelector('#be-author-select');
+      if (select && select.value !== String(value)) select.value = value;
+    }
+    if (key === 'status') {
+      const select = document.querySelector('#be-status-select');
+      if (select && select.value !== value) select.value = value;
+    }
+    if (key === 'title') {
+      const postTitle = document.querySelector('#be-post-title');
+      postTitle.innerText = value || 'Không có tiêu đề';
+    }
+    if (key === 'excerpt') {
+      const excerptInput = document.querySelector('#be-excerpt-input');
+      if (excerptInput && excerptInput.value !== value) {
+        excerptInput.value = value || '';
+      }
+    }
+  }
+
+  switchRightTab(tabName) {
+    const targetPanelId = tabName === 'post' ? 'be-post-settings-panel' : 'be-block-settings-panel';
+
+    const targetBtn = document.querySelector(`.be-right-tab[data-tabs-trigger="${targetPanelId}"]`);
+
+    if (targetBtn) {
+      targetBtn.click();
+    }
   }
 
   toggleLeftPanel() {
@@ -38,6 +149,8 @@ export class EditorUI {
    * @param {EditorBlock} block 
    */
   renderSettingsPanel(block) {
+    this.switchRightTab('block');
+
     this.blockSettingsPanel.innerHTML = "";
     const schema = block.schema;
     const currentData = block.data;
@@ -69,6 +182,7 @@ export class EditorUI {
 
   clearSettingsPanel() {
     this.blockSettingsPanel.innerHTML = EditorEmptyState.rightBlockSettingsPanel.html;
+    this.switchRightTab('post');
   }
 
   showCanvasEmptyState() {
