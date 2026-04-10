@@ -98,32 +98,6 @@ $statusLabels = [
         <div class="be-panel__content">
           <!-- Tab: Blocks -->
           <div id="be-blocks-menu-panel" class="tabs__panel" data-tabs-panel="be-blocks-panel" role="tabpanel">
-
-            <div class="be-block-group">
-              <span class="be-block-group__label">Văn bản</span>
-
-              <?php
-              // Render block type buttons từ PHP — thực ra JS sẽ attach addBlock(),
-              // nhưng render HTML từ PHP để trang không bị flash khi JS chưa load.
-              $blockTypes = [
-                ['type' => 'blocks/heading', 'label' => 'Tiêu đề', 'icon' => '<i class="fa-solid fa-heading"></i>', 'desc' => 'H2, H3, H4'],
-                ['type' => 'blocks/paragraph', 'label' => 'Đoạn văn', 'icon' => '<i class="fa-solid fa-paragraph"></i>', 'desc' => 'Văn bản thuần'],
-                ['type' => 'blocks/quote', 'label' => 'Trích dẫn', 'icon' => '<i class="fa-solid fa-quote-left"></i>', 'desc' => 'Blockquote'],
-              ];
-              foreach ($blockTypes as $bt):
-                ?>
-                <button type="button" class="btn be-block-btn" data-variant="outline" data-add-block="<?= $bt['type'] ?>">
-                  <div class="be-block-btn__icon">
-                    <?= $bt['icon'] ?>
-                  </div>
-                  <div>
-                    <div class="be-block-btn__name">
-                      <?= $bt['label'] ?>
-                    </div>
-                  </div>
-                </button>
-              <?php endforeach; ?>
-            </div>
           </div>
 
           <!-- Tab: Cấu trúc -->

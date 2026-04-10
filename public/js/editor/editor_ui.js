@@ -1,5 +1,6 @@
 import { BlockInspector } from "./block_inspector.js";
 import { EditorBlock } from './blocks/editor_block.js';
+import { registry } from "./block_registry.js";
 
 /** Quản lý UI */
 export class EditorUI {
@@ -7,12 +8,9 @@ export class EditorUI {
   #inspector;
   /** @type {EditorEventBus} */
   #bus;
-  /** @type {EditorCanvas} */
-  #canvas;
 
-  constructor(bus, canvas) {
+  constructor(bus, registry) {
     this.#bus = bus;
-    this.#canvas = canvas;
     this.#inspector = new BlockInspector();
 
     // Tham chiếu các phần tử DOM
@@ -37,12 +35,56 @@ export class EditorUI {
  * Left panel - block inventory
  */
   #initPanels() {
-    document.querySelectorAll('[data-add-block]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.#canvas.addBlock(btn.dataset.addBlock);
-        console.log(this.#canvas.getBlocks());
+    const menuContainer = document.querySelector("#be-blocks-menu-panel");
+    menuContainer.innerHTML = '';
+
+    const fragment = document.createDocumentFragment();
+    const groupedBlocks = registry.getGrouped();
+
+    for (const [groupKey, groupData] of Object.entries(groupedBlocks)) {
+
+      const groupWrapper = document.createElement('div');
+      groupWrapper.className = 'be-block-group';
+
+      const groupLabel = document.createElement('span');
+      groupLabel.className = 'be-block-group__label';
+      groupLabel.textContent = groupData.label;
+      groupWrapper.appendChild(groupLabel);
+
+      groupData.items.forEach(schema => {
+        const blockBtn = document.createElement('button');
+        blockBtn.type = 'button';
+        blockBtn.className = 'btn be-block-btn';
+        blockBtn.setAttribute('data-variant', 'outline');
+
+        blockBtn.setAttribute('data-add-block', schema.name);
+
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'be-block-btn__icon';
+        iconDiv.innerHTML = schema.icon;
+
+        const textWrapper = document.createElement('div');
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'be-block-btn__name';
+        nameDiv.textContent = schema.title;
+
+        textWrapper.appendChild(nameDiv);
+
+        blockBtn.appendChild(iconDiv);
+        blockBtn.appendChild(textWrapper);
+
+        blockBtn.addEventListener('click', () => {
+          this.#bus.dispatch("block:add_request", { type: blockBtn.dataset.addBlock })
+        });
+
+        groupWrapper.appendChild(blockBtn);
       });
-    });
+
+      fragment.appendChild(groupWrapper);
+    }
+
+    menuContainer.appendChild(fragment);
   }
 
   #initPanelToggle() {

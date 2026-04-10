@@ -87,6 +87,7 @@ export class EditorManager {
 
     // Subscribe manager events
     this.#bus.subscribe('block:selected', (block) => this.#onBlockSelected(block));
+    this.#bus.subscribe('block:add_request', (block) => this.#onBlockAddRequested(block));
     this.#bus.subscribe('block:added', (block) => this.#onBlockAdded(block));
     this.#bus.subscribe('block:update_request', (block) => this.#onBlockUpdateRequested(block));
     this.#bus.subscribe('block:updated', (block) => this.#onBlockUpdated(block));
@@ -168,6 +169,9 @@ export class EditorManager {
     })
   }
 
+  #onBlockAddRequested({ type }) {
+    this.#canvas.addBlock(type);
+  }
 
   #onBlockSelected({ blockId }) {
     this.#activeBlockId = blockId;
