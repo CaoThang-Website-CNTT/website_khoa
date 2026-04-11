@@ -1,194 +1,117 @@
-/**
- * EditorBlockToolbar (Block-Driven Architecture)
- *
- * Chỉ chịu trách nhiệm:
- * 1. Nhận sự kiện 'block:handle_click' -> Hiện nút Xóa block.
- * 2. Nhận sự kiện 'toolbar:request_dynamic' -> Hiện các nút do Block TỰ ĐỊNH NGHĨA.
- * 3. Bấm nút -> Đẩy ngược (delegate) action về cho Block đó xử lý.
- */
 export class EditorBlockToolbar {
-  /** @type {EditorEventBus} */
   #bus;
-  /** @type {EditorCanvas} */
-  #canvas;
-  /** @type {HTMLElement} */
-  #portalEl;
-  /** @type {HTMLElement} */
-  #toolbarBox;
-  /** @type {HTMLElement} */
+  #root;
+  #virtualTrigger;
   #dynamicArea;
-
   #currentBlock = null;
+  /** Lưu lại context (row/col index) */
+  #currentSelection = null;
+  #separator;
+  #deleteBtn;
 
-  #anchorEl = null;
+  static DROPDOWN_ID = 'be-block-toolbar';
 
-  #dynamicCtx = null;
-
-  #offset = 8;
-
-  constructor(bus, canvas) {
+  constructor(bus) {
     this.#bus = bus;
-    this.#canvas = canvas;
-    this.#createPortal();
-    this.#initEvents();
+    this.#buildDOM();
+    this.#setupListeners();
   }
 
-  // ─── Portal ───────────────────────────────────────────────────
+  #buildDOM() {
+    this.#root = document.createElement('div');
+    this.#root.className = 'dropdown';
+    this.#root.dataset.dropdownId = EditorBlockToolbar.DROPDOWN_ID;
 
-  #createPortal() {
-    this.#portalEl = document.createElement('div');
-    this.#portalEl.id = 'be-toolbar-portal';
-    this.#portalEl.className = 'be-toolbar-overlay';
-
-    Object.assign(this.#portalEl.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100vw',
-      height: '100vh',
-      display: 'none',
-      zIndex: '9999',
-      backgroundColor: 'transparent',
-      pointerEvents: 'none',
-    });
-
-    this.#portalEl.innerHTML = `
-      <div class="be-toolbar" style="position: absolute; pointer-events: all;">
-        <div class="be-toolbar__inner">
-          <div class="be-toolbar__group" id="be-toolbar-dynamic-area"></div>
-          
-          <div class="be-toolbar__group" id="be-toolbar-block-actions">
-            <button class="be-toolbar__btn" data-be-toolbar-action="remove-block" title="Xóa block">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
-          </div>
-        </div>
+    this.#root.innerHTML = `
+      <div class="dropdown__trigger" 
+          data-dropdown-trigger-mode="click" 
+          style="position: fixed; pointer-events: none; opacity: 0; visibility: hidden; width: 24px; height: 24px;">
       </div>
+      
+        <div class="dropdown__content be-toolbar">
+      
+      <div id="be-toolbar-dynamic-slot" class="be-toolbar__dynamic-area"></div>
+      
+      <div class="be-toolbar__separator"></div>
+      
+      <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="remove">
+        <i class="fa-solid fa-trash-can"></i>
+        <span class="dropdown__item-label">Xóa Block</span>
+      </button>
+    </div>
     `;
 
-    this.#dynamicArea = this.#portalEl.querySelector('#be-toolbar-dynamic-area');
-    this.#toolbarBox = this.#portalEl.querySelector('.be-toolbar');
-    document.body.appendChild(this.#portalEl);
+    document.body.appendChild(this.#root);
+
+    this.#virtualTrigger = this.#root.querySelector('.dropdown__trigger');
+    this.#dynamicArea = this.#root.querySelector('#be-toolbar-dynamic-slot');
+    this.#separator = this.#root.querySelector('.be-toolbar__separator');
+    this.#deleteBtn = this.#root.querySelector('[data-action="remove"]');
+
+    DropdownHandler.instance.register(this.#root);
   }
 
-  #initEvents() {
-    this.#bus.subscribe('block:handle_click', ({ blockId }) => {
-      const block = this.#canvas.getBlock(blockId);
-      if (!block) return;
-      this.#showBlockMode(block);
+  #setupListeners() {
+    this.#bus.subscribe('toolbar:toggle', ({ block, anchorEl, selection, hideDefault }) => {
+      this.toggle(block, anchorEl, selection, hideDefault);
     });
 
-    this.#bus.subscribe('toolbar:request_dynamic', ({ block, anchorEl, controls, context }) => {
-      this.#currentBlock = block;
-      this.#showDynamicMode({ anchorEl, controls, context });
-    });
+    this.#root.addEventListener('dropdown:select', (e) => {
+      const { item } = e.detail;
+      const action = item.dataset.action;
 
-    this.#bus.subscribe('toolbar:hide_dynamic', () => {
-      this.hide();
-    });
-
-    this.#toolbarBox.addEventListener('mousedown', (e) => {
-      const btn = e.target.closest('button[data-be-toolbar-action]');
-      if (!btn) return;
-
-      e.preventDefault(); // Ngăn mất focus ở Canvas
-
-      const action = btn.dataset.beToolbarAction;
-      this.#handleAction(action);
-    });
-  }
-
-  #showBlockMode(block) {
-    this.#currentBlock = block;
-    this.#anchorEl = block.dom;
-    this.#dynamicCtx = null;
-
-    this.#dynamicArea.innerHTML = '';
-
-    this.#portalEl.style.display = 'block';
-    this.#updatePosition();
-  }
-
-  #showDynamicMode({ anchorEl, controls, context }) {
-    this.#anchorEl = anchorEl;
-    this.#dynamicCtx = context; // Lưu lại ngữ cảnh (ví dụ: { row: 1, col: 2 })
-
-    this.#dynamicArea.innerHTML = '';
-
-    if (controls && controls.length > 0) {
-      this.#dynamicArea.appendChild(this.#buildDynamicActions(controls));
-    }
-
-    this.#portalEl.style.display = 'block';
-    this.#updatePosition();
-  }
-
-  #buildDynamicActions(controls) {
-    const fragment = document.createDocumentFragment();
-    const group = document.createElement('div');
-    group.className = 'be-toolbar__group';
-
-    controls.forEach(item => {
-      if (item.divider) {
-        const sep = document.createElement('div');
-        sep.className = 'be-toolbar__separator';
-        group.appendChild(sep);
-        return;
+      if (item.dataset.action === 'remove' && this.#currentBlock) {
+        this.#bus.dispatch('block:removed', { blockId: this.#currentBlock.id });
       }
-
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `be-toolbar__btn${item.danger ? ' be-toolbar__btn--danger' : ''}`;
-      btn.dataset.beToolbarAction = item.action;
-      btn.title = item.title;
-      btn.innerHTML = `<i class="${item.icon}"></i>`;
-      group.appendChild(btn);
     });
 
-    fragment.appendChild(group);
-    return fragment;
+    this.#dynamicArea.addEventListener('click', (e) => {
+      const item = e.target.closest('.dropdown__item');
+
+      if (!item || 'disabled' in item.dataset) return;
+
+      const action = item.dataset.action;
+
+      // Nếu là action của table, báo về cho Table xử lý
+      if (action && action.startsWith('table:') && this.#currentBlock) {
+        this.#currentBlock.handleToolbarAction(action, this.#currentSelection);
+
+        // Đóng dropdown sau khi xử lý xong
+        DropdownHandler.instance.close(EditorBlockToolbar.DROPDOWN_ID);
+      }
+    });
   }
 
-  #handleAction(action) {
-    if (action === 'remove-block') {
-      if (!this.#currentBlock) return;
-      this.#bus.dispatch('block:remove_request', { blockId: this.#currentBlock.id });
-      this.hide();
-      return;
+  /**
+   * Tính toán tọa độ và mở dropdown
+   */
+  toggle(block, anchorEl, selection = null, hideDefault = false) {
+    this.#currentBlock = block;
+    this.#currentSelection = selection;
+
+    if (hideDefault) {
+      this.#separator.style.display = 'none';
+      this.#deleteBtn.style.display = 'none';
+    } else {
+      this.#separator.style.display = '';
+      this.#deleteBtn.style.display = '';
     }
 
-    if (this.#currentBlock && typeof this.#currentBlock.handleToolbarAction === 'function') {
-      this.#currentBlock.handleToolbarAction(action, this.#dynamicCtx);
+    if (this.#currentBlock && typeof this.#currentBlock.getDynamicToolbar === 'function') {
+      const dynamicHTML = this.#currentBlock.getDynamicToolbar(this.#currentSelection);
+      this.#dynamicArea.innerHTML = dynamicHTML;
+      this.#dynamicArea.style.display = dynamicHTML ? 'block' : 'none';
+
+      DropdownHandler.instance.register(this.#root);
+    } else {
+      this.#dynamicArea.innerHTML = '';
+      this.#dynamicArea.style.display = 'none';
     }
-  }
 
-  #updatePosition() {
-    if (!this.#anchorEl || !this.#toolbarBox) return;
+    const rect = anchorEl.getBoundingClientRect();
+    this.#virtualTrigger.style.top = `${rect.top}px`;
+    this.#virtualTrigger.style.left = `${rect.left + rect.width}px`;
 
-    const anchorRect = this.#anchorEl.getBoundingClientRect();
-    const toolbarRect = this.#toolbarBox.getBoundingClientRect();
-    const offset = this.#offset;
-
-    const cannotFitAbove = anchorRect.top < (toolbarRect.height + offset);
-
-    const top = cannotFitAbove
-      ? anchorRect.bottom + offset
-      : anchorRect.top - toolbarRect.height - offset;
-
-    let left = anchorRect.left + (anchorRect.width / 2) - (toolbarRect.width / 2);
-    left = Math.max(offset, Math.min(left, window.innerWidth - toolbarRect.width - offset));
-
-    this.#toolbarBox.style.top = `${top}px`;
-    this.#toolbarBox.style.left = `${left}px`;
-  }
-
-  hide() {
-    this.#portalEl.style.display = 'none';
-    this.#dynamicCtx = null;
-    this.#anchorEl = null;
-  }
-
-  updatePosition() {
-    this.#updatePosition();
+    DropdownHandler.instance.open(EditorBlockToolbar.DROPDOWN_ID);
   }
 }

@@ -70,7 +70,7 @@ export class EditorManager {
     this.#canvas = new EditorCanvas(this.#bus);
 
     this.#ui = new EditorUI(this.#bus);
-    this.#toolbar = new EditorBlockToolbar(this.#bus, this.#canvas);
+    this.#toolbar = new EditorBlockToolbar(this.#bus);
     this.#listView = new EditorListView(this.#bus, this.#canvas);
 
     // Tham chiếu các phần tử DOM
@@ -132,12 +132,20 @@ export class EditorManager {
     });
 
     this.#blockList.addEventListener('click', (e) => {
-      // Tìm xem user có click vào bên trong một block-card nào không
       const card = e.target.closest('.be-block-card');
 
       if (!card) return; // Click ra ngoài không làm gì cả
 
       const clickedId = card.dataset.beBlockId;
+
+      const handle = e.target.closest('.be-drag-handle');
+
+      if (handle) {
+        const block = this.#canvas.getBlock(clickedId);
+        this.#bus.dispatch('toolbar:toggle', { block, anchorEl: handle });
+
+        return;
+      }
 
       // Nếu block này chưa được active thì mới dispatch
       if (this.#activeBlockId !== clickedId) {
@@ -504,15 +512,6 @@ class EditorBlockWrapper {
     handle.className = 'be-drag-handle';
     handle.title = 'Kéo để sắp xếp';
     handle.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
-
-    handle.addEventListener('click', (e) => {
-      e.stopPropagation();
-
-      bus.dispatch('block:handle_click', {
-        blockId: block.id,
-        anchorEl: handle
-      });
-    });
 
     fraggment.appendChild(handle);
     fraggment.appendChild(block.render());

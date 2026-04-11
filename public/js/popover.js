@@ -4,13 +4,26 @@ document.addEventListener('DOMContentLoaded', () => {
 class PopoverHandler {
   // Safe margin tối thiểu giữa panel và mép viewport (px)
   static VIEWPORT_MARGIN = 8;
-
   // Khoảng cách giữa trigger và content panel (px)
   static GAP = 4;
+  #ignoreGlobalClick = false;
+
+  static #instance = null;
+
 
   constructor() {
+    if (PopoverHandler.#instance) return PopoverHandler.#instance;
+
     this._roots = document.querySelectorAll('.popover');
     this._instances = new Map();
+    PopoverHandler.#instance = this;
+  }
+
+  /**
+   * Global access point
+   */
+  static get instance() {
+    return PopoverHandler.#instance || new PopoverHandler();
   }
 
   init() {
@@ -28,7 +41,15 @@ class PopoverHandler {
 
   open(id) {
     const inst = this._instances.get(id);
-    if (inst) this._open(inst);
+    if (inst) {
+      this.#ignoreGlobalClick = true;
+
+      this._open(inst);
+
+      setTimeout(() => {
+        this.#ignoreGlobalClick = false;
+      }, 0);
+    }
   }
 
   close(id) {
@@ -60,7 +81,6 @@ class PopoverHandler {
       trigger,
       content,
       isOpen: false,
-      closingTimer: null,
       preferredSide: root.dataset.side || 'bottom',
       preferredAlign: root.dataset.align || 'center'
     };
@@ -86,6 +106,8 @@ class PopoverHandler {
 
   _bindGlobalListeners() {
     document.addEventListener('click', (e) => {
+      if (this.#ignoreGlobalClick) return;
+
       const clickedInsideAny =
         e.target.closest('.popover__content') ||
         e.target.closest('.popover__trigger');
@@ -115,14 +137,7 @@ class PopoverHandler {
   }
 
   _open(instance) {
-    // Hủy timeout nếu đang trong quá trình animate đóng
-    if (instance.closingTimer) {
-      clearTimeout(instance.closingTimer);
-      instance.closingTimer = null;
-    } else {
-      // Portal content vào body
-      document.body.appendChild(instance.content);
-    }
+    document.body.appendChild(instance.content);
 
     // Đóng các popover khác
     this._instances.forEach(other => {

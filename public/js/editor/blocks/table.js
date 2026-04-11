@@ -28,6 +28,12 @@ export class TableBlock extends EditorBlock {
 
   /** @type {{ row: number, col: number } | null} */
   #activeCursor = null;
+  /** @type {{ type: 'row' | 'col', index: number } | null} */
+  #selectedSelection = null;
+
+  #tableWrapper = null;
+  #rowHandle = null;
+  #colHandle = null;
 
   render() {
     const wrapper = document.createElement('div');
@@ -41,6 +47,18 @@ export class TableBlock extends EditorBlock {
 
   #buildTable() {
     this.dom.innerHTML = '';
+
+    this.#tableWrapper = document.createElement('div');
+    this.#tableWrapper.className = 'be-table-wrapper';
+    this.#tableWrapper.style.position = 'relative';
+
+    this.#colHandle = document.createElement('div');
+    this.#colHandle.className = 'be-table-col-handle';
+    this.#colHandle.innerHTML = '<i class="fa-solid fa-grip-horizontal"></i>';
+
+    this.#rowHandle = document.createElement('div');
+    this.#rowHandle.className = 'be-table-row-handle';
+    this.#rowHandle.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
 
     const scrollWrap = document.createElement('div');
     scrollWrap.className = 'be-table-scroll';
@@ -65,7 +83,208 @@ export class TableBlock extends EditorBlock {
     table.appendChild(tbody);
 
     scrollWrap.appendChild(table);
-    this.dom.appendChild(scrollWrap);
+
+    this.#tableWrapper.appendChild(this.#colHandle);
+    this.#tableWrapper.appendChild(this.#rowHandle);
+    this.#tableWrapper.appendChild(scrollWrap);
+
+    this.dom.appendChild(this.#tableWrapper);
+
+    this.#setupHandleTracking();
+  }
+
+  #setupHandleTracking() {
+    if (!this.#tableWrapper) return;
+
+    this.#tableWrapper.addEventListener('mousemove', (e) => {
+      const cell = e.target.closest('td, th');
+
+      if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) {
+        return;
+      }
+
+      if (!cell) return;
+
+      const tr = cell.closest('tr');
+      if (!tr) return;
+
+      this.#colHandle.style.display = 'flex';
+      this.#rowHandle.style.display = 'flex';
+
+      const wrapperRect = this.#tableWrapper.getBoundingClientRect();
+      const cellRect = cell.getBoundingClientRect();
+      const trRect = tr.getBoundingClientRect();
+
+      const colLeft = (cellRect.left - wrapperRect.left) + (cellRect.width / 2) - 20;
+      this.#colHandle.style.left = `${colLeft}px`;
+
+      const rowTop = (trRect.top - wrapperRect.top) + (trRect.height / 2) - 15;
+      this.#rowHandle.style.top = `${rowTop}px`;
+
+      const rowIndex = tr.rowIndex;
+      const colIndex = cell.cellIndex;
+
+      this.#rowHandle.dataset.rowIndex = rowIndex;
+      this.#colHandle.dataset.colIndex = colIndex;
+    });
+
+    this.#tableWrapper.addEventListener('mouseleave', () => {
+      this.#colHandle.style.display = 'none';
+      this.#rowHandle.style.display = 'none';
+    });
+
+    this.#rowHandle.addEventListener('click', (e) => {
+      e.stopPropagation(); // Ngăn click lan ra ngoài
+      const rowIndex = parseInt(this.#rowHandle.dataset.rowIndex, 10);
+
+      this.#highlightRow(rowIndex);
+
+      // Kích hoạt Toolbar (Mình truyền thêm selection context để Toolbar biết đang thao tác với Row)
+      if (this.bus) {
+        this.bus.dispatch('toolbar:toggle', {
+          block: this,
+          anchorEl: this.#rowHandle,
+          selection: this.#selectedSelection,
+          hideDefault: true
+        });
+      }
+    });
+
+    this.#colHandle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const colIndex = parseInt(this.#colHandle.dataset.colIndex, 10);
+
+      this.#highlightCol(colIndex);
+
+      // Kích hoạt Toolbar
+      if (this.bus) {
+        this.bus.dispatch('toolbar:toggle', {
+          block: this,
+          anchorEl: this.#colHandle,
+          selection: this.#selectedSelection,
+          hideDefault: true
+        });
+      }
+    });
+
+    this.#tableWrapper.addEventListener('click', (e) => {
+      // Nếu click trúng vào các handle thì bỏ qua (do đã xử lý ở trên)
+      if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) return;
+
+      // Nếu click vào một ô bình thường (để gõ chữ), ta xóa highlight
+      if (e.target.closest('td, th')) {
+        this.#clearHighlight();
+      }
+    });
+  }
+
+  #clearHighlight() {
+    if (!this.dom) return;
+    const selectedCells = this.dom.querySelectorAll('.be-cell-selected');
+    selectedCells.forEach(cell => cell.classList.remove('be-cell-selected'));
+    this.#selectedSelection = null;
+  }
+
+  #highlightRow(rowIndex) {
+    this.#clearHighlight();
+
+    const table = this.dom.querySelector('.be-table');
+    if (!table || !table.rows[rowIndex]) return;
+
+    const cells = table.rows[rowIndex].cells;
+    for (let i = 0; i < cells.length; i++) {
+      cells[i].classList.add('be-cell-selected');
+    }
+
+    this.#selectedSelection = { type: 'row', index: rowIndex };
+  }
+
+  #highlightCol(colIndex) {
+    this.#clearHighlight();
+
+    const table = this.dom.querySelector('.be-table');
+    if (!table) return;
+
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      if (row.cells[colIndex]) {
+        row.cells[colIndex].classList.add('be-cell-selected');
+      }
+    }
+
+    this.#selectedSelection = { type: 'col', index: colIndex };
+  }
+
+  getDynamicToolbar(selection) {
+    if (!selection) return '';
+
+    if (selection.type === 'row') {
+      return `
+        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-row-above">
+          <i class="fa-solid fa-arrow-up"></i>
+          <span class="dropdown__item-label">Thêm dòng bên trên</span>
+        </button>
+        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-row-below">
+          <i class="fa-solid fa-arrow-down"></i>
+          <span class="dropdown__item-label">Thêm dòng bên dưới</span>
+        </button>
+        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:delete-row">
+          <i class="fa-solid fa-trash-can"></i>
+          <span class="dropdown__item-label">Xóa dòng</span>
+        </button>
+      `;
+    }
+
+    if (selection.type === 'col') {
+      return `
+        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-left">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span class="dropdown__item-label">Thêm cột bên trái</span>
+        </button>
+        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-right">
+          <i class="fa-solid fa-arrow-right"></i>
+          <span class="dropdown__item-label">Thêm cột bên phải</span>
+        </button>
+        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:delete-col">
+          <i class="fa-solid fa-trash-can"></i>
+          <span class="dropdown__item-label">Xóa cột</span>
+        </button>
+      `;
+    }
+    return '';
+  }
+
+  handleToolbarAction(action, selection) {
+    if (!selection) return;
+
+    // Clone data ra để tránh lỗi tham chiếu
+    let newRows = JSON.parse(JSON.stringify(this.data.rows));
+    const { type, index } = selection;
+
+    switch (action) {
+      // Nhánh xử lý Dòng
+      case 'table:insert-row-before': this.insertRowBefore(index); break;
+      case 'table:insert-row-after': this.insertRowAfter(index); break;
+      case 'table:remove-row': this.removeRow(index); break;
+
+      // Nhánh xử lý Cột
+      case 'table:insert-col-before': this.insertColBefore(index); break;
+      case 'table:insert-col-after': this.insertColAfter(index); break;
+      case 'table:remove-col': this.removeCol(index); break;
+
+      default:
+        console.warn(`Action ${action} chưa được hỗ trợ trên TableBlock`);
+    }
+
+    // Ẩn handle đi vì sau khi render lại DOM sẽ thay đổi
+    this.#colHandle.style.display = 'none';
+    this.#rowHandle.style.display = 'none';
+
+    // Cập nhật lại data và render
+    // Tùy vào setup của bạn, có thể gọi this.onUpdate() nếu EditorManager bắt sự kiện này,
+    // hoặc gán thẳng data và gọi #buildTable() lại.
+    this.data.rows = newRows;
+    this.#buildTable();
   }
 
   /**
@@ -109,26 +328,8 @@ export class TableBlock extends EditorBlock {
         }
       });
 
-      // 1. FOCUS: Gửi yêu cầu vẽ Toolbar động lên Global Event Bus
       cell.addEventListener('focus', () => {
         this.#activeCursor = { row: rowIndex, col: colIndex };
-
-        if (this.bus) {
-          this.bus.dispatch('toolbar:request_dynamic', {
-            block: this,
-            anchorEl: cell, // Thanh công cụ sẽ bám vào ô này
-            context: { row: rowIndex, col: colIndex }, // Ngữ cảnh cần thiết
-            controls: [     // TỰ ĐỊNH NGHĨA UI CHO TOOLBAR
-              { action: 'table:insert-row-before', icon: 'fa-solid fa-arrow-up', title: 'Chèn dòng lên trên' },
-              { action: 'table:insert-row-after', icon: 'fa-solid fa-arrow-down', title: 'Chèn dòng xuống dưới' },
-              { action: 'table:remove-row', icon: 'fa-solid fa-minus', title: 'Xóa dòng', danger: true },
-              { divider: true },
-              { action: 'table:insert-col-before', icon: 'fa-solid fa-arrow-left', title: 'Chèn cột sang trái' },
-              { action: 'table:insert-col-after', icon: 'fa-solid fa-arrow-right', title: 'Chèn cột sang phải' },
-              { action: 'table:remove-col', icon: 'fa-solid fa-minus', title: 'Xóa cột', danger: true },
-            ]
-          });
-        }
       });
 
       // 2. BLUR: Khi rời khỏi bảng, yêu cầu ẩn Toolbar
@@ -191,27 +392,6 @@ export class TableBlock extends EditorBlock {
     range.collapse(false);
     sel.removeAllRanges();
     sel.addRange(range);
-  }
-
-  // ─── Toolbar Delegation ───────────────────────────────────────
-
-  /**
-   * 3. Ủy Quyền Xử Lý: Toolbar sẽ gọi hàm này và trả lại ngữ cảnh (context)
-   */
-  handleToolbarAction(action, ctx) {
-    if (!ctx) return;
-    const { row, col } = ctx;
-
-    switch (action) {
-      case 'table:insert-row-before': this.insertRowBefore(row); break;
-      case 'table:insert-row-after': this.insertRowAfter(row); break;
-      case 'table:remove-row': this.removeRow(row); break;
-      case 'table:insert-col-before': this.insertColBefore(col); break;
-      case 'table:insert-col-after': this.insertColAfter(col); break;
-      case 'table:remove-col': this.removeCol(col); break;
-      default:
-        console.warn(`Action ${action} chưa được hỗ trợ trên TableBlock`);
-    }
   }
 
   // ─── Public Mutation API ──────────────────────────────────────

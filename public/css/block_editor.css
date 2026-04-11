@@ -339,36 +339,20 @@
 
 /* Block action toolbar — xuất hiện trên block khi selected */
 .be-toolbar {
-  width: fit-content;
-  height: 2rem;
-  border-radius: var(--radius-md);
-  background: var(--background);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  min-width: 10rem;
 }
 
-.be-toolbar__inner {
-  display: flex;
+.be-toolbar__item {
   width: 100%;
-  height: 100%;
 }
 
-.be-toolbar__group {
-  flex: 1;
-  display: flex;
-}
-
-.be-toolbar__btn {
-  width: 2rem;
-  height: 2rem;
-}
-
-.be-toolbar__btn:hover i,
-.be-toolbar__btn:hover svg {
+.be-toolbar__item--destructive {
   color: var(--destructive);
-  fill: var(--destructive);
 }
 
+.be-toolbar__item--destructive:hover {
+  background: color-mix(in oklab, var(--destructive) 10%, transparent);
+}
 /* =============================================================
    BLOCK PREVIEWS — trong canvas, render như trang public thật
    ============================================================= */
@@ -763,24 +747,62 @@ thead .be-table-cell,
   pointer-events: none;
 }
 
-/* Ghost cell cho cột add-col */
-.be-table-cell-ghost {
-  width: 28px;
-  border: none;
-  background: transparent;
+/* Container bao bọc bảng */
+.be-table-wrapper {
+  padding: 0.5rem;
 }
 
-/* ── Add row button ── */
-.be-table-add-row-btn {
-  align-self: flex-start;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  gap: 0.35rem;
-  opacity: 0;
-  transition: opacity 0.15s;
+/* Style chung cho 2 Handles */
+.be-table-col-handle,
+.be-table-row-handle {
+  position: absolute;
+  display: none; /* Ẩn đi, Step 2 mình sẽ dùng JS bật lên */
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 10;
+  font-size: var(--text-xs);
+  transition:
+    background-color 0.1s,
+    color 0.1s;
 }
 
-.be-preview-table-wrapper:hover .be-table-add-row-btn,
-.be-table-add-row-btn:focus {
-  opacity: 1;
+.be-table-col-handle > *,
+.be-table-row-handle > * {
+  font-size: inherit;
+}
+
+.be-table-col-handle:hover,
+.be-table-row-handle:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.be-table-col-handle {
+  height: 1rem;
+  width: 1.5rem;
+  top: 0;
+}
+
+.be-table-row-handle {
+  width: 1rem;
+  height: 1.5rem;
+  left: 0;
+}
+
+/* Màu nền bôi xanh nhẹ giống Notion khi chọn Dòng/Cột */
+.be-table td.be-cell-selected,
+.be-table th.be-cell-selected {
+  background-color: #e0f2fe !important; /* Xanh nhạt Tailwind (sky-100) */
+  /* Hoặc bạn có thể dùng rgba(46, 170, 220, 0.15) */
+  transition: background-color 0.15s ease;
+}
+
+/* Tùy chọn: Làm cho Handle đứng im (không bị biến mất) nếu đang chọn */
+.be-table-wrapper.is-selecting .be-table-col-handle,
+.be-table-wrapper.is-selecting .be-table-row-handle {
+  /* Bạn có thể cấu hình thêm sau này để giữ handle hiển thị khi menu mở */
 }

@@ -28,6 +28,9 @@ class DropdownHandler {
   static BASE_Z_INDEX = 100;
   static _zCounter = 0;
 
+  static #instance = null;
+  #ignoreGlobalClick = false;
+
   // Transform-origin cho từng hướng mở của panel
   origins = {
     bottom: 'top left',
@@ -37,33 +40,66 @@ class DropdownHandler {
   };
 
   constructor() {
+    if (DropdownHandler.#instance) return DropdownHandler.#instance;
+
     this._roots = document.querySelectorAll('.dropdown');
     this._instances = new Map();
+    DropdownHandler.#instance = this;
+  }
+
+  static get instance() {
+    return DropdownHandler.#instance || new DropdownHandler();
+  }
+
+  /**
+   * Đăng ký dropdown được tạo động sau khi DOMContentLoaded
+   * @param {HTMLElement} root - Phần tử .dropdown
+   */
+  register(root) {
+    this._initRoot(root);
   }
 
   /* ------------------------------------------------------------------ */
   /* Public                                                               */
   /* ------------------------------------------------------------------ */
-
   init() {
     this._roots.forEach(root => this._initRoot(root));
+    this._bindGlobalListeners();
+  }
 
-    // Đóng tất cả dropdown khi click ra ngoài vùng panel và trigger
-    document.addEventListener('click', event => {
-      const clickedInsideAny =
-        event.target.closest('.dropdown__content') ||
-        event.target.closest('.dropdown__sub-content') ||
-        event.target.closest('.dropdown__trigger');
+  /**
+   * Mở dropdown bằng code (Programmatic)
+   */
+  open(id) {
+    const inst = this._instances.get(id);
+    if (inst) {
+      // Khóa sự kiện global click để tránh bị đóng ngay lập tức (Event Bubbling Trap)
+      this.#ignoreGlobalClick = true;
+      this._open(inst);
 
-      if (!clickedInsideAny) {
-        this._instances.forEach(instance => this._close(instance));
-      }
+      setTimeout(() => {
+        this.#ignoreGlobalClick = false;
+      }, 0);
+    }
+  }
+
+  /**
+   * Đóng dropdown bằng code
+   */
+  close(id) {
+    const inst = this._instances.get(id);
+    if (inst) this._close(inst);
+  }
+
+  /**
+   * Đóng tất cả dropdown đang mở
+   */
+  closeAll() {
+    this._instances.forEach(inst => {
+      if (inst.content.dataset.state === 'open') this._close(inst);
     });
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Init per root                                                        */
-  /* ------------------------------------------------------------------ */
 
   /**
    * Khởi tạo một .dropdown root: tạo instance object, thu thập sub,
@@ -72,13 +108,22 @@ class DropdownHandler {
    * @param {HTMLElement} root - Phần tử .dropdown cần khởi tạo.
    */
   _initRoot(root) {
+    const id = root.dataset.dropdownId || (root.dataset.dropdownId = crypto.randomUUID());
+
+    // Ngăn chặn khởi tạo 2 lần trên cùng 1 element
+    if (this._instances.has(id)) return;
+
     const rootTrigger = root.querySelector(':scope > .dropdown__trigger');
     const rootContent = root.querySelector(':scope > .dropdown__content');
     const triggerMode = rootTrigger?.dataset.dropdownTriggerMode ?? 'hover';
 
-    if (!rootTrigger || !rootContent) return;
+    if (!rootTrigger || !rootContent) {
+      console.warn('[DropdownHandler] Missing trigger or content in', root);
+      return;
+    }
 
     const instance = {
+      id,
       root,
       trigger: rootTrigger,
       content: rootContent,
@@ -88,9 +133,9 @@ class DropdownHandler {
       highlighted: null,
     };
 
-    this._instances.set(root, instance);
+    this._instances.set(id, instance);
 
-    // Thu thập tất cả sub trước khi portal — sub-content vẫn còn nằm trong rootContent
+    // Thu thập sub-menus
     rootContent.querySelectorAll('.dropdown__sub').forEach(subWrapper => {
       const subTrigger = subWrapper.querySelector(':scope > .dropdown__sub-trigger');
       const subContent = subWrapper.querySelector(':scope > .dropdown__sub-content');
@@ -99,8 +144,7 @@ class DropdownHandler {
       }
     });
 
-    // Portal tất cả panel vào <body> để relatedTarget resolve đúng khi cursor qua gap
-    // Sub-content trước (đang nằm trong rootContent), rootContent sau
+    // Portal tất cả panel vào <body>
     instance.subs.forEach(sub => document.body.appendChild(sub.content));
     document.body.appendChild(rootContent);
 
@@ -112,6 +156,26 @@ class DropdownHandler {
   /* ------------------------------------------------------------------ */
   /* Bind events                                                          */
   /* ------------------------------------------------------------------ */
+
+  _bindGlobalListeners() {
+    document.addEventListener('click', event => {
+      // Nếu đang được mở bằng API -> bỏ qua cú click nổi bọt này
+      if (this.#ignoreGlobalClick) return;
+
+      const clickedInsideAny =
+        event.target.closest('.dropdown__content') ||
+        event.target.closest('.dropdown__sub-content') ||
+        event.target.closest('.dropdown__trigger');
+
+      if (!clickedInsideAny) {
+        this.closeAll();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeAll();
+    });
+  }
 
   /**
    * Gắn sự kiện click và hover (nếu mode="hover") lên root trigger.

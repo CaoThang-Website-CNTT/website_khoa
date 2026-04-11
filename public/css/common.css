@@ -1235,7 +1235,7 @@
       var(--shadow-md),
       0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent);
     outline: none;
-    pointer-events: none;
+    /* pointer-events: none; */
     opacity: 0;
     transform-origin: var(--dropdown-transform-origin, top left);
     transform: scale(0.96) translateY(-4px);
@@ -1292,11 +1292,16 @@
     position: relative;
   }
 
+  .dropdown__item:hover {
+    background: var(--muted);
+  }
+
   .dropdown__item > * {
     display: flex;
     align-items: center;
     width: 100%;
     color: inherit;
+    font-size: inherit;
     text-decoration: none;
   }
 
@@ -1322,11 +1327,15 @@
     line-height: 1;
   }
 
-  .dropdown__item svg,
-  .dropdown__item .fa-solid,
-  .dropdown__item .fa-brand {
+  .dropdown__item svg {
     width: 1rem;
     height: 1rem;
+    margin-left: auto;
+    color: var(--dropdown-muted);
+    flex-shrink: 0;
+  }
+  .dropdown__item .fa-solid,
+  .dropdown__item .fa-brand {
     margin-left: auto;
     color: var(--dropdown-muted);
     flex-shrink: 0;
