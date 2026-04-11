@@ -1,4 +1,11 @@
-/** Toolbar khi chọn 1 block */
+/**
+ * EditorBlockToolbar (Block-Driven Architecture)
+ *
+ * Chỉ chịu trách nhiệm:
+ * 1. Nhận sự kiện 'block:handle_click' -> Hiện nút Xóa block.
+ * 2. Nhận sự kiện 'toolbar:request_dynamic' -> Hiện các nút do Block TỰ ĐỊNH NGHĨA.
+ * 3. Bấm nút -> Đẩy ngược (delegate) action về cho Block đó xử lý.
+ */
 export class EditorBlockToolbar {
   /** @type {EditorEventBus} */
   #bus;
@@ -10,19 +17,24 @@ export class EditorBlockToolbar {
   #toolbarBox;
   /** @type {HTMLElement} */
   #dynamicArea;
+
   #currentBlock = null;
 
-  /** Offset giữa block và toolbar */
+  #anchorEl = null;
+
+  #dynamicCtx = null;
+
   #offset = 8;
 
   constructor(bus, canvas) {
     this.#bus = bus;
     this.#canvas = canvas;
-
-    // Tự động render UI khi khởi tạo
     this.#createPortal();
     this.#initEvents();
   }
+
+  // ─── Portal ───────────────────────────────────────────────────
+
   #createPortal() {
     this.#portalEl = document.createElement('div');
     this.#portalEl.id = 'be-toolbar-portal';
@@ -36,17 +48,19 @@ export class EditorBlockToolbar {
       height: '100vh',
       display: 'none',
       zIndex: '9999',
-      backgroundColor: 'transparent'
+      backgroundColor: 'transparent',
+      pointerEvents: 'none',
     });
 
     this.#portalEl.innerHTML = `
-      <div class="be-toolbar" style="position: absolute;"> 
+      <div class="be-toolbar" style="position: absolute; pointer-events: all;">
         <div class="be-toolbar__inner">
-          <div class="be-toolbar__group">
-          </div>
           <div class="be-toolbar__group" id="be-toolbar-dynamic-area"></div>
-          <div class="be-toolbar__group">
-            <button class="be-toolbar__btn" data-be-toolbar-action="remove-block"><i class="fa-solid fa-trash-can"></i></button>
+          
+          <div class="be-toolbar__group" id="be-toolbar-block-actions">
+            <button class="be-toolbar__btn" data-be-toolbar-action="remove-block" title="Xóa block">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -57,89 +71,124 @@ export class EditorBlockToolbar {
     document.body.appendChild(this.#portalEl);
   }
 
-
   #initEvents() {
-    this.#bus.subscribe('block:handle_click', ({ blockId, anchorEl }) => {
+    this.#bus.subscribe('block:handle_click', ({ blockId }) => {
       const block = this.#canvas.getBlock(blockId);
       if (!block) return;
-
-      this.show(block);
+      this.#showBlockMode(block);
     });
 
-    this.#portalEl.addEventListener('mousedown', (e) => {
-      if (e.target === this.#portalEl) {
-        this.hide();
-      }
+    this.#bus.subscribe('toolbar:request_dynamic', ({ block, anchorEl, controls, context }) => {
+      this.#currentBlock = block;
+      this.#showDynamicMode({ anchorEl, controls, context });
+    });
+
+    this.#bus.subscribe('toolbar:hide_dynamic', () => {
+      this.hide();
     });
 
     this.#toolbarBox.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-      const btn = e.target.closest('button');
+      const btn = e.target.closest('button[data-be-toolbar-action]');
       if (!btn) return;
 
-      e.preventDefault();
+      e.preventDefault(); // Ngăn mất focus ở Canvas
 
       const action = btn.dataset.beToolbarAction;
-
-      if (action === 'remove-block' && this.#currentBlock) {
-        this.#bus.dispatch('block:remove_request', {
-          blockId: this.#currentBlock.id
-        });
-
-        this.hide();
-      }
+      this.#handleAction(action);
     });
   }
 
-  show(block) {
+  #showBlockMode(block) {
     this.#currentBlock = block;
+    this.#anchorEl = block.dom;
+    this.#dynamicCtx = null;
 
     this.#dynamicArea.innerHTML = '';
-    const customUI = null;
-    if (customUI) {
-      this.#dynamicArea.appendChild(customUI);
+
+    this.#portalEl.style.display = 'block';
+    this.#updatePosition();
+  }
+
+  #showDynamicMode({ anchorEl, controls, context }) {
+    this.#anchorEl = anchorEl;
+    this.#dynamicCtx = context; // Lưu lại ngữ cảnh (ví dụ: { row: 1, col: 2 })
+
+    this.#dynamicArea.innerHTML = '';
+
+    if (controls && controls.length > 0) {
+      this.#dynamicArea.appendChild(this.#buildDynamicActions(controls));
     }
 
     this.#portalEl.style.display = 'block';
-    this.updatePosition();
+    this.#updatePosition();
+  }
+
+  #buildDynamicActions(controls) {
+    const fragment = document.createDocumentFragment();
+    const group = document.createElement('div');
+    group.className = 'be-toolbar__group';
+
+    controls.forEach(item => {
+      if (item.divider) {
+        const sep = document.createElement('div');
+        sep.className = 'be-toolbar__separator';
+        group.appendChild(sep);
+        return;
+      }
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `be-toolbar__btn${item.danger ? ' be-toolbar__btn--danger' : ''}`;
+      btn.dataset.beToolbarAction = item.action;
+      btn.title = item.title;
+      btn.innerHTML = `<i class="${item.icon}"></i>`;
+      group.appendChild(btn);
+    });
+
+    fragment.appendChild(group);
+    return fragment;
+  }
+
+  #handleAction(action) {
+    if (action === 'remove-block') {
+      if (!this.#currentBlock) return;
+      this.#bus.dispatch('block:remove_request', { blockId: this.#currentBlock.id });
+      this.hide();
+      return;
+    }
+
+    if (this.#currentBlock && typeof this.#currentBlock.handleToolbarAction === 'function') {
+      this.#currentBlock.handleToolbarAction(action, this.#dynamicCtx);
+    }
+  }
+
+  #updatePosition() {
+    if (!this.#anchorEl || !this.#toolbarBox) return;
+
+    const anchorRect = this.#anchorEl.getBoundingClientRect();
+    const toolbarRect = this.#toolbarBox.getBoundingClientRect();
+    const offset = this.#offset;
+
+    const cannotFitAbove = anchorRect.top < (toolbarRect.height + offset);
+
+    const top = cannotFitAbove
+      ? anchorRect.bottom + offset
+      : anchorRect.top - toolbarRect.height - offset;
+
+    let left = anchorRect.left + (anchorRect.width / 2) - (toolbarRect.width / 2);
+    left = Math.max(offset, Math.min(left, window.innerWidth - toolbarRect.width - offset));
+
+    this.#toolbarBox.style.top = `${top}px`;
+    this.#toolbarBox.style.left = `${left}px`;
   }
 
   hide() {
     this.#portalEl.style.display = 'none';
+    this.#dynamicCtx = null;
+    this.#anchorEl = null;
   }
 
   updatePosition() {
-    if (!this.#currentBlock || !this.#currentBlock.dom || !this.#toolbarBox) return;
-
-    const blockRect = this.#currentBlock.dom.getBoundingClientRect();
-    const toolbarRect = this.#toolbarBox.getBoundingClientRect();
-    const offset = this.#offset;
-
-    // Kiểm tra không gian phía trên
-    // Nếu khoảng cách từ block tới đỉnh màn hình nhỏ hơn chiều cao toolbar + offset
-    const cannotFitAbove = blockRect.top < (toolbarRect.height + offset);
-
-    let top;
-
-    if (cannotFitAbove) {
-      // FLIP: Render phía dưới block
-      top = blockRect.bottom + offset;
-    } else {
-      // NORMAL: Render phía trên block
-      top = blockRect.top - toolbarRect.height - offset;
-    }
-
-    // 2. Tính toán trục X (Căn giữa và chống tràn lề)
-    let left = blockRect.left + (blockRect.width / 2) - (toolbarRect.width / 2);
-
-    // Chống tràn mép trái
-    left = Math.max(offset, left);
-
-    // Chống tràn mép phải
-    const maxLeft = window.innerWidth - toolbarRect.width - offset;
-    left = Math.min(left, maxLeft);
-
-    this.#toolbarBox.style.top = `${top}px`;
-    this.#toolbarBox.style.left = `${left}px`;
+    this.#updatePosition();
   }
 }

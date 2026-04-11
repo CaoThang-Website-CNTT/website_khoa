@@ -409,6 +409,122 @@
   color: var(--be-text-muted, #9a9a97);
 }
 
+.be-preview-image {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.be-image-content-wrapper {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  max-width: 100%;
+}
+
+.be-image-element {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  transition: width 0.2s ease-in-out;
+}
+
+.be-align-center {
+  align-items: center;
+  text-align: center;
+}
+
+.be-align-left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.be-align-right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.be-align-full {
+  align-items: center;
+}
+.be-align-full .be-image-content-wrapper,
+.be-align-full .be-image-element {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.be-image-caption {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #666;
+  width: 100%;
+  outline: none;
+  min-height: 1.2em;
+}
+
+.be-image-caption:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.be-image-placeholder {
+  width: 100%;
+  min-height: 10rem;
+  background: var(--muted);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.be-image-placeholder__icon {
+  font-size: 3rem;
+  color: var(--muted-foreground);
+}
+
+.be-image-placeholder__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.be-placeholder-divider {
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+}
+
+.be-image-url-input-group {
+  display: flex;
+  height: 2rem;
+  flex: 1;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 0.25rem;
+}
+
+.be-image-external-url {
+  flex: 1;
+  border: none;
+  font-size: var(--text-sm);
+  outline: none;
+  min-width: 0;
+}
+
+.be-apply-url-btn {
+  border: none !important;
+  background: transparent;
+  outline: none;
+}
+
 .be-editable {
   cursor: text;
 }
@@ -420,64 +536,251 @@
 }
 
 /* =============================================================
-   RIGHT PANEL — Block settings & Post settings
+   List view
    ============================================================= */
-.be-settings-section {
-  margin-bottom: 20px;
+.be-list-view__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
 }
 
-.be-settings-property__label {
-  font-size: var(--text-sm);
+.be-list-view__item:hover {
+  outline: 1px solid var(--primary);
 }
 
-.be-settings-input {
-  width: 100%;
-  padding: 7px 10px;
-  border: 0.5px solid var(--be-border, rgba(0, 0, 0, 0.15));
-  border-radius: 7px;
-  font-size: 13px;
-  background: var(--be-surface, #fff);
-  color: var(--be-text, #1a1a1a);
-  transition: border-color 0.1s;
+/* ─────────────────────────────────────────
+   LIST BLOCK
+   ───────────────────────────────────────── */
+
+.be-preview-list {
+  margin: 0;
+  padding-left: 1.5rem;
   outline: none;
 }
 
-.be-settings-input:focus {
-  border-color: #2563eb;
+.be-preview-list--ol {
+  list-style-type: decimal;
 }
 
-.be-settings-textarea {
-  width: 100%;
-  padding: 7px 10px;
-  border: 0.5px solid var(--be-border, rgba(0, 0, 0, 0.15));
-  border-radius: 7px;
-  font-size: 13px;
-  background: var(--be-surface, #fff);
-  color: var(--be-text, #1a1a1a);
-  resize: vertical;
+.be-preview-list--ul {
+  list-style-type: disc;
+}
+
+.be-list-nested {
+  padding-left: 1.5rem;
+  margin: 0;
+  list-style-type: circle;
+}
+
+.be-list-nested .be-list-nested {
+  list-style-type: square;
+}
+
+.be-list-item {
+  margin: 0.15rem 0;
+  position: relative;
+}
+
+.be-list-item-text {
+  display: inline;
   outline: none;
-  transition: border-color 0.1s;
+  min-width: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.be-settings-textarea:focus {
-  border-color: #2563eb;
+/* Placeholder */
+.be-list-item-text:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
 }
 
-.be-settings-select {
+/* ─────────────────────────────────────────
+   TABLE BLOCK
+   ───────────────────────────────────────── */
+
+.be-preview-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: visible;
+}
+
+.be-table-scroll {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.be-table {
+  border-collapse: collapse;
   width: 100%;
-  padding: 7px 10px;
-  border: 0.5px solid var(--be-border, rgba(0, 0, 0, 0.15));
-  border-radius: 7px;
-  font-size: 13px;
-  background: var(--be-surface, #fff);
-  color: var(--be-text, #1a1a1a);
-  outline: none;
+  table-layout: auto;
+  font-size: 0.9rem;
+}
+
+.be-table--fixed {
+  table-layout: fixed;
+}
+
+/* ── Col control row (xóa cột) ── */
+.be-table-col-controls {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.be-table-scroll:hover .be-table-col-controls,
+.be-table-col-controls:focus-within {
+  opacity: 1;
+}
+
+.be-table-col-control-cell {
+  padding: 2px 4px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  width: 36px;
+}
+
+.be-table-col-del-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--destructive);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition:
+    background 0.1s,
+    color 0.1s;
 }
 
-.be-settings-hint {
+.be-table-col-del-btn:hover {
+  background: var(--destructive);
+  color: var(--text-danger);
+  border-color: var(--border-danger);
+}
+
+.be-table-add-col-cell {
+  width: 36px;
+}
+
+.be-table-add-col-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border-secondary);
+  background: var(--background-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
-  color: var(--be-text-muted, #9a9a97);
-  margin-top: 5px;
-  line-height: 1.5;
+  transition: background 0.1s;
+}
+
+.be-table-add-col-btn:hover {
+  background: var(--background-info);
+  color: var(--text-info);
+}
+
+/* ── Row action cell (xóa hàng) ── */
+.be-table-row-action-cell {
+  width: 28px;
+  padding: 0 2px;
+  border: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  vertical-align: middle;
+}
+
+tr:hover .be-table-row-action-cell,
+.be-table-row-action-cell:focus-within {
+  opacity: 1;
+}
+
+.be-table-row-del-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--destructive);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition:
+    background 0.1s,
+    color 0.1s;
+}
+
+.be-table-row-del-btn:hover {
+  background: var(--destructive);
+  color: var(--text-danger);
+}
+
+.be-table-row-del-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Cells ── */
+.be-table-cell {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  outline: none;
+  min-width: 80px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+thead .be-table-cell,
+.be-table th.be-table-cell {
+  background: var(--background-secondary);
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.be-table-cell:focus {
+  outline: 2px solid var(--border-info, #3b82f6);
+  outline-offset: -2px;
+}
+
+/* Placeholder cho cell rỗng */
+.be-table-cell:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+/* Ghost cell cho cột add-col */
+.be-table-cell-ghost {
+  width: 28px;
+  border: none;
+  background: transparent;
+}
+
+/* ── Add row button ── */
+.be-table-add-row-btn {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  gap: 0.35rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.be-preview-table-wrapper:hover .be-table-add-row-btn,
+.be-table-add-row-btn:focus {
+  opacity: 1;
 }
