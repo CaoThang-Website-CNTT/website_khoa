@@ -310,7 +310,7 @@ class EditorCanvas {
     /** @var {EditorBlock} */
     const block = new blockClass({
       data
-    }, schema);
+    }, schema, this.#bus);
 
     if (afterId === null) {
       this.#blocks = [...this.#blocks, block];

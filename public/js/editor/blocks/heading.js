@@ -50,6 +50,11 @@ export class HeadingBlock extends EditorBlock {
 
   renderInspectorControls(data, { onUpdate }) {
     const wrap = document.createElement('div');
+    // Tạo mảng 3 element tượng trưng cho 3 cấp độ tiêu đề H1, H2, H3
+    // Thủ thuật là đơn giản hóa về mặt UI là chỉ hiển thị cấp độ H1, H2, H3
+    // Nhưng đằng sau sẽ là từ H2 trở đi do H1 là tiêu đề bài viết
+    // Giúp người dùng biết được rằng block Heading có BAO NHIÊU CẤP ĐỘ CÓ THỂ CHỌN
+    // hơn là biết CÓ BAO NHIÊU THẺ <h> CÓ THỂ CHỌN
     wrap.innerHTML = `
         <div class="be-settings-property-section">
           <span class="be-settings-property__label">Cấp độ tiêu đề</span>
@@ -63,7 +68,7 @@ export class HeadingBlock extends EditorBlock {
 
     wrap.querySelectorAll('.be-heading-level-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        onUpdate({ level: parseInt(btn.dataset.level) });
+        onUpdate({ level: parseInt(btn.dataset.level + 1) });
       });
     });
 

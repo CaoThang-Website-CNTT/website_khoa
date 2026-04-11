@@ -217,7 +217,7 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Tác giả</span>
-                <select class="be-settings-select" id="be-author-select" name="">
+                <select class="field__input" id="be-author-select" name="">
                   <?php foreach (($authors ?? []) as $author): ?>
                     <option value="<?= $author ?>">
                       <?= htmlspecialchars($author->name) ?>
@@ -228,19 +228,7 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Trạng thái</span>
-                <select class="be-settings-select" id="be-status-select" name="">
-                  <?php foreach (($categories ?? []) as $cat): ?>
-                    <div class="be-toggle-row">
-                      <input type="checkbox" id="cat-<?= $cat->id ?>" name="category_ids[]" value="<?= $cat->id ?>"
-                        <?= in_array($cat->id, $post->category_ids ?? []) ? 'checked' : '' ?>>
-                      <label class="be-toggle-label" for="cat-<?= $cat->id ?>" style="cursor:pointer">
-                        <?= htmlspecialchars($cat->name) ?>
-                      </label>
-                    </div>
-                  <?php endforeach; ?>
-                  <?php if (empty($categories)): ?>
-                    <div class="be-settings-hint">Chưa có danh mục nào.</div>
-                  <?php endif; ?>
+                <select class="field__input" id="be-status-select" name="">
                   <option value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>Nháp</option>
                   <option value="published" <?= $oldStatus === 'published' ? 'selected' : '' ?>>Xuất bản</option>
                   <option value="archived" <?= $oldStatus === 'archived' ? 'selected' : '' ?>>Lưu trữ</option>
@@ -249,9 +237,8 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Slug</span>
-                <input type="text" class="be-settings-input" id="be-slug-input"
-                  value="<?= htmlspecialchars($oldSlug) ?>" placeholder="duong-dan-bai-viet">
-                <div class="be-settings-hint">Tự sinh từ tiêu đề. Chỉnh tay nếu cần.</div>
+                <input type="text" class="field__input" id="be-slug-input" value="<?= htmlspecialchars($oldSlug) ?>"
+                  placeholder="duong-dan-bai-viet">
               </div>
 
               <div class="field">
@@ -272,7 +259,7 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Mô tả</span>
-                <textarea id="be-excerpt-input" class="be-settings-textarea" rows="3" name="seo_desc"
+                <textarea id="be-excerpt-input" class="field__input" rows="3" name="seo_desc"
                   placeholder="Để trống: tự lấy từ đoạn văn đầu tiên"
                   maxlength="500"><?= htmlspecialchars($post->seo_desc ?? '') ?></textarea>
               </div>

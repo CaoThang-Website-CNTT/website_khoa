@@ -253,7 +253,7 @@
 }
 
 .be-canvas-title-area {
-  padding: 0 2rem;
+  padding: 0 2.25rem;
 }
 
 .be-canvas-title {
@@ -290,21 +290,16 @@
    ============================================================= */
 .be-block-card {
   position: relative;
-  border: 1.5px solid beige;
-  border-radius: 6px;
-  padding: 6px 8px;
-  margin-bottom: 2px;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
   cursor: pointer;
   transition:
     border-color 0.1s,
     background 0.1s;
-  /* Đủ chỗ cho controls bên phải */
-  padding-right: 8px;
 }
 
-.be-block-card.selected {
-  border-color: #2563eb;
-  background: rgba(37, 99, 235, 0.03);
+.be-block-card:hover {
+  background: mix(in oklab, var(--primary) 10%, transparent);
 }
 
 .be-block-card.dragging {
@@ -324,11 +319,11 @@
 /* Drag handle — xuất hiện khi hover */
 .be-drag-handle {
   position: absolute;
-  left: -22px;
+  left: -1.5rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--be-text-muted, #c0bfbb);
-  font-size: 13px;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
   cursor: grab;
   opacity: 0;
   transition: opacity 0.15s;

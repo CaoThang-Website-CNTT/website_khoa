@@ -52,7 +52,7 @@ export class EditorListView {
     blocks.forEach(block => {
       console.log(block);
       const li = document.createElement('li');
-      li.className = 'be-list-item';
+      li.className = 'be-list-view__item';
       li.dataset.id = block.id;
 
       const icon = block.schema.icon;
@@ -60,8 +60,8 @@ export class EditorListView {
       const previewText = block.schema.title;
 
       li.innerHTML = `
-        <span class="be-list-icon">${icon}</span>
-        <span class="be-list-title">${previewText}</span>
+        <span class="be-list-view__icon">${icon}</span>
+        <span class="be-list-view__title">${previewText}</span>
       `;
 
       ul.appendChild(li);

@@ -3,7 +3,7 @@ export class EditorBlock {
    * @param {Object} blockData - Dữ liệu thực tế lưu trong Database (nếu có)
    * @param {Object} schema - File config JSON của block này
    */
-  constructor(blockData = {}, schema) {
+  constructor(blockData = {}, schema, bus = null) {
     this.id = blockData.id || crypto.randomUUID();
 
     this.type = schema.name;
@@ -11,6 +11,9 @@ export class EditorBlock {
     this.data = this.#parseDataWithSchema(blockData.data || {}, schema.attributes);
 
     this.schema = schema;
+
+    /**@type {EditorEventBus} */
+    this.bus = bus;
 
     /** @type {HTMLElement} */
     this.dom = null;
