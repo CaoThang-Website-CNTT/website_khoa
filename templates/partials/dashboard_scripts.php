@@ -7,3 +7,4 @@
 <script src="<?= url('/public/js/carousel.js') ?>"></script>
 <script src="<?= url('/public/js/tabs.js') ?>"></script>
 <script src="<?= url('/public/js/collapsible.js') ?>"></script>
+<script src="<?= url('/public/js/popover.js') ?>"></script>
