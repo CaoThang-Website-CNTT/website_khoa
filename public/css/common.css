@@ -204,7 +204,7 @@
     height: 1.5rem;
   }
 
-  .switch[data-state="checked"] {
+  .switch[data-switch-state="checked"] {
     background: var(--primary);
   }
 
@@ -219,7 +219,7 @@
     height: 1.25rem;
   }
 
-  .switch__thumb[data-state="checked"] {
+  .switch__thumb[data-switch-state="checked"] {
     transform: translateX(calc(100% - 2px));
   }
 

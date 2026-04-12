@@ -420,9 +420,11 @@ class EditorCanvasMetadata {
     status: 'draft',
     category_ids: [],
     featured_image: null,
-    showAuthor: true,
-    showPublishDate: true,
-    showReadTime: true
+    show_author: false,
+    show_date: true,
+    show_read_time: false,
+    show_view_count: false,
+    init_view_count: 0
   };
 
   /**
@@ -440,6 +442,19 @@ class EditorCanvasMetadata {
   #initEvents() {
     this.#bus.subscribe('meta:update_request', ({ key, value }) => {
       this.setData(key, value);
+    });
+
+    this.#bus.subscribe('meta:sync_request', () => {
+      console.log('[EditorCanvasMetadata] Đang đồng bộ State khởi tạo xuống UI...');
+      for (const [key, value] of Object.entries(this.#data)) {
+        if (value !== null && value !== undefined) {
+          this.#bus.dispatch('meta:updated', {
+            key,
+            value,
+            allMeta: this.getData()
+          });
+        }
+      }
     });
   }
 

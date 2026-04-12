@@ -42,7 +42,7 @@ $statusLabels = [
 <!-- ════════════════════════════════════════════════════════════
      EDITOR SHELL
 ════════════════════════════════════════════════════════════ -->
-<div id="block-editor-shell">
+<div id="be-shell">
 
   <!-- ── TOPBAR ─────────────────────────────────────────────── -->
   <div id="be-topbar">
@@ -61,7 +61,7 @@ $statusLabels = [
 
     <div id="be-topbar-center">
       <input id="be-title-input" class="field__input be-post-title-input" type="text" placeholder="Tiêu đề bài viết..."
-        value="<?= htmlspecialchars($oldTitle) ?>" autocomplete="off">
+        value="<?= htmlspecialchars($oldTitle) ?>" autocomplete="off" data-be-meta-key="title">
       <span class="badge" data-variant="<?= $oldStatus === 'published' ? 'primary' : 'secondary' ?>"
         id="be-status-badge">
         <?= $statusLabels[$oldStatus] ?? 'Nháp' ?>
@@ -131,21 +131,25 @@ $statusLabels = [
             <?= $oldTitle ? htmlspecialchars($oldTitle) : 'Tiêu đề bài viết' ?>
           </h1>
           <div class="be-canvas-meta">
-            <div class="be-canvas-meta__info">
+            <div class="be-canvas-meta__info" data-be-meta-preview="show_author" data-be-preview-action="toggle">
               <i class="fa-regular fa-user"></i>
-              Ban biên tập
+              <span class="be-canvas-meta__text">Ban biên tập</span>
             </div>
-            <div class="be-canvas-meta__info">
+            <div class="be-canvas-meta__info" data-be-meta-preview="show_date" data-be-preview-action="toggle">
               <i class="fa-regular fa-calendar"></i>
-              <?= date('d/m/Y') ?>
+              <span class="be-canvas-meta__text"><?= date('d/m/Y') ?></span>
             </div>
-            <div class="be-canvas-meta__info">
+            <div class="be-canvas-meta__info" data-be-meta-preview="show_read_time" data-be-preview-action="toggle">
               <i class="fa-regular fa-clock"></i>
-              5 phút đọc
+              <span class="be-canvas-meta__text">5 phút đọc</span>
             </div>
-            <div class="be-canvas-meta__info">
+            <div class="be-canvas-meta__info" data-be-meta-preview="show_view_count" data-be-preview-action="toggle">
               <i class="fa-regular fa-eye"></i>
-              100 lượt xem
+              <span class="be-canvas-meta__text">
+                <span class="be-canvas-meta__value" data-be-meta-preview="init_view_count" data-be-preview-action="text"
+                  data-preview-default="0">0</span>
+                lượt xem
+              </span>
             </div>
           </div>
         </div>
@@ -217,7 +221,7 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Tác giả</span>
-                <select class="field__input" id="be-author-select" name="">
+                <select class="field__input" id="be-author-select" name="author_id" data-be-meta-key="author_id">
                   <?php foreach (($authors ?? []) as $author): ?>
                     <option value="<?= $author ?>">
                       <?= htmlspecialchars($author->name) ?>
@@ -228,7 +232,7 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Trạng thái</span>
-                <select class="field__input" id="be-status-select" name="">
+                <select class="field__input" id="be-status-select" name="status" data-be-meta-key="status">
                   <option value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>Nháp</option>
                   <option value="published" <?= $oldStatus === 'published' ? 'selected' : '' ?>>Xuất bản</option>
                   <option value="archived" <?= $oldStatus === 'archived' ? 'selected' : '' ?>>Lưu trữ</option>
@@ -237,16 +241,16 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Slug</span>
-                <input type="text" class="field__input" id="be-slug-input" value="<?= htmlspecialchars($oldSlug) ?>"
-                  placeholder="duong-dan-bai-viet">
+                <input type="text" class="field__input" id="be-slug-input" name="slug"
+                  value="<?= htmlspecialchars($oldSlug) ?>" placeholder="duong-dan-bai-viet" data-be-meta-key="slug">
               </div>
 
               <div class="field">
                 <span class="field__label">Danh mục</span>
                 <?php foreach (($categories ?? []) as $cat): ?>
                   <div class="be-toggle-row">
-                    <input type="checkbox" id="cat-<?= $cat->id ?>" name="category_ids[]" value="<?= $cat->id ?>"
-                      <?= in_array($cat->id, $post->category_ids ?? []) ? 'checked' : '' ?>>
+                    <input type="checkbox" id="cat-<?= $cat->id ?>" name="category_ids[]" data-be-meta-key="category_ids"
+                      value="<?= $cat->id ?>" <?= in_array($cat->id, $post->category_ids ?? []) ? 'checked' : '' ?>>
                     <label class="be-toggle-label" for="cat-<?= $cat->id ?>" style="cursor:pointer">
                       <?= htmlspecialchars($cat->name) ?>
                     </label>
@@ -260,8 +264,53 @@ $statusLabels = [
               <div class="field">
                 <span class="field__label">Mô tả</span>
                 <textarea id="be-excerpt-input" class="field__input" rows="3" name="seo_desc"
-                  placeholder="Để trống: tự lấy từ đoạn văn đầu tiên"
-                  maxlength="500"><?= htmlspecialchars($post->seo_desc ?? '') ?></textarea>
+                  placeholder="Để trống: tự lấy từ đoạn văn đầu tiên" maxlength="500"
+                  data-be-meta-key="seo_desc"><?= htmlspecialchars($post->seo_desc ?? '') ?></textarea>
+              </div>
+
+              <div class="field" data-orientation="horizontal">
+                <div class="field__content">
+                  <span class="field__label">Hiển thị Tác giả</span>
+                </div>
+                <button class="switch" type="button" role="switch" name="show_author" data-be-meta-key="show_author">
+                  <span class="switch__thumb"></span>
+                </button>
+              </div>
+
+              <div class="field" data-orientation="horizontal">
+                <div class="field__content">
+                  <span class="field__label">Hiển thị Ngày xuất bản</span>
+                </div>
+                <button class="switch" type="button" role="switch" data-switch-default-state="checked" name="show_date"
+                  data-be-meta-key="show_date">
+                  <span class="switch__thumb"></span>
+                </button>
+              </div>
+
+              <div class="field" data-orientation="horizontal">
+                <div class="field__content">
+                  <span class="field__label">Hiển thị Thời gian đọc</span>
+                </div>
+                <button class="switch" type="button" role="switch" name="show_read_time"
+                  data-be-meta-key="show_read_time">
+                  <span class="switch__thumb"></span>
+                </button>
+              </div>
+
+              <div class="field" data-orientation="horizontal">
+                <div class="field__content">
+                  <span class="field__label">Hiển thị Lượt xem</span>
+                </div>
+                <button class="switch" type="button" role="switch" name="show_view_count"
+                  data-be-meta-key="show_view_count">
+                  <span class="switch__thumb"></span>
+                </button>
+              </div>
+
+              <div class="field" data-be-meta-preview="show_view_count" data-be-preview-action="toggle">
+                <span class="field__label">Lượt xem khởi tạo</span>
+                <input type="number" class="field__input" data-be-meta-key="init_view_count" placeholder="VD: 500"
+                  min="0">
               </div>
             </div>
           </div>
@@ -276,24 +325,7 @@ $statusLabels = [
 
 <!-- /block-editor-shell -->
 
-<!-- ════════════════════════════════════════════════════════════
-     FORM SUBMIT (ẩn, không hiển thị)
-════════════════════════════════════════════════════════════ -->
-<form id="be-post-form" action="<?= $formAction ?>" method="POST" style="display:none">
-  <?php if ($isEdit): ?><input type="hidden" name="_method" value="PUT"><?php endif; ?>
-  <input type="hidden" name="content_json" id="be-content-json-input">
-  <input type="hidden" name="title" id="be-title-hidden">
-  <input type="hidden" name="slug" id="be-slug-hidden">
-  <input type="hidden" name="status" id="be-status-hidden">
-  <input type="hidden" name="seo_title" id="be-seo-title-hidden">
-  <input type="hidden" name="seo_desc" id="be-seo-desc-hidden">
-  <input type="hidden" name="author_id" id="be-show-author-hidden">
-  <input type="hidden" name="published_at" id="be-show-date-hidden">
-  <input type="hidden" name="read_time" id="be-show-readtime-hidden">
-  <input type="hidden" name="view_count" id="be-views-hidden">
-</form>
-
-<form id="be-post-form" method="POST" action="<?= url("admin/posts"); ?>" style="display:none">
+<form id="be-post-form" method="POST" action="<?= url("admin/posts"); ?>" class="hidden">
   <?= csrf_field() ?>
   <input type="hidden" id="be-editor-data" name="editor_data" />
 </form>
@@ -302,12 +334,13 @@ $statusLabels = [
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#be-post-form');
 
-    document.getElementById('be-publish-btn')?.addEventListener('click', () => {
-      const payload = window.BeEditor.getPayloadForSave();
+    document.querySelector('#be-publish-btn')?.addEventListener('click', () => {
+      const payload = window.BeEditor.getPayload();
+      console.log(payload);
 
       document.querySelector('#be-editor-data').value = JSON.stringify(payload);
 
-      form.submit();
+      // form.submit();
     });
   });
 </script>

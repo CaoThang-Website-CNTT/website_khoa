@@ -99,70 +99,89 @@ export class EditorUI {
   }
 
   #initMetaUIEvents() {
-    const titleInput = document.querySelector('#be-canvas-title');
-    const authorSelect = document.querySelector('#be-author-select');
-    const statusSelect = document.querySelector('#be-status-select');
-    const excerptInput = document.querySelector('#be-excerpt-input');
+    const metaElements = document.querySelectorAll('[data-be-meta-key]');
 
-    if (titleInput) {
-      titleInput.addEventListener('input', (e) => {
-        const newTitle = e.target.innerText.trim();
-        this.#bus.dispatch('meta:update_request', { key: 'title', value: newTitle });
-      });
+    metaElements.forEach(el => {
+      if (el.classList.contains('switch')) {
+        el.addEventListener('click', () => {
+          const key = el.dataset.beMetaKey;
+          const newValue = el.dataset.switchState !== 'checked'; // Đảo ngược trạng thái
+          this.#bus.dispatch('meta:update_request', { key, value: newValue });
+        });
+      }
+      else {
+        el.addEventListener('input', (e) => {
+          const key = el.dataset.beMetaKey;
+          let value = e.target.value;
 
-      titleInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-        }
-      });
-    }
-
-    if (authorSelect) {
-      authorSelect.addEventListener('change', (e) => {
-        this.#bus.dispatch('meta:update_request', { key: 'author_id', value: e.target.value });
-      });
-    }
-
-    if (statusSelect) {
-      statusSelect.addEventListener('change', (e) => {
-        this.#bus.dispatch('meta:update_request', { key: 'status', value: e.target.value });
-      });
-    }
-
-    if (excerptInput) {
-      excerptInput.addEventListener('input', (e) => {
-        this.#bus.dispatch('meta:update_request', { key: 'excerpt', value: e.target.value });
-      });
-    }
-
-    this.#bus.subscribe('meta:updated', ({ key, value }) => {
-      this.#syncMetaUIToState(key, value);
+          if (el.type === 'number') value = parseInt(value) || 0;
+          this.#bus.dispatch('meta:update_request', { key, value });
+        });
+      }
     });
 
-    if (this.tabPostBtn && this.tabBlockBtn) {
-      this.tabPostBtn.addEventListener('click', () => this.switchRightTab('post'));
-      this.tabBlockBtn.addEventListener('click', () => this.switchRightTab('block'));
-    }
-  }
+    this.#bus.subscribe('meta:updated', ({ key, value }) => {
+      const elements = document.querySelectorAll(`[data-meta-key="${key}"]`);
 
-  #syncMetaUIToState(key, value) {
-    if (key === 'author_id') {
-      const select = document.querySelector('#be-author-select');
-      if (select && select.value !== String(value)) select.value = value;
-    }
-    if (key === 'status') {
-      const select = document.querySelector('#be-status-select');
-      if (select && select.value !== value) select.value = value;
-    }
-    if (key === 'title') {
-      const postTitle = document.querySelector('#be-post-title');
-      postTitle.innerText = value || 'Không có tiêu đề';
-    }
-    if (key === 'excerpt') {
-      const excerptInput = document.querySelector('#be-excerpt-input');
-      if (excerptInput && excerptInput.value !== value) {
-        excerptInput.value = value || '';
-      }
+      elements.forEach(el => {
+        if (el.classList.contains('switch')) {
+          const stateStr = value ? 'checked' : 'unchecked';
+          el.dataset.switchState = stateStr;
+
+          const thumb = el.querySelector('.switch__thumb');
+          if (thumb) thumb.dataset.switchState = stateStr;
+
+          // Xử lý riêng cho nút View Botting
+          if (key === 'show_view_count') {
+            const wrapper = document.querySelector('#be-view-botting-wrapper');
+            if (wrapper) wrapper.classList.toggle("hidden");
+          }
+        }
+        else {
+          if (el.value != value) el.value = value;
+        }
+      });
+
+      const previewElements = document.querySelectorAll(`[data-be-meta-preview="${key}"]`);
+
+      previewElements.forEach(previewEl => {
+        const action = previewEl.dataset.bePreviewAction || 'text';
+
+        if (action === 'toggle') {
+          previewEl.classList.toggle("hidden");
+        }
+
+        else if (action === 'text') {
+          let displayText = value;
+
+          const sourceInput = document.querySelector(`select[data-be-meta-key="${key}"]`);
+          if (sourceInput && sourceInput.options) {
+            displayText = sourceInput.options[sourceInput.selectedIndex]?.text || value;
+          }
+
+          if (previewEl.textContent !== displayText) {
+            previewEl.textContent = displayText || previewEl.dataset.previewDefault || '';
+          }
+        }
+
+        else if (action === 'status-badge') {
+          const statusLabels = { draft: 'Nháp', published: 'Đã xuất bản', archived: 'Lưu trữ' };
+          previewEl.textContent = statusLabels[value] || 'Nháp';
+          previewEl.dataset.variant = value === 'published' ? 'primary' : 'secondary';
+        }
+      });
+    });
+
+    this.#bus.dispatch('meta:sync_request');
+
+    // ==========================================
+    // Tìm button tab dựa vào thuộc tính data của chúng
+    const tabPostBtn = document.querySelector('[data-tabs-trigger="be-post-settings-panel"]');
+    const tabBlockBtn = document.querySelector('[data-tabs-trigger="be-block-settings-panel"]');
+
+    if (tabPostBtn && tabBlockBtn) {
+      tabPostBtn.addEventListener('click', () => this.switchRightTab('post'));
+      tabBlockBtn.addEventListener('click', () => this.switchRightTab('block'));
     }
   }
 
