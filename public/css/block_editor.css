@@ -19,13 +19,19 @@
   width: 0.25rem;
 }
 
+.be-table-scroll::-webkit-scrollbar {
+  height: 0.25rem;
+}
+
 .be-panel__content::-webkit-scrollbar-track,
-#be-canvas-wrap::-webkit-scrollbar-track {
+#be-canvas-wrap::-webkit-scrollbar-track,
+.be-table-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .be-panel__content::-webkit-scrollbar-thumb,
-#be-canvas-wrap::-webkit-scrollbar-thumb {
+#be-canvas-wrap::-webkit-scrollbar-thumb,
+.be-table-scroll::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: var(--radius-md);
 }
@@ -218,13 +224,6 @@
   font-size: var(--text-xs);
 }
 
-/* List view tab */
-.be-list-item {
-  display: flex;
-  align-items: center;
-  font-size: var(--text-sm);
-}
-
 /* =============================================================
    CANVAS — center
    ============================================================= */
@@ -299,21 +298,7 @@
 }
 
 .be-block-card:hover {
-  background: mix(in oklab, var(--primary) 10%, transparent);
-}
-
-.be-block-card.dragging {
-  opacity: 0.4;
-}
-
-.be-block-card.drag-over-top {
-  border-top-color: #2563eb;
-  border-top-width: 2px;
-}
-
-.be-block-card.drag-over-bottom {
-  border-bottom-color: #2563eb;
-  border-bottom-width: 2px;
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
 }
 
 /* Drag handle — xuất hiện khi hover */
@@ -332,8 +317,7 @@
   user-select: none;
 }
 
-.be-block-card:hover .be-drag-handle,
-.be-block-card.selected .be-drag-handle {
+.be-block-card:hover .be-drag-handle {
   opacity: 1;
 }
 
@@ -352,6 +336,19 @@
 
 .be-toolbar__item--destructive:hover {
   background: color-mix(in oklab, var(--destructive) 10%, transparent);
+}
+/* =============================================================
+   List view
+   ============================================================= */
+.be-list-view__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.be-list-view__item:hover {
+  outline: 1px solid var(--primary);
 }
 /* =============================================================
    BLOCK PREVIEWS — trong canvas, render như trang public thật
@@ -519,28 +516,10 @@
   pointer-events: none;
 }
 
-/* =============================================================
-   List view
-   ============================================================= */
-.be-list-view__item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0;
-}
-
-.be-list-view__item:hover {
-  outline: 1px solid var(--primary);
-}
-
-/* ─────────────────────────────────────────
-   LIST BLOCK
-   ───────────────────────────────────────── */
-
 .be-preview-list {
-  margin: 0;
-  padding-left: 1.5rem;
+  padding-left: 1rem;
   outline: none;
+  list-style-position: outside;
 }
 
 .be-preview-list--ol {
@@ -554,10 +533,13 @@
 .be-list-nested {
   padding-left: 1.5rem;
   margin: 0;
-  list-style-type: circle;
+  display: block;
 }
 
-.be-list-nested .be-list-nested {
+.be-preview-list--ul .be-list-nested {
+  list-style-type: circle;
+}
+.be-preview-list--ul .be-list-nested .be-list-nested {
   list-style-type: square;
 }
 
@@ -567,23 +549,20 @@
 }
 
 .be-list-item-text {
-  display: inline;
+  display: inline-block;
+  vertical-align: top;
+  width: 100%;
   outline: none;
   min-width: 4px;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* Placeholder */
 .be-list-item-text:empty::before {
   content: attr(data-placeholder);
   color: var(--muted-foreground);
   pointer-events: none;
 }
-
-/* ─────────────────────────────────────────
-   TABLE BLOCK
-   ───────────────────────────────────────── */
 
 .be-preview-table-wrapper {
   display: flex;
@@ -596,125 +575,16 @@
   overflow-x: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
+
+  container-type: inline-size;
 }
 
 .be-table {
   border-collapse: collapse;
-  width: 100%;
-  table-layout: auto;
-  font-size: 0.9rem;
-}
-
-.be-table--fixed {
+  width: max-content;
+  min-width: fit-content;
   table-layout: fixed;
-}
-
-/* ── Col control row (xóa cột) ── */
-.be-table-col-controls {
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.be-table-scroll:hover .be-table-col-controls,
-.be-table-col-controls:focus-within {
-  opacity: 1;
-}
-
-.be-table-col-control-cell {
-  padding: 2px 4px;
-  text-align: center;
-  border: none;
-  background: transparent;
-  width: 36px;
-}
-
-.be-table-col-del-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--background);
-  color: var(--destructive);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  transition:
-    background 0.1s,
-    color 0.1s;
-}
-
-.be-table-col-del-btn:hover {
-  background: var(--destructive);
-  color: var(--text-danger);
-  border-color: var(--border-danger);
-}
-
-.be-table-add-col-cell {
-  width: 36px;
-}
-
-.be-table-add-col-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1px solid var(--border-secondary);
-  background: var(--background-primary);
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  transition: background 0.1s;
-}
-
-.be-table-add-col-btn:hover {
-  background: var(--background-info);
-  color: var(--text-info);
-}
-
-/* ── Row action cell (xóa hàng) ── */
-.be-table-row-action-cell {
-  width: 28px;
-  padding: 0 2px;
-  border: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-  vertical-align: middle;
-}
-
-tr:hover .be-table-row-action-cell,
-.be-table-row-action-cell:focus-within {
-  opacity: 1;
-}
-
-.be-table-row-del-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--background);
-  color: var(--destructive);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  transition:
-    background 0.1s,
-    color 0.1s;
-}
-
-.be-table-row-del-btn:hover {
-  background: var(--destructive);
-  color: var(--text-danger);
-}
-
-.be-table-row-del-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+  font-size: var(-text-sm);
 }
 
 /* ── Cells ── */
@@ -723,45 +593,42 @@ tr:hover .be-table-row-action-cell,
   border: 1px solid var(--border);
   vertical-align: top;
   outline: none;
-  min-width: 80px;
+  min-width: calc(100cqw / 3);
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 thead .be-table-cell,
 .be-table th.be-table-cell {
-  background: var(--background-secondary);
+  background: var(--background);
   font-weight: 500;
   color: var(--foreground);
 }
 
 .be-table-cell:focus {
-  outline: 2px solid var(--border-info, #3b82f6);
+  outline: 2px solid var(--primary);
   outline-offset: -2px;
 }
 
-/* Placeholder cho cell rỗng */
 .be-table-cell:empty::before {
   content: attr(data-placeholder);
-  color: var(--text-tertiary);
+  color: var(--muted-foreground);
   pointer-events: none;
 }
 
-/* Container bao bọc bảng */
 .be-table-wrapper {
   padding: 0.5rem;
 }
 
-/* Style chung cho 2 Handles */
 .be-table-col-handle,
 .be-table-row-handle {
   position: absolute;
-  display: none; /* Ẩn đi, Step 2 mình sẽ dùng JS bật lên */
+  display: none;
   align-items: center;
   justify-content: center;
-  background-color: #f1f5f9;
-  color: #64748b;
-  border-radius: 4px;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   z-index: 10;
   font-size: var(--text-xs);
@@ -777,8 +644,8 @@ thead .be-table-cell,
 
 .be-table-col-handle:hover,
 .be-table-row-handle:hover {
-  background-color: #e2e8f0;
-  color: #0f172a;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .be-table-col-handle {
@@ -793,16 +660,12 @@ thead .be-table-cell,
   left: 0;
 }
 
-/* Màu nền bôi xanh nhẹ giống Notion khi chọn Dòng/Cột */
 .be-table td.be-cell-selected,
 .be-table th.be-cell-selected {
-  background-color: #e0f2fe !important; /* Xanh nhạt Tailwind (sky-100) */
-  /* Hoặc bạn có thể dùng rgba(46, 170, 220, 0.15) */
+  background-color: color-mix(
+    in oklab,
+    var(--primary) 5%,
+    transparent
+  ) !important;
   transition: background-color 0.15s ease;
-}
-
-/* Tùy chọn: Làm cho Handle đứng im (không bị biến mất) nếu đang chọn */
-.be-table-wrapper.is-selecting .be-table-col-handle,
-.be-table-wrapper.is-selecting .be-table-row-handle {
-  /* Bạn có thể cấu hình thêm sau này để giữ handle hiển thị khi menu mở */
 }

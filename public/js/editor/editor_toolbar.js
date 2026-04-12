@@ -58,10 +58,25 @@ export class EditorBlockToolbar {
 
     this.#root.addEventListener('dropdown:select', (e) => {
       const { item } = e.detail;
-      const action = item.dataset.action;
 
       if (item.dataset.action === 'remove' && this.#currentBlock) {
         this.#bus.dispatch('block:removed', { blockId: this.#currentBlock.id });
+      }
+    });
+
+    this.#deleteBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      if (this.#currentBlock) {
+        this.#bus.dispatch('block:removed', { blockId: this.#currentBlock.id });
+
+        try {
+          if (DropdownHandler.instance.close) {
+            DropdownHandler.instance.close(EditorBlockToolbar.DROPDOWN_ID);
+          }
+        } catch (err) {
+          console.warn('Không thể đóng Dropdown bằng Handler, đã tự động ẩn nội dung.');
+        }
       }
     });
 
@@ -76,8 +91,17 @@ export class EditorBlockToolbar {
       if (action && action.startsWith('table:') && this.#currentBlock) {
         this.#currentBlock.handleToolbarAction(action, this.#currentSelection);
 
+        this.#dynamicArea.innerHTML = '';
+        this.#dynamicArea.style.display = 'none';
+
         // Đóng dropdown sau khi xử lý xong
-        DropdownHandler.instance.close(EditorBlockToolbar.DROPDOWN_ID);
+        try {
+          if (DropdownHandler.instance.close) {
+            DropdownHandler.instance.close(EditorBlockToolbar.DROPDOWN_ID);
+          }
+        } catch (err) {
+          console.warn('Không thể đóng Dropdown bằng Handler, đã tự động ẩn nội dung.');
+        }
       }
     });
   }

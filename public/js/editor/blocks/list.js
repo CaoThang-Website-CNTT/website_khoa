@@ -16,21 +16,6 @@ export const ListSchema = {
   }
 };
 
-/**
- * ListBlock
- *
- * Data model (recursive):
- *   type ListNode = { text: string, children: ListNode[] }
- *   block.data.values: ListNode[]
- *
- * DOM strategy:
- *   - Render toàn bộ cây thành <ul>/<ol> lồng nhau.
- *   - Mỗi <li> có contenteditable span để nhận input.
- *   - Tab / Shift+Tab → indent / outdent (max depth = 3).
- *   - Enter trên item rỗng → outdent; nếu depth=0 → exit block.
- *   - Structural change (indent/outdent/add/remove) → re-render DOM + dispatch block:updated.
- *   - Text change → chỉ write vào data tree, KHÔNG re-render, KHÔNG dispatch (in-place).
- */
 export class ListBlock extends EditorBlock {
 
   /** @type {HTMLElement} Root list element */

@@ -97,8 +97,6 @@ export class EditorManager {
     this.#initialRender();
     this.#initCanvas();
 
-    this.#initKeyboardShortcuts();
-
     console.log('[EditorManager] Khởi tạo thành công.');
   }
 
@@ -152,29 +150,6 @@ export class EditorManager {
         this.#bus.dispatch('block:selected', { blockId: clickedId });
       }
     });
-  }
-
-  #initKeyboardShortcuts() {
-    // Lắng nghe sự kiện keydown trên canvas
-    this.#blockList.addEventListener('keydown', (e) => {
-      if (e.key !== 'Backspace') return;
-
-      const target = e.target;
-      if (target.getAttribute('contenteditable') !== 'true') return;
-
-      const card = target.closest('.be-block-card');
-      if (!card) return;
-
-      const textContent = target.textContent.trim();
-
-      if (textContent === '') {
-        e.preventDefault();
-
-        const blockId = card.dataset.beBlockId;
-
-        this.#bus.dispatch('block:remove_request', { blockId });
-      }
-    })
   }
 
   #onBlockAddRequested({ type }) {

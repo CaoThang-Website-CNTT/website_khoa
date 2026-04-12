@@ -16,14 +16,10 @@ export const TableSchema = {
       ]
     },
     hasHeader: { default: true },
-    fixedWidth: { default: false },
   },
   supports: {}
 };
 
-/**
- * TableBlock v2 - Block-Driven Architecture
- */
 export class TableBlock extends EditorBlock {
 
   /** @type {{ row: number, col: number } | null} */
@@ -34,6 +30,14 @@ export class TableBlock extends EditorBlock {
   #tableWrapper = null;
   #rowHandle = null;
   #colHandle = null;
+
+  constructor(...args) {
+    super(...args);
+
+    if (this.data && this.data.rows) {
+      this.data.rows = JSON.parse(JSON.stringify(this.data.rows));
+    }
+  }
 
   render() {
     const wrapper = document.createElement('div');
@@ -64,7 +68,7 @@ export class TableBlock extends EditorBlock {
     scrollWrap.className = 'be-table-scroll';
 
     const table = document.createElement('table');
-    table.className = `be-table${this.data.fixedWidth ? ' be-table--fixed' : ''}`;
+    table.className = `be-table`;
     table.contentEditable = 'false';
 
     const { rows, hasHeader } = this.data;
@@ -228,7 +232,7 @@ export class TableBlock extends EditorBlock {
           <i class="fa-solid fa-arrow-down"></i>
           <span class="dropdown__item-label">Thêm dòng bên dưới</span>
         </button>
-        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:delete-row">
+        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:remove-row">
           <i class="fa-solid fa-trash-can"></i>
           <span class="dropdown__item-label">Xóa dòng</span>
         </button>
@@ -237,15 +241,15 @@ export class TableBlock extends EditorBlock {
 
     if (selection.type === 'col') {
       return `
-        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-left">
+        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-before">
           <i class="fa-solid fa-arrow-left"></i>
           <span class="dropdown__item-label">Thêm cột bên trái</span>
         </button>
-        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-right">
+        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-after">
           <i class="fa-solid fa-arrow-right"></i>
           <span class="dropdown__item-label">Thêm cột bên phải</span>
         </button>
-        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:delete-col">
+        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:remove-col">
           <i class="fa-solid fa-trash-can"></i>
           <span class="dropdown__item-label">Xóa cột</span>
         </button>
@@ -257,14 +261,17 @@ export class TableBlock extends EditorBlock {
   handleToolbarAction(action, selection) {
     if (!selection) return;
 
-    // Clone data ra để tránh lỗi tham chiếu
-    let newRows = JSON.parse(JSON.stringify(this.data.rows));
+    // Ẩn handle và clear highlight đi vì sau khi render lại DOM sẽ thay đổi
+    this.#clearHighlight();
+    if (this.#colHandle) this.#colHandle.style.display = 'none';
+    if (this.#rowHandle) this.#rowHandle.style.display = 'none';
+
     const { type, index } = selection;
 
     switch (action) {
       // Nhánh xử lý Dòng
-      case 'table:insert-row-before': this.insertRowBefore(index); break;
-      case 'table:insert-row-after': this.insertRowAfter(index); break;
+      case 'table:insert-row-above': this.insertRowBefore(index); break;
+      case 'table:insert-row-below': this.insertRowAfter(index); break;
       case 'table:remove-row': this.removeRow(index); break;
 
       // Nhánh xử lý Cột
@@ -276,15 +283,6 @@ export class TableBlock extends EditorBlock {
         console.warn(`Action ${action} chưa được hỗ trợ trên TableBlock`);
     }
 
-    // Ẩn handle đi vì sau khi render lại DOM sẽ thay đổi
-    this.#colHandle.style.display = 'none';
-    this.#rowHandle.style.display = 'none';
-
-    // Cập nhật lại data và render
-    // Tùy vào setup của bạn, có thể gọi this.onUpdate() nếu EditorManager bắt sự kiện này,
-    // hoặc gán thẳng data và gọi #buildTable() lại.
-    this.data.rows = newRows;
-    this.#buildTable();
   }
 
   /**
@@ -466,31 +464,12 @@ export class TableBlock extends EditorBlock {
           </button>
         </div>
       </div>
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Độ rộng cột</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-table-width-btn ${data.fixedWidth ? 'active' : ''}" data-variant="outline" data-fixed="true">
-            Cố định
-          </button>
-          <button type="button" class="btn be-table-width-btn ${!data.fixedWidth ? 'active' : ''}" data-variant="outline" data-fixed="false">
-            Tự động
-          </button>
-        </div>
-      </div>
     `;
 
     wrap.querySelectorAll('.be-table-header-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         onUpdate({ hasHeader: btn.dataset.hasHeader === 'true' });
         wrap.querySelectorAll('.be-table-header-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
-
-    wrap.querySelectorAll('.be-table-width-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        onUpdate({ fixedWidth: btn.dataset.fixed === 'true' });
-        wrap.querySelectorAll('.be-table-width-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
     });

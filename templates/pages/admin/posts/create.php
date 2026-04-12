@@ -73,7 +73,7 @@ $statusLabels = [
       <button type="button" class="btn" data-size="md" id="be-toggle-right" title="Ẩn/hiện panel settings">
         <i class="fa-solid fa-table-columns"></i>
       </button>
-      <button type="button" class="btn" data-variant="primary" data-size="md" id="be-save-btn">
+      <button type="button" class="btn" data-variant="primary" data-size="md" id="be-publish-btn">
         Lưu
       </button>
     </div>
@@ -297,14 +297,6 @@ $statusLabels = [
   <?= csrf_field() ?>
   <input type="hidden" id="be-editor-data" name="editor_data" />
 </form>
-
-<!-- ════════════════════════════════════════════════════════════
-     SCRIPTS
-     Load order:
-       1. block_registry.js   — types, renderPreview, renderSettings
-       2. block_editor.js     — core state + canvas + panels
-       3. block_serializer.js — serialize → form submit
-════════════════════════════════════════════════════════════ -->
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
