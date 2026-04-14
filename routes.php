@@ -3,6 +3,7 @@
 use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
 
 $router->get('/', [SiteController::class, 'index']);
+$router->get('/about', [SiteController::class, 'about']);
 $router->get('/admin', [DashboardController::class, 'index']);
 
 // Auth

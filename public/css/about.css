@@ -1,0 +1,323 @@
+.about__breadcrumb {
+  color: #4a5565;
+}
+.about__breadcrumb-link--active {
+  color: var(--foreground);
+}
+.about__hero {
+  height: 432px;
+  padding-top: 6rem;
+}
+.about__hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.5);
+}
+.about__hero-content {
+  max-width: var(--container-5xl);
+  color: var(--primary-foreground);
+}
+.about__hero-title {
+  max-width: 800px;
+}
+.about__hero-desc {
+  max-width: 768px;
+}
+.about__history-image-container,
+.about__tradition-image-container {
+  height: var(--container-sm);
+}
+.about__history-image-caption,
+.about__tradition-image-caption {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+  color: var(--primary-foreground);
+}
+.about__history-header,
+.about__tradition-info {
+  max-width: 400px;
+}
+.about__history-timeline-wrapper,
+.about__tradition-timeline {
+  width: 544px;
+  max-width: 100%;
+}
+.about__history-timeline-year,
+.about__tradition-timeline-year,
+.about__history-stat-number {
+  color: var(--primary);
+}
+.about__history-timeline-desc,
+.about__tradition-timeline-desc,
+.about__history-stat-label {
+  color: #364153;
+}
+.about__history-stat-card {
+  background-color: var(--toast-info-bg);
+}
+
+/* about features */
+.about__features {
+  margin-bottom: 4rem;
+}
+
+.about__features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto auto;
+  gap: 1.5rem;
+}
+
+/* Base card styles */
+.about__feature-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 38px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  min-height: 280px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.about__feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 16px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Primary card (large blue) */
+.about__feature-card--primary {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+  background: linear-gradient(135deg, var(--primary), #193cb8);
+  color: white;
+  padding: 2rem;
+}
+
+.about__feature-card--primary .about__feature-card__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.6;
+  z-index: 0;
+  transition: transform 0.7s ease;
+}
+
+.about__feature-card--primary .about__feature-card__title {
+  font-size: 2.25rem;
+  margin-bottom: 3.5rem;
+}
+
+.about__feature-card--primary .about__feature-card__desc {
+  font-size: 1.125rem;
+}
+
+.about__feature-card--primary:hover .about__feature-card__bg {
+  transform: scale(1.05);
+}
+
+.about__feature-card__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.about__feature-card__content--bottom {
+  justify-content: flex-end;
+}
+
+.about__feature-card__badge {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  font-size: var(--text-sm);
+  margin-bottom: 1.5rem;
+}
+
+/* Main title for primary card */
+.about__feature-card__title {
+  font-size: var(--text-xl);
+}
+
+.about__feature-card__desc.about__feature-card__desc--large {
+  font-size: var(--text-2xl);
+  color: white;
+}
+
+/* Title for secondary cards */
+.about__feature-card__text .about__feature-card__title {
+  font-size: var(--text-xl);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Description for primary card */
+.about__feature-card__desc {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Description for secondary cards */
+.about__feature-card__text .about__feature-card__desc {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+
+.about__feature-card__desc--dark {
+  color: #4a5565;
+}
+
+.about__feature-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: auto;
+}
+
+.about__feature-card__stat {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: 2rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.about__feature-card__stat-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Secondary cards (small cards) - Top Right */
+.about__feature-card--green {
+  grid-column: 3;
+  grid-row: 1;
+  background: var(--green-gradient-alt);
+  color: white;
+}
+
+.about__feature-card--purple-pink {
+  grid-column: 3;
+  grid-row: 2;
+  background: var(--purple-pink-gradient);
+  color: white;
+}
+
+/* Bottom section cards */
+.about__feature-card--orange {
+  grid-column: 2;
+  grid-row: 3;
+  background: var(--orange-red-gradient);
+  color: white;
+}
+
+.about__feature-card--white {
+  grid-column: 3;
+  grid-row: 3;
+  background: white;
+  color: #111828;
+}
+
+.about__feature-card--dark {
+  grid-column: 2;
+  grid-row: 4;
+  background: var(--dark-gradient);
+  color: white;
+}
+
+.about__feature-card--cyan {
+  grid-column: 3;
+  grid-row: 4;
+  background: var(--cyan-blue-gradient);
+  color: white;
+}
+
+.about__feature-card__icon {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  height: 3.5rem;
+  width: 3.5rem;
+  font-size: 2rem;
+  color: white;
+  transition:
+    transform 0.5s ease,
+    color 0.5s ease;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.about__feature-card__icon i {
+  font-size: var(--text-2xl);
+}
+
+.about__feature-card__icon--blue {
+  color: var(--primary);
+}
+
+.about__feature-card__icon--blue {
+  color: var(--primary);
+  background-color: var(--toast-info-bg);
+}
+
+.about__feature-card__text {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.about__feature-card__num {
+  font-size: var(--text-6xl);
+}
+
+.about__feature-card__num--blue {
+  color: var(--primary);
+}
+
+/* Image card (tall) */
+.about__feature-card--image {
+  grid-column: 1;
+  grid-row: 3 / 5;
+  padding: 2rem;
+  color: white;
+}
+
+.about__feature-card--image .about__feature-card__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transition: transform 0.7s ease;
+}
+
+.about__feature-card--image:hover .about__feature-card__bg {
+  transform: scale(1.05);
+}
+
+.about__feature-card__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--card-overlay-gradient);
+  pointer-events: none;
+}

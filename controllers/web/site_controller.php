@@ -63,6 +63,16 @@ class SiteController extends Controller
       'settings' => $this->_settings,
     ], "site_layout");
   }
+  public function about(): void
+  {
+    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
+
+    $this->render('site/about', [
+      'headerMenu' => $headerMenuItems,
+      'settings' => $this->_settings,
+    ], "site_layout");
+  }
 
   // ============================================================================
   // Private helpers

@@ -271,6 +271,21 @@
       rgba(25, 60, 184, 0.7) 50%,
       rgba(0, 0, 0, 0.2) 100%
     );
+
+    --green-gradient-alt: linear-gradient(135deg, #00c951, #009966);
+    --purple-pink-gradient: linear-gradient(135deg, #9810fa, #e60076);
+    --orange-red-gradient: linear-gradient(135deg, #ff6900, #fb2c36);
+    --dark-gradient: linear-gradient(135deg, #0f172b, #314157);
+    --cyan-blue-gradient: linear-gradient(135deg, #00b8db, #2b7fff);
+    --card-overlay-gradient: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.2) 50%,
+      rgba(0, 0, 0, 0) 100%
+    );
+
+    --color-orangered: #ca3500;
+    --color-papayawhip: #ffedd4;
   }
 }
 

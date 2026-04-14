@@ -23,6 +23,7 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/about.css') ?>">
 <link rel="shortcut icon" href="<?= url('assets/images/favicon.svg') ?>" type="image/x-icon">
 
 <script src="<?= url('/public/js/utils.js') ?>"></script>
