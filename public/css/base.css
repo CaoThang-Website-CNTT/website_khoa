@@ -398,6 +398,10 @@
     border: none;
     background: transparent;
   }
+
+  figcaption {
+    display: block;
+  }
 }
 
 /* ==========================================================================

@@ -38,3 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+
+<?php
+// JSON-LD Structured Data - chỉ dùng cho trang about và landing
+if (isset($hasEducationalOrganization) && $hasEducationalOrganization):
+  include_once BASE_PATH . '/templates/partials/json_ld.php';
+endif;
+?>

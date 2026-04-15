@@ -61,6 +61,7 @@ class SiteController extends Controller
       'headerMenu' => $headerMenuItems,
       'carouselSlides' => $carouselSlides,
       'settings' => $this->_settings,
+      'hasEducationalOrganization' => true,
     ], "site_layout");
   }
   public function about(): void
@@ -71,6 +72,7 @@ class SiteController extends Controller
     $this->render('site/about', [
       'headerMenu' => $headerMenuItems,
       'settings' => $this->_settings,
+      'hasEducationalOrganization' => true,
     ], "site_layout");
   }
   public function news(): void
