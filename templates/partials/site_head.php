@@ -6,7 +6,7 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= $_metaTitle ?></title>
 <?php if ($_metaDesc): ?>
-  <meta name="description" content="<?= $_metaDesc ?>">
+<meta name="description" content="<?= $_metaDesc ?>">
 <?php endif; ?>
 
 <!-- ========== All CSS files linkup ========= -->
@@ -24,14 +24,17 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/about.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/news_list.css') ?>">
 <link rel="shortcut icon" href="<?= url('assets/images/favicon.svg') ?>" type="image/x-icon">
 
 <script src="<?= url('/public/js/utils.js') ?>"></script>
 <script src="<?= url('/public/js/toast.js') ?>"></script>
 
 <script>
-  // Khởi tạo toast
-  document.addEventListener('DOMContentLoaded', () => {
-    window.toast = new Toast({ position: 'bottom-right', });
+// Khởi tạo toast
+document.addEventListener('DOMContentLoaded', () => {
+  window.toast = new Toast({
+    position: 'bottom-right',
   });
+});
 </script>

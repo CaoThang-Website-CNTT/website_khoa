@@ -4,6 +4,7 @@ use App\Controllers\{AuthController, DashboardController, MenuController, SiteCo
 
 $router->get('/', [SiteController::class, 'index']);
 $router->get('/about', [SiteController::class, 'about']);
+$router->get('/news', [SiteController::class, 'news']);
 $router->get('/admin', [DashboardController::class, 'index']);
 
 // Auth

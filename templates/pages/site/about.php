@@ -1,4 +1,4 @@
-<section class="about__breadcrumb container">
+<section class="about__breadcrumb">
   <div class="container-wrapper py-4 flex items-center gap-2">
     <a href="/" class="about__breadcrumb-link flex items-center gap-1">
       <div class="about__breadcrumb-icon-wrapper flex items-center justify-center">
