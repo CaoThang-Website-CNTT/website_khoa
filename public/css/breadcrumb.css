@@ -1,0 +1,7 @@
+.breadcrumb {
+  color: #4a5565;
+}
+
+.breadcrumb__link--active {
+  color: var(--foreground);
+}

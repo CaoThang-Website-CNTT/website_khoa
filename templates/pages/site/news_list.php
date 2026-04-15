@@ -1,17 +1,11 @@
-<section class="about__breadcrumb">
-  <div class="container-wrapper py-4 flex items-center gap-2">
-    <a href="/" class="about__breadcrumb-link flex items-center gap-1">
-      <div class="about__breadcrumb-icon-wrapper flex items-center justify-center">
-        <i class="fa-regular fa-house"></i>
-      </div>
-      <span class="about__breadcrumb-text text-sm">Trang chủ</span>
-    </a>
-    <i class="fa-solid fa-chevron-right text-xs"></i>
-    <div class="about__breadcrumb-link about__breadcrumb-link--active flex items-center font-medium">
-      <span class="about__breadcrumb-text text-sm">Tin tức</span>
-    </div>
-  </div>
-</section>
+<?php
+$breadcrumb = [
+  'items' => [
+    ['label' => 'Trang chủ', 'url' => '/', 'active' => false],
+    ['label' => 'Tin tức', 'active' => true],
+  ],
+];
+?>
 <!--News List Title-->
 <section class="news-list__title-section container">
   <div class="container-wrapper">

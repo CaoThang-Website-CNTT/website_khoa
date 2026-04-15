@@ -1,28 +1,12 @@
-<!-- BREADCRUMB: START -->
-<nav class="about__breadcrumb" aria-label="Breadcrumb">
-  <div class="container-wrapper py-4 flex items-center gap-2">
-    <ol class="about__breadcrumb-list flex items-center gap-2" itemscope itemtype="https://schema.org/BreadcrumbList">
-      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" class="flex items-center gap-1">
-        <a href="/" itemprop="item" class="about__breadcrumb-link flex items-center gap-1">
-          <div class="about__breadcrumb-icon-wrapper flex items-center justify-center">
-            <i class="fa-regular fa-house"></i>
-          </div>
-          <span itemprop="name" class="about__breadcrumb-text text-sm">Trang chủ</span>
-        </a>
-        <meta itemprop="position" content="1">
-      </li>
-      <li class="about__breadcrumb-separator flex items-center">
-        <i class="fa-solid fa-chevron-right text-xs"></i>
-      </li>
-      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"
-        class="about__breadcrumb-link about__breadcrumb-link--active flex items-center font-medium" aria-current="page">
-        <span itemprop="name" class="about__breadcrumb-text text-sm">Giới Thiệu</span>
-        <meta itemprop="position" content="2">
-      </li>
-    </ol>
-  </div>
-</nav>
-<!-- BREADCRUMB: END -->
+<?php
+$breadcrumb = [
+  'items' => [
+    ['label' => 'Trang chủ', 'url' => '/', 'active' => false],
+    ['label' => 'Giới Thiệu', 'active' => true],
+  ],
+  'schema' => true,
+];
+?>
 
 <!-- HERO: START -->
 <section class="about__hero relative flex flex-col justify-start items-center overflow-hidden w-full" role="banner"

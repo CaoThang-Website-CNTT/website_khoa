@@ -15,6 +15,9 @@
   <!-- HEADER: END -->
 
   <main>
+    <?php if (isset($breadcrumb) && isset($breadcrumb['items'])): ?>
+      <?php include_once BASE_PATH . '/templates/components/breadcrumb.php'; ?>
+    <?php endif; ?>
     <?= $content; ?>
   </main>
 

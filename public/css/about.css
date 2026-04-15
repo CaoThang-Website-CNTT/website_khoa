@@ -1,9 +1,3 @@
-.about__breadcrumb {
-  color: #4a5565;
-}
-.about__breadcrumb-link--active {
-  color: var(--foreground);
-}
 .about__hero {
   height: 432px;
   padding-top: 6rem;
