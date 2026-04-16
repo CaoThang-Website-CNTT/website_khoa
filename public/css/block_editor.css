@@ -208,6 +208,10 @@
   font-size: var(--text-xs);
 }
 
+#be-post-settings-panel .field__input::placeholder {
+  font-size: var(--text-sm);
+}
+
 /* Block list tab */
 .be-block-group {
   display: grid;
