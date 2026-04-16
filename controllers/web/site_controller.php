@@ -85,6 +85,17 @@ class SiteController extends Controller
       'settings' => $this->_settings,
     ], "site_layout");
   }
+  //Tạm thời để ở đây để test
+  public function news_detail(): void
+  {
+    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
+
+    $this->render('site/news_detail', [
+      'headerMenu' => $headerMenuItems,
+      'settings' => $this->_settings,
+    ], "site_layout");
+  }
 
   // ============================================================================
   // Private helpers
