@@ -60,6 +60,8 @@ class SelectHandler {
     inst.root.dataset.selectOpen = 'true';
     inst.content.dataset.state = 'open';
 
+    document.body.style.overflow = "hidden";
+
     this._position(inst.content, inst.trigger);
     inst.content.style.zIndex = SelectHandler.BASE_Z_INDEX + (++this.#zCounter);
     if (inst.search) { inst.search.value = ''; this._filterItems(inst, ''); requestAnimationFrame(() => inst.search.focus()); }
@@ -71,6 +73,8 @@ class SelectHandler {
     inst.isOpen = false;
     inst.root.dataset.selectOpen = 'false';
     inst.content.dataset.state = 'closed';
+
+    document.body.style.overflow = "auto";
 
     if (inst.contentWrapper) {
       inst.contentWrapper.style.position = '';
@@ -111,7 +115,6 @@ class SelectHandler {
 
     // Normalize options
     let items = [...content.querySelectorAll('.select__item')];
-    console.log(content, items);
     if (dynamicOptions.length) items = this._injectDynamicItems(viewport, dynamicOptions);
     items.forEach(el => el.classList.add('select__item')); // CSS sync
     items.forEach(item => {
