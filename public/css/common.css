@@ -1000,12 +1000,11 @@
 
   .select__trigger {
     display: flex;
-    align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
 
     width: 100%;
-    min-height: var(2rem);
+    height: 2rem;
     padding: 0.5rem 0.5rem;
     padding-left: 0.625rem;
 
@@ -1038,6 +1037,10 @@
   }
 
   .select__value {
+    display: flex;
+    align-items: center;
+    justify-self: self-start;
+    font-size: var(--text-sm);
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1046,6 +1049,7 @@
   }
 
   .select__value[data-select-placeholder] {
+    font-size: var(--text-sm);
     color: var(--muted-foreground);
   }
 

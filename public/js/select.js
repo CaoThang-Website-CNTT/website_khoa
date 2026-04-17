@@ -127,6 +127,8 @@ class SelectHandler {
       }
     });
 
+    const defaultValue = root.dataset.selectDefaultValue || "";
+
     const instance = {
       id, root, trigger, content, search, empty,
       items, placeholder, isMultiple, isSearchable, isDisabled,
@@ -140,6 +142,7 @@ class SelectHandler {
     this._renderTriggerState(instance);
     this._bindTrigger(instance);
     this._bindContent(instance);
+    this._setDefaultValue(instance);
     if (isSearchable && search) this._bindSearch(instance);
   }
 
@@ -273,6 +276,24 @@ class SelectHandler {
     });
   }
 
+  _setDefaultValue(instance) {
+    const defaultValue = instance.root.dataset.selectDefaultValue?.trim();
+    if (!defaultValue) return;
+
+    const values = instance.isMultiple
+      ? defaultValue.split(',').map(v => v.trim()).filter(v => v)
+      : [defaultValue];
+
+    values.forEach(v => {
+      const item = instance.items.find(i => i.dataset.selectValue === v);
+      if (item && !item.dataset.selectDisabled) {
+        instance.selected.add(v);
+      }
+    });
+
+    this._syncSelection(instance);
+    this._renderTriggerState(instance);
+  }
   _bindSearch(instance) {
     instance.search.addEventListener('input', e => {
       e.stopPropagation();

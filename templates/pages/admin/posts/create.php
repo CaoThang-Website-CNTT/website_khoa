@@ -221,22 +221,29 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Tác giả</span>
-                <select class="field__input" id="be-author-select" name="author_id" data-be-meta-key="author_id">
-                  <?php foreach (($authors ?? []) as $author): ?>
-                    <option value="<?= $author ?>">
-                      <?= htmlspecialchars($author->name) ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
+                <button type="button" class="select" data-select-id="be-author-select" data-select-searchable
+                  data-select-placeholder="Chọn tác giả" name="author_id" data-be-meta-key="author_id" role="listbox">
+                  <div class="select__content">
+                    <?php foreach (($authors ?? []) as $author): ?>
+                      <div class="select__item" data-select-value=" <?= $author ?>">
+                        <?= htmlspecialchars($author->name) ?>
+                      </div>
+                    <?php endforeach; ?>
+                  </div>
+                </button>
               </div>
 
               <div class="field">
                 <span class="field__label">Trạng thái</span>
-                <select class="field__input" id="be-status-select" name="status" data-be-meta-key="status">
-                  <option value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>Nháp</option>
-                  <option value="published" <?= $oldStatus === 'published' ? 'selected' : '' ?>>Xuất bản</option>
-                  <option value="archived" <?= $oldStatus === 'archived' ? 'selected' : '' ?>>Lưu trữ</option>
-                </select>
+                <button type="button" class="select" data-select-id="be-status-select" data-select-placeholder="Chọn"
+                  name="status" data-be-meta-key="status" role="listbox" data-select-default-value="draft">
+                  <div class="select__content">
+                    <div class="select__item" data-select-value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>
+                      Nháp</div>
+                    <div class="select__item" data-select-value="published" <?= $oldStatus === 'published' ? 'selected' : '' ?>>Xuất bản</div>
+                    <div class="select__item" data-select-value="archived" <?= $oldStatus === 'archived' ? 'selected' : '' ?>>Lưu trữ</div>
+                  </div>
+                </button>
               </div>
 
               <div class="field">
@@ -247,19 +254,40 @@ $statusLabels = [
 
               <div class="field">
                 <span class="field__label">Danh mục</span>
-                <?php foreach (($categories ?? []) as $cat): ?>
-                  <div class="be-toggle-row">
-                    <input type="checkbox" id="cat-<?= $cat->id ?>" name="category_ids[]" data-be-meta-key="category_ids"
-                      value="<?= $cat->id ?>" <?= in_array($cat->id, $post->category_ids ?? []) ? 'checked' : '' ?>>
-                    <label class="be-toggle-label" for="cat-<?= $cat->id ?>" style="cursor:pointer">
-                      <?= htmlspecialchars($cat->name) ?>
-                    </label>
-                  </div>
-                <?php endforeach; ?>
-                <?php if (empty($categories)): ?>
-                  <div class="be-settings-hint">Chưa có danh mục nào.</div>
-                <?php endif; ?>
-              </div>
+                <button type="button" class="select" 
+                  data-select-id="be-categories-select" 
+                  data-select-multiple 
+                  data-select-searchable 
+                  data-select-placeholder="Chọn danh mục..."
+                  name="category_ids"
+                  data-be-meta-key="category_ids"
+                  role="listbox"
+                  <?php if (empty($categories)): ?>data-select-disabled<?php endif; ?>
+                  <?php 
+                    // Pre-select saved categories (comma-separated values)
+                    $selectedCats = $post->category_ids ?? ($old_input['category_ids'] ?? []);
+                    if (!empty($selectedCats)): 
+                  ?>
+                  data-select-default-value="<?= implode(',', array_map('intval', $selectedCats)) ?>"
+                  <?php endif; ?>
+                  >
+                    <div class="select__content">
+                      <?php if (!empty($categories)): ?>
+                        <?php foreach ($categories as $cat): ?>
+                          <div class="select__item" 
+                              data-select-value="<?= $cat->id ?>"
+                              <?php if ($cat->disabled ?? false): ?>data-select-disabled<?php endif; ?>>
+                            <?= htmlspecialchars($cat->name) ?>
+                          </div>
+                        <?php endforeach; ?>
+                      <?php else: ?>
+                        <div class="select__item" data-select-value="" data-select-disabled>
+                          Chưa có danh mục nào
+                        </div>
+                      <?php endif; ?>
+                    </div>
+                  </button>
+                </div>
 
               <div class="field">
                 <span class="field__label">Mô tả</span>
