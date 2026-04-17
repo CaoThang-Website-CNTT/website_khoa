@@ -2,12 +2,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const switchHandler = new SwitchHandler();
   switchHandler.init();
 });
+
 class SwitchHandler {
   constructor() {
-    this._switchs = document.querySelectorAll(".switch");
+    this.switchMap = new Map();
   }
+
   init() {
-    this._switchs.forEach(switchEl => {
+    const switchElements = document.querySelectorAll(".switch");
+
+    switchElements.forEach(switchEl => {
       const thumb = switchEl.querySelector(".switch__thumb");
       const name = switchEl.getAttribute("name");
 
@@ -18,8 +22,13 @@ class SwitchHandler {
       }
 
       this._bindEvents(switchEl, thumb);
+
+      if (switchEl.id) {
+        this.switchMap.set(switchEl.id, { switchEl, thumb });
+      }
     });
   }
+
   _setDefaultState(switchEl, switchThumb) {
     const initialState = switchEl.dataset.switchDefaultState || "unchecked";
 
@@ -29,6 +38,7 @@ class SwitchHandler {
 
     switchThumb.dataset.switchState = switchEl.dataset.switchState;
   }
+
   _ensureHiddenInput(switchEl, name) {
     let hiddenInput = switchEl.querySelector(`input[type="hidden"][name="${name}"]`);
 
@@ -36,15 +46,17 @@ class SwitchHandler {
       hiddenInput = document.createElement("input");
       hiddenInput.type = "hidden";
       hiddenInput.name = name;
-      hiddenInput.value = switchEl.dataset.state === "checked" ? "1" : "0";
+      hiddenInput.value = switchEl.dataset.switchState === "checked" ? "1" : "0";
       switchEl.appendChild(hiddenInput);
     }
   }
+
   _bindEvents(switchEl, switchThumb) {
     switchEl.addEventListener('click', () => {
       this._toggle(switchEl, switchThumb);
     });
   }
+
   _toggle(switchEl, switchThumb) {
     const currentState = switchEl.dataset.switchState;
     const newState = currentState === "unchecked" ? "checked" : "unchecked";
@@ -55,6 +67,19 @@ class SwitchHandler {
     const hiddenInput = switchEl.querySelector('input[type="hidden"]');
     if (hiddenInput) {
       hiddenInput.value = newState === "checked" ? "1" : "0";
+    }
+  }
+
+  /**
+   * Public method to programmatically toggle a switch by its ID
+   * @param {string} switchId - The ID of the switch element
+   */
+  static toggle(switchId) {
+    if (this.switchMap.has(switchId)) {
+      const { switchEl, thumb } = this.switchMap.get(switchId);
+      this._toggle(switchEl, thumb);
+    } else {
+      console.warn(`SwitchHandler: Không tìm thấy Switch với ID "${switchId}".`);
     }
   }
 }

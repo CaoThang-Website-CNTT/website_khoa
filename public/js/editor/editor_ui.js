@@ -8,6 +8,8 @@ export class EditorUI {
   #inspector;
   /** @type {EditorEventBus} */
   #bus;
+  /** @type {EditorMetaBinder} */
+  #metaBinder;
 
   constructor(bus, registry) {
     this.#bus = bus;
@@ -28,7 +30,7 @@ export class EditorUI {
 
     this.#initPanels();
     this.#initPanelToggle();
-    this.#initMetaUIEvents();
+    this.#initMetaBinder();
   }
   /**
  * Khởi tạo 2 panel
@@ -98,91 +100,8 @@ export class EditorUI {
     });
   }
 
-  #initMetaUIEvents() {
-    const metaElements = document.querySelectorAll('[data-be-meta-key]');
-
-    metaElements.forEach(el => {
-      if (el.classList.contains('switch')) {
-        el.addEventListener('click', () => {
-          const key = el.dataset.beMetaKey;
-          const newValue = el.dataset.switchState !== 'checked'; // Đảo ngược trạng thái
-          this.#bus.dispatch('meta:update_request', { key, value: newValue });
-        });
-      }
-      else {
-        el.addEventListener('input', (e) => {
-          const key = el.dataset.beMetaKey;
-          let value = e.target.value || el.textContent.trim();
-
-          if (el.type === 'number') value = parseInt(value) || 0;
-          this.#bus.dispatch('meta:update_request', { key, value });
-        });
-      }
-    });
-
-    this.#bus.subscribe('meta:updated', ({ key, value }) => {
-      const elements = document.querySelectorAll(`[data-meta-key="${key}"]`);
-
-      elements.forEach(el => {
-        if (el.classList.contains('switch')) {
-          const stateStr = value ? 'checked' : 'unchecked';
-          el.dataset.switchState = stateStr;
-
-          const thumb = el.querySelector('.switch__thumb');
-          if (thumb) thumb.dataset.switchState = stateStr;
-
-          // Xử lý riêng cho nút View Botting
-          if (key === 'show_view_count') {
-            const wrapper = document.querySelector('#be-view-botting-wrapper');
-            if (wrapper) wrapper.classList.toggle("hidden");
-          }
-        }
-        else {
-          if (el.value != value) el.value = value;
-        }
-      });
-
-      const previewElements = document.querySelectorAll(`[data-be-meta-preview="${key}"]`);
-
-      previewElements.forEach(previewEl => {
-        const action = previewEl.dataset.bePreviewAction || 'text';
-
-        if (action === 'toggle') {
-          previewEl.classList.toggle("hidden");
-        }
-
-        else if (action === 'text') {
-          let displayText = value;
-
-          const sourceInput = document.querySelector(`select[data-be-meta-key="${key}"]`);
-          if (sourceInput && sourceInput.options) {
-            displayText = sourceInput.options[sourceInput.selectedIndex]?.text || value;
-          }
-
-          if (previewEl.textContent !== displayText) {
-            previewEl.textContent = displayText || previewEl.dataset.previewDefault || '';
-          }
-        }
-
-        else if (action === 'status-badge') {
-          const statusLabels = { draft: 'Nháp', published: 'Đã xuất bản', archived: 'Lưu trữ' };
-          previewEl.textContent = statusLabels[value] || 'Nháp';
-          previewEl.dataset.variant = value === 'published' ? 'primary' : 'secondary';
-        }
-      });
-    });
-
-    this.#bus.dispatch('meta:sync_request');
-
-    // ==========================================
-    // Tìm button tab dựa vào thuộc tính data của chúng
-    const tabPostBtn = document.querySelector('[data-tabs-trigger="be-post-settings-panel"]');
-    const tabBlockBtn = document.querySelector('[data-tabs-trigger="be-block-settings-panel"]');
-
-    if (tabPostBtn && tabBlockBtn) {
-      tabPostBtn.addEventListener('click', () => this.switchRightTab('post'));
-      tabBlockBtn.addEventListener('click', () => this.switchRightTab('block'));
-    }
+  #initMetaBinder() {
+    this.#metaBinder = new EditorMetaBinder(document.body, this.#bus);
   }
 
   switchRightTab(tabName) {
@@ -255,6 +174,165 @@ export class EditorUI {
     if (hintElement) {
       hintElement.remove();
     }
+  }
+}
+/**
+ * Xử lý binding metadata (theo declarative)
+ */
+class EditorMetaBinder {
+  /**
+   * @param {HTMLElement} container - Root element chứa các phần tử meta controls/previews
+   * @param {EditorEventBus} bus - Event channel
+   */
+  constructor(container, bus) {
+    this.container = container;
+    this.bus = bus;
+    this.controls = new Map();
+    this.previews = new Map();
+    this.#init();
+  }
+
+  #init() {
+    this.#cacheElements();
+    this.#bindEvents();
+
+    this.bus.subscribe('meta:updated', ({ key, value, allMeta }) => {
+      this.#syncControl(key, value);
+      this.#syncPreview(key, value, allMeta);
+    });
+
+    this.bus.dispatch('meta:sync_request');
+  }
+
+  #cacheElements() {
+    // Cache form controls
+    this.container.querySelectorAll('[data-be-meta-key]').forEach(el => {
+      const key = el.dataset.beMetaKey;
+      if (!this.controls.has(key)) this.controls.set(key, []);
+      this.controls.get(key).push(el);
+    });
+
+    // Cache preview elements
+    this.container.querySelectorAll('[data-be-meta-preview]').forEach(el => {
+      const key = el.dataset.beMetaPreview;
+      if (!this.previews.has(key)) this.previews.set(key, []);
+      this.previews.get(key).push(el);
+    });
+  }
+
+  #bindEvents() {
+    this.container.addEventListener('input', e => this.#handleInput(e));
+    this.container.addEventListener('change', e => this.#handleChange(e));
+    this.container.addEventListener('click', e => this.#handleClick(e));
+  }
+
+  #handleInput(e) {
+    console.log("input");
+    const el = e.target.closest('[data-be-meta-key]:not(select, .select, .switch)');
+    if (!el) return;
+    const value = el.type === 'number' ? parseInt(el.value) || 0 : el.value;
+    this.bus.dispatch('meta:update_request', { key: el.dataset.beMetaKey, value });
+  }
+
+  #handleChange(e) {
+    const el = e.target.closest('select[data-be-meta-key]');
+    if (!el) return;
+    this.bus.dispatch('meta:update_request', { key: el.dataset.beMetaKey, value: el.value });
+  }
+
+  #handleClick(e) {
+    const switchEl = e.target.closest('.switch[data-be-meta-key]');
+    if (switchEl) {
+      e.preventDefault();
+      const key = switchEl.dataset.beMetaKey;
+      const current = switchEl.dataset.switchState === 'checked';
+
+      this.bus.dispatch('meta:update_request', { key, value: current });
+      return;
+    }
+
+    const selectItem = e.target.closest('.select__item[data-select-value]');
+    if (selectItem) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const selectEl = selectItem.closest('.select');
+      if (!selectEl) return;
+
+      const key = selectEl.dataset.beMetaKey;
+      const value = selectItem.dataset.selectValue;
+
+      if (key) {
+        this.bus.dispatch('meta:update_request', { key, value });
+      }
+      return;
+    }
+  }
+
+  #syncControl(key, value) {
+    this.controls.get(key)?.forEach(el => {
+      if (el.classList.contains('switch')) {
+        const state = value ? 'checked' : 'unchecked';
+        el.dataset.switchState = state;
+        el.querySelector('.switch__thumb')?.setAttribute('data-switch-state', state);
+      }
+      else if (el.classList.contains('select')) {
+        this.#updateSelectUI(el, value);
+      }
+      else if (el.tagName === 'SELECT') {
+        el.value = value;
+      }
+      else {
+        el.value = value ?? '';
+      }
+    });
+  }
+
+  #syncPreview(key, value, allMeta) {
+    console.log("sync preview", this.previews.get(key), key, value, allMeta);
+    this.previews.get(key)?.forEach(el => {
+      const action = el.dataset.bePreviewAction || 'text';
+      console.log(el, action);
+      switch (action) {
+        case 'toggle':
+          el.classList.toggle('hidden', !value);
+          break;
+        case 'text':
+          el.textContent = value ?? el.dataset.previewDefault ?? '';
+          break;
+        case 'status-badge': {
+          const labels = { draft: 'Nháp', published: 'Đã xuất bản', archived: 'Lưu trữ' };
+          el.textContent = labels[value] || 'Nháp';
+          el.dataset.variant = value === 'published' ? 'primary' : 'secondary';
+          break;
+        }
+      }
+
+      if (key === 'show_view_count') {
+        document.getElementById('be-view-botting-wrapper')?.classList.toggle('hidden', !value);
+      }
+    });
+  }
+
+  #updateSelectUI(selectEl, value) {
+    const items = selectEl.querySelectorAll('.select__item');
+    let activeItem = null;
+
+    items.forEach(item => {
+      const isActive = item.dataset.selectValue == value;
+      item.classList.toggle('active', isActive);
+      item.classList.toggle('selected', isActive);
+      if (isActive) activeItem = item;
+    });
+
+    const trigger = selectEl.querySelector('.select__label, .select__trigger, [data-select-label]');
+    if (trigger && activeItem) {
+      trigger.textContent = activeItem.textContent.trim();
+    }
+
+    selectEl.dispatchEvent(new CustomEvent('meta:select-changed', {
+      detail: { key: selectEl.dataset.beMetaKey, value }
+    }));
   }
 }
 class EditorEmptyState {

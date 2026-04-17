@@ -68,7 +68,6 @@ export class HeadingBlock extends EditorBlock {
 
     wrap.querySelectorAll('.be-heading-level-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        console.log(btn.dataset.level);
         onUpdate({ level: parseInt(btn.dataset.level) });
       });
     });
