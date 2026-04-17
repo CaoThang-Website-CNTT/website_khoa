@@ -160,7 +160,7 @@ class PopoverHandler {
     instance.isOpen = false;
     instance.trigger.setAttribute('aria-expanded', 'false');
 
-    instance.content.dataset.state = 'closing';
+    instance.content.dataset.state = 'closed';
     instance.trigger.dataset.state = 'closed';
   }
 

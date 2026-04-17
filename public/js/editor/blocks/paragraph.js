@@ -17,12 +17,12 @@ export const ParagraphSchema = {
 };
 
 export class ParagraphBlock extends EditorBlock {
-  render(data) {
+  render() {
     const el = document.createElement('p');
     el.className = 'be-preview-p be-editable';
     el.contentEditable = 'true';
     el.dataset.placeholder = 'Nhập nội dung đoạn văn...';
-    el.textContent = data?.content || '';
+    el.textContent = this.data?.content || '';
     el.spellcheck = false;
 
     this.dom = el;

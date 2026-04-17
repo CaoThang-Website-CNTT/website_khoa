@@ -312,7 +312,6 @@
 
   .popover__content {
     position: fixed;
-    z-index: 100;
     background: var(--popover);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -331,18 +330,19 @@
   }
 
   .popover__content[data-state="open"],
-  .popover__content[data-state="closing"] {
+  .popover__content[data-state="closed"] {
     display: block;
   }
 
   .popover__content[data-state="open"] {
     display: block;
     opacity: 1;
+    z-index: 100;
     transform: translate(0, 0) scale(1);
     pointer-events: auto;
   }
 
-  .popover__content[data-state="closing"] {
+  .popover__content[data-state="closed"] {
     display: block;
     opacity: 0;
     transform: translate(var(--tw-exit-x, 0), var(--tw-exit-y, 0)) scale(0.95);
@@ -1523,7 +1523,7 @@
       var(--shadow-md),
       0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent);
     outline: none;
-    /* pointer-events: none; */
+
     opacity: 0;
     transform-origin: var(--dropdown-transform-origin, top left);
     transform: scale(0.96) translateY(-4px);
@@ -1533,9 +1533,14 @@
   }
 
   .dropdown__content[data-state="open"] {
+    display: block;
     pointer-events: auto;
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+
+  .dropdown__content[data-state="closed"] {
+    pointer-events: none;
   }
 
   .dropdown__sub {

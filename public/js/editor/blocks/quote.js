@@ -8,8 +8,8 @@ export const QuoteSchema = {
   group: 'paragraph',
   groupLabel: 'Văn Bản',
   attributes: {
-    text: { default: '' },
-    author: { default: '' },
+    content: { default: '' },
+    citation: { default: '' },
   },
   supports: {
     typography: true,
@@ -22,7 +22,7 @@ export class QuoteBlock extends EditorBlock {
   /**@type {HTMLElement} */
   authorEl = null;
 
-  render(data) {
+  render() {
     /* Quote có 2 field: text + author — dùng 2 contenteditable riêng */
     const wrap = document.createElement('blockquote');
     wrap.className = 'be-preview-quote be-editable-wrap';
@@ -33,14 +33,14 @@ export class QuoteBlock extends EditorBlock {
     textEl.contentEditable = 'true';
     textEl.className = 'be-editable';
     textEl.dataset.placeholder = 'Nội dung trích dẫn...';
-    textEl.textContent = data?.text || '';
+    textEl.textContent = this.data?.content || '';
     textEl.spellcheck = false;
 
     const authorEl = document.createElement('cite');
     authorEl.contentEditable = 'true';
     authorEl.className = 'be-editable be-editable-cite';
     authorEl.dataset.placeholder = '— Tác giả (không bắt buộc)';
-    authorEl.textContent = data?.author || '';
+    authorEl.textContent = this.data?.citation || '';
     authorEl.spellcheck = false;
 
     // Lưu lại tham chiếu
@@ -51,8 +51,8 @@ export class QuoteBlock extends EditorBlock {
     wrap.appendChild(authorEl);
 
     const emit = () => onUpdate({
-      text: textEl.textContent,
-      author: authorEl.textContent,
+      content: textEl.textContent,
+      citation: authorEl.textContent,
     });
 
     textEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); authorEl.focus(); } });
