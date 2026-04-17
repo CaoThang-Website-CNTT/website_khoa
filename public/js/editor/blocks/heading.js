@@ -33,7 +33,7 @@ export class HeadingBlock extends EditorBlock {
       e.preventDefault();
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
 
-      this.paste(text);
+      this.paste(this.esc(text));
     });
 
     /* Ngăn Enter xuống dòng (heading là single-line) */
@@ -68,7 +68,8 @@ export class HeadingBlock extends EditorBlock {
 
     wrap.querySelectorAll('.be-heading-level-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        onUpdate({ level: parseInt(btn.dataset.level + 1) });
+        console.log(btn.dataset.level);
+        onUpdate({ level: parseInt(btn.dataset.level) });
       });
     });
 

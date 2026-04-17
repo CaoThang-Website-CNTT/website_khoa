@@ -48,6 +48,7 @@ export class EditorBlock {
    * @param {{onUpdate:Function}} param1 
    */
   renderInspectorControls(
+    data,
     {
       onUpdate,
     } = null
@@ -83,5 +84,14 @@ export class EditorBlock {
     }
 
     bus.dispatch('block:selected', { blockId: this.id });
+  }
+
+  paste(text) {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+    sel.collapseToEnd();
   }
 }

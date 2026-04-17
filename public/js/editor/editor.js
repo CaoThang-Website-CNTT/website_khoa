@@ -229,6 +229,10 @@ export class EditorManager {
     }
   }
 
+  getCanvas() {
+    return this.#canvas;
+  }
+
   getPayload() {
     return {
       meta: this.#metadata.getData(),

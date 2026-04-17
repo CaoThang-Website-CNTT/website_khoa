@@ -31,7 +31,7 @@ export class ParagraphBlock extends EditorBlock {
       e.preventDefault();
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
 
-      this.paste(text);
+      this.paste(this.esc(text));
     });
 
     el.addEventListener('input', () => {

@@ -8,8 +8,8 @@ export const QuoteSchema = {
   group: 'paragraph',
   groupLabel: 'Văn Bản',
   attributes: {
-    content: { default: '' },
-    citation: { default: '' },
+    text: { default: '' },
+    author: { default: '' },
   },
   supports: {
     typography: true,
@@ -65,14 +65,14 @@ export class QuoteBlock extends EditorBlock {
 
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
 
-      this.paste(text);
+      this.paste(this.esc(text));
     });
     authorEl.addEventListener('paste', (e) => {
       e.preventDefault();
 
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
 
-      this.paste(text);
+      this.paste(this.esc(text));
     });
 
     return wrap;
