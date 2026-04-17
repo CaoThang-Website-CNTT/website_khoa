@@ -112,7 +112,7 @@ export class EditorUI {
       else {
         el.addEventListener('input', (e) => {
           const key = el.dataset.beMetaKey;
-          let value = e.target.value;
+          let value = e.target.value || el.textContent.trim();
 
           if (el.type === 'number') value = parseInt(value) || 0;
           this.#bus.dispatch('meta:update_request', { key, value });

@@ -127,7 +127,7 @@ $statusLabels = [
 
         <!-- Tiêu đề bài viết hiển thị trên canvas như trang public -->
         <div class="be-canvas-title-area">
-          <h1 contenteditable="true" id="be-canvas-title" class="be-canvas-title">
+          <h1 contenteditable="true" id="be-canvas-title" class="be-canvas-title" data-be-meta-key="title">
             <?= $oldTitle ? htmlspecialchars($oldTitle) : 'Tiêu đề bài viết' ?>
           </h1>
           <div class="be-canvas-meta">
@@ -214,7 +214,7 @@ $statusLabels = [
             <div class="field-group">
               <div class="field">
                 <span class="field__label">Tiêu đề</span>
-                <div id="be-post-title">
+                <div id="be-post-title" data-be-meta-preview="title">
                   <?= $oldTitle ? htmlspecialchars($oldTitle) : 'Tiêu đề bài viết' ?>
                 </div>
               </div>

@@ -414,7 +414,7 @@ class EditorCanvasMetadata {
   #bus;
 
   #data = {
-    title: '',
+    title: 'Tiêu đề bài viết',
     excerpt: '',
     author_id: null,
     status: 'draft',
