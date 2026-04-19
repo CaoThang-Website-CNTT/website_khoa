@@ -14,6 +14,9 @@ class UploadedFile
     public string $tmpPath,
     public string $originalName,
     public string $extension,
+    public string $mimeType,
+    public int $fileSize,
+    public int $altText,
   ) {
   }
 }
@@ -58,6 +61,7 @@ class UploadedFileHandler
       tmpPath: $fileArray['tmp_name'],
       originalName: $fileArray['name'],
       extension: $extension,
+      mimeType
     );
   }
 
