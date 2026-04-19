@@ -1,6 +1,10 @@
 <?php
 define('BASE_PATH', __DIR__);
 
+require_once BASE_PATH . '/includes/env_loader.php';
+
+App\EnvLoader::load(BASE_PATH . '/.env.local');
+
 // Database
 require_once BASE_PATH . '/includes/core/database.php';
 // Schema
