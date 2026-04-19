@@ -236,7 +236,7 @@ $statusLabels = [
               <div class="field">
                 <span class="field__label">Trạng thái</span>
                 <button type="button" class="select" data-select-id="be-status-select" data-select-placeholder="Chọn"
-                  name="status" data-be-meta-key="status" role="listbox" data-select-default-value="draft">
+                  name="status" data-meta-key="status" data-meta-preview="status" data-meta-action="status-badge" role="listbox" data-select-default-value="draft">
                   <div class="select__content">
                     <div class="select__item" data-select-value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>
                       Nháp</div>
@@ -361,6 +361,50 @@ $statusLabels = [
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#be-post-form');
+    const canvas = window.BeEditor.getCanvas();
+
+    const headingId = canvas.addBlock('blocks/heading', {
+        content: 'Welcome to the Future of Editing',
+        level: 2
+    });
+
+    const introId = canvas.addBlock('blocks/paragraph', {
+        content: 'This post was created entirely via code, demonstrating the power of the underlying API.',
+        align: 'left'
+    }, headingId);
+
+    const imageId = canvas.addBlock('blocks/image', {
+        url: 'https://placehold.co/600x400',
+        alt: 'Placeholder image',
+        caption: 'A sample image inserted via API',
+        align: 'center',
+        width: '100%'
+    }, introId);
+
+    const listId = canvas.addBlock('blocks/list', {
+        values: [
+            { text: 'Fast performance', children: [] },
+            { text: 'Schema-driven data', children: [] },
+            { text: 'Extensible architecture', children: [
+                { text: 'Easy to add new blocks', children: [] }
+            ]}
+        ],
+        ordered: false
+    }, imageId);
+
+    const quoteId = canvas.addBlock('blocks/quote', {
+        content: 'Code is poetry.',
+        citation: 'Matt Mullenweg'
+    }, listId);
+
+    const tableId = canvas.addBlock('blocks/table', {
+        rows: [
+            ['Feature', 'Status'],
+            ['API', 'Ready'],
+            ['UI', 'Polished']
+        ],
+        hasHeader: true
+    }, quoteId);
 
     document.querySelector('#be-publish-btn')?.addEventListener('click', () => {
       const payload = window.BeEditor.getPayload();

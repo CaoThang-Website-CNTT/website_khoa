@@ -144,10 +144,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <option value="" selected>
                   -- Chọn lớp học--
                 </option>
-                <?php foreach ($classrooms as $classroom): ?>
+              <?php foreach ($classrooms as $classroom): ?>
                   <option value=<?= htmlspecialchars($classroom->id) ?>>
                     <?= htmlspecialchars($classroom->short_name); ?>
-                  </option>
+                    </option>
                 <?php endforeach; ?>
               </select>
             </div>
