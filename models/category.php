@@ -22,6 +22,7 @@ class Category
     public ?string $deleted_at = null,
     public ?Category $parent = null,
     public array $children = [],
+    public array $posts = [],
   ) {
   }
 
