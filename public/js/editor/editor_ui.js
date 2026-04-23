@@ -227,7 +227,6 @@ class EditorMetaBinder {
   }
 
   #handleInput(e) {
-    console.log("input");
     const el = e.target.closest('[data-be-meta-key]:not(select, .select, .switch)');
     if (!el) return;
     const value = el.type === 'number' ? parseInt(el.value) || 0 : el.value;

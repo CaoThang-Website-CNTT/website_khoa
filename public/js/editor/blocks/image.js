@@ -7,6 +7,7 @@ export const ImageSchema = {
   groupLabel: 'Phương tiện',
   icon: '<i class="fa-regular fa-image"></i>',
   attributes: {
+    mediaId: { default: null },
     url: { default: '' },       // Đường dẫn ảnh thật sau khi upload
     alt: { default: '' },
     caption: { default: '' },   // Chú thích dưới ảnh
@@ -16,6 +17,28 @@ export const ImageSchema = {
 };
 
 export class ImageBlock extends EditorBlock {
+  /**
+   * post_id hiện tại — chỉ có giá trị khi đang ở chế độ edit (post đã tồn tại).
+   * Khi tạo mới: null — media upload sẽ là "orphan", được attach sau khi post được save.
+   * @type {number|null}
+   */
+  #postId = null;
+
+  constructor(blockData, schema, bus) {
+    super(blockData, schema, bus);
+
+    // Lắng nghe post_id từ metadata qua bus.
+    // Khi edit: EditorCanvasMetadata dispatch 'meta:sync_request' → 'meta:updated' với post_id.
+    // Khi tạo mới: event này không bao giờ có key 'post_id' nên #postId vẫn là null.
+    if (this.bus) {
+      this.bus.subscribe('meta:updated', ({ key, value }) => {
+        if (key === 'post_id' && value) {
+          this.#postId = value;
+        }
+      });
+    }
+  }
+
   render() {
     this.dom = document.createElement('figure');
     this.dom.className = `be-preview-image be-align-${this.data.align}`;
@@ -90,6 +113,7 @@ export class ImageBlock extends EditorBlock {
   }
 
   async #handleUpload(file) {
+    // Hiển thị preview mờ + spinner ngay lập tức — không cần chờ server
     const blobUrl = URL.createObjectURL(file);
 
     this.dom.innerHTML = `
@@ -102,19 +126,39 @@ export class ImageBlock extends EditorBlock {
     `;
 
     try {
-      /*
       const formData = new FormData();
-      formData.append('image', file);
-      const response = await fetch('/api/upload', { method: 'POST', body: formData });
-      const result = await response.json();
-      const uploadedUrl = result.url;
-      */
+      formData.append('file', file);
 
-      const uploadedUrl = await new Promise(resolve => {
-        setTimeout(() => resolve(blobUrl), 1500);
+      // alt_text: lấy từ data hiện tại nếu user đã nhập trước đó
+      if (this.data.alt) {
+        formData.append('alt_text', this.data.alt);
+      }
+
+      // post_id: chỉ gửi khi đang edit (post đã tồn tại trên DB).
+      // Khi tạo mới: không gửi — API chấp nhận upload không có post_id,
+      // media sẽ là "orphan" và được attach khi server xử lý payload lúc save.
+      if (this.#postId) {
+        formData.append('post_id', this.#postId);
+      }
+
+      const response = await fetch('http://localhost/website_khoa/api/v1/media', {
+        method: 'POST',
+        body: formData,
       });
 
-      this.data.url = uploadedUrl;
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      this.data.mediaId = result.data.id;
+      this.data.url = `http://localhost/website_khoa/storage/${result.data.file_path}`;
+
+      if (result.data.alt_text && !this.data.alt) {
+        this.data.alt = result.data.alt_text;
+      }
 
       if (this.bus) {
         this.bus.dispatch('block:updated', { block: this });
@@ -126,6 +170,9 @@ export class ImageBlock extends EditorBlock {
       console.error('Lỗi upload ảnh:', error);
       alert('Không thể tải ảnh lên. Vui lòng thử lại.');
       this.#renderCurrentState();
+    } finally {
+      // Giải phóng blob URL khỏi memory dù thành công hay thất bại
+      URL.revokeObjectURL(blobUrl);
     }
   }
 
@@ -139,6 +186,7 @@ export class ImageBlock extends EditorBlock {
     const img = document.createElement('img');
     img.src = this.data.url;
     img.alt = this.data.alt || '';
+    img.loading = 'lazy';
     img.className = 'be-image-element';
 
     img.style.width = this.data.width.includes('%') || this.data.width.includes('px')
@@ -160,9 +208,10 @@ export class ImageBlock extends EditorBlock {
     // Xử lý sự kiện cho caption
     caption.addEventListener('input', () => {
       this.data.caption = caption.textContent.trim();
-      if (this.bus) {
-        this.bus.dispatch('block:updated', { block: this });
-      }
+    });
+
+    caption.addEventListener('blur', () => {
+      if (this.bus) this.bus.dispatch('block:updated', { block: this });
     });
 
     caption.addEventListener('paste', (e) => {
@@ -229,7 +278,9 @@ export class ImageBlock extends EditorBlock {
 
       const imgNode = this.dom.querySelector('.be-image-element');
       if (imgNode) imgNode.alt = this.data.alt;
+    });
 
+    altInput.addEventListener('blur', () => {
       if (this.bus) this.bus.dispatch('block:updated', { block: this });
     });
 
