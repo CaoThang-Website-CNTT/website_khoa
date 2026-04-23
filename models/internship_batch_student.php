@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Models;
+
+class InternshipBatchStudent
+{
+  public function __construct(
+    public ?int $id = null,
+    public ?int $batch_id = null,
+    public ?int $student_id = null,
+    public string $status = 'pending',
+    public string $source = 'db_select',
+    public ?string $note = null,
+    public ?string $created_at = null,
+    public ?string $updated_at = null
+  ) {}
+}

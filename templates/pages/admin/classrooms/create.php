@@ -1,33 +1,33 @@
 <?php
-$errors = request()->session()->getErrors()() ?? [];
+$errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
   window.__specializations__ = <?= json_encode(
-    array_map(fn($s) => [
-      'id' => $s->id,
-      'major_id' => $s->major_id,
-      'full_name' => $s->full_name,
-      'short_name' => $s->short_name,
-    ], $specializations)
-  ) ?>;
+                                  array_map(fn($s) => [
+                                    'id' => $s->id,
+                                    'major_id' => $s->major_id,
+                                    'full_name' => $s->full_name,
+                                    'short_name' => $s->short_name,
+                                  ], $specializations)
+                                ) ?>;
   window.__majors__ = <?= json_encode(
-    array_map(fn($m) => [
-      'id' => $m->id,
-      'short_name' => $m->short_name,
-      'level' => $m->level,
-    ], $majors)
-  ) ?>;
+                        array_map(fn($m) => [
+                          'id' => $m->id,
+                          'short_name' => $m->short_name,
+                          'level' => $m->level,
+                        ], $majors)
+                      ) ?>;
   window.__teachers__ = <?= json_encode(
-    array_map(fn($t) => [
-      'id' => $t->id,
-      'full_name' => $t->full_name,
-      'staff_code' => $t->staff_code,
-      'department' => $t->department,
-    ], $teachers)
-  ) ?>;
+                          array_map(fn($t) => [
+                            'id' => $t->id,
+                            'full_name' => $t->full_name,
+                            'staff_code' => $t->staff_code,
+                            'department' => $t->department,
+                          ], $teachers)
+                        ) ?>;
 </script>
 
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
@@ -265,12 +265,12 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
     classOfInput.addEventListener('input', buildShortName);
 
-    letterInput.addEventListener('input', function () {
+    letterInput.addEventListener('input', function() {
       this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1);
       buildShortName();
     });
 
-    teacherSelect.addEventListener('change', function () {
+    teacherSelect.addEventListener('change', function() {
       const teacherId = parseInt(this.value);
       if (!teacherId) {
         return;
