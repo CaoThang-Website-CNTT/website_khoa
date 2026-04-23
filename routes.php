@@ -1,6 +1,7 @@
 <?php
 
 use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
+use App\Core\Router;
 
 $router->get('/', [SiteController::class, 'index']);
 $router->get('/admin', [DashboardController::class, 'index']);
@@ -11,12 +12,19 @@ $router->get('/login/oauth/callback', [AuthController::class, 'googleOAuthCallba
 $router->get('/onboarding', [AuthController::class, 'onboard']);
 $router->post('/onboarding', [AuthController::class, 'completeOnboarding']);
 
-$router->prefix('admin')->group(function ($router) {
+$router->prefix('admin')->group(function (Router $router) {
   $router->get('/', [DashboardController::class, 'index']);
+
+  // Media
 
   // Posts
   $router->prefix('posts')->group(function ($router) {
     $router->get('/', [PostController::class, 'index']);
+    $router->post('/', [PostController::class, 'store']);
+    $router->get('/create', [PostController::class, 'create']);
+    $router->get('/{post_id}', [PostController::class, 'show']);
+    $router->put('/{post_id}', [PostController::class, 'update']);
+    $router->delete('/{post_id}', [PostController::class, 'delete']);
   });
 
   // Students

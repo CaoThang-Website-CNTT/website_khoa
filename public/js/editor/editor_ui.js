@@ -229,7 +229,15 @@ class EditorMetaBinder {
   #handleInput(e) {
     const el = e.target.closest('[data-be-meta-key]:not(select, .select, .switch)');
     if (!el) return;
-    const value = el.type === 'number' ? parseInt(el.value) || 0 : el.value;
+
+    let value;
+
+    if (el.isContentEditable) {
+      value = el.innerText;
+    } else {
+      value = el.type === 'number' ? parseInt(el.value) || 0 : el.value;
+    }
+
     this.bus.dispatch('meta:update_request', { key: el.dataset.beMetaKey, value });
   }
 

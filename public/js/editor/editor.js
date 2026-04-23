@@ -419,8 +419,9 @@ class EditorCanvasMetadata {
 
   #data = {
     title: 'Tiêu đề bài viết',
+    slug: 'tieu-de-bai-viet',
     excerpt: '',
-    author_id: null,
+    author_id: '1',
     status: 'draft',
     category_ids: [],
     featured_image: null,

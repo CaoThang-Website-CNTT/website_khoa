@@ -24,7 +24,6 @@ class TabHandler {
       const tabId = tabs.dataset.tabsId;
       const initialKey = this.resolveInitialKey(tabs, tabId);
 
-      console.log(tabs, initialKey);
       this.activate(tabs, initialKey);
 
       // Gán events cho tab triggers

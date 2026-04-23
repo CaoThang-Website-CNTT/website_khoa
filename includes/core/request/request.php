@@ -253,11 +253,19 @@ class Request
 
     if ($parsed === null) {
       $raw = file_get_contents('php://input');
-      $parsed = json_decode($raw, true) ?? [];
+      print_r($raw);
+      $decoded = json_decode($raw, true) ?? [];
+
+      if (json_last_error() !== JSON_ERROR_NONE) {
+        $parsed = [];
+      } else {
+        $parsed = $decoded;
+      }
     }
 
     if ($key === null)
       return $parsed;
+
     return $parsed[$key] ?? $default;
   }
 

@@ -52,6 +52,7 @@ class AccountService implements IAccountService
       "is_new" => false
     ];
   }
+
   public function createAccount(string $email, string $rawPassword, string $role): int
   {
     if (!$this->_accountStore->isEmailUnique($email)) {

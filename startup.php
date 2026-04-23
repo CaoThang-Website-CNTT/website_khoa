@@ -57,6 +57,7 @@ require_once BASE_PATH . '/models/student.php';
 require_once BASE_PATH . '/models/teacher.php';
 require_once BASE_PATH . '/models/web_setting.php';
 require_once BASE_PATH . '/models/media.php';
+require_once BASE_PATH . '/models/post.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
@@ -68,6 +69,7 @@ require_once BASE_PATH . '/stores/menu_store.php';
 require_once BASE_PATH . '/stores/web_setting_store.php';
 require_once BASE_PATH . '/stores/carousel_store.php';
 require_once BASE_PATH . '/stores/media_store.php';
+require_once BASE_PATH . '/stores/post_store.php';
 
 // Services
 require_once BASE_PATH . '/services/google_oauth_service.php';
@@ -79,6 +81,7 @@ require_once BASE_PATH . '/services/menu_service.php';
 require_once BASE_PATH . '/services/web_setting_service.php';
 require_once BASE_PATH . '/services/carousel_service.php';
 require_once BASE_PATH . '/services/media_service.php';
+require_once BASE_PATH . '/services/post_service.php';
 
 // Controllers
 // Web

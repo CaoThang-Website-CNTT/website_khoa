@@ -31,10 +31,15 @@ $statusLabels = [
   window.__isEdit__ = <?= $isEdit ? 'true' : 'false' ?>;
 </script>
 
+
+<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>('<?= $flash['title'] ?>', '<?= $flash['desc'] ?>');
+      toast.<?= ($flash['type']) ?>(
+        "<?= htmlspecialchars($flash['title']) ?>",
+        "<?= htmlspecialchars($flash['desc']) ?>"
+      );
     });
   </script>
 <?php endif; ?>
@@ -408,11 +413,11 @@ $statusLabels = [
 
     document.querySelector('#be-publish-btn')?.addEventListener('click', () => {
       const payload = window.BeEditor.getPayload();
-      console.log(payload);
+      console.log("submit", payload);
 
       document.querySelector('#be-editor-data').value = JSON.stringify(payload);
 
-      // form.submit();
+      form.submit();
     });
   });
 </script>

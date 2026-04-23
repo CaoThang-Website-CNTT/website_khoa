@@ -73,6 +73,15 @@
   gap: 6px;
 }
 
+#be-topbar-left {
+  width: var(--left-panel-width);
+}
+
+#be-topbar-right {
+  width: var(--right-panel-width);
+  justify-content: flex-end;
+}
+
 #be-topbar-center {
   display: flex;
   align-items: center;
