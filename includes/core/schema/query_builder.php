@@ -7,6 +7,19 @@ interface IQueryBuilder
 {
   public function insert(array $data): static;
   public function update(array $data): static;
+  /**
+   * Đánh dấu builder ở chế độ DELETE.
+   * - Có WHERE  → DELETE FROM t WHERE …
+   * - Không WHERE, không all() → no-op (toSql trả về '').
+   * - Không WHERE, có all()   → DELETE FROM t  (xóa toàn bộ bảng).
+   */
+  public function delete(): static;
+
+  /**
+   * Cho phép DELETE không có WHERE (xóa toàn bộ bảng).
+   * Bắt buộc phải gọi tường minh — tránh xóa nhầm do quên điều kiện.
+   */
+  public function all(): static;
   /** * Xác định bảng chính để truy vấn dữ liệu.
    */
   public function from(string $table): static;
@@ -82,6 +95,8 @@ class QueryBuilder implements IQueryBuilder
   protected ?int $offset = null;
   protected array $bindings = [];
   protected array $whereBindings = [];
+  protected bool $deleteMode = false;
+  protected bool $deleteAll = false;
 
   public function __construct(ISQLCompiler $compiler)
   {
@@ -96,6 +111,17 @@ class QueryBuilder implements IQueryBuilder
   public function update(array $data): static
   {
     $this->updateData = $data;
+    return $this;
+  }
+
+  public function delete(): static
+  {
+    $this->deleteMode = true;
+    return $this;
+  }
+  public function all(): static
+  {
+    $this->deleteAll = true;
     return $this;
   }
 
@@ -199,6 +225,12 @@ class QueryBuilder implements IQueryBuilder
     if (!empty($this->updateData)) {
       return $this->compiler->compileUpdate($this->table, $this->updateData, $this->wheres);
     }
+    if ($this->deleteMode) {
+      if (empty($this->wheres) && !$this->deleteAll) {
+        return '';
+      }
+      return $this->compiler->compileDelete($this->table, $this->wheres);
+    }
     return $this->compiler->compileSelect(
       $this->table,
       $this->columns,
@@ -218,6 +250,12 @@ class QueryBuilder implements IQueryBuilder
     if (!empty($this->updateData)) {
       // SET values trước, WHERE values sau — đúng thứ tự prepared statement
       return array_merge(array_values($this->updateData), $this->whereBindings);
+    }
+    if ($this->deleteMode) {
+      if (empty($this->wheres) && !$this->deleteAll) {
+        return [];
+      }
+      return $this->whereBindings;
     }
     return $this->whereBindings; // SELECT
   }

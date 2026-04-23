@@ -12,8 +12,6 @@ interface IAccountService
 {
   public function authenticateOAuthUser(array $oauthData): array;
   public function createAccount(string $email, string $rawPassword, string $role): int;
-  public function changePassword(int $accountId, string $oldPassword, string $newPassword): bool;
-  public function forceResetPassword(int $accountId, string $newPassword): bool;
   public function getById(int $accountId): ?Account;
   public function getByEmail(string $email): ?Account;
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
@@ -63,25 +61,6 @@ class AccountService implements IAccountService
     $hashedNewPassword = password_hash($rawPassword, PASSWORD_DEFAULT);
 
     return $this->_accountStore->create($email, $hashedNewPassword, $role);
-  }
-  public function changePassword(int $accountId, string $oldPassword, string $newPassword): bool
-  {
-    $account = $this->_accountStore->getById($accountId);
-
-    $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-
-    if (password_verify($oldPassword, $account->password_hash)) {
-      return false;
-    }
-
-    return $this->_accountStore->updatePassword($accountId, $hashedNewPassword);
-  }
-  public function forceResetPassword(int $accountId, string $newPassword): bool
-  {
-    $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-
-    return $this->_accountStore->updatePassword($accountId, $hashedNewPassword);
-
   }
   public function getById(int $accountId): ?Account
   {

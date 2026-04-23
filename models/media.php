@@ -14,6 +14,7 @@ class Media extends Model
     public int $file_size = 0,
     public string $alt_text = '',
     public ?int $post_id = null,
+    public ?int $uploader_id = null,
     public ?string $created_at = null,
     public ?string $updated_at = null,
     public ?Post $post = null,
@@ -29,6 +30,7 @@ class Media extends Model
       file_size: $row['file_size'],
       alt_text: $row['alt_text'],
       post_id: isset($row['post_id']) ? (int) $row['post_id'] : null,
+      uploader_id: isset($row['uploader_id']) ? (int) $row['uploader_id'] : null,
       created_at: $row['created_at'] ?? null,
       updated_at: $row['updated_at'] ?? null,
     );
