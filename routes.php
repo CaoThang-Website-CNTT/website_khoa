@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
+use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, InternshipAssignmentController, InternshipBatchController};
 
 $router->get('/', [SiteController::class, 'index']);
 $router->get('/admin', [DashboardController::class, 'index']);
@@ -116,5 +116,11 @@ $router->prefix('admin')->group(function ($router) {
       $router->post('/{slideId}', [CarouselController::class, 'updateSlide']);
       $router->post('/delete/{slideId}', [CarouselController::class, 'destroySlide']);
     });
+  });
+
+  // Internship Batches
+  $router->prefix('internship_batches')->group(function ($router) {
+    $router->get('/create', [InternshipBatchController::class, 'create']);
+    $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);
   });
 });

@@ -91,6 +91,10 @@ require_once BASE_PATH . '/controllers/web/menu_controller.php';
 require_once BASE_PATH . '/controllers/web/web_setting_controller.php';
 require_once BASE_PATH . '/controllers/web/carousel_controller.php';
 require_once BASE_PATH . '/controllers/web/post_controller.php';
+require_once BASE_PATH . '/controllers/web/internship_assignment_controller.php';
+require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/student_api_controller.php';
+require_once BASE_PATH . '/controllers/api/internship_assignment_api_controller.php';
+require_once BASE_PATH . '/controllers/api/internship_batch_api_controller.php';
