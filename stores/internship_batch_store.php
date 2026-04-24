@@ -16,6 +16,8 @@ interface IInternshipBatchStore
   public function validateStudentsByStudentIds(array $studentIds): array;
   public function getActiveTeachers(): array;
   public function getAllClassrooms(): array;
+  public function getPaginated(int $page, int $limit = 15): array;
+  public function getTotalCount(): int;
 }
 
 class InternshipBatchStore extends Store implements IInternshipBatchStore
@@ -167,5 +169,26 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getPaginated(int $page, int $limit = 15): array
+  {
+    $offset = ($page - 1) * $limit;
+    $sql = "SELECT * FROM internship_batches 
+            WHERE deleted_at IS NULL 
+            ORDER BY created_at DESC 
+            LIMIT :limit OFFSET :offset";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getTotalCount(): int
+  {
+    $sql = "SELECT COUNT(*) FROM internship_batches WHERE deleted_at IS NULL";
+    $stmt = $this->db->query($sql);
+    return (int)$stmt->fetchColumn();
   }
 }

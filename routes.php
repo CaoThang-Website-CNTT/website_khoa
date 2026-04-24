@@ -120,7 +120,11 @@ $router->prefix('admin')->group(function ($router) {
 
   // Internship Batches
   $router->prefix('internship_batches')->group(function ($router) {
+    $router->get('/', [InternshipBatchController::class, 'index']);
     $router->get('/create', [InternshipBatchController::class, 'create']);
+    $router->get('/{id}', [InternshipBatchController::class, 'show']);
+
+    // Internship Assignments
     $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);
   });
 });
