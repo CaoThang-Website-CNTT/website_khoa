@@ -1,0 +1,381 @@
+input[type="checkbox"],
+.card-clickable-area {
+  cursor: pointer;
+}
+.teacher-checkbox {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.wizard-stepper {
+  margin: 0 auto 2.5rem;
+  min-width: var(--container-md);
+  width: var(--container-4xl);
+}
+
+.stepper-line {
+  position: absolute;
+  top: 1.25rem;
+  left: 3rem;
+  right: 3rem;
+  height: 2px;
+  background-color: var(--border);
+  z-index: 0;
+}
+
+.step-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100px;
+}
+
+.step-circle {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: var(--card);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--fw-semibold);
+  color: var(--muted-foreground);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.step-label {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--muted-foreground);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Active State */
+.step-item.active .step-circle {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 15%, transparent);
+}
+
+.step-item.active .step-label {
+  color: var(--primary);
+  font-weight: var(--fw-bold);
+}
+
+/* Completed State */
+.step-item.completed .step-circle {
+  background-color: var(--toast-success-icon);
+  border-color: var(--toast-success-icon);
+  color: var(--primary-foreground);
+  cursor: pointer;
+}
+
+.step-item.completed:hover .step-circle {
+  box-shadow: 0 0 0 4px
+    color-mix(in oklab, var(--toast-success-icon) 15%, transparent);
+}
+
+/* Wizard Steps Content */
+.wizard-step {
+  width: 100%;
+  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wizard-step.hidden {
+  display: none;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loader */
+.assignment-loader {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  border-radius: var(--radius-lg);
+}
+
+.assignment-loader.hidden {
+  display: none;
+}
+
+/* Step 2: Student Selection */
+#classrooms-container {
+  max-height: 150px;
+  overflow-y: auto;
+}
+.table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  height: 4rem;
+  z-index: 10;
+  background-color: var(--card);
+}
+
+.td-classroom {
+  background-color: var(--muted);
+}
+
+.classroom-badge {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.classroom-badge:hover {
+  background-color: var(--muted);
+  border-color: var(--primary-alt);
+}
+
+.classroom-badge.selected {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.search-bar--students {
+  width: var(--container-xl);
+}
+
+/* Step 3: Teacher Cards */
+.teacher-selection-grid {
+  margin-top: 1rem;
+}
+
+.teacher-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  background: var(--card);
+  display: block;
+}
+
+.teacher-card:hover {
+  border-color: var(--primary-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+.teacher-card.selected {
+  border-color: var(--primary);
+  background-color: color-mix(in oklab, var(--primary) 5%, transparent);
+}
+
+.quota-input {
+  width: 5rem;
+  height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-weight: var(--fw-semibold);
+}
+
+.quota-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 20%, transparent);
+}
+
+/* Sticky Bottom Bar */
+.fixed-bottom-bar {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 3rem);
+  max-width: var(--container-6xl);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  z-index: 100;
+  box-shadow: var(--shadow-xl);
+  margin-left: 125px; /* Adjust for sidebar if needed, but centering usually works */
+}
+
+/* Fix for Sidebar inset layout */
+@media (min-width: 1024px) {
+  .sidebar__inset .fixed-bottom-bar {
+    left: calc(50% + 125px); /* Half of sidebar width */
+    width: calc(100% - 250px - 3rem);
+  }
+}
+
+.quota-summary {
+  transition: all 0.3s ease;
+}
+
+.quota-summary.error {
+  background-color: var(--toast-error-bg);
+  border: 1px solid var(--toast-error-border);
+}
+
+.quota-summary.error #total-capacity-text {
+  color: var(--toast-error-color);
+}
+
+.quota-summary.success {
+  background-color: var(--toast-success-bg);
+  border: 1px solid var(--toast-success-border);
+}
+
+.quota-summary.success #total-capacity-text {
+  color: var(--toast-success-color);
+}
+
+/* Field group inside card content */
+.card__content .field-group {
+  padding: 0;
+}
+
+textarea.field__input {
+  min-height: 100px;
+}
+
+/* --- STEP 3: TEACHER SELECTION --- */
+.teacher-selection-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.department-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
+
+.department-header {
+  background-color: var(--muted);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.department-title {
+  font-weight: 600;
+  color: var(--accent-foreground);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.teacher-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .teacher-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .teacher-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .teacher-card {
+    background-color: white;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
+  }
+
+  .teacher-card:hover {
+    border-color: var(--primary);
+    background-color: rgba(128, 128, 128, 0.05);
+  }
+
+  .teacher-card.selected {
+    border-color: var(--primary);
+    background-color: var(--primary-50);
+  }
+
+  .teacher-info {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .quota-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .quota-input {
+    width: 4.5rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .quota-input:disabled {
+    background-color: rgba(128, 128, 128, 0.1);
+    cursor: not-allowed;
+  }
+
+  .quota-progress-container {
+    height: 8px;
+    background-color: #e5e7eb; /* Gray-200 for better visibility */
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+    width: 100%;
+  }
+
+  .quota-progress-bar {
+    height: 100%;
+    background-color: #2563eb; /* Hardcoded blue if var(--primary) is failing */
+    transition: width 0.3s ease;
+  }
+}
+
+.quota-progress-bar.warning {
+  background-color: #eab308;
+}
+
+.quota-progress-bar.danger {
+  background-color: #dc2626;
+}
+
+.quota-percentage {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-align: center;
+}

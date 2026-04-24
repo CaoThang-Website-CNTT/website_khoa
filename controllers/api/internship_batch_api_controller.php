@@ -29,14 +29,35 @@ class InternshipBatchApiController extends Controller
 
   public function getEligibleStudents(Request $request)
   {
-    $classroomId = $request->query('classroom_id');
-    if (!$classroomId) {
-      return $this->json(['message' => 'Vui lòng cung cấp classroom_id'], 400);
+    $classroomIdsParam = $request->query('classroom_ids');
+
+    if (empty($classroomIdsParam)) {
+      return $this->json([], 200);
     }
-    
+
     try {
-      $students = $this->_service->getEligibleStudentsByClassroom((int)$classroomId);
+      if (is_array($classroomIdsParam)) {
+        $classroomIds = array_map('intval', $classroomIdsParam);
+        $students = $this->_service->getEligibleStudentsByClassrooms($classroomIds);
+      } else {
+        $students = $this->_service->getEligibleStudentsByClassroom((int)$classroomIdsParam);
+      }
       return $this->json($students, 200);
+    } catch (Exception $e) {
+      return $this->json(['message' => $e->getMessage()], 500);
+    }
+  }
+
+  public function validateStudentsBulk(Request $request)
+  {
+    $data = $request->json();
+    if (empty($data['student_ids']) || !is_array($data['student_ids'])) {
+      return $this->json(['message' => 'Vui lòng cung cấp danh sách mssv'], 400);
+    }
+
+    try {
+      $result = $this->_service->validateStudentsBulk($data['student_ids']);
+      return $this->json($result, 200);
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 500);
     }
@@ -54,31 +75,34 @@ class InternshipBatchApiController extends Controller
 
   public function store(Request $request)
   {
-    $data = $request->json();
-    $validator = new Validator();
-    
-    $rules = [
-      'title' => ['required', 'max:255'],
-      'class_of' => ['required'],
-      'level' => ['required', 'in:CĐ,CĐN'],
-      'start_at' => ['required', 'date'],
-      'end_at' => ['required', 'date'],
-      'student_ids' => ['required'], // Array
-      'classroom_ids' => ['required'], // Array
-      'supervisors' => ['required'] // Array of {teacher_id, max_students}
-    ];
-
-    if (!$validator->validate($data, $rules)) {
-      return $this->json(['errors' => $validator->getErrors()], 422, 'Dữ liệu không hợp lệ.');
-    }
-
-    if (strtotime($data['end_at']) <= strtotime($data['start_at'])) {
-      return $this->json(['errors' => ['end_at' => 'Ngày kết thúc phải sau ngày bắt đầu.']], 422, 'Dữ liệu không hợp lệ.');
-    }
-
+    ob_start();
     try {
+      $data = $request->json();
+      $validator = new Validator();
+
+      $rules = [
+        'title' => ['required', 'max:255'],
+        'class_of' => ['required'],
+        'level' => ['required', 'in:CĐ,CĐN'],
+        'start_at' => ['required', 'date'],
+        'end_at' => ['required', 'date'],
+        'student_ids' => ['required'],
+        'classroom_ids' => ['required'],
+        'supervisors' => ['required']
+      ];
+
+      if (!$validator->validate($data, $rules)) {
+        ob_end_clean();
+        return $this->json(['errors' => $validator->getErrors()], 422, 'Dữ liệu không hợp lệ.');
+      }
+
+      if (strtotime($data['end_at']) <= strtotime($data['start_at'])) {
+        ob_end_clean();
+        return $this->json(['errors' => ['end_at' => 'Ngày kết thúc phải sau ngày bắt đầu.']], 422, 'Dữ liệu không hợp lệ.');
+      }
+
       // Giả lập adminId (sau này đổi thành lấy từ Session/Auth)
-      $adminId = 1; 
+      $adminId = 1;
 
       $batchId = $this->_service->createFullBatch(
         [
@@ -95,9 +119,21 @@ class InternshipBatchApiController extends Controller
         $adminId
       );
 
+      $output = ob_get_clean();
+      if (!empty($output)) {
+        return $this->json([
+          'batch_id' => $batchId,
+          'debug_output' => $output
+        ], 201, 'Tạo đợt thực tập thành công.');
+      }
+
       return $this->json(['batch_id' => $batchId], 201, 'Tạo đợt thực tập thành công.');
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      $output = ob_get_clean();
+      return $this->json([
+        'message' => $e->getMessage(),
+        'debug_output' => $output
+      ], 400);
     }
   }
 }

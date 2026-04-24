@@ -13,6 +13,7 @@ $router->prefix('api')->group(function ($router) {
     $router->prefix('internship/batches')->group(function ($router) {
       $router->get('/classrooms', [InternshipBatchApiController::class, 'getClassrooms']);
       $router->get('/students-eligible', [InternshipBatchApiController::class, 'getEligibleStudents']);
+      $router->post('/validate-students-bulk', [InternshipBatchApiController::class, 'validateStudentsBulk']);
       $router->get('/teachers-active', [InternshipBatchApiController::class, 'getActiveTeachers']);
       $router->post('/', [InternshipBatchApiController::class, 'store']);
       

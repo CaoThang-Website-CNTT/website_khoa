@@ -12,6 +12,8 @@ interface IInternshipBatchStore
   public function addStudentsToBatch(int $batchId, array $studentIds): bool;
   public function addSupervisorsToBatch(int $batchId, array $supervisors): bool;
   public function getEligibleStudentsByClassroom(int $classroomId): array;
+  public function getEligibleStudentsByClassrooms(array $classroomIds): array;
+  public function validateStudentsByStudentIds(array $studentIds): array;
   public function getActiveTeachers(): array;
   public function getAllClassrooms(): array;
 }
@@ -97,21 +99,60 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function getEligibleStudentsByClassroom(int $classroomId): array
   {
     // SV không thuộc đợt nào đang "draft" hoặc "public"
-    $sql = "SELECT s.id, s.student_id, s.full_name, s.gender, s.dob
+    $sql = "SELECT s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id
             FROM students s
             LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
             LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'public')
             WHERE s.classroom_id = :classroom_id AND b.id IS NULL AND s.status = 'Đang học'
-            GROUP BY s.id, s.student_id, s.full_name, s.gender, s.dob";
+            GROUP BY s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id";
 
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':classroom_id' => $classroomId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
+  public function getEligibleStudentsByClassrooms(array $classroomIds): array
+  {
+    if (empty($classroomIds)) return [];
+
+    $placeholders = implode(',', array_fill(0, count($classroomIds), '?'));
+    $sql = "SELECT s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id, s.phone
+            FROM students s
+            LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'public')
+            WHERE s.classroom_id IN ($placeholders) AND b.id IS NULL AND s.status = 'Đang học'
+            GROUP BY s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($classroomIds);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function validateStudentsByStudentIds(array $studentIds): array
+  {
+    if (empty($studentIds)) return [];
+
+    $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
+    $sql = "SELECT s.id, s.student_id, s.full_name, s.phone, s.gender, s.classroom_id, s.status,
+            b.id as batch_id, b.status as batch_status, c.short_name as classroom_name
+            FROM students s
+            LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'public')
+            LEFT JOIN classrooms c ON s.classroom_id = c.id AND c.deleted_at IS NULL
+            WHERE s.student_id IN ($placeholders)";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($studentIds);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
   public function getActiveTeachers(): array
   {
-    $sql = "SELECT id, teacher_id, full_name, email, phone FROM teachers WHERE status = 'Đang giảng dạy'";
+    $sql = "SELECT t.id, t.id as teacher_id, t.full_name, a.email, t.phone, d.full_name as department 
+            FROM teachers t
+            JOIN accounts a ON t.account_id = a.id
+            LEFT JOIN departments d ON t.department_id = d.id
+            WHERE t.deleted_at IS NULL";
     $stmt = $this->db->prepare($sql);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -119,7 +160,10 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function getAllClassrooms(): array
   {
-    $sql = "SELECT id, name FROM classrooms";
+    $sql = "SELECT c.id, c.short_name as name, c.class_of, m.level 
+            FROM classrooms c
+            JOIN majors m ON c.major_id = m.id
+            WHERE c.deleted_at IS NULL";
     $stmt = $this->db->prepare($sql);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);

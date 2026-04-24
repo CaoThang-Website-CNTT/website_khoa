@@ -56,6 +56,11 @@ require_once BASE_PATH . '/models/specialization.php';
 require_once BASE_PATH . '/models/student.php';
 require_once BASE_PATH . '/models/teacher.php';
 require_once BASE_PATH . '/models/web_setting.php';
+require_once BASE_PATH . '/models/internship_batch.php';
+require_once BASE_PATH . '/models/internship_batch_student.php';
+require_once BASE_PATH . '/models/internship_batch_supervisor.php';
+require_once BASE_PATH . '/models/internship_assignment.php';
+require_once BASE_PATH . '/models/assignment_log.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
@@ -66,6 +71,8 @@ require_once BASE_PATH . '/stores/category_store.php';
 require_once BASE_PATH . '/stores/menu_store.php';
 require_once BASE_PATH . '/stores/web_setting_store.php';
 require_once BASE_PATH . '/stores/carousel_store.php';
+require_once BASE_PATH . '/stores/internship_batch_store.php';
+require_once BASE_PATH . '/stores/internship_assignment_store.php';
 
 // Services
 require_once BASE_PATH . '/services/google_oauth_service.php';
@@ -76,6 +83,8 @@ require_once BASE_PATH . '/services/category_service.php';
 require_once BASE_PATH . '/services/menu_service.php';
 require_once BASE_PATH . '/services/web_setting_service.php';
 require_once BASE_PATH . '/services/carousel_service.php';
+require_once BASE_PATH . '/services/internship_batch_service.php';
+require_once BASE_PATH . '/services/internship_assignment_service.php';
 
 // Controllers
 // Web
