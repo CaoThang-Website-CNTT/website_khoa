@@ -1,9 +1,14 @@
 a,
+strong,
 b,
-i {
+i,
+em,
+u {
   font-size: inherit;
+  font-weight: unset;
 }
 
+strong,
 b {
   font-weight: bold;
 }

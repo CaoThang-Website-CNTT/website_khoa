@@ -1,8 +1,9 @@
 import { registry as BLOCK_REGISTRY } from './block_registry.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
-import { InlineTextToolbar } from './inline_text_toolbar.js';
-import { EditorBlockToolbar } from './editor_toolbar.js';
+import { InlineToolbar } from './toolbar/inline_toolbar.js';
+import { BlockToolbar } from './toolbar/block_toolbar.js';
+import { InlineFormatter } from './inline_formatter.js';
 import { EditorUI } from './editor_ui.js';
 
 /** Đảm nhận việc truyền tin */
@@ -50,10 +51,10 @@ export class EditorManager {
   #bus;
   /** @type {EditorUI} */
   #ui;
-  /** @type {InlineTextToolbar} */
+  /** @type {InlineToolbar} */
   #inlineToolbar;
-  /** @type {EditorBlockToolbar} */
-  #toolbar;
+  /** @type {BlockToolbar} */
+  #blockToolbar;
   /** @type {EditorListView} */
   #listView;
   /** @type {EditorCanvasMetadata} */
@@ -73,7 +74,7 @@ export class EditorManager {
     this.#canvas = new EditorCanvas(this.#bus);
 
     this.#ui = new EditorUI(this.#bus);
-    this.#toolbar = new EditorBlockToolbar(this.#bus);
+    this.#blockToolbar = new BlockToolbar(this.#bus);
     this.#listView = new EditorListView(this.#bus, this.#canvas);
 
     // Tham chiếu các phần tử DOM
@@ -97,19 +98,20 @@ export class EditorManager {
     this.#bus.subscribe('block:remove_request', (block) => this.#onBlockRemoveRequested(block));
     this.#bus.subscribe('block:removed', (payload) => this.#onBlockRemoved(payload));
 
-    this.#bus.subscribe('text:format_request', ({ command, value }) =>
-      this.#handleInlineFormat(command, value)
-    );
+    this.#bus.subscribe('block:action', (p) => this.#onBlockAction(p));
+    this.#bus.subscribe('inline:selection_changed', (p) => this.#onInlineSelectionChanged(p));
+    this.#bus.subscribe('inline:format_request', (p) => this.#onInlineFormatRequest(p));
+    this.#bus.subscribe('inline:link_request', (p) => this.#onInlineLinkRequest(p));
+    this.#bus.subscribe('inline:unlink_request', (p) => this.#onInlineUnlinkRequest(p));
 
     this.#initialRender();
     this.#initCanvas();
 
-    this.#inlineToolbar = new InlineTextToolbar(
+    this.#inlineToolbar = new InlineToolbar(
       this.#bus,
       this.#blockList,
       { offset: 8, debounceMs: 80 }
     );
-    this.#inlineToolbar.init();
 
     console.log('[EditorManager] Khởi tạo thành công.');
   }
@@ -254,20 +256,185 @@ export class EditorManager {
     }
   }
 
-  #handleInlineFormat(command, value) {
-    if (command === 'createLink' && value) {
-      document.execCommand('createLink', false, value);
+  #onBlockAction({ action, blockId, selection }) {
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
 
-      const anchors = this.#blockList.querySelectorAll('a[href]:not([rel])');
-      anchors.forEach(a => {
-        a.setAttribute('rel', 'noopener noreferrer');
-        a.setAttribute('target', '_blank');
-      });
+    if (typeof block.handleToolbarAction === 'function') {
+      block.handleToolbarAction(action, selection);
     } else {
-      document.execCommand(command, false, value ?? null);
+      console.warn(`[EditorManager] Block "${blockId}" không implement handleToolbarAction()`);
     }
+  }
 
-    this.#bus.dispatch('text:format_applied', { command, value });
+  /**
+   * Khi selection thay đổi trong canvas:
+   *   1. Lấy block đang chứa selection.
+   *   2. Lấy HTML hiện tại của block → parse → tính activeMarks.
+   *   3. Gửi lại 'inline:marks_updated' để InlineToolbar sync button state.
+   *
+   * @param {{ blockId: string, range: Range }} payload
+   */
+  #onInlineSelectionChanged({ blockId, range }) {
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
+
+    const editable = this.#getEditableEl(blockId);
+    if (!editable) return;
+
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    const activeMarks = InlineFormatter.getActiveMarks(tokens, offsets.start, offsets.end);
+
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+  }
+
+  /**
+   * Format request (bold/italic/underline):
+   *   1. Parse HTML → tokens.
+   *   2. applyMark trên [start, end).
+   *   3. serialize → write lại innerHTML.
+   *   4. Restore selection (caret vẫn ở vị trí cũ).
+   *   5. Gửi lại marks mới để toolbar cập nhật.
+   *
+   * @param {{ command: string, value: string|null, blockId: string, range: Range }} payload
+   */
+  #onInlineFormatRequest({ command, blockId, range }) {
+    const editable = this.#getEditableEl(blockId);
+    if (!editable) return;
+
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    const newTokens = InlineFormatter.applyMark(
+      tokens,
+      offsets.start,
+      offsets.end,
+      command  // 'bold' | 'italic' | 'underline'
+    );
+
+    editable.innerHTML = InlineFormatter.serialize(newTokens);
+
+    // Restore selection sau khi innerHTML thay đổi
+    this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+
+    // Tính lại marks và thông báo toolbar
+    const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+
+    // Đánh dấu dirty
+    this.#isDirty = true;
+  }
+
+  /**
+   * Link request:
+   *   applyMark với type='link' và href.
+   *
+   * @param {{ href: string, blockId: string, range: Range }} payload
+   */
+  #onInlineLinkRequest({ href, blockId, range }) {
+    const editable = this.#getEditableEl(blockId);
+    if (!editable) return;
+
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    const newTokens = InlineFormatter.applyMark(
+      tokens,
+      offsets.start,
+      offsets.end,
+      'link',
+      href
+    );
+
+    editable.innerHTML = InlineFormatter.serialize(newTokens);
+    this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+
+    const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+    this.#isDirty = true;
+  }
+
+  /**
+   * Unlink request:
+   *   removeLink trên vùng được chọn.
+   *
+   * @param {{ blockId: string, range: Range }} payload
+   */
+  #onInlineUnlinkRequest({ blockId, range }) {
+    const editable = this.#getEditableEl(blockId);
+    if (!editable) return;
+
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    const newTokens = InlineFormatter.removeLink(tokens, offsets.start, offsets.end);
+
+    editable.innerHTML = InlineFormatter.serialize(newTokens);
+    this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+
+    const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+    this.#isDirty = true;
+  }
+
+  #getEditableEl(blockId) {
+    const card = this.#blockList.querySelector(`[data-be-block-id="${blockId}"]`);
+    if (!card) return null;
+
+    // Ưu tiên element được đánh dấu rõ ràng
+    return (
+      card.querySelector('[data-be-editable]') ??
+      card.querySelector('[contenteditable="true"]') ??
+      null
+    );
+  }
+
+  #restoreSelectionByOffset(container, start, end) {
+    const sel = window.getSelection();
+    if (!sel) return;
+
+    const findPoint = (targetOffset) => {
+      let charCount = 0;
+
+      function walk(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const len = node.textContent.length;
+          if (charCount + len >= targetOffset) {
+            return { node, offset: targetOffset - charCount };
+          }
+          charCount += len;
+          return null;
+        }
+        for (const child of node.childNodes) {
+          const result = walk(child);
+          if (result) return result;
+        }
+        return null;
+      }
+
+      return walk(container);
+    };
+
+    const startPoint = findPoint(start);
+    const endPoint = findPoint(end);
+    if (!startPoint || !endPoint) return;
+
+    try {
+      const range = document.createRange();
+      range.setStart(startPoint.node, startPoint.offset);
+      range.setEnd(endPoint.node, endPoint.offset);
+
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (err) {
+      console.warn('[EditorManager] Không thể restore selection:', err);
+    }
   }
 
   getCanvas() {
