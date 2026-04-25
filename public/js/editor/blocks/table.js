@@ -452,6 +452,8 @@ export class TableBlock extends EditorBlock {
 
   renderInspectorControls(data, { onUpdate }) {
     const wrap = document.createElement('div');
+    wrap.className = "field-group";
+
     wrap.innerHTML = `
       <div class="be-settings-property-section">
         <span class="be-settings-property__label">Header</span>

@@ -50,6 +50,8 @@ export class HeadingBlock extends EditorBlock {
 
   renderInspectorControls(data, { onUpdate }) {
     const wrap = document.createElement('div');
+    wrap.className = "field-group";
+
     // Tạo mảng 3 element tượng trưng cho 3 cấp độ tiêu đề H1, H2, H3
     // Thủ thuật là đơn giản hóa về mặt UI là chỉ hiển thị cấp độ H1, H2, H3
     // Nhưng đằng sau sẽ là từ H2 trở đi do H1 là tiêu đề bài viết

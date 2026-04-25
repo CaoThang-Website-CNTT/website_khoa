@@ -1,0 +1,14 @@
+a,
+b,
+i {
+  font-size: inherit;
+}
+
+b {
+  font-weight: bold;
+}
+
+a {
+  text-decoration: underline;
+  cursor: pointer;
+}

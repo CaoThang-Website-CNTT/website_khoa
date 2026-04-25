@@ -230,33 +230,67 @@ export class ImageBlock extends EditorBlock {
 
   renderInspectorControls() {
     const wrap = document.createElement('div');
+    wrap.className = "field-group";
 
     wrap.innerHTML = `
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Căn lề (Align)</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-align-btn ${this.data.align === 'left' ? 'active' : ''}" data-align="left" title="Căn trái"><i class="fa-solid fa-align-left"></i></button>
-          <button type="button" class="btn be-align-btn ${this.data.align === 'center' ? 'active' : ''}" data-align="center" title="Căn giữa"><i class="fa-solid fa-align-center"></i></button>
-          <button type="button" class="btn be-align-btn ${this.data.align === 'right' ? 'active' : ''}" data-align="right" title="Căn phải"><i class="fa-solid fa-align-right"></i></button>
-          <button type="button" class="btn be-align-btn ${this.data.align === 'full' ? 'active' : ''}" data-align="full" title="Toàn màn hình"><i class="fa-solid fa-arrows-left-right"></i></button>
-        </div>
+      <div class="field">
+        <label class="field__label" for="full_name">Văn bản thay thế (Alt Text)</label>
+        <textarea class="field__input be-alt-input" rows="3" placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.alt)}</textarea>
       </div>
 
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Văn bản thay thế (Alt Text)</span>
-        <textarea class="be-settings-textarea be-alt-input" rows="3" placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.alt)}</textarea>
+      <div class="field">
+  <label class="field__label">Kích thước ảnh</label>
+  
+  <div class="radio-group grid grid-cols-2 gap-2" data-radio-name="imageSize" data-radio-default-value="100%">
+    
+    <label class="field__label">
+      <div class="field" data-orientation="horizontal">
+        <button id="size-25" class="radio-group__item" type="button" role="radio" value="25%"></button>
+        <div class="field__title">25%</div>
       </div>
+    </label>
 
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Kích thước ảnh</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-size-btn" data-size="25%">25%</button>
-          <button type="button" class="btn be-size-btn" data-size="50%">50%</button>
-          <button type="button" class="btn be-size-btn" data-size="75%">75%</button>
-          <button type="button" class="btn be-size-btn" data-size="100%">100%</button>
-        </div>
+    <label class="field__label">
+      <div class="field" data-orientation="horizontal">
+        <button id="size-50" class="radio-group__item" type="button" role="radio" value="50%"></button>
+        <div class="field__title">50%</div>
       </div>
+    </label>
+
+    <label class="field__label">
+      <div class="field" data-orientation="horizontal">
+        <button id="size-75" class="radio-group__item" type="button" role="radio" value="75%"></button>
+        <div class="field__title">75%</div>
+      </div>
+    </label>
+
+    <label class="field__label">
+      <div class="field" data-orientation="horizontal">
+        <button id="size-100" class="radio-group__item" type="button" role="radio" value="100%"></button>
+        <div class="field__title">100%</div>
+      </div>
+    </label>
+    
+  </div>
+</div>
     `;
+
+    const radioGroup = wrap.querySelector('.radio-group');
+
+    RadioHandler.instance.register(radioGroup);
+
+    radioGroup.addEventListener('radio:change', (e) => {
+      this.data.width = e.detail.value;
+
+      const imgNode = this.dom?.querySelector('.be-image-element');
+      if (imgNode) {
+        imgNode.style.width = e.detail.value;
+      }
+
+      if (this.bus) {
+        this.bus.dispatch('block:updated', { block: this });
+      }
+    });
 
     wrap.querySelectorAll('.be-align-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -282,18 +316,6 @@ export class ImageBlock extends EditorBlock {
 
     altInput.addEventListener('blur', () => {
       if (this.bus) this.bus.dispatch('block:updated', { block: this });
-    });
-
-    wrap.querySelectorAll('.be-size-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const newSize = btn.dataset.size;
-        this.data.width = newSize;
-
-        const imgNode = this.dom.querySelector('.be-image-element');
-        if (imgNode) imgNode.style.width = newSize;
-
-        if (this.bus) this.bus.dispatch('block:updated', { block: this });
-      });
     });
 
     return wrap;

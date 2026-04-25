@@ -35,7 +35,7 @@ export class ParagraphBlock extends EditorBlock {
     });
 
     el.addEventListener('input', () => {
-      onUpdate({ content: el.textContent });
+      this.data.content = el.textContent.trim();
     });
 
     return el;
@@ -43,6 +43,8 @@ export class ParagraphBlock extends EditorBlock {
 
   renderInspectorControls() {
     const wrap = document.createElement('div');
+    wrap.className = "field-group";
+
     wrap.innerHTML = `
         <div class="be-settings-property-section">
           <span class="be-settings-property__label">Định dạng Paragraph</span>

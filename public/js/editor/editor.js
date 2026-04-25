@@ -1,6 +1,7 @@
 import { registry as BLOCK_REGISTRY } from './block_registry.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
+import { InlineTextToolbar } from './inline_text_toolbar.js';
 import { EditorBlockToolbar } from './editor_toolbar.js';
 import { EditorUI } from './editor_ui.js';
 
@@ -49,6 +50,8 @@ export class EditorManager {
   #bus;
   /** @type {EditorUI} */
   #ui;
+  /** @type {InlineTextToolbar} */
+  #inlineToolbar;
   /** @type {EditorBlockToolbar} */
   #toolbar;
   /** @type {EditorListView} */
@@ -94,8 +97,19 @@ export class EditorManager {
     this.#bus.subscribe('block:remove_request', (block) => this.#onBlockRemoveRequested(block));
     this.#bus.subscribe('block:removed', (payload) => this.#onBlockRemoved(payload));
 
+    this.#bus.subscribe('text:format_request', ({ command, value }) =>
+      this.#handleInlineFormat(command, value)
+    );
+
     this.#initialRender();
     this.#initCanvas();
+
+    this.#inlineToolbar = new InlineTextToolbar(
+      this.#bus,
+      this.#blockList,
+      { offset: 8, debounceMs: 80 }
+    );
+    this.#inlineToolbar.init();
 
     console.log('[EditorManager] Khởi tạo thành công.');
   }
@@ -149,6 +163,17 @@ export class EditorManager {
       if (this.#activeBlockId !== clickedId) {
         this.#bus.dispatch('block:selected', { blockId: clickedId });
       }
+    });
+
+    this.#blockList.addEventListener('click', (e) => {
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const href = anchor.getAttribute('href');
+      if (href) window.open(href, '_blank', 'noopener,noreferrer');
     });
   }
 
@@ -227,6 +252,22 @@ export class EditorManager {
       this.#ui.clearSettingsPanel();
       this.#activeBlockId = "";
     }
+  }
+
+  #handleInlineFormat(command, value) {
+    if (command === 'createLink' && value) {
+      document.execCommand('createLink', false, value);
+
+      const anchors = this.#blockList.querySelectorAll('a[href]:not([rel])');
+      anchors.forEach(a => {
+        a.setAttribute('rel', 'noopener noreferrer');
+        a.setAttribute('target', '_blank');
+      });
+    } else {
+      document.execCommand(command, false, value ?? null);
+    }
+
+    this.#bus.dispatch('text:format_applied', { command, value });
   }
 
   getCanvas() {
