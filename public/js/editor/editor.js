@@ -1,4 +1,5 @@
 import { registry as BLOCK_REGISTRY } from './block_registry.js';
+import { BlockSerializer } from './block_serializer.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
 import { ContextEngine } from './context_engine.js';
@@ -444,8 +445,16 @@ export class EditorManager {
 
   getPayload() {
     return {
-      meta: this.#metadata.getData(),
-      blocks: this.#canvas.getBlocks().map(block => block.data)
+      meta: {
+        version: 1,
+        ...this.#metadata.getData(),
+      },
+      blocks: this.#canvas.getBlocks().map(block =>
+        BlockSerializer.toPayload(
+          block,
+          this.#getEditableEl(block.id)
+        )
+      ),
     };
   }
 }

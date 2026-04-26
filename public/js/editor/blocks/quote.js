@@ -1,4 +1,5 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer.js';
 
 export const QuoteSchema = {
   version: 1,
@@ -8,8 +9,8 @@ export const QuoteSchema = {
   group: 'paragraph',
   groupLabel: 'Văn Bản',
   attributes: {
-    content: { default: '' },
-    citation: { default: '' },
+    content: { default: '' },   // rich-text segment[] | plain string
+    citation: { default: '' },   // plain string — tác giả không cần mark
   },
   supports: {
     typography: true,
@@ -23,7 +24,6 @@ export class QuoteBlock extends EditorBlock {
   authorEl = null;
 
   render() {
-    /* Quote có 2 field: text + author — dùng 2 contenteditable riêng */
     const wrap = document.createElement('blockquote');
     wrap.className = 'be-preview-quote be-editable-wrap';
 
@@ -33,45 +33,49 @@ export class QuoteBlock extends EditorBlock {
     textEl.contentEditable = 'true';
     textEl.className = 'be-editable';
     textEl.dataset.placeholder = 'Nội dung trích dẫn...';
-    textEl.textContent = this.data?.content || '';
+    textEl.dataset.beEditable = '';
     textEl.spellcheck = false;
+
+    textEl.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
 
     const authorEl = document.createElement('cite');
     authorEl.contentEditable = 'true';
     authorEl.className = 'be-editable be-editable-cite';
     authorEl.dataset.placeholder = '— Tác giả (không bắt buộc)';
-    authorEl.textContent = this.data?.citation || '';
     authorEl.spellcheck = false;
+    authorEl.textContent = this.data.citation || '';
 
-    // Lưu lại tham chiếu
     this.textEl = textEl;
     this.authorEl = authorEl;
 
     wrap.appendChild(textEl);
     wrap.appendChild(authorEl);
 
-    const emit = () => onUpdate({
-      content: textEl.textContent,
-      citation: authorEl.textContent,
+    textEl.addEventListener('input', () => {
+      this.data.content = textEl.innerHTML.trim();
     });
 
-    textEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); authorEl.focus(); } });
-    textEl.addEventListener('input', emit);
-    authorEl.addEventListener('input', emit);
-    authorEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); authorEl.blur(); } });
+    authorEl.addEventListener('input', () => {
+      this.data.citation = authorEl.textContent.trim();
+    });
+
+    textEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); authorEl.focus(); }
+    });
+
+    authorEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); authorEl.blur(); }
+    });
 
     textEl.addEventListener('paste', (e) => {
       e.preventDefault();
-
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-
       this.paste(this.esc(text));
     });
+
     authorEl.addEventListener('paste', (e) => {
       e.preventDefault();
-
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-
       this.paste(this.esc(text));
     });
 
@@ -85,18 +89,21 @@ export class QuoteBlock extends EditorBlock {
     wrap.innerHTML = `
         <div class="be-settings-property-section">
           <span class="be-settings-property__label">Định dạng Quote</span>
-
         </div>
       `;
     return wrap;
   }
 
+  // Override focus: ưu tiên focus vào textEl (content) ở start
+  // hoặc authorEl ở end nếu đã có tác giả
   focus(bus, position = 'end') {
     if (!this.dom) return;
 
     let targetEl;
     if (position === 'end') {
-      targetEl = this.authorEl.textContent.trim() !== '' ? this.authorEl : this.textEl;
+      targetEl = this.authorEl.textContent.trim() !== ''
+        ? this.authorEl
+        : this.textEl;
     } else {
       targetEl = this.textEl;
     }

@@ -1,4 +1,5 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer.js';
 
 export const HeadingSchema = {
   version: 1,
@@ -23,7 +24,8 @@ export class HeadingBlock extends EditorBlock {
     el.className = `be-preview-h${l} be-editable`;
     el.contentEditable = 'true';
     el.dataset.placeholder = 'Nhập tiêu đề...';
-    el.textContent = this.data.content || '';
+    el.dataset.beEditable = '';
+    el.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
     el.spellcheck = false;
 
     this.dom = el;
@@ -42,7 +44,7 @@ export class HeadingBlock extends EditorBlock {
     });
 
     el.addEventListener('input', () => {
-      this.data.content = el.textContent.trim();
+      this.data.content = el.innerHTML.trim();
     });
 
     return el;

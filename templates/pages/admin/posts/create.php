@@ -369,13 +369,21 @@ $statusLabels = [
     const canvas = window.BeEditor.getCanvas();
 
     const headingId = canvas.addBlock('blocks/heading', {
-        content: 'Welcome to the Future of Editing',
-        level: 2
+      content: [
+      { text: 'Welcome to the ', marks: [] },
+      { text: 'Future', marks: ['bold', 'italic'] },
+      { text: ' of Editing', marks: [] }
+    ],
+    level: 2
     });
 
     const introId = canvas.addBlock('blocks/paragraph', {
-        content: 'This post was created entirely via code, demonstrating the power of the underlying API.',
-        align: 'left'
+        content: [
+      { text: 'This post was ', marks: [] },
+      { text: 'created', marks: ['bold', 'underline'] },
+      { text: ' via API.', marks: [] }
+    ],
+    align: 'left'
     }, headingId);
 
     const imageId = canvas.addBlock('blocks/image', {

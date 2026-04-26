@@ -1,4 +1,5 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer.js';
 
 export const TableSchema = {
   version: 1,
@@ -33,7 +34,6 @@ export class TableBlock extends EditorBlock {
 
   constructor(...args) {
     super(...args);
-
     if (this.data && this.data.rows) {
       this.data.rows = JSON.parse(JSON.stringify(this.data.rows));
     }
@@ -47,7 +47,7 @@ export class TableBlock extends EditorBlock {
     return wrapper;
   }
 
-  // ─── Build / Rebuild ──────────────────────────────────────────
+  // ─── Build / Rebuild ──────────────────────────────────────────────────────
 
   #buildTable() {
     this.dom.innerHTML = '';
@@ -68,7 +68,7 @@ export class TableBlock extends EditorBlock {
     scrollWrap.className = 'be-table-scroll';
 
     const table = document.createElement('table');
-    table.className = `be-table`;
+    table.className = 'be-table';
     table.contentEditable = 'false';
 
     const { rows, hasHeader } = this.data;
@@ -102,11 +102,7 @@ export class TableBlock extends EditorBlock {
 
     this.#tableWrapper.addEventListener('mousemove', (e) => {
       const cell = e.target.closest('td, th');
-
-      if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) {
-        return;
-      }
-
+      if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) return;
       if (!cell) return;
 
       const tr = cell.closest('tr');
@@ -125,11 +121,8 @@ export class TableBlock extends EditorBlock {
       const rowTop = (trRect.top - wrapperRect.top) + (trRect.height / 2) - 15;
       this.#rowHandle.style.top = `${rowTop}px`;
 
-      const rowIndex = tr.rowIndex;
-      const colIndex = cell.cellIndex;
-
-      this.#rowHandle.dataset.rowIndex = rowIndex;
-      this.#colHandle.dataset.colIndex = colIndex;
+      this.#rowHandle.dataset.rowIndex = tr.rowIndex;
+      this.#colHandle.dataset.colIndex = cell.cellIndex;
     });
 
     this.#tableWrapper.addEventListener('mouseleave', () => {
@@ -138,12 +131,10 @@ export class TableBlock extends EditorBlock {
     });
 
     this.#rowHandle.addEventListener('click', (e) => {
-      e.stopPropagation(); // Ngăn click lan ra ngoài
+      e.stopPropagation();
       const rowIndex = parseInt(this.#rowHandle.dataset.rowIndex, 10);
-
       this.#highlightRow(rowIndex);
 
-      // Kích hoạt Toolbar (Mình truyền thêm selection context để Toolbar biết đang thao tác với Row)
       if (this.bus) {
         this.bus.dispatch('toolbar:toggle', {
           block: this,
@@ -157,10 +148,8 @@ export class TableBlock extends EditorBlock {
     this.#colHandle.addEventListener('click', (e) => {
       e.stopPropagation();
       const colIndex = parseInt(this.#colHandle.dataset.colIndex, 10);
-
       this.#highlightCol(colIndex);
 
-      // Kích hoạt Toolbar
       if (this.bus) {
         this.bus.dispatch('toolbar:toggle', {
           block: this,
@@ -172,50 +161,38 @@ export class TableBlock extends EditorBlock {
     });
 
     this.#tableWrapper.addEventListener('click', (e) => {
-      // Nếu click trúng vào các handle thì bỏ qua (do đã xử lý ở trên)
       if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) return;
-
-      // Nếu click vào một ô bình thường (để gõ chữ), ta xóa highlight
-      if (e.target.closest('td, th')) {
-        this.#clearHighlight();
-      }
+      if (e.target.closest('td, th')) this.#clearHighlight();
     });
   }
 
   #clearHighlight() {
     if (!this.dom) return;
-    const selectedCells = this.dom.querySelectorAll('.be-cell-selected');
-    selectedCells.forEach(cell => cell.classList.remove('be-cell-selected'));
+    this.dom.querySelectorAll('.be-cell-selected')
+      .forEach(cell => cell.classList.remove('be-cell-selected'));
     this.#selectedSelection = null;
   }
 
   #highlightRow(rowIndex) {
     this.#clearHighlight();
-
     const table = this.dom.querySelector('.be-table');
     if (!table || !table.rows[rowIndex]) return;
 
     const cells = table.rows[rowIndex].cells;
-    for (let i = 0; i < cells.length; i++) {
-      cells[i].classList.add('be-cell-selected');
-    }
-
+    for (let i = 0; i < cells.length; i++) cells[i].classList.add('be-cell-selected');
     this.#selectedSelection = { type: 'row', index: rowIndex };
   }
 
   #highlightCol(colIndex) {
     this.#clearHighlight();
-
     const table = this.dom.querySelector('.be-table');
     if (!table) return;
 
     for (let i = 0; i < table.rows.length; i++) {
-      const row = table.rows[i];
-      if (row.cells[colIndex]) {
-        row.cells[colIndex].classList.add('be-cell-selected');
+      if (table.rows[i].cells[colIndex]) {
+        table.rows[i].cells[colIndex].classList.add('be-cell-selected');
       }
     }
-
     this.#selectedSelection = { type: 'col', index: colIndex };
   }
 
@@ -261,7 +238,6 @@ export class TableBlock extends EditorBlock {
   handleToolbarAction(action, selection) {
     if (!selection) return;
 
-    // Ẩn handle và clear highlight đi vì sau khi render lại DOM sẽ thay đổi
     this.#clearHighlight();
     if (this.#colHandle) this.#colHandle.style.display = 'none';
     if (this.#rowHandle) this.#rowHandle.style.display = 'none';
@@ -269,24 +245,25 @@ export class TableBlock extends EditorBlock {
     const { type, index } = selection;
 
     switch (action) {
-      // Nhánh xử lý Dòng
       case 'table:insert-row-above': this.insertRowBefore(index); break;
       case 'table:insert-row-below': this.insertRowAfter(index); break;
       case 'table:remove-row': this.removeRow(index); break;
-
-      // Nhánh xử lý Cột
       case 'table:insert-col-before': this.insertColBefore(index); break;
       case 'table:insert-col-after': this.insertColAfter(index); break;
       case 'table:remove-col': this.removeCol(index); break;
-
       default:
         console.warn(`Action ${action} chưa được hỗ trợ trên TableBlock`);
     }
-
   }
 
   /**
-   * @param {string[]} cellData
+   * Tạo <tr> với các cell editable.
+   *
+   * Cell value có thể là:
+   *   - segment[] (đã qua serializer)
+   *   - plain string (default schema, block mới)
+   *
+   * @param {Array<any>} cellData  — mảng giá trị mỗi cell trong row
    * @param {number} rowIndex
    * @param {'td'|'th'} cellTag
    * @returns {HTMLTableRowElement}
@@ -295,7 +272,7 @@ export class TableBlock extends EditorBlock {
     const tr = document.createElement('tr');
     tr.dataset.row = rowIndex;
 
-    cellData.forEach((cellText, colIndex) => {
+    cellData.forEach((cellValue, colIndex) => {
       const cell = document.createElement(cellTag);
       cell.className = 'be-table-cell';
       cell.contentEditable = 'true';
@@ -303,16 +280,32 @@ export class TableBlock extends EditorBlock {
       cell.dataset.row = rowIndex;
       cell.dataset.col = colIndex;
       cell.dataset.placeholder = cellTag === 'th' ? 'Tiêu đề...' : '';
-      cell.textContent = cellText;
 
+      // [MODIFIED] — was: cell.innerHTML = cellText
+      // Hydrate: segment[] hoặc plain string → HTML
+      cell.innerHTML = BlockSerializer.toHTML({ data: { content: cellValue } });
+
+      // [MODIFIED] — was: this.data.rows[rowIndex][colIndex] = cell.innerHTML
+      // Parse innerHTML → segment[] rồi lưu vào data.rows
       cell.addEventListener('input', () => {
-        this.data.rows[rowIndex][colIndex] = cell.textContent;
+        const html = cell.innerHTML?.trim() ?? '';
+        this.data.rows[rowIndex][colIndex] = html
+          ? BlockSerializer.tokensToRichText(BlockSerializer.parseHTML(html))
+          : [];
       });
 
+      // [MODIFIED] — was: document.execCommand('insertText', false, text)
       cell.addEventListener('paste', (e) => {
         e.preventDefault();
         const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-        document.execCommand('insertText', false, text);
+        const sel = window.getSelection();
+        if (!sel?.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(text));
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
       });
 
       cell.addEventListener('keydown', (e) => {
@@ -330,11 +323,9 @@ export class TableBlock extends EditorBlock {
         this.#activeCursor = { row: rowIndex, col: colIndex };
       });
 
-      // 2. BLUR: Khi rời khỏi bảng, yêu cầu ẩn Toolbar
       cell.addEventListener('blur', (e) => {
         const relatedTarget = e.relatedTarget;
         const stillInTable = relatedTarget && this.dom.contains(relatedTarget);
-
         if (!stillInTable && this.bus) {
           this.#activeCursor = null;
           this.bus.dispatch('toolbar:hide_dynamic');
@@ -347,7 +338,7 @@ export class TableBlock extends EditorBlock {
     return tr;
   }
 
-  // ─── Navigation ───────────────────────────────────────────────
+  // ─── Navigation ───────────────────────────────────────────────────────────
 
   #navigateCell(row, col, direction) {
     const colCount = this.data.rows[row]?.length ?? 0;
@@ -392,17 +383,19 @@ export class TableBlock extends EditorBlock {
     sel.addRange(range);
   }
 
-  // ─── Public Mutation API ──────────────────────────────────────
+  // ─── Public Mutation API ──────────────────────────────────────────────────
 
   insertRowBefore(rowIndex) {
     const colCount = this.data.rows[0]?.length ?? 1;
-    this.data.rows.splice(rowIndex, 0, new Array(colCount).fill(''));
+    // [MODIFIED] — was: new Array(colCount).fill('')
+    // Empty cell là [] (empty segment array) thay vì string rỗng
+    this.data.rows.splice(rowIndex, 0, new Array(colCount).fill([]));
     this.#rerender(rowIndex, this.#activeCursor?.col ?? 0);
   }
 
   insertRowAfter(rowIndex) {
     const colCount = this.data.rows[0]?.length ?? 1;
-    this.data.rows.splice(rowIndex + 1, 0, new Array(colCount).fill(''));
+    this.data.rows.splice(rowIndex + 1, 0, new Array(colCount).fill([])); // [MODIFIED]
     this.#rerender(rowIndex + 1, this.#activeCursor?.col ?? 0);
   }
 
@@ -414,12 +407,13 @@ export class TableBlock extends EditorBlock {
   }
 
   insertColBefore(colIndex) {
-    this.data.rows.forEach(row => row.splice(colIndex, 0, ''));
+    // [MODIFIED] — was: row.splice(colIndex, 0, '')
+    this.data.rows.forEach(row => row.splice(colIndex, 0, []));
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex);
   }
 
   insertColAfter(colIndex) {
-    this.data.rows.forEach(row => row.splice(colIndex + 1, 0, ''));
+    this.data.rows.forEach(row => row.splice(colIndex + 1, 0, [])); // [MODIFIED]
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex + 1);
   }
 
@@ -431,14 +425,12 @@ export class TableBlock extends EditorBlock {
     this.#rerender(this.#activeCursor?.row ?? 0, focusCol);
   }
 
-  // ─── Re-render ────────────────────────────────────────────────
+  // ─── Re-render ────────────────────────────────────────────────────────────
 
   #rerender(focusRow, focusCol) {
     this.#buildTable();
 
-    if (this.bus) {
-      this.bus.dispatch('block:updated', { block: this });
-    }
+    if (this.bus) this.bus.dispatch('block:updated', { block: this });
 
     requestAnimationFrame(() => {
       this.#focusCell(
@@ -448,7 +440,7 @@ export class TableBlock extends EditorBlock {
     });
   }
 
-  // ─── Inspector controls ───────────────────────────────────────
+  // ─── Inspector controls ───────────────────────────────────────────────────
 
   renderInspectorControls(data, { onUpdate }) {
     const wrap = document.createElement('div');

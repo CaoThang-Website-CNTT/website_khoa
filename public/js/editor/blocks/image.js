@@ -1,25 +1,26 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer.js';
 
 export const ImageSchema = {
   name: 'blocks/image',
+  version: 1, // [ADDED]
   title: 'Hình ảnh',
   group: 'media',
   groupLabel: 'Phương tiện',
   icon: '<i class="fa-regular fa-image"></i>',
   attributes: {
     mediaId: { default: null },
-    url: { default: '' },       // Đường dẫn ảnh thật sau khi upload
+    url: { default: '' },
     alt: { default: '' },
-    caption: { default: '' },   // Chú thích dưới ảnh
-    align: { default: 'center' }, // Căn lề
+    caption: { default: '' },  // rich-text segment[] | plain string
+    align: { default: 'center' },
     width: { default: '100%' }
   }
 };
 
 export class ImageBlock extends EditorBlock {
   /**
-   * post_id hiện tại — chỉ có giá trị khi đang ở chế độ edit (post đã tồn tại).
-   * Khi tạo mới: null — media upload sẽ là "orphan", được attach sau khi post được save.
+   * post_id hiện tại — chỉ có giá trị khi đang edit (post đã tồn tại).
    * @type {number|null}
    */
   #postId = null;
@@ -27,9 +28,6 @@ export class ImageBlock extends EditorBlock {
   constructor(blockData, schema, bus) {
     super(blockData, schema, bus);
 
-    // Lắng nghe post_id từ metadata qua bus.
-    // Khi edit: EditorCanvasMetadata dispatch 'meta:sync_request' → 'meta:updated' với post_id.
-    // Khi tạo mới: event này không bao giờ có key 'post_id' nên #postId vẫn là null.
     if (this.bus) {
       this.bus.subscribe('meta:updated', ({ key, value }) => {
         if (key === 'post_id' && value) {
@@ -54,10 +52,8 @@ export class ImageBlock extends EditorBlock {
     this.dom.className = `be-preview-image be-align-${this.data.align}`;
 
     if (this.data.url) {
-      // Có hình
       this.#renderResolved();
     } else {
-      // Chưa có hình
       this.#renderPlaceholder();
     }
   }
@@ -103,17 +99,12 @@ export class ImageBlock extends EditorBlock {
     };
 
     applyUrlBtn.addEventListener('click', handleExternalUrl);
-
     urlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleExternalUrl();
-      }
+      if (e.key === 'Enter') { e.preventDefault(); handleExternalUrl(); }
     });
   }
 
   async #handleUpload(file) {
-    // Hiển thị preview mờ + spinner ngay lập tức — không cần chờ server
     const blobUrl = URL.createObjectURL(file);
 
     this.dom.innerHTML = `
@@ -129,17 +120,8 @@ export class ImageBlock extends EditorBlock {
       const formData = new FormData();
       formData.append('file', file);
 
-      // alt_text: lấy từ data hiện tại nếu user đã nhập trước đó
-      if (this.data.alt) {
-        formData.append('alt_text', this.data.alt);
-      }
-
-      // post_id: chỉ gửi khi đang edit (post đã tồn tại trên DB).
-      // Khi tạo mới: không gửi — API chấp nhận upload không có post_id,
-      // media sẽ là "orphan" và được attach khi server xử lý payload lúc save.
-      if (this.#postId) {
-        formData.append('post_id', this.#postId);
-      }
+      if (this.data.alt) formData.append('alt_text', this.data.alt);
+      if (this.#postId) formData.append('post_id', this.#postId);
 
       const response = await fetch('http://localhost/website_khoa/api/v1/media', {
         method: 'POST',
@@ -160,9 +142,7 @@ export class ImageBlock extends EditorBlock {
         this.data.alt = result.data.alt_text;
       }
 
-      if (this.bus) {
-        this.bus.dispatch('block:updated', { block: this });
-      }
+      if (this.bus) this.bus.dispatch('block:updated', { block: this });
 
       this.#renderCurrentState();
 
@@ -171,7 +151,6 @@ export class ImageBlock extends EditorBlock {
       alert('Không thể tải ảnh lên. Vui lòng thử lại.');
       this.#renderCurrentState();
     } finally {
-      // Giải phóng blob URL khỏi memory dù thành công hay thất bại
       URL.revokeObjectURL(blobUrl);
     }
   }
@@ -188,26 +167,24 @@ export class ImageBlock extends EditorBlock {
     img.alt = this.data.alt || '';
     img.loading = 'lazy';
     img.className = 'be-image-element';
-
     img.style.width = this.data.width.includes('%') || this.data.width.includes('px')
       ? this.data.width
       : `${this.data.width}px`;
 
-    // Render khu vực nhập caption
     const caption = document.createElement('figcaption');
     caption.contentEditable = 'true';
     caption.className = 'be-editable be-image-caption';
     caption.dataset.placeholder = 'Viết chú thích ảnh...';
-    caption.textContent = this.data.caption || '';
+    caption.dataset.beEditable = '';
     caption.spellcheck = false;
+    caption.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.caption } });
 
     imgWrapper.appendChild(img);
     this.dom.appendChild(imgWrapper);
     this.dom.appendChild(caption);
 
-    // Xử lý sự kiện cho caption
     caption.addEventListener('input', () => {
-      this.data.caption = caption.textContent.trim();
+      this.data.caption = caption.innerHTML.trim();
     });
 
     caption.addEventListener('blur', () => {
@@ -221,10 +198,7 @@ export class ImageBlock extends EditorBlock {
     });
 
     caption.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        caption.blur();
-      }
+      if (e.key === 'Enter') { e.preventDefault(); caption.blur(); }
     });
   }
 
@@ -239,69 +213,59 @@ export class ImageBlock extends EditorBlock {
       </div>
 
       <div class="field">
-  <label class="field__label">Kích thước ảnh</label>
-  
-  <div class="radio-group grid grid-cols-2 gap-2" data-radio-name="imageSize" data-radio-default-value="100%">
-    
-    <label class="field__label">
-      <div class="field" data-orientation="horizontal">
-        <button id="size-25" class="radio-group__item" type="button" role="radio" value="25%"></button>
-        <div class="field__title">25%</div>
-      </div>
-    </label>
+        <label class="field__label">Kích thước ảnh</label>
 
-    <label class="field__label">
-      <div class="field" data-orientation="horizontal">
-        <button id="size-50" class="radio-group__item" type="button" role="radio" value="50%"></button>
-        <div class="field__title">50%</div>
-      </div>
-    </label>
+        <div class="radio-group grid grid-cols-2 gap-2" data-radio-name="imageSize" data-radio-default-value="100%">
 
-    <label class="field__label">
-      <div class="field" data-orientation="horizontal">
-        <button id="size-75" class="radio-group__item" type="button" role="radio" value="75%"></button>
-        <div class="field__title">75%</div>
-      </div>
-    </label>
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="size-25" class="radio-group__item" type="button" role="radio" value="25%"></button>
+              <div class="field__title">25%</div>
+            </div>
+          </label>
 
-    <label class="field__label">
-      <div class="field" data-orientation="horizontal">
-        <button id="size-100" class="radio-group__item" type="button" role="radio" value="100%"></button>
-        <div class="field__title">100%</div>
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="size-50" class="radio-group__item" type="button" role="radio" value="50%"></button>
+              <div class="field__title">50%</div>
+            </div>
+          </label>
+
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="size-75" class="radio-group__item" type="button" role="radio" value="75%"></button>
+              <div class="field__title">75%</div>
+            </div>
+          </label>
+
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="size-100" class="radio-group__item" type="button" role="radio" value="100%"></button>
+              <div class="field__title">100%</div>
+            </div>
+          </label>
+
+        </div>
       </div>
-    </label>
-    
-  </div>
-</div>
     `;
 
     const radioGroup = wrap.querySelector('.radio-group');
-
     RadioHandler.instance.register(radioGroup);
 
     radioGroup.addEventListener('radio:change', (e) => {
       this.data.width = e.detail.value;
-
       const imgNode = this.dom?.querySelector('.be-image-element');
-      if (imgNode) {
-        imgNode.style.width = e.detail.value;
-      }
-
-      if (this.bus) {
-        this.bus.dispatch('block:updated', { block: this });
-      }
+      if (imgNode) imgNode.style.width = e.detail.value;
+      if (this.bus) this.bus.dispatch('block:updated', { block: this });
     });
 
     wrap.querySelectorAll('.be-align-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const newAlign = btn.dataset.align;
         this.data.align = newAlign;
-
         this.dom.className = `be-preview-image be-align-${newAlign}`;
-
         wrap.querySelectorAll('.be-align-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
         if (this.bus) this.bus.dispatch('block:updated', { block: this });
       });
     });
@@ -309,7 +273,6 @@ export class ImageBlock extends EditorBlock {
     const altInput = wrap.querySelector('.be-alt-input');
     altInput.addEventListener('input', () => {
       this.data.alt = altInput.value;
-
       const imgNode = this.dom.querySelector('.be-image-element');
       if (imgNode) imgNode.alt = this.data.alt;
     });

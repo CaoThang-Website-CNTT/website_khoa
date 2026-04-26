@@ -1,4 +1,5 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer.js';
 
 export const ParagraphSchema = {
   version: 1,
@@ -22,7 +23,8 @@ export class ParagraphBlock extends EditorBlock {
     el.className = 'be-preview-p be-editable';
     el.contentEditable = 'true';
     el.dataset.placeholder = 'Nhập nội dung đoạn văn...';
-    el.textContent = this.data?.content || '';
+    el.dataset.beEditable = '';
+    el.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
     el.spellcheck = false;
 
     this.dom = el;
@@ -35,7 +37,7 @@ export class ParagraphBlock extends EditorBlock {
     });
 
     el.addEventListener('input', () => {
-      this.data.content = el.textContent.trim();
+      this.data.content = el.innerHTML.trim();
     });
 
     return el;
