@@ -1,4 +1,5 @@
 import { EditorToolbar } from './editor_toolbar.js';
+import { ContextEngine } from '../context_engine.js';
 
 export class InlineToolbar extends EditorToolbar {
   static #URL_PATTERN = /^(https?:\/\/|mailto:|\/)[^\s]+$/i;
@@ -229,10 +230,9 @@ export class InlineToolbar extends EditorToolbar {
 
         if (!this.#linkInputOpen) {
           const sel = window.getSelection();
-          if (!sel || sel.isCollapsed || sel.rangeCount === 0) { this.#hide(); return; }
-          const range = sel.getRangeAt(0);
-          if (!this.#validateRange(range)) { this.#hide(); return; }
-          this.#positionToolbar(range);
+          const ctx = ContextEngine.analyze(this.canvas, sel);
+          if (ctx.type !== 'text' || !ctx.range) { this.#hide(); return; }
+          this.#positionToolbar(ctx.range);
         } else if (this.#savedRange) {
           this.#positionToolbar(this.#savedRange);
         }
@@ -256,17 +256,14 @@ export class InlineToolbar extends EditorToolbar {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) { this.#hide(); return; }
 
-    const range = sel.getRangeAt(0);
-    if (!this.#validateRange(range)) { this.#hide(); return; }
+    const ctx = ContextEngine.analyze(this.canvas, sel);
+    if (ctx.type !== 'text' || !ctx.range) { this.#hide(); return; }
 
-    // Lưu range + blockId — cả hai dùng trong dispatch sau này
-    this.#savedRange = range.cloneRange();
-    this.#activeBlockId = this.#extractBlockId(range);
+    this.#savedRange = ctx.range;
+    this.#activeBlockId = ctx.blockId;
 
-    this.#positionToolbar(range);
+    this.#positionToolbar(this.#savedRange);
 
-    // Gửi lên bus để Manager tính activeMarks qua InlineFormatter
-    // Manager sẽ reply bằng 'inline:marks_updated'
     this.bus.dispatch('inline:selection_changed', {
       blockId: this.#activeBlockId,
       range: this.#savedRange,
@@ -274,48 +271,6 @@ export class InlineToolbar extends EditorToolbar {
 
     this.#showToolbar();
     this.bus.dispatch('toolbar:inline_show', { timestamp: Date.now() });
-  }
-
-  /**
-   * Validate range:
-   *   1. Phải nằm trong canvas
-   *   2. Phải trong cùng 1 block (không cross-block)
-   *   3. Không intersect với element không editable
-   *
-   * @param {Range} range
-   * @returns {boolean}
-   */
-  #validateRange(range) {
-    if (!this.canvas.contains(range.commonAncestorContainer)) return false;
-
-    const toEl = (n) => n.nodeType === Node.TEXT_NODE ? n.parentElement : n;
-
-    const startBlock = toEl(range.startContainer)?.closest('[data-be-block-id]');
-    const endBlock = toEl(range.endContainer)?.closest('[data-be-block-id]');
-    if (!startBlock || startBlock !== endBlock) return false;
-
-    const ancestorEl = toEl(range.commonAncestorContainer);
-    if (!ancestorEl) return false;
-
-    const forbidden = ancestorEl.querySelectorAll(
-      '[contenteditable="false"], img, input, button, select, textarea'
-    );
-    for (const el of forbidden) {
-      if (range.intersectsNode(el)) return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Lấy blockId từ range (tìm [data-be-block-id] gần nhất).
-   * @param {Range} range
-   * @returns {string|null}
-   */
-  #extractBlockId(range) {
-    const toEl = (n) => n.nodeType === Node.TEXT_NODE ? n.parentElement : n;
-    const blockEl = toEl(range.commonAncestorContainer)?.closest('[data-be-block-id]');
-    return blockEl?.dataset?.beBlockId ?? null;
   }
 
   /**
@@ -414,19 +369,19 @@ export class InlineToolbar extends EditorToolbar {
     const command = this.#shortcutMap.get(lookupKey);
 
     if (!command) return;
-
     e.preventDefault();
 
-    // Giữ nguyên logic đặc thù cho Link
     if (command === InlineToolbar.COMMANDS.CREATE_LINK) {
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
-      const range = sel.getRangeAt(0);
-      if (!this.#validateRange(range)) return;
 
-      this.#savedRange = range.cloneRange();
-      this.#activeBlockId = this.#extractBlockId(range);
-      this.#positionToolbar(range);
+      const ctx = ContextEngine.analyze(this.canvas, sel);
+      if (ctx.type !== 'text') return;
+
+      this.#savedRange = ctx.range;
+      this.#activeBlockId = ctx.blockId;
+
+      this.#positionToolbar(ctx.range);
       this.#showToolbar();
       this.#openLinkInput();
       return;

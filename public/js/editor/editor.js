@@ -1,6 +1,7 @@
 import { registry as BLOCK_REGISTRY } from './block_registry.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
+import { ContextEngine } from './context_engine.js';
 import { InlineToolbar } from './toolbar/inline_toolbar.js';
 import { BlockToolbar } from './toolbar/block_toolbar.js';
 import { InlineFormatter } from './inline_formatter.js';
@@ -155,9 +156,9 @@ export class EditorManager {
       const handle = e.target.closest('.be-drag-handle');
 
       if (handle) {
-        const block = this.#canvas.getBlock(clickedId);
+        const ctx = ContextEngine.analyze(this.#blockList, window.getSelection(), handle);
+        const block = this.#canvas.getBlock(ctx.blockId ?? clickedId);
         this.#bus.dispatch('toolbar:toggle', { block, anchorEl: handle });
-
         return;
       }
 
