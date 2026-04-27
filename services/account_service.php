@@ -16,6 +16,7 @@ interface IAccountService
   public function getByEmail(string $email): ?Account;
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
   public function deactivateAccount(int $accountId): bool;
+  public function isAdminExists(int $accountId): bool;
 }
 
 class AccountService implements IAccountService
@@ -79,6 +80,14 @@ class AccountService implements IAccountService
   public function deactivateAccount(int $accountId): bool
   {
     return $this->_accountStore->softDelete($accountId);
+  }
+  public function isAdminExists(int $accountId): bool
+  {
+    if ($accountId <= 0) {
+      return false;
+    }
+
+    return $this->_accountStore->existsWithRole($accountId, 'admin');
   }
   /**
    * Xác định Role dựa trên định dạng email của trường.

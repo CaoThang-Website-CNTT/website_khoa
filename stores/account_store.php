@@ -6,6 +6,8 @@ require_once BASE_PATH . '/includes/core/store.php';
 require_once BASE_PATH . '/models/account.php';
 
 use App\Core\Store;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 use App\Models\Account;
 use PDO;
 
@@ -20,6 +22,7 @@ interface IAccountStore
   public function updateRole(int $id, string $role): bool;
   public function softDelete(int $id): bool;
   public function isEmailUnique(string $email, ?int $excludeId = null): bool;
+  public function existsWithRole(int $id, string $role): bool;
 }
 
 class AccountStore extends Store implements IAccountStore
@@ -139,5 +142,24 @@ class AccountStore extends Store implements IAccountStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute($params);
     return (int) $stmt->fetchColumn() === 0;
+  }
+  public function existsWithRole(int $id, string $role): bool
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder->from('accounts')
+      ->from('accounts')
+      ->select('COUNT(*)')
+      ->eq('id', $id)
+      ->eq('role', $role)
+      ->is('deleted_at', null);
+
+    $sql = $query->toSql();
+    $bindings = $query->getBindings();
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($bindings);
+
+    return (int) $stmt->fetchColumn() > 0;
   }
 }

@@ -21,39 +21,48 @@ class PostController extends Controller
     $this->_categoryService = $categoryService;
   }
 
-  public function create(): void
+  public function create()
   {
-    $this->render('admin/posts/create', [
+    return $this->render('admin/posts/create', [
       'authors' => [],
       'categories' => $this->_categoryService->getAllCategories()
     ], layout: 'canva_layout');
   }
 
-  public function index(Request $request): mixed
+  public function index(Request $request)
   {
     $limit = max(1, min(100, (int) $request->input('limit', 20)));
     $offset = max(0, (int) $request->input('offset', 0));
 
     $posts = $this->_postService->list(['limit' => $limit, 'offset' => $offset]);
 
-    return $this->json(
-      data: array_map(static fn($p) => $p->toArray(), $posts),
-      message: 'OK',
-    );
+    return $this->render('posts', [
+      'posts' => $posts
+    ], layout: 'canva_layout');
   }
 
   public function store(Request $request)
   {
-    $jsonString = $request->input('editor_data');
-    $editorData = json_decode($jsonString, true);
+    $validated = $this->validate($request, [
+      'editor_data' => ['required', 'json']
+    ]);
 
-    // Validate cấu trúc tối thiểu tại controller — chi tiết validation ở service
+    $editorData = json_decode($validated['editor_data'], true);
+
+    // Kiểm tra tiêu đề trong JSON meta
     if (empty($editorData['meta']['title'])) {
-      return $this->json(data: null, message: 'Tiêu đề bài viết là bắt buộc.', status: 422);
+      $request->session()->flashErrors(['editor_data' => ['Tiêu đề bài viết trong trình chỉnh sửa không được để trống.']]);
+      $request->session()->flashNotify('error', 'Lỗi dữ liệu', 'Tiêu đề bài viết là bắt buộc.');
+      $request->flashOldInputs(); // Giữ lại dữ liệu đã nhập
+      return $this->redirect('admin/posts/create');
     }
 
+    // Kiểm tra cấu trúc blocks
     if (!isset($editorData['blocks']) || !is_array($editorData['blocks'])) {
-      return $this->json(data: null, message: 'blocks phải là một mảng.', status: 422);
+      $request->session()->flashErrors(['editor_data' => ['Cấu trúc nội dung bài viết không hợp lệ.']]);
+      $request->session()->flashNotify('error', 'Lỗi dữ liệu', 'Nội dung bài viết (blocks) phải là một mảng.');
+      $request->flashOldInputs();
+      return $this->redirect('admin/posts/create');
     }
 
     try {
@@ -63,18 +72,11 @@ class PostController extends Controller
         'Tạo mới bài viết thành công!',
         "Bài viết có tiêu đề '" . $post->title . "' đã được tạo."
       );
-    } catch (\InvalidArgumentException $e) {
+    } catch (\InvalidArgumentException | \RuntimeException $e) {
       $request->flashOldInputs();
       $request->session()->flashNotify(
         'error',
-        'Không thể thêm bài viết',
-        $e->getMessage()
-      );
-    } catch (\RuntimeException $e) {
-      $request->flashOldInputs();
-      $request->session()->flashNotify(
-        'error',
-        'Không thể thêm bài viết',
+        'Lỗi tạo',
         $e->getMessage()
       );
     }
@@ -103,27 +105,25 @@ class PostController extends Controller
 
   public function update(Request $request, int $post_id)
   {
-    $jsonString = $request->input('editor_data');
-    $editorData = json_decode($jsonString, true);
+    $validated = $this->validate($request, [
+      'editor_data' => ['required', 'json']
+    ]);
 
-    if (empty($editorData)) {
-      $request->session()->flashNotify(
-        'error',
-        'Dữ liệu trống',
-        'Vui lòng nhập ít nhất một trường để cập nhật.'
-      );
+    $editorData = json_decode($validated['editor_data'], true);
+
+    // Kiểm tra Tiêu đề
+    if (empty($editorData['meta']['title'])) {
+      $request->session()->flashErrors(['editor_data' => ['Tiêu đề không được để trống khi cập nhật.']]);
+      $request->session()->flashNotify('error', 'Cập nhật thất bại', 'Tiêu đề bài viết là bắt buộc.');
+      $request->flashOldInputs();
       return $this->redirect("admin/posts/{$post_id}/edit");
     }
 
-    // Validate status nếu có gửi lên
-    $allowedStatuses = ['draft', 'published', 'deleted'];
-    if (isset($editorData['meta']['status']) && !in_array($editorData['meta']['status'], $allowedStatuses, true)) {
+    // Kiểm tra cấu trúc Blocks
+    if (!isset($editorData['blocks']) || !is_array($editorData['blocks'])) {
+      $request->session()->flashErrors(['editor_data' => ['Dữ liệu nội dung không hợp lệ.']]);
+      $request->session()->flashNotify('error', 'Cập nhật thất bại', 'Cấu trúc nội dung (blocks) không đúng định dạng.');
       $request->flashOldInputs();
-      $request->session()->flashNotify(
-        'error',
-        'Trạng thái không hợp lệ',
-        'Các giá trị cho phép: ' . implode(', ', $allowedStatuses)
-      );
       return $this->redirect("admin/posts/{$post_id}/edit");
     }
 
@@ -137,20 +137,12 @@ class PostController extends Controller
       );
 
       return $this->redirect('admin/posts');
-    } catch (\InvalidArgumentException $e) {
+    } catch (\InvalidArgumentException | \RuntimeException $e) {
       $request->flashOldInputs();
       $request->session()->flashNotify(
         'error',
-        'Dữ liệu không hợp lệ',
+        'Lỗi cập nhật',
         $e->getMessage()
-      );
-      return $this->redirect("admin/posts/{$post_id}/edit");
-    } catch (\RuntimeException $e) {
-      $request->flashOldInputs();
-      $request->session()->flashNotify(
-        'error',
-        'Lỗi hệ thống',
-        'Không thể cập nhật bài viết. Vui lòng thử lại sau.'
       );
       return $this->redirect("admin/posts/{$post_id}/edit");
     }

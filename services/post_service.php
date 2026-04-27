@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Post;
 use App\Stores\PostStore;
+use App\Stores\AccountStore;
 use App\Stores\MediaStore;
 
 interface IPostService
@@ -31,13 +32,16 @@ class PostService implements IPostService
 {
   private PostStore $_postStore;
   private MediaStore $_mediaStore;
+  private AccountStore $_accountStore;
 
   public function __construct(
     PostStore $postStore,
     MediaStore $mediaStore,
+    AccountStore $accountStore
   ) {
     $this->_postStore = $postStore;
     $this->_mediaStore = $mediaStore;
+    $this->_accountStore = $accountStore;
   }
 
   public function create(array $payload): Post
@@ -45,10 +49,23 @@ class PostService implements IPostService
     $meta = $payload['meta'] ?? [];
     $blocks = $payload['blocks'] ?? [];
 
+    if (!isset($meta['author_id']) || trim((string) $meta['author_id']) === '') {
+      throw new \InvalidArgumentException("Dữ liệu không hợp lệ: Thiếu ID tác giả (author_id).");
+    }
+
+    $authorId = (int) $meta['author_id'];
+
+    // Kiểm tra xem user có tồn tại không
+    $author = $this->_accountStore->getById($authorId);
+
+    if (!$author) {
+      throw new \InvalidArgumentException("Tác giả với ID '{$authorId}' không tồn tại hoặc đã bị xoá.");
+    }
+
     $contentJson = json_encode($blocks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     if ($contentJson === false) {
-      throw new \InvalidArgumentException('blocks không hợp lệ, không thể encode JSON.');
+      throw new \InvalidArgumentException('Blocks không hợp lệ, không thể encode JSON.');
     }
 
     $slug = $this->resolveSlug($meta['slug'] ?? '', $meta['title'] ?? '');
