@@ -2,7 +2,7 @@
 
 namespace App\Core;
 
-class Validator
+class RequestValidator
 {
   private array $errors = [];
 

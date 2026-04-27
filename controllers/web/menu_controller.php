@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\MenuService;
 
 class MenuController extends Controller
@@ -41,7 +41,7 @@ class MenuController extends Controller
     $data = $request->all();
 
     // ── 1. Validate menu fields ───────────────────────────────────────────
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'key' => ['required', 'max:60'],
       'label' => ['required', 'max:100'],
@@ -131,7 +131,7 @@ class MenuController extends Controller
 
     $data = $request->all();
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'key' => ['required', 'max:60'],
       'label' => ['required', 'max:100'],
@@ -214,7 +214,7 @@ class MenuController extends Controller
 
     $data = $request->all();
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'label' => ['required', 'max:150'],
       'url' => ['required', 'max:500'],
@@ -269,7 +269,7 @@ class MenuController extends Controller
 
     $data = $request->all();
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'label' => ['required', 'max:150'],
       'url' => ['required', 'max:500'],

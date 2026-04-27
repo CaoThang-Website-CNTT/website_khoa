@@ -3,7 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Models\WebSetting;
 use App\Services\WebSettingsService;
 class WebSettingsController extends Controller
@@ -29,7 +29,7 @@ class WebSettingsController extends Controller
   public function store(Request $request)
   {
     $data = $request->all();
-    $validator = new Validator();
+    $validator = new RequestValidator();
     if (
       !$validator->validate($data, [
         'key' => ['required', 'max:120'],

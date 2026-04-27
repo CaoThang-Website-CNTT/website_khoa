@@ -6,7 +6,7 @@ require_once BASE_PATH . '/models/category.php';
 
 use App\Core\Controller;
 use App\Core\Request;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\CategoryService;
 
 class CategoryController extends Controller
@@ -57,7 +57,7 @@ class CategoryController extends Controller
   {
     $data = $request->all();
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'name' => ['required', 'max:255'],
       'slug' => ['nullable', 'max:255'],
@@ -97,7 +97,7 @@ class CategoryController extends Controller
       return $this->abort(404);
     }
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'name' => ['required', 'max:255'],
       'slug' => ['max:255'],

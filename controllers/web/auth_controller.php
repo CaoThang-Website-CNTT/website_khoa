@@ -4,7 +4,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Session;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\{AccountService, GoogleOAuthService, StudentService, TeacherService, WebSettingsService};
 
 class AuthController extends Controller
@@ -215,7 +215,7 @@ class AuthController extends Controller
     $data['status'] = 'Đang học';
     $data['notes'] = $data['notes'] ?? '';
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'full_name' => ['required', 'max:255'],
       'dob' => ['required', 'date'],
@@ -272,7 +272,7 @@ class AuthController extends Controller
       $data['staff_code'] = trim((string) $data['staff_code']);
     }
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'full_name' => ['required', 'max:255'],
       'dob' => ['required', 'date'],

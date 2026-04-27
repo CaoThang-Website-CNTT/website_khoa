@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\TeacherService;
 
 class TeacherController extends Controller
@@ -36,7 +36,7 @@ class TeacherController extends Controller
   {
     $data = $request->all();
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'full_name' => ['required', 'max:255'],
       'dob' => ['required', 'date'],
@@ -99,7 +99,7 @@ class TeacherController extends Controller
   {
     $data = $request->all();
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rules = [
       'full_name' => ['required', 'max:255'],
       'dob' => ['required', 'date'],
