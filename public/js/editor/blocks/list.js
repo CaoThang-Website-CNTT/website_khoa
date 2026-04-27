@@ -84,7 +84,7 @@ export class ListBlock extends EditorBlock {
   render() {
     const tag = this.data.ordered ? 'ol' : 'ul';
     const rootEl = document.createElement(tag);
-    rootEl.className = `be-preview-list be-preview-list--${this.data.ordered ? 'ol' : 'ul'}`;
+    rootEl.className = `be-list`;
     rootEl.contentEditable = 'false';
 
     this.dom = rootEl;
@@ -132,7 +132,7 @@ export class ListBlock extends EditorBlock {
       if (node.children && node.children.length > 0) {
         const subTag = this.data.ordered ? 'ol' : 'ul';
         const subList = document.createElement(subTag);
-        subList.className = 'be-list-nested';
+        subList.className = 'be-list';
         li.appendChild(subList);
         this.#renderTree(node.children, subList, path);
       }
@@ -147,17 +147,15 @@ export class ListBlock extends EditorBlock {
    */
   #createLi(node, path) {
     const li = document.createElement('li');
-    li.className = 'be-list-item';
     li.dataset.path = path.join('.');
 
     const span = document.createElement('span');
-    span.className = 'be-list-item-text be-editable';
+    span.className = 'be-editable';
     span.contentEditable = 'true';
     span.spellcheck = false;
     span.dataset.placeholder = 'Nhập nội dung...';
-    span.dataset.beEditable = 'list-item'; // [ADDED] — đánh dấu các editable con
+    span.dataset.beEditable = 'list-item'
 
-    // [MODIFIED] — was: span.innerHTML = node.text || ''
     // Hydrate: segment[] hoặc plain string → HTML
     span.innerHTML = BlockSerializer.toHTML({ data: { content: node.content } });
 
@@ -168,7 +166,6 @@ export class ListBlock extends EditorBlock {
       const { node: n } = this.#nodeAt(path);
       if (!n) return;
 
-      // [MODIFIED] — was: n.text = span.innerHTML
       // Parse innerHTML → segment[] và lưu vào node.content
       const html = span.innerHTML?.trim() ?? '';
       n.content = html
@@ -180,16 +177,7 @@ export class ListBlock extends EditorBlock {
     span.addEventListener('paste', (e) => {
       e.preventDefault();
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-      // [MODIFIED] — was: document.execCommand('insertText', false, text)
-      // execCommand deprecated — dùng insertNode thay thế
-      const sel = window.getSelection();
-      if (!sel?.rangeCount) return;
-      const range = sel.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(document.createTextNode(text));
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
+      this.paste(this.esc(text));
     });
 
     // ── Keyboard ───────────────────────────────────────────────────────────
@@ -226,7 +214,6 @@ export class ListBlock extends EditorBlock {
 
   #handleEnter(liEl, path) {
     const { node } = this.#nodeAt(path);
-    // [MODIFIED] — was: node?.text?.trim() ?? ''
     const isEmpty = !node?.content || (Array.isArray(node.content) ? node.content.length === 0 : node.content.trim() === '');
     const depth = this.#depth(path);
 
@@ -241,7 +228,6 @@ export class ListBlock extends EditorBlock {
 
     const { parent } = this.#nodeAt(path);
     const localIdx = path[path.length - 1];
-    // [MODIFIED] — was: { text: '', children: [] }
     const newNode = { content: [], children: [] };
     parent.splice(localIdx + 1, 0, newNode);
 

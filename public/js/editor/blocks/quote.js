@@ -25,13 +25,13 @@ export class QuoteBlock extends EditorBlock {
 
   render() {
     const wrap = document.createElement('blockquote');
-    wrap.className = 'be-preview-quote be-editable-wrap';
+    wrap.className = 'be-quote be-editable-wrap';
 
     this.dom = wrap;
 
     const textEl = document.createElement('p');
     textEl.contentEditable = 'true';
-    textEl.className = 'be-editable';
+    textEl.className = 'be-quote-content be-editable';
     textEl.dataset.placeholder = 'Nội dung trích dẫn...';
     textEl.dataset.beEditable = '';
     textEl.spellcheck = false;
@@ -40,7 +40,7 @@ export class QuoteBlock extends EditorBlock {
 
     const authorEl = document.createElement('cite');
     authorEl.contentEditable = 'true';
-    authorEl.className = 'be-editable be-editable-cite';
+    authorEl.className = 'be-quote-citation be-editable';
     authorEl.dataset.placeholder = '— Tác giả (không bắt buộc)';
     authorEl.spellcheck = false;
     authorEl.textContent = this.data.citation || '';

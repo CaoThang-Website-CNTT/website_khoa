@@ -21,7 +21,7 @@ export class HeadingBlock extends EditorBlock {
   render() {
     const l = this.data.level || 2;
     const el = document.createElement('h' + l);
-    el.className = `be-preview-h${l} be-editable`;
+    el.className = `be-heading be-editable`;
     el.contentEditable = 'true';
     el.dataset.placeholder = 'Nhập tiêu đề...';
     el.dataset.beEditable = '';

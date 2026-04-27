@@ -39,7 +39,7 @@ export class ImageBlock extends EditorBlock {
 
   render() {
     this.dom = document.createElement('figure');
-    this.dom.className = `be-preview-image be-align-${this.data.align}`;
+    this.dom.className = `be-image be-image-align--${this.data.align}`;
     this.dom.contentEditable = 'false';
 
     this.#renderCurrentState();
@@ -49,7 +49,6 @@ export class ImageBlock extends EditorBlock {
 
   #renderCurrentState() {
     this.dom.innerHTML = '';
-    this.dom.className = `be-preview-image be-align-${this.data.align}`;
 
     if (this.data.url) {
       this.#renderResolved();
@@ -157,16 +156,11 @@ export class ImageBlock extends EditorBlock {
 
   #renderResolved() {
     const imgWrapper = document.createElement('div');
-    imgWrapper.className = 'be-image-content-wrapper';
-    imgWrapper.style.display = 'inline-block';
-    imgWrapper.style.position = 'relative';
-    imgWrapper.style.maxWidth = '100%';
 
     const img = document.createElement('img');
     img.src = this.data.url;
     img.alt = this.data.alt || '';
     img.loading = 'lazy';
-    img.className = 'be-image-element';
     img.style.width = this.data.width.includes('%') || this.data.width.includes('px')
       ? this.data.width
       : `${this.data.width}px`;
@@ -254,20 +248,7 @@ export class ImageBlock extends EditorBlock {
 
     radioGroup.addEventListener('radio:change', (e) => {
       this.data.width = e.detail.value;
-      const imgNode = this.dom?.querySelector('.be-image-element');
-      if (imgNode) imgNode.style.width = e.detail.value;
       if (this.bus) this.bus.dispatch('block:updated', { block: this });
-    });
-
-    wrap.querySelectorAll('.be-align-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const newAlign = btn.dataset.align;
-        this.data.align = newAlign;
-        this.dom.className = `be-preview-image be-align-${newAlign}`;
-        wrap.querySelectorAll('.be-align-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (this.bus) this.bus.dispatch('block:updated', { block: this });
-      });
     });
 
     const altInput = wrap.querySelector('.be-alt-input');

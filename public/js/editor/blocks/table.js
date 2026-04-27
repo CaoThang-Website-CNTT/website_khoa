@@ -28,7 +28,7 @@ export class TableBlock extends EditorBlock {
   /** @type {{ type: 'row' | 'col', index: number } | null} */
   #selectedSelection = null;
 
-  #tableWrapper = null;
+  dom = null;
   #rowHandle = null;
   #colHandle = null;
 
@@ -41,7 +41,9 @@ export class TableBlock extends EditorBlock {
 
   render() {
     const wrapper = document.createElement('div');
-    wrapper.className = 'be-preview-table-wrapper';
+    wrapper.className = 'be-table-wrapper';
+    wrapper.style.position = 'relative';
+
     this.dom = wrapper;
     this.#buildTable();
     return wrapper;
@@ -52,10 +54,6 @@ export class TableBlock extends EditorBlock {
   #buildTable() {
     this.dom.innerHTML = '';
 
-    this.#tableWrapper = document.createElement('div');
-    this.#tableWrapper.className = 'be-table-wrapper';
-    this.#tableWrapper.style.position = 'relative';
-
     this.#colHandle = document.createElement('div');
     this.#colHandle.className = 'be-table-col-handle';
     this.#colHandle.innerHTML = '<i class="fa-solid fa-grip-horizontal"></i>';
@@ -64,8 +62,8 @@ export class TableBlock extends EditorBlock {
     this.#rowHandle.className = 'be-table-row-handle';
     this.#rowHandle.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
 
-    const scrollWrap = document.createElement('div');
-    scrollWrap.className = 'be-table-scroll';
+    const scrollContainer = document.createElement('div');
+    scrollContainer.className = 'be-table-scroll';
 
     const table = document.createElement('table');
     table.className = 'be-table';
@@ -86,21 +84,19 @@ export class TableBlock extends EditorBlock {
     }
     table.appendChild(tbody);
 
-    scrollWrap.appendChild(table);
+    scrollContainer.appendChild(table);
 
-    this.#tableWrapper.appendChild(this.#colHandle);
-    this.#tableWrapper.appendChild(this.#rowHandle);
-    this.#tableWrapper.appendChild(scrollWrap);
-
-    this.dom.appendChild(this.#tableWrapper);
+    this.dom.appendChild(this.#colHandle);
+    this.dom.appendChild(this.#rowHandle);
+    this.dom.appendChild(scrollContainer);
 
     this.#setupHandleTracking();
   }
 
   #setupHandleTracking() {
-    if (!this.#tableWrapper) return;
+    if (!this.dom) return;
 
-    this.#tableWrapper.addEventListener('mousemove', (e) => {
+    this.dom.addEventListener('mousemove', (e) => {
       const cell = e.target.closest('td, th');
       if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) return;
       if (!cell) return;
@@ -111,7 +107,7 @@ export class TableBlock extends EditorBlock {
       this.#colHandle.style.display = 'flex';
       this.#rowHandle.style.display = 'flex';
 
-      const wrapperRect = this.#tableWrapper.getBoundingClientRect();
+      const wrapperRect = this.dom.getBoundingClientRect();
       const cellRect = cell.getBoundingClientRect();
       const trRect = tr.getBoundingClientRect();
 
@@ -125,7 +121,7 @@ export class TableBlock extends EditorBlock {
       this.#colHandle.dataset.colIndex = cell.cellIndex;
     });
 
-    this.#tableWrapper.addEventListener('mouseleave', () => {
+    this.dom.addEventListener('mouseleave', () => {
       this.#colHandle.style.display = 'none';
       this.#rowHandle.style.display = 'none';
     });
@@ -160,7 +156,7 @@ export class TableBlock extends EditorBlock {
       }
     });
 
-    this.#tableWrapper.addEventListener('click', (e) => {
+    this.dom.addEventListener('click', (e) => {
       if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) return;
       if (e.target.closest('td, th')) this.#clearHighlight();
     });
@@ -274,18 +270,15 @@ export class TableBlock extends EditorBlock {
 
     cellData.forEach((cellValue, colIndex) => {
       const cell = document.createElement(cellTag);
-      cell.className = 'be-table-cell';
       cell.contentEditable = 'true';
       cell.spellcheck = false;
       cell.dataset.row = rowIndex;
       cell.dataset.col = colIndex;
       cell.dataset.placeholder = cellTag === 'th' ? 'Tiêu đề...' : '';
 
-      // [MODIFIED] — was: cell.innerHTML = cellText
       // Hydrate: segment[] hoặc plain string → HTML
       cell.innerHTML = BlockSerializer.toHTML({ data: { content: cellValue } });
 
-      // [MODIFIED] — was: this.data.rows[rowIndex][colIndex] = cell.innerHTML
       // Parse innerHTML → segment[] rồi lưu vào data.rows
       cell.addEventListener('input', () => {
         const html = cell.innerHTML?.trim() ?? '';
@@ -294,18 +287,10 @@ export class TableBlock extends EditorBlock {
           : [];
       });
 
-      // [MODIFIED] — was: document.execCommand('insertText', false, text)
       cell.addEventListener('paste', (e) => {
         e.preventDefault();
         const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-        const sel = window.getSelection();
-        if (!sel?.rangeCount) return;
-        const range = sel.getRangeAt(0);
-        range.deleteContents();
-        range.insertNode(document.createTextNode(text));
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
+        this.paste(this.esc(text));
       });
 
       cell.addEventListener('keydown', (e) => {
