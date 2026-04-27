@@ -21,9 +21,6 @@ class PostController extends Controller
     $this->_categoryService = $categoryService;
   }
 
-  /**
-   * Render form tạo bài viết mới (page).
-   */
   public function create(): void
   {
     $this->render('admin/posts/create', [
@@ -32,9 +29,6 @@ class PostController extends Controller
     ], layout: 'canva_layout');
   }
 
-  /**
-   * Listing — trả về JSON danh sách bài viết (chỉ metadata, không content).
-   */
   public function index(Request $request): mixed
   {
     $limit = max(1, min(100, (int) $request->input('limit', 20)));
@@ -48,10 +42,6 @@ class PostController extends Controller
     );
   }
 
-  /**
-   * Tạo bài viết mới.
-   * Body: JSON với cấu trúc { meta: {...}, blocks: [...] }
-   */
   public function store(Request $request)
   {
     $jsonString = $request->input('editor_data');
@@ -92,62 +82,99 @@ class PostController extends Controller
     return $this->redirect('admin/posts/create');
   }
 
-  /**
-   * Chi tiết một bài viết (bao gồm content_json).
-   */
-  public function show(Request $request, int $post_id): mixed
+  public function show(Request $request, int $post_id)
   {
     try {
       $post = $this->_postService->get($post_id);
-      return $this->json(data: $post->toArray(), message: 'OK');
+
+      $this->render('admin/posts/show', [
+        'post' => $post,
+        'categories' => $this->_categoryService->getAllCategories()
+      ], layout: 'canva_layout');
     } catch (\RuntimeException $e) {
-      return $this->json(data: null, message: $e->getMessage(), status: 404);
+      $request->session()->flashNotify(
+        'error',
+        'Không tìm thấy bài viết',
+        'Bài viết bạn yêu cầu không tồn tại hoặc đã bị xoá.'
+      );
+      return $this->redirect('admin/posts');
     }
   }
 
-  /**
-   * Cập nhật nội dung và/hoặc trạng thái.
-   * Body: JSON với cấu trúc { meta?: {...}, blocks?: [...] }
-   * Chỉ các field có mặt trong payload mới được ghi đè.
-   */
-  public function update(Request $request, int $post_id): mixed
+  public function update(Request $request, int $post_id)
   {
-    $payload = $request->json();
+    $jsonString = $request->input('editor_data');
+    $editorData = json_decode($jsonString, true);
 
-    if (empty($payload)) {
-      return $this->json(data: null, message: 'Payload không được rỗng.', status: 422);
+    if (empty($editorData)) {
+      $request->session()->flashNotify(
+        'error',
+        'Dữ liệu trống',
+        'Vui lòng nhập ít nhất một trường để cập nhật.'
+      );
+      return $this->redirect("admin/posts/{$post_id}/edit");
     }
 
     // Validate status nếu có gửi lên
     $allowedStatuses = ['draft', 'published', 'deleted'];
-    if (isset($payload['meta']['status']) && !in_array($payload['meta']['status'], $allowedStatuses, true)) {
-      return $this->json(
-        data: null,
-        message: 'status không hợp lệ. Các giá trị cho phép: ' . implode(', ', $allowedStatuses),
-        status: 422,
+    if (isset($editorData['meta']['status']) && !in_array($editorData['meta']['status'], $allowedStatuses, true)) {
+      $request->flashOldInputs();
+      $request->session()->flashNotify(
+        'error',
+        'Trạng thái không hợp lệ',
+        'Các giá trị cho phép: ' . implode(', ', $allowedStatuses)
       );
+      return $this->redirect("admin/posts/{$post_id}/edit");
     }
 
     try {
-      $post = $this->_postService->update($post_id, $payload);
-      return $this->json(data: $post->toArray(), message: 'Cập nhật bài viết thành công.');
+      $post = $this->_postService->update($post_id, $editorData);
+
+      $request->session()->flashNotify(
+        'success',
+        'Cập nhật thành công',
+        "Bài viết '" . htmlspecialchars($post->title) . "' đã được cập nhật."
+      );
+
+      return $this->redirect('admin/posts');
     } catch (\InvalidArgumentException $e) {
-      return $this->json(data: null, message: $e->getMessage(), status: 422);
+      $request->flashOldInputs();
+      $request->session()->flashNotify(
+        'error',
+        'Dữ liệu không hợp lệ',
+        $e->getMessage()
+      );
+      return $this->redirect("admin/posts/{$post_id}/edit");
     } catch (\RuntimeException $e) {
-      return $this->json(data: null, message: $e->getMessage(), status: 404);
+      $request->flashOldInputs();
+      $request->session()->flashNotify(
+        'error',
+        'Lỗi hệ thống',
+        'Không thể cập nhật bài viết. Vui lòng thử lại sau.'
+      );
+      return $this->redirect("admin/posts/{$post_id}/edit");
     }
   }
 
-  /**
-   * Soft delete — ghi deleted_at, không xoá record vật lý.
-   */
-  public function destroy(Request $request, int $post_id): mixed
+  public function destroy(Request $request, int $post_id)
   {
     try {
       $this->_postService->delete($post_id);
-      return $this->json(data: null, message: 'Đã xoá bài viết thành công.');
+
+      $request->session()->flashNotify(
+        'success',
+        'Đã xoá bài viết',
+        "Bài viết #" . $post_id . " đã được xoá."
+      );
+
     } catch (\RuntimeException $e) {
-      return $this->json(data: null, message: $e->getMessage(), status: 404);
+      $request->session()->flashNotify(
+        'error',
+        'Không thể xoá',
+        'Có lỗi xảy ra khi xoá bài viết. Vui lòng thử lại.'
+      );
     }
+
+    return $this->redirect("");
   }
 }
