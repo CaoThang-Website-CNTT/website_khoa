@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Stores\InternshipBatchStore;
+use App\Core\Pageable;
 use Database;
 
 class InternshipBatchService
@@ -53,7 +54,6 @@ class InternshipBatchService
     $valid = [];
     $invalid = [];
 
-    // Map by MSSV for fast lookup
     $studentsMap = [];
     foreach ($students as $s) {
       $studentsMap[$s['student_id']] = $s;
@@ -94,5 +94,57 @@ class InternshipBatchService
   public function getAllClassrooms(): array
   {
     return $this->_store->getAllClassrooms();
+  }
+
+  public function getBatches(int $page, int $limit = 15): Pageable
+  {
+    $items = $this->_store->getPaginated($page, $limit);
+    $total = $this->_store->getTotalCount();
+
+    return new Pageable($items, $total, $limit, $page);
+  }
+
+  public function getBatchById(int $id): ?array
+  {
+    return $this->_store->getById($id);
+  }
+
+  public function getBatchWithStats(int $id): ?array
+  {
+    $batch = $this->_store->getById($id);
+    if (!$batch) return null;
+
+    $stats = $this->_store->getBatchStats($id);
+    return array_merge($batch, ['stats' => $stats]);
+  }
+
+  public function updateBatch(int $id, array $data): bool
+  {
+    return $this->_store->update($id, $data);
+  }
+
+  public function deleteBatch(int $id): bool
+  {
+    $stats = $this->_store->getBatchStats($id);
+
+    if ($stats['has_submissions'] || $stats['has_grades']) {
+      throw new \Exception('Không thể xóa đợt thực tập đã có bài nộp hoặc điểm số.');
+    }
+
+    return $this->_store->delete($id);
+  }
+
+  public function publishBatch(int $id): bool
+  {
+    return $this->_store->updateStatus($id, 'published', [
+      'published_at' => date('Y-m-d H:i:s')
+    ]);
+  }
+
+  public function closeBatch(int $id): bool
+  {
+    return $this->_store->updateStatus($id, 'closed', [
+      'closed_at' => date('Y-m-d H:i:s')
+    ]);
   }
 }

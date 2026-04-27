@@ -61,10 +61,6 @@
         <th>
           <h6>Công bố</h6>
         </th>
-        <th>
-          <h6>Trạng thái</h6>
-        </th>
-        <th></th> <!-- Actions placeholder -->
       </tr>
     </thead>
     <tbody>
@@ -73,7 +69,7 @@
           <?php
           $batchObj = (object)$batch;
           $statusVariant = 'secondary';
-          if ($batchObj->status === 'published') $statusVariant = 'primary';
+          if ($batchObj->status === 'public') $statusVariant = 'primary';
           if ($batchObj->status === 'closed') $statusVariant = 'destructive';
 
           $startDate = $batchObj->start_at ? date('d/m/Y', strtotime($batchObj->start_at)) : 'N/A';
@@ -109,28 +105,17 @@
             <td>
               <?= $publishDate ?>
             </td>
-            <td>
-              <span class="badge" data-variant="<?= $statusVariant ?>">
-                <?= htmlspecialchars(ucfirst($batchObj->status)) ?>
-              </span>
-            </td>
-            <td>
-              <div class="internship-batches__actions data-table-actions">
-                <!-- Chỗ trống cho các nút thao tác sau này -->
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr>
+            <td colspan="9" class="text-center py-8">
+              <div class="flex flex-col items-center gap-2">
+                <i class="fa-solid fa-folder-open text-4xl text-muted"></i>
+                <p>Không tìm thấy đợt thực tập nào.</p>
               </div>
             </td>
           </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="10" class="text-center py-8">
-            <div class="flex flex-col items-center gap-2">
-              <i class="fa-solid fa-folder-open text-4xl text-muted"></i>
-              <p>Không tìm thấy đợt thực tập nào.</p>
-            </div>
-          </td>
-        </tr>
-      <?php endif; ?>
+        <?php endif; ?>
     </tbody>
   </table>
 

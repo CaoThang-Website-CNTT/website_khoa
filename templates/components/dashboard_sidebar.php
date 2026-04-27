@@ -79,6 +79,14 @@
                 </div>
               </div>
             </li>
+
+            <!-- ── Thực tập ────────────────────────────────────────────── -->
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn" href="<?= url('admin/internship_batches') ?>">
+                <i class="fa-solid fa-house-laptop"></i>
+                Thực tập tốt nghiệp
+              </a>
+            </li>
           </ul>
         </div>
 

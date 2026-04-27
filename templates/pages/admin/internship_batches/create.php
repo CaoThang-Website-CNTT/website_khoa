@@ -260,7 +260,7 @@
   </div>
   <div class="modal__content">
     <div class="field">
-      <textarea id="import-student-ids-textarea" class="field__input" style="min-height: 150px;"
+      <textarea id="import-student-ids-textarea" class="field__input textarea--import"
         placeholder="Ví dụ:&#10;2100123&#10;2100456&#10;2100789"></textarea>
     </div>
     <div id="import-results-container" class="mt-4 hidden">
