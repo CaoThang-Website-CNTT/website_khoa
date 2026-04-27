@@ -1,0 +1,161 @@
+/* 
+   Styles cho trang Chi tiết đợt thực tập
+*/
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr var(--container-xs);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-layout__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.detail-layout__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Stats Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stat-card {
+  padding: 1.25rem;
+  background: var(--background);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-card__label {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--fw-semibold);
+}
+
+.stat-card__value {
+  font-size: var(--text-2xl);
+  font-weight: var(--fw-bold);
+  color: var(--foreground);
+}
+
+.stat-card__footer {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+
+/* Progress bar for assignments */
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: var(--muted);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: var(--progress, 0%);
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+/* Tabs */
+.tabs-container {
+  margin-top: 1rem;
+}
+
+.tabs-list {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab-trigger {
+  padding: 0.75rem 0;
+  font-weight: var(--fw-medium);
+  color: var(--muted-foreground);
+  position: relative;
+  cursor: pointer;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+}
+
+.tab-trigger:hover {
+  color: var(--foreground);
+}
+
+.tab-trigger[data-state="active"] {
+  color: var(--primary);
+}
+
+.tab-trigger[data-state="active"]::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary);
+}
+
+.tab-content[data-state="inactive"] {
+  display: none;
+}
+
+/* Action Groups in Sidebar */
+.sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sidebar-actions .btn {
+  justify-content: flex-start;
+  padding-left: 1rem;
+}
+
+/* Badge for sidebar readonly info */
+.readonly-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.readonly-info__label {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
+.readonly-info__value {
+  font-weight: var(--fw-semibold);
+  color: var(--foreground);
+}
+
+textarea#description {
+  min-height: 8rem;
+}

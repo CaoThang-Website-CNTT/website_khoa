@@ -123,6 +123,10 @@ $router->prefix('admin')->group(function ($router) {
     $router->get('/', [InternshipBatchController::class, 'index']);
     $router->get('/create', [InternshipBatchController::class, 'create']);
     $router->get('/{id}', [InternshipBatchController::class, 'show']);
+    $router->post('/{id}', [InternshipBatchController::class, 'update']);
+    $router->post('/delete/{id}', [InternshipBatchController::class, 'destroy']);
+    $router->post('/{id}/publish', [InternshipBatchController::class, 'publish']);
+    $router->post('/{id}/close', [InternshipBatchController::class, 'close']);
 
     // Internship Assignments
     $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);

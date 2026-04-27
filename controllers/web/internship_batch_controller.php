@@ -30,9 +30,68 @@ class InternshipBatchController extends Controller
     $this->render("admin/internship_batches/create", [], layout: "dashboard_layout");
   }
 
-  public function show($id)
+  public function show($id, Request $request)
   {
-    // Placeholder for detail page
-    echo "Trang chi tiết đợt thực tập #$id đang được phát triển.";
+    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    if (!$batch) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
+      return $this->redirect('admin/internship_batches');
+    }
+
+    $this->render("admin/internship_batches/edit", [
+      'batch' => $batch
+    ], layout: "dashboard_layout");
+  }
+
+  public function update($id, Request $request)
+  {
+    $data = $request->all();
+
+    $isSuccess = $this->_internshipBatchService->updateBatch((int)$id, $data);
+    if ($isSuccess) {
+      $request->session()->flashNotify('success', 'Cập nhật thông tin đợt thực tập thành công!');
+    } else {
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra khi cập nhật.');
+    }
+
+    return $this->redirect("admin/internship_batches/$id");
+  }
+
+  public function destroy($id, Request $request)
+  {
+    try {
+      $isSuccess = $this->_internshipBatchService->deleteBatch((int)$id);
+      if ($isSuccess) {
+        $request->session()->flashNotify('success', 'Xóa đợt thực tập thành công!');
+      } else {
+        $request->session()->flashNotify('error', 'Có lỗi xảy ra khi xóa.');
+      }
+    } catch (\Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+    }
+
+    return $this->redirect('admin/internship_batches');
+  }
+
+  public function publish($id, Request $request)
+  {
+    $isSuccess = $this->_internshipBatchService->publishBatch((int)$id);
+    if ($isSuccess) {
+      $request->session()->flashNotify('success', 'Công bố đợt thực tập thành công!');
+    } else {
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra.');
+    }
+    return $this->redirect("admin/internship_batches/$id");
+  }
+
+  public function close($id, Request $request)
+  {
+    $isSuccess = $this->_internshipBatchService->closeBatch((int)$id);
+    if ($isSuccess) {
+      $request->session()->flashNotify('success', 'Kết thúc đợt thực tập thành công!');
+    } else {
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra.');
+    }
+    return $this->redirect("admin/internship_batches/$id");
   }
 }
