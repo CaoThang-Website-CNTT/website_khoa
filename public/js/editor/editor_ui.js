@@ -59,7 +59,7 @@ export class EditorUI {
         blockBtn.className = 'btn be-block-btn';
         blockBtn.setAttribute('data-variant', 'outline');
 
-        blockBtn.setAttribute('data-add-block', schema.name);
+        blockBtn.setAttribute('data-add-block', schema.type);
 
         const iconDiv = document.createElement('div');
         iconDiv.className = 'be-block-btn__icon';

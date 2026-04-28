@@ -50,4 +50,18 @@ export class ParagraphBlock extends EditorBlock {
     wrap.innerHTML = ``;
     return wrap;
   }
+
+  focus(bus, position = 'end') {
+    if (!this.dom) return;
+    this.dom.focus();
+
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(this.dom);
+    range.collapse(position === 'start');
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    this.bus.dispatch('block:selected', { blockId: this.id });
+  }
 }

@@ -90,7 +90,6 @@ export class ListBlock extends EditorBlock {
     this.dom = rootEl;
     this.#rootEl = rootEl;
 
-    // [ADDED] — migrate legacy nodes: node.text (string) → node.content (string)
     // Nếu data được load từ DB cũ vẫn còn field 'text', đổi sang 'content'
     this.#migrateNodes(this.data.values);
 
@@ -307,18 +306,22 @@ export class ListBlock extends EditorBlock {
 
   #exitBlock(liEl, path) {
     const { parent } = this.#nodeAt(path);
-    parent.splice(path[path.length - 1], 1);
+    parent.splice(path[path.length - 1], 1); // Xóa item rỗng
 
     if (this.bus) {
       this.bus.dispatch('block:updated', { block: this });
-      this.bus.dispatch('block:add_request', { type: 'blocks/paragraph' });
+      // Yêu cầu chèn Paragraph ngay sau block List hiện tại
+      this.bus.dispatch('block:add_request', {
+        type: 'blocks/paragraph',
+        afterId: this.id
+      });
     }
   }
 
   // ─── Re-render helper ─────────────────────────────────────────────────────
 
   #rerender(afterRender) {
-    const tag = this.data.list_type("ordered") ? 'ol' : 'ul';
+    const tag = this.data.list_type === "ordered" ? 'ol' : 'ul';
 
     if (this.dom.tagName.toLowerCase() !== tag) {
       const newRoot = document.createElement(tag);
@@ -379,6 +382,6 @@ export class ListBlock extends EditorBlock {
     const target = position === 'end' ? all[all.length - 1] : all[0];
     if (target) this.#focusLi(target, position);
 
-    bus.dispatch('block:selected', { blockId: this.id });
+    this.bus.dispatch('block:selected', { blockId: this.id });
   }
 }

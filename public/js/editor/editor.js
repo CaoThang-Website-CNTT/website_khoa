@@ -178,10 +178,24 @@ export class EditorManager {
       const href = anchor.getAttribute('href');
       if (href) window.open(href, '_blank', 'noopener,noreferrer');
     });
+
+    this.#blockList.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        this.#handleGlobalEnter(e);
+      }
+    });
   }
 
-  #onBlockAddRequested({ type }) {
-    this.#canvas.addBlock(type);
+  #onBlockAddRequested({ type, data = {}, afterId = null }) {
+    // Nếu không truyền afterId, tự động lấy block đang active làm mốc
+    const targetId = afterId || this.#activeBlockId;
+    const newBlock = this.#canvas.addBlock(type, data, targetId);
+
+    setTimeout(() => {
+      if (newBlock && typeof newBlock.focus === 'function') {
+        newBlock.focus(this.#bus, 'start');
+      }
+    }, 0);
   }
 
   #onBlockSelected({ blockId }) {
@@ -192,7 +206,7 @@ export class EditorManager {
     this.#ui.renderSettingsPanel(block);
   }
 
-  #onBlockAdded({ block }) {
+  #onBlockAdded({ block, afterId }) {
     console.log(`[EditorManager][block:added] Block: `, block);
     const card = new EditorBlockWrapper(this.#bus, block);
 
@@ -200,7 +214,18 @@ export class EditorManager {
       this.#isEmpty = false;
       this.#ui.hideCanvasEmptyState();
     }
-    this.#blockList.appendChild(card);
+
+    if (afterId) {
+      const anchorEl = this.#blockList.querySelector(`[data-be-block-id="${afterId}"]`);
+
+      if (anchorEl && anchorEl.nextSibling) {
+        this.#blockList.insertBefore(card, anchorEl.nextSibling);
+      } else {
+        this.#blockList.appendChild(card);
+      }
+    } else {
+      this.#blockList.appendChild(card);
+    }
 
     // Dispatch event activate block
     this.#bus.dispatch("block:selected", { blockId: block.id })
@@ -378,6 +403,20 @@ export class EditorManager {
     this.#isDirty = true;
   }
 
+  /**
+ * Xử lý phím Enter tập trung
+ */
+  #handleGlobalEnter(e) {
+    const selection = window.getSelection();
+    const ctx = ContextEngine.analyze(this.#blockList, selection);
+
+    if (!ctx.blockId || ctx.type === 'none') return;
+
+    if (ctx.blockType === 'blocks/paragraph') {
+      e.preventDefault();
+    }
+  }
+
   #getEditableEl(blockId) {
     const card = this.#blockList.querySelector(`[data-be-block-id="${blockId}"]`);
     if (!card) return null;
@@ -491,7 +530,7 @@ class EditorCanvas {
   // ===========================
   /**
    * Thêm block mới.
-   * @param {string}      type      — phải có trong BLOCK_DEFAULTS
+   * @param {string}      type      — phải có trong BLOCK_REGISTRY
    * @param {object}      data      — merge với defaultData
    * @param {string|null} afterId   — chèn sau block có id này; null = cuối danh sách
    * @returns {string} id của block mới
@@ -526,7 +565,7 @@ class EditorCanvas {
       block,
       afterId
     });
-    return block.id;
+    return block;
   }
 
   /**
@@ -713,6 +752,7 @@ class EditorBlockWrapper {
     const wrapper = document.createElement('div');
     wrapper.className = 'be-block-card';
     wrapper.dataset.beBlockId = block.id;
+    wrapper.dataset.beBlockType = block.type;
 
     const handle = document.createElement('div');
     handle.className = 'be-drag-handle';

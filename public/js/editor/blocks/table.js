@@ -472,6 +472,6 @@ export class TableBlock extends EditorBlock {
       this.#focusCell(0, 0);
     }
 
-    bus.dispatch('block:selected', { blockId: this.id });
+    this.bus.dispatch('block:selected', { blockId: this.id });
   }
 }

@@ -116,7 +116,7 @@ export class QuoteBlock extends EditorBlock {
       selection.removeAllRanges();
       selection.addRange(range);
 
-      bus.dispatch('block:selected', { blockId: this.id });
+      this.bus.dispatch('block:selected', { blockId: this.id });
     }
   }
 }
