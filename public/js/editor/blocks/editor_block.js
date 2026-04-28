@@ -6,7 +6,7 @@ export class EditorBlock {
   constructor(blockData = {}, schema, bus = null) {
     this.id = blockData.id || crypto.randomUUID();
 
-    this.type = schema.name;
+    this.type = schema.type;
 
     this.data = this.#parseDataWithSchema(blockData.data || {}, schema.attributes);
 
