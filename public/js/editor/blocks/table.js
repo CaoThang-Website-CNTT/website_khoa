@@ -4,7 +4,7 @@ import { BlockSerializer } from '../block_serializer.js';
 export const TableSchema = {
   version: 1,
   icon: "<i class='fa-solid fa-table'></i>",
-  name: 'blocks/table',
+  type: 'blocks/table',
   title: 'Bảng',
   group: 'media',
   groupLabel: 'Phương tiện',

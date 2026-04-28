@@ -4,7 +4,7 @@ import { BlockSerializer } from '../block_serializer.js';
 export const QuoteSchema = {
   version: 1,
   icon: "<i class='fa-solid fa-quote-left'></i>",
-  name: 'blocks/quote',
+  type: 'blocks/quote',
   title: 'Trích dẫn',
   group: 'paragraph',
   groupLabel: 'Văn Bản',

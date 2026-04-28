@@ -4,7 +4,7 @@ import { BlockSerializer } from '../block_serializer.js';
 export const ParagraphSchema = {
   version: 1,
   icon: "<i class='fa-solid fa-paragraph'></i>",
-  name: 'blocks/paragraph',
+  type: 'blocks/paragraph',
   title: 'Đoạn văn',
   group: 'paragraph',
   groupLabel: 'Văn Bản',

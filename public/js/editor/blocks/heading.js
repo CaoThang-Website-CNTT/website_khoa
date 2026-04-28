@@ -4,7 +4,7 @@ import { BlockSerializer } from '../block_serializer.js';
 export const HeadingSchema = {
   version: 1,
   icon: "<i class='fa-solid fa-heading'></i>",
-  name: 'blocks/heading',
+  type: 'blocks/heading',
   title: 'Heading',
   group: 'paragraph',
   groupLabel: 'Văn Bản',

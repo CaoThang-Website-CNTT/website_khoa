@@ -292,10 +292,8 @@ class EditorMetaBinder {
   }
 
   #syncPreview(key, value, allMeta) {
-    console.log("sync preview", this.previews.get(key), key, value, allMeta);
     this.previews.get(key)?.forEach(el => {
       const action = el.dataset.bePreviewAction || 'text';
-      console.log(el, action);
       switch (action) {
         case 'toggle':
           el.classList.toggle('hidden', !value);

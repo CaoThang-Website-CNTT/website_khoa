@@ -2,8 +2,8 @@ import { EditorBlock } from './editor_block.js';
 import { BlockSerializer } from '../block_serializer.js';
 
 export const ImageSchema = {
-  name: 'blocks/image',
-  version: 1, // [ADDED]
+  type: 'blocks/image',
+  version: 1,
   title: 'Hình ảnh',
   group: 'media',
   groupLabel: 'Phương tiện',

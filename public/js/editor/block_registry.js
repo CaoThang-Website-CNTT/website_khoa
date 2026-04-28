@@ -3,7 +3,7 @@ class BlockRegistry {
   #groupedBlocks = {};
 
   register(schema, blockClass) {
-    this.#blocks.set(schema.name, {
+    this.#blocks.set(schema.type, {
       schema: schema,
       blockClass: blockClass
     });
@@ -20,8 +20,8 @@ class BlockRegistry {
     this.#groupedBlocks[groupKey].items.push(schema);
   }
 
-  get(name) {
-    return this.#blocks.get(name);
+  get(type) {
+    return this.#blocks.get(type);
   }
 
   getAll() {

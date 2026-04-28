@@ -4,7 +4,7 @@ import { BlockSerializer } from '../block_serializer.js';
 export const ListSchema = {
   version: 1,
   icon: "<i class='fa-solid fa-list-ul'></i>",
-  name: 'blocks/list',
+  type: 'blocks/list',
   title: 'Danh sách',
   group: 'paragraph',
   groupLabel: 'Văn Bản',
