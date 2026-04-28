@@ -95,7 +95,6 @@ export class EditorManager {
     this.#bus.subscribe('block:selected', (block) => this.#onBlockSelected(block));
     this.#bus.subscribe('block:add_request', (block) => this.#onBlockAddRequested(block));
     this.#bus.subscribe('block:added', (block) => this.#onBlockAdded(block));
-    this.#bus.subscribe('block:update_request', (block) => this.#onBlockUpdateRequested(block));
     this.#bus.subscribe('block:updated', (block) => this.#onBlockUpdated(block));
     this.#bus.subscribe('block:remove_request', (block) => this.#onBlockRemoveRequested(block));
     this.#bus.subscribe('block:removed', (payload) => this.#onBlockRemoved(payload));
@@ -205,12 +204,6 @@ export class EditorManager {
 
     // Dispatch event activate block
     this.#bus.dispatch("block:selected", { blockId: block.id })
-  }
-
-  #onBlockUpdateRequested({ blockId, payload }) {
-    console.log(`[EditorManager][block:update_request]`, blockId, payload);
-
-    this.#canvas.updateBlock(blockId, payload);
   }
 
   #onBlockUpdated({ block }) {

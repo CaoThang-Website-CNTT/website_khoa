@@ -3,6 +3,12 @@
 
   --left-panel-width: 15rem;
   --right-panel-width: 20rem;
+
+  --editor-background: #f0efeb;
+}
+
+body {
+  background: var(--background);
 }
 
 [contenteditable="true"]:focus {
@@ -32,22 +38,6 @@
   border-radius: var(--radius-md);
 }
 
-/* ── Shell chiếm toàn màn hình ── */
-#be-shell {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  background: var(--background);
-
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 /* =============================================================
    TOPBAR
    ============================================================= */
@@ -70,7 +60,7 @@
 #be-topbar-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.5rem;
 }
 
 #be-topbar-left {
@@ -85,47 +75,21 @@
 #be-topbar-center {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .be-post-title-input {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--be-text, #1a1a1a);
-  width: 320px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  font-size: var(--text-sm);
+  width: 20rem;
 }
 
-.be-post-title-input:hover {
-  background: var(--be-surface-2, #f5f5f3);
-}
-
-.be-post-title-input:focus {
-  background: var(--be-surface-2, #f5f5f3);
-}
-
-.be-post-title-input::placeholder {
-  color: var(--be-text-muted, #9a9a97);
-}
-
-/* =============================================================
-   BODY — 3 columns
-   ============================================================= */
 #be-body {
   display: flex;
   flex: 1;
   overflow: hidden;
-  background: #f0efeb;
-  padding-top: var(--topbar-height);
+  margin-top: var(--topbar-height);
 }
 
-/* =============================================================
-   PANELS
-   ============================================================= */
 .be-panel__wrapper {
   transition: all 0.2s ease;
 }
@@ -151,8 +115,9 @@
   z-index: 10;
   left: 0;
   transition: left 200ms ease;
-  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   background: var(--background);
+  box-shadow: var(--shadow-sm);
 }
 
 #be-right {
@@ -160,8 +125,8 @@
   max-width: var(--right-panel-width);
   left: unset;
   right: 0;
-  border-left: unset;
-  border-right: 1px solid var(--border);
+  border-right: unset;
+  border-left: 1px solid var(--border);
   transition: right 200ms ease;
 }
 
@@ -254,10 +219,6 @@
 #be-canvas-wrap {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 #be-canvas {
@@ -265,17 +226,17 @@
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  flex: 1 0 auto;
-  max-width: var(--container-2xl);
   background: var(--background);
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-md);
   padding: 2rem 0;
   position: relative;
 }
 
-.be-canvas-title-area {
-  padding: 0 2.25rem;
+.be-canvas__content-wrapper {
+}
+
+.be-canvas__content {
+  max-width: var(--container-2xl);
+  margin: 0 auto;
 }
 
 .be-canvas-title {
@@ -305,7 +266,6 @@
 #be-block-list {
   flex: 1;
   min-height: min-content;
-  padding: 0 2rem;
 }
 
 /* =============================================================
@@ -365,7 +325,7 @@
 .inline-toolbar {
   position: fixed;
   z-index: 10;
-  display: none; /* JS toggles to flex */
+  display: none;
   align-items: center;
   border-radius: var(--radius-md);
   background: var(--background);
@@ -418,7 +378,7 @@
 }
 
 .inline-toolbar__link-wrapper {
-  display: none; /* JS toggles to flex */
+  display: none;
   align-items: center;
 }
 

@@ -1,15 +1,20 @@
-strong,
-b {
+.be-editable strong,
+.be-editable b {
+  font-size: inherit;
   font-weight: bold;
 }
-i,
-em {
+.be-editable i,
+.be-editable em {
+  font-size: inherit;
+  font-weight: inherit;
   font-style: italic;
 }
-u {
+.be-editable u {
+  font-size: inherit;
+  font-weight: inherit;
   text-decoration: underline;
 }
-a {
+.be-editable a {
   color: var(--primary);
   text-decoration: underline;
   cursor: pointer;
@@ -25,20 +30,23 @@ a {
   font-weight: var(--fw-bold);
   color: var(--foreground);
 }
-h1.be-heading {
-  font-size: 2.25rem;
-}
 h2.be-heading {
-  font-size: 1.875rem;
+  margin-top: 2rem;
+  font-size: var(--text-2xl);
 }
 h3.be-heading {
-  font-size: 1.5rem;
+  margin-top: 1.5rem;
+  font-size: var(--text-xl);
+}
+h4.be-heading {
+  margin-top: 1rem;
+  font-size: var(--text-lg);
 }
 
 /* Paragraph Block */
 .be-paragraph {
-  line-height: 1.6;
-  font-size: 1.125rem;
+  margin: 0.5rem 0;
+  line-height: var(--text-lg-line-height);
   color: var(--foreground);
 }
 
@@ -46,6 +54,10 @@ h3.be-heading {
 .be-image {
   display: flex;
   flex-direction: column;
+  width: 100%;
+}
+
+.be-image-wrapper {
   width: 100%;
 }
 
@@ -86,15 +98,16 @@ ul.be-list .be-list .be-list {
 /* Quote Block */
 .be-quote {
   border-left: 4px solid var(--primary);
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1.5rem;
 }
 .be-quote-content {
-  font-size: 1.25rem;
-  font-style: italic;
-  margin-bottom: 0.5rem;
+  font-size: var(--text-lg);
+  margin-bottom: 0.25rem;
 }
 .be-quote-citation {
-  font-size: 0.875rem;
+  display: block;
+  width: 100%;
+  font-size: var(--text-sm);
   color: var(--muted-foreground);
 }
 
@@ -128,8 +141,8 @@ ul.be-list .be-list .be-list {
   word-break: break-word;
 }
 .be-table th {
-  background: var(--background);
-  color: var(--foreground);
+  text-align: left;
+  font-weight: var(--fw-semibold);
 }
 .be-table-col-handle,
 .be-table-row-handle {

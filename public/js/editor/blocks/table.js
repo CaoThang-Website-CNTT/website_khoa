@@ -372,15 +372,13 @@ export class TableBlock extends EditorBlock {
 
   insertRowBefore(rowIndex) {
     const colCount = this.data.rows[0]?.length ?? 1;
-    // [MODIFIED] — was: new Array(colCount).fill('')
-    // Empty cell là [] (empty segment array) thay vì string rỗng
     this.data.rows.splice(rowIndex, 0, new Array(colCount).fill([]));
     this.#rerender(rowIndex, this.#activeCursor?.col ?? 0);
   }
 
   insertRowAfter(rowIndex) {
     const colCount = this.data.rows[0]?.length ?? 1;
-    this.data.rows.splice(rowIndex + 1, 0, new Array(colCount).fill([])); // [MODIFIED]
+    this.data.rows.splice(rowIndex + 1, 0, new Array(colCount).fill([]));
     this.#rerender(rowIndex + 1, this.#activeCursor?.col ?? 0);
   }
 
@@ -392,13 +390,12 @@ export class TableBlock extends EditorBlock {
   }
 
   insertColBefore(colIndex) {
-    // [MODIFIED] — was: row.splice(colIndex, 0, '')
     this.data.rows.forEach(row => row.splice(colIndex, 0, []));
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex);
   }
 
   insertColAfter(colIndex) {
-    this.data.rows.forEach(row => row.splice(colIndex + 1, 0, [])); // [MODIFIED]
+    this.data.rows.forEach(row => row.splice(colIndex + 1, 0, []));
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex + 1);
   }
 
@@ -427,30 +424,37 @@ export class TableBlock extends EditorBlock {
 
   // ─── Inspector controls ───────────────────────────────────────────────────
 
-  renderInspectorControls(data, { onUpdate }) {
+  renderInspectorControls() {
     const wrap = document.createElement('div');
     wrap.className = "field-group";
 
     wrap.innerHTML = `
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Header</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-table-header-btn ${data.hasHeader ? 'active' : ''}" data-variant="outline" data-has-header="true">
-            <i class="fa-solid fa-table-columns"></i> Có header
-          </button>
-          <button type="button" class="btn be-table-header-btn ${!data.hasHeader ? 'active' : ''}" data-variant="outline" data-has-header="false">
-            Không header
-          </button>
+      <fieldset class="field__set">
+        <legend class="field__label">Kiểu danh sách</legend>
+        <div class="radio-group grid gap-2" data-radio-name="has_header" data-radio-default-value="false">
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="has_header" class="radio-group__item" type="button" role="radio" value="false"></button>
+              <div class="field__title">Có header</div>
+            </div>
+          </label>
+
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="not_has_header" class="radio-group__item" type="button" role="radio" value="true"></button>
+              <div class="field__title">Không header</div>
+            </div>
+          </label>
         </div>
-      </div>
+      </fieldset>
     `;
 
-    wrap.querySelectorAll('.be-table-header-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        onUpdate({ hasHeader: btn.dataset.hasHeader === 'true' });
-        wrap.querySelectorAll('.be-table-header-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
+    const radioGroup = wrap.querySelector('.radio-group');
+    RadioHandler.instance.register(radioGroup);
+
+    radioGroup.addEventListener('radio:change', (e) => {
+      this.data.hasHeader = e.detail.value;
+      if (this.bus) this.bus.dispatch('block:updated', { block: this });
     });
 
     return wrap;

@@ -135,19 +135,15 @@ export class EditorUI {
     const schema = block.schema;
     const currentData = block.data;
 
-    const updateHandler = (patchData) => {
-      this.#bus.dispatch('block:update_request', { blockId: block.id, payload: patchData });
-    };
-
     if (schema.supports) {
       if (schema.supports.typography) {
-        const typoUI = this.#inspector.renderTypographySettings(currentData, updateHandler);
+        const typoUI = this.#inspector.renderTypographySettings();
         this.blockSettingsPanel.appendChild(typoUI);
       }
     }
 
     if (typeof block.renderInspectorControls === 'function') {
-      const customUI = block.renderInspectorControls(block.data, { onUpdate: updateHandler });
+      const customUI = block.renderInspectorControls();
 
       const divider = document.createElement('hr');
       this.blockSettingsPanel.appendChild(divider);

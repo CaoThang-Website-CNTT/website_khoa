@@ -10,7 +10,7 @@ export const ListSchema = {
   groupLabel: 'Văn Bản',
   attributes: {
     values: { default: [{ content: '', children: [] }] },
-    ordered: { default: false },
+    list_type: { default: false },
   },
   supports: {
     typography: false,
@@ -82,7 +82,7 @@ export class ListBlock extends EditorBlock {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   render() {
-    const tag = this.data.ordered ? 'ol' : 'ul';
+    const tag = this.data.list_type === "ordered" ? 'ol' : 'ul';
     const rootEl = document.createElement(tag);
     rootEl.className = `be-list`;
     rootEl.contentEditable = 'false';
@@ -130,7 +130,7 @@ export class ListBlock extends EditorBlock {
       listEl.appendChild(li);
 
       if (node.children && node.children.length > 0) {
-        const subTag = this.data.ordered ? 'ol' : 'ul';
+        const subTag = this.data.list_type === "ordered" ? 'ol' : 'ul';
         const subList = document.createElement(subTag);
         subList.className = 'be-list';
         li.appendChild(subList);
@@ -318,7 +318,7 @@ export class ListBlock extends EditorBlock {
   // ─── Re-render helper ─────────────────────────────────────────────────────
 
   #rerender(afterRender) {
-    const tag = this.data.ordered ? 'ol' : 'ul';
+    const tag = this.data.list_type("ordered") ? 'ol' : 'ul';
 
     if (this.dom.tagName.toLowerCase() !== tag) {
       const newRoot = document.createElement(tag);
@@ -336,33 +336,37 @@ export class ListBlock extends EditorBlock {
     if (afterRender) requestAnimationFrame(afterRender);
   }
 
-  // ─── Inspector controls ───────────────────────────────────────────────────
-
-  renderInspectorControls(data, { onUpdate }) {
+  renderInspectorControls() {
     const wrap = document.createElement('div');
     wrap.className = "field-group";
 
     wrap.innerHTML = `
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Kiểu danh sách</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-list-type-btn ${!data.ordered ? 'active' : ''}" data-variant="outline" data-ordered="false">
-            <i class="fa-solid fa-list-ul"></i> Dấu chấm
-          </button>
-          <button type="button" class="btn be-list-type-btn ${data.ordered ? 'active' : ''}" data-variant="outline" data-ordered="true">
-            <i class="fa-solid fa-list-ol"></i> Đánh số
-          </button>
+      <fieldset class="field__set">
+        <legend class="field__label">Kiểu danh sách</legend>
+        <div class="radio-group grid gap-2" data-radio-name="list_type" data-radio-default-value="unordered">
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="unordered" class="radio-group__item" type="button" role="radio" value="unordered"></button>
+              <div class="field__title"><i class="fa-solid fa-list-ul"></i> Không đánh số</div>
+            </div>
+          </label>
+
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="ordered" class="radio-group__item" type="button" role="radio" value="ordered"></button>
+              <div class="field__title"><i class="fa-solid fa-list-ol"></i> Có đánh số</div>
+            </div>
+          </label>
         </div>
-      </div>
+      </fieldset>
     `;
 
-    wrap.querySelectorAll('.be-list-type-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const ordered = btn.dataset.ordered === 'true';
-        onUpdate({ ordered });
-        wrap.querySelectorAll('.be-list-type-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
+    const radioGroup = wrap.querySelector('.radio-group');
+    RadioHandler.instance.register(radioGroup);
+
+    radioGroup.addEventListener('radio:change', (e) => {
+      this.data.list_type = e.detail.value;
+      if (this.bus) this.bus.dispatch('block:updated', { block: this });
     });
 
     return wrap;

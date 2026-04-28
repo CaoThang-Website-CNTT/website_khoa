@@ -86,11 +86,7 @@ export class QuoteBlock extends EditorBlock {
     const wrap = document.createElement('div');
     wrap.className = "field-group";
 
-    wrap.innerHTML = `
-        <div class="be-settings-property-section">
-          <span class="be-settings-property__label">Định dạng Quote</span>
-        </div>
-      `;
+    wrap.innerHTML = ``;
     return wrap;
   }
 

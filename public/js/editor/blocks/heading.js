@@ -50,30 +50,37 @@ export class HeadingBlock extends EditorBlock {
     return el;
   }
 
-  renderInspectorControls(data, { onUpdate }) {
+  renderInspectorControls() {
     const wrap = document.createElement('div');
     wrap.className = "field-group";
 
     // Tạo mảng 3 element tượng trưng cho 3 cấp độ tiêu đề H1, H2, H3
-    // Thủ thuật là đơn giản hóa về mặt UI là chỉ hiển thị cấp độ H1, H2, H3
-    // Nhưng đằng sau sẽ là từ H2 trở đi do H1 là tiêu đề bài viết
-    // Giúp người dùng biết được rằng block Heading có BAO NHIÊU CẤP ĐỘ CÓ THỂ CHỌN
+    // Trick lỏ về mặt UI là chỉ hiển thị cấp độ H1, H2, H3
+    // Nhưng đằng sau sẽ là từ H2 trở đi do H1 sẽ là tiêu đề bài viết và chỉ tồn tại 1 thẻ H1 trong 1 bài viết
+    // Mục đính giúp người dùng biết được rằng block Heading có BAO NHIÊU CẤP ĐỘ CÓ THỂ CHỌN
     // hơn là biết CÓ BAO NHIÊU THẺ <h> CÓ THỂ CHỌN
     wrap.innerHTML = `
-        <div class="be-settings-property-section">
-          <span class="be-settings-property__label">Cấp độ tiêu đề</span>
-          <div class="be-settings-level-group">
+        <div class="field">
+          <label class="field__label">Cấp độ tiêu đề</label>
+          <div class="radio-group grid gap-2" data-radio-name="heading_level" data-radio-default-value="1">
             ${[...Array.from({ length: 3 }, (_, i) => i + 1)].map(l => `
-              <button type="button" class="btn be-heading-level-btn ${data?.level === l ? ' active' : ''}" data-size="lg" data-variant="outline" data-level="${l}">H${l}</button>
+              <label class="field__label">
+                <div class="field" data-orientation="horizontal">
+                  <button id="${l}" class="radio-group__item" type="button" role="radio" value="${l}"></button>
+                  <div class="field__title">H${l}</div>
+                </div>
+              </label>
             `).join('')}
           </div>
         </div>
       `;
 
-    wrap.querySelectorAll('.be-heading-level-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        onUpdate({ level: parseInt(btn.dataset.level) });
-      });
+    const radioGroup = wrap.querySelector('.radio-group');
+    RadioHandler.instance.register(radioGroup);
+
+    radioGroup.addEventListener('radio:change', (e) => {
+      this.data.level = parseInt(e.detail.value) + 1;
+      if (this.bus) this.bus.dispatch('block:updated', { block: this });
     });
 
     return wrap;

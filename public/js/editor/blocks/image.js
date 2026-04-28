@@ -156,6 +156,7 @@ export class ImageBlock extends EditorBlock {
 
   #renderResolved() {
     const imgWrapper = document.createElement('div');
+    imgWrapper.className = "be-image-wrapper";
 
     const img = document.createElement('img');
     img.src = this.data.url;
@@ -202,45 +203,23 @@ export class ImageBlock extends EditorBlock {
 
     wrap.innerHTML = `
       <div class="field">
-        <label class="field__label" for="full_name">Văn bản thay thế (Alt Text)</label>
+        <label class="field__label">Văn bản thay thế (Alt Text)</label>
         <textarea class="field__input be-alt-input" rows="3" placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.alt)}</textarea>
       </div>
 
-      <div class="field">
-        <label class="field__label">Kích thước ảnh</label>
-
-        <div class="radio-group grid grid-cols-2 gap-2" data-radio-name="imageSize" data-radio-default-value="100%">
-
-          <label class="field__label">
-            <div class="field" data-orientation="horizontal">
-              <button id="size-25" class="radio-group__item" type="button" role="radio" value="25%"></button>
-              <div class="field__title">25%</div>
-            </div>
-          </label>
-
-          <label class="field__label">
-            <div class="field" data-orientation="horizontal">
-              <button id="size-50" class="radio-group__item" type="button" role="radio" value="50%"></button>
-              <div class="field__title">50%</div>
-            </div>
-          </label>
-
-          <label class="field__label">
-            <div class="field" data-orientation="horizontal">
-              <button id="size-75" class="radio-group__item" type="button" role="radio" value="75%"></button>
-              <div class="field__title">75%</div>
-            </div>
-          </label>
-
-          <label class="field__label">
-            <div class="field" data-orientation="horizontal">
-              <button id="size-100" class="radio-group__item" type="button" role="radio" value="100%"></button>
-              <div class="field__title">100%</div>
-            </div>
-          </label>
-
+      <fieldset class="field__set">
+        <legend class="field__label">Kích thước ảnh</legend>
+        <div class="radio-group grid grid-cols-2 gap-2" data-radio-name="image_size" data-radio-default-value="100%">
+          ${[...Array.from({ length: 4 }, (_, i) => i + 1)].map(l => `
+            <label class="field__label">
+              <div class="field" data-orientation="horizontal">
+                <button id="size-${l * 25}" class="radio-group__item" type="button" role="radio" value="${l * 25}%"></button>
+                <div class="field__title">${l * 25}%</div>
+              </div>
+            </label>
+          `).join('')}
         </div>
-      </div>
+      </fieldset>
     `;
 
     const radioGroup = wrap.querySelector('.radio-group');
@@ -254,8 +233,7 @@ export class ImageBlock extends EditorBlock {
     const altInput = wrap.querySelector('.be-alt-input');
     altInput.addEventListener('input', () => {
       this.data.alt = altInput.value;
-      const imgNode = this.dom.querySelector('.be-image-element');
-      if (imgNode) imgNode.alt = this.data.alt;
+      if (this.bus) this.bus.dispatch('block:updated', { block: this });
     });
 
     altInput.addEventListener('blur', () => {
