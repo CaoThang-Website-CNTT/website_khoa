@@ -66,7 +66,7 @@ export class BlockSerializer {
     if ('content' in data) {
       const html = editableEl?.innerHTML?.trim() ?? '';
       if (html) {
-        const tokens = BlockSerializer.#parseHTML(html);
+        const tokens = BlockSerializer.parseHTML(html);
         data.content = BlockSerializer.tokensToRichText(tokens);
       } else {
         data.content = [];
@@ -107,7 +107,7 @@ export class BlockSerializer {
    * @param {string} html
    * @returns {Array<{text: string, marks: Set, href?: string}>}
    */
-  static #parseHTML(html) {
+  static parseHTML(html) {
     const container = document.createElement('div');
     container.innerHTML = html;
 

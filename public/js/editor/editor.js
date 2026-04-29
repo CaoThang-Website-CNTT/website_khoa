@@ -3,6 +3,7 @@ import { BlockSerializer } from './block_serializer.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
 import { ContextEngine } from './context_engine.js';
+import { ContextStore } from './context/context_store.js';
 import { InlineToolbar } from './toolbar/inline_toolbar.js';
 import { BlockToolbar } from './toolbar/block_toolbar.js';
 import { InlineFormatter } from './inline_formatter.js';
@@ -61,6 +62,8 @@ export class EditorManager {
   #listView;
   /** @type {EditorCanvasMetadata} */
   #metadata;
+  /** @type {ContextStore} */
+  #contextStore;
 
   #blockList;
   #canvas;
@@ -81,6 +84,18 @@ export class EditorManager {
 
     // Tham chiếu các phần tử DOM
     this.#blockList = document.querySelector('#be-block-list');
+
+    this.#contextStore = new ContextStore(this.#bus, this.#blockList, {
+      maxSnapshots: 10,
+      schemaRegistry: BLOCK_REGISTRY,
+    });
+
+    this.#inlineToolbar = new InlineToolbar(
+      this.#bus,
+      this.#blockList,
+      this.#contextStore,
+      { offset: 8, debounceMs: 80 }
+    );
 
     // Khởi tạo các State
     this.#activeBlockId = "";
@@ -105,14 +120,11 @@ export class EditorManager {
     this.#bus.subscribe('inline:link_request', (p) => this.#onInlineLinkRequest(p));
     this.#bus.subscribe('inline:unlink_request', (p) => this.#onInlineUnlinkRequest(p));
 
+    this.#bus.subscribe('context:undo_applied', (p) => this.#onUndoApplied(p));
+    this.#bus.subscribe('context:redo_applied', (p) => this.#onRedoApplied(p));
+
     this.#initialRender();
     this.#initCanvas();
-
-    this.#inlineToolbar = new InlineToolbar(
-      this.#bus,
-      this.#blockList,
-      { offset: 8, debounceMs: 80 }
-    );
 
     console.log('[EditorManager] Khởi tạo thành công.');
   }
@@ -156,8 +168,7 @@ export class EditorManager {
       const handle = e.target.closest('.be-drag-handle');
 
       if (handle) {
-        const ctx = ContextEngine.analyze(this.#blockList, window.getSelection(), handle);
-        const block = this.#canvas.getBlock(ctx.blockId ?? clickedId);
+        const block = this.#canvas.getBlock(clickedId);
         this.#bus.dispatch('toolbar:toggle', { block, anchorEl: handle });
         return;
       }
@@ -403,16 +414,21 @@ export class EditorManager {
     this.#isDirty = true;
   }
 
+  #onUndoApplied() {
+  }
+
+  #onRedoApplied() {
+  }
+
   /**
- * Xử lý phím Enter tập trung
- */
+   * Xử lý phím Enter tập trung
+   */
   #handleGlobalEnter(e) {
-    const selection = window.getSelection();
-    const ctx = ContextEngine.analyze(this.#blockList, selection);
+    const { blockId, blockType } = this.#contextStore.cursor;
 
-    if (!ctx.blockId || ctx.type === 'none') return;
+    if (!blockId || this.#contextStore.type === 'none') return;
 
-    if (ctx.blockType === 'blocks/paragraph') {
+    if (blockType === 'blocks/paragraph') {
       e.preventDefault();
     }
   }

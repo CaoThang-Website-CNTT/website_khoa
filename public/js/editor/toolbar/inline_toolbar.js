@@ -1,5 +1,4 @@
 import { EditorToolbar } from './editor_toolbar.js';
-import { ContextEngine } from '../context_engine.js';
 
 export class InlineToolbar extends EditorToolbar {
   static #URL_PATTERN = /^(https?:\/\/|mailto:|\/)[^\s]+$/i;
@@ -57,12 +56,19 @@ export class InlineToolbar extends EditorToolbar {
   #linkInputOpen = false;
 
   /**
+   * @type {ContextStore}
+   */
+  #store;
+
+  /**
    * @param {EditorEventBus} bus
    * @param {HTMLElement}    canvas   — #be-block-list
    * @param {{ offset?: number, debounceMs?: number }} [config]
    */
-  constructor(bus, canvas, config = {}) {
+  constructor(bus, canvas, store, config = {}) {
     super(bus, canvas);
+
+    this.#store = store;
     this.#config = {
       offset: config.offset ?? 8,
       debounceMs: config.debounceMs ?? 80,
@@ -229,10 +235,11 @@ export class InlineToolbar extends EditorToolbar {
         if (this.root?.style.display === 'none') return;
 
         if (!this.#linkInputOpen) {
-          const sel = window.getSelection();
-          const ctx = ContextEngine.analyze(this.canvas, sel);
-          if (ctx.type !== 'text' || !ctx.range) { this.#hide(); return; }
-          this.#positionToolbar(ctx.range);
+          if (this.#store.type !== 'text' || !this.#savedRange) {
+            this.#hide();
+            return;
+          }
+          this.#positionToolbar(this.#savedRange);
         } else if (this.#savedRange) {
           this.#positionToolbar(this.#savedRange);
         }
@@ -253,14 +260,20 @@ export class InlineToolbar extends EditorToolbar {
   #handleSelection() {
     if (this.#linkInputOpen) return;
 
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || sel.rangeCount === 0) { this.#hide(); return; }
+    if (this.#store.type !== 'text') {
+      this.#hide();
+      return;
+    }
 
-    const ctx = ContextEngine.analyze(this.canvas, sel);
-    if (ctx.type !== 'text' || !ctx.range) { this.#hide(); return; }
+    const sel = this.#store.selection;
 
-    this.#savedRange = ctx.range;
-    this.#activeBlockId = ctx.blockId;
+    if (!sel.range || !sel.blockId) {
+      this.#hide();
+      return;
+    }
+
+    this.#savedRange = sel.range;
+    this.#activeBlockId = sel.blockId;
 
     this.#positionToolbar(this.#savedRange);
 
@@ -372,16 +385,15 @@ export class InlineToolbar extends EditorToolbar {
     e.preventDefault();
 
     if (command === InlineToolbar.COMMANDS.CREATE_LINK) {
-      const sel = window.getSelection();
-      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+      if (this.#store.type !== 'text') return;
 
-      const ctx = ContextEngine.analyze(this.canvas, sel);
-      if (ctx.type !== 'text') return;
+      const sel = this.#store.selection;
+      if (!sel.range || !sel.blockId) return;
 
-      this.#savedRange = ctx.range;
-      this.#activeBlockId = ctx.blockId;
+      this.#savedRange = sel.range;
+      this.#activeBlockId = sel.blockId;
 
-      this.#positionToolbar(ctx.range);
+      this.#positionToolbar(this.#savedRange);
       this.#showToolbar();
       this.#openLinkInput();
       return;
