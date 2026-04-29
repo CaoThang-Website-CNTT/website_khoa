@@ -2,7 +2,6 @@ import { registry as BLOCK_REGISTRY } from './block_registry.js';
 import { BlockSerializer } from './block_serializer.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
-import { ContextEngine } from './context_engine.js';
 import { ContextStore } from './context/context_store.js';
 import { InlineToolbar } from './toolbar/inline_toolbar.js';
 import { BlockToolbar } from './toolbar/block_toolbar.js';

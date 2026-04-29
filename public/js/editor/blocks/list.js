@@ -70,13 +70,6 @@ export class ListBlock extends EditorBlock {
     const span = liEl.querySelector(':scope > span.be-list-item-text');
     if (!span) return;
     span.focus();
-
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(span);
-    range.collapse(position === 'start');
-    sel.removeAllRanges();
-    sel.addRange(range);
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -90,30 +83,9 @@ export class ListBlock extends EditorBlock {
     this.dom = rootEl;
     this.#rootEl = rootEl;
 
-    // Nếu data được load từ DB cũ vẫn còn field 'text', đổi sang 'content'
-    this.#migrateNodes(this.data.values);
-
     this.#renderTree(this.data.values, rootEl, []);
 
     return rootEl;
-  }
-
-  /**
-   * Migrate legacy node shape { text, children } → { content, children }.
-   * Safe to call multiple times (idempotent).
-   * @param {any[]} nodes
-   */
-  #migrateNodes(nodes) {
-    if (!Array.isArray(nodes)) return;
-    for (const node of nodes) {
-      if ('text' in node && !('content' in node)) {
-        node.content = node.text; // giữ nguyên giá trị (string)
-        delete node.text;
-      }
-      if (Array.isArray(node.children)) {
-        this.#migrateNodes(node.children);
-      }
-    }
   }
 
   /**

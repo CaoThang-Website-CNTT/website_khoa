@@ -1,15 +1,8 @@
 <?php
-/**
- * create.php — Trang tạo bài viết (Block Editor)
- *
- * Layout: 3 cột full-height, dùng canva layout.
- * $categories — mảng category.
- */
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 
 $isEdit = isset($post);
-$formAction = $isEdit ? url("admin/posts/{$post->id}") : url('admin/posts');
 
 $oldTitle = $old_input['title'] ?? ($post->title ?? '');
 $oldSlug = $old_input['slug'] ?? ($post->slug ?? '');
@@ -374,19 +367,19 @@ $statusLabels = [
 
     const listId = canvas.addBlock('blocks/list', {
       values: [
-        { text: 'Fast performance', children: [] },
-        { text: 'Schema-driven data', children: [] },
+        { content: 'Fast performance', children: [] },
+        { content: 'Schema-driven data', children: [] },
         {
-          text: 'Extensible architecture', children: [
-            { text: 'Easy to add new blocks', children: [] }
+          content: 'Extensible architecture', children: [
+            { content: 'Easy to add new blocks', children: [] }
           ]
         }
       ],
-      ordered: false
+      list_type: 'ordered'
     }, imageId);
 
     const quoteId = canvas.addBlock('blocks/quote', {
-      content: 'Code is poetry.',
+      text: 'Code is poetry.',
       citation: 'Matt Mullenweg'
     }, listId);
 

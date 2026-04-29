@@ -9,8 +9,8 @@ export const QuoteSchema = {
   group: 'paragraph',
   groupLabel: 'Văn Bản',
   attributes: {
-    content: { default: '' },   // rich-text segment[] | plain string
-    citation: { default: '' },   // plain string — tác giả không cần mark
+    content: { default: '' },
+    citation: { default: '' },
   },
   supports: {
     typography: true,
