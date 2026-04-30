@@ -17,6 +17,8 @@ interface IAccountStore
   public function getById(int $id): ?Account;
   /** @return Account[] */
   public function getByIds(array $ids): array;
+  /** @return Account[] */
+  public function getAllByRole(string $role): array;
   public function findByEmail(string $email): ?Account;
   public function updatePassword(int $id, string $newHash): bool;
   public function updateRole(int $id, string $role): bool;
@@ -41,6 +43,25 @@ class AccountStore extends Store implements IAccountStore
     ]);
 
     return (int) $this->db->lastInsertId();
+  }
+
+  public function getAllByRole(string $role): array
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder->from('accounts')
+      ->from('accounts')
+      ->select('*')
+      ->eq('role', $role)
+      ->is('deleted_at', null);
+
+    $sql = $query->toSql();
+    $bindings = $query->getBindings();
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($bindings);
+
+    return array_map(fn($row) => Account::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function getById(int $id): ?Account

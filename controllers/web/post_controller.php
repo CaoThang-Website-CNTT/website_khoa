@@ -11,20 +11,23 @@ use App\Services\PostService;
 class PostController extends Controller
 {
   private PostService $_postService;
+  private AccountService $_accountService;
   private CategoryService $_categoryService;
 
   public function __construct(
     PostService $postService,
+    AccountService $accountService,
     CategoryService $categoryService,
   ) {
     $this->_postService = $postService;
+    $this->_accountService = $accountService;
     $this->_categoryService = $categoryService;
   }
 
   public function create()
   {
     return $this->render('admin/posts/create', [
-      'authors' => [],
+      'authors' => $this->_accountService->getAllAdmins(),
       'categories' => $this->_categoryService->getAllCategories()
     ], layout: 'canva_layout');
   }

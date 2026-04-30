@@ -12,6 +12,8 @@ interface IAccountService
 {
   public function authenticateOAuthUser(array $oauthData): array;
   public function createAccount(string $email, string $rawPassword, string $role): int;
+  /** @return Account[] */
+  public function getAllAdmins(): array;
   public function getById(int $accountId): ?Account;
   public function getByEmail(string $email): ?Account;
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
@@ -63,6 +65,10 @@ class AccountService implements IAccountService
     $hashedNewPassword = password_hash($rawPassword, PASSWORD_DEFAULT);
 
     return $this->_accountStore->create($email, $hashedNewPassword, $role);
+  }
+  public function getAllAdmins(): array
+  {
+    return $this->_accountStore->getAllByRole('admin');
   }
   public function getById(int $accountId): ?Account
   {
