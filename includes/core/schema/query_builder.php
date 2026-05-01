@@ -245,6 +245,18 @@ class QueryBuilder implements IQueryBuilder
   public function getBindings(): array
   {
     if (!empty($this->insertData)) {
+      // Kiểm tra nếu là mảng 2 chiều (Bulk Insert)
+      if (isset($this->insertData[0]) && is_array($this->insertData[0])) {
+        $flattened = [];
+        foreach ($this->insertData as $row) {
+          // Sử dụng array_values để chỉ lấy giá trị, bỏ key
+          foreach ($row as $value) {
+            $flattened[] = $value;
+          }
+        }
+        return $flattened;
+      }
+
       return array_values($this->insertData);
     }
     if (!empty($this->updateData)) {

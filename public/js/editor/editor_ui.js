@@ -219,7 +219,9 @@ class EditorMetaBinder {
   #bindEvents() {
     this.container.addEventListener('input', e => this.#handleInput(e));
     this.container.addEventListener('change', e => this.#handleChange(e));
-    this.container.addEventListener('click', e => this.#handleClick(e));
+    this.container.addEventListener('click', e => this.#handleSwitchClick(e));
+
+    document.addEventListener('select:change', e => this.#handleSelectClick(e));
   }
 
   #handleInput(e) {
@@ -243,33 +245,27 @@ class EditorMetaBinder {
     this.bus.dispatch('meta:update_request', { key: el.dataset.beMetaKey, value: el.value });
   }
 
-  #handleClick(e) {
+  #handleSwitchClick(e) {
     const switchEl = e.target.closest('.switch[data-be-meta-key]');
-    if (switchEl) {
-      e.preventDefault();
-      const key = switchEl.dataset.beMetaKey;
-      const current = switchEl.dataset.switchState === 'checked';
+    if (!switchEl) return;
 
-      this.bus.dispatch('meta:update_request', { key, value: current });
-      return;
-    }
+    e.preventDefault();
+    const key = switchEl.dataset.beMetaKey;
+    const current = switchEl.dataset.switchState === 'checked';
 
-    const selectItem = e.target.closest('.select__item[data-select-value]');
-    if (selectItem) {
-      e.preventDefault();
-      e.stopPropagation();
+    this.bus.dispatch('meta:update_request', { key, value: current });
+  }
 
-      const selectEl = selectItem.closest('.select');
-      if (!selectEl) return;
+  #handleSelectClick(e) {
+    const { id, label, isMultiple } = e.detail;
+    const value = isMultiple ? e.detail.values.map(item => item.value) : e.detail.value;
 
-      const key = selectEl.dataset.beMetaKey;
-      const value = selectItem.dataset.selectValue;
+    console.log(e.detail, value)
 
-      if (key) {
-        this.bus.dispatch('meta:update_request', { key, value });
-      }
-      return;
-    }
+    const selectEl = document.querySelector(`[data-select-id='${id}']`);
+    if (!selectEl) return;
+
+    this.bus.dispatch('meta:update_request', { key: selectEl.dataset.beMetaKey, value: value });
   }
 
   #syncControl(key, value) {

@@ -686,7 +686,7 @@ class EditorCanvasMetadata {
     title: 'Tiêu đề bài viết',
     slug: 'tieu-de-bai-viet',
     excerpt: '',
-    author_id: '1',
+    author_id: '',
     status: 'draft',
     category_ids: [],
     featured_image: null,

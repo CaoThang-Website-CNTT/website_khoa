@@ -1021,6 +1021,11 @@
     outline: none;
   }
 
+  .select[data-select-multiple] .select__trigger {
+    min-height: 2rem;
+    height: auto;
+  }
+
   .select__trigger:hover:not([data-select-disabled]) {
     border-color: var(--ring);
   }
@@ -1055,6 +1060,7 @@
 
   .select__tags {
     display: flex;
+    align-content: center;
     flex-wrap: wrap;
     gap: 0.25rem;
     flex: 1;
@@ -1064,12 +1070,12 @@
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.125rem 0.5rem;
     background: var(--primary);
     color: var(--primary-foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     cursor: default;
   }
 

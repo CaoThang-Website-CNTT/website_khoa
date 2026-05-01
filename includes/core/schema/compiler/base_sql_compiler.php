@@ -87,8 +87,23 @@ abstract class BaseSQLCompiler implements ISQLCompiler
     $columns = implode(', ', array_map([$this, 'wrap'], array_keys($data)));
     $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
+    // Kiểm tra nếu là Bulk Insert
+    if (isset($data[0]) && is_array($data[0])) {
+      $columns = implode(', ', array_map([$this, 'wrap'], array_keys($data[0])));
+
+      $rows = [];
+      foreach ($data as $row) {
+        $rows[] = "(" . implode(', ', array_fill(0, count($row), '?')) . ")";
+      }
+      $placeholders = implode(', ', $rows);
+    } else {
+      // Single Insert cũ
+      $columns = implode(', ', array_map([$this, 'wrap'], array_keys($data)));
+      $placeholders = "(" . implode(', ', array_fill(0, count($data), '?')) . ")";
+    }
+
     return sprintf(
-      "INSERT INTO %s (%s) VALUES (%s)",
+      "INSERT INTO %s (%s) VALUES %s",
       $this->wrap($table),
       $columns,
       $placeholders

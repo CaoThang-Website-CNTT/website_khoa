@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Stores\PostStore;
 use App\Stores\AccountStore;
 use App\Stores\MediaStore;
+use Database;
 
 interface IPostService
 {
@@ -93,16 +94,25 @@ class PostService implements IPostService
       published_at: $publishedAt,
     );
 
-    $post = $this->_postStore->create($post);
+    return Database::getInstance()->transaction(function () use ($post, $meta, $blocks) {
 
-    // Sau khi có post ID, gắn các media nội bộ được tham chiếu trong blocks
-    // External URL (mediaId === null) bỏ qua — chúng không có record trong DB
-    $internalMediaIds = $this->extractInternalMediaIds($blocks);
-    if (!empty($internalMediaIds)) {
-      $this->_mediaStore->attachToPost($internalMediaIds, $post->id);
-    }
+      $post = $this->_postStore->create($post);
 
-    return $post;
+      // Kiểm tra xem client có gửi category_ids lên không
+      if (isset($meta['category_ids'])) {
+        $categoryIds = is_array($meta['category_ids']) ? $meta['category_ids'] : [$meta['category_ids']];
+        $this->_postStore->syncCategories($post->id, $categoryIds);
+      }
+
+      // Sau khi có post ID, gắn các media nội bộ được tham chiếu trong blocks
+      // External URL (mediaId === null) bỏ qua — chúng không có record trong DB
+      $internalMediaIds = $this->extractInternalMediaIds($blocks);
+      if (!empty($internalMediaIds)) {
+        $this->_mediaStore->attachToPost($internalMediaIds, $post->id);
+      }
+
+      return $post;
+    });
   }
 
   public function list(array $filters = []): array

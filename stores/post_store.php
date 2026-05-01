@@ -29,6 +29,7 @@ interface IPostStore
   public function softDelete(int $id): void;
 
   public function findBySlug(string $slug): ?Post;
+  public function syncCategories(int $postId, array $categoryIds): bool;
 }
 
 class PostStore extends Store implements IPostStore
@@ -178,5 +179,63 @@ class PostStore extends Store implements IPostStore
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
+  }
+
+  public function syncCategories(int $postId, array $newCategoryIds): bool
+  {
+    $newCategoryIds = array_unique(array_map('intval', $newCategoryIds));
+
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('category_post')
+      ->select('category_id')
+      ->eq('post_id', $postId);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    $currentCategoryIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+    $toAdd = array_diff($newCategoryIds, $currentCategoryIds);
+    $toRemove = array_diff($currentCategoryIds, $newCategoryIds);
+
+    print_r([
+      'current' => $currentCategoryIds,
+      'new' => $newCategoryIds,
+      'toAdd' => $toAdd,
+      'toRemove' => $toRemove,
+    ]);
+
+    if (empty($toAdd) && empty($toRemove))
+      return true;
+
+    if (!empty($toRemove)) {
+      $deleteQuery = (new QueryBuilder(new MySQLCompiler()))
+        ->from('category_post')
+        ->delete()
+        ->eq('post_id', $postId)
+        ->in('category_id', $toRemove);
+
+      $stmtDel = $this->db->prepare($deleteQuery->toSql());
+      $success = $stmtDel->execute($deleteQuery->getBindings());
+
+      if (!$success) {
+        throw new \RuntimeException('Không thể cập nhật danh mục cho bài viết.');
+      }
+    }
+
+
+    if (!empty($toAdd)) {
+      $insertQuery = (new QueryBuilder(new MySQLCompiler()))
+        ->from('category_post')
+        ->insert(array_map(fn($categoryId) => ['post_id' => $postId, 'category_id' => $categoryId], $toAdd));
+
+      $stmtIns = $this->db->prepare($insertQuery->toSql());
+      $success = $stmtIns->execute($insertQuery->getBindings());
+
+      if (!$success) {
+        throw new \RuntimeException('Không thể cập nhật danh mục cho bài viết.');
+      }
+    }
+
+    return true;
   }
 }

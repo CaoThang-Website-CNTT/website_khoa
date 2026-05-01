@@ -8,15 +8,6 @@ $oldTitle = $old_input['title'] ?? ($post->title ?? '');
 $oldSlug = $old_input['slug'] ?? ($post->slug ?? '');
 $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
 
-$initialBlocksJson = $isEdit
-  ? json_encode($post->content_json ?? [], JSON_UNESCAPED_UNICODE)
-  : '[]';
-
-$statusLabels = [
-  'draft' => 'Nháp',
-  'published' => 'Đã xuất bản',
-  'archived' => 'Lưu trữ',
-];
 ?>
 
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
@@ -49,8 +40,8 @@ $statusLabels = [
   <div id="be-topbar-center">
     <input id="be-title-input" class="field__input be-post-title-input" type="text" placeholder="Tiêu đề bài viết..."
       value="<?= htmlspecialchars($oldTitle) ?>" autocomplete="off" data-be-meta-key="title">
-    <span class="badge" data-variant="<?= $oldStatus === 'published' ? 'primary' : 'secondary' ?>" id="be-status-badge">
-      <?= $statusLabels[$oldStatus] ?? 'Nháp' ?>
+    <span class="badge" data-variant="<?= $oldStatus === 'published' ? 'primary' : 'secondary' ?>" id="be-status-badge"
+      data-be-meta-preview="status">
     </span>
   </div>
 
@@ -122,7 +113,7 @@ $statusLabels = [
           <div class="be-canvas-meta">
             <div class="be-canvas-meta__info" data-be-meta-preview="show_author" data-be-preview-action="toggle">
               <i class="fa-regular fa-user"></i>
-              <span class="be-canvas-meta__text">Ban biên tập</span>
+              <span id="be-author-name-preview" class="be-canvas-meta__text"></span>
             </div>
             <div class="be-canvas-meta__info" data-be-meta-preview="show_date" data-be-preview-action="toggle">
               <i class="fa-regular fa-calendar"></i>
@@ -215,8 +206,8 @@ $statusLabels = [
                 data-select-placeholder="Chọn tác giả" name="author_id" data-be-meta-key="author_id" role="listbox">
                 <div class="select__content">
                   <?php foreach (($authors ?? []) as $author): ?>
-                    <div class="select__item" data-select-value=" <?= $author ?>">
-                      <?= htmlspecialchars($author->name) ?>
+                    <div class="select__item" data-select-value=" <?= $author->id ?>">
+                      <?= htmlspecialchars($author->email) ?>
                     </div>
                   <?php endforeach; ?>
                 </div>
@@ -248,7 +239,6 @@ $statusLabels = [
               <button type="button" class="select" data-select-id="be-categories-select" data-select-multiple
                 data-select-searchable data-select-placeholder="Chọn danh mục..." name="category_ids"
                 data-be-meta-key="category_ids" role="listbox" <?php if (empty($categories)): ?>data-select-disabled<?php endif; ?> <?php
-                      // Pre-select saved categories (comma-separated values)
                       $selectedCats = $post->category_ids ?? ($old_input['category_ids'] ?? []);
                       if (!empty($selectedCats)):
                         ?>
@@ -326,8 +316,8 @@ $statusLabels = [
     </div>
   </div>
   <!-- ════ END: RIGHT PANEL ════ -->
-
 </div>
+<!-- ════ END: BODY ════ -->
 
 <form id="be-post-form" method="POST" action="<?= url("admin/posts"); ?>" class="hidden">
   <?= csrf_field() ?>
@@ -336,6 +326,18 @@ $statusLabels = [
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    const authors = <?= json_encode($authors ?? []) ?> ?? [];
+    const categories = <?= json_encode($categories ?? []) ?> ?? [];
+
+    const authorSelect = document.querySelector("[name='author_id']");
+
+    authorSelect.addEventListener('select:change', (e) => {
+      const { label, value } = e.detail;
+
+      const author = authors.find(a => Number(authors[0].id) === Number(value));
+      document.getElementById('be-author-name-preview').textContent = author?.email ?? '';
+    });
+
     const form = document.querySelector('#be-post-form');
     const canvas = window.BeEditor.getCanvas();
 

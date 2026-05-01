@@ -373,7 +373,6 @@ class SelectHandler {
     if (instance.isMultiple) {
       instance.selected.forEach(v => {
         const item = instance.items.find(item => item.dataset.selectValue === v);
-        console.log(instance.items)
         if (!item) return;
         const tag = document.createElement('span');
         tag.className = 'select__tag';
@@ -395,9 +394,14 @@ class SelectHandler {
   }
 
   _dispatch(instance) {
-    const detail = instance.isMultiple
+    const selectionData = instance.isMultiple
       ? { values: [...instance.selected].map(v => ({ value: v, label: instance.items.find(item => item.dataset.selectValue === v)?.textContent.trim() || v })) }
       : (() => { const v = [...instance.selected][0] ?? null; return v ? { value: v, label: instance.items.find(item => item.dataset.selectValue === v)?.textContent.trim() || v } : { value: null, label: null }; })();
+    const detail = {
+      ...selectionData,
+      id: instance.id,
+      isMultiple: instance.isMultiple
+    };
     instance.root.dispatchEvent(new CustomEvent('select:change', { bubbles: true, detail }));
     if (typeof instance.root.__selectOnChange === 'function') instance.root.__selectOnChange(detail);
   }
