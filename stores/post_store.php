@@ -61,6 +61,7 @@ class PostStore extends Store implements IPostStore
       'title' => $post->title,
       'slug' => $post->slug,
       'content_json' => $post->content_json,
+      'settings_json' => $post->settings_json,
       'author_id' => $post->author_id,
       'status' => $post->status,
       'view_count' => $post->view_count,

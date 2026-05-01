@@ -64,6 +64,7 @@ class PostService implements IPostService
     }
 
     $contentJson = json_encode($blocks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $settingsJson = isset($meta['settings']) ? json_encode($meta['settings'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
 
     if ($contentJson === false) {
       throw new \InvalidArgumentException('Blocks không hợp lệ, không thể encode JSON.');
@@ -86,6 +87,7 @@ class PostService implements IPostService
       title: $meta['title'] ?? '',
       slug: $slug,
       content_json: $contentJson,
+      settings_json: $settingsJson,
       author_id: isset($meta['author_id']) ? (int) $meta['author_id'] : null,
       status: $meta['status'] ?? 'draft',
       view_count: (int) ($meta['init_view_count'] ?? 0),

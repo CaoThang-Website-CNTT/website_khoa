@@ -242,4 +242,8 @@ export class ImageBlock extends EditorBlock {
 
     return wrap;
   }
+
+  getStats() {
+    return { seconds: 12 };
+  }
 }

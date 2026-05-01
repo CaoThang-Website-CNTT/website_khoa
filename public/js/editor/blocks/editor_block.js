@@ -94,4 +94,18 @@ export class EditorBlock {
     range.insertNode(document.createTextNode(text));
     sel.collapseToEnd();
   }
+
+  getStats() {
+    // Text-based blocks: đếm words → quy ra seconds
+    const text = this._extractText(this.data.content);
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    return { seconds: Math.round((words / 200) * 60) };
+  }
+
+  _extractText(content) {
+    if (!content) return '';
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) return content.map(s => s.text ?? '').join('');
+    return '';
+  }
 }

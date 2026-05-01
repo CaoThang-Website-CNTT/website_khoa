@@ -356,4 +356,15 @@ export class ListBlock extends EditorBlock {
 
     this.bus.dispatch('block:selected', { blockId: this.id });
   }
+
+  getStats() {
+    const itemCount = this.#countAllItems(this.data.values ?? []);
+    return { seconds: itemCount * 3 };
+  }
+
+  #countAllItems(nodes) {
+    return nodes.reduce((sum, node) =>
+      sum + 1 + this.#countAllItems(node.children ?? []), 0
+    );
+  }
 }

@@ -474,4 +474,10 @@ export class TableBlock extends EditorBlock {
 
     this.bus.dispatch('block:selected', { blockId: this.id });
   }
+
+  getStats() {
+    const rows = this.data.rows?.length ?? 0;
+    const cols = this.data.rows?.[0]?.length ?? 0;
+    return { seconds: rows * cols * 2 };
+  }
 }

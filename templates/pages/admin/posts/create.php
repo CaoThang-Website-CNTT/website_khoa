@@ -8,6 +8,8 @@ $oldTitle = $old_input['title'] ?? ($post->title ?? '');
 $oldSlug = $old_input['slug'] ?? ($post->slug ?? '');
 $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
 
+$current_user = request()->session()->authUser() ?? ['account_id' => null];
+
 ?>
 
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
@@ -111,19 +113,26 @@ $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
             <?= $oldTitle ? htmlspecialchars($oldTitle) : 'Tiêu đề bài viết' ?>
           </h1>
           <div class="be-canvas-meta">
-            <div class="be-canvas-meta__info" data-be-meta-preview="show_author" data-be-preview-action="toggle">
+            <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_author"
+              data-be-preview-action="toggle">
               <i class="fa-regular fa-user"></i>
               <span id="be-author-name-preview" class="be-canvas-meta__text"></span>
             </div>
-            <div class="be-canvas-meta__info" data-be-meta-preview="show_date" data-be-preview-action="toggle">
+            <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_date" data-be-preview-action="toggle">
               <i class="fa-regular fa-calendar"></i>
               <span class="be-canvas-meta__text"><?= date('d/m/Y') ?></span>
             </div>
-            <div class="be-canvas-meta__info" data-be-meta-preview="show_read_time" data-be-preview-action="toggle">
+            <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_read_time"
+              data-be-preview-action="toggle">
               <i class="fa-regular fa-clock"></i>
-              <span class="be-canvas-meta__text">5 phút đọc</span>
+              <span class="be-canvas-meta__text">
+                <span class="be-canvas-meta__value" data-be-meta-preview="read_time" data-be-preview-action="text"
+                  data-preview-default="0">0</span>
+                phút đọc
+              </span>
             </div>
-            <div class="be-canvas-meta__info" data-be-meta-preview="show_view_count" data-be-preview-action="toggle">
+            <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_view_count"
+              data-be-preview-action="toggle">
               <i class="fa-regular fa-eye"></i>
               <span class="be-canvas-meta__text">
                 <span class="be-canvas-meta__value" data-be-meta-preview="init_view_count" data-be-preview-action="text"
@@ -206,7 +215,8 @@ $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
                 data-select-placeholder="Chọn tác giả" name="author_id" data-be-meta-key="author_id" role="listbox">
                 <div class="select__content">
                   <?php foreach (($authors ?? []) as $author): ?>
-                    <div class="select__item" data-select-value=" <?= $author->id ?>">
+                    <div class="select__item" data-select-value=" <?= $author->id ?>"
+                      <?= $author->id === $current_user['account_id'] ? 'selected' : '' ?>>
                       <?= htmlspecialchars($author->email) ?>
                     </div>
                   <?php endforeach; ?>
@@ -270,7 +280,8 @@ $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
               <div class="field__content">
                 <span class="field__label">Hiển thị Tác giả</span>
               </div>
-              <button class="switch" type="button" role="switch" name="show_author" data-be-meta-key="show_author">
+              <button class="switch" type="button" role="switch" name="show_author"
+                data-be-meta-key="settings.show_author">
                 <span class="switch__thumb"></span>
               </button>
             </div>
@@ -280,7 +291,7 @@ $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
                 <span class="field__label">Hiển thị Ngày xuất bản</span>
               </div>
               <button class="switch" type="button" role="switch" data-switch-default-state="checked" name="show_date"
-                data-be-meta-key="show_date">
+                data-be-meta-key="settings.show_date">
                 <span class="switch__thumb"></span>
               </button>
             </div>
@@ -288,9 +299,10 @@ $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
             <div class="field" data-orientation="horizontal">
               <div class="field__content">
                 <span class="field__label">Hiển thị Thời gian đọc</span>
+                <span class="field__description">Tự động tính dựa trên nội dung</span>
               </div>
               <button class="switch" type="button" role="switch" name="show_read_time"
-                data-be-meta-key="show_read_time">
+                data-be-meta-key="settings.show_read_time">
                 <span class="switch__thumb"></span>
               </button>
             </div>
@@ -300,12 +312,12 @@ $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
                 <span class="field__label">Hiển thị Lượt xem</span>
               </div>
               <button class="switch" type="button" role="switch" name="show_view_count"
-                data-be-meta-key="show_view_count">
+                data-be-meta-key="settings.show_view_count">
                 <span class="switch__thumb"></span>
               </button>
             </div>
 
-            <div class="field" data-be-meta-preview="show_view_count" data-be-preview-action="toggle">
+            <div class="field" data-be-meta-preview="settings.show_view_count" data-be-preview-action="toggle">
               <span class="field__label">Lượt xem khởi tạo</span>
               <input type="number" class="field__input" data-be-meta-key="init_view_count" placeholder="VD: 500"
                 min="0">

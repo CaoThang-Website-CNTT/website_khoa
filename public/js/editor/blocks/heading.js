@@ -19,6 +19,7 @@ export const HeadingSchema = {
 
 export class HeadingBlock extends EditorBlock {
   render() {
+    console.log(this.data.content, BlockSerializer.toHTML({ data: { content: this.data.content } }))
     const l = this.data.level || 2;
     const el = document.createElement('h' + l);
     el.className = `be-heading be-editable`;
@@ -79,8 +80,38 @@ export class HeadingBlock extends EditorBlock {
     RadioHandler.instance.register(radioGroup);
 
     radioGroup.addEventListener('radio:change', (e) => {
-      this.data.level = parseInt(e.detail.value) + 1;
-      if (this.bus) this.bus.dispatch('block:updated', { block: this });
+      const newLevel = parseInt(e.detail.value) + 1;
+      this.data.level = newLevel;
+
+      // Swap tag in-place
+      if (this.dom) {
+        const newEl = document.createElement('h' + newLevel);
+        // Copy toàn bộ attributes + content sang tag mới
+        newEl.className = this.dom.className;
+        newEl.contentEditable = this.dom.contentEditable;
+        newEl.spellcheck = false;
+        newEl.dataset.placeholder = this.dom.dataset.placeholder;
+        newEl.dataset.beEditable = '';
+        newEl.innerHTML = this.dom.innerHTML; // giữ nguyên rich content
+
+        this.dom.replaceWith(newEl);
+        this.dom = newEl; // cập nhật reference
+
+        // Re-attach input listener vì element mới
+        newEl.addEventListener('input', () => {
+          this.data.content = newEl.innerHTML.trim();
+        });
+
+        newEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); newEl.blur(); }
+        });
+
+        newEl.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+          this.paste(this.esc(text));
+        });
+      }
     });
 
     return wrap;

@@ -122,6 +122,10 @@ export class EditorManager {
     this.#bus.subscribe('context:undo_applied', (p) => this.#onUndoApplied(p));
     this.#bus.subscribe('context:redo_applied', (p) => this.#onRedoApplied(p));
 
+    this.#bus.subscribe('block:added', () => this.#recomputeReadTime());
+    this.#bus.subscribe('block:updated', () => this.#recomputeReadTime());
+    this.#bus.subscribe('block:removed', () => this.#recomputeReadTime());
+
     this.#initialRender();
     this.#initCanvas();
 
@@ -419,6 +423,14 @@ export class EditorManager {
   #onRedoApplied() {
   }
 
+  #recomputeReadTime() {
+    const stats = this.#canvas.computeStats();
+    this.#bus.dispatch('meta:update_request', {
+      key: 'read_time',
+      value: stats.readTime
+    });
+  }
+
   /**
    * Xử lý phím Enter tập trung
    */
@@ -523,20 +535,15 @@ class EditorCanvas {
    * Tính các thông số của page
    * @returns {{
    * blockCount: number,
-   * wordCount: number,
    * readTime: number
    * }}
    */
-  #computeStats() {
-    let words = 0;
-    for (const b of this.#blocks) {
-      words += b.getStats().words;
-    }
-    const readTime = Math.max(1, Math.round(words / 200)); // 200wpm
+  computeStats() {
+    const totalSeconds = this.#blocks.reduce((sum, b) => sum + b.getStats().seconds, 0);
+    console.log(totalSeconds)
     return {
       blockCount: this.#blocks.length,
-      wordCount: words,
-      readTime
+      readTime: Math.max(1, Math.round(totalSeconds / 60)) // phút, tối thiểu 1
     };
   }
 
@@ -690,10 +697,13 @@ class EditorCanvasMetadata {
     status: 'draft',
     category_ids: [],
     featured_image: null,
-    show_author: false,
-    show_date: true,
-    show_read_time: false,
-    show_view_count: false,
+    settings: {
+      show_author: false,
+      show_date: true,
+      show_read_time: false,
+      show_view_count: false,
+    },
+    read_time: 0, // minute
     init_view_count: 0
   };
 
@@ -716,15 +726,24 @@ class EditorCanvasMetadata {
 
     this.#bus.subscribe('meta:sync_request', () => {
       console.log('[EditorCanvasMetadata] Đang đồng bộ State khởi tạo xuống UI...');
-      for (const [key, value] of Object.entries(this.#data)) {
-        if (value !== null && value !== undefined) {
-          this.#bus.dispatch('meta:updated', {
-            key,
-            value,
-            allMeta: this.getData()
-          });
+
+      const traverse = (obj, prefix = '') => {
+        for (const [key, value] of Object.entries(obj)) {
+          const path = prefix ? `${prefix}.${key}` : key;
+
+          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            traverse(value, path);
+          } else {
+            this.#bus.dispatch('meta:updated', {
+              key: path,
+              value: value,
+              allMeta: this.getData()
+            });
+          }
         }
       }
+
+      traverse(this.#data);
     });
   }
 
