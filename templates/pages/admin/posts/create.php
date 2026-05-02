@@ -6,8 +6,9 @@ $initialPayload = null;
 if ($oldEditorData) {
   try {
     $initialPayload = json_decode($oldEditorData, true);
-  } catch (\Exception $e) {}
+  } catch (\Exception $e) {
   }
+}
 
 $current_user = request()->session()->authUser() ?? ['account_id' => null];
 ?>
@@ -42,8 +43,9 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
   <div id="be-topbar-center">
     <input id="be-title-input" class="field__input be-post-title-input" type="text" placeholder="Tiêu đề bài viết..."
       value="<?= htmlspecialchars($oldTitle) ?>" autocomplete="off" data-be-meta-key="title">
-    <span class="badge" data-variant="<?= $oldStatus === 'published' ? 'primary' : 'secondary' ?>" id="be-status-badge"
-      data-be-meta-preview="status">
+    <span class="badge"
+      data-variant="<?= $initialPayload['meta']['status'] ?? 'draft' === 'published' ? 'primary' : 'secondary' ?>"
+      id="be-status-badge" data-be-meta-preview="status">
     </span>
   </div>
 
@@ -218,8 +220,8 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field">
               <span class="field__label">Trạng thái</span>
               <button type="button" class="select" data-select-id="be-status-select" data-select-placeholder="Chọn"
-                name="status" data-be-meta-key="status" role="listbox"
-                data-select-default-value="draft" data-select-placeholder="Chọn trạng thái">
+                name="status" data-be-meta-key="status" role="listbox" data-select-default-value="draft"
+                data-select-placeholder="Chọn trạng thái">
                 <div class="select__content">
                   <div class="select__item" data-select-value="draft">Nháp</div>
                   <div class="select__item" data-select-value="published">Xuất bản</div>
@@ -231,7 +233,8 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field">
               <span class="field__label">Slug</span>
               <input type="text" class="field__input" id="be-slug-input" name="slug"
-                value="<?= htmlspecialchars($initialPayload['meta']['slug']) ?>" placeholder="duong-dan-bai-viet" data-be-meta-key="slug">
+                value="<?= htmlspecialchars($initialPayload['meta']['slug']) ?>" placeholder="duong-dan-bai-viet"
+                data-be-meta-key="slug">
             </div>
 
             <div class="field">
