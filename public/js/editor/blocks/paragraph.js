@@ -8,9 +8,8 @@ export const ParagraphSchema = {
   title: 'Đoạn văn',
   group: 'paragraph',
   groupLabel: 'Văn Bản',
-  attributes: {
-    content: { default: [] }, // RichSegment[]
-    align: { default: 'left' },
+  meta: {
+    align: { default: 'left' }
   },
   supports: { typography: true },
 };
@@ -25,7 +24,7 @@ export class ParagraphBlock extends EditorBlock {
     el.dataset.placeholder = 'Nhập nội dung đoạn văn...';
     el.dataset.beEditable = '';
 
-    el.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
+    el.innerHTML = BlockSerializer.toHTML({ data: this.data });
 
     this.dom = el;
 

@@ -354,56 +354,70 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
     const canvas = window.BeEditor.getCanvas();
 
     const headingId = canvas.addBlock('blocks/heading', {
-      content: [
-        { text: 'Welcome to the ', marks: [] },
-        { text: 'Future', marks: ['bold', 'italic'] },
-        { text: ' of Editing', marks: [] }
+      rich_text: [
+        { text: 'Chào mừng tới kỷ nguyên ', marks: [] },
+        { text: 'Block Editor V2', marks: ['bold', 'italic'] },
+        { text: ' chuyên nghiệp', marks: [] }
       ],
-      level: 2
+      meta: { level: 2, align: 'center' }
     });
 
     const introId = canvas.addBlock('blocks/paragraph', {
-      content: [
-        { text: 'This post was ', marks: [] },
-        { text: 'created', marks: ['bold', 'underline'] },
-        { text: ' via API.', marks: [] }
+      rich_text: [
+        { text: 'Hệ thống soạn thảo này được thiết kế để ', marks: [] },
+        { text: 'tối ưu hóa', marks: ['bold', 'underline'] },
+        { text: ' trải nghiệm người dùng theo phong cách Notion.', marks: [] }
       ],
-      align: 'left'
+      meta: { align: 'left' }
     }, headingId);
 
     const imageId = canvas.addBlock('blocks/image', {
-      url: 'https://placehold.co/600x400',
-      alt: 'Placeholder image',
-      caption: 'A sample image inserted via API',
-      align: 'center',
-      width: '100%'
+      rich_text: [],
+      meta: {
+        url: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+        alt: 'Code Editor',
+        caption: [
+          { text: 'Giao diện soạn thảo hiện đại', marks: ['italic'] }
+        ],
+        align: 'center',
+        width: '100%'
+      }
     }, introId);
 
     const listId = canvas.addBlock('blocks/list', {
-      values: [
-        { content: 'Fast performance', children: [] },
-        { content: 'Schema-driven data', children: [] },
-        {
-          content: 'Extensible architecture', children: [
-            { content: 'Easy to add new blocks', children: [] }
-          ]
-        }
-      ],
-      list_type: 'ordered'
+      rich_text: [],
+      meta: {
+        style: 'bullet',
+        items: [
+          { rich_text: [{ text: 'Hiệu năng siêu tốc', marks: [] }], children: [] },
+          { rich_text: [{ text: 'Dữ liệu hướng cấu trúc (Schema-driven)', marks: [] }], children: [] },
+          {
+            rich_text: [{ text: 'Khả năng mở rộng không giới hạn', marks: [] }],
+            children: [
+              { rich_text: [{ text: 'Dễ dàng thêm block mới', marks: ['bold'] }], children: [] }
+            ]
+          }
+        ]
+      }
     }, imageId);
 
     const quoteId = canvas.addBlock('blocks/quote', {
-      text: 'Code is poetry.',
-      citation: 'Matt Mullenweg'
+      rich_text: [{ text: 'Code is poetry, but data is its rhythm.', marks: ['italic'] }],
+      meta: {
+        citation: 'Matt Mullenweg'
+      }
     }, listId);
 
     const tableId = canvas.addBlock('blocks/table', {
-      rows: [
-        ['Feature', 'Status'],
-        ['API', 'Ready'],
-        ['UI', 'Polished']
-      ],
-      hasHeader: true
+      rich_text: [],
+      meta: {
+        rows: [
+          ['Tính năng', 'Trạng thái'],
+          ['Cấu trúc Notion', 'Hoàn tất'],
+          ['Tốc độ render', 'Vượt trội']
+        ],
+        hasHeader: true
+      }
     }, quoteId);
 
     document.querySelector('#be-publish-btn')?.addEventListener('click', () => {
@@ -412,7 +426,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 
       document.querySelector('#be-editor-data').value = JSON.stringify(payload);
 
-      //form.submit();
+      form.submit();
     });
   });
 </script>

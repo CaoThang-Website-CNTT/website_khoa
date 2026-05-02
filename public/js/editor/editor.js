@@ -520,7 +520,7 @@ export class EditorManager {
     // Chỉ cập nhật model tĩnh để lưu trữ dữ liệu mới nhất
     const editable = this.#getEditableEl(blockId);
     if (editable) {
-       this.#canvas.updateBlock(blockId, { content: block.serializeData(editable).content }, { silent: true });
+      this.#canvas.updateBlock(blockId, { content: block.serializeData(editable).content }, { silent: true });
     }
   }
 
@@ -720,9 +720,9 @@ class EditorCanvas {
 
     const prevData = { ...block.data };
     block.data = {
-      ...block.data,
-      ...payload
-    };
+      rich_text: payload.rich_text ?? block.data.rich_text,
+      meta: { ...block.data.meta, ...(payload.meta ?? {}) },
+    }
 
     this.#bus.dispatch("block:updated", {
       block,

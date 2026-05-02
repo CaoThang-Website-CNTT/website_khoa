@@ -9,10 +9,9 @@ export const ListSchema = {
   title: 'Danh sách',
   group: 'paragraph',
   groupLabel: 'Văn Bản',
-  attributes: {
-    // Mỗi node: { content: RichSegment[], children: ListNode[] }
-    values: { default: [{ content: [], children: [] }] },
-    list_type: { default: 'bullet' }, // 'bullet' | 'ordered' — bỏ false
+  meta: {
+    style: { default: 'bullet' },
+    items: { default: [{ rich_text: [], children: [] }] },
   },
   supports: { typography: false },
 };
@@ -34,7 +33,7 @@ export class ListBlock extends EditorBlock {
    * @returns {{ node: object, parent: object[]|null, localIndex: number }}
    */
   #nodeAt(path) {
-    let list = this.data.values;
+    let list = this.data.meta.items;
     let node = null, parent = null;
 
     for (let i = 0; i < path.length; i++) {
@@ -71,7 +70,7 @@ export class ListBlock extends EditorBlock {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   render() {
-    const tag = this.data.list_type === 'ordered' ? 'ol' : 'ul';
+    const tag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
     const rootEl = document.createElement(tag);
     rootEl.className = 'be-list';
     rootEl.contentEditable = 'false';
@@ -79,7 +78,7 @@ export class ListBlock extends EditorBlock {
     this.dom = rootEl;
     this.#rootEl = rootEl;
 
-    this.#renderTree(this.data.values, rootEl, []);
+    this.#renderTree(this.data.meta.items, rootEl, []);
     return rootEl;
   }
 
@@ -96,7 +95,7 @@ export class ListBlock extends EditorBlock {
       listEl.appendChild(li);
 
       if (node.children?.length > 0) {
-        const subTag = this.data.list_type === 'ordered' ? 'ol' : 'ul';
+        const subTag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
         const subList = document.createElement(subTag);
         subList.className = 'be-list';
         li.appendChild(subList);
@@ -107,7 +106,7 @@ export class ListBlock extends EditorBlock {
 
   /**
    * Tạo <li> kèm <span contenteditable>.
-   * @param {object} node — { content: RichSegment[], children: [] }
+   * @param {object} node — { rich_text: RichSegment[], children: [] }
    * @param {number[]} path
    * @returns {HTMLLIElement}
    */
@@ -122,7 +121,7 @@ export class ListBlock extends EditorBlock {
     span.dataset.placeholder = 'Nhập nội dung...';
     span.dataset.beEditable = 'list-item';
 
-    span.innerHTML = BlockSerializer.toHTML({ data: { content: node.content } });
+    span.innerHTML = BlockSerializer.toHTML({ data: { rich_text: node.rich_text } });
 
     li.appendChild(span);
 
@@ -131,7 +130,7 @@ export class ListBlock extends EditorBlock {
       const { node: n } = this.#nodeAt(path);
       if (!n) return;
       const html = span.innerHTML?.trim() ?? '';
-      n.content = html
+      n.rich_text = html
         ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
         : [];
     });
@@ -170,7 +169,7 @@ export class ListBlock extends EditorBlock {
 
   #handleEnter(liEl, path) {
     const { node } = this.#nodeAt(path);
-    const isEmpty = !node?.content || (Array.isArray(node.content) ? node.content.length === 0 : node.content.trim() === '');
+    const isEmpty = !node?.rich_text || (Array.isArray(node.rich_text) ? node.rich_text.length === 0 : node.rich_text.trim() === '');
     const depth = this.#depth(path);
 
     if (isEmpty) {
@@ -180,7 +179,7 @@ export class ListBlock extends EditorBlock {
 
     const { parent } = this.#nodeAt(path);
     const localIdx = path[path.length - 1];
-    parent.splice(localIdx + 1, 0, { content: [], children: [] });
+    parent.splice(localIdx + 1, 0, { rich_text: [], children: [] });
 
     this.#rerender(() => {
       const newPath = [...path.slice(0, -1), localIdx + 1];
@@ -231,7 +230,7 @@ export class ListBlock extends EditorBlock {
   #handleBackspaceEmpty(liEl, path) {
     const localIdx = path[path.length - 1];
 
-    if (this.#depth(path) === 0 && localIdx === 0 && this.data.values.length === 1) {
+    if (this.#depth(path) === 0 && localIdx === 0 && this.data.meta.items.length === 1) {
       this.#exitBlock(liEl, path);
       return;
     }
@@ -260,7 +259,7 @@ export class ListBlock extends EditorBlock {
   // ─── Re-render ────────────────────────────────────────────────────────────
 
   #rerender(afterRender) {
-    const tag = this.data.list_type === 'ordered' ? 'ol' : 'ul';
+    const tag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
 
     if (this.dom.tagName.toLowerCase() !== tag) {
       const newRoot = document.createElement(tag);
@@ -271,7 +270,7 @@ export class ListBlock extends EditorBlock {
     }
 
     this.dom.innerHTML = '';
-    this.#renderTree(this.data.values, this.dom, []);
+    this.#renderTree(this.data.meta.items, this.dom, []);
 
     this.bus?.dispatch('block:updated', { block: this });
     if (afterRender) requestAnimationFrame(afterRender);
@@ -287,7 +286,10 @@ export class ListBlock extends EditorBlock {
    * @returns {object}
    */
   serializeData(_editableEl) {
-    return this._cloneData();
+    return {
+      rich_text: [],
+      meta: { ...this.data.meta },
+    };
   }
 
   /**
@@ -295,7 +297,7 @@ export class ListBlock extends EditorBlock {
    * @returns {{ seconds: number }}
    */
   getStats() {
-    return { seconds: this.#countItems(this.data.values ?? []) * 3 };
+    return { seconds: this.#countItems(this.data.meta.items ?? []) * 3 };
   }
 
   #countItems(nodes) {
@@ -313,7 +315,7 @@ export class ListBlock extends EditorBlock {
         <legend class="field__label">Kiểu danh sách</legend>
         <div class="radio-group grid gap-2"
              data-radio-name="list_type"
-             data-radio-default-value="${this.data.list_type}">
+             data-radio-default-value="${this.data.meta.style}">
           <label class="field__label">
             <div class="field" data-orientation="horizontal">
               <button id="bullet" class="radio-group__item" type="button" role="radio" value="bullet"></button>
@@ -334,7 +336,7 @@ export class ListBlock extends EditorBlock {
     RadioHandler.instance.register(radioGroup);
 
     radioGroup.addEventListener('radio:change', (e) => {
-      this.data.list_type = e.detail.value;
+      this.data.meta.style = e.detail.value;
       this.bus?.dispatch('block:updated', { block: this });
     });
 

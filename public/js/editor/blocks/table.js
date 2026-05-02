@@ -9,8 +9,8 @@ export const TableSchema = {
   title: 'Bảng',
   group: 'media',
   groupLabel: 'Phương tiện',
-  attributes: {
-    // rows[r][c] = RichSegment[] | string (legacy)
+  meta: {
+    hasHeader: { default: true },
     rows: {
       default: [
         ['Tiêu đề 1', 'Tiêu đề 2', 'Tiêu đề 3'],
@@ -18,7 +18,6 @@ export const TableSchema = {
         ['', '', ''],
       ],
     },
-    hasHeader: { default: true },
   },
   supports: {},
 };
@@ -36,8 +35,8 @@ export class TableBlock extends EditorBlock {
   constructor(...args) {
     super(...args);
     // Deep clone rows để tránh mutate default schema
-    if (this.data?.rows) {
-      this.data.rows = JSON.parse(JSON.stringify(this.data.rows));
+    if (this.data?.meta?.rows) {
+      this.data.meta.rows = JSON.parse(JSON.stringify(this.data.meta.rows));
     }
   }
 
@@ -71,7 +70,7 @@ export class TableBlock extends EditorBlock {
     table.className = 'be-table';
     table.contentEditable = 'false';
 
-    const { rows, hasHeader } = this.data;
+    const { rows, hasHeader } = this.data.meta;
 
     if (hasHeader && rows.length > 0) {
       const thead = document.createElement('thead');
@@ -187,12 +186,12 @@ export class TableBlock extends EditorBlock {
       cell.dataset.col = colIndex;
       cell.dataset.placeholder = cellTag === 'th' ? 'Tiêu đề...' : '';
 
-      cell.innerHTML = BlockSerializer.toHTML({ data: { content: cellValue } });
+      cell.innerHTML = BlockSerializer.toHTML({ data: { rich_text: cellValue } });
 
       // Input: sync cell → RichSegment[] ngay
       cell.addEventListener('input', () => {
         const html = cell.innerHTML?.trim() ?? '';
-        this.data.rows[rowIndex][colIndex] = html
+        this.data.meta.rows[rowIndex][colIndex] = html
           ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
           : [];
       });
@@ -229,13 +228,13 @@ export class TableBlock extends EditorBlock {
   // ─── Navigation ───────────────────────────────────────────────────────────
 
   #navigateCell(row, col, direction) {
-    const colCount = this.data.rows[row]?.length ?? 0;
-    const rowCount = this.data.rows.length;
+    const colCount = this.data.meta.rows[row]?.length ?? 0;
+    const rowCount = this.data.meta.rows.length;
     let nextCol = col + direction;
     let nextRow = row;
 
     if (nextCol >= colCount) { nextCol = 0; nextRow = row + 1; }
-    else if (nextCol < 0) { nextRow = row - 1; if (nextRow < 0) return; nextCol = (this.data.rows[nextRow]?.length ?? 1) - 1; }
+    else if (nextCol < 0) { nextRow = row - 1; if (nextRow < 0) return; nextCol = (this.data.meta.rows[nextRow]?.length ?? 1) - 1; }
 
     if (nextRow >= rowCount) {
       this.insertRowAfter(rowCount - 1);
@@ -247,7 +246,7 @@ export class TableBlock extends EditorBlock {
 
   #navigateRow(row, col, direction) {
     const nextRow = row + direction;
-    if (nextRow < 0 || nextRow >= this.data.rows.length) return;
+    if (nextRow < 0 || nextRow >= this.data.meta.rows.length) return;
     this.#focusCell(nextRow, col);
   }
 
@@ -310,37 +309,37 @@ export class TableBlock extends EditorBlock {
   }
 
   insertRowBefore(rowIndex) {
-    const colCount = this.data.rows[0]?.length ?? 1;
-    this.data.rows.splice(rowIndex, 0, new Array(colCount).fill([]));
+    const colCount = this.data.meta.rows[0]?.length ?? 1;
+    this.data.meta.rows.splice(rowIndex, 0, new Array(colCount).fill([]));
     this.#rerender(rowIndex, this.#activeCursor?.col ?? 0);
   }
 
   insertRowAfter(rowIndex) {
-    const colCount = this.data.rows[0]?.length ?? 1;
-    this.data.rows.splice(rowIndex + 1, 0, new Array(colCount).fill([]));
+    const colCount = this.data.meta.rows[0]?.length ?? 1;
+    this.data.meta.rows.splice(rowIndex + 1, 0, new Array(colCount).fill([]));
     this.#rerender(rowIndex + 1, this.#activeCursor?.col ?? 0);
   }
 
   removeRow(rowIndex) {
-    if (this.data.rows.length <= 1) return;
-    this.data.rows.splice(rowIndex, 1);
-    this.#rerender(Math.min(rowIndex, this.data.rows.length - 1), this.#activeCursor?.col ?? 0);
+    if (this.data.meta.rows.length <= 1) return;
+    this.data.meta.rows.splice(rowIndex, 1);
+    this.#rerender(Math.min(rowIndex, this.data.meta.rows.length - 1), this.#activeCursor?.col ?? 0);
   }
 
   insertColBefore(colIndex) {
-    this.data.rows.forEach(row => row.splice(colIndex, 0, []));
+    this.data.meta.rows.forEach(row => row.splice(colIndex, 0, []));
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex);
   }
 
   insertColAfter(colIndex) {
-    this.data.rows.forEach(row => row.splice(colIndex + 1, 0, []));
+    this.data.meta.rows.forEach(row => row.splice(colIndex + 1, 0, []));
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex + 1);
   }
 
   removeCol(colIndex) {
-    const colCount = this.data.rows[0]?.length ?? 0;
+    const colCount = this.data.meta.rows[0]?.length ?? 0;
     if (colCount <= 1) return;
-    this.data.rows.forEach(row => row.splice(colIndex, 1));
+    this.data.meta.rows.forEach(row => row.splice(colIndex, 1));
     this.#rerender(this.#activeCursor?.row ?? 0, Math.min(colIndex, colCount - 2));
   }
 
@@ -349,8 +348,8 @@ export class TableBlock extends EditorBlock {
     this.bus?.dispatch('block:updated', { block: this });
     requestAnimationFrame(() => {
       this.#focusCell(
-        Math.min(focusRow, this.data.rows.length - 1),
-        Math.min(focusCol, (this.data.rows[0]?.length ?? 1) - 1),
+        Math.min(focusRow, this.data.meta.rows.length - 1),
+        Math.min(focusCol, (this.data.meta.rows[0]?.length ?? 1) - 1),
       );
     });
   }
@@ -365,7 +364,10 @@ export class TableBlock extends EditorBlock {
    * @returns {object}
    */
   serializeData(_editableEl) {
-    return this._cloneData();
+    return {
+      rich_text: [],
+      meta: { ...this.data.meta },
+    };
   }
 
   /**
@@ -373,8 +375,8 @@ export class TableBlock extends EditorBlock {
    * @returns {{ seconds: number }}
    */
   getStats() {
-    const rows = this.data.rows?.length ?? 0;
-    const cols = this.data.rows?.[0]?.length ?? 0;
+    const rows = this.data.meta.rows?.length ?? 0;
+    const cols = this.data.meta.rows?.[0]?.length ?? 0;
     return { seconds: rows * cols * 2 };
   }
 
@@ -387,7 +389,7 @@ export class TableBlock extends EditorBlock {
         <legend class="field__label">Header</legend>
         <div class="radio-group grid gap-2"
              data-radio-name="has_header"
-             data-radio-default-value="${this.data.hasHeader}">
+             data-radio-default-value="${this.data.meta.hasHeader}">
           <label class="field__label">
             <div class="field" data-orientation="horizontal">
               <button id="has_header" class="radio-group__item" type="button" role="radio" value="true"></button>
@@ -408,7 +410,7 @@ export class TableBlock extends EditorBlock {
     RadioHandler.instance.register(radioGroup);
 
     radioGroup.addEventListener('radio:change', (e) => {
-      this.data.hasHeader = e.detail.value === 'true';
+      this.data.meta.hasHeader = e.detail.value === 'true';
       this.bus?.dispatch('block:updated', { block: this });
     });
 
@@ -417,7 +419,7 @@ export class TableBlock extends EditorBlock {
 
   focus(bus, position = 'end') {
     if (!this.dom) return;
-    const rows = this.data.rows;
+    const rows = this.data.meta.rows;
     if (!rows.length) return;
 
     if (position === 'end') {

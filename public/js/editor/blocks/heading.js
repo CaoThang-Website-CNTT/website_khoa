@@ -8,9 +8,9 @@ export const HeadingSchema = {
   title: 'Heading',
   group: 'paragraph',
   groupLabel: 'Văn Bản',
-  attributes: {
-    content: { default: [] }, // RichSegment[]
-    level: { default: 2 },  // 2–4 (H1 dành cho tiêu đề bài viết)
+  meta: {
+    level: { default: 2 },
+    align: { default: 'left' },
   },
   supports: { typography: true },
 };
@@ -18,7 +18,7 @@ export const HeadingSchema = {
 export class HeadingBlock extends EditorBlock {
 
   render() {
-    const el = this.#createElement(this.data.level);
+    const el = this.#createElement(this.data.meta.level);
     this.dom = el;
     this.#attachListeners(el);
     return el;
@@ -37,7 +37,7 @@ export class HeadingBlock extends EditorBlock {
     el.dataset.placeholder = 'Nhập tiêu đề...';
     el.dataset.beEditable = '';
 
-    el.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
+    el.innerHTML = BlockSerializer.toHTML({ data: this.data });
 
     return el;
   }
@@ -73,7 +73,7 @@ export class HeadingBlock extends EditorBlock {
         <label class="field__label">Cấp độ tiêu đề</label>
         <div class="radio-group grid gap-2"
              data-radio-name="heading_level"
-             data-radio-default-value="${this.data.level - 1}">
+             data-radio-default-value="${this.data.meta.level - 1}">
           ${[1, 2, 3].map(display => `
             <label class="field__label">
               <div class="field" data-orientation="horizontal">
@@ -95,7 +95,7 @@ export class HeadingBlock extends EditorBlock {
 
     radioGroup.addEventListener('radio:change', (e) => {
       const newLevel = parseInt(e.detail.value) + 1; // display H1→2, H2→3, H3→4
-      this.data.level = newLevel;
+      this.data.meta.level = newLevel;
       this.#swapLevel(newLevel);
     });
 

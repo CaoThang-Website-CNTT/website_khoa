@@ -62,7 +62,8 @@ export class BlockSerializer {
    * @returns {string}
    */
   static toHTML(blockData) {
-    const content = blockData?.data?.content;
+    const data = blockData?.data;
+    const content = data?.rich_text ?? data?.content;
     if (!content) return '';
 
     // Legacy: content là plain string (block chưa qua serializer)

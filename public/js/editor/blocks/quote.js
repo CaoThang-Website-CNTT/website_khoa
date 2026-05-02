@@ -9,9 +9,8 @@ export const QuoteSchema = {
   title: 'Trích dẫn',
   group: 'paragraph',
   groupLabel: 'Văn Bản',
-  attributes: {
-    content: { default: [] }, // RichSegment[]
-    citation: { default: '' }, // plain string
+  meta: {
+    citation: { default: '' },
   },
   supports: { typography: true },
 };
@@ -34,14 +33,14 @@ export class QuoteBlock extends EditorBlock {
     textEl.spellcheck = false;
     textEl.dataset.placeholder = 'Nội dung trích dẫn...';
     textEl.dataset.beEditable = '';
-    textEl.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
+    textEl.innerHTML = BlockSerializer.toHTML({ data: this.data });
 
     const authorEl = document.createElement('cite');
     authorEl.contentEditable = 'true';
     authorEl.className = 'be-quote-citation be-editable';
     authorEl.spellcheck = false;
     authorEl.dataset.placeholder = '— Tác giả (không bắt buộc)';
-    authorEl.textContent = this.data.citation || '';
+    authorEl.textContent = this.data.meta.citation || '';
 
     this.#textEl = textEl;
     this.#authorEl = authorEl;
@@ -55,7 +54,7 @@ export class QuoteBlock extends EditorBlock {
 
     authorEl.addEventListener('input', () => {
       // citation là plain text — sync ngay vì không qua RichTextParser
-      this.data.citation = authorEl.textContent.trim();
+      this.data.meta.citation = authorEl.textContent.trim();
     });
 
     textEl.addEventListener('keydown', (e) => {
@@ -90,12 +89,13 @@ export class QuoteBlock extends EditorBlock {
    */
   serializeData(_editableEl) {
     const html = this.#textEl?.innerHTML?.trim() ?? '';
-
     return {
-      content: html
+      rich_text: html
         ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
         : [],
-      citation: this.data.citation ?? '',
+      meta: {
+        citation: this.data.meta.citation ?? '',
+      },
     };
   }
 
@@ -104,8 +104,8 @@ export class QuoteBlock extends EditorBlock {
    * @returns {{ seconds: number }}
    */
   getStats() {
-    const contentWords = this._extractText(this.data.content).trim().split(/\s+/).filter(Boolean).length;
-    const citationWords = (this.data.citation ?? '').trim().split(/\s+/).filter(Boolean).length;
+    const contentWords = this._extractText(this.data.rich_text).trim().split(/\s+/).filter(Boolean).length;
+    const citationWords = (this.data.meta.citation ?? '').trim().split(/\s+/).filter(Boolean).length;
     return { seconds: Math.round(((contentWords + citationWords) / 200) * 60) };
   }
 

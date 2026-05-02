@@ -10,7 +10,7 @@ export class EditorBlock {
   constructor(blockData = {}, schema, bus = null) {
     this.id = blockData.id || crypto.randomUUID();
     this.type = schema.type;
-    this.data = this.#parseDataWithSchema(blockData.data || {}, schema.attributes);
+    this.data = this.#parseDataWithSchema(blockData.data || {}, schema);
     this.schema = schema;
 
     /** @type {import('./editor.js').EditorEventBus} */
@@ -22,10 +22,17 @@ export class EditorBlock {
 
   // ─── Schema ───────────────────────────────────────────────────────────────
 
-  #parseDataWithSchema(currentData, attributesSchema) {
+  #parseDataWithSchema(currentData, schema) {
+    return {
+      rich_text: currentData.rich_text ?? [],
+      meta: this.#parseMeta(currentData.meta ?? {}, schema.meta ?? {}),
+    };
+  }
+
+  #parseMeta(currentMeta, metaSchema) {
     const parsed = {};
-    for (const [key, config] of Object.entries(attributesSchema)) {
-      parsed[key] = currentData[key] !== undefined ? currentData[key] : config.default;
+    for (const [key, config] of Object.entries(metaSchema)) {
+      parsed[key] = currentMeta[key] !== undefined ? currentMeta[key] : config.default;
     }
     return parsed;
   }
@@ -59,16 +66,13 @@ export class EditorBlock {
    * @returns {object}
    */
   serializeData(editableEl) {
-    const data = this._cloneData();
-
-    if ('content' in data) {
-      const html = editableEl?.innerHTML?.trim() ?? '';
-      data.content = html
+    const html = editableEl?.innerHTML?.trim() ?? '';
+    return {
+      rich_text: html
         ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
-        : [];
-    }
-
-    return data;
+        : [],
+      meta: { ...this.data.meta },
+    };
   }
 
   // ─── Stats (read time) ────────────────────────────────────────────────────
@@ -79,9 +83,9 @@ export class EditorBlock {
    * @returns {{ seconds: number }}
    */
   getStats() {
-    const text = this._extractText(this.data.content);
+    const text = this._extractText(this.data.rich_text);
     const words = text.trim().split(/\s+/).filter(Boolean).length;
-    return { seconds: Math.round((words / 200) * 60) }; // 200 WPM
+    return { seconds: Math.round((words / 200) * 60) };
   }
 
   // ─── Rich text helpers ────────────────────────────────────────────────────
@@ -154,5 +158,16 @@ export class EditorBlock {
     range.deleteContents();
     range.insertNode(document.createTextNode(text));
     sel.collapseToEnd();
+  }
+
+  exportCanonical() {
+    return {
+      rich_text: this.data.rich_text ?? [],
+      meta: { ...this.data.meta },
+    };
+  }
+
+  importCanonical({ rich_text }) {
+    this.data.rich_text = rich_text ?? [];
   }
 }

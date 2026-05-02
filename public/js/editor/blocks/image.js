@@ -9,14 +9,14 @@ export const ImageSchema = {
   title: 'Hình ảnh',
   group: 'media',
   groupLabel: 'Phương tiện',
-  attributes: {
+  meta: {
     mediaId: { default: null },
     url: { default: '' },
     alt: { default: '' },
-    caption: { default: [] }, // RichSegment[]
+    caption: { default: [] },
     align: { default: 'center' },
     width: { default: '100%' },
-  },
+  }
 };
 
 export class ImageBlock extends EditorBlock {
@@ -36,7 +36,7 @@ export class ImageBlock extends EditorBlock {
 
   render() {
     this.dom = document.createElement('figure');
-    this.dom.className = `be-image be-image-align--${this.data.align}`;
+    this.dom.className = `be-image be-image-align--${this.data.meta.align}`;
     this.dom.contentEditable = 'false';
 
     this.#renderCurrentState();
@@ -46,7 +46,7 @@ export class ImageBlock extends EditorBlock {
   #renderCurrentState() {
     this.dom.innerHTML = '';
     this.#captionEl = null;
-    this.data.url ? this.#renderResolved() : this.#renderPlaceholder();
+    this.data.meta.url ? this.#renderResolved() : this.#renderPlaceholder();
   }
 
   #renderPlaceholder() {
@@ -81,7 +81,7 @@ export class ImageBlock extends EditorBlock {
     const applyExternalUrl = () => {
       const url = urlInput.value.trim();
       if (!url) return;
-      this.data.url = url;
+      this.data.meta.url = url;
       this.bus?.dispatch('block:updated', { block: this });
       this.#renderCurrentState();
     };
@@ -107,7 +107,7 @@ export class ImageBlock extends EditorBlock {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      if (this.data.alt) formData.append('alt_text', this.data.alt);
+      if (this.data.meta.alt) formData.append('alt_text', this.data.meta.alt);
       if (this.#postId) formData.append('post_id', this.#postId);
 
       const response = await fetch('http://localhost/website_khoa/api/v1/media', {
@@ -122,11 +122,11 @@ export class ImageBlock extends EditorBlock {
 
       const result = await response.json();
 
-      this.data.mediaId = result.data.id;
-      this.data.url = `http://localhost/website_khoa/storage/${result.data.file_path}`;
+      this.data.meta.mediaId = result.data.id;
+      this.data.meta.url = `http://localhost/website_khoa/storage/${result.data.file_path}`;
 
-      if (result.data.alt_text && !this.data.alt) {
-        this.data.alt = result.data.alt_text;
+      if (result.data.alt_text && !this.data.meta.alt) {
+        this.data.meta.alt = result.data.alt_text;
       }
 
       this.bus?.dispatch('block:updated', { block: this });
@@ -146,12 +146,12 @@ export class ImageBlock extends EditorBlock {
     wrapper.className = 'be-image-wrapper';
 
     const img = document.createElement('img');
-    img.src = this.data.url;
-    img.alt = this.data.alt || '';
+    img.src = this.data.meta.url;
+    img.alt = this.data.meta.alt || '';
     img.loading = 'lazy';
-    img.style.width = this.data.width.includes('%') || this.data.width.includes('px')
-      ? this.data.width
-      : `${this.data.width}px`;
+    img.style.width = this.data.meta.width.includes('%') || this.data.meta.width.includes('px')
+      ? this.data.meta.width
+      : `${this.data.meta.width}px`;
 
     const caption = document.createElement('figcaption');
     caption.contentEditable = 'true';
@@ -159,7 +159,7 @@ export class ImageBlock extends EditorBlock {
     caption.spellcheck = false;
     caption.dataset.placeholder = 'Viết chú thích ảnh...';
     caption.dataset.beEditable = '';
-    caption.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.caption } });
+    caption.innerHTML = BlockSerializer.toHTML({ data: { rich_text: this.data.meta.caption } });
 
     this.#captionEl = caption;
 
@@ -193,16 +193,14 @@ export class ImageBlock extends EditorBlock {
    */
   serializeData(_editableEl) {
     const captionHtml = this.#captionEl?.innerHTML?.trim() ?? '';
-
     return {
-      mediaId: this.data.mediaId,
-      url: this.data.url,
-      alt: this.data.alt,
-      caption: captionHtml
-        ? BlockSerializer.tokensToSegments(RichTextParser.parse(captionHtml))
-        : [],
-      align: this.data.align,
-      width: this.data.width,
+      rich_text: [],
+      meta: {
+        ...this.data.meta,
+        caption: captionHtml
+          ? BlockSerializer.tokensToSegments(RichTextParser.parse(captionHtml))
+          : [],
+      },
     };
   }
 
@@ -218,13 +216,13 @@ export class ImageBlock extends EditorBlock {
       <div class="field">
         <label class="field__label">Văn bản thay thế (Alt Text)</label>
         <textarea class="field__input be-alt-input" rows="3"
-                  placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.alt)}</textarea>
+                  placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.meta.alt)}</textarea>
       </div>
       <fieldset class="field__set">
         <legend class="field__label">Kích thước ảnh</legend>
         <div class="radio-group grid grid-cols-2 gap-2"
              data-radio-name="image_size"
-             data-radio-default-value="${this.data.width}">
+             data-radio-default-value="${this.data.meta.width}">
           ${[25, 50, 75, 100].map(pct => `
             <label class="field__label">
               <div class="field" data-orientation="horizontal">
@@ -242,12 +240,12 @@ export class ImageBlock extends EditorBlock {
     RadioHandler.instance.register(radioGroup);
 
     radioGroup.addEventListener('radio:change', (e) => {
-      this.data.width = e.detail.value;
+      this.data.meta.width = e.detail.value;
       this.bus?.dispatch('block:updated', { block: this });
     });
 
     const altInput = wrap.querySelector('.be-alt-input');
-    altInput.addEventListener('input', () => { this.data.alt = altInput.value; });
+    altInput.addEventListener('input', () => { this.data.meta.alt = altInput.value; });
     altInput.addEventListener('blur', () => {
       this.bus?.dispatch('block:updated', { block: this });
     });
