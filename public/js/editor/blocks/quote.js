@@ -103,12 +103,6 @@ export class QuoteBlock extends EditorBlock {
    * Override: cộng cả content lẫn citation.
    * @returns {{ seconds: number }}
    */
-  getStats() {
-    const contentWords = this._extractText(this.data.rich_text).trim().split(/\s+/).filter(Boolean).length;
-    const citationWords = (this.data.meta.citation ?? '').trim().split(/\s+/).filter(Boolean).length;
-    return { seconds: Math.round(((contentWords + citationWords) / 200) * 60) };
-  }
-
   renderInspectorControls() {
     const wrap = document.createElement('div');
     wrap.className = 'field-group';

@@ -292,20 +292,6 @@ export class ListBlock extends EditorBlock {
     };
   }
 
-  /**
-   * Weight-based: 3 giây/item (đệ quy).
-   * @returns {{ seconds: number }}
-   */
-  getStats() {
-    return { seconds: this.#countItems(this.data.meta.items ?? []) * 3 };
-  }
-
-  #countItems(nodes) {
-    return nodes.reduce((sum, node) =>
-      sum + 1 + this.#countItems(node.children ?? []), 0
-    );
-  }
-
   renderInspectorControls() {
     const wrap = document.createElement('div');
     wrap.className = 'field-group';

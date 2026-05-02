@@ -127,10 +127,6 @@ export class EditorManager {
     // this.#bus.subscribe('context:redo_applied', (p) => this.#onRedoApplied(p));
     this.#bus.subscribe('block:input', (p) => this.#onBlockInput(p));
 
-    this.#bus.subscribe('block:added', () => this.#recomputeReadTime());
-    this.#bus.subscribe('block:updated', () => this.#recomputeReadTime());
-    this.#bus.subscribe('block:removed', () => this.#recomputeReadTime());
-
     this.#initialRender();
     this.#initCanvas();
 
@@ -517,10 +513,11 @@ export class EditorManager {
     const block = this.#canvas.getBlock(blockId);
     if (!block) return;
 
-    // Chỉ cập nhật model tĩnh để lưu trữ dữ liệu mới nhất
+    // Cập nhật model với schema mới { rich_text, meta }
     const editable = this.#getEditableEl(blockId);
     if (editable) {
-      this.#canvas.updateBlock(blockId, { content: block.serializeData(editable).content }, { silent: true });
+      const data = block.serializeData(editable);
+      this.#canvas.updateBlock(blockId, data, { silent: true });
     }
   }
 
@@ -529,14 +526,6 @@ export class EditorManager {
    */
   #commitPendingInput() {
     // Logic gỡ bỏ tạm thời
-  }
-
-  #recomputeReadTime() {
-    const stats = this.#canvas.computeStats();
-    this.#bus.dispatch('meta:update_request', {
-      key: 'read_time',
-      value: stats.readTime
-    });
   }
 
   /**
@@ -647,11 +636,8 @@ class EditorCanvas {
    * }}
    */
   computeStats() {
-    const totalSeconds = this.#blocks.reduce((sum, b) => sum + b.getStats().seconds, 0);
-    console.log(totalSeconds)
     return {
-      blockCount: this.#blocks.length,
-      readTime: Math.max(1, Math.round(totalSeconds / 60)) // phút, tối thiểu 1
+      blockCount: this.#blocks.length
     };
   }
 

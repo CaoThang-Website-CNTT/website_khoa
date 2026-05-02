@@ -122,15 +122,6 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
               <i class="fa-regular fa-calendar"></i>
               <span class="be-canvas-meta__text"><?= date('d/m/Y') ?></span>
             </div>
-            <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_read_time"
-              data-be-preview-action="toggle">
-              <i class="fa-regular fa-clock"></i>
-              <span class="be-canvas-meta__text">
-                <span class="be-canvas-meta__value" data-be-meta-preview="read_time" data-be-preview-action="text"
-                  data-preview-default="0">0</span>
-                phút đọc
-              </span>
-            </div>
             <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_view_count"
               data-be-preview-action="toggle">
               <i class="fa-regular fa-eye"></i>
@@ -212,11 +203,12 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field">
               <span class="field__label">Tác giả</span>
               <button type="button" class="select" data-select-id="be-author-select" data-select-searchable
-                data-select-placeholder="Chọn tác giả" name="author_id" data-be-meta-key="author_id" role="listbox">
+                data-select-placeholder="Chọn tác giả" name="author_id" data-be-meta-key="author_id" role="listbox"
+                data-select-default-value="<?= $current_user['account_id'] ?>">
                 <div class="select__content">
                   <?php foreach (($authors ?? []) as $author): ?>
-                    <div class="select__item" data-select-value=" <?= $author->id ?>"
-                      <?= $author->id === $current_user['account_id'] ? 'selected' : '' ?>>
+                    <div class="select__item" data-select-value="<?= $author->id ?>"
+                      <?= (int)$author->id === (int)$current_user['account_id'] ? 'selected' : '' ?>>
                       <?= htmlspecialchars($author->email) ?>
                     </div>
                   <?php endforeach; ?>
@@ -292,17 +284,6 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
               </div>
               <button class="switch" type="button" role="switch" data-switch-default-state="checked" name="show_date"
                 data-be-meta-key="settings.show_date">
-                <span class="switch__thumb"></span>
-              </button>
-            </div>
-
-            <div class="field" data-orientation="horizontal">
-              <div class="field__content">
-                <span class="field__label">Hiển thị Thời gian đọc</span>
-                <p class="field__description">Tự động tính dựa trên nội dung</p>
-              </div>
-              <button class="switch" type="button" role="switch" name="show_read_time"
-                data-be-meta-key="settings.show_read_time">
                 <span class="switch__thumb"></span>
               </button>
             </div>

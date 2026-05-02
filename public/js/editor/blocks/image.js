@@ -204,10 +204,6 @@ export class ImageBlock extends EditorBlock {
     };
   }
 
-  getStats() {
-    return { seconds: 12 };
-  }
-
   renderInspectorControls() {
     const wrap = document.createElement('div');
     wrap.className = 'field-group';

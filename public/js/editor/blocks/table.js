@@ -374,12 +374,6 @@ export class TableBlock extends EditorBlock {
    * Weight-based: 2 giây/cell.
    * @returns {{ seconds: number }}
    */
-  getStats() {
-    const rows = this.data.meta.rows?.length ?? 0;
-    const cols = this.data.meta.rows?.[0]?.length ?? 0;
-    return { seconds: rows * cols * 2 };
-  }
-
   renderInspectorControls() {
     const wrap = document.createElement('div');
     wrap.className = 'field-group';

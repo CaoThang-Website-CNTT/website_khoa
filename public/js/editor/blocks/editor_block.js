@@ -82,12 +82,6 @@ export class EditorBlock {
    * Text block dùng WPM, block cấu trúc override với weight riêng.
    * @returns {{ seconds: number }}
    */
-  getStats() {
-    const text = this._extractText(this.data.rich_text);
-    const words = text.trim().split(/\s+/).filter(Boolean).length;
-    return { seconds: Math.round((words / 200) * 60) };
-  }
-
   // ─── Rich text helpers ────────────────────────────────────────────────────
 
   /**
