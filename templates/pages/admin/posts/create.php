@@ -1,12 +1,13 @@
 <?php
-$errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 
-$isEdit = isset($post);
-
-$oldTitle = $old_input['title'] ?? ($post->title ?? '');
-$oldSlug = $old_input['slug'] ?? ($post->slug ?? '');
-$oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
+$oldEditorData = $old_input['editor_data'] ?? null;
+$initialPayload = null;
+if ($oldEditorData) {
+  try {
+    $initialPayload = json_decode($oldEditorData, true);
+  } catch (\Exception $e) {}
+  }
 
 $current_user = request()->session()->authUser() ?? ['account_id' => null];
 ?>
@@ -109,7 +110,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
       <div class="be-canvas__content-wrapper">
         <div class="be-canvas__content be-canvas-title-area">
           <h1 contenteditable="true" id="be-canvas-title" class="be-canvas-title" data-be-meta-key="title">
-            <?= $oldTitle ? htmlspecialchars($oldTitle) : 'Tiêu đề bài viết' ?>
+            <?= $initialPayload['meta']['title'] ?? 'Tiêu đề bài viết' ?>
           </h1>
           <div class="be-canvas-meta">
             <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_author"
@@ -195,7 +196,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field">
               <span class="field__label">Tiêu đề</span>
               <div id="be-post-title" data-be-meta-preview="title">
-                <?= $oldTitle ? htmlspecialchars($oldTitle) : 'Tiêu đề bài viết' ?>
+                <?= $initialPayload['meta']['title'] ?? 'Tiêu đề bài viết' ?>
               </div>
             </div>
 
@@ -203,11 +204,10 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
               <span class="field__label">Tác giả</span>
               <button type="button" class="select" data-select-id="be-author-select" data-select-searchable
                 data-select-placeholder="Chọn tác giả" name="author_id" data-be-meta-key="author_id" role="listbox"
-                data-select-default-value="<?= $current_user['account_id'] ?>">
+                data-select-default-value="<?= $initialPayload['meta']['author_id'] ?? $current_user['account_id'] ?>">
                 <div class="select__content">
                   <?php foreach (($authors ?? []) as $author): ?>
-                    <div class="select__item" data-select-value="<?= $author->id ?>"
-                      <?= (int)$author->id === (int)$current_user['account_id'] ? 'selected' : '' ?>>
+                    <div class="select__item" data-select-value="<?= $author->id ?>">
                       <?= htmlspecialchars($author->email) ?>
                     </div>
                   <?php endforeach; ?>
@@ -218,13 +218,12 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field">
               <span class="field__label">Trạng thái</span>
               <button type="button" class="select" data-select-id="be-status-select" data-select-placeholder="Chọn"
-                name="status" data-meta-key="status" data-meta-preview="status" data-meta-action="status-badge"
-                role="listbox" data-select-default-value="draft">
+                name="status" data-be-meta-key="status" role="listbox"
+                data-select-default-value="draft" data-select-placeholder="Chọn trạng thái">
                 <div class="select__content">
-                  <div class="select__item" data-select-value="draft" <?= $oldStatus === 'draft' ? 'selected' : '' ?>>
-                    Nháp</div>
-                  <div class="select__item" data-select-value="published" <?= $oldStatus === 'published' ? 'selected' : '' ?>>Xuất bản</div>
-                  <div class="select__item" data-select-value="archived" <?= $oldStatus === 'archived' ? 'selected' : '' ?>>Lưu trữ</div>
+                  <div class="select__item" data-select-value="draft">Nháp</div>
+                  <div class="select__item" data-select-value="published">Xuất bản</div>
+                  <div class="select__item" data-select-value="archived">Lưu trữ</div>
                 </div>
               </button>
             </div>
@@ -232,7 +231,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field">
               <span class="field__label">Slug</span>
               <input type="text" class="field__input" id="be-slug-input" name="slug"
-                value="<?= htmlspecialchars($oldSlug) ?>" placeholder="duong-dan-bai-viet" data-be-meta-key="slug">
+                value="<?= htmlspecialchars($initialPayload['meta']['slug']) ?>" placeholder="duong-dan-bai-viet" data-be-meta-key="slug">
             </div>
 
             <div class="field">
@@ -240,7 +239,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
               <button type="button" class="select" data-select-id="be-categories-select" data-select-multiple
                 data-select-searchable data-select-placeholder="Chọn danh mục..." name="category_ids"
                 data-be-meta-key="category_ids" role="listbox" <?php if (empty($categories)): ?>data-select-disabled<?php endif; ?> <?php
-                      $selectedCats = $post->category_ids ?? ($old_input['category_ids'] ?? []);
+                      $selectedCats = $initialPayload['meta']['category_ids'] ?? [];
                       if (!empty($selectedCats)):
                         ?>
                   data-select-default-value="<?= implode(',', array_map('intval', $selectedCats)) ?>" <?php endif; ?>>
@@ -333,79 +332,19 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
     const form = document.querySelector('#be-post-form');
     const canvas = window.BeEditor.getCanvas();
 
-    const headingId = canvas.addBlock('blocks/heading', {
-      rich_text: [
-        { text: 'Chào mừng tới kỷ nguyên ', marks: [] },
-        { text: 'Block Editor V2', marks: ['bold', 'italic'] },
-        { text: ' chuyên nghiệp', marks: [] }
-      ],
-      meta: { level: 2, align: 'center' }
-    });
+    const initialPayload = <?= json_encode($initialPayload) ?>;
 
-    const introId = canvas.addBlock('blocks/paragraph', {
-      rich_text: [
-        { text: 'Hệ thống soạn thảo này được thiết kế để ', marks: [] },
-        { text: 'tối ưu hóa', marks: ['bold', 'underline'] },
-        { text: ' trải nghiệm người dùng theo phong cách Notion.', marks: [] }
-      ],
-      meta: { align: 'left' }
-    }, headingId);
+    if (initialPayload && initialPayload.blocks && initialPayload.blocks.length > 0) {
+      // Nạp lại toàn bộ Payload (Blocks + Meta)
+      window.BeEditor.importPayload(initialPayload);
+    }
 
-    const imageId = canvas.addBlock('blocks/image', {
-      rich_text: [],
-      meta: {
-        url: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        alt: 'Code Editor',
-        caption: [
-          { text: 'Giao diện soạn thảo hiện đại', marks: ['italic'] }
-        ],
-        align: 'center',
-        width: '100%'
-      }
-    }, introId);
-
-    const listId = canvas.addBlock('blocks/list', {
-      rich_text: [],
-      meta: {
-        style: 'bullet',
-        items: [
-          { rich_text: [{ text: 'Hiệu năng siêu tốc', marks: [] }], children: [] },
-          { rich_text: [{ text: 'Dữ liệu hướng cấu trúc (Schema-driven)', marks: [] }], children: [] },
-          {
-            rich_text: [{ text: 'Khả năng mở rộng không giới hạn', marks: [] }],
-            children: [
-              { rich_text: [{ text: 'Dễ dàng thêm block mới', marks: ['bold'] }], children: [] }
-            ]
-          }
-        ]
-      }
-    }, imageId);
-
-    const quoteId = canvas.addBlock('blocks/quote', {
-      rich_text: [{ text: 'Code is poetry, but data is its rhythm.', marks: ['italic'] }],
-      meta: {
-        citation: 'Matt Mullenweg'
-      }
-    }, listId);
-
-    const tableId = canvas.addBlock('blocks/table', {
-      rich_text: [],
-      meta: {
-        rows: [
-          ['Tính năng', 'Trạng thái'],
-          ['Cấu trúc Notion', 'Hoàn tất'],
-          ['Tốc độ render', 'Vượt trội']
-        ],
-        hasHeader: true
-      }
-    }, quoteId);
-
+    // ─── Sự kiện lưu bài viết ──────────────────────────────────────
     document.querySelector('#be-publish-btn')?.addEventListener('click', () => {
       const payload = window.BeEditor.getPayload();
       console.log("submit", payload);
 
       document.querySelector('#be-editor-data').value = JSON.stringify(payload);
-
       form.submit();
     });
   });

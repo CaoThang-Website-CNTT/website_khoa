@@ -260,10 +260,8 @@ class EditorMetaBinder {
     const { id, label, isMultiple } = e.detail;
     const value = isMultiple ? e.detail.values.map(item => item.value) : e.detail.value;
 
-    console.log(e.detail, value)
-
     const selectEl = document.querySelector(`[data-select-id='${id}']`);
-    if (!selectEl) return;
+    if (!selectEl || !selectEl.dataset.beMetaKey) return;
 
     this.bus.dispatch('meta:update_request', { key: selectEl.dataset.beMetaKey, value: value });
   }

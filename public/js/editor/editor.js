@@ -595,6 +595,34 @@ export class EditorManager {
     }
   }
 
+  importPayload(payload) {
+    if (!payload) return;
+
+    if (payload.meta) {
+      // Đệ quy để nạp metadata (hỗ trợ dot-notation tự động)
+      const traverse = (obj, prefix = '') => {
+        for (const [key, value] of Object.entries(obj)) {
+          const path = prefix ? `${prefix}.${key}` : key;
+          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            traverse(value, path);
+          } else {
+            this.#metadata.setData(path, value);
+          }
+        }
+      };
+      traverse(payload.meta);
+
+      // Force UI sync sau khi nạp xong
+      this.#bus.dispatch('meta:sync_request');
+    }
+
+    if (payload.blocks && Array.isArray(payload.blocks)) {
+      payload.blocks.forEach(b => {
+        this.#canvas.addBlock(b.type, b.data || {}, null, b.id);
+      });
+    }
+  }
+
   getCanvas() {
     return this.#canvas;
   }
@@ -852,9 +880,20 @@ class EditorCanvasMetadata {
    * @param {any} value - Giá trị mới
    */
   setData(key, value) {
-    if (this.#data[key] !== value) {
-      this.#data[key] = value;
+    const keys = key.split('.');
+    let target = this.#data;
 
+    // Duyệt sâu để tìm đúng field (hỗ trợ dot notation)
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      if (!target[k]) target[k] = {};
+      target = target[k];
+    }
+
+    const lastKey = keys[keys.length - 1];
+
+    if (target[lastKey] !== value) {
+      target[lastKey] = value;
       console.log(`[EditorCanvasMetadata] Đã cập nhật "${key}":`, value);
 
       this.#bus.dispatch('meta:updated', {
