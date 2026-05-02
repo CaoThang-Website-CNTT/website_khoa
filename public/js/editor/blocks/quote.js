@@ -1,5 +1,6 @@
 import { EditorBlock } from './editor_block.js';
-import { BlockSerializer } from '../block_serializer.js';
+import { BlockSerializer } from '../block_serializer_v2.js';
+import { RichTextParser } from '../rich_text_parser.js';
 
 export const QuoteSchema = {
   version: 1,
@@ -9,53 +10,51 @@ export const QuoteSchema = {
   group: 'paragraph',
   groupLabel: 'Văn Bản',
   attributes: {
-    content: { default: '' },
-    citation: { default: '' },
+    content: { default: [] }, // RichSegment[]
+    citation: { default: '' }, // plain string
   },
-  supports: {
-    typography: true,
-  }
+  supports: { typography: true },
 };
 
 export class QuoteBlock extends EditorBlock {
-  /**@type {HTMLElement} */
-  textEl = null;
-  /**@type {HTMLElement} */
-  authorEl = null;
+
+  /** @type {HTMLElement|null} */
+  #textEl = null;
+  /** @type {HTMLElement|null} */
+  #authorEl = null;
 
   render() {
     const wrap = document.createElement('blockquote');
     wrap.className = 'be-quote be-editable-wrap';
-
     this.dom = wrap;
 
     const textEl = document.createElement('p');
     textEl.contentEditable = 'true';
     textEl.className = 'be-quote-content be-editable';
+    textEl.spellcheck = false;
     textEl.dataset.placeholder = 'Nội dung trích dẫn...';
     textEl.dataset.beEditable = '';
-    textEl.spellcheck = false;
-
     textEl.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
 
     const authorEl = document.createElement('cite');
     authorEl.contentEditable = 'true';
     authorEl.className = 'be-quote-citation be-editable';
-    authorEl.dataset.placeholder = '— Tác giả (không bắt buộc)';
     authorEl.spellcheck = false;
+    authorEl.dataset.placeholder = '— Tác giả (không bắt buộc)';
     authorEl.textContent = this.data.citation || '';
 
-    this.textEl = textEl;
-    this.authorEl = authorEl;
+    this.#textEl = textEl;
+    this.#authorEl = authorEl;
 
     wrap.appendChild(textEl);
     wrap.appendChild(authorEl);
 
     textEl.addEventListener('input', () => {
-      this.data.content = textEl.innerHTML.trim();
+      this.bus?.dispatch('block:input', { blockId: this.id });
     });
 
     authorEl.addEventListener('input', () => {
+      // citation là plain text — sync ngay vì không qua RichTextParser
       this.data.citation = authorEl.textContent.trim();
     });
 
@@ -82,41 +81,58 @@ export class QuoteBlock extends EditorBlock {
     return wrap;
   }
 
+  /**
+   * Override: Quote có hai field cần serialize riêng.
+   * content đọc từ #textEl (rich text), citation đọc từ this.data (plain text đã sync).
+   *
+   * @param {HTMLElement|null} _editableEl — không dùng vì Quote tự quản lý DOM ref
+   * @returns {object}
+   */
+  serializeData(_editableEl) {
+    const html = this.#textEl?.innerHTML?.trim() ?? '';
+
+    return {
+      content: html
+        ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
+        : [],
+      citation: this.data.citation ?? '',
+    };
+  }
+
+  /**
+   * Override: cộng cả content lẫn citation.
+   * @returns {{ seconds: number }}
+   */
+  getStats() {
+    const contentWords = this._extractText(this.data.content).trim().split(/\s+/).filter(Boolean).length;
+    const citationWords = (this.data.citation ?? '').trim().split(/\s+/).filter(Boolean).length;
+    return { seconds: Math.round(((contentWords + citationWords) / 200) * 60) };
+  }
+
   renderInspectorControls() {
     const wrap = document.createElement('div');
-    wrap.className = "field-group";
-
-    wrap.innerHTML = ``;
+    wrap.className = 'field-group';
     return wrap;
   }
 
-  // Override focus: ưu tiên focus vào textEl (content) ở start
-  // hoặc authorEl ở end nếu đã có tác giả
   focus(bus, position = 'end') {
     if (!this.dom) return;
 
-    let targetEl;
-    if (position === 'end') {
-      targetEl = this.authorEl.textContent.trim() !== ''
-        ? this.authorEl
-        : this.textEl;
-    } else {
-      targetEl = this.textEl;
-    }
+    const targetEl = position === 'end' && this.#authorEl?.textContent.trim()
+      ? this.#authorEl
+      : this.#textEl;
 
-    if (targetEl) {
-      targetEl.focus();
+    if (!targetEl) return;
 
-      const range = document.createRange();
-      const selection = window.getSelection();
+    targetEl.focus();
 
-      range.selectNodeContents(targetEl);
-      range.collapse(position === 'start');
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(targetEl);
+    range.collapse(position === 'start');
+    sel.removeAllRanges();
+    sel.addRange(range);
 
-      selection.removeAllRanges();
-      selection.addRange(range);
-
-      this.bus.dispatch('block:selected', { blockId: this.id });
-    }
+    this.bus.dispatch('block:selected', { blockId: this.id });
   }
 }

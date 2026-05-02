@@ -1,5 +1,5 @@
 import { EditorBlock } from './editor_block.js';
-import { BlockSerializer } from '../block_serializer.js';
+import { BlockSerializer } from '../block_serializer_v2.js';
 
 export const HeadingSchema = {
   version: 1,
@@ -9,111 +9,134 @@ export const HeadingSchema = {
   group: 'paragraph',
   groupLabel: 'Văn Bản',
   attributes: {
-    content: { default: '' },
-    level: { default: 2 }
+    content: { default: [] }, // RichSegment[]
+    level: { default: 2 },  // 2–4 (H1 dành cho tiêu đề bài viết)
   },
-  supports: {
-    typography: true
-  }
+  supports: { typography: true },
 };
 
 export class HeadingBlock extends EditorBlock {
+
   render() {
-    console.log(this.data.content, BlockSerializer.toHTML({ data: { content: this.data.content } }))
-    const l = this.data.level || 2;
-    const el = document.createElement('h' + l);
-    el.className = `be-heading be-editable`;
+    const el = this.#createElement(this.data.level);
+    this.dom = el;
+    this.#attachListeners(el);
+    return el;
+  }
+
+  /**
+   * Tạo <hN> với đầy đủ attributes.
+   * @param {number} level
+   * @returns {HTMLElement}
+   */
+  #createElement(level) {
+    const el = document.createElement(`h${level}`);
+    el.className = 'be-heading be-editable';
     el.contentEditable = 'true';
+    el.spellcheck = false;
     el.dataset.placeholder = 'Nhập tiêu đề...';
     el.dataset.beEditable = '';
+
     el.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
-    el.spellcheck = false;
-
-    this.dom = el;
-
-    /* Ngăn paste kéo theo HTML format */
-    el.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-
-      this.paste(this.esc(text));
-    });
-
-    /* Ngăn Enter xuống dòng (heading là single-line) */
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
-    });
-
-    el.addEventListener('input', () => {
-      this.data.content = el.innerHTML.trim();
-    });
 
     return el;
   }
 
+  /**
+   * Gắn event listeners vào element.
+   * Tách riêng để #swapLevel có thể re-attach sau khi thay tag.
+   * @param {HTMLElement} el
+   */
+  #attachListeners(el) {
+    el.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+      this.paste(this.esc(text));
+    });
+
+    el.addEventListener('keydown', (e) => {
+      // Heading là single-line — Enter không xuống dòng
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+
+    el.addEventListener('input', () => {
+      this.bus?.dispatch('block:input', { blockId: this.id });
+    });
+  }
+
   renderInspectorControls() {
     const wrap = document.createElement('div');
-    wrap.className = "field-group";
+    wrap.className = 'field-group';
 
-    // Tạo mảng 3 element tượng trưng cho 3 cấp độ tiêu đề H1, H2, H3
-    // Trick lỏ về mặt UI là chỉ hiển thị cấp độ H1, H2, H3
-    // Nhưng đằng sau sẽ là từ H2 trở đi do H1 sẽ là tiêu đề bài viết và chỉ tồn tại 1 thẻ H1 trong 1 bài viết
-    // Mục đính giúp người dùng biết được rằng block Heading có BAO NHIÊU CẤP ĐỘ CÓ THỂ CHỌN
-    // hơn là biết CÓ BAO NHIÊU THẺ <h> CÓ THỂ CHỌN
     wrap.innerHTML = `
-        <div class="field">
-          <label class="field__label">Cấp độ tiêu đề</label>
-          <div class="radio-group grid gap-2" data-radio-name="heading_level" data-radio-default-value="1">
-            ${[...Array.from({ length: 3 }, (_, i) => i + 1)].map(l => `
-              <label class="field__label">
-                <div class="field" data-orientation="horizontal">
-                  <button id="${l}" class="radio-group__item" type="button" role="radio" value="${l}"></button>
-                  <div class="field__title">H${l}</div>
-                </div>
-              </label>
-            `).join('')}
-          </div>
+      <div class="field">
+        <label class="field__label">Cấp độ tiêu đề</label>
+        <div class="radio-group grid gap-2"
+             data-radio-name="heading_level"
+             data-radio-default-value="${this.data.level - 1}">
+          ${[1, 2, 3].map(display => `
+            <label class="field__label">
+              <div class="field" data-orientation="horizontal">
+                <button id="level-${display}"
+                        class="radio-group__item"
+                        type="button" role="radio"
+                        value="${display}">
+                </button>
+                <div class="field__title">H${display}</div>
+              </div>
+            </label>
+          `).join('')}
         </div>
-      `;
+      </div>
+    `;
 
     const radioGroup = wrap.querySelector('.radio-group');
     RadioHandler.instance.register(radioGroup);
 
     radioGroup.addEventListener('radio:change', (e) => {
-      const newLevel = parseInt(e.detail.value) + 1;
+      const newLevel = parseInt(e.detail.value) + 1; // display H1→2, H2→3, H3→4
       this.data.level = newLevel;
-
-      // Swap tag in-place
-      if (this.dom) {
-        const newEl = document.createElement('h' + newLevel);
-        // Copy toàn bộ attributes + content sang tag mới
-        newEl.className = this.dom.className;
-        newEl.contentEditable = this.dom.contentEditable;
-        newEl.spellcheck = false;
-        newEl.dataset.placeholder = this.dom.dataset.placeholder;
-        newEl.dataset.beEditable = '';
-        newEl.innerHTML = this.dom.innerHTML; // giữ nguyên rich content
-
-        this.dom.replaceWith(newEl);
-        this.dom = newEl; // cập nhật reference
-
-        // Re-attach input listener vì element mới
-        newEl.addEventListener('input', () => {
-          this.data.content = newEl.innerHTML.trim();
-        });
-
-        newEl.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') { e.preventDefault(); newEl.blur(); }
-        });
-
-        newEl.addEventListener('paste', (e) => {
-          e.preventDefault();
-          const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-          this.paste(this.esc(text));
-        });
-      }
+      this.#swapLevel(newLevel);
     });
 
     return wrap;
+  }
+
+  /**
+   * Swap tag <hN> in-place mà không destroy DOM node hiện tại.
+   * Giữ nguyên innerHTML và Range đang held bởi InlineToolbar.
+   *
+   * @param {number} newLevel
+   */
+  #swapLevel(newLevel) {
+    if (!this.dom) return;
+
+    const newEl = document.createElement(`h${newLevel}`);
+    newEl.className = this.dom.className;
+    newEl.contentEditable = this.dom.contentEditable;
+    newEl.spellcheck = false;
+    newEl.dataset.placeholder = this.dom.dataset.placeholder;
+    newEl.dataset.beEditable = '';
+    newEl.innerHTML = this.dom.innerHTML; // giữ nguyên rich content
+
+    this.dom.replaceWith(newEl);
+    this.dom = newEl;
+
+    this.#attachListeners(newEl);
+  }
+
+  focus(bus, position = 'end') {
+    if (!this.dom) return;
+
+    this.dom.focus();
+
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(this.dom);
+    range.collapse(position === 'start');
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    this.bus.dispatch('block:selected', { blockId: this.id });
   }
 }

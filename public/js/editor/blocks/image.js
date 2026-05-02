@@ -1,40 +1,37 @@
 import { EditorBlock } from './editor_block.js';
-import { BlockSerializer } from '../block_serializer.js';
+import { BlockSerializer } from '../block_serializer_v2.js';
+import { RichTextParser } from '../rich_text_parser.js';
 
 export const ImageSchema = {
-  type: 'blocks/image',
   version: 1,
+  icon: '<i class="fa-regular fa-image"></i>',
+  type: 'blocks/image',
   title: 'Hình ảnh',
   group: 'media',
   groupLabel: 'Phương tiện',
-  icon: '<i class="fa-regular fa-image"></i>',
   attributes: {
     mediaId: { default: null },
     url: { default: '' },
     alt: { default: '' },
-    caption: { default: '' },  // rich-text segment[] | plain string
+    caption: { default: [] }, // RichSegment[]
     align: { default: 'center' },
-    width: { default: '100%' }
-  }
+    width: { default: '100%' },
+  },
 };
 
 export class ImageBlock extends EditorBlock {
-  /**
-   * post_id hiện tại — chỉ có giá trị khi đang edit (post đã tồn tại).
-   * @type {number|null}
-   */
+
+  /** @type {number|null} */
   #postId = null;
+  /** @type {HTMLElement|null} */
+  #captionEl = null;
 
   constructor(blockData, schema, bus) {
     super(blockData, schema, bus);
 
-    if (this.bus) {
-      this.bus.subscribe('meta:updated', ({ key, value }) => {
-        if (key === 'post_id' && value) {
-          this.#postId = value;
-        }
-      });
-    }
+    this.bus?.subscribe('meta:updated', ({ key, value }) => {
+      if (key === 'post_id' && value) this.#postId = value;
+    });
   }
 
   render() {
@@ -43,18 +40,13 @@ export class ImageBlock extends EditorBlock {
     this.dom.contentEditable = 'false';
 
     this.#renderCurrentState();
-
     return this.dom;
   }
 
   #renderCurrentState() {
     this.dom.innerHTML = '';
-
-    if (this.data.url) {
-      this.#renderResolved();
-    } else {
-      this.#renderPlaceholder();
-    }
+    this.#captionEl = null;
+    this.data.url ? this.#renderResolved() : this.#renderPlaceholder();
   }
 
   #renderPlaceholder() {
@@ -66,9 +58,7 @@ export class ImageBlock extends EditorBlock {
         <div class="be-image-placeholder__actions">
           <button type="button" class="btn be-upload-btn" data-variant="primary" data-size="md">Tải lên</button>
           <input type="file" class="be-file-input" accept="image/*" hidden>
-
           <span class="be-placeholder-divider">hoặc</span>
-
           <div class="be-image-url-input-group">
             <input type="text" class="be-image-external-url" placeholder="Dán URL hình ảnh...">
             <button type="button" class="btn be-apply-url-btn" data-variant="outline">Chèn</button>
@@ -80,7 +70,7 @@ export class ImageBlock extends EditorBlock {
     const uploadBtn = this.dom.querySelector('.be-upload-btn');
     const fileInput = this.dom.querySelector('.be-file-input');
     const urlInput = this.dom.querySelector('.be-image-external-url');
-    const applyUrlBtn = this.dom.querySelector('.be-apply-url-btn');
+    const applyBtn = this.dom.querySelector('.be-apply-url-btn');
 
     uploadBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async (e) => {
@@ -88,18 +78,17 @@ export class ImageBlock extends EditorBlock {
       if (file) await this.#handleUpload(file);
     });
 
-    const handleExternalUrl = () => {
+    const applyExternalUrl = () => {
       const url = urlInput.value.trim();
-      if (url) {
-        this.data.url = url;
-        if (this.bus) this.bus.dispatch('block:updated', { block: this });
-        this.#renderCurrentState();
-      }
+      if (!url) return;
+      this.data.url = url;
+      this.bus?.dispatch('block:updated', { block: this });
+      this.#renderCurrentState();
     };
 
-    applyUrlBtn.addEventListener('click', handleExternalUrl);
+    applyBtn.addEventListener('click', applyExternalUrl);
     urlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); handleExternalUrl(); }
+      if (e.key === 'Enter') { e.preventDefault(); applyExternalUrl(); }
     });
   }
 
@@ -107,9 +96,9 @@ export class ImageBlock extends EditorBlock {
     const blobUrl = URL.createObjectURL(file);
 
     this.dom.innerHTML = `
-      <div class="be-image-loading" style="position: relative;">
-        <img src="${blobUrl}" style="opacity: 0.5; max-width: 100%; border-radius: var(--radius-md);">
-        <div class="be-spinner" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+      <div class="be-image-loading" style="position:relative;">
+        <img src="${blobUrl}" style="opacity:0.5;max-width:100%;border-radius:var(--radius-md);">
+        <div class="be-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
           <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
         </div>
       </div>
@@ -118,7 +107,6 @@ export class ImageBlock extends EditorBlock {
     try {
       const formData = new FormData();
       formData.append('file', file);
-
       if (this.data.alt) formData.append('alt_text', this.data.alt);
       if (this.#postId) formData.append('post_id', this.#postId);
 
@@ -141,12 +129,11 @@ export class ImageBlock extends EditorBlock {
         this.data.alt = result.data.alt_text;
       }
 
-      if (this.bus) this.bus.dispatch('block:updated', { block: this });
-
+      this.bus?.dispatch('block:updated', { block: this });
       this.#renderCurrentState();
 
     } catch (error) {
-      console.error('Lỗi upload ảnh:', error);
+      console.error('[ImageBlock] Lỗi upload:', error);
       alert('Không thể tải ảnh lên. Vui lòng thử lại.');
       this.#renderCurrentState();
     } finally {
@@ -155,8 +142,8 @@ export class ImageBlock extends EditorBlock {
   }
 
   #renderResolved() {
-    const imgWrapper = document.createElement('div');
-    imgWrapper.className = "be-image-wrapper";
+    const wrapper = document.createElement('div');
+    wrapper.className = 'be-image-wrapper';
 
     const img = document.createElement('img');
     img.src = this.data.url;
@@ -169,21 +156,23 @@ export class ImageBlock extends EditorBlock {
     const caption = document.createElement('figcaption');
     caption.contentEditable = 'true';
     caption.className = 'be-editable be-image-caption';
+    caption.spellcheck = false;
     caption.dataset.placeholder = 'Viết chú thích ảnh...';
     caption.dataset.beEditable = '';
-    caption.spellcheck = false;
     caption.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.caption } });
 
-    imgWrapper.appendChild(img);
-    this.dom.appendChild(imgWrapper);
+    this.#captionEl = caption;
+
+    wrapper.appendChild(img);
+    this.dom.appendChild(wrapper);
     this.dom.appendChild(caption);
 
     caption.addEventListener('input', () => {
-      this.data.caption = caption.innerHTML.trim();
+      this.bus?.dispatch('block:input', { blockId: this.id });
     });
 
     caption.addEventListener('blur', () => {
-      if (this.bus) this.bus.dispatch('block:updated', { block: this });
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     caption.addEventListener('paste', (e) => {
@@ -197,24 +186,51 @@ export class ImageBlock extends EditorBlock {
     });
   }
 
+  /**
+   * Override: Image có caption là rich text và các field media khác.
+   * @param {HTMLElement|null} _editableEl — không dùng, tự quản lý #captionEl
+   * @returns {object}
+   */
+  serializeData(_editableEl) {
+    const captionHtml = this.#captionEl?.innerHTML?.trim() ?? '';
+
+    return {
+      mediaId: this.data.mediaId,
+      url: this.data.url,
+      alt: this.data.alt,
+      caption: captionHtml
+        ? BlockSerializer.tokensToSegments(RichTextParser.parse(captionHtml))
+        : [],
+      align: this.data.align,
+      width: this.data.width,
+    };
+  }
+
+  getStats() {
+    return { seconds: 12 };
+  }
+
   renderInspectorControls() {
     const wrap = document.createElement('div');
-    wrap.className = "field-group";
+    wrap.className = 'field-group';
 
     wrap.innerHTML = `
       <div class="field">
         <label class="field__label">Văn bản thay thế (Alt Text)</label>
-        <textarea class="field__input be-alt-input" rows="3" placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.alt)}</textarea>
+        <textarea class="field__input be-alt-input" rows="3"
+                  placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.alt)}</textarea>
       </div>
-
       <fieldset class="field__set">
         <legend class="field__label">Kích thước ảnh</legend>
-        <div class="radio-group grid grid-cols-2 gap-2" data-radio-name="image_size" data-radio-default-value="100%">
-          ${[...Array.from({ length: 4 }, (_, i) => i + 1)].map(l => `
+        <div class="radio-group grid grid-cols-2 gap-2"
+             data-radio-name="image_size"
+             data-radio-default-value="${this.data.width}">
+          ${[25, 50, 75, 100].map(pct => `
             <label class="field__label">
               <div class="field" data-orientation="horizontal">
-                <button id="size-${l * 25}" class="radio-group__item" type="button" role="radio" value="${l * 25}%"></button>
-                <div class="field__title">${l * 25}%</div>
+                <button id="size-${pct}" class="radio-group__item"
+                        type="button" role="radio" value="${pct}%"></button>
+                <div class="field__title">${pct}%</div>
               </div>
             </label>
           `).join('')}
@@ -227,23 +243,15 @@ export class ImageBlock extends EditorBlock {
 
     radioGroup.addEventListener('radio:change', (e) => {
       this.data.width = e.detail.value;
-      if (this.bus) this.bus.dispatch('block:updated', { block: this });
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     const altInput = wrap.querySelector('.be-alt-input');
-    altInput.addEventListener('input', () => {
-      this.data.alt = altInput.value;
-      if (this.bus) this.bus.dispatch('block:updated', { block: this });
-    });
-
+    altInput.addEventListener('input', () => { this.data.alt = altInput.value; });
     altInput.addEventListener('blur', () => {
-      if (this.bus) this.bus.dispatch('block:updated', { block: this });
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     return wrap;
-  }
-
-  getStats() {
-    return { seconds: 12 };
   }
 }

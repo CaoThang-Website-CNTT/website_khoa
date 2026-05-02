@@ -1,11 +1,11 @@
 import { registry as BLOCK_REGISTRY } from './block_registry.js';
-import { BlockSerializer } from './block_serializer.js';
+import { BlockSerializer } from './block_serializer_v2.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
 import { ContextStore } from './context/context_store.js';
 import { InlineToolbar } from './toolbar/inline_toolbar.js';
 import { BlockToolbar } from './toolbar/block_toolbar.js';
-import { InlineFormatter } from './inline_formatter.js';
+import { InlineFormatter } from './inline_formatter_v2.js';
 import { EditorUI } from './editor_ui.js';
 
 /** Đảm nhận việc truyền tin */
@@ -69,6 +69,10 @@ export class EditorManager {
   #activeBlockId;
   #isEmpty;
   #isDirty;
+  #inputRecordTimeout = null;
+  #lastInputSnapshot = null;
+  #lastInputBlockId = null;
+  #lastRecordTime = 0;
 
   constructor(initialMetaData = {}) {
     this.#bus = new EditorEventBus();
@@ -109,7 +113,7 @@ export class EditorManager {
     this.#bus.subscribe('block:selected', (block) => this.#onBlockSelected(block));
     this.#bus.subscribe('block:add_request', (block) => this.#onBlockAddRequested(block));
     this.#bus.subscribe('block:added', (block) => this.#onBlockAdded(block));
-    this.#bus.subscribe('block:updated', (block) => this.#onBlockUpdated(block));
+    this.#bus.subscribe('block:updated', (payload) => this.#onBlockUpdated(payload));
     this.#bus.subscribe('block:remove_request', (block) => this.#onBlockRemoveRequested(block));
     this.#bus.subscribe('block:removed', (payload) => this.#onBlockRemoved(payload));
 
@@ -119,8 +123,9 @@ export class EditorManager {
     this.#bus.subscribe('inline:link_request', (p) => this.#onInlineLinkRequest(p));
     this.#bus.subscribe('inline:unlink_request', (p) => this.#onInlineUnlinkRequest(p));
 
-    this.#bus.subscribe('context:undo_applied', (p) => this.#onUndoApplied(p));
-    this.#bus.subscribe('context:redo_applied', (p) => this.#onRedoApplied(p));
+    // this.#bus.subscribe('context:undo_applied', (p) => this.#onUndoApplied(p));
+    // this.#bus.subscribe('context:redo_applied', (p) => this.#onRedoApplied(p));
+    this.#bus.subscribe('block:input', (p) => this.#onBlockInput(p));
 
     this.#bus.subscribe('block:added', () => this.#recomputeReadTime());
     this.#bus.subscribe('block:updated', () => this.#recomputeReadTime());
@@ -201,9 +206,22 @@ export class EditorManager {
   }
 
   #onBlockAddRequested({ type, data = {}, afterId = null }) {
-    // Nếu không truyền afterId, tự động lấy block đang active làm mốc
-    const targetId = afterId || this.#activeBlockId;
-    const newBlock = this.#canvas.addBlock(type, data, targetId);
+    // this.#commitPendingInput();
+    // this.#contextStore.beginRecord();
+    const newBlock = this.#canvas.addBlock(type, data, afterId);
+
+    /* 
+    Tạm thời gỡ bỏ undo/redo
+    const index = this.#canvas.getBlocks().findIndex(b => b.id === newBlock.id);
+    this.#contextStore.recordOperation({
+      blockId: newBlock.id,
+      attribute: 'lifecycle',
+      prev: null,
+      next: { type: newBlock.type, data: newBlock.data, index },
+      label: `Thêm block ${type}`,
+      action: 'LIFECYCLE'
+    });
+    */
 
     setTimeout(() => {
       if (newBlock && typeof newBlock.focus === 'function') {
@@ -213,6 +231,11 @@ export class EditorManager {
   }
 
   #onBlockSelected({ blockId }) {
+    // Stage 3: Chốt input đang gõ nếu có khi chuyển block
+    if (this.#lastInputBlockId && this.#lastInputBlockId !== blockId) {
+      this.#commitPendingInput();
+    }
+
     this.#activeBlockId = blockId;
     const block = this.#canvas.getBlock(blockId);
     console.log(`[EditorManager][block:selected] Block: `, block);
@@ -245,20 +268,27 @@ export class EditorManager {
     this.#bus.dispatch("block:selected", { blockId: block.id })
   }
 
-  #onBlockUpdated({ block }) {
+  #onBlockUpdated({ block, silent }) {
+    if (silent) return; // Tuyệt đối không replace DOM nếu là silent update
+
     console.log(`[EditorManager][block:updated]`, block);
     const oldCard = document.querySelector(`[data-be-block-id="${block.id}"]`);
     if (!oldCard) return;
 
     const newCard = new EditorBlockWrapper(this.#bus, block);
-
     oldCard.replaceWith(newCard);
   }
 
   #onBlockRemoveRequested({ blockId }) {
-    console.log(`[EditorManager][block:remove_request]`, blockId);
+    // this.#commitPendingInput();
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
 
-    this.#canvas.removeBlock(blockId);
+    // this.#contextStore.beginRecord();
+    const index = this.#canvas.getBlocks().findIndex(b => b.id === blockId);
+
+    // Thực thi vật lý luôn, không thông qua record
+    this.#performPhysicalAction('LIFECYCLE', blockId, 'lifecycle', null, null, false, `Xóa block ${block.type}`);
   }
 
   #onBlockRemoved({ blockId, index }) {
@@ -336,30 +366,26 @@ export class EditorManager {
    * @param {{ command: string, value: string|null, blockId: string, range: Range }} payload
    */
   #onInlineFormatRequest({ command, blockId, range }) {
-    const editable = this.#getEditableEl(blockId);
-    if (!editable) return;
+    if (range.collapsed) return;
 
-    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const block = this.#canvas.getBlock(blockId);
+    const editable = this.#getEditableEl(blockId);
+    if (!block || !editable) return;
+
+    const prevContent = block._cloneData().content;
     const offsets = InlineFormatter.getRangeOffsets(range, editable);
     if (!offsets) return;
 
-    const newTokens = InlineFormatter.applyMark(
-      tokens,
-      offsets.start,
-      offsets.end,
-      command  // 'bold' | 'italic' | 'underline'
-    );
+    this.#commitPendingInput();
+    this.#contextStore.beginRecord();
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, command);
 
-    editable.innerHTML = InlineFormatter.serialize(newTokens);
+    const nextContent = BlockSerializer.tokensToSegments(newTokens);
+    this.#recordAndApply(blockId, 'content', prevContent, nextContent, `Format: ${command}`);
 
-    // Restore selection sau khi innerHTML thay đổi
-    this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
-
-    // Tính lại marks và thông báo toolbar
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
-
-    // Đánh dấu dirty
     this.#isDirty = true;
   }
 
@@ -370,23 +396,21 @@ export class EditorManager {
    * @param {{ href: string, blockId: string, range: Range }} payload
    */
   #onInlineLinkRequest({ href, blockId, range }) {
+    const block = this.#canvas.getBlock(blockId);
     const editable = this.#getEditableEl(blockId);
-    if (!editable) return;
+    if (!block || !editable) return;
 
-    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const prevContent = block._cloneData().content;
     const offsets = InlineFormatter.getRangeOffsets(range, editable);
     if (!offsets) return;
 
-    const newTokens = InlineFormatter.applyMark(
-      tokens,
-      offsets.start,
-      offsets.end,
-      'link',
-      href
-    );
+    this.#commitPendingInput();
+    this.#contextStore.beginRecord();
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, 'link', href);
 
-    editable.innerHTML = InlineFormatter.serialize(newTokens);
-    this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+    const nextContent = BlockSerializer.tokensToSegments(newTokens);
+    this.#recordAndApply(blockId, 'content', prevContent, nextContent, 'Add Link');
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
@@ -400,27 +424,111 @@ export class EditorManager {
    * @param {{ blockId: string, range: Range }} payload
    */
   #onInlineUnlinkRequest({ blockId, range }) {
+    const block = this.#canvas.getBlock(blockId);
     const editable = this.#getEditableEl(blockId);
-    if (!editable) return;
+    if (!block || !editable) return;
 
-    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const prevContent = block._cloneData().content;
     const offsets = InlineFormatter.getRangeOffsets(range, editable);
     if (!offsets) return;
 
+    this.#commitPendingInput();
+    this.#contextStore.beginRecord();
+    const tokens = InlineFormatter.parse(editable.innerHTML);
     const newTokens = InlineFormatter.removeLink(tokens, offsets.start, offsets.end);
 
-    editable.innerHTML = InlineFormatter.serialize(newTokens);
-    this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+    const nextContent = BlockSerializer.tokensToSegments(newTokens);
+    this.#recordAndApply(blockId, 'content', prevContent, nextContent, 'Unlink');
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
     this.#isDirty = true;
   }
 
-  #onUndoApplied() {
+  #onUndoApplied({ blockId, action, attr, value, cursor, label }) {
+    this.#performPhysicalAction(action || 'UPDATE', blockId, attr, value, cursor, true, label);
   }
 
-  #onRedoApplied() {
+  #onRedoApplied({ blockId, action, attr, value, cursor, label }) {
+    this.#performPhysicalAction(action || 'UPDATE', blockId, attr, value, cursor, true, label);
+  }
+
+  /**
+   * Unified Action Performer - Phễu trung tâm điều khiển DOM & Canvas
+   */
+  #performPhysicalAction(action, blockId, attr, value, cursor = null, isUndoRedo = false, label = '') {
+    if (action === 'LIFECYCLE') {
+      if (value === null) {
+        this.#canvas.removeBlock(blockId);
+      } else {
+        const blocks = this.#canvas.getBlocks();
+        const afterId = value.index === 0 ? 'START' : (blocks[value.index - 1]?.id || null);
+        this.#canvas.addBlock(value.type, value.data, afterId, blockId);
+      }
+    } else {
+      const block = this.#canvas.getBlock(blockId);
+      if (!block) return;
+
+      // Cập nhật thẻ data trong Canvas (Luôn SILENT cho content để tránh re-render card)
+      const isSilent = (attr === 'content') ? true : !isUndoRedo;
+      this.#canvas.updateBlock(blockId, { [attr]: value }, { silent: isSilent });
+
+      // CHỈ CẬP NHẬT DOM NẾU:
+      // 1. Đó là Undo/Redo (cần khôi phục hình ảnh cũ)
+      // 2. Đó là lệnh từ Toolbar/Format (cần áp dụng style mới)
+      // KHÔNG CẬP NHẬT NẾU: Đang gõ văn bản (Typing) - vì DOM đã có sẵn nội dung rồi.
+      if (attr === 'content' && (isUndoRedo || label !== 'Typing')) {
+        const editable = this.#getEditableEl(blockId);
+        if (editable) {
+          // Serialize tokens -> HTML một cách chuẩn mực
+          const tokens = Array.isArray(value) ? BlockSerializer.segmentsToTokens(value) : value;
+          editable.innerHTML = InlineFormatter.serialize(tokens);
+        }
+      }
+    }
+
+    // Khôi phục con trỏ nếu có thông tin (chủ yếu dùng cho Undo/Redo hoặc Format)
+    if (cursor && cursor.charOffset !== null) {
+      setTimeout(() => {
+        const editable = this.#getEditableEl(blockId);
+        if (editable) {
+          editable.focus();
+          const off = cursor.charOffset;
+          this.#restoreSelectionByOffset(editable, off, off);
+        }
+      }, isUndoRedo ? 10 : 0);
+    }
+  }
+
+  /**
+   * Thực thi và ghi lại một Operation
+   */
+  #recordAndApply(blockId, attr, prev, next, label, action = 'UPDATE') {
+    // const op = { blockId, attribute: attr, prev, next, label, action };
+
+    // 1. Ghi vào store (Tạm thời vô hiệu hóa)
+    // this.#contextStore.recordOperation(op);
+
+    // 2. Thực thi vật lý
+    this.#performPhysicalAction(action, blockId, attr, next, null, false, label);
+  }
+
+  #onBlockInput({ blockId }) {
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
+
+    // Chỉ cập nhật model tĩnh để lưu trữ dữ liệu mới nhất
+    const editable = this.#getEditableEl(blockId);
+    if (editable) {
+       this.#canvas.updateBlock(blockId, { content: block.serializeData(editable).content }, { silent: true });
+    }
+  }
+
+  /**
+   * Chốt (Commit) mọi thay đổi (Đã vô hiệu hóa cùng với Undo/Redo)
+   */
+  #commitPendingInput() {
+    // Logic gỡ bỏ tạm thời
   }
 
   #recomputeReadTime() {
@@ -560,19 +668,22 @@ class EditorCanvas {
   addBlock(
     type,
     data = {},
-    afterId = null
+    afterId = null,
+    forceId = null // Thêm forceId để phục vụ Undo/Redo khôi phục đúng ID cũ
   ) {
     const blueprint = BLOCK_REGISTRY.get(type);
     if (!blueprint) throw new Error(`[EditorCanvas] Không tồn tại block type: "${type}"`);
     const { schema, blockClass } = blueprint;
 
-    /** @var {EditorBlock} */
     const block = new blockClass({
+      id: forceId, // Nếu có forceId (hồi sinh block), dùng nó
       data
     }, schema, this.#bus);
 
     if (afterId === null) {
       this.#blocks = [...this.#blocks, block];
+    } else if (afterId === 'START') {
+      this.#blocks = [block, ...this.#blocks];
     } else {
       const idx = this.#blocks.findIndex(b => b.id === afterId);
       const insertAt = idx === -1 ? this.#blocks.length : idx + 1;
@@ -596,7 +707,7 @@ class EditorCanvas {
    * @param {string} id 
    * @param {object} payload 
    */
-  updateBlock(id, payload) {
+  updateBlock(id, payload, options = {}) {
     const idx = this.#blocks.findIndex(b => b.id === id);
     if (idx === -1) return null;
 
@@ -607,6 +718,7 @@ class EditorCanvas {
     );
     if (!isChanged) return block;
 
+    const prevData = { ...block.data };
     block.data = {
       ...block.data,
       ...payload
@@ -614,7 +726,8 @@ class EditorCanvas {
 
     this.#bus.dispatch("block:updated", {
       block,
-      prevData: { ...block.data }
+      prevData,
+      silent: options.silent || false
     });
   }
 

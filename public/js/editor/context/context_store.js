@@ -1,6 +1,5 @@
 import { ContextAnalyzer } from './context_analyzer.js';
 import { CapabilityResolver } from './capability_resolver.js';
-import { SnapshotRing } from './snapshot_ring.js';
 
 export class ContextStore {
   /** @type {EditorEventBus} */
@@ -15,6 +14,7 @@ export class ContextStore {
 
   /** @type {CursorState} */
   #cursor = {
+    activeMarks: new Set(), // Trạng thái thực tế tại caret
     blockId: null,
     blockType: null,
     charOffset: null,
@@ -50,12 +50,15 @@ export class ContextStore {
    */
   #capabilities = new Set();
 
-  /** @type {SnapshotRing<Delta>} */
-  #history;
+  /** @type {object[]} */
+  #undoStack = [];
+  /** @type {object[]} */
+  #redoStack = [];
+  /** @type {number} */
+  #limit = 100;
 
   /**
    * Lưu cursor state ngay trước khi record delta.
-   * Được set bởi #capturePreCursor() khi Manager biết action sắp xảy ra.
    * @type {CursorState|null}
    */
   #pendingPreCursor = null;
@@ -68,14 +71,21 @@ export class ContextStore {
   #schemaRegistry;
 
   constructor(bus, canvas, options = {}) {
-    const { maxSnapshots = 100, schemaRegistry = new Map() } = options;
+    const { schemaRegistry = new Map() } = options;
 
     this.#bus = bus;
     this.#canvas = canvas;
-    this.#history = new SnapshotRing(maxSnapshots);
     this.#schemaRegistry = schemaRegistry;
 
     this.mount();
+  }
+
+  getUndoStack() {
+    return this.#undoStack;
+  }
+
+  getRedoStack() {
+    return this.#redoStack;
   }
 
   mount() {
@@ -96,7 +106,7 @@ export class ContextStore {
       if (this.#activeBlockId === blockId) this.#resetToNone();
     });
 
-    // Keyboard: undo/redo — lắng nghe ở document level
+    /* Tạm thời vô hiệu hóa phím tắt Undo/Redo
     document.addEventListener('keydown', (e) => {
       const ctrl = e.ctrlKey || e.metaKey;
       if (!ctrl) return;
@@ -109,6 +119,7 @@ export class ContextStore {
         this.redo();
       }
     }, { signal, capture: true });
+    */
 
     // selectionchange để cập nhật cursor state real-time (không debounce ở đây,
     // vì chỉ update state — render/dispatch vẫn debounce ở InlineToolbar)
@@ -123,7 +134,8 @@ export class ContextStore {
    */
   destroy() {
     this.#ac.abort();
-    this.#history.clear();
+    this.#undoStack = [];
+    this.#redoStack = [];
     this.#selection.range = null;
     this.#pendingPreCursor = null;
   }
@@ -150,84 +162,67 @@ export class ContextStore {
   get capabilities() { return new Set(this.#capabilities); }
 
   /** @returns {boolean} */
-  get canUndo() { return this.#history.canUndo; }
+  get canUndo() { return this.#undoStack.length > 0; }
 
   /** @returns {boolean} */
-  get canRedo() { return this.#history.canRedo; }
+  get canRedo() { return this.#redoStack.length > 0; }
 
-  /** @returns {number} — số delta đang lưu trong ring */
-  get historySize() { return this.#history.size; }
+  /** @returns {number} */
+  get historySize() { return this.#undoStack.length; }
 
   beginRecord() {
     this.#pendingPreCursor = { ...this.#cursor };
   }
 
   /**
-   * Ghi một delta vào history ring.
-   *
-   * Delta chỉ lưu sự thay đổi (prev/next), không lưu toàn bộ document.
-   * Cursor state được đính kèm để undo/redo có thể restore vị trí con trỏ.
-   *
-   * @param {object}  opts
-   * @param {string}  opts.blockId
-   * @param {string}  opts.attribute   — tên field (vd: 'content', 'level', 'src')
-   * @param {*}       opts.prev        — giá trị trước
-   * @param {*}       opts.next        — giá trị sau
-   * @param {string}  [opts.label]     — mô tả ngắn để debug
+   * Notion-style Operation Recorder
    */
-  recordDelta({ blockId, attribute, prev, next, label = '' }) {
-    // Skip nếu không có thay đổi thực sự
-    if (prev === next) return;
-
-    /** @type {Delta} */
-    const delta = {
-      blockId,
-      attribute,
-      prev,
-      next,
+  recordOperation(op) {
+    const operation = {
+      ...op,
       cursorBefore: this.#pendingPreCursor ?? { ...this.#cursor },
       cursorAfter: { ...this.#cursor },
-      timestamp: Date.now(),
-      label,
+      timestamp: Date.now()
     };
 
-    this.#history.push(delta);
+    this.#undoStack.push(operation);
+    if (this.#undoStack.length > this.#limit) this.#undoStack.shift();
+
+    this.#redoStack = []; // Quan trọng: Clear redo khi có hành động mới
     this.#pendingPreCursor = null;
 
-    // Notify để UI cập nhật undo/redo button state
     this.#emitHistoryState();
   }
 
-  /**
-   * Undo: lấy delta gần nhất, emit để Manager apply prev value.
-   *
-   */
   undo() {
-    const delta = this.#history.stepBack();
-    if (!delta) return;
+    if (this.#undoStack.length === 0) return;
+    const op = this.#undoStack.pop();
+    this.#redoStack.push(op);
 
     this.#bus.dispatch('context:undo_applied', {
-      blockId: delta.blockId,
-      attribute: delta.attribute,
-      value: delta.prev,          // apply giá trị cũ
-      restoreCursor: delta.cursorBefore,
+      blockId: op.blockId,
+      action: op.action,
+      attr: op.attribute,
+      value: op.prev,
+      cursor: op.cursorBefore,
+      label: op.label
     });
 
     this.#emitHistoryState();
   }
 
-  /**
-   * Redo: tiến đến delta kế tiếp, emit để Manager apply next value.
-   */
   redo() {
-    const delta = this.#history.stepForward();
-    if (!delta) return;
+    if (this.#redoStack.length === 0) return;
+    const op = this.#redoStack.pop();
+    this.#undoStack.push(op);
 
     this.#bus.dispatch('context:redo_applied', {
-      blockId: delta.blockId,
-      attribute: delta.attribute,
-      value: delta.next,          // apply lại giá trị mới
-      restoreCursor: delta.cursorAfter,
+      blockId: op.blockId,
+      action: op.action,
+      attr: op.attribute,
+      value: op.next,
+      cursor: op.cursorAfter,
+      label: op.label
     });
 
     this.#emitHistoryState();
@@ -264,7 +259,8 @@ export class ContextStore {
    * Xóa toàn bộ history (vd: sau khi save thành công).
    */
   clearHistory() {
-    this.#history.clear();
+    this.#undoStack = [];
+    this.#redoStack = [];
     this.#emitHistoryState();
   }
 
@@ -283,12 +279,14 @@ export class ContextStore {
 
     if (raw.type === 'cursor') {
       this.#cursor = {
+        ...this.#cursor,
         blockId: raw.blockId,
         blockType: raw.blockType,
         charOffset: raw.cursorOffset,
         line: raw.lineHint,
+        activeMarks: raw.activeMarks,
       };
-      // Cursor đang trong block → cập nhật activeBlockId
+
       if (raw.blockId) this.#activeBlockId = raw.blockId;
       this.#clearSelection();
 
@@ -319,7 +317,8 @@ export class ContextStore {
       if (raw.blockId) this.#activeBlockId = raw.blockId;
       this.#clearSelection();
 
-    } else {
+    }
+    else {
       // none
       this.#clearSelection();
     }
@@ -440,9 +439,9 @@ export class ContextStore {
 
   #emitHistoryState() {
     this.#bus.dispatch('context:history_changed', {
-      canUndo: this.#history.canUndo,
-      canRedo: this.#history.canRedo,
-      historySize: this.#history.size,
+      canUndo: this.canUndo,
+      canRedo: this.canRedo,
+      historySize: this.historySize,
     });
   }
 
@@ -462,8 +461,8 @@ export class ContextStore {
       }),
       activeBlockId: this.#activeBlockId,
       capabilities: new Set(this.#capabilities),
-      canUndo: this.#history.canUndo,
-      canRedo: this.#history.canRedo,
+      canUndo: this.canUndo,
+      canRedo: this.canRedo,
     });
   }
 }

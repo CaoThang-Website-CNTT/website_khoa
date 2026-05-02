@@ -1,3 +1,5 @@
+import { RichTextParser } from '../rich_text_parser.js';
+
 export class ContextAnalyzer {
   /**
    * BASE capabilities áp dụng theo loại ngữ cảnh, không phụ thuộc block type.
@@ -47,6 +49,7 @@ export class ContextAnalyzer {
       range: isTextSelection ? range.cloneRange() : null,
       // Cursor position chỉ có ý nghĩa khi type === 'cursor'
       cursorOffset: isCollapsed ? this.#getCursorOffset(range, blockEl) : null,
+      activeMarks: isCollapsed ? this.#getMarksAtCaret(range) : new Set(),
       lineHint: isCollapsed ? this.#estimateLine(range, blockEl) : null,
     };
   }
@@ -111,6 +114,17 @@ export class ContextAnalyzer {
     }
 
     return walk(editable);
+  }
+
+  static #getMarksAtCaret(range) {
+    const marks = new Set();
+    let node = range.startContainer.nodeType === Node.TEXT_NODE ? range.startContainer.parentElement : range.startContainer;
+    while (node && !node.hasAttribute?.('data-be-block-id') && node.tagName !== 'DIV') {
+      const m = RichTextParser.getMarkByTag(node.tagName);
+      if (m) marks.add(m);
+      node = node.parentElement;
+    }
+    return marks;
   }
 
   /**

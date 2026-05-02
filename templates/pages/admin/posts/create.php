@@ -299,7 +299,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field" data-orientation="horizontal">
               <div class="field__content">
                 <span class="field__label">Hiển thị Thời gian đọc</span>
-                <span class="field__description">Tự động tính dựa trên nội dung</span>
+                <p class="field__description">Tự động tính dựa trên nội dung</p>
               </div>
               <button class="switch" type="button" role="switch" name="show_read_time"
                 data-be-meta-key="settings.show_read_time">
@@ -412,7 +412,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 
       document.querySelector('#be-editor-data').value = JSON.stringify(payload);
 
-      form.submit();
+      //form.submit();
     });
   });
 </script>

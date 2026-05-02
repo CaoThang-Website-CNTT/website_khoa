@@ -1,5 +1,5 @@
 import { EditorBlock } from './editor_block.js';
-import { BlockSerializer } from '../block_serializer.js';
+import { BlockSerializer } from '../block_serializer_v2.js';
 
 export const ParagraphSchema = {
   version: 1,
@@ -9,35 +9,36 @@ export const ParagraphSchema = {
   group: 'paragraph',
   groupLabel: 'Văn Bản',
   attributes: {
-    content: { default: '' },
-    align: { default: 'left' }
+    content: { default: [] }, // RichSegment[]
+    align: { default: 'left' },
   },
-  supports: {
-    typography: true,
-  }
+  supports: { typography: true },
 };
 
 export class ParagraphBlock extends EditorBlock {
+
   render() {
     const el = document.createElement('p');
     el.className = 'be-paragraph be-editable';
     el.contentEditable = 'true';
+    el.spellcheck = false;
     el.dataset.placeholder = 'Nhập nội dung đoạn văn...';
     el.dataset.beEditable = '';
+
     el.innerHTML = BlockSerializer.toHTML({ data: { content: this.data.content } });
-    el.spellcheck = false;
 
     this.dom = el;
 
     el.addEventListener('paste', (e) => {
       e.preventDefault();
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-
       this.paste(this.esc(text));
     });
 
+    // input: không lưu HTML string — chỉ sync khi serialize (serializeData đọc từ DOM)
+    // Giữ lại để các listener khác (word count, dirty flag) có thể subscribe nếu cần
     el.addEventListener('input', () => {
-      this.data.content = el.innerHTML.trim();
+      this.bus?.dispatch('block:input', { blockId: this.id });
     });
 
     return el;
@@ -45,14 +46,13 @@ export class ParagraphBlock extends EditorBlock {
 
   renderInspectorControls() {
     const wrap = document.createElement('div');
-    wrap.className = "field-group";
-
-    wrap.innerHTML = ``;
+    wrap.className = 'field-group';
     return wrap;
   }
 
   focus(bus, position = 'end') {
     if (!this.dom) return;
+
     this.dom.focus();
 
     const range = document.createRange();

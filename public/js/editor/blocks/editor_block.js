@@ -1,111 +1,158 @@
+import { BlockSerializer } from '../block_serializer_v2.js';
+import { RichTextParser } from '../rich_text_parser.js';
+
 export class EditorBlock {
   /**
-   * @param {Object} blockData - Dữ liệu thực tế lưu trong Database (nếu có)
-   * @param {Object} schema - File config JSON của block này
+   * @param {object} blockData  — dữ liệu từ DB
+   * @param {object} schema     — config của block
+   * @param {object} [bus]      — EditorEventBus
    */
   constructor(blockData = {}, schema, bus = null) {
     this.id = blockData.id || crypto.randomUUID();
-
     this.type = schema.type;
-
     this.data = this.#parseDataWithSchema(blockData.data || {}, schema.attributes);
-
     this.schema = schema;
 
-    /**@type {EditorEventBus} */
+    /** @type {import('./editor.js').EditorEventBus} */
     this.bus = bus;
 
-    /** @type {HTMLElement} */
+    /** @type {HTMLElement|null} */
     this.dom = null;
   }
 
+  // ─── Schema ───────────────────────────────────────────────────────────────
+
   #parseDataWithSchema(currentData, attributesSchema) {
-    const parsedData = {};
+    const parsed = {};
     for (const [key, config] of Object.entries(attributesSchema)) {
-      parsedData[key] = currentData[key] !== undefined ? currentData[key] : config.default;
+      parsed[key] = currentData[key] !== undefined ? currentData[key] : config.default;
     }
-    return parsedData;
+    return parsed;
   }
 
-  /**
- * Render ra canvas
- * @abstract
- * 
- * @param {{onUpdate:Function}} param1 
- */
-  render(
-    {
-      onUpdate,
-    } = null
-  ) {
-    throw new Error("Block phải triển khai phương thức 'render()'.");
-  }
+  // ─── Abstract — phải override ─────────────────────────────────────────────
 
   /**
-   * Render ra cửa sổ settings
+   * Render block ra canvas.
    * @abstract
-   * 
-   * @param {{onUpdate:Function}} param1 
+   * @returns {HTMLElement}
    */
-  renderInspectorControls(
-    data,
-    {
-      onUpdate,
-    } = null
-  ) {
-    throw new Error("Block phải triển khai phương thức 'renderInspectorControls()'.");
+  render() {
+    throw new Error(`${this.type} phải implement render().`);
   }
 
   /**
-   * Escape string tránh XSS
-   * @param {string} s 
-   * @returns {string} String đã được escaped
+   * Render panel settings bên phải.
+   * @abstract
+   * @returns {HTMLElement}
    */
-  esc(s) {
-    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  renderInspectorControls() {
+    throw new Error(`${this.type} phải implement renderInspectorControls().`);
   }
 
   /**
-   * Focus block
-   * @param {'start' | 'end'} position 
+   * Đóng gói data để gửi server — mỗi block tự biết cách đọc từ DOM.
+   * Base class xử lý trường hợp có field `content` đọc từ editableEl.
+   * Block phức tạp (List, Table) override để đọc từ this.data trực tiếp.
+   *
+   * @param {HTMLElement|null} editableEl
+   * @returns {object}
    */
-  focus(bus, position = 'end') {
-    if (!this.dom) return;
+  serializeData(editableEl) {
+    const data = this._cloneData();
 
-    if (this.dom) {
-      this.dom.focus();
-
-      const range = document.createRange();
-      const selection = window.getSelection();
-      range.selectNodeContents(this.dom);
-      range.collapse(position === 'start');
-      selection.removeAllRanges();
-      selection.addRange(range);
+    if ('content' in data) {
+      const html = editableEl?.innerHTML?.trim() ?? '';
+      data.content = html
+        ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
+        : [];
     }
 
-    bus.dispatch('block:selected', { blockId: this.id });
+    return data;
   }
 
-  paste(text) {
-    const sel = window.getSelection();
-    if (!sel.rangeCount) return;
-    const range = sel.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(text));
-    sel.collapseToEnd();
-  }
+  // ─── Stats (read time) ────────────────────────────────────────────────────
 
+  /**
+   * Trả về số giây đọc ước tính của block.
+   * Text block dùng WPM, block cấu trúc override với weight riêng.
+   * @returns {{ seconds: number }}
+   */
   getStats() {
-    // Text-based blocks: đếm words → quy ra seconds
     const text = this._extractText(this.data.content);
     const words = text.trim().split(/\s+/).filter(Boolean).length;
-    return { seconds: Math.round((words / 200) * 60) };
+    return { seconds: Math.round((words / 200) * 60) }; // 200 WPM
   }
 
+  // ─── Rich text helpers ────────────────────────────────────────────────────
+
+  /**
+   * Extract plain text từ content — hỗ trợ cả string (legacy) lẫn RichSegment[].
+   * @param {string|Array<{text:string}>|null|undefined} content
+   * @returns {string}
+   */
   _extractText(content) {
     if (!content) return '';
     if (typeof content === 'string') return content;
     if (Array.isArray(content)) return content.map(s => s.text ?? '').join('');
     return '';
+  }
+
+  /**
+   * Deep clone this.data — tránh mutate khi serialize.
+   * @returns {object}
+   */
+  _cloneData() {
+    try { return JSON.parse(JSON.stringify(this.data)); } catch { return { ...this.data }; }
+  }
+
+  // ─── DOM helpers ──────────────────────────────────────────────────────────
+
+  /**
+   * Escape string tránh XSS khi inject vào innerHTML.
+   * @param {string} s
+   * @returns {string}
+   */
+  esc(s) {
+    return (s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /**
+   * Focus block, đặt caret theo position.
+   * Các block có nhiều editable el (Quote, List, Table) nên override.
+   *
+   * @param {object}          bus
+   * @param {'start'|'end'}   [position='end']
+   */
+  focus(bus, position = 'end') {
+    if (!this.dom) return;
+
+    this.dom.focus();
+
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(this.dom);
+    range.collapse(position === 'start');
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    bus.dispatch('block:selected', { blockId: this.id });
+  }
+
+  /**
+   * Paste plain text tại vị trí caret hiện tại.
+   * @param {string} text
+   */
+  paste(text) {
+    const sel = window.getSelection();
+    if (!sel?.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+    sel.collapseToEnd();
   }
 }

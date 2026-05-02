@@ -177,7 +177,8 @@ body {
   padding: 0.5rem 0.5rem 10rem 0.5rem;
 }
 
-#be-post-settings-panel .field__label {
+#be-post-settings-panel .field__label,
+#be-post-settings-panel .field__description {
   font-size: var(--text-xs);
 }
 
