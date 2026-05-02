@@ -9,7 +9,6 @@ $oldSlug = $old_input['slug'] ?? ($post->slug ?? '');
 $oldStatus = $old_input['status'] ?? ($post->status ?? 'draft');
 
 $current_user = request()->session()->authUser() ?? ['account_id' => null];
-
 ?>
 
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->

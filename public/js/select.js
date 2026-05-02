@@ -127,8 +127,6 @@ class SelectHandler {
       }
     });
 
-    const defaultValue = root.dataset.selectDefaultValue || "";
-
     const instance = {
       id, root, trigger, content, search, empty,
       items, placeholder, isMultiple, isSearchable, isDisabled,
@@ -285,7 +283,7 @@ class SelectHandler {
       : [defaultValue];
 
     values.forEach(v => {
-      const item = instance.items.find(i => i.dataset.selectValue === v);
+      const item = instance.items.find(i => i.dataset.selectValue?.trim() === v);
       if (item && !item.dataset.selectDisabled) {
         instance.selected.add(v);
       }
@@ -293,6 +291,7 @@ class SelectHandler {
 
     this._syncSelection(instance);
     this._renderTriggerState(instance);
+    this._dispatch(instance);
   }
   _bindSearch(instance) {
     instance.search.addEventListener('input', e => {
