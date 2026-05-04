@@ -24,6 +24,13 @@ interface IInternshipBatchStore
   public function update(int $id, array $data): bool;
   public function delete(int $id): bool;
   public function updateStatus(int $id, string $status, array $extraData = []): bool;
+  public function getBatchStudentsWithDetails(int $batchId): array;
+  public function getBatchSupervisorsWithDetails(int $batchId): array;
+  public function removeStudentFromBatch(int $batchId, int $studentId): bool;
+  public function removeSupervisorFromBatch(int $batchId, int $teacherId): bool;
+  public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool;
+  public function searchEligibleStudents(int $batchId, string $query = '', ?int $classroomId = null): array;
+  public function searchEligibleTeachers(int $batchId, string $query = ''): array;
 }
 
 class InternshipBatchStore extends Store implements IInternshipBatchStore
@@ -110,7 +117,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $sql = "SELECT s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id
             FROM students s
             LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
-            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'public')
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published')
             WHERE s.classroom_id = :classroom_id AND b.id IS NULL AND s.status = 'Đang học'
             GROUP BY s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id";
 
@@ -127,7 +134,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $sql = "SELECT s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id, s.phone
             FROM students s
             LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
-            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'public')
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published')
             WHERE s.classroom_id IN ($placeholders) AND b.id IS NULL AND s.status = 'Đang học'
             GROUP BY s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id";
 
@@ -145,7 +152,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
             b.id as batch_id, b.status as batch_status, c.short_name as classroom_name
             FROM students s
             LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
-            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'public')
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published')
             LEFT JOIN classrooms c ON s.classroom_id = c.id AND c.deleted_at IS NULL
             WHERE s.student_id IN ($placeholders)";
 
@@ -301,5 +308,111 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $sql = "UPDATE internship_batches SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE id = :id";
     $stmt = $this->db->prepare($sql);
     return $stmt->execute($params);
+  }
+
+  public function getBatchStudentsWithDetails(int $batchId): array
+  {
+    $sql = "SELECT bs.id as batch_student_id, bs.student_id, s.full_name, s.student_id as student_code, 
+                   c.short_name as classroom_name, bs.status, bs.note
+            FROM internship_batch_students bs
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            WHERE bs.batch_id = :batch_id
+            ORDER BY s.full_name ASC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getBatchSupervisorsWithDetails(int $batchId): array
+  {
+    $sql = "SELECT bs.id as batch_supervisor_id, bs.teacher_id, t.full_name, t.degree, 
+                   d.short_name as department_name, bs.max_students,
+                   (SELECT COUNT(*) FROM internship_assignments a 
+                    JOIN internship_batch_students s ON a.batch_student_id = s.id 
+                    WHERE s.batch_id = :batch_id_sub AND a.teacher_id = bs.teacher_id) as assigned_count
+            FROM internship_batch_supervisors bs
+            JOIN teachers t ON bs.teacher_id = t.id
+            LEFT JOIN departments d ON t.department_id = d.id
+            WHERE bs.batch_id = :batch_id AND bs.is_active = 1
+            ORDER BY t.full_name ASC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId, ':batch_id_sub' => $batchId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function removeStudentFromBatch(int $batchId, int $studentId): bool
+  {
+    $sql = "DELETE FROM internship_batch_students WHERE batch_id = :batch_id AND student_id = :student_id";
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute([':batch_id' => $batchId, ':student_id' => $studentId]);
+  }
+
+  public function removeSupervisorFromBatch(int $batchId, int $teacherId): bool
+  {
+    $sql = "DELETE FROM internship_batch_supervisors WHERE batch_id = :batch_id AND teacher_id = :teacher_id";
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+  }
+
+  public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool
+  {
+    $sql = "UPDATE internship_batch_supervisors SET max_students = :max_students 
+            WHERE batch_id = :batch_id AND teacher_id = :teacher_id";
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute([
+      ':batch_id' => $batchId,
+      ':teacher_id' => $teacherId,
+      ':max_students' => $newQuota
+    ]);
+  }
+
+  public function searchEligibleStudents(int $batchId, string $query = '', ?int $classroomId = null): array
+  {
+    $params = [':batch_id' => $batchId];
+    $where = ["s.id NOT IN (SELECT student_id FROM internship_batch_students WHERE batch_id = :batch_id)"];
+    $where[] = "s.status = 'Đang học'";
+
+    if ($query) {
+      $where[] = "(s.full_name LIKE :query OR s.student_id LIKE :query)";
+      $params[':query'] = "%$query%";
+    }
+
+    if ($classroomId) {
+      $where[] = "s.classroom_id = :classroom_id";
+      $params[':classroom_id'] = $classroomId;
+    }
+
+    $sql = "SELECT s.id, s.student_id as student_code, s.full_name, c.short_name as classroom_name
+            FROM students s
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            WHERE " . implode(' AND ', $where) . "
+            LIMIT 50";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function searchEligibleTeachers(int $batchId, string $query = ''): array
+  {
+    $params = [':batch_id' => $batchId];
+    $where = ["t.id NOT IN (SELECT teacher_id FROM internship_batch_supervisors WHERE batch_id = :batch_id)"];
+    $where[] = "t.deleted_at IS NULL";
+
+    if ($query) {
+      $where[] = "(t.full_name LIKE :query OR t.phone LIKE :query)";
+      $params[':query'] = "%$query%";
+    }
+
+    $sql = "SELECT t.id, t.full_name, t.degree, d.short_name as department_name
+            FROM teachers t
+            LEFT JOIN departments d ON t.department_id = d.id
+            WHERE " . implode(' AND ', $where) . "
+            LIMIT 50";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 }

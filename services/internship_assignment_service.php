@@ -6,36 +6,36 @@ require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/stores/internship_assignment_store.php';
 
-use App\Stores\InternshipAssignmentStore;
+use App\Stores\{InternshipAssignmentStore, InternshipBatchStore};
 use Database;
 
 interface IInternshipAssignmentService
 {
-  public function assign(int $batchStudentId, int $teacherId, bool $isDraft = true, ?int $assignedBy = null): bool;
+  public function assign(int $batchStudentId, int $teacherId, ?int $assignedBy = null): bool;
   public function autoAssign(int $batchId, string $method, int $adminId): int;
   public function reassign(int $assignmentId, int $newTeacherId, int $adminId, string $reason): bool;
-  public function bulkReassignAndPublish(int $batchId, array $assignmentsData, int $adminId, string $reason): int;
-  public function publishBatch(int $batchId, int $adminId): int;
+  public function bulkSave(int $batchId, array $assignmentsData, int $adminId, string $reason): int;
+  public function unassign(int $assignmentId, int $adminId, string $reason): bool;
   public function getLogsByStudent(int $batchStudentId): array;
 }
 
 class InternshipAssignmentService implements IInternshipAssignmentService
 {
   private InternshipAssignmentStore $_store;
+  private InternshipBatchStore $_batchStore;
 
-  public function __construct(InternshipAssignmentStore $store)
+  public function __construct(InternshipAssignmentStore $store, InternshipBatchStore $batchStore)
   {
     $this->_store = $store;
+    $this->_batchStore = $batchStore;
   }
 
   /**
    * Phân công lần đầu (hoặc chạy qua auto-assign)
    */
-  public function assign(int $batchStudentId, int $teacherId, bool $isDraft = true, ?int $assignedBy = null): bool
+  public function assign(int $batchStudentId, int $teacherId, ?int $assignedBy = null): bool
   {
-    return Database::getInstance()->transaction(function () use ($batchStudentId, $teacherId, $isDraft, $assignedBy) {
-      $status = $isDraft ? 'draft' : 'published';
-      
+    return Database::getInstance()->transaction(function () use ($batchStudentId, $teacherId, $assignedBy) {
       // Kiểm tra xem sinh viên đã có assignment nào chưa
       $existingAssignment = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
       if ($existingAssignment) {
@@ -45,7 +45,6 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       $assignmentId = $this->_store->createAssignment(
         batchStudentId: $batchStudentId, 
         teacherId: $teacherId, 
-        status: $status, 
         method: 'manual', 
         assignedBy: $assignedBy
       );
@@ -74,6 +73,11 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   public function autoAssign(int $batchId, string $method, int $adminId): int
   {
     return Database::getInstance()->transaction(function () use ($batchId, $method, $adminId) {
+      $batch = $this->_batchStore->getById($batchId);
+      if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
+        throw new \Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
+      }
+
       $unassigned = $this->_store->getUnassignedStudentsInBatch($batchId);
       if (empty($unassigned)) {
         return 0;
@@ -96,7 +100,6 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         }
       }
 
-      //TODO: Hiển thị thông báo trực quan hơn throw exception
       if (count($unassigned) > $totalRemainingQuota) {
         throw new \Exception('Tổng số sinh viên chưa phân công ('.count($unassigned).') lớn hơn tổng hạn mức còn lại ('.$totalRemainingQuota.') của các giảng viên.');
       }
@@ -113,13 +116,11 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         }
 
         if ($method === 'auto_even') {
-          // Ưu tiên GV có ít sinh viên nhất
           usort($availableSupervisors, function($a, $b) {
             return $a['current'] <=> $b['current'];
           });
           $chosenIndex = 0;
         } else {
-          // Random GV còn quota
           $chosenIndex = array_rand($availableSupervisors);
         }
 
@@ -129,7 +130,6 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         $assignmentId = $this->_store->createAssignment(
           batchStudentId: $student['batch_student_id'],
           teacherId: $teacherId,
-          status: 'draft',
           method: $method,
           assignedBy: $adminId
         );
@@ -195,53 +195,108 @@ class InternshipAssignmentService implements IInternshipAssignmentService
     });
   }
 
-  /**
-   * Lưu nhiều thay đổi phân công cùng lúc và công bố toàn bộ đợt
-   * $assignmentsData có dạng: [['assignment_id' => 1, 'new_teacher_id' => 2], ...]
-   */
-  public function bulkReassignAndPublish(int $batchId, array $assignmentsData, int $adminId, string $reason): int
+  public function bulkSave(int $batchId, array $assignmentsData, int $adminId, string $reason): int
   {
     return Database::getInstance()->transaction(function () use ($batchId, $assignmentsData, $adminId, $reason) {
+      $batch = $this->_batchStore->getById($batchId);
+      if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
+        throw new \Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
+      }
+
+      $count = 0;
       foreach ($assignmentsData as $data) {
-        if (!isset($data['assignment_id']) || !isset($data['new_teacher_id'])) {
+        $assignmentId = $data['assignment_id'] ?? null;
+        $batchStudentId = $data['batch_student_id'] ?? null;
+        $newTeacherId = $data['new_teacher_id'] ?? null;
+
+        if (!array_key_exists('new_teacher_id', $data) || (!$assignmentId && !$batchStudentId)) {
           continue;
         }
 
-        $assignmentId = $data['assignment_id'];
-        $newTeacherId = $data['new_teacher_id'];
-        
-        $assignment = $this->_store->getAssignmentById($assignmentId);
-        if (!$assignment || $assignment->teacher_id == $newTeacherId) {
-          continue;
+        if ($assignmentId) {
+          $assignment = $this->_store->getAssignmentById($assignmentId);
+          if (!$assignment) continue;
+
+          if ($newTeacherId === null || $newTeacherId === 0) {
+            // UNASSIGN
+            $this->_store->logAction(
+              assignmentId: $assignmentId,
+              action: 'DELETE',
+              oldTeacherId: $assignment->teacher_id,
+              newTeacherId: null,
+              performedBy: $adminId,
+              reason: $reason
+            );
+            $this->_store->deleteAssignment($assignmentId);
+            $count++;
+            continue;
+          }
+
+          if ($assignment->teacher_id == $newTeacherId) {
+            continue;
+          }
+          
+          $oldTeacherId = $assignment->teacher_id;
+          $this->_store->updateAssignmentTeacher($assignmentId, $newTeacherId);
+          
+          $this->_store->logAction(
+            assignmentId: $assignmentId, 
+            action: 'UPDATE', 
+            oldTeacherId: $oldTeacherId, 
+            newTeacherId: $newTeacherId, 
+            performedBy: $adminId, 
+            reason: $reason
+          );
+          $count++;
+        } else {
+          if ($newTeacherId === null || $newTeacherId === 0) continue;
+          
+          $existing = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
+          if ($existing) continue;
+
+          $newId = $this->_store->createAssignment(
+            batchStudentId: $batchStudentId,
+            teacherId: $newTeacherId,
+            method: 'manual',
+            assignedBy: $adminId
+          );
+
+          if ($newId) {
+            $this->_store->logAction(
+              assignmentId: $newId,
+              action: 'CREATE',
+              oldTeacherId: null,
+              newTeacherId: $newTeacherId,
+              performedBy: $adminId,
+              reason: $reason
+            );
+            $count++;
+          }
         }
-        
-        $oldTeacherId = $assignment->teacher_id;
-        $this->_store->updateAssignmentTeacher($assignmentId, $newTeacherId);
-        
-        $this->_store->logAction(
-          assignmentId: $assignmentId, 
-          action: 'UPDATE', 
-          oldTeacherId: $oldTeacherId, 
-          newTeacherId: $newTeacherId, 
-          performedBy: $adminId, 
-          reason: $reason
-        );
       }
       
-      // Sau khi lưu toàn bộ thay đổi, tiến hành công bố (chuyển draft -> published)
-      return $this->_store->publishBatchAssignments($batchId);
+      return $count;
     });
   }
 
-  /**
-   * Công bố toàn bộ các bản nháp của 1 đợt thực tập
-   */
-  public function publishBatch(int $batchId, int $adminId): int
+  public function unassign(int $assignmentId, int $adminId, string $reason): bool
   {
-    return Database::getInstance()->transaction(function () use ($batchId, $adminId) {
-      // Chuyển toàn bộ status = 'draft' -> 'published' trong batch_id đó
-      // Theo Option A đã chốt: Không sinh ra log cho hành động Publish để tránh rác DB
-      return $this->_store->publishBatchAssignments($batchId);
+    return Database::getInstance()->transaction(function () use ($assignmentId, $adminId, $reason) {
+      $assignment = $this->_store->getAssignmentById($assignmentId);
+      if (!$assignment) {
+        throw new \Exception('Không tìm thấy bản ghi phân công này.');
+      }
+
+      $this->_store->logAction(
+        assignmentId: $assignmentId,
+        action: 'DELETE',
+        oldTeacherId: $assignment->teacher_id,
+        newTeacherId: null,
+        performedBy: $adminId,
+        reason: $reason
+      );
+
+      return $this->_store->deleteAssignment($assignmentId);
     });
   }
 

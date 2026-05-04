@@ -147,4 +147,62 @@ class InternshipBatchService
       'closed_at' => date('Y-m-d H:i:s')
     ]);
   }
+
+  public function getBatchStudents(int $batchId): array
+  {
+    return $this->_store->getBatchStudentsWithDetails($batchId);
+  }
+
+  public function getBatchSupervisors(int $batchId): array
+  {
+    return $this->_store->getBatchSupervisorsWithDetails($batchId);
+  }
+
+  public function addStudentToBatch(int $batchId, int $studentId): bool
+  {
+    return $this->_store->addStudentsToBatch($batchId, [$studentId]);
+  }
+
+  public function removeStudentFromBatch(int $batchId, int $studentId): bool
+  {
+    return $this->_store->removeStudentFromBatch($batchId, $studentId);
+  }
+
+  public function addSupervisorToBatch(int $batchId, int $teacherId, int $maxStudents): bool
+  {
+    return $this->_store->addSupervisorsToBatch($batchId, [
+      ['teacher_id' => $teacherId, 'max_students' => $maxStudents]
+    ]);
+  }
+
+  public function removeSupervisorFromBatch(int $batchId, int $teacherId): bool
+  {
+    return $this->_store->removeSupervisorFromBatch($batchId, $teacherId);
+  }
+
+  public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool
+  {
+    // Kiểm tra quota mới có nhỏ hơn số lượng đã phân công không
+    $supervisors = $this->_store->getBatchSupervisorsWithDetails($batchId);
+    foreach ($supervisors as $sup) {
+      if ($sup['teacher_id'] == $teacherId) {
+        if ($newQuota < $sup['assigned_count']) {
+          throw new \Exception("Không thể giảm định mức xuống thấp hơn số sinh viên hiện đang hướng dẫn ({$sup['assigned_count']}).");
+        }
+        break;
+      }
+    }
+
+    return $this->_store->updateSupervisorQuota($batchId, $teacherId, $newQuota);
+  }
+
+  public function searchEligibleStudents(int $batchId, string $query = '', ?int $classroomId = null): array
+  {
+    return $this->_store->searchEligibleStudents($batchId, $query, $classroomId);
+  }
+
+  public function searchEligibleTeachers(int $batchId, string $query = ''): array
+  {
+    return $this->_store->searchEligibleTeachers($batchId, $query);
+  }
 }

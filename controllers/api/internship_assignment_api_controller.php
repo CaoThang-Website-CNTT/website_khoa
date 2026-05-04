@@ -25,10 +25,10 @@ class InternshipAssignmentApiController extends Controller
   /**
    * Lấy danh sách sinh viên kèm thông tin phân công (nếu có) của đợt
    */
-  public function getAssignments($batchId)
+  public function getAssignments($id)
   {
     try {
-      $assignments = $this->_assignmentStore->getStudentsInBatchWithAssignment((int)$batchId);
+      $assignments = $this->_assignmentStore->getStudentsInBatchWithAssignment((int)$id);
       return $this->json($assignments, 200);
     } catch (Exception $e) {
       return $this->json(['message' => 'Lỗi khi tải danh sách phân công: ' . $e->getMessage()], 500);
@@ -38,10 +38,10 @@ class InternshipAssignmentApiController extends Controller
   /**
    * Lấy danh sách giảng viên kèm thống kê Quota của đợt
    */
-  public function getSupervisors($batchId)
+  public function getSupervisors($id)
   {
     try {
-      $supervisors = $this->_assignmentStore->getBatchSupervisorsWithStats((int)$batchId);
+      $supervisors = $this->_assignmentStore->getBatchSupervisorsWithStats((int)$id);
       return $this->json($supervisors, 200);
     } catch (Exception $e) {
       return $this->json(['message' => 'Lỗi khi tải danh sách giảng viên: ' . $e->getMessage()], 500);
@@ -51,7 +51,7 @@ class InternshipAssignmentApiController extends Controller
   /**
    * Phân công tự động
    */
-  public function autoAssign($batchId, Request $request)
+  public function autoAssign($id, Request $request)
   {
     $data = $request->json();
     $validator = new Validator();
@@ -68,7 +68,7 @@ class InternshipAssignmentApiController extends Controller
       // TODO: Get admin ID from Auth logic, using mock ID 1 for now
       $adminId = 1; 
 
-      $assignedCount = $this->_assignmentService->autoAssign((int)$batchId, $data['method'], $adminId);
+      $assignedCount = $this->_assignmentService->autoAssign((int)$id, $data['method'], $adminId);
       return $this->json(['assigned_count' => $assignedCount], 200, 'Đã phân công tự động thành công ' . $assignedCount . ' sinh viên.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -78,7 +78,7 @@ class InternshipAssignmentApiController extends Controller
   /**
    * Lưu thay đổi và công bố
    */
-  public function bulkSave($batchId, Request $request)
+  public function bulkSave($id, Request $request)
   {
     $data = $request->json();
     $validator = new Validator();
@@ -100,14 +100,14 @@ class InternshipAssignmentApiController extends Controller
       // TODO: Get admin ID from Auth logic, using mock ID 1 for now
       $adminId = 1;
 
-      $this->_assignmentService->bulkReassignAndPublish(
-        (int)$batchId, 
+      $this->_assignmentService->bulkSave(
+        (int)$id, 
         $data['assignments'], 
         $adminId, 
         $data['reason']
       );
       
-      return $this->json([], 200, 'Đã lưu thay đổi và công bố thành công.');
+      return $this->json([], 200, 'Đã lưu thay đổi thành công.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
     }

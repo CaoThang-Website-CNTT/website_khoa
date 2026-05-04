@@ -17,6 +17,20 @@ $router->prefix('api')->group(function ($router) {
       $router->get('/teachers-active', [InternshipBatchApiController::class, 'getActiveTeachers']);
       $router->post('/', [InternshipBatchApiController::class, 'store']);
       
+      $router->prefix('{id}/management')->group(function ($router) {
+        $router->get('/students', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'getStudents']);
+        $router->post('/students', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'addStudent']);
+        $router->delete('/students/{student_id}', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'removeStudent']);
+
+        $router->get('/supervisors', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'getSupervisors']);
+        $router->post('/supervisors', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'addSupervisor']);
+        $router->put('/supervisors/{teacher_id}', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'updateSupervisor']);
+        $router->delete('/supervisors/{teacher_id}', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'removeSupervisor']);
+
+        $router->get('/search-eligible-students', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'searchStudents']);
+        $router->get('/search-eligible-teachers', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'searchTeachers']);
+      });
+
       $router->get('/{id}/assignments', [InternshipAssignmentApiController::class, 'getAssignments']);
       $router->get('/{id}/supervisors', [InternshipAssignmentApiController::class, 'getSupervisors']);
       $router->post('/{id}/auto-assign', [InternshipAssignmentApiController::class, 'autoAssign']);

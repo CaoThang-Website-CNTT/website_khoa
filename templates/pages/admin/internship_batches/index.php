@@ -69,7 +69,7 @@
           <?php
           $batchObj = (object)$batch;
           $statusVariant = 'secondary';
-          if ($batchObj->status === 'public') $statusVariant = 'primary';
+          if ($batchObj->status === 'published') $statusVariant = 'primary';
           if ($batchObj->status === 'closed') $statusVariant = 'destructive';
 
           $startDate = $batchObj->start_at ? date('d/m/Y', strtotime($batchObj->start_at)) : 'N/A';

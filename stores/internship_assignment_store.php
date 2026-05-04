@@ -13,31 +13,29 @@ use PDO;
 
 interface IInternshipAssignmentStore
 {
-  public function createAssignment(int $batchStudentId, int $teacherId, string $status = 'draft', string $method = 'manual', ?int $assignedBy = null): ?int;
+  public function createAssignment(int $batchStudentId, int $teacherId, string $method = 'manual', ?int $assignedBy = null): ?int;
   public function getAssignmentByBatchStudentId(int $batchStudentId): ?InternshipAssignment;
   public function getAssignmentById(int $assignmentId): ?InternshipAssignment;
   public function updateAssignmentTeacher(int $assignmentId, int $newTeacherId): bool;
-  public function publishBatchAssignments(int $batchId): int;
   public function logAction(int $assignmentId, string $action, ?int $oldTeacherId, ?int $newTeacherId, ?int $performedBy, ?string $reason): bool;
   public function getLogsByBatchStudent(int $batchStudentId): array;
-  
+
   public function getBatchSupervisorsWithStats(int $batchId): array;
   public function getStudentsInBatchWithAssignment(int $batchId): array;
   public function getUnassignedStudentsInBatch(int $batchId): array;
-  public function clearDraftAssignments(int $batchId): bool;
+  public function deleteAssignment(int $assignmentId): bool;
 }
 
 class InternshipAssignmentStore extends Store implements IInternshipAssignmentStore
 {
-  public function createAssignment(int $batchStudentId, int $teacherId, string $status = 'draft', string $method = 'manual', ?int $assignedBy = null): ?int
+  public function createAssignment(int $batchStudentId, int $teacherId, string $method = 'manual', ?int $assignedBy = null): ?int
   {
-    $sql = "INSERT INTO internship_assignments (batch_student_id, teacher_id, status, assignment_method, assigned_by) 
-            VALUES (:batch_student_id, :teacher_id, :status, :method, :assigned_by)";
+    $sql = "INSERT INTO internship_assignments (batch_student_id, teacher_id, assignment_method, assigned_by) 
+            VALUES (:batch_student_id, :teacher_id, :method, :assigned_by)";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([
       ':batch_student_id' => $batchStudentId,
       ':teacher_id' => $teacherId,
-      ':status' => $status,
       ':method' => $method,
       ':assigned_by' => $assignedBy
     ]);
@@ -56,7 +54,6 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
       id: $data['id'],
       batch_student_id: $data['batch_student_id'],
       teacher_id: $data['teacher_id'],
-      status: $data['status'],
       assignment_method: $data['assignment_method'],
       assigned_at: $data['assigned_at'],
       assigned_by: $data['assigned_by'],
@@ -78,7 +75,6 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
       id: $data['id'],
       batch_student_id: $data['batch_student_id'],
       teacher_id: $data['teacher_id'],
-      status: $data['status'],
       assignment_method: $data['assignment_method'],
       assigned_at: $data['assigned_at'],
       assigned_by: $data['assigned_by'],
@@ -98,17 +94,14 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
     return $stmt->rowCount() > 0;
   }
 
-  public function publishBatchAssignments(int $batchId): int
+  public function deleteAssignment(int $assignmentId): bool
   {
-    // Need to join internship_batch_students to filter by batch_id
-    $sql = "UPDATE internship_assignments a
-            INNER JOIN internship_batch_students s ON a.batch_student_id = s.id
-            SET a.status = 'published', a.updated_at = CURRENT_TIMESTAMP
-            WHERE s.batch_id = :batch_id AND a.status = 'draft'";
+    $sql = "DELETE FROM internship_assignments WHERE id = :id";
     $stmt = $this->db->prepare($sql);
-    $stmt->execute([':batch_id' => $batchId]);
-    return $stmt->rowCount();
+    $stmt->execute([':id' => $assignmentId]);
+    return $stmt->rowCount() > 0;
   }
+
 
   public function logAction(int $assignmentId, string $action, ?int $oldTeacherId, ?int $newTeacherId, ?int $performedBy, ?string $reason): bool
   {
@@ -152,12 +145,15 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
             FROM internship_batch_supervisors s
             JOIN teachers t ON s.teacher_id = t.id
             LEFT JOIN internship_assignments a ON a.teacher_id = s.teacher_id 
-              AND a.batch_student_id IN (SELECT id FROM internship_batch_students WHERE batch_id = :batch_id)
+              AND a.batch_student_id IN (SELECT id FROM internship_batch_students WHERE batch_id = :batch_id_sub)
             WHERE s.batch_id = :batch_id AND s.is_active = 1
             GROUP BY s.id, s.teacher_id, s.max_students, t.full_name";
-    
+
     $stmt = $this->db->prepare($sql);
-    $stmt->execute([':batch_id' => $batchId]);
+    $stmt->execute([
+      ':batch_id' => $batchId,
+      ':batch_id_sub' => $batchId
+    ]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
@@ -168,18 +164,18 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
               bs.student_id,
               s.full_name as student_name,
               s.student_id as student_code,
-              c.name as classroom_name,
+              s.phone as student_phone,
+              c.short_name as classroom_name,
               a.id as assignment_id,
               a.teacher_id,
-              t.full_name as teacher_name,
-              a.status as assignment_status
+              t.full_name as teacher_name
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
             LEFT JOIN internship_assignments a ON bs.id = a.batch_student_id
             LEFT JOIN teachers t ON a.teacher_id = t.id
             WHERE bs.batch_id = :batch_id";
-            
+
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -191,18 +187,9 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
             FROM internship_batch_students bs
             LEFT JOIN internship_assignments a ON bs.id = a.batch_student_id
             WHERE bs.batch_id = :batch_id AND a.id IS NULL";
-            
+
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
-  }
-
-  public function clearDraftAssignments(int $batchId): bool
-  {
-    $sql = "DELETE a FROM internship_assignments a
-            INNER JOIN internship_batch_students bs ON a.batch_student_id = bs.id
-            WHERE bs.batch_id = :batch_id AND a.status = 'draft'";
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute([':batch_id' => $batchId]);
   }
 }

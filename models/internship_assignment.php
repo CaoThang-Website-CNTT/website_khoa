@@ -8,7 +8,6 @@ class InternshipAssignment
     public ?int $id = null,
     public ?int $batch_student_id = null,
     public ?int $teacher_id = null,
-    public string $status = 'draft',
     public string $assignment_method = 'manual',
     public ?string $assigned_at = null,
     public ?int $assigned_by = null,
