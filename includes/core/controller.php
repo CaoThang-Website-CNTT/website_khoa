@@ -40,4 +40,17 @@ abstract class Controller
       require BASE_PATH . "/templates/pages/{$template}.php";
     }
   }
+  protected function validate(Request $request, array $rules): array
+  {
+    $validator = new RequestValidator();
+
+    if (!$validator->validate($request->all(), $rules)) {
+      $request->session()->flashErrors($validator->getErrors());
+      $request->flashOldInputs();
+
+      throw new \Exception();
+    }
+
+    return array_intersect_key($request->all(), $rules);
+  }
 }

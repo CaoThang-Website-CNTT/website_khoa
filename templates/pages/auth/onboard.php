@@ -273,6 +273,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const form = document.getElementById('onboard-form');
     if (!form) return;
 
+    const triggers = Array.from(document.querySelectorAll('[data-tabs-trigger]'))
     const tabHandler = new TabHandler({ syncParams: false });
     tabHandler.init();
 

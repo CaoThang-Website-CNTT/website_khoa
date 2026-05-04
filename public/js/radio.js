@@ -1,26 +1,62 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const radioHandler = new RadioHandler();
-  radioHandler.init();
+  RadioHandler.instance.init();
 });
 
 class RadioHandler {
-  constructor() {
-    this._groups = document.querySelectorAll(".radio-group");
-  }
-  init() {
-    this._groups.forEach(group => {
-      const hiddenInput = this._createHiddenInput(group);
-      const radioBtns = group.querySelectorAll('button.radio-group__item');
+  static #instance = null;
+  #initializedGroups = new Set();
 
-      radioBtns.forEach(radioBtn => {
-        this._setDefaultState(group, radioBtn, hiddenInput);
-        this._bindEvents(radioBtns, radioBtn, hiddenInput, group);
-      });
+  constructor() {
+    if (RadioHandler.#instance) return RadioHandler.#instance;
+    RadioHandler.#instance = this;
+  }
+
+  /**
+   * Global access point (Singleton)
+   */
+  static get instance() {
+    return RadioHandler.#instance || new RadioHandler();
+  }
+
+  /**
+   * Khởi tạo tất cả radio group có trong DOM tại thời điểm gọi.
+   */
+  init() {
+    document.querySelectorAll(".radio-group").forEach(group => this._initGroup(group));
+  }
+
+  /**
+   * Đăng ký thêm radio group được render động sau khi init()
+   * @param {HTMLElement} group - Phần tử .radio-group
+   */
+  register(group) {
+    if (!(group instanceof HTMLElement)) {
+      console.warn("[RadioHandler] register() expects an HTMLElement");
+      return;
+    }
+    this._initGroup(group);
+  }
+
+  /**
+   * Khởi tạo một .radio-group: tạo hidden input, set state, bind events.
+   * Đảm bảo idempotent (không bind trùng lặp).
+   * @private
+   */
+  _initGroup(group) {
+    if (this.#initializedGroups.has(group)) return;
+    this.#initializedGroups.add(group);
+
+    const hiddenInput = this._createHiddenInput(group);
+    const radioBtns = group.querySelectorAll("button.radio-group__item");
+
+    radioBtns.forEach(radioBtn => {
+      this._setDefaultState(group, radioBtn, hiddenInput);
+      this._bindEvents(radioBtns, radioBtn, hiddenInput, group);
     });
   }
+
   _createHiddenInput(group) {
     let input = group.querySelector('input[type="hidden"]');
-
     if (!input) {
       input = document.createElement("input");
       input.type = "hidden";
@@ -29,19 +65,17 @@ class RadioHandler {
     }
     return input;
   }
+
   /**
    * Set trạng thái mặc định cho button.
-   * Nếu FormHandler đã chạy trước và set data-state từ __old__,
-   * _setDefaultState sẽ bỏ qua (data-state đã tồn tại) — chỉ sync hidden input.
+   * Ưu tiên data-state đã tồn tại (ví dụ: từ FormHandler SSR/old values).
    * @private
    */
   _setDefaultState(group, radioBtn, hiddenInput) {
-    // Nếu FormHandler đã set data-state từ old input, ưu tiên giá trị đó
     if (radioBtn.dataset.state === "checked") {
       hiddenInput.value = radioBtn.value;
       return;
     }
-
     if (radioBtn.value && group.dataset.radioDefaultValue === radioBtn.value) {
       radioBtn.dataset.state = "checked";
       hiddenInput.value = radioBtn.value;
@@ -52,12 +86,9 @@ class RadioHandler {
       radioBtn.dataset.state = "unchecked";
     }
   }
+
   /**
    * @private
-   * @param {NodeList} siblingBtns
-   * @param {HTMLElement} radioBtn
-   * @param {HTMLInputElement} hiddenInput
-   * @param {HTMLElement} group
    */
   _bindEvents(siblingBtns, radioBtn, hiddenInput, group) {
     radioBtn.addEventListener("click", (e) => {
@@ -65,6 +96,7 @@ class RadioHandler {
       this._toggle(siblingBtns, radioBtn, hiddenInput, group);
     });
   }
+
   /**
    * Cập nhật trạng thái, ghi hidden input, phát radio:change lên group.
    * FormHandler lắng nghe radio:change để clear error.

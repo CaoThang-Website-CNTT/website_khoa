@@ -2,14 +2,14 @@
 
 namespace App\Core;
 
-class Validator
+class RequestValidator
 {
   private array $errors = [];
 
   public function validate(array $data, array $rules): bool
   {
     foreach ($rules as $field => $fieldRules) {
-      $value = $data[$field] ?? null;
+      $value = $this->getValueByPath($data, $field);
 
       $isEmpty = $value === null || (is_array($value) ? empty($value) : trim((string) $value) === '');
       if ($isEmpty && in_array('nullable', $fieldRules)) {
@@ -122,5 +122,23 @@ class Validator
   public function getErrors(): array
   {
     return $this->errors;
+  }
+
+  /**
+   * Xử lý dot annotation
+   * @param array $data
+   * @param string $path
+   */
+  private function getValueByPath(array $data, string $path)
+  {
+    $keys = explode('.', $path);
+    foreach ($keys as $key) {
+      if (is_array($data) && array_key_exists($key, $data)) {
+        $data = $data[$key];
+      } else {
+        return null;
+      }
+    }
+    return $data;
   }
 }

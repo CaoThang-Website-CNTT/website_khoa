@@ -59,7 +59,7 @@ export class EditorUI {
         blockBtn.className = 'btn be-block-btn';
         blockBtn.setAttribute('data-variant', 'outline');
 
-        blockBtn.setAttribute('data-add-block', schema.name);
+        blockBtn.setAttribute('data-add-block', schema.type);
 
         const iconDiv = document.createElement('div');
         iconDiv.className = 'be-block-btn__icon';
@@ -135,19 +135,15 @@ export class EditorUI {
     const schema = block.schema;
     const currentData = block.data;
 
-    const updateHandler = (patchData) => {
-      this.#bus.dispatch('block:update_request', { blockId: block.id, payload: patchData });
-    };
-
     if (schema.supports) {
       if (schema.supports.typography) {
-        const typoUI = this.#inspector.renderTypographySettings(currentData, updateHandler);
+        const typoUI = this.#inspector.renderTypographySettings();
         this.blockSettingsPanel.appendChild(typoUI);
       }
     }
 
     if (typeof block.renderInspectorControls === 'function') {
-      const customUI = block.renderInspectorControls(block.data, { onUpdate: updateHandler });
+      const customUI = block.renderInspectorControls();
 
       const divider = document.createElement('hr');
       this.blockSettingsPanel.appendChild(divider);
@@ -223,14 +219,23 @@ class EditorMetaBinder {
   #bindEvents() {
     this.container.addEventListener('input', e => this.#handleInput(e));
     this.container.addEventListener('change', e => this.#handleChange(e));
-    this.container.addEventListener('click', e => this.#handleClick(e));
+    this.container.addEventListener('click', e => this.#handleSwitchClick(e));
+
+    document.addEventListener('select:change', e => this.#handleSelectClick(e));
   }
 
   #handleInput(e) {
-    console.log("input");
     const el = e.target.closest('[data-be-meta-key]:not(select, .select, .switch)');
     if (!el) return;
-    const value = el.type === 'number' ? parseInt(el.value) || 0 : el.value;
+
+    let value;
+
+    if (el.isContentEditable) {
+      value = el.innerText;
+    } else {
+      value = el.type === 'number' ? parseInt(el.value) || 0 : el.value;
+    }
+
     this.bus.dispatch('meta:update_request', { key: el.dataset.beMetaKey, value });
   }
 
@@ -240,33 +245,25 @@ class EditorMetaBinder {
     this.bus.dispatch('meta:update_request', { key: el.dataset.beMetaKey, value: el.value });
   }
 
-  #handleClick(e) {
+  #handleSwitchClick(e) {
     const switchEl = e.target.closest('.switch[data-be-meta-key]');
-    if (switchEl) {
-      e.preventDefault();
-      const key = switchEl.dataset.beMetaKey;
-      const current = switchEl.dataset.switchState === 'checked';
+    if (!switchEl) return;
 
-      this.bus.dispatch('meta:update_request', { key, value: current });
-      return;
-    }
+    e.preventDefault();
+    const key = switchEl.dataset.beMetaKey;
+    const current = switchEl.dataset.switchState === 'checked';
 
-    const selectItem = e.target.closest('.select__item[data-select-value]');
-    if (selectItem) {
-      e.preventDefault();
-      e.stopPropagation();
+    this.bus.dispatch('meta:update_request', { key, value: current });
+  }
 
-      const selectEl = selectItem.closest('.select');
-      if (!selectEl) return;
+  #handleSelectClick(e) {
+    const { id, label, isMultiple } = e.detail;
+    const value = isMultiple ? e.detail.values.map(item => item.value) : e.detail.value;
 
-      const key = selectEl.dataset.beMetaKey;
-      const value = selectItem.dataset.selectValue;
+    const selectEl = document.querySelector(`[data-select-id='${id}']`);
+    if (!selectEl || !selectEl.dataset.beMetaKey) return;
 
-      if (key) {
-        this.bus.dispatch('meta:update_request', { key, value });
-      }
-      return;
-    }
+    this.bus.dispatch('meta:update_request', { key: selectEl.dataset.beMetaKey, value: value });
   }
 
   #syncControl(key, value) {
@@ -289,10 +286,9 @@ class EditorMetaBinder {
   }
 
   #syncPreview(key, value, allMeta) {
-    console.log("sync preview", this.previews.get(key), key, value, allMeta);
+    console.log(key, this.previews.get(key), allMeta);
     this.previews.get(key)?.forEach(el => {
       const action = el.dataset.bePreviewAction || 'text';
-      console.log(el, action);
       switch (action) {
         case 'toggle':
           el.classList.toggle('hidden', !value);

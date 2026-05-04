@@ -107,13 +107,20 @@ class Session
   {
     $this->flash('notification', compact('type', 'title', 'desc'));
   }
+  /**
+   * Lưu lại dữ liệu form cũ, có loại trừ các field nhạy cảm
+   */
   public function flashOldInputs(array $data, array $only = [], array $except = []): void
   {
+    $blacklist = ['_token', 'password', 'password_confirmation', 'new_password'];
+
     if (!empty($only)) {
       $data = array_intersect_key($data, array_flip($only));
     } elseif (!empty($except)) {
       $data = array_diff_key($data, array_flip($except));
     }
+
+    $data = array_diff_key($data, array_flip($blacklist));
 
     $this->flash('_old_input', $data);
   }

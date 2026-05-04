@@ -1,46 +1,40 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer_v2.js';
+import { RichTextParser } from '../rich_text_parser.js';
 
 export const ListSchema = {
   version: 1,
   icon: "<i class='fa-solid fa-list-ul'></i>",
-  name: 'blocks/list',
+  type: 'blocks/list',
   title: 'Danh sách',
   group: 'paragraph',
   groupLabel: 'Văn Bản',
-  attributes: {
-    values: { default: [{ text: '', children: [] }] },
-    ordered: { default: false },
+  meta: {
+    style: { default: 'bullet' },
+    items: { default: [{ rich_text: [], children: [] }] },
   },
-  supports: {
-    typography: false,
-  }
+  supports: { typography: false },
 };
 
 export class ListBlock extends EditorBlock {
 
-  /** @type {HTMLElement} Root list element */
+  /** @type {HTMLElement|null} */
   #rootEl = null;
 
-  /**
-   * Trả về path dạng mảng index từ root tới node chứa element.
-   * Dùng data-path="0.children.1.children.0" được gắn lên mỗi <li>.
-   * @param {HTMLElement} liEl
-   * @returns {number[]}
-   */
+  // ─── Path helpers ─────────────────────────────────────────────────────────
+
+  /** @param {HTMLElement} liEl @returns {number[]} */
   #pathOf(liEl) {
     return (liEl.dataset.path || '0').split('.').map(Number);
   }
 
   /**
-   * Đọc node tại path từ data.values.
-   * path = [rootIndex, childIndex, grandChildIndex, ...]
    * @param {number[]} path
-   * @returns {{ node: ListNode, parent: ListNode[]|null, localIndex: number }}
+   * @returns {{ node: object, parent: object[]|null, localIndex: number }}
    */
   #nodeAt(path) {
-    let list = this.data.values;
-    let node = null;
-    let parent = null;
+    let list = this.data.meta.items;
+    let node = null, parent = null;
 
     for (let i = 0; i < path.length; i++) {
       parent = list;
@@ -51,74 +45,46 @@ export class ListBlock extends EditorBlock {
     return { node, parent, localIndex: path[path.length - 1] };
   }
 
-  /**
-   * Depth của path (root = 0).
-   * @param {number[]} path
-   * @returns {number}
-   */
-  #depth(path) {
-    return path.length - 1;
-  }
+  /** @param {number[]} path @returns {number} */
+  #depth(path) { return path.length - 1; }
 
-  /**
-   * Tìm <li> element kế tiếp theo thứ tự DOM (bất kể depth).
-   * @param {HTMLElement} liEl
-   * @returns {HTMLElement|null}
-   */
+  /** @param {HTMLElement} liEl @returns {HTMLElement|null} */
   #nextLi(liEl) {
     const all = Array.from(this.dom.querySelectorAll('li[data-path]'));
-    const idx = all.indexOf(liEl);
-    return all[idx + 1] || null;
+    return all[all.indexOf(liEl) + 1] || null;
   }
 
-  /**
-   * Tìm <li> element trước đó.
-   * @param {HTMLElement} liEl
-   * @returns {HTMLElement|null}
-   */
+  /** @param {HTMLElement} liEl @returns {HTMLElement|null} */
   #prevLi(liEl) {
     const all = Array.from(this.dom.querySelectorAll('li[data-path]'));
-    const idx = all.indexOf(liEl);
-    return all[idx - 1] || null;
+    return all[all.indexOf(liEl) - 1] || null;
   }
 
-  /**
-   * Focus vào span của <li> tại vị trí end hoặc start.
-   * @param {HTMLElement} liEl
-   * @param {'start'|'end'} position
-   */
+  /** @param {HTMLElement} liEl @param {'start'|'end'} position */
   #focusLi(liEl, position = 'end') {
     const span = liEl.querySelector(':scope > span.be-list-item-text');
     if (!span) return;
     span.focus();
-
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(span);
-    range.collapse(position === 'start');
-    sel.removeAllRanges();
-    sel.addRange(range);
   }
 
-  // ─── Render ───────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   render() {
-    const tag = this.data.ordered ? 'ol' : 'ul';
+    const tag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
     const rootEl = document.createElement(tag);
-    rootEl.className = `be-preview-list be-preview-list--${this.data.ordered ? 'ol' : 'ul'}`;
+    rootEl.className = 'be-list';
     rootEl.contentEditable = 'false';
 
     this.dom = rootEl;
     this.#rootEl = rootEl;
 
-    this.#renderTree(this.data.values, rootEl, []);
-
+    this.#renderTree(this.data.meta.items, rootEl, []);
     return rootEl;
   }
 
   /**
-   * Render đệ quy cây ListNode[] vào một <ul>/<ol> element.
-   * @param {ListNode[]} nodes
+   * Render đệ quy cây ListNode[] vào <ul>/<ol>.
+   * @param {object[]} nodes
    * @param {HTMLElement} listEl
    * @param {number[]} basePath
    */
@@ -128,10 +94,10 @@ export class ListBlock extends EditorBlock {
       const li = this.#createLi(node, path);
       listEl.appendChild(li);
 
-      if (node.children && node.children.length > 0) {
-        const subTag = this.data.ordered ? 'ol' : 'ul';
+      if (node.children?.length > 0) {
+        const subTag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
         const subList = document.createElement(subTag);
-        subList.className = 'be-list-nested';
+        subList.className = 'be-list';
         li.appendChild(subList);
         this.#renderTree(node.children, subList, path);
       }
@@ -139,14 +105,13 @@ export class ListBlock extends EditorBlock {
   }
 
   /**
-   * Tạo <li> kèm <span contenteditable> và wire events.
-   * @param {ListNode} node
+   * Tạo <li> kèm <span contenteditable>.
+   * @param {object} node — { rich_text: RichSegment[], children: [] }
    * @param {number[]} path
-   * @returns {HTMLElement}
+   * @returns {HTMLLIElement}
    */
   #createLi(node, path) {
     const li = document.createElement('li');
-    li.className = 'be-list-item';
     li.dataset.path = path.join('.');
 
     const span = document.createElement('span');
@@ -154,37 +119,35 @@ export class ListBlock extends EditorBlock {
     span.contentEditable = 'true';
     span.spellcheck = false;
     span.dataset.placeholder = 'Nhập nội dung...';
-    span.textContent = node.text || '';
+    span.dataset.beEditable = 'list-item';
+
+    span.innerHTML = BlockSerializer.toHTML({ data: { rich_text: node.rich_text } });
 
     li.appendChild(span);
 
-    // ── Event: input → sync text vào data tree (in-place, no re-render) ──
+    // Input: sync content → RichSegment[] ngay
     span.addEventListener('input', () => {
       const { node: n } = this.#nodeAt(path);
-      if (n) n.text = span.textContent;
-      // Không dispatch block:updated — user đang typing
+      if (!n) return;
+      const html = span.innerHTML?.trim() ?? '';
+      n.rich_text = html
+        ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
+        : [];
     });
 
-    // ── Event: paste → strip HTML ──
     span.addEventListener('paste', (e) => {
       e.preventDefault();
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-      document.execCommand('insertText', false, text);
+      this.paste(this.esc(text));
     });
 
-    // ── Event: keydown → Enter / Tab / Backspace ──
     span.addEventListener('keydown', (e) => this.#handleKeydown(e, li, path));
 
     return li;
   }
 
-  // ─── Keyboard logic ───────────────────────────────────────────
+  // ─── Keyboard ─────────────────────────────────────────────────────────────
 
-  /**
-   * @param {KeyboardEvent} e
-   * @param {HTMLElement} liEl
-   * @param {number[]} path
-   */
   #handleKeydown(e, liEl, path) {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -197,115 +160,77 @@ export class ListBlock extends EditorBlock {
       this.#handleOutdent(liEl, path);
     } else if (e.key === 'Backspace') {
       const span = liEl.querySelector(':scope > span.be-list-item-text');
-      if (span && span.textContent.trim() === '') {
+      if (span && span.innerHTML.trim() === '') {
         e.preventDefault();
         this.#handleBackspaceEmpty(liEl, path);
       }
     }
   }
 
-  /**
-   * Enter: thêm item mới sau item hiện tại cùng depth.
-   * Nếu item rỗng và đang ở depth > 0 → outdent.
-   * Nếu item rỗng và depth = 0 → exit block.
-   */
   #handleEnter(liEl, path) {
     const { node } = this.#nodeAt(path);
-    const text = node?.text?.trim() ?? '';
+    const isEmpty = !node?.rich_text || (Array.isArray(node.rich_text) ? node.rich_text.length === 0 : node.rich_text.trim() === '');
     const depth = this.#depth(path);
 
-    if (text === '') {
-      if (depth > 0) {
-        this.#handleOutdent(liEl, path);
-      } else {
-        this.#exitBlock(liEl, path);
-      }
+    if (isEmpty) {
+      depth > 0 ? this.#handleOutdent(liEl, path) : this.#exitBlock(liEl, path);
       return;
     }
 
-    // Thêm item mới sau path hiện tại, cùng level
     const { parent } = this.#nodeAt(path);
     const localIdx = path[path.length - 1];
-    const newNode = { text: '', children: [] };
-    parent.splice(localIdx + 1, 0, newNode);
+    parent.splice(localIdx + 1, 0, { rich_text: [], children: [] });
 
     this.#rerender(() => {
-      // Focus vào item mới
       const newPath = [...path.slice(0, -1), localIdx + 1];
       const newLi = this.dom.querySelector(`li[data-path="${newPath.join('.')}"]`);
       if (newLi) this.#focusLi(newLi, 'start');
     });
   }
 
-  /**
-   * Tab: indent item hiện tại thành con của item trước đó.
-   * Giới hạn depth = 3.
-   */
   #handleIndent(liEl, path) {
-    const depth = this.#depth(path);
-    if (depth >= 3) return; // max depth
-
+    if (this.#depth(path) >= 3) return;
     const localIdx = path[path.length - 1];
-    if (localIdx === 0) return; // Không có item trước để làm parent
+    if (localIdx === 0) return;
 
     const { parent, node } = this.#nodeAt(path);
-
-    // Lấy item trước đó cùng level
     const prevSibling = parent[localIdx - 1];
 
-    // Di chuyển node này thành con cuối của prevSibling
     parent.splice(localIdx, 1);
     prevSibling.children.push(node);
 
     const newPath = [...path.slice(0, -1), localIdx - 1, prevSibling.children.length - 1];
-
     this.#rerender(() => {
       const newLi = this.dom.querySelector(`li[data-path="${newPath.join('.')}"]`);
       if (newLi) this.#focusLi(newLi, 'end');
     });
   }
 
-  /**
-   * Shift+Tab: outdent item — đưa lên level cha, chèn sau parent item.
-   */
   #handleOutdent(liEl, path) {
-    const depth = this.#depth(path);
-    if (depth === 0) return; // Đã ở root, không outdent được
+    if (this.#depth(path) === 0) return;
 
     const localIdx = path[path.length - 1];
     const { parent: currentList, node } = this.#nodeAt(path);
-
-    // Lấy grandparent list và parent node
     const parentPath = path.slice(0, -1);
     const { parent: grandParentList, localIndex: parentLocalIdx } = this.#nodeAt(parentPath);
 
-    // Xóa node khỏi current list
     currentList.splice(localIdx, 1);
-
-    // Chèn sau parent trong grandparent list
     grandParentList.splice(parentLocalIdx + 1, 0, node);
 
-    // Các siblings còn lại trong currentList (sau localIdx) → trở thành children của node
     const orphans = currentList.splice(localIdx);
     node.children.push(...orphans);
 
     const newPath = [...parentPath.slice(0, -1), parentLocalIdx + 1];
-
     this.#rerender(() => {
       const newLi = this.dom.querySelector(`li[data-path="${newPath.join('.')}"]`);
       if (newLi) this.#focusLi(newLi, 'end');
     });
   }
 
-  /**
-   * Backspace trên item rỗng: xóa item, focus item trước.
-   */
   #handleBackspaceEmpty(liEl, path) {
-    const depth = this.#depth(path);
     const localIdx = path[path.length - 1];
 
-    if (depth === 0 && localIdx === 0 && this.data.values.length === 1) {
-      // List chỉ còn 1 item rỗng → exit block
+    if (this.#depth(path) === 0 && localIdx === 0 && this.data.meta.items.length === 1) {
       this.#exitBlock(liEl, path);
       return;
     }
@@ -323,31 +248,19 @@ export class ListBlock extends EditorBlock {
     });
   }
 
-  /**
-   * Thoát block: xóa item rỗng cuối, dispatch add paragraph.
-   */
   #exitBlock(liEl, path) {
     const { parent } = this.#nodeAt(path);
-    const localIdx = path[path.length - 1];
-    parent.splice(localIdx, 1);
+    parent.splice(path[path.length - 1], 1);
 
-    if (this.bus) {
-      this.bus.dispatch('block:updated', { block: this });
-      this.bus.dispatch('block:add_request', { type: 'blocks/paragraph' });
-    }
+    this.bus?.dispatch('block:updated', { block: this });
+    this.bus?.dispatch('block:add_request', { type: 'blocks/paragraph', afterId: this.id });
   }
 
-  // ─── Re-render helper ─────────────────────────────────────────
+  // ─── Re-render ────────────────────────────────────────────────────────────
 
-  /**
-   * Re-render toàn bộ DOM của block, sau đó dispatch block:updated.
-   * Dùng cho structural changes (indent/outdent/add/remove item).
-   * @param {Function} [afterRender] — callback sau khi DOM sẵn sàng
-   */
   #rerender(afterRender) {
-    const tag = this.data.ordered ? 'ol' : 'ul';
+    const tag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
 
-    // Thay đổi tag nếu cần (ordered switch)
     if (this.dom.tagName.toLowerCase() !== tag) {
       const newRoot = document.createElement(tag);
       newRoot.className = this.dom.className;
@@ -357,50 +270,65 @@ export class ListBlock extends EditorBlock {
     }
 
     this.dom.innerHTML = '';
-    this.#renderTree(this.data.values, this.dom, []);
+    this.#renderTree(this.data.meta.items, this.dom, []);
 
-    if (this.bus) {
-      this.bus.dispatch('block:updated', { block: this });
-    }
-
-    // Defer focus sau khi DOM settled
+    this.bus?.dispatch('block:updated', { block: this });
     if (afterRender) requestAnimationFrame(afterRender);
   }
 
-  // ─── Inspector controls ───────────────────────────────────────
+  // ─── Overrides ────────────────────────────────────────────────────────────
 
-  renderInspectorControls(data, { onUpdate }) {
+  /**
+   * List tự sync content vào this.data.values khi input,
+   * nên serializeData chỉ cần clone data — không cần đọc từ DOM.
+   *
+   * @param {HTMLElement|null} _editableEl
+   * @returns {object}
+   */
+  serializeData(_editableEl) {
+    return {
+      rich_text: [],
+      meta: { ...this.data.meta },
+    };
+  }
+
+  renderInspectorControls() {
     const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+
     wrap.innerHTML = `
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Kiểu danh sách</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-list-type-btn ${!data.ordered ? 'active' : ''}" data-variant="outline" data-ordered="false">
-            <i class="fa-solid fa-list-ul"></i> Dấu chấm
-          </button>
-          <button type="button" class="btn be-list-type-btn ${data.ordered ? 'active' : ''}" data-variant="outline" data-ordered="true">
-            <i class="fa-solid fa-list-ol"></i> Đánh số
-          </button>
+      <fieldset class="field__set">
+        <legend class="field__label">Kiểu danh sách</legend>
+        <div class="radio-group grid gap-2"
+             data-radio-name="list_type"
+             data-radio-default-value="${this.data.meta.style}">
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="bullet" class="radio-group__item" type="button" role="radio" value="bullet"></button>
+              <div class="field__title"><i class="fa-solid fa-list-ul"></i> Không đánh số</div>
+            </div>
+          </label>
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="ordered" class="radio-group__item" type="button" role="radio" value="ordered"></button>
+              <div class="field__title"><i class="fa-solid fa-list-ol"></i> Có đánh số</div>
+            </div>
+          </label>
         </div>
-      </div>
+      </fieldset>
     `;
 
-    wrap.querySelectorAll('.be-list-type-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const ordered = btn.dataset.ordered === 'true';
-        onUpdate({ ordered });
+    const radioGroup = wrap.querySelector('.radio-group');
+    RadioHandler.instance.register(radioGroup);
 
-        wrap.querySelectorAll('.be-list-type-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
+    radioGroup.addEventListener('radio:change', (e) => {
+      this.data.meta.style = e.detail.value;
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     return wrap;
   }
 
-  /**
-   * Override focus: tìm item đầu/cuối để focus.
-   */
   focus(bus, position = 'end') {
     if (!this.dom) return;
 
@@ -408,6 +336,6 @@ export class ListBlock extends EditorBlock {
     const target = position === 'end' ? all[all.length - 1] : all[0];
     if (target) this.#focusLi(target, position);
 
-    bus.dispatch('block:selected', { blockId: this.id });
+    this.bus.dispatch('block:selected', { blockId: this.id });
   }
 }

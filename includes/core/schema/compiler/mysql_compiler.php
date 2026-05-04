@@ -28,7 +28,7 @@ class MySQLCompiler extends BaseSQLCompiler
     );
   }
 
-  protected function compileLimit(int $limit, int $offset): string
+  protected function compileLimit(int $limit, ?int $offset): string
   {
     return $offset !== null ? "LIMIT $offset, $limit" : "LIMIT $limit";
   }

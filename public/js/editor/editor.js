@@ -1,7 +1,11 @@
 import { registry as BLOCK_REGISTRY } from './block_registry.js';
+import { BlockSerializer } from './block_serializer_v2.js';
 import { EditorBlock } from './blocks/editor_block.js';
 import { EditorListView } from './editor_list_view.js';
-import { EditorBlockToolbar } from './editor_toolbar.js';
+import { ContextStore } from './context/context_store.js';
+import { InlineToolbar } from './toolbar/inline_toolbar.js';
+import { BlockToolbar } from './toolbar/block_toolbar.js';
+import { InlineFormatter } from './inline_formatter_v2.js';
 import { EditorUI } from './editor_ui.js';
 
 /** Đảm nhận việc truyền tin */
@@ -49,18 +53,26 @@ export class EditorManager {
   #bus;
   /** @type {EditorUI} */
   #ui;
-  /** @type {EditorBlockToolbar} */
-  #toolbar;
+  /** @type {InlineToolbar} */
+  #inlineToolbar;
+  /** @type {BlockToolbar} */
+  #blockToolbar;
   /** @type {EditorListView} */
   #listView;
   /** @type {EditorCanvasMetadata} */
   #metadata;
+  /** @type {ContextStore} */
+  #contextStore;
 
   #blockList;
   #canvas;
   #activeBlockId;
   #isEmpty;
   #isDirty;
+  #inputRecordTimeout = null;
+  #lastInputSnapshot = null;
+  #lastInputBlockId = null;
+  #lastRecordTime = 0;
 
   constructor(initialMetaData = {}) {
     this.#bus = new EditorEventBus();
@@ -70,11 +82,23 @@ export class EditorManager {
     this.#canvas = new EditorCanvas(this.#bus);
 
     this.#ui = new EditorUI(this.#bus);
-    this.#toolbar = new EditorBlockToolbar(this.#bus);
+    this.#blockToolbar = new BlockToolbar(this.#bus);
     this.#listView = new EditorListView(this.#bus, this.#canvas);
 
     // Tham chiếu các phần tử DOM
     this.#blockList = document.querySelector('#be-block-list');
+
+    this.#contextStore = new ContextStore(this.#bus, this.#blockList, {
+      maxSnapshots: 10,
+      schemaRegistry: BLOCK_REGISTRY,
+    });
+
+    this.#inlineToolbar = new InlineToolbar(
+      this.#bus,
+      this.#blockList,
+      this.#contextStore,
+      { offset: 8, debounceMs: 80 }
+    );
 
     // Khởi tạo các State
     this.#activeBlockId = "";
@@ -89,10 +113,19 @@ export class EditorManager {
     this.#bus.subscribe('block:selected', (block) => this.#onBlockSelected(block));
     this.#bus.subscribe('block:add_request', (block) => this.#onBlockAddRequested(block));
     this.#bus.subscribe('block:added', (block) => this.#onBlockAdded(block));
-    this.#bus.subscribe('block:update_request', (block) => this.#onBlockUpdateRequested(block));
-    this.#bus.subscribe('block:updated', (block) => this.#onBlockUpdated(block));
+    this.#bus.subscribe('block:updated', (payload) => this.#onBlockUpdated(payload));
     this.#bus.subscribe('block:remove_request', (block) => this.#onBlockRemoveRequested(block));
     this.#bus.subscribe('block:removed', (payload) => this.#onBlockRemoved(payload));
+
+    this.#bus.subscribe('block:action', (p) => this.#onBlockAction(p));
+    this.#bus.subscribe('inline:selection_changed', (p) => this.#onInlineSelectionChanged(p));
+    this.#bus.subscribe('inline:format_request', (p) => this.#onInlineFormatRequest(p));
+    this.#bus.subscribe('inline:link_request', (p) => this.#onInlineLinkRequest(p));
+    this.#bus.subscribe('inline:unlink_request', (p) => this.#onInlineUnlinkRequest(p));
+
+    // this.#bus.subscribe('context:undo_applied', (p) => this.#onUndoApplied(p));
+    // this.#bus.subscribe('context:redo_applied', (p) => this.#onRedoApplied(p));
+    this.#bus.subscribe('block:input', (p) => this.#onBlockInput(p));
 
     this.#initialRender();
     this.#initCanvas();
@@ -141,7 +174,6 @@ export class EditorManager {
       if (handle) {
         const block = this.#canvas.getBlock(clickedId);
         this.#bus.dispatch('toolbar:toggle', { block, anchorEl: handle });
-
         return;
       }
 
@@ -150,13 +182,56 @@ export class EditorManager {
         this.#bus.dispatch('block:selected', { blockId: clickedId });
       }
     });
+
+    this.#blockList.addEventListener('click', (e) => {
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const href = anchor.getAttribute('href');
+      if (href) window.open(href, '_blank', 'noopener,noreferrer');
+    });
+
+    this.#blockList.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        this.#handleGlobalEnter(e);
+      }
+    });
   }
 
-  #onBlockAddRequested({ type }) {
-    this.#canvas.addBlock(type);
+  #onBlockAddRequested({ type, data = {}, afterId = null }) {
+    // this.#commitPendingInput();
+    // this.#contextStore.beginRecord();
+    const newBlock = this.#canvas.addBlock(type, data, afterId);
+
+    /* 
+    Tạm thời gỡ bỏ undo/redo
+    const index = this.#canvas.getBlocks().findIndex(b => b.id === newBlock.id);
+    this.#contextStore.recordOperation({
+      blockId: newBlock.id,
+      attribute: 'lifecycle',
+      prev: null,
+      next: { type: newBlock.type, data: newBlock.data, index },
+      label: `Thêm block ${type}`,
+      action: 'LIFECYCLE'
+    });
+    */
+
+    setTimeout(() => {
+      if (newBlock && typeof newBlock.focus === 'function') {
+        newBlock.focus(this.#bus, 'start');
+      }
+    }, 0);
   }
 
   #onBlockSelected({ blockId }) {
+    // Stage 3: Chốt input đang gõ nếu có khi chuyển block
+    if (this.#lastInputBlockId && this.#lastInputBlockId !== blockId) {
+      this.#commitPendingInput();
+    }
+
     this.#activeBlockId = blockId;
     const block = this.#canvas.getBlock(blockId);
     console.log(`[EditorManager][block:selected] Block: `, block);
@@ -164,7 +239,7 @@ export class EditorManager {
     this.#ui.renderSettingsPanel(block);
   }
 
-  #onBlockAdded({ block }) {
+  #onBlockAdded({ block, afterId }) {
     console.log(`[EditorManager][block:added] Block: `, block);
     const card = new EditorBlockWrapper(this.#bus, block);
 
@@ -172,32 +247,44 @@ export class EditorManager {
       this.#isEmpty = false;
       this.#ui.hideCanvasEmptyState();
     }
-    this.#blockList.appendChild(card);
+
+    if (afterId) {
+      const anchorEl = this.#blockList.querySelector(`[data-be-block-id="${afterId}"]`);
+
+      if (anchorEl && anchorEl.nextSibling) {
+        this.#blockList.insertBefore(card, anchorEl.nextSibling);
+      } else {
+        this.#blockList.appendChild(card);
+      }
+    } else {
+      this.#blockList.appendChild(card);
+    }
 
     // Dispatch event activate block
     this.#bus.dispatch("block:selected", { blockId: block.id })
   }
 
-  #onBlockUpdateRequested({ blockId, payload }) {
-    console.log(`[EditorManager][block:update_request]`, blockId, payload);
+  #onBlockUpdated({ block, silent }) {
+    if (silent) return; // Tuyệt đối không replace DOM nếu là silent update
 
-    this.#canvas.updateBlock(blockId, payload);
-  }
-
-  #onBlockUpdated({ block }) {
     console.log(`[EditorManager][block:updated]`, block);
     const oldCard = document.querySelector(`[data-be-block-id="${block.id}"]`);
     if (!oldCard) return;
 
     const newCard = new EditorBlockWrapper(this.#bus, block);
-
     oldCard.replaceWith(newCard);
   }
 
   #onBlockRemoveRequested({ blockId }) {
-    console.log(`[EditorManager][block:remove_request]`, blockId);
+    // this.#commitPendingInput();
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
 
-    this.#canvas.removeBlock(blockId);
+    // this.#contextStore.beginRecord();
+    const index = this.#canvas.getBlocks().findIndex(b => b.id === blockId);
+
+    // Thực thi vật lý luôn, không thông qua record
+    this.#performPhysicalAction('LIFECYCLE', blockId, 'lifecycle', null, null, false, `Xóa block ${block.type}`);
   }
 
   #onBlockRemoved({ blockId, index }) {
@@ -229,14 +316,329 @@ export class EditorManager {
     }
   }
 
+  #onBlockAction({ action, blockId, selection }) {
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
+
+    if (typeof block.handleToolbarAction === 'function') {
+      block.handleToolbarAction(action, selection);
+    } else {
+      console.warn(`[EditorManager] Block "${blockId}" không implement handleToolbarAction()`);
+    }
+  }
+
+  /**
+   * Khi selection thay đổi trong canvas:
+   *   1. Lấy block đang chứa selection.
+   *   2. Lấy HTML hiện tại của block → parse → tính activeMarks.
+   *   3. Gửi lại 'inline:marks_updated' để InlineToolbar sync button state.
+   *
+   * @param {{ blockId: string, range: Range }} payload
+   */
+  #onInlineSelectionChanged({ blockId, range }) {
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
+
+    const editable = this.#getEditableEl(blockId);
+    if (!editable) return;
+
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    const activeMarks = InlineFormatter.getActiveMarks(tokens, offsets.start, offsets.end);
+
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+  }
+
+  /**
+   * Format request (bold/italic/underline):
+   *   1. Parse HTML → tokens.
+   *   2. applyMark trên [start, end).
+   *   3. serialize → write lại innerHTML.
+   *   4. Restore selection (caret vẫn ở vị trí cũ).
+   *   5. Gửi lại marks mới để toolbar cập nhật.
+   *
+   * @param {{ command: string, value: string|null, blockId: string, range: Range }} payload
+   */
+  #onInlineFormatRequest({ command, blockId, range }) {
+    if (range.collapsed) return;
+
+    const block = this.#canvas.getBlock(blockId);
+    const editable = this.#getEditableEl(blockId);
+    if (!block || !editable) return;
+
+    const prevContent = block._cloneData().content;
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    this.#commitPendingInput();
+    this.#contextStore.beginRecord();
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, command);
+
+    const nextContent = BlockSerializer.tokensToSegments(newTokens);
+    this.#recordAndApply(blockId, 'content', prevContent, nextContent, `Format: ${command}`);
+
+    const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+    this.#isDirty = true;
+  }
+
+  /**
+   * Link request:
+   *   applyMark với type='link' và href.
+   *
+   * @param {{ href: string, blockId: string, range: Range }} payload
+   */
+  #onInlineLinkRequest({ href, blockId, range }) {
+    const block = this.#canvas.getBlock(blockId);
+    const editable = this.#getEditableEl(blockId);
+    if (!block || !editable) return;
+
+    const prevContent = block._cloneData().content;
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    this.#commitPendingInput();
+    this.#contextStore.beginRecord();
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, 'link', href);
+
+    const nextContent = BlockSerializer.tokensToSegments(newTokens);
+    this.#recordAndApply(blockId, 'content', prevContent, nextContent, 'Add Link');
+
+    const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+    this.#isDirty = true;
+  }
+
+  /**
+   * Unlink request:
+   *   removeLink trên vùng được chọn.
+   *
+   * @param {{ blockId: string, range: Range }} payload
+   */
+  #onInlineUnlinkRequest({ blockId, range }) {
+    const block = this.#canvas.getBlock(blockId);
+    const editable = this.#getEditableEl(blockId);
+    if (!block || !editable) return;
+
+    const prevContent = block._cloneData().content;
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    this.#commitPendingInput();
+    this.#contextStore.beginRecord();
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const newTokens = InlineFormatter.removeLink(tokens, offsets.start, offsets.end);
+
+    const nextContent = BlockSerializer.tokensToSegments(newTokens);
+    this.#recordAndApply(blockId, 'content', prevContent, nextContent, 'Unlink');
+
+    const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
+    this.#bus.dispatch('inline:marks_updated', { activeMarks });
+    this.#isDirty = true;
+  }
+
+  #onUndoApplied({ blockId, action, attr, value, cursor, label }) {
+    this.#performPhysicalAction(action || 'UPDATE', blockId, attr, value, cursor, true, label);
+  }
+
+  #onRedoApplied({ blockId, action, attr, value, cursor, label }) {
+    this.#performPhysicalAction(action || 'UPDATE', blockId, attr, value, cursor, true, label);
+  }
+
+  /**
+   * Unified Action Performer - Phễu trung tâm điều khiển DOM & Canvas
+   */
+  #performPhysicalAction(action, blockId, attr, value, cursor = null, isUndoRedo = false, label = '') {
+    if (action === 'LIFECYCLE') {
+      if (value === null) {
+        this.#canvas.removeBlock(blockId);
+      } else {
+        const blocks = this.#canvas.getBlocks();
+        const afterId = value.index === 0 ? 'START' : (blocks[value.index - 1]?.id || null);
+        this.#canvas.addBlock(value.type, value.data, afterId, blockId);
+      }
+    } else {
+      const block = this.#canvas.getBlock(blockId);
+      if (!block) return;
+
+      // Cập nhật thẻ data trong Canvas (Luôn SILENT cho content để tránh re-render card)
+      const isSilent = (attr === 'content') ? true : !isUndoRedo;
+      this.#canvas.updateBlock(blockId, { [attr]: value }, { silent: isSilent });
+
+      // CHỈ CẬP NHẬT DOM NẾU:
+      // 1. Đó là Undo/Redo (cần khôi phục hình ảnh cũ)
+      // 2. Đó là lệnh từ Toolbar/Format (cần áp dụng style mới)
+      // KHÔNG CẬP NHẬT NẾU: Đang gõ văn bản (Typing) - vì DOM đã có sẵn nội dung rồi.
+      if (attr === 'content' && (isUndoRedo || label !== 'Typing')) {
+        const editable = this.#getEditableEl(blockId);
+        if (editable) {
+          // Serialize tokens -> HTML một cách chuẩn mực
+          const tokens = Array.isArray(value) ? BlockSerializer.segmentsToTokens(value) : value;
+          editable.innerHTML = InlineFormatter.serialize(tokens);
+        }
+      }
+    }
+
+    // Khôi phục con trỏ nếu có thông tin (chủ yếu dùng cho Undo/Redo hoặc Format)
+    if (cursor && cursor.charOffset !== null) {
+      setTimeout(() => {
+        const editable = this.#getEditableEl(blockId);
+        if (editable) {
+          editable.focus();
+          const off = cursor.charOffset;
+          this.#restoreSelectionByOffset(editable, off, off);
+        }
+      }, isUndoRedo ? 10 : 0);
+    }
+  }
+
+  /**
+   * Thực thi và ghi lại một Operation
+   */
+  #recordAndApply(blockId, attr, prev, next, label, action = 'UPDATE') {
+    // const op = { blockId, attribute: attr, prev, next, label, action };
+
+    // 1. Ghi vào store (Tạm thời vô hiệu hóa)
+    // this.#contextStore.recordOperation(op);
+
+    // 2. Thực thi vật lý
+    this.#performPhysicalAction(action, blockId, attr, next, null, false, label);
+  }
+
+  #onBlockInput({ blockId }) {
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
+
+    // Cập nhật model với schema mới { rich_text, meta }
+    const editable = this.#getEditableEl(blockId);
+    if (editable) {
+      const data = block.serializeData(editable);
+      this.#canvas.updateBlock(blockId, data, { silent: true });
+    }
+  }
+
+  /**
+   * Chốt (Commit) mọi thay đổi (Đã vô hiệu hóa cùng với Undo/Redo)
+   */
+  #commitPendingInput() {
+    // Logic gỡ bỏ tạm thời
+  }
+
+  /**
+   * Xử lý phím Enter tập trung
+   */
+  #handleGlobalEnter(e) {
+    const { blockId, blockType } = this.#contextStore.cursor;
+
+    if (!blockId || this.#contextStore.type === 'none') return;
+
+    if (blockType === 'blocks/paragraph') {
+      e.preventDefault();
+    }
+  }
+
+  #getEditableEl(blockId) {
+    const card = this.#blockList.querySelector(`[data-be-block-id="${blockId}"]`);
+    if (!card) return null;
+
+    // Ưu tiên element được đánh dấu rõ ràng
+    return (
+      card.querySelector('[data-be-editable]') ??
+      card.querySelector('[contenteditable="true"]') ??
+      null
+    );
+  }
+
+  #restoreSelectionByOffset(container, start, end) {
+    const sel = window.getSelection();
+    if (!sel) return;
+
+    const findPoint = (targetOffset) => {
+      let charCount = 0;
+
+      function walk(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const len = node.textContent.length;
+          if (charCount + len >= targetOffset) {
+            return { node, offset: targetOffset - charCount };
+          }
+          charCount += len;
+          return null;
+        }
+        for (const child of node.childNodes) {
+          const result = walk(child);
+          if (result) return result;
+        }
+        return null;
+      }
+
+      return walk(container);
+    };
+
+    const startPoint = findPoint(start);
+    const endPoint = findPoint(end);
+    if (!startPoint || !endPoint) return;
+
+    try {
+      const range = document.createRange();
+      range.setStart(startPoint.node, startPoint.offset);
+      range.setEnd(endPoint.node, endPoint.offset);
+
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (err) {
+      console.warn('[EditorManager] Không thể restore selection:', err);
+    }
+  }
+
+  importPayload(payload) {
+    if (!payload) return;
+
+    if (payload.meta) {
+      // Đệ quy để nạp metadata (hỗ trợ dot-notation tự động)
+      const traverse = (obj, prefix = '') => {
+        for (const [key, value] of Object.entries(obj)) {
+          const path = prefix ? `${prefix}.${key}` : key;
+          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            traverse(value, path);
+          } else {
+            this.#metadata.setData(path, value);
+          }
+        }
+      };
+      traverse(payload.meta);
+
+      // Force UI sync sau khi nạp xong
+      this.#bus.dispatch('meta:sync_request');
+    }
+
+    if (payload.blocks && Array.isArray(payload.blocks)) {
+      payload.blocks.forEach(b => {
+        this.#canvas.addBlock(b.type, b.data || {}, null, b.id);
+      });
+    }
+  }
+
   getCanvas() {
     return this.#canvas;
   }
 
   getPayload() {
     return {
-      meta: this.#metadata.getData(),
-      blocks: this.#canvas.getBlocks().map(block => block.data)
+      meta: {
+        version: 1,
+        ...this.#metadata.getData(),
+      },
+      blocks: this.#canvas.getBlocks().map(block =>
+        BlockSerializer.toPayload(
+          block,
+          this.#getEditableEl(block.id)
+        )
+      ),
     };
   }
 }
@@ -258,20 +660,12 @@ class EditorCanvas {
    * Tính các thông số của page
    * @returns {{
    * blockCount: number,
-   * wordCount: number,
    * readTime: number
    * }}
    */
-  #computeStats() {
-    let words = 0;
-    for (const b of this.#blocks) {
-      words += b.getStats().words;
-    }
-    const readTime = Math.max(1, Math.round(words / 200)); // 200wpm
+  computeStats() {
     return {
-      blockCount: this.#blocks.length,
-      wordCount: words,
-      readTime
+      blockCount: this.#blocks.length
     };
   }
 
@@ -280,7 +674,7 @@ class EditorCanvas {
   // ===========================
   /**
    * Thêm block mới.
-   * @param {string}      type      — phải có trong BLOCK_DEFAULTS
+   * @param {string}      type      — phải có trong BLOCK_REGISTRY
    * @param {object}      data      — merge với defaultData
    * @param {string|null} afterId   — chèn sau block có id này; null = cuối danh sách
    * @returns {string} id của block mới
@@ -288,19 +682,22 @@ class EditorCanvas {
   addBlock(
     type,
     data = {},
-    afterId = null
+    afterId = null,
+    forceId = null // Thêm forceId để phục vụ Undo/Redo khôi phục đúng ID cũ
   ) {
     const blueprint = BLOCK_REGISTRY.get(type);
     if (!blueprint) throw new Error(`[EditorCanvas] Không tồn tại block type: "${type}"`);
     const { schema, blockClass } = blueprint;
 
-    /** @var {EditorBlock} */
     const block = new blockClass({
+      id: forceId, // Nếu có forceId (hồi sinh block), dùng nó
       data
     }, schema, this.#bus);
 
     if (afterId === null) {
       this.#blocks = [...this.#blocks, block];
+    } else if (afterId === 'START') {
+      this.#blocks = [block, ...this.#blocks];
     } else {
       const idx = this.#blocks.findIndex(b => b.id === afterId);
       const insertAt = idx === -1 ? this.#blocks.length : idx + 1;
@@ -315,7 +712,7 @@ class EditorCanvas {
       block,
       afterId
     });
-    return block.id;
+    return block;
   }
 
   /**
@@ -324,7 +721,7 @@ class EditorCanvas {
    * @param {string} id 
    * @param {object} payload 
    */
-  updateBlock(id, payload) {
+  updateBlock(id, payload, options = {}) {
     const idx = this.#blocks.findIndex(b => b.id === id);
     if (idx === -1) return null;
 
@@ -335,14 +732,16 @@ class EditorCanvas {
     );
     if (!isChanged) return block;
 
+    const prevData = { ...block.data };
     block.data = {
-      ...block.data,
-      ...payload
-    };
+      rich_text: payload.rich_text ?? block.data.rich_text,
+      meta: { ...block.data.meta, ...(payload.meta ?? {}) },
+    }
 
     this.#bus.dispatch("block:updated", {
       block,
-      prevData: { ...block.data }
+      prevData,
+      silent: options.silent || false
     });
   }
 
@@ -419,15 +818,19 @@ class EditorCanvasMetadata {
 
   #data = {
     title: 'Tiêu đề bài viết',
+    slug: 'tieu-de-bai-viet',
     excerpt: '',
-    author_id: null,
+    author_id: '',
     status: 'draft',
     category_ids: [],
     featured_image: null,
-    show_author: false,
-    show_date: true,
-    show_read_time: false,
-    show_view_count: false,
+    settings: {
+      show_author: false,
+      show_date: true,
+      show_read_time: false,
+      show_view_count: false,
+    },
+    read_time: 0, // minute
     init_view_count: 0
   };
 
@@ -450,15 +853,24 @@ class EditorCanvasMetadata {
 
     this.#bus.subscribe('meta:sync_request', () => {
       console.log('[EditorCanvasMetadata] Đang đồng bộ State khởi tạo xuống UI...');
-      for (const [key, value] of Object.entries(this.#data)) {
-        if (value !== null && value !== undefined) {
-          this.#bus.dispatch('meta:updated', {
-            key,
-            value,
-            allMeta: this.getData()
-          });
+
+      const traverse = (obj, prefix = '') => {
+        for (const [key, value] of Object.entries(obj)) {
+          const path = prefix ? `${prefix}.${key}` : key;
+
+          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            traverse(value, path);
+          } else {
+            this.#bus.dispatch('meta:updated', {
+              key: path,
+              value: value,
+              allMeta: this.getData()
+            });
+          }
         }
       }
+
+      traverse(this.#data);
     });
   }
 
@@ -468,9 +880,20 @@ class EditorCanvasMetadata {
    * @param {any} value - Giá trị mới
    */
   setData(key, value) {
-    if (this.#data[key] !== value) {
-      this.#data[key] = value;
+    const keys = key.split('.');
+    let target = this.#data;
 
+    // Duyệt sâu để tìm đúng field (hỗ trợ dot notation)
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      if (!target[k]) target[k] = {};
+      target = target[k];
+    }
+
+    const lastKey = keys[keys.length - 1];
+
+    if (target[lastKey] !== value) {
+      target[lastKey] = value;
       console.log(`[EditorCanvasMetadata] Đã cập nhật "${key}":`, value);
 
       this.#bus.dispatch('meta:updated', {
@@ -501,6 +924,7 @@ class EditorBlockWrapper {
     const wrapper = document.createElement('div');
     wrapper.className = 'be-block-card';
     wrapper.dataset.beBlockId = block.id;
+    wrapper.dataset.beBlockType = block.type;
 
     const handle = document.createElement('div');
     handle.className = 'be-drag-handle';

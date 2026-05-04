@@ -3,10 +3,7 @@
 namespace App\Core\Files;
 
 /**
- * UploadedFile
- *
- * Simple value object representing a validated uploaded file.
- * Carries only what callers need — no parsing logic.
+ * UploadedFile - Value object bất biến cho file upload đã validate
  */
 class UploadedFile
 {
@@ -16,23 +13,32 @@ class UploadedFile
     public string $extension,
     public string $mimeType,
     public int $fileSize,
-    public int $altText,
+    public ?string $altText = null,
   ) {
   }
 }
 
+
 /**
- * UploadedFileHandler
- *
- * Validates a $_FILES entry and returns an UploadedFile.
- * Knows nothing about how the file will be parsed downstream.
+ * UploadedFileHandler - Validate và xử lý file upload
+ * Kiểm tra: extension + MIME type (finfo)
  */
 class UploadedFileHandler
 {
-  /** Extensions the application accepts, lowercase. */
-  private const ALLOWED_EXTENSIONS = [
-    'xlsx',
+  /** MIME types được phép */
+  private const ALLOWED_MIME_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/avif',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  ];
 
+  /** Extensions được phép */
+  private const ALLOWED_EXTENSIONS = [
     'jpg',
     'jpeg',
     'png',
@@ -40,16 +46,25 @@ class UploadedFileHandler
     'webp',
     'avif',
     'ico',
+    'xlsx',
   ];
 
   /**
-   * Validate a $_FILES entry and return a safe UploadedFile.
-   *
-   * @param  array $fileArray  A single entry from $_FILES.
-   * @return UploadedFile
-   * @throws \Exception on any validation failure.
+   * Lấy file từ $_FILES
    */
-  public function processUpload(array $fileArray): UploadedFile
+  public function fromGlobals(string $fieldName, ?string $altText = null): UploadedFile
+  {
+    if (!isset($_FILES[$fieldName])) {
+      throw new \RuntimeException("Không tìm thấy trường file: '{$fieldName}'.");
+    }
+
+    return $this->processUpload($_FILES[$fieldName], $altText);
+  }
+
+  /**
+   * Validate $_FILES array và trả về UploadedFile
+   */
+  public function processUpload(array $fileArray, ?string $altText = null): UploadedFile
   {
     $this->assertValidStructure($fileArray);
     $this->assertNoUploadError($fileArray['error']);
@@ -57,35 +72,77 @@ class UploadedFileHandler
     $extension = strtolower(pathinfo($fileArray['name'], PATHINFO_EXTENSION));
     $this->assertAllowedExtension($extension);
 
+    $mimeType = $this->detectMimeType($fileArray['tmp_name']);
+    $this->assertAllowedMimeType($mimeType);
+
     return new UploadedFile(
       tmpPath: $fileArray['tmp_name'],
       originalName: $fileArray['name'],
       extension: $extension,
-      mimeType
+      mimeType: $mimeType,
+      fileSize: (int) $fileArray['size'],
+      altText: $altText,
     );
   }
 
-  // -------------------------------------------------------------------------
-
   private function assertValidStructure(array $fileArray): void
   {
-    if (!isset($fileArray['error']) || is_array($fileArray['error'])) {
-      throw new \Exception("Tham số không hợp lệ.");
+    $required = ['error', 'name', 'tmp_name', 'size'];
+    foreach ($required as $key) {
+      if (!array_key_exists($key, $fileArray)) {
+        throw new \RuntimeException("Cấu trúc file không hợp lệ: thiếu trường '{$key}'.");
+      }
+    }
+
+    if (is_array($fileArray['error'])) {
+      throw new \RuntimeException("Chỉ chấp nhận upload từng file một.");
     }
   }
 
   private function assertNoUploadError(int $errorCode): void
   {
+    $messages = [
+      UPLOAD_ERR_INI_SIZE => "File vượt quá giới hạn upload_max_filesize trong php.ini.",
+      UPLOAD_ERR_FORM_SIZE => "File vượt quá giới hạn MAX_FILE_SIZE trong form.",
+      UPLOAD_ERR_PARTIAL => "File chỉ được upload một phần.",
+      UPLOAD_ERR_NO_FILE => "Không có file nào được upload.",
+      UPLOAD_ERR_NO_TMP_DIR => "Thiếu thư mục tạm thời.",
+      UPLOAD_ERR_CANT_WRITE => "Không thể ghi file lên đĩa.",
+      UPLOAD_ERR_EXTENSION => "Một PHP extension đã chặn upload.",
+    ];
+
     if ($errorCode !== UPLOAD_ERR_OK) {
-      throw new \Exception("Upload thất bại với lỗi: {$errorCode}");
+      $message = $messages[$errorCode] ?? "Upload thất bại với lỗi không xác định: {$errorCode}";
+      throw new \RuntimeException($message);
     }
   }
 
   private function assertAllowedExtension(string $extension): void
   {
     if (!in_array($extension, self::ALLOWED_EXTENSIONS, strict: true)) {
-      throw new \Exception("Không hỗ trợ file có định dạng: .{$extension}");
+      throw new \RuntimeException("Không hỗ trợ file có định dạng: .{$extension}");
     }
   }
+
+  private function assertAllowedMimeType(string $mimeType): void
+  {
+    if (!in_array($mimeType, self::ALLOWED_MIME_TYPES, strict: true)) {
+      throw new \RuntimeException("MIME type không được phép: {$mimeType}");
+    }
+  }
+
+  /**
+   * Đọc magic bytes để xác định MIME type thực tế
+   */
+  private function detectMimeType(string $tmpPath): string
+  {
+    $finfo = new \finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($tmpPath);
+
+    if ($mime === false) {
+      throw new \RuntimeException("Không thể xác định MIME type của file.");
+    }
+
+    return $mime;
+  }
 }
-?>

@@ -1,2 +1,3 @@
 .prettierignore
 .env.local
+/storage/media/**

@@ -1,5 +1,6 @@
 <?php
-use App\Controllers\Api\{StudentApiController, InternshipAssignmentApiController, InternshipBatchApiController};
+use App\Controllers\Api\{MediaApiController, StudentApiController, InternshipAssignmentApiController, InternshipBatchApiController};
+use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
   $router->prefix('v1')->group(function ($router) {
@@ -35,6 +36,17 @@ $router->prefix('api')->group(function ($router) {
       $router->get('/{id}/supervisors', [InternshipAssignmentApiController::class, 'getSupervisors']);
       $router->post('/{id}/auto-assign', [InternshipAssignmentApiController::class, 'autoAssign']);
       $router->post('/{id}/bulk-save', [InternshipAssignmentApiController::class, 'bulkSave']);
+    });
+    
+    // Media
+    $router->prefix('media')->group(function (Router $router) {
+      $router->post('/', [MediaApiController::class, 'upload']);
+      $router->get('/', [MediaApiController::class, 'indexByPost']);
+      $router->get('/{media_id}', [MediaApiController::class, 'show']);
+      $router->patch('/{media_id}', [MediaApiController::class, 'updateMetadata']);
+      $router->post('/attach', [MediaApiController::class, 'attachToPost']);
+      $router->delete('/{media_id}', [MediaApiController::class, 'delete']);
+      $router->delete('/orphans', [MediaApiController::class, 'deleteOrphans']);
     });
   });
 });

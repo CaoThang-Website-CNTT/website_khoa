@@ -6,7 +6,7 @@ require_once BASE_PATH . '/services/carousel_service.php';
 
 use App\Core\Controller;
 use App\Core\Request;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\CarouselService;
 
 class CarouselController extends Controller
@@ -33,7 +33,7 @@ class CarouselController extends Controller
   {
     $data = $request->all();
 
-    $validator = new Validator();
+    $validator = new RequestValidator();
     $rule = [
       'name' => ['required', 'max:255'],
     ];
@@ -98,7 +98,7 @@ class CarouselController extends Controller
     if (!$carousel)
       $this->abort(404);
     $data = $request->all();
-    $validator = new Validator();
+    $validator = new RequestValidator();
     if (!$validator->validate($data, ['name' => ['required', 'max:255'], 'slug' => ['max:255']])) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
@@ -156,7 +156,7 @@ class CarouselController extends Controller
   public function storeSlide(string $carouselId, Request $request)
   {
     $data = $request->all();
-    $validator = new Validator();
+    $validator = new RequestValidator();
     if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
@@ -196,7 +196,7 @@ class CarouselController extends Controller
   public function updateSlide(string $carouselId, string $slideId, Request $request)
   {
     $data = $request->all();
-    $validator = new Validator();
+    $validator = new RequestValidator();
     if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());

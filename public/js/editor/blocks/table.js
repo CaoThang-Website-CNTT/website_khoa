@@ -1,60 +1,59 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer_v2.js';
+import { RichTextParser } from '../rich_text_parser.js';
 
 export const TableSchema = {
   version: 1,
   icon: "<i class='fa-solid fa-table'></i>",
-  name: 'blocks/table',
+  type: 'blocks/table',
   title: 'Bảng',
   group: 'media',
   groupLabel: 'Phương tiện',
-  attributes: {
+  meta: {
+    hasHeader: { default: true },
     rows: {
       default: [
         ['Tiêu đề 1', 'Tiêu đề 2', 'Tiêu đề 3'],
         ['', '', ''],
         ['', '', ''],
-      ]
+      ],
     },
-    hasHeader: { default: true },
   },
-  supports: {}
+  supports: {},
 };
 
 export class TableBlock extends EditorBlock {
 
-  /** @type {{ row: number, col: number } | null} */
+  /** @type {{ row: number, col: number }|null} */
   #activeCursor = null;
-  /** @type {{ type: 'row' | 'col', index: number } | null} */
+  /** @type {{ type: 'row'|'col', index: number }|null} */
   #selectedSelection = null;
 
-  #tableWrapper = null;
   #rowHandle = null;
   #colHandle = null;
 
   constructor(...args) {
     super(...args);
-
-    if (this.data && this.data.rows) {
-      this.data.rows = JSON.parse(JSON.stringify(this.data.rows));
+    // Deep clone rows để tránh mutate default schema
+    if (this.data?.meta?.rows) {
+      this.data.meta.rows = JSON.parse(JSON.stringify(this.data.meta.rows));
     }
   }
 
   render() {
     const wrapper = document.createElement('div');
-    wrapper.className = 'be-preview-table-wrapper';
+    wrapper.className = 'be-table-wrapper';
+    wrapper.style.position = 'relative';
+
     this.dom = wrapper;
     this.#buildTable();
     return wrapper;
   }
 
-  // ─── Build / Rebuild ──────────────────────────────────────────
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   #buildTable() {
     this.dom.innerHTML = '';
-
-    this.#tableWrapper = document.createElement('div');
-    this.#tableWrapper.className = 'be-table-wrapper';
-    this.#tableWrapper.style.position = 'relative';
 
     this.#colHandle = document.createElement('div');
     this.#colHandle.className = 'be-table-col-handle';
@@ -64,14 +63,14 @@ export class TableBlock extends EditorBlock {
     this.#rowHandle.className = 'be-table-row-handle';
     this.#rowHandle.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
 
-    const scrollWrap = document.createElement('div');
-    scrollWrap.className = 'be-table-scroll';
+    const scrollContainer = document.createElement('div');
+    scrollContainer.className = 'be-table-scroll';
 
     const table = document.createElement('table');
-    table.className = `be-table`;
+    table.className = 'be-table';
     table.contentEditable = 'false';
 
-    const { rows, hasHeader } = this.data;
+    const { rows, hasHeader } = this.data.meta;
 
     if (hasHeader && rows.length > 0) {
       const thead = document.createElement('thead');
@@ -86,207 +85,91 @@ export class TableBlock extends EditorBlock {
     }
     table.appendChild(tbody);
 
-    scrollWrap.appendChild(table);
-
-    this.#tableWrapper.appendChild(this.#colHandle);
-    this.#tableWrapper.appendChild(this.#rowHandle);
-    this.#tableWrapper.appendChild(scrollWrap);
-
-    this.dom.appendChild(this.#tableWrapper);
+    scrollContainer.appendChild(table);
+    this.dom.appendChild(this.#colHandle);
+    this.dom.appendChild(this.#rowHandle);
+    this.dom.appendChild(scrollContainer);
 
     this.#setupHandleTracking();
   }
 
   #setupHandleTracking() {
-    if (!this.#tableWrapper) return;
-
-    this.#tableWrapper.addEventListener('mousemove', (e) => {
+    this.dom.addEventListener('mousemove', (e) => {
       const cell = e.target.closest('td, th');
-
-      if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) {
-        return;
-      }
-
+      if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) return;
       if (!cell) return;
 
       const tr = cell.closest('tr');
-      if (!tr) return;
-
-      this.#colHandle.style.display = 'flex';
-      this.#rowHandle.style.display = 'flex';
-
-      const wrapperRect = this.#tableWrapper.getBoundingClientRect();
+      const wrapperRect = this.dom.getBoundingClientRect();
       const cellRect = cell.getBoundingClientRect();
       const trRect = tr.getBoundingClientRect();
 
-      const colLeft = (cellRect.left - wrapperRect.left) + (cellRect.width / 2) - 20;
-      this.#colHandle.style.left = `${colLeft}px`;
+      this.#colHandle.style.display = 'flex';
+      this.#rowHandle.style.display = 'flex';
+      this.#colHandle.style.left = `${(cellRect.left - wrapperRect.left) + (cellRect.width / 2) - 20}px`;
+      this.#rowHandle.style.top = `${(trRect.top - wrapperRect.top) + (trRect.height / 2) - 15}px`;
 
-      const rowTop = (trRect.top - wrapperRect.top) + (trRect.height / 2) - 15;
-      this.#rowHandle.style.top = `${rowTop}px`;
-
-      const rowIndex = tr.rowIndex;
-      const colIndex = cell.cellIndex;
-
-      this.#rowHandle.dataset.rowIndex = rowIndex;
-      this.#colHandle.dataset.colIndex = colIndex;
+      this.#rowHandle.dataset.rowIndex = tr.rowIndex;
+      this.#colHandle.dataset.colIndex = cell.cellIndex;
     });
 
-    this.#tableWrapper.addEventListener('mouseleave', () => {
+    this.dom.addEventListener('mouseleave', () => {
       this.#colHandle.style.display = 'none';
       this.#rowHandle.style.display = 'none';
     });
 
     this.#rowHandle.addEventListener('click', (e) => {
-      e.stopPropagation(); // Ngăn click lan ra ngoài
-      const rowIndex = parseInt(this.#rowHandle.dataset.rowIndex, 10);
-
-      this.#highlightRow(rowIndex);
-
-      // Kích hoạt Toolbar (Mình truyền thêm selection context để Toolbar biết đang thao tác với Row)
-      if (this.bus) {
-        this.bus.dispatch('toolbar:toggle', {
-          block: this,
-          anchorEl: this.#rowHandle,
-          selection: this.#selectedSelection,
-          hideDefault: true
-        });
-      }
+      e.stopPropagation();
+      this.#highlightRow(parseInt(this.#rowHandle.dataset.rowIndex, 10));
+      this.bus?.dispatch('toolbar:toggle', {
+        block: this, anchorEl: this.#rowHandle,
+        selection: this.#selectedSelection, hideDefault: true,
+      });
     });
 
     this.#colHandle.addEventListener('click', (e) => {
       e.stopPropagation();
-      const colIndex = parseInt(this.#colHandle.dataset.colIndex, 10);
-
-      this.#highlightCol(colIndex);
-
-      // Kích hoạt Toolbar
-      if (this.bus) {
-        this.bus.dispatch('toolbar:toggle', {
-          block: this,
-          anchorEl: this.#colHandle,
-          selection: this.#selectedSelection,
-          hideDefault: true
-        });
-      }
+      this.#highlightCol(parseInt(this.#colHandle.dataset.colIndex, 10));
+      this.bus?.dispatch('toolbar:toggle', {
+        block: this, anchorEl: this.#colHandle,
+        selection: this.#selectedSelection, hideDefault: true,
+      });
     });
 
-    this.#tableWrapper.addEventListener('click', (e) => {
-      // Nếu click trúng vào các handle thì bỏ qua (do đã xử lý ở trên)
+    this.dom.addEventListener('click', (e) => {
       if (e.target.closest('.be-table-row-handle, .be-table-col-handle')) return;
-
-      // Nếu click vào một ô bình thường (để gõ chữ), ta xóa highlight
-      if (e.target.closest('td, th')) {
-        this.#clearHighlight();
-      }
+      if (e.target.closest('td, th')) this.#clearHighlight();
     });
   }
 
   #clearHighlight() {
-    if (!this.dom) return;
-    const selectedCells = this.dom.querySelectorAll('.be-cell-selected');
-    selectedCells.forEach(cell => cell.classList.remove('be-cell-selected'));
+    this.dom?.querySelectorAll('.be-cell-selected')
+      .forEach(cell => cell.classList.remove('be-cell-selected'));
     this.#selectedSelection = null;
   }
 
   #highlightRow(rowIndex) {
     this.#clearHighlight();
-
     const table = this.dom.querySelector('.be-table');
-    if (!table || !table.rows[rowIndex]) return;
-
-    const cells = table.rows[rowIndex].cells;
-    for (let i = 0; i < cells.length; i++) {
-      cells[i].classList.add('be-cell-selected');
-    }
-
+    if (!table?.rows[rowIndex]) return;
+    [...table.rows[rowIndex].cells].forEach(c => c.classList.add('be-cell-selected'));
     this.#selectedSelection = { type: 'row', index: rowIndex };
   }
 
   #highlightCol(colIndex) {
     this.#clearHighlight();
-
     const table = this.dom.querySelector('.be-table');
     if (!table) return;
-
-    for (let i = 0; i < table.rows.length; i++) {
-      const row = table.rows[i];
-      if (row.cells[colIndex]) {
-        row.cells[colIndex].classList.add('be-cell-selected');
-      }
+    for (const row of table.rows) {
+      row.cells[colIndex]?.classList.add('be-cell-selected');
     }
-
     this.#selectedSelection = { type: 'col', index: colIndex };
   }
 
-  getDynamicToolbar(selection) {
-    if (!selection) return '';
-
-    if (selection.type === 'row') {
-      return `
-        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-row-above">
-          <i class="fa-solid fa-arrow-up"></i>
-          <span class="dropdown__item-label">Thêm dòng bên trên</span>
-        </button>
-        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-row-below">
-          <i class="fa-solid fa-arrow-down"></i>
-          <span class="dropdown__item-label">Thêm dòng bên dưới</span>
-        </button>
-        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:remove-row">
-          <i class="fa-solid fa-trash-can"></i>
-          <span class="dropdown__item-label">Xóa dòng</span>
-        </button>
-      `;
-    }
-
-    if (selection.type === 'col') {
-      return `
-        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-before">
-          <i class="fa-solid fa-arrow-left"></i>
-          <span class="dropdown__item-label">Thêm cột bên trái</span>
-        </button>
-        <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-after">
-          <i class="fa-solid fa-arrow-right"></i>
-          <span class="dropdown__item-label">Thêm cột bên phải</span>
-        </button>
-        <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:remove-col">
-          <i class="fa-solid fa-trash-can"></i>
-          <span class="dropdown__item-label">Xóa cột</span>
-        </button>
-      `;
-    }
-    return '';
-  }
-
-  handleToolbarAction(action, selection) {
-    if (!selection) return;
-
-    // Ẩn handle và clear highlight đi vì sau khi render lại DOM sẽ thay đổi
-    this.#clearHighlight();
-    if (this.#colHandle) this.#colHandle.style.display = 'none';
-    if (this.#rowHandle) this.#rowHandle.style.display = 'none';
-
-    const { type, index } = selection;
-
-    switch (action) {
-      // Nhánh xử lý Dòng
-      case 'table:insert-row-above': this.insertRowBefore(index); break;
-      case 'table:insert-row-below': this.insertRowAfter(index); break;
-      case 'table:remove-row': this.removeRow(index); break;
-
-      // Nhánh xử lý Cột
-      case 'table:insert-col-before': this.insertColBefore(index); break;
-      case 'table:insert-col-after': this.insertColAfter(index); break;
-      case 'table:remove-col': this.removeCol(index); break;
-
-      default:
-        console.warn(`Action ${action} chưa được hỗ trợ trên TableBlock`);
-    }
-
-  }
+  // ─── Row builder ──────────────────────────────────────────────────────────
 
   /**
-   * @param {string[]} cellData
+   * @param {Array<RichSegment[]|string>} cellData
    * @param {number} rowIndex
    * @param {'td'|'th'} cellTag
    * @returns {HTMLTableRowElement}
@@ -295,49 +178,44 @@ export class TableBlock extends EditorBlock {
     const tr = document.createElement('tr');
     tr.dataset.row = rowIndex;
 
-    cellData.forEach((cellText, colIndex) => {
+    cellData.forEach((cellValue, colIndex) => {
       const cell = document.createElement(cellTag);
-      cell.className = 'be-table-cell';
       cell.contentEditable = 'true';
       cell.spellcheck = false;
       cell.dataset.row = rowIndex;
       cell.dataset.col = colIndex;
       cell.dataset.placeholder = cellTag === 'th' ? 'Tiêu đề...' : '';
-      cell.textContent = cellText;
 
+      cell.innerHTML = BlockSerializer.toHTML({ data: { rich_text: cellValue } });
+
+      // Input: sync cell → RichSegment[] ngay
       cell.addEventListener('input', () => {
-        this.data.rows[rowIndex][colIndex] = cell.textContent;
+        const html = cell.innerHTML?.trim() ?? '';
+        this.data.meta.rows[rowIndex][colIndex] = html
+          ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
+          : [];
       });
 
       cell.addEventListener('paste', (e) => {
         e.preventDefault();
         const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-        document.execCommand('insertText', false, text);
+        this.paste(this.esc(text));
       });
 
       cell.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          this.#navigateCell(rowIndex, colIndex, e.shiftKey ? -1 : 1);
-        }
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          this.#navigateRow(rowIndex, colIndex, 1);
-        }
+        if (e.key === 'Tab') { e.preventDefault(); this.#navigateCell(rowIndex, colIndex, e.shiftKey ? -1 : 1); }
+        if (e.key === 'Enter') { e.preventDefault(); this.#navigateRow(rowIndex, colIndex, 1); }
       });
 
       cell.addEventListener('focus', () => {
         this.#activeCursor = { row: rowIndex, col: colIndex };
       });
 
-      // 2. BLUR: Khi rời khỏi bảng, yêu cầu ẩn Toolbar
       cell.addEventListener('blur', (e) => {
-        const relatedTarget = e.relatedTarget;
-        const stillInTable = relatedTarget && this.dom.contains(relatedTarget);
-
-        if (!stillInTable && this.bus) {
+        const stillInTable = e.relatedTarget && this.dom.contains(e.relatedTarget);
+        if (!stillInTable) {
           this.#activeCursor = null;
-          this.bus.dispatch('toolbar:hide_dynamic');
+          this.bus?.dispatch('toolbar:hide_dynamic');
         }
       });
 
@@ -347,36 +225,28 @@ export class TableBlock extends EditorBlock {
     return tr;
   }
 
-  // ─── Navigation ───────────────────────────────────────────────
+  // ─── Navigation ───────────────────────────────────────────────────────────
 
   #navigateCell(row, col, direction) {
-    const colCount = this.data.rows[row]?.length ?? 0;
-    const rowCount = this.data.rows.length;
-
+    const colCount = this.data.meta.rows[row]?.length ?? 0;
+    const rowCount = this.data.meta.rows.length;
     let nextCol = col + direction;
     let nextRow = row;
 
-    if (nextCol >= colCount) {
-      nextCol = 0;
-      nextRow = row + 1;
-    } else if (nextCol < 0) {
-      nextRow = row - 1;
-      if (nextRow < 0) return;
-      nextCol = (this.data.rows[nextRow]?.length ?? 1) - 1;
-    }
+    if (nextCol >= colCount) { nextCol = 0; nextRow = row + 1; }
+    else if (nextCol < 0) { nextRow = row - 1; if (nextRow < 0) return; nextCol = (this.data.meta.rows[nextRow]?.length ?? 1) - 1; }
 
     if (nextRow >= rowCount) {
       this.insertRowAfter(rowCount - 1);
       requestAnimationFrame(() => this.#focusCell(nextRow, 0));
       return;
     }
-
     this.#focusCell(nextRow, nextCol);
   }
 
   #navigateRow(row, col, direction) {
     const nextRow = row + direction;
-    if (nextRow < 0 || nextRow >= this.data.rows.length) return;
+    if (nextRow < 0 || nextRow >= this.data.meta.rows.length) return;
     this.#focusCell(nextRow, col);
   }
 
@@ -392,86 +262,150 @@ export class TableBlock extends EditorBlock {
     sel.addRange(range);
   }
 
-  // ─── Public Mutation API ──────────────────────────────────────
+  // ─── Mutation API ─────────────────────────────────────────────────────────
+
+  getDynamicToolbar(selection) {
+    if (!selection) return '';
+    if (selection.type === 'row') return `
+      <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-row-above">
+        <i class="fa-solid fa-arrow-up"></i><span class="dropdown__item-label">Thêm dòng bên trên</span>
+      </button>
+      <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-row-below">
+        <i class="fa-solid fa-arrow-down"></i><span class="dropdown__item-label">Thêm dòng bên dưới</span>
+      </button>
+      <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:remove-row">
+        <i class="fa-solid fa-trash-can"></i><span class="dropdown__item-label">Xóa dòng</span>
+      </button>`;
+
+    if (selection.type === 'col') return `
+      <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-before">
+        <i class="fa-solid fa-arrow-left"></i><span class="dropdown__item-label">Thêm cột bên trái</span>
+      </button>
+      <button type="button" class="dropdown__item be-toolbar__item" data-action="table:insert-col-after">
+        <i class="fa-solid fa-arrow-right"></i><span class="dropdown__item-label">Thêm cột bên phải</span>
+      </button>
+      <button type="button" class="dropdown__item be-toolbar__item be-toolbar__item--destructive" data-action="table:remove-col">
+        <i class="fa-solid fa-trash-can"></i><span class="dropdown__item-label">Xóa cột</span>
+      </button>`;
+    return '';
+  }
+
+  handleToolbarAction(action, selection) {
+    if (!selection) return;
+    this.#clearHighlight();
+    this.#colHandle.style.display = 'none';
+    this.#rowHandle.style.display = 'none';
+
+    const { type, index } = selection;
+    switch (action) {
+      case 'table:insert-row-above': this.insertRowBefore(index); break;
+      case 'table:insert-row-below': this.insertRowAfter(index); break;
+      case 'table:remove-row': this.removeRow(index); break;
+      case 'table:insert-col-before': this.insertColBefore(index); break;
+      case 'table:insert-col-after': this.insertColAfter(index); break;
+      case 'table:remove-col': this.removeCol(index); break;
+      default: console.warn(`[TableBlock] Action không hỗ trợ: ${action}`);
+    }
+  }
 
   insertRowBefore(rowIndex) {
-    const colCount = this.data.rows[0]?.length ?? 1;
-    this.data.rows.splice(rowIndex, 0, new Array(colCount).fill(''));
+    const colCount = this.data.meta.rows[0]?.length ?? 1;
+    this.data.meta.rows.splice(rowIndex, 0, new Array(colCount).fill([]));
     this.#rerender(rowIndex, this.#activeCursor?.col ?? 0);
   }
 
   insertRowAfter(rowIndex) {
-    const colCount = this.data.rows[0]?.length ?? 1;
-    this.data.rows.splice(rowIndex + 1, 0, new Array(colCount).fill(''));
+    const colCount = this.data.meta.rows[0]?.length ?? 1;
+    this.data.meta.rows.splice(rowIndex + 1, 0, new Array(colCount).fill([]));
     this.#rerender(rowIndex + 1, this.#activeCursor?.col ?? 0);
   }
 
   removeRow(rowIndex) {
-    if (this.data.rows.length <= 1) return;
-    this.data.rows.splice(rowIndex, 1);
-    const focusRow = Math.min(rowIndex, this.data.rows.length - 1);
-    this.#rerender(focusRow, this.#activeCursor?.col ?? 0);
+    if (this.data.meta.rows.length <= 1) return;
+    this.data.meta.rows.splice(rowIndex, 1);
+    this.#rerender(Math.min(rowIndex, this.data.meta.rows.length - 1), this.#activeCursor?.col ?? 0);
   }
 
   insertColBefore(colIndex) {
-    this.data.rows.forEach(row => row.splice(colIndex, 0, ''));
+    this.data.meta.rows.forEach(row => row.splice(colIndex, 0, []));
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex);
   }
 
   insertColAfter(colIndex) {
-    this.data.rows.forEach(row => row.splice(colIndex + 1, 0, ''));
+    this.data.meta.rows.forEach(row => row.splice(colIndex + 1, 0, []));
     this.#rerender(this.#activeCursor?.row ?? 0, colIndex + 1);
   }
 
   removeCol(colIndex) {
-    const colCount = this.data.rows[0]?.length ?? 0;
+    const colCount = this.data.meta.rows[0]?.length ?? 0;
     if (colCount <= 1) return;
-    this.data.rows.forEach(row => row.splice(colIndex, 1));
-    const focusCol = Math.min(colIndex, colCount - 2);
-    this.#rerender(this.#activeCursor?.row ?? 0, focusCol);
+    this.data.meta.rows.forEach(row => row.splice(colIndex, 1));
+    this.#rerender(this.#activeCursor?.row ?? 0, Math.min(colIndex, colCount - 2));
   }
-
-  // ─── Re-render ────────────────────────────────────────────────
 
   #rerender(focusRow, focusCol) {
     this.#buildTable();
-
-    if (this.bus) {
-      this.bus.dispatch('block:updated', { block: this });
-    }
-
+    this.bus?.dispatch('block:updated', { block: this });
     requestAnimationFrame(() => {
       this.#focusCell(
-        Math.min(focusRow, this.data.rows.length - 1),
-        Math.min(focusCol, (this.data.rows[0]?.length ?? 1) - 1)
+        Math.min(focusRow, this.data.meta.rows.length - 1),
+        Math.min(focusCol, (this.data.meta.rows[0]?.length ?? 1) - 1),
       );
     });
   }
 
-  // ─── Inspector controls ───────────────────────────────────────
+  // ─── Overrides ────────────────────────────────────────────────────────────
 
-  renderInspectorControls(data, { onUpdate }) {
+  /**
+   * Table sync cell data vào this.data.rows khi input —
+   * serializeData chỉ cần clone, không đọc từ DOM.
+   *
+   * @param {HTMLElement|null} _editableEl
+   * @returns {object}
+   */
+  serializeData(_editableEl) {
+    return {
+      rich_text: [],
+      meta: { ...this.data.meta },
+    };
+  }
+
+  /**
+   * Weight-based: 2 giây/cell.
+   * @returns {{ seconds: number }}
+   */
+  renderInspectorControls() {
     const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+
     wrap.innerHTML = `
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Header</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-table-header-btn ${data.hasHeader ? 'active' : ''}" data-variant="outline" data-has-header="true">
-            <i class="fa-solid fa-table-columns"></i> Có header
-          </button>
-          <button type="button" class="btn be-table-header-btn ${!data.hasHeader ? 'active' : ''}" data-variant="outline" data-has-header="false">
-            Không header
-          </button>
+      <fieldset class="field__set">
+        <legend class="field__label">Header</legend>
+        <div class="radio-group grid gap-2"
+             data-radio-name="has_header"
+             data-radio-default-value="${this.data.meta.hasHeader}">
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="has_header" class="radio-group__item" type="button" role="radio" value="true"></button>
+              <div class="field__title">Có header</div>
+            </div>
+          </label>
+          <label class="field__label">
+            <div class="field" data-orientation="horizontal">
+              <button id="not_has_header" class="radio-group__item" type="button" role="radio" value="false"></button>
+              <div class="field__title">Không header</div>
+            </div>
+          </label>
         </div>
-      </div>
+      </fieldset>
     `;
 
-    wrap.querySelectorAll('.be-table-header-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        onUpdate({ hasHeader: btn.dataset.hasHeader === 'true' });
-        wrap.querySelectorAll('.be-table-header-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
+    const radioGroup = wrap.querySelector('.radio-group');
+    RadioHandler.instance.register(radioGroup);
+
+    radioGroup.addEventListener('radio:change', (e) => {
+      this.data.meta.hasHeader = e.detail.value === 'true';
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     return wrap;
@@ -479,7 +413,7 @@ export class TableBlock extends EditorBlock {
 
   focus(bus, position = 'end') {
     if (!this.dom) return;
-    const rows = this.data.rows;
+    const rows = this.data.meta.rows;
     if (!rows.length) return;
 
     if (position === 'end') {
@@ -489,6 +423,6 @@ export class TableBlock extends EditorBlock {
       this.#focusCell(0, 0);
     }
 
-    bus.dispatch('block:selected', { blockId: this.id });
+    this.bus.dispatch('block:selected', { blockId: this.id });
   }
 }

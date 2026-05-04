@@ -1,42 +1,52 @@
 import { EditorBlock } from './editor_block.js';
+import { BlockSerializer } from '../block_serializer_v2.js';
+import { RichTextParser } from '../rich_text_parser.js';
 
 export const ImageSchema = {
-  name: 'blocks/image',
+  version: 1,
+  icon: '<i class="fa-regular fa-image"></i>',
+  type: 'blocks/image',
   title: 'Hình ảnh',
   group: 'media',
   groupLabel: 'Phương tiện',
-  icon: '<i class="fa-regular fa-image"></i>',
-  attributes: {
-    url: { default: '' },       // Đường dẫn ảnh thật sau khi upload
+  meta: {
+    mediaId: { default: null },
+    url: { default: '' },
     alt: { default: '' },
-    caption: { default: '' },   // Chú thích dưới ảnh
-    align: { default: 'center' }, // Căn lề
-    width: { default: '100%' }
+    caption: { default: [] },
+    align: { default: 'center' },
+    width: { default: '100%' },
   }
 };
 
 export class ImageBlock extends EditorBlock {
+
+  /** @type {number|null} */
+  #postId = null;
+  /** @type {HTMLElement|null} */
+  #captionEl = null;
+
+  constructor(blockData, schema, bus) {
+    super(blockData, schema, bus);
+
+    this.bus?.subscribe('meta:updated', ({ key, value }) => {
+      if (key === 'post_id' && value) this.#postId = value;
+    });
+  }
+
   render() {
     this.dom = document.createElement('figure');
-    this.dom.className = `be-preview-image be-align-${this.data.align}`;
+    this.dom.className = `be-image be-image-align--${this.data.meta.align}`;
     this.dom.contentEditable = 'false';
 
     this.#renderCurrentState();
-
     return this.dom;
   }
 
   #renderCurrentState() {
     this.dom.innerHTML = '';
-    this.dom.className = `be-preview-image be-align-${this.data.align}`;
-
-    if (this.data.url) {
-      // Có hình
-      this.#renderResolved();
-    } else {
-      // Chưa có hình
-      this.#renderPlaceholder();
-    }
+    this.#captionEl = null;
+    this.data.meta.url ? this.#renderResolved() : this.#renderPlaceholder();
   }
 
   #renderPlaceholder() {
@@ -48,9 +58,7 @@ export class ImageBlock extends EditorBlock {
         <div class="be-image-placeholder__actions">
           <button type="button" class="btn be-upload-btn" data-variant="primary" data-size="md">Tải lên</button>
           <input type="file" class="be-file-input" accept="image/*" hidden>
-
           <span class="be-placeholder-divider">hoặc</span>
-
           <div class="be-image-url-input-group">
             <input type="text" class="be-image-external-url" placeholder="Dán URL hình ảnh...">
             <button type="button" class="btn be-apply-url-btn" data-variant="outline">Chèn</button>
@@ -62,7 +70,7 @@ export class ImageBlock extends EditorBlock {
     const uploadBtn = this.dom.querySelector('.be-upload-btn');
     const fileInput = this.dom.querySelector('.be-file-input');
     const urlInput = this.dom.querySelector('.be-image-external-url');
-    const applyUrlBtn = this.dom.querySelector('.be-apply-url-btn');
+    const applyBtn = this.dom.querySelector('.be-apply-url-btn');
 
     uploadBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async (e) => {
@@ -70,22 +78,17 @@ export class ImageBlock extends EditorBlock {
       if (file) await this.#handleUpload(file);
     });
 
-    const handleExternalUrl = () => {
+    const applyExternalUrl = () => {
       const url = urlInput.value.trim();
-      if (url) {
-        this.data.url = url;
-        if (this.bus) this.bus.dispatch('block:updated', { block: this });
-        this.#renderCurrentState();
-      }
+      if (!url) return;
+      this.data.meta.url = url;
+      this.bus?.dispatch('block:updated', { block: this });
+      this.#renderCurrentState();
     };
 
-    applyUrlBtn.addEventListener('click', handleExternalUrl);
-
+    applyBtn.addEventListener('click', applyExternalUrl);
     urlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleExternalUrl();
-      }
+      if (e.key === 'Enter') { e.preventDefault(); applyExternalUrl(); }
     });
   }
 
@@ -93,76 +96,83 @@ export class ImageBlock extends EditorBlock {
     const blobUrl = URL.createObjectURL(file);
 
     this.dom.innerHTML = `
-      <div class="be-image-loading" style="position: relative;">
-        <img src="${blobUrl}" style="opacity: 0.5; max-width: 100%; border-radius: var(--radius-md);">
-        <div class="be-spinner" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+      <div class="be-image-loading" style="position:relative;">
+        <img src="${blobUrl}" style="opacity:0.5;max-width:100%;border-radius:var(--radius-md);">
+        <div class="be-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
           <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
         </div>
       </div>
     `;
 
     try {
-      /*
       const formData = new FormData();
-      formData.append('image', file);
-      const response = await fetch('/api/upload', { method: 'POST', body: formData });
-      const result = await response.json();
-      const uploadedUrl = result.url;
-      */
+      formData.append('file', file);
+      if (this.data.meta.alt) formData.append('alt_text', this.data.meta.alt);
+      if (this.#postId) formData.append('post_id', this.#postId);
 
-      const uploadedUrl = await new Promise(resolve => {
-        setTimeout(() => resolve(blobUrl), 1500);
+      const response = await fetch('http://localhost/website_khoa/api/v1/media', {
+        method: 'POST',
+        body: formData,
       });
 
-      this.data.url = uploadedUrl;
-
-      if (this.bus) {
-        this.bus.dispatch('block:updated', { block: this });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${response.status}`);
       }
 
+      const result = await response.json();
+
+      this.data.meta.mediaId = result.data.id;
+      this.data.meta.url = `http://localhost/website_khoa/storage/${result.data.file_path}`;
+
+      if (result.data.alt_text && !this.data.meta.alt) {
+        this.data.meta.alt = result.data.alt_text;
+      }
+
+      this.bus?.dispatch('block:updated', { block: this });
       this.#renderCurrentState();
 
     } catch (error) {
-      console.error('Lỗi upload ảnh:', error);
+      console.error('[ImageBlock] Lỗi upload:', error);
       alert('Không thể tải ảnh lên. Vui lòng thử lại.');
       this.#renderCurrentState();
+    } finally {
+      URL.revokeObjectURL(blobUrl);
     }
   }
 
   #renderResolved() {
-    const imgWrapper = document.createElement('div');
-    imgWrapper.className = 'be-image-content-wrapper';
-    imgWrapper.style.display = 'inline-block';
-    imgWrapper.style.position = 'relative';
-    imgWrapper.style.maxWidth = '100%';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'be-image-wrapper';
 
     const img = document.createElement('img');
-    img.src = this.data.url;
-    img.alt = this.data.alt || '';
-    img.className = 'be-image-element';
+    img.src = this.data.meta.url;
+    img.alt = this.data.meta.alt || '';
+    img.loading = 'lazy';
+    img.style.width = this.data.meta.width.includes('%') || this.data.meta.width.includes('px')
+      ? this.data.meta.width
+      : `${this.data.meta.width}px`;
 
-    img.style.width = this.data.width.includes('%') || this.data.width.includes('px')
-      ? this.data.width
-      : `${this.data.width}px`;
-
-    // Render khu vực nhập caption
     const caption = document.createElement('figcaption');
     caption.contentEditable = 'true';
     caption.className = 'be-editable be-image-caption';
-    caption.dataset.placeholder = 'Viết chú thích ảnh...';
-    caption.textContent = this.data.caption || '';
     caption.spellcheck = false;
+    caption.dataset.placeholder = 'Viết chú thích ảnh...';
+    caption.dataset.beEditable = '';
+    caption.innerHTML = BlockSerializer.toHTML({ data: { rich_text: this.data.meta.caption } });
 
-    imgWrapper.appendChild(img);
-    this.dom.appendChild(imgWrapper);
+    this.#captionEl = caption;
+
+    wrapper.appendChild(img);
+    this.dom.appendChild(wrapper);
     this.dom.appendChild(caption);
 
-    // Xử lý sự kiện cho caption
     caption.addEventListener('input', () => {
-      this.data.caption = caption.textContent.trim();
-      if (this.bus) {
-        this.bus.dispatch('block:updated', { block: this });
-      }
+      this.bus?.dispatch('block:input', { blockId: this.id });
+    });
+
+    caption.addEventListener('blur', () => {
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     caption.addEventListener('paste', (e) => {
@@ -172,77 +182,68 @@ export class ImageBlock extends EditorBlock {
     });
 
     caption.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        caption.blur();
-      }
+      if (e.key === 'Enter') { e.preventDefault(); caption.blur(); }
     });
+  }
+
+  /**
+   * Override: Image có caption là rich text và các field media khác.
+   * @param {HTMLElement|null} _editableEl — không dùng, tự quản lý #captionEl
+   * @returns {object}
+   */
+  serializeData(_editableEl) {
+    const captionHtml = this.#captionEl?.innerHTML?.trim() ?? '';
+    return {
+      rich_text: [],
+      meta: {
+        ...this.data.meta,
+        caption: captionHtml
+          ? BlockSerializer.tokensToSegments(RichTextParser.parse(captionHtml))
+          : [],
+      },
+    };
   }
 
   renderInspectorControls() {
     const wrap = document.createElement('div');
+    wrap.className = 'field-group';
 
     wrap.innerHTML = `
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Căn lề (Align)</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-align-btn ${this.data.align === 'left' ? 'active' : ''}" data-align="left" title="Căn trái"><i class="fa-solid fa-align-left"></i></button>
-          <button type="button" class="btn be-align-btn ${this.data.align === 'center' ? 'active' : ''}" data-align="center" title="Căn giữa"><i class="fa-solid fa-align-center"></i></button>
-          <button type="button" class="btn be-align-btn ${this.data.align === 'right' ? 'active' : ''}" data-align="right" title="Căn phải"><i class="fa-solid fa-align-right"></i></button>
-          <button type="button" class="btn be-align-btn ${this.data.align === 'full' ? 'active' : ''}" data-align="full" title="Toàn màn hình"><i class="fa-solid fa-arrows-left-right"></i></button>
+      <div class="field">
+        <label class="field__label">Văn bản thay thế (Alt Text)</label>
+        <textarea class="field__input be-alt-input" rows="3"
+                  placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.meta.alt)}</textarea>
+      </div>
+      <fieldset class="field__set">
+        <legend class="field__label">Kích thước ảnh</legend>
+        <div class="radio-group grid grid-cols-2 gap-2"
+             data-radio-name="image_size"
+             data-radio-default-value="${this.data.meta.width}">
+          ${[25, 50, 75, 100].map(pct => `
+            <label class="field__label">
+              <div class="field" data-orientation="horizontal">
+                <button id="size-${pct}" class="radio-group__item"
+                        type="button" role="radio" value="${pct}%"></button>
+                <div class="field__title">${pct}%</div>
+              </div>
+            </label>
+          `).join('')}
         </div>
-      </div>
-
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Văn bản thay thế (Alt Text)</span>
-        <textarea class="be-settings-textarea be-alt-input" rows="3" placeholder="Mô tả hình ảnh cho SEO...">${this.esc(this.data.alt)}</textarea>
-      </div>
-
-      <div class="be-settings-property-section">
-        <span class="be-settings-property__label">Kích thước ảnh</span>
-        <div class="be-settings-level-group">
-          <button type="button" class="btn be-size-btn" data-size="25%">25%</button>
-          <button type="button" class="btn be-size-btn" data-size="50%">50%</button>
-          <button type="button" class="btn be-size-btn" data-size="75%">75%</button>
-          <button type="button" class="btn be-size-btn" data-size="100%">100%</button>
-        </div>
-      </div>
+      </fieldset>
     `;
 
-    wrap.querySelectorAll('.be-align-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const newAlign = btn.dataset.align;
-        this.data.align = newAlign;
+    const radioGroup = wrap.querySelector('.radio-group');
+    RadioHandler.instance.register(radioGroup);
 
-        this.dom.className = `be-preview-image be-align-${newAlign}`;
-
-        wrap.querySelectorAll('.be-align-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        if (this.bus) this.bus.dispatch('block:updated', { block: this });
-      });
+    radioGroup.addEventListener('radio:change', (e) => {
+      this.data.meta.width = e.detail.value;
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     const altInput = wrap.querySelector('.be-alt-input');
-    altInput.addEventListener('input', () => {
-      this.data.alt = altInput.value;
-
-      const imgNode = this.dom.querySelector('.be-image-element');
-      if (imgNode) imgNode.alt = this.data.alt;
-
-      if (this.bus) this.bus.dispatch('block:updated', { block: this });
-    });
-
-    wrap.querySelectorAll('.be-size-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const newSize = btn.dataset.size;
-        this.data.width = newSize;
-
-        const imgNode = this.dom.querySelector('.be-image-element');
-        if (imgNode) imgNode.style.width = newSize;
-
-        if (this.bus) this.bus.dispatch('block:updated', { block: this });
-      });
+    altInput.addEventListener('input', () => { this.data.meta.alt = altInput.value; });
+    altInput.addEventListener('blur', () => {
+      this.bus?.dispatch('block:updated', { block: this });
     });
 
     return wrap;

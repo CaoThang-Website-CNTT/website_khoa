@@ -12,12 +12,13 @@ interface IAccountService
 {
   public function authenticateOAuthUser(array $oauthData): array;
   public function createAccount(string $email, string $rawPassword, string $role): int;
-  public function changePassword(int $accountId, string $oldPassword, string $newPassword): bool;
-  public function forceResetPassword(int $accountId, string $newPassword): bool;
+  /** @return Account[] */
+  public function getAllAdmins(): array;
   public function getById(int $accountId): ?Account;
   public function getByEmail(string $email): ?Account;
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
   public function deactivateAccount(int $accountId): bool;
+  public function isAdminExists(int $accountId): bool;
 }
 
 class AccountService implements IAccountService
@@ -54,6 +55,7 @@ class AccountService implements IAccountService
       "is_new" => false
     ];
   }
+
   public function createAccount(string $email, string $rawPassword, string $role): int
   {
     if (!$this->_accountStore->isEmailUnique($email)) {
@@ -64,24 +66,9 @@ class AccountService implements IAccountService
 
     return $this->_accountStore->create($email, $hashedNewPassword, $role);
   }
-  public function changePassword(int $accountId, string $oldPassword, string $newPassword): bool
+  public function getAllAdmins(): array
   {
-    $account = $this->_accountStore->getById($accountId);
-
-    $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-
-    if (password_verify($oldPassword, $account->password_hash)) {
-      return false;
-    }
-
-    return $this->_accountStore->updatePassword($accountId, $hashedNewPassword);
-  }
-  public function forceResetPassword(int $accountId, string $newPassword): bool
-  {
-    $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-
-    return $this->_accountStore->updatePassword($accountId, $hashedNewPassword);
-
+    return $this->_accountStore->getAllByRole('admin');
   }
   public function getById(int $accountId): ?Account
   {
@@ -99,6 +86,14 @@ class AccountService implements IAccountService
   public function deactivateAccount(int $accountId): bool
   {
     return $this->_accountStore->softDelete($accountId);
+  }
+  public function isAdminExists(int $accountId): bool
+  {
+    if ($accountId <= 0) {
+      return false;
+    }
+
+    return $this->_accountStore->existsWithRole($accountId, 'admin');
   }
   /**
    * Xác định Role dựa trên định dạng email của trường.

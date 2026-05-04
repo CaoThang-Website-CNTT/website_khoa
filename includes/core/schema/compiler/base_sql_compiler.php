@@ -14,6 +14,7 @@ interface ISQLCompiler
   public function compileSelect(string $table, array $columns, array $wheres, array $joins, array $orders, ?int $limit, ?int $offset): string;
   public function compileInsert(string $table, array $data): string;
   public function compileUpdate(string $table, array $data, array $wheres): string;
+  public function compileDelete(string $table, array $wheres): string;
 }
 
 abstract class BaseSQLCompiler implements ISQLCompiler
@@ -86,8 +87,23 @@ abstract class BaseSQLCompiler implements ISQLCompiler
     $columns = implode(', ', array_map([$this, 'wrap'], array_keys($data)));
     $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
+    // Kiểm tra nếu là Bulk Insert
+    if (isset($data[0]) && is_array($data[0])) {
+      $columns = implode(', ', array_map([$this, 'wrap'], array_keys($data[0])));
+
+      $rows = [];
+      foreach ($data as $row) {
+        $rows[] = "(" . implode(', ', array_fill(0, count($row), '?')) . ")";
+      }
+      $placeholders = implode(', ', $rows);
+    } else {
+      // Single Insert cũ
+      $columns = implode(', ', array_map([$this, 'wrap'], array_keys($data)));
+      $placeholders = "(" . implode(', ', array_fill(0, count($data), '?')) . ")";
+    }
+
     return sprintf(
-      "INSERT INTO %s (%s) VALUES (%s)",
+      "INSERT INTO %s (%s) VALUES %s",
       $this->wrap($table),
       $columns,
       $placeholders
@@ -102,6 +118,17 @@ abstract class BaseSQLCompiler implements ISQLCompiler
     ));
 
     $sql = sprintf("UPDATE %s SET %s", $this->wrap($table), $sets);
+
+    if (!empty($wheres)) {
+      $sql .= ' WHERE ' . $this->compileWheres($wheres);
+    }
+
+    return $sql;
+  }
+
+  public function compileDelete(string $table, array $wheres): string
+  {
+    $sql = sprintf("DELETE FROM %s", $this->wrap($table));
 
     if (!empty($wheres)) {
       $sql .= ' WHERE ' . $this->compileWheres($wheres);

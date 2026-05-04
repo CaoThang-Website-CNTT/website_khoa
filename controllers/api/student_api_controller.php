@@ -4,7 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Core\Request;
 use App\Core\Controller;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\StudentService;
 use Exception;
 
@@ -39,7 +39,7 @@ class StudentApiController extends Controller
   public function store(Request $request)
   {
     $data = $request->json();
-    $validator = new Validator();
+    $validator = new RequestValidator();
 
     $rules = [
       'full_name' => ['required', 'max:255'],
@@ -79,7 +79,7 @@ class StudentApiController extends Controller
   public function update($student_id, Request $request)
   {
     $data = $request->json();
-    $validator = new Validator();
+    $validator = new RequestValidator();
 
     $rules = [
       'full_name' => ['max:255'],

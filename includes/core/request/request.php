@@ -60,9 +60,20 @@ class Request
   public static function capture(): static
   {
     if (self::$instance === null) {
+      $body = $_POST;
+      $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+
+      // Nếu Request là JSON, hợp nhất nó vào $body chung
+      if (str_contains(strtolower($contentType), '/json')) {
+        $jsonPayload = json_decode(file_get_contents('php://input'), true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($jsonPayload)) {
+          $body = array_merge($body, $jsonPayload);
+        }
+      }
+
       self::$instance = new static(
         $_GET,
-        $_POST,
+        $body,
         $_FILES,
         $_SERVER,
       );
@@ -253,11 +264,19 @@ class Request
 
     if ($parsed === null) {
       $raw = file_get_contents('php://input');
-      $parsed = json_decode($raw, true) ?? [];
+      print_r($raw);
+      $decoded = json_decode($raw, true) ?? [];
+
+      if (json_last_error() !== JSON_ERROR_NONE) {
+        $parsed = [];
+      } else {
+        $parsed = $decoded;
+      }
     }
 
     if ($key === null)
       return $parsed;
+
     return $parsed[$key] ?? $default;
   }
 
@@ -299,19 +318,11 @@ class Request
   }
   public function flashOldInputs(?array $includedKeys = null, ?array $excludedKeys = null): void
   {
-    if ($includedKeys !== null) {
-      $this->session->flashOldInputs(array_diff_key(
-        $this->body,
-        array_flip($includedKeys)
-      ));
-    } elseif ($excludedKeys !== null) {
-      $this->session->flashOldInputs(array_diff_key(
-        $this->body,
-        array_flip($excludedKeys)
-      ));
-    } else {
-      $this->session->flashOldInputs($this->body);
-    }
+    $this->session->flashOldInputs(
+      $this->body,
+      $includedKeys ?? [],
+      $excludedKeys ?? []
+    );
   }
   public function setSession(Session $session)
   {

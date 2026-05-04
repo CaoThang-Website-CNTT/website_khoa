@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\ClassroomService;
 use App\Services\TeacherService;
 
@@ -48,7 +48,7 @@ class ClassroomController extends Controller
   public function store(Request $request)
   {
     $data = $request->all();
-    $validator = new Validator();
+    $validator = new RequestValidator();
 
     $rules = [
       'major_id' => ['required'],
@@ -108,7 +108,7 @@ class ClassroomController extends Controller
   public function update($id, Request $request)
   {
     $data = $request->all();
-    $validator = new Validator();
+    $validator = new RequestValidator();
 
     $rules = [
       'major_id' => ['required'],

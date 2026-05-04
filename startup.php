@@ -21,10 +21,10 @@ require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 // Session
 require_once BASE_PATH . '/includes/core/session/session.php';
 // Middelware
-require_once BASE_PATH . './includes/core/middleware/pipeline.php';
-require_once BASE_PATH . './includes/core/middleware/base_middleware.php';
-require_once BASE_PATH . './includes/core/middleware/start_session.php';
-require_once BASE_PATH . './includes/core/middleware/verify_csrf_token.php';
+require_once BASE_PATH . '/includes/core/middleware/pipeline.php';
+require_once BASE_PATH . '/includes/core/middleware/base_middleware.php';
+require_once BASE_PATH . '/includes/core/middleware/start_session.php';
+require_once BASE_PATH . '/includes/core/middleware/verify_csrf_token.php';
 require_once BASE_PATH . '/includes/core/router.php';
 // Request
 require_once BASE_PATH . '/includes/core/request/request.php';
@@ -61,6 +61,8 @@ require_once BASE_PATH . '/models/internship_batch_student.php';
 require_once BASE_PATH . '/models/internship_batch_supervisor.php';
 require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
+require_once BASE_PATH . '/models/media.php';
+require_once BASE_PATH . '/models/post.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
@@ -73,6 +75,8 @@ require_once BASE_PATH . '/stores/web_setting_store.php';
 require_once BASE_PATH . '/stores/carousel_store.php';
 require_once BASE_PATH . '/stores/internship_batch_store.php';
 require_once BASE_PATH . '/stores/internship_assignment_store.php';
+require_once BASE_PATH . '/stores/media_store.php';
+require_once BASE_PATH . '/stores/post_store.php';
 
 // Services
 require_once BASE_PATH . '/services/google_oauth_service.php';
@@ -85,6 +89,8 @@ require_once BASE_PATH . '/services/web_setting_service.php';
 require_once BASE_PATH . '/services/carousel_service.php';
 require_once BASE_PATH . '/services/internship_batch_service.php';
 require_once BASE_PATH . '/services/internship_assignment_service.php';
+require_once BASE_PATH . '/services/media_service.php';
+require_once BASE_PATH . '/services/post_service.php';
 
 // Controllers
 // Web
@@ -108,3 +114,4 @@ require_once BASE_PATH . '/controllers/api/student_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_assignment_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_batch_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_batch_management_api_controller.php';
+require_once BASE_PATH . '/controllers/api/media_api_controller.php';

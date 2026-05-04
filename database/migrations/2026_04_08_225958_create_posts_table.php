@@ -3,8 +3,7 @@
 use App\Migration\BaseMigration;
 use App\Core\Schema\TableBuilder;
 
-return new class extends BaseMigration
-{
+return new class extends BaseMigration {
   /**
    * Chạy migration để tạo bảng
    */
@@ -16,6 +15,7 @@ return new class extends BaseMigration
       $table->varchar('title', 255);
       $table->varchar('slug', 255)->unique();
       $table->json('content_json');
+      $table->json('settings_json')->nullable();
       $table->bigInt('author_id')->unsigned();
       $table->enum('status', ['draft', 'published', 'deleted'])->default('draft');
       $table->int('view_count')->default(0);
