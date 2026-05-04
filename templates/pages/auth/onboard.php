@@ -1,4 +1,10 @@
 <?php
+$role = $role ?? '';
+$pendingEmail = $pendingEmail ?? '';
+$googleDisplayName = $googleDisplayName ?? '';
+$studentIdFromEmail = $studentIdFromEmail ?? '';
+$classrooms = $classrooms ?? [];
+
 $isStudent = ($role === 'student');
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
@@ -269,15 +275,17 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('onboard-form');
     if (!form) return;
 
     const triggers = Array.from(document.querySelectorAll('[data-tabs-trigger]'))
-    const tabHandler = new TabHandler({ syncParams: false });
+    const tabHandler = new TabHandler({
+      syncParams: false
+    });
     tabHandler.init();
 
-    const progressDots = Array.from(document.querySelectorAll('.onboard-progress__dots'));
+    const progressDots = Array.from(document.querySelectorAll('.onboard-progress__dot'));
     const panels = Array.from(document.querySelectorAll('[data-tabs-panel]'));
     const stepLabels = Array.from(document.querySelectorAll('.onboard-progress__step-label'));
     const progressLine = document.querySelector('.onboard-progress__line');
@@ -290,27 +298,29 @@ $old_input = request()->session()->getOldInputs() ?? [];
     let maxUnlockedIdx = 0;
 
     function syncUI(idx) {
-      progressDots.forEach((trigger, i) => {
+      progressDots.forEach((dot, i) => {
         if (i < idx) {
-          trigger.setAttribute('data-steps-state', 'passed');
+          dot.setAttribute('data-steps-state', 'passed');
         } else if (i === idx) {
-          trigger.setAttribute('data-steps-state', 'active');
+          dot.setAttribute('data-steps-state', 'active');
         } else {
-          trigger.setAttribute('data-steps-state', 'idle');
+          dot.setAttribute('data-steps-state', 'idle');
         }
       });
 
       // Tính % width progress line
-      // Kiểm tra nếu đầu và cuối thì chia thêm cho 2
       if (progressLine && total > 1) {
-        const percentage = (100 / total) * (idx + 0.5);
-        console.log(percentage);
+        const percentage = (100 / (total - 1)) * idx;
         progressLine.style.width = percentage + '%';
       }
 
       btnBack.style.display = idx === 0 ? "none" : "block";
       btnNext.style.display = idx === total - 1 ? "none" : "block";
       btnSubmit.style.display = idx !== total - 1 ? "none" : "block";
+
+      if (idx === total - 1) {
+        fillReview();
+      }
     }
 
     // Lấy ra các input hiện hữu
@@ -325,7 +335,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
     function validateStep(stepEl) {
       const list = visibleInputs(stepEl);
       return list.every((input) => {
-        console.log(input)
         if (typeof input.checkValidity === 'function' && !input.checkValidity()) {
           input.reportValidity();
           return false;
@@ -340,9 +349,21 @@ $old_input = request()->session()->getOldInputs() ?? [];
         const input = form.querySelector(`[name="${name}"]`);
         if (!input) return;
 
-        if (input.type === 'radio') {
-          const checked = form.querySelector(`[name="${name}"]:checked`);
-          span.textContent = checked ? checked.value : '—';
+        const radioGroup = input.closest('.radio-group');
+        if (radioGroup) {
+          const checkedBtn = radioGroup.querySelector('button[data-state="checked"]');
+          if (checkedBtn) {
+            const label = checkedBtn.closest('label') || checkedBtn.parentElement;
+            span.textContent = label.textContent.trim();
+          } else {
+            span.textContent = '—';
+          }
+          return;
+        }
+
+        if (input.tagName === 'SELECT') {
+          const selectedOption = input.options[input.selectedIndex];
+          span.textContent = selectedOption ? selectedOption.textContent.trim() : '—';
           return;
         }
         span.textContent = input.value.trim() || '—';
@@ -350,21 +371,31 @@ $old_input = request()->session()->getOldInputs() ?? [];
     }
 
     function getCurrentIndex() {
-      const activePanel = document.querySelector('[data-tabs-panel][data-state="active"]');
+      const activePanel = document.querySelector('[data-tabs-panel][data-tabs-panel-state="active"]');
       return activePanel ? parseInt(activePanel.getAttribute('data-tabs-panel')) : 0;
     }
 
-    btnNext.addEventListener('click', function () {
+    triggers.forEach((trigger, idx) => {
+      trigger.addEventListener('click', () => {
+        syncUI(idx);
+      });
+    });
+
+    btnNext.addEventListener('click', function() {
       const currentIdx = getCurrentIndex();
-      if (currentIdx < total - 1) {
-        triggers[currentIdx + 1].click();
+      if (validateStep(panels[currentIdx])) {
+        if (currentIdx < total - 1) {
+          triggers[currentIdx + 1].click();
+          syncUI(currentIdx + 1);
+        }
       }
     });
 
-    btnBack.addEventListener('click', function () {
+    btnBack.addEventListener('click', function() {
       const currentIdx = getCurrentIndex();
       if (currentIdx > 0) {
         triggers[currentIdx - 1].click();
+        syncUI(currentIdx - 1);
       }
     });
 
