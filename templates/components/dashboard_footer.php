@@ -3,8 +3,8 @@
 
     <div class="footer__info">
       <div class="footer__brand-group flex gap-3 mb-4 items-center">
-        <div class="footer__logo overflow-hidden rounded-full">
-          <img class="footer__logo-image w-full h-full object-fit" src="<?= url('/public/img/faculty_logo.jpg') ?>"
+        <div class="footer__logo overflow-hidden rounded-full shrink-0">
+          <img class="footer__logo-image w-full h-full object-cover" src="<?= url('/public/img/faculty_logo.jpg') ?>"
             alt="Logo Khoa CNTT cua Truong CDKT Cao Thang">
         </div>
         <div class="footer__brand-text flex flex-col justify-center">
