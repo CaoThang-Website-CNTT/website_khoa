@@ -318,6 +318,13 @@ class AuthController extends Controller
     $request->session()->flashNotify('success', 'Hoàn tất đăng ký!', 'Tài khoản giảng viên đã được tạo.');
     return $this->redirect('/');
   }
+  public function logout(Request $request)
+  {
+    $request->session()->logoutUser();
+    $request->session()->flashNotify('success', 'Đăng xuất thành công.');
+    return $this->redirect('/');
+  }
+
   /**
    * Load tất cả settings thuộc PRELOAD_GROUPS vào $_settings.
    * Kết quả là flat map: key → cast_value.

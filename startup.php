@@ -75,6 +75,7 @@ require_once BASE_PATH . '/stores/web_setting_store.php';
 require_once BASE_PATH . '/stores/carousel_store.php';
 require_once BASE_PATH . '/stores/internship_batch_store.php';
 require_once BASE_PATH . '/stores/internship_assignment_store.php';
+require_once BASE_PATH . '/stores/internship_submission_store.php';
 require_once BASE_PATH . '/stores/media_store.php';
 require_once BASE_PATH . '/stores/post_store.php';
 
@@ -108,6 +109,7 @@ require_once BASE_PATH . '/controllers/web/carousel_controller.php';
 require_once BASE_PATH . '/controllers/web/post_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_assignment_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
+require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/student_api_controller.php';

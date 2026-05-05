@@ -31,6 +31,7 @@ interface IInternshipBatchStore
   public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool;
   public function searchEligibleStudents(int $batchId, string $query = '', ?int $classroomId = null): array;
   public function searchEligibleTeachers(int $batchId, string $query = ''): array;
+  public function getBatchesByStudentId(int $studentId): array;
 }
 
 class InternshipBatchStore extends Store implements IInternshipBatchStore
@@ -413,6 +414,18 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
     $stmt = $this->db->prepare($sql);
     $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getBatchesByStudentId(int $studentId): array
+  {
+    $sql = "SELECT b.*, bs.status as student_status, bs.id as batch_student_id
+            FROM internship_batches b
+            JOIN internship_batch_students bs ON b.id = bs.batch_id
+            WHERE bs.student_id = :student_id AND b.deleted_at IS NULL
+            ORDER BY b.start_at DESC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':student_id' => $studentId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 }

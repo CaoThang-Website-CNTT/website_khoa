@@ -2,17 +2,24 @@
 
 namespace App\Services;
 
-use App\Stores\InternshipBatchStore;
+use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore};
 use App\Core\Pageable;
 use Database;
 
 class InternshipBatchService
 {
   private InternshipBatchStore $_store;
+  private InternshipAssignmentStore $_assignmentStore;
+  private TeacherStore $_teacherStore;
 
-  public function __construct(InternshipBatchStore $store)
-  {
+  public function __construct(
+    InternshipBatchStore $store,
+    InternshipAssignmentStore $assignmentStore,
+    TeacherStore $teacherStore
+  ) {
     $this->_store = $store;
+    $this->_assignmentStore = $assignmentStore;
+    $this->_teacherStore = $teacherStore;
   }
 
   /**
@@ -204,5 +211,48 @@ class InternshipBatchService
   public function searchEligibleTeachers(int $batchId, string $query = ''): array
   {
     return $this->_store->searchEligibleTeachers($batchId, $query);
+  }
+
+  public function getStudentDashboardData(int $studentId, ?int $batchId = null): array
+  {
+    // Lấy tất cả các đợt của SV này
+    $batches = $this->_store->getBatchesByStudentId($studentId);
+
+    if (empty($batches)) {
+      return ['batches' => [], 'current' => null];
+    }
+
+    // Lấy đợt gần nhất mà SV tham gia
+    $currentBatch = null;
+    if ($batchId) {
+      foreach ($batches as $b) {
+        if ($b['id'] == $batchId) {
+          $currentBatch = $b;
+          break;
+        }
+      }
+    } else {
+      $currentBatch = $batches[0];
+    }
+
+    if (!$currentBatch) return ['batches' => $batches, 'current' => null];
+
+    // Lấy chi tiết thông tin thực tập của SV
+    $assignment = $this->_assignmentStore->getAssignmentByBatchStudentId($currentBatch['batch_student_id']);
+
+    $supervisor = null;
+    $logs = [];
+    if ($assignment) {
+      $supervisor = $this->_teacherStore->getById($assignment->teacher_id);
+      $logs = $this->_assignmentStore->getLogsByBatchStudent($currentBatch['batch_student_id']);
+    }
+
+    return [
+      'batches' => $batches,
+      'current' => $currentBatch,
+      'assignment' => $assignment,
+      'supervisor' => $supervisor,
+      'logs' => $logs
+    ];
   }
 }

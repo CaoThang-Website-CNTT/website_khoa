@@ -4,7 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Core\Request;
 use App\Core\Controller;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\InternshipAssignmentService;
 use App\Stores\InternshipAssignmentStore;
 use Exception;
@@ -54,7 +54,7 @@ class InternshipAssignmentApiController extends Controller
   public function autoAssign($id, Request $request)
   {
     $data = $request->json();
-    $validator = new Validator();
+    $validator = new RequestValidator();
 
     $rules = [
       'method' => ['required', 'in:auto_even,auto_shuffle']
@@ -66,7 +66,7 @@ class InternshipAssignmentApiController extends Controller
 
     try {
       // TODO: Get admin ID from Auth logic, using mock ID 1 for now
-      $adminId = 1; 
+      $adminId = 1;
 
       $assignedCount = $this->_assignmentService->autoAssign((int)$id, $data['method'], $adminId);
       return $this->json(['assigned_count' => $assignedCount], 200, 'Đã phân công tự động thành công ' . $assignedCount . ' sinh viên.');
@@ -81,7 +81,7 @@ class InternshipAssignmentApiController extends Controller
   public function bulkSave($id, Request $request)
   {
     $data = $request->json();
-    $validator = new Validator();
+    $validator = new RequestValidator();
 
     $rules = [
       'assignments' => ['required'], // Array of {assignment_id, new_teacher_id}
@@ -101,12 +101,12 @@ class InternshipAssignmentApiController extends Controller
       $adminId = 1;
 
       $this->_assignmentService->bulkSave(
-        (int)$id, 
-        $data['assignments'], 
-        $adminId, 
+        (int)$id,
+        $data['assignments'],
+        $adminId,
         $data['reason']
       );
-      
+
       return $this->json([], 200, 'Đã lưu thay đổi thành công.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);

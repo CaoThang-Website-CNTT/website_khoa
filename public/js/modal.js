@@ -162,9 +162,9 @@
 //   });
 // });
 document.addEventListener('DOMContentLoaded', () => {
-  const modalHandler = new ModalHandler();
-  modalHandler.init();
-})
+  window.modal = new ModalHandler();
+  window.modal.init();
+});
 class ModalHandler {
   constructor() {
     this._activeModal = null;

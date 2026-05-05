@@ -1,10 +1,15 @@
+<?php
+$authUser = request()->session()->authUser();
+$role = $authUser['role'] ?? 'guest';
+$currentPath = request()->path();
+?>
 <div class="sidebar__gap"></div>
 <div class="sidebar__container">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar__header">
       <ul class="sidebar__menu">
         <li class="sidebar__menu-item">
-          <a class="sidebar__menu-btn" href="<?= url('admin') ?>">
+          <a class="sidebar__menu-btn" href="<?= url($role === 'admin' ? 'admin' : 'student') ?>">
             <div class="sidebar__logo object-contain">
               <img src="<?= url('/public/img/faculty_logo.jpg') ?>" alt="Logo Khoa CNTT">
             </div>
@@ -19,13 +24,16 @@
 
     <div class="sidebar__content">
       <nav class="sidebar__nav">
+        <?php if ($role === 'admin'): ?>
+        <!-- ── ADMIN MENU ─────────────────────────────────────────── -->
         <div class="sidebar__group">
           <div class="sidebar__group-label">Chức năng chính</div>
           <ul class="sidebar__menu">
 
             <!-- ── Tổng quan ─────────────────────────────────────────── -->
             <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn" href="<?= url('admin') ?>">
+              <a class="sidebar__menu-btn <?= str_ends_with($currentPath, 'admin') ? 'active' : '' ?>"
+                href="<?= url('admin') ?>">
                 <i class="fa-solid fa-house"></i>
                 Tổng Quan
               </a>
@@ -135,14 +143,58 @@
                 </div>
               </div>
             </li>
+          </ul>
+        </div>
 
+        <?php elseif ($role === 'student'): ?>
+        <!-- ── STUDENT MENU ───────────────────────────────────────── -->
+        <div class="sidebar__group">
+          <div class="sidebar__group-label">Cá nhân</div>
+          <ul class="sidebar__menu">
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student') ? 'active' : '' ?>"
+                href="<?= url('student') ?>">
+                <i class="fa-solid fa-user"></i>
+                Tổng Quan
+              </a>
+            </li>
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student/internship') ? 'active' : '' ?>"
+                href="<?= url('student/internship') ?>">
+                <i class="fa-solid fa-briefcase"></i>
+                Thực Tập
+              </a>
+            </li>
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student/graduation') ? 'active' : '' ?>"
+                href="<?= url('student/graduation') ?>">
+                <i class="fa-solid fa-graduation-cap"></i>
+                Đồ Án Tốt Nghiệp
+              </a>
+            </li>
+          </ul>
+        </div>
+        <?php endif; ?>
+
+        <!-- ── CHUNG ────────────────────────────────────────────────── -->
+        <div class="sidebar__group">
+          <div class="sidebar__group-label">Tài khoản</div>
+          <ul class="sidebar__menu">
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn" href="<?= url('logout') ?>" style="color: var(--destructive);">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Đăng xuất
+              </a>
+            </li>
           </ul>
         </div>
       </nav>
     </div>
 
     <div class="sidebar__footer">
-      Hello, User 123!
+      <div class="sidebar__user-info">
+        <?= htmlspecialchars($authUser['email'] ?? 'Guest') ?>
+      </div>
     </div>
   </aside>
 </div>

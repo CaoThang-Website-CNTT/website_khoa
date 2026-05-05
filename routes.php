@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, InternshipAssignmentController, InternshipBatchController};
+use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController};
 use App\Core\Router;
 
 $router->get('/', [SiteController::class, 'index']);
@@ -11,6 +11,7 @@ $router->get('/login', [AuthController::class, 'show']);
 $router->get('/login/oauth/callback', [AuthController::class, 'googleOAuthCallback']);
 $router->get('/onboarding', [AuthController::class, 'onboard']);
 $router->post('/onboarding', [AuthController::class, 'completeOnboarding']);
+$router->get('/logout', [AuthController::class, 'logout']);
 
 $router->prefix('admin')->group(function (Router $router) {
   $router->get('/', [DashboardController::class, 'index']);
@@ -139,4 +140,16 @@ $router->prefix('admin')->group(function (Router $router) {
     // Internship Assignments
     $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);
   });
+});
+
+// Student Dashboard
+$router->prefix('student')->group(function (Router $router) {
+  // Thông tin tổng quan, tài khoản.
+  $router->get('/', [StudentDashboardController::class, 'index']);
+  // Thông tin thực tập.
+  $router->get('/internship', [StudentDashboardController::class, 'internship']);
+  // Thông tin đồ án tốt nghiệp
+  $router->get('/graduation', [StudentDashboardController::class, 'graduation']);
+  // Cập nhật thông tin cá nhân
+  $router->post('/profile/update', [StudentDashboardController::class, 'updateProfile']);
 });
