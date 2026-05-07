@@ -90,10 +90,25 @@ $currentPath = request()->path();
 
             <!-- ── Thực tập ────────────────────────────────────────────── -->
             <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn" href="<?= url('admin/internship_batches') ?>">
-                <i class="fa-solid fa-house-laptop"></i>
-                Thực tập tốt nghiệp
-              </a>
+              <div class="collapsible">
+                <div class="sidebar__menu-btn">
+                  <button class="collapsible__trigger">
+                    <i class="fa-solid fa-house-laptop"></i>
+                    Thực tập tốt nghiệp
+                    <i class="fa-solid fa-angle-down"></i>
+                  </button>
+                </div>
+                <div class="collapsible__content">
+                  <ul class="sidebar__menu-sub">
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('admin/internship_batches') ?>" class="sidebar__menu-sub-item-btn">Quản lý đợt</a>
+                    </li>
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('admin/companies') ?>" class="sidebar__menu-sub-item-btn">Quản lý công ty</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </li>
           </ul>
         </div>

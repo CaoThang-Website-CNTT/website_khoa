@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\Schema\Compiler\MySQLCompiler;
+use App\Core\Schema\QueryBuilder;
 use App\Core\Store;
 use App\Models\Company;
 use PDO;
@@ -93,5 +95,36 @@ class CompanyStore extends Store
     $stmt->execute([':query' => "%$query%"]);
 
     return array_map(fn($row) => Company::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  /** @return Company[] */
+  public function getPaginated(int $pageTo, int $limit = 15): array
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder->from('companies')
+      ->select('*')
+      ->is('deleted_at', null)
+      ->range(($pageTo - 1) * $limit, $pageTo * $limit - 1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute();
+
+    return array_map(fn($row) => Company::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  /**
+   * Lấy tổng số lượng record
+   */
+  public function getTotalCount(): int
+  {
+    $sql = "
+      SELECT COUNT(*) 
+      FROM `companies`
+      WHERE `deleted_at` IS NULL
+    ";
+
+    $stmt = $this->db->query($sql);
+    return (int) $stmt->fetchColumn();
   }
 }

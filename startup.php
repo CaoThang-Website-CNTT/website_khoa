@@ -114,6 +114,7 @@ require_once BASE_PATH . '/controllers/web/post_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_assignment_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
 require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
+require_once BASE_PATH . '/controllers/web/company_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/student_api_controller.php';

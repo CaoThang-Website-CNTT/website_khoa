@@ -3,8 +3,24 @@
 namespace App\Services;
 
 use App\Stores\CompanyStore;
+use App\Models\Company;
+use Exception;
+use App\Core\Pageable;
+use Override;
 
-class CompanyService
+interface ICompanyService
+{
+  /** @return Pageable */
+  public function getCompanies(int $page, int $limit = 15): Pageable;
+  //public function createCompanies(array $data): ?Company;
+  public function getById(int $id): ?array;
+  public function findByTaxCode(string $taxCode): ?array;
+  public function upsertFromApi(array $data): int;
+  public function createManual(array $data): int;
+  public function suggestByName(string $query): array;
+}
+
+class CompanyService implements ICompanyService
 {
   private CompanyStore $_store;
 
@@ -39,6 +55,13 @@ class CompanyService
   public function suggestByName(string $query): array
   {
     return $this->_store->suggestByNameAndVerified($query);
+  }
+
+  public function getCompanies(int $page, int $limit = 15): Pageable
+  {
+    $companies = $this->_store->getPaginated($page, $limit);
+    $total = $this->_store->getTotalCount();
+    return new Pageable($companies, $total, $limit, $page);
   }
 
   /**
