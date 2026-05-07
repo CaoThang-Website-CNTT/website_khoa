@@ -31,7 +31,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: 'admin/teachers') ?>" data-variant="outline" data-size="lg"
+        <a href="<?= request()->previous(fallback: url('admin/teachers')) ?>" data-variant="outline" data-size="lg"
           class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại

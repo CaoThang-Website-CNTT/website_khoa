@@ -28,7 +28,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 <!-- ── TOPBAR ─────────────────────────────────────────────── -->
 <div id="be-topbar">
   <div id="be-topbar-left">
-    <a href="<?= request()->previous('admin/posts') ?>" class="btn" data-size="md" data-variant="outline">
+    <a href="<?= request()->previous(fallback: url('admin/posts')) ?>" class="btn" data-size="md" data-variant="outline">
       <i class="fa-solid fa-chevron-left"></i>
       Quay lại
     </a>

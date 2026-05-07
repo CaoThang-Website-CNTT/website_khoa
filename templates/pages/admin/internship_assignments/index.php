@@ -23,7 +23,7 @@
     </div>
 
     <div class="flex gap-2 items-center">
-      <a href="<?= request()->previous(fallback: 'admin/intership_batches') ?>" data-variant="outline" data-size="md"
+      <a href="<?= request()->previous(fallback: url('admin/intership_batches')) ?>" data-variant="outline" data-size="md"
         class="btn">
         <i class="fa-solid fa-chevron-left"></i>
         Quay lại
