@@ -264,7 +264,6 @@ class Request
 
     if ($parsed === null) {
       $raw = file_get_contents('php://input');
-      print_r($raw);
       $decoded = json_decode($raw, true) ?? [];
 
       if (json_last_error() !== JSON_ERROR_NONE) {

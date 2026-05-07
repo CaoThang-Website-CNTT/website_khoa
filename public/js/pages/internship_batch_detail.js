@@ -388,11 +388,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const hiddenForm = document.createElement("form");
           hiddenForm.method = "POST";
           hiddenForm.action = actionUrl;
-          const csrfToken = document.querySelector('input[name="csrf_token"]');
+          const csrfToken = document.querySelector('input[name="_token"]');
           if (csrfToken) {
             const csrfInput = document.createElement("input");
             csrfInput.type = "hidden";
-            csrfInput.name = "csrf_token";
+            csrfInput.name = "_token";
             csrfInput.value = csrfToken.value;
             hiddenForm.appendChild(csrfInput);
           }

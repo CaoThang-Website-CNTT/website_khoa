@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore};
+use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore};
 use App\Core\Pageable;
 use Database;
 
@@ -11,15 +11,18 @@ class InternshipBatchService
   private InternshipBatchStore $_store;
   private InternshipAssignmentStore $_assignmentStore;
   private TeacherStore $_teacherStore;
+  private AccountStore $_accountStore;
 
   public function __construct(
     InternshipBatchStore $store,
     InternshipAssignmentStore $assignmentStore,
-    TeacherStore $teacherStore
+    TeacherStore $teacherStore,
+    AccountStore $accountStore
   ) {
     $this->_store = $store;
     $this->_assignmentStore = $assignmentStore;
     $this->_teacherStore = $teacherStore;
+    $this->_accountStore = $accountStore;
   }
 
   /**
@@ -244,6 +247,9 @@ class InternshipBatchService
     $logs = [];
     if ($assignment) {
       $supervisor = $this->_teacherStore->getById($assignment->teacher_id);
+      if ($supervisor->account_id) {
+        $supervisor->account = $this->_accountStore->getById($supervisor->account_id);
+      }
       $logs = $this->_assignmentStore->getLogsByBatchStudent($currentBatch['batch_student_id']);
     }
 
@@ -254,5 +260,10 @@ class InternshipBatchService
       'supervisor' => $supervisor,
       'logs' => $logs
     ];
+  }
+
+  public function updateStudentInternshipInfo(int $batchStudentId, array $data): bool
+  {
+    return $this->_store->updateBatchStudentCompany($batchStudentId, $data);
   }
 }

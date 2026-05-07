@@ -1,4 +1,5 @@
 <?php
+
 /**
  * View: Thông tin thực tập sinh viên
  * Route: /student/internship
@@ -10,8 +11,17 @@ $batches = $batches ?? [];
 $supervisor = $supervisor ?? null;
 $logs = $logs ?? [];
 ?>
+<?php if ($flash = request()->session()->getFlash("notification")): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      window.toast?.<?= ($flash['type']) ?>('<?= $flash['title'] ?>', '<?= $flash['desc'] ?>');
+    });
+  </script>
+<?php endif; ?>
+
 
 <!-- ========== title-wrapper start ========== -->
+<link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
     <div>
@@ -55,67 +65,153 @@ $logs = $logs ?? [];
         </div>
         <hr class="separator" />
         <div class="card__content">
-          <div class="field-group">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="field" data-field-readonly>
-                <label class="field__label">Đợt thực tập</label>
-                <input class="field__input" type="text" readonly value="<?= htmlspecialchars($current['title'] ?? '') ?>">
+          <div>
+            <p><span class="font-bold">Đợt thực tập:</span> <?= htmlspecialchars($current['title'] ?? '') ?></p>
+            <p><span class="font-bold">Thời gian mở đợt thực tập:</span> từ <time datetime="<?= date("d/m/Y", strtotime($current['start_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['start_at']))) ?></time> đến <time datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?></p>
+
+
+            <?php if ($supervisor): ?>
+              <p><span class="font-bold">Họ & tên GVHD:</span> <?= htmlspecialchars($supervisor->full_name) ?></p>
+              <p><span class="font-bold">Email GVHD:</span> <?= htmlspecialchars($supervisor->account->email) ?></p>
+              <p><span class="font-bold">Số điện thoại GVHD:</span> <?= htmlspecialchars($supervisor->phone) ?></p>
+            <?php else: ?>
+              <p><span class="font-bold">Giảng viên hướng dẫn:</span> Chưa phân công</p>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khai báo công ty -->
+      <div class="card shadow">
+        <div class="card__header">
+          <h3 class="card__title">
+            <i class="fa-solid fa-building text-primary mr-2"></i>
+            Thông tin công ty
+          </h3>
+          <!-- TODO: hiển thị động thời gian còn lại or hiển thị hạn chót khai báo thông tin? -->
+          <?php if ($can_edit_company): ?>
+            <p class="text-xs">Bạn cần khai báo thông tin công ty trong vòng 3 tuần kể từ khi đợt thực tập bắt đầu.</p>
+          <?php endif; ?>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <?php if ($can_edit_company): ?>
+            <form action="<?= url('student/internship/company') ?>" method="POST" id="companyForm">
+              <?= csrf_field() ?>
+              <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
+
+              <div class="field mb-3" data-orientation="horizontal">
+                <input type="checkbox" id="is_manual" name="is_manual" value="1" class="field__input">
+                <label for="is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số thuế</label>
               </div>
-              <div class="field" data-field-readonly>
-                <label class="field__label">Trạng thái</label>
-                <?php
-                $statusVariant = match ($current['student_status'] ?? '') {
-                  'pending' => 'warning',
-                  'approved' => 'success',
-                  'rejected' => 'destructive',
-                  default => 'primary'
-                };
-                $statusText = match ($current['student_status'] ?? '') {
-                  'pending' => 'Chờ duyệt',
-                  'approved' => 'Đang thực tập',
-                  'rejected' => 'Bị từ chối',
-                  default => $current['student_status'] ?? 'N/A'
-                };
-                ?>
-                <div class="flex items-center h-8">
-                   <span class="badge" data-variant="<?= $statusVariant ?>"><?= $statusText ?></span>
+
+              <div class="field mb-3" data-field-required>
+                <label class="field__label">Mã số thuế</label>
+                <div class="field__input-group">
+                  <input type="text" name="tax_code" id="tax_code" class="field__input" required value="<?= htmlspecialchars($current['company_tax_code'] ?? '') ?>">
+                  <button type="button" id="btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm tra</button>
+                </div>
+                <div id="mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin...</div>
+                <div id="mstError" class="field__error hidden"></div>
+              </div>
+
+              <div class="field mb-3" data-field-required>
+                <label class="field__label">Tên công ty</label>
+                <div class="field__suggest-wrapper">
+                  <input type="text" name="name" id="company_name" class="field__input relative" required value="<?= htmlspecialchars($current['company_name'] ?? '') ?>" readonly autocomplete="off">
+                  <div id="companySuggestions" class="suggestions-list hidden"></div>
                 </div>
               </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div class="field" data-field-readonly>
-                <label class="field__label">Giảng viên hướng dẫn</label>
-                <input class="field__input" type="text" readonly value="<?= $supervisor ? htmlspecialchars($supervisor->full_name) : 'Chưa phân công' ?>">
+              <div class="field mb-3" data-field-required>
+                <label class="field__label">Địa chỉ</label>
+                <textarea name="address" id="company_address" class="field__input" required readonly><?= htmlspecialchars($current['company_address'] ?? '') ?></textarea>
               </div>
-              <div class="field" data-field-readonly>
-                <label class="field__label">Số điện thoại GVHD</label>
-                <input class="field__input" type="text" readonly value="<?= $supervisor ? htmlspecialchars($supervisor->phone) : '--' ?>">
+
+              <div class="field mb-3" data-field-required>
+                <label class="field__label">Vị trí thực tập</label>
+                <input type="text" name="position" class="field__input" required value="<?= htmlspecialchars($current['position'] ?? '') ?>" placeholder="VD: Thực tập sinh Frontend">
               </div>
+
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="field" data-field-required>
+                  <label class="field__label">Từ ngày</label>
+                  <input type="date" name="internship_start_date" class="field__input" required value="<?= htmlspecialchars($current['internship_start_date'] ?? '') ?>">
+                </div>
+                <div class="field" data-field-required>
+                  <label class="field__label">Đến ngày</label>
+                  <input type="date" name="internship_end_date" class="field__input" required value="<?= htmlspecialchars($current['internship_end_date'] ?? '') ?>">
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-2">
+                <button type="submit" class="btn" data-variant="primary" data-size="lg">Lưu thông tin</button>
+              </div>
+            </form>
+          <?php else: ?>
+            <div>
+              <?php if ($current['company_name']): ?>
+                <p><span class="font-bold">Tên công ty:</span> <?= htmlspecialchars($current['company_name']) ?></p>
+                <p><span class="font-bold">MST:</span> <?= htmlspecialchars($current['company_tax_code']) ?></p>
+                <p><span class="font-bold">Địa chỉ:</span> <?= htmlspecialchars($current['company_address']) ?></p>
+                <p><span class="font-bold">Vị trí:</span> <?= htmlspecialchars($current['position']) ?></p>
+                <p><span class="font-bold">Thời gian thực tập:</span> từ <time datetime="<?= date("d/m/Y", strtotime($current['internship_start_date'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_start_date']))) ?></time> đến <time datetime="<?= date("d/m/Y", strtotime($current['internship_end_date'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_end_date']))) ?></p>
+              <?php else: ?>
+                <p>Chưa có thông tin công ty và đã hết thời gian khai báo.</p>
+              <?php endif; ?>
             </div>
-          </div>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-layout__sidebar">
+      <!-- Kết quả -->
+      <div class="card shadow result-card text-center py-8">
+        <div class="card__header flex-col items-center gap-2">
+          <h3 class="card__title text-sm uppercase tracking-wider text-muted-foreground">
+            <i class="fa-solid fa-star text-warning mr-1"></i>
+            Kết quả
+          </h3>
+        </div>
+        <div class="card__content">
+          <div class="text-4xl font-bold text-primary mb-1">--</div>
+          <span class="text-xs text-muted-foreground">Chưa có điểm</span>
         </div>
       </div>
 
       <!-- Nộp tài liệu -->
-      <div class="card shadow">
-        <div class="card__header">
-          <h3 class="card__title">
-            <i class="fa-solid fa-cloud-arrow-up text-primary mr-2"></i>
-            Nộp tài liệu tốt nghiệp
-          </h3>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="upload-area" id="uploadArea">
-            <div class="upload-area__icon">
-              <i class="fa-solid fa-file-arrow-up"></i>
-            </div>
-            <p class="upload-area__text">Nhấn để chọn file hoặc kéo thả vào đây</p>
-            <p class="upload-area__hint">Định dạng hỗ trợ: PDF, DOCX, ZIP. Dung lượng tối đa: 30MB</p>
+      <?php if ($current['status'] === 'published'): ?>
+        <div class="card shadow">
+          <div class="card__header">
+            <h3 class="card__title">
+              <i class="fa-solid fa-cloud-arrow-up text-primary mr-2"></i>
+              Nộp tài liệu thực tập tốt nghiệp
+            </h3>
+            <p class="text-xs">Tài liệu được gửi cho giảng viên hướng dẫn để đánh giá kết quả thực tập.</p>
+          </div>
+          <hr class="separator" />
+          <div class="card__content">
+            <form action="<?= url('student/internship/upload') ?>" method="POST" enctype="multipart/form-data" id="uploadForm">
+              <?= csrf_field() ?>
+              <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
+              <div class="upload-area" id="uploadArea">
+                <div class="upload-area__icon">
+                  <i class="fa-solid fa-file-arrow-up"></i>
+                </div>
+                <p class="upload-area__text">Nhấn để chọn file hoặc kéo thả vào đây</p>
+                <p class="upload-area__hint">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty, nhật ký thực tập, hình ảnh liên quan... thành một file nén.</p>
+                <p class="upload-area__hint">Định dạng hỗ trợ: ZIP, RAR. Dung lượng tối đa: 50MB</p>
+                <input type="file" name="report_file" class="hidden" id="report_file" accept=".pdf,.docx,.zip,.rar">
+              </div>
+              <div id="filePreview" class="hidden mt-4 text-sm text-center text-primary"></div>
+              <div class="mt-4 flex justify-end">
+                <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài liệu</button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      <?php endif; ?>
 
       <!-- Thông báo & Lịch sử -->
       <div class="card shadow">
@@ -148,22 +244,6 @@ $logs = $logs ?? [];
         </div>
       </div>
     </div>
-
-    <div class="detail-layout__sidebar">
-      <!-- Kết quả -->
-      <div class="card shadow result-card text-center py-8">
-        <div class="card__header flex-col items-center gap-2">
-          <h3 class="card__title text-sm uppercase tracking-wider text-muted-foreground">
-            <i class="fa-solid fa-star text-warning mr-1"></i>
-            Kết quả
-          </h3>
-        </div>
-        <div class="card__content">
-          <div class="text-4xl font-bold text-primary mb-1">--</div>
-          <span class="text-xs text-muted-foreground">Chưa có điểm</span>
-        </div>
-      </div>
-    </div>
   </div>
 <?php else: ?>
   <div class="card shadow py-12 text-center">
@@ -177,4 +257,7 @@ $logs = $logs ?? [];
   </div>
 <?php endif; ?>
 
+<script>
+  window.API_BASE_URL = '<?= url('api/v1') ?>';
+</script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>

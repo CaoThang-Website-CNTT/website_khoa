@@ -19,6 +19,7 @@ TRUNCATE TABLE `departments`;
 TRUNCATE TABLE `category_post`;
 TRUNCATE TABLE `media`;
 TRUNCATE TABLE `posts`;
+TRUNCATE TABLE `companies`;
 
 -- ============================================================================
 -- 1. BẢNG DEPARTMENTS
@@ -334,5 +335,20 @@ INSERT INTO `category_post` (`post_id`, `category_id`) VALUES
 INSERT INTO `media` (`id`, `post_id`, `file_name`, `file_path`, `mime_type`, `size`, `created_at`) VALUES
 (1, 1, 'tb-datn-2026.pdf', '/uploads/media/tb-datn-2026.pdf', 'application/pdf', 1024500, '2026-03-25 08:00:00'),
 (2, 2, 'banner-olympic-2026.jpg', '/uploads/media/banner-olympic-2026.jpg', 'image/jpeg', 204800, '2026-03-20 08:00:00');
+
+-- ============================================================================
+-- 18. BẢNG COMPANIES 
+-- ============================================================================
+INSERT INTO `companies` (`id`, `tax_code`, `name`, `normalized_name`, `phone`, `email`, `website`, `address`, `is_verified`, `source`) VALUES
+(1, '0312456789', 'Công ty TNHH Giải pháp Phần mềm Sài Gòn (Saigon Software)', 'cong ty tnhh giai phap phan mem sai gon saigon software', '02838210001', 'info@saigonsoft.vn', 'https://saigonsoft.vn', '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM', 1, 'api'),
+(2, '0313987654', 'Công ty Cổ phần Công nghệ Vidon', 'cong ty co phan cong nghe vidon', '02839301122', 'contact@vidon.tech', 'https://vidon.tech', '45 Võ Văn Tần, Phường Võ Thị Sáu, Quận 3, TP.HCM', 1, 'api'),
+(3, '0309112233', 'Công ty TNHH Tích hợp Hệ thống CMC (CMC SI)', 'cong ty tnhh tich hop he thong cmc cmc si', '02838445566', 'support@cmcsi.com.vn', 'https://cmcsi.com.vn', '12 Phổ Quang, Phường 2, Quận Tân Bình, TP.HCM', 1, 'api'),
+(4, '0315667788', 'Công ty TNHH Phát triển Phần mềm Magestore', 'cong ty tnhh phat trien phan mem magestore', '02835102030', 'hr@magestore.com', 'https://magestore.com', '270 Bạch Đằng, Phường 24, Quận Bình Thạnh, TP.HCM', 1, 'api'),
+(5, '0304556677', 'Công ty TNHH Giải pháp Công nghệ ITG', 'cong ty tnhh giai phap cong nghe itg', '02837151234', 'info@itg.vn', 'https://itg.vn', 'Công viên phần mềm Quang Trung, Quận 12, TP.HCM', 1, 'api'),
+(6, '0311223344', 'Công ty TNHH Công nghệ Mật Mã (Cipher Tech)', 'cong ty tnhh cong nghe mat ma cipher tech', '02838940000', 'hello@ciphertech.vn', 'https://ciphertech.vn', '56 Quang Trung, Phường 10, Quận Gò Vấp, TP.HCM', 1, 'api'),
+(7, '0314889900', 'Công ty Cổ phần Giải pháp Công nghệ Việt Nam (V-Sol)', 'cong ty co phan giai phap cong nghe viet nam v-sol', '02839951234', 'sales@v-sol.vn', 'https://v-sol.vn', '158 Đào Duy Anh, Phường 9, Quận Phú Nhuận, TP.HCM', 1, 'api'),
+(8, '0308776655', 'Công ty TNHH Linh kiện Máy tính Song Huy', 'cong ty tnhh linh kien may tinh song huy', '02839274567', 'songhuy@hardware.vn', 'https://songhuycomputer.vn', '436/1 Đường 3/2, Phường 12, Quận 10, TP.HCM', 1, 'api'),
+(9, '0316443322', 'Công ty TNHH Giải pháp ERP Toàn Cầu', 'cong ty tnhh giai phap erp toan cau', '02837718899', 'admin@erp-global.com', 'https://erp-global.com', 'Số 7 Đường số 2, KDC Him Lam, Quận 7, TP.HCM', 1, 'api'),
+(10, '0310229988', 'Công ty TNHH MTV Kỹ thuật Phần cứng và Mạng Bách Khoa', 'cong ty tnhh mtv ky thuat phan cung va mang bach khoa', '02837223344', 'bachkhoa@bk-tech.edu.vn', 'https://bk-tech.vn', 'Khu Công nghệ cao, Quận Thủ Đức, TP.HCM', 1, 'api');
 
 SET FOREIGN_KEY_CHECKS = 1;

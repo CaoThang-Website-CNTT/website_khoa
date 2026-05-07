@@ -11,6 +11,10 @@ class InternshipBatchStudent
     public string $status = 'pending',
     public string $source = 'db_select',
     public ?string $note = null,
+    public ?int $company_id = null,
+    public ?string $position = null,
+    public ?string $internship_start_date = null,
+    public ?string $internship_end_date = null,
     public ?string $created_at = null,
     public ?string $updated_at = null
   ) {}

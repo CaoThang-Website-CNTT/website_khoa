@@ -1,5 +1,6 @@
 <?php
-use App\Controllers\Api\{MediaApiController, StudentApiController, InternshipAssignmentApiController, InternshipBatchApiController};
+
+use App\Controllers\Api\{MediaApiController, StudentApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
@@ -10,14 +11,14 @@ $router->prefix('api')->group(function ($router) {
       $router->get('/{student_id}', [StudentApiController::class, 'show']);
       $router->put('/{student_id}', [StudentApiController::class, 'update']);
     });
-    
+
     $router->prefix('internship/batches')->group(function ($router) {
       $router->get('/classrooms', [InternshipBatchApiController::class, 'getClassrooms']);
       $router->get('/students-eligible', [InternshipBatchApiController::class, 'getEligibleStudents']);
       $router->post('/validate-students-bulk', [InternshipBatchApiController::class, 'validateStudentsBulk']);
       $router->get('/teachers-active', [InternshipBatchApiController::class, 'getActiveTeachers']);
       $router->post('/', [InternshipBatchApiController::class, 'store']);
-      
+
       $router->prefix('{id}/management')->group(function ($router) {
         $router->get('/students', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'getStudents']);
         $router->post('/students', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'addStudent']);
@@ -37,7 +38,7 @@ $router->prefix('api')->group(function ($router) {
       $router->post('/{id}/auto-assign', [InternshipAssignmentApiController::class, 'autoAssign']);
       $router->post('/{id}/bulk-save', [InternshipAssignmentApiController::class, 'bulkSave']);
     });
-    
+
     // Media
     $router->prefix('media')->group(function (Router $router) {
       $router->post('/', [MediaApiController::class, 'upload']);
@@ -47,6 +48,17 @@ $router->prefix('api')->group(function ($router) {
       $router->post('/attach', [MediaApiController::class, 'attachToPost']);
       $router->delete('/{media_id}', [MediaApiController::class, 'delete']);
       $router->delete('/orphans', [MediaApiController::class, 'deleteOrphans']);
+    });
+
+    // Student
+    $router->prefix('student')->group(function (Router $router) {
+      $router->post('/profile/update', [StudentApiController::class, 'updateProfile']);
+      $router->post('/profile/upload-document', [StudentApiController::class, 'uploadDocument']);
+    });
+
+    // Companies
+    $router->prefix('companies')->group(function (Router $router) {
+      $router->get('/suggest-by-name', [CompanyApiController::class, 'suggestByName']);
     });
   });
 });

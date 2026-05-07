@@ -419,13 +419,36 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function getBatchesByStudentId(int $studentId): array
   {
-    $sql = "SELECT b.*, bs.status as student_status, bs.id as batch_student_id
+    $sql = "SELECT b.*, bs.status as student_status, bs.id as batch_student_id, 
+                   bs.company_id, bs.position, bs.internship_start_date, bs.internship_end_date,
+                   c.name as company_name, c.tax_code as company_tax_code, c.address as company_address, c.phone as company_phone
             FROM internship_batches b
             JOIN internship_batch_students bs ON b.id = bs.batch_id
-            WHERE bs.student_id = :student_id AND b.deleted_at IS NULL
+            LEFT JOIN companies c ON bs.company_id = c.id
+            WHERE bs.student_id = :student_id AND b.deleted_at IS NULL AND b.status IN ('published','closed')
             ORDER BY b.start_at DESC";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':student_id' => $studentId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function updateBatchStudentCompany(int $batchStudentId, array $data): bool
+  {
+    $sql = "UPDATE internship_batch_students SET 
+            company_id = :company_id, 
+            position = :position, 
+            internship_start_date = :internship_start_date, 
+            internship_end_date = :internship_end_date,
+            updated_at = NOW()
+            WHERE id = :id";
+
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute([
+      ':id' => $batchStudentId,
+      ':company_id' => $data['company_id'],
+      ':position' => $data['position'],
+      ':internship_start_date' => $data['internship_start_date'],
+      ':internship_end_date' => $data['internship_end_date']
+    ]);
   }
 }

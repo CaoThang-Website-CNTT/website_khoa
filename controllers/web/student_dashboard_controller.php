@@ -5,7 +5,8 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
-use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService};
+use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService};
+use App\Core\Files\UploadedFileHandler;
 
 class StudentDashboardController extends Controller
 {
@@ -13,17 +14,23 @@ class StudentDashboardController extends Controller
   private ClassroomService $_classroomService;
   private InternshipBatchService $_internshipBatchService;
   private InternshipAssignmentService $_internshipAssignmentService;
+  private CompanyService $_companyService;
+  private InternshipSubmissionService $_submissionService;
 
   public function __construct(
     StudentService $studentService,
     ClassroomService $classroomService,
     InternshipBatchService $internshipBatchService,
-    InternshipAssignmentService $internshipAssignmentService
+    InternshipAssignmentService $internshipAssignmentService,
+    CompanyService $companyService,
+    InternshipSubmissionService $submissionService
   ) {
     $this->_studentService = $studentService;
     $this->_classroomService = $classroomService;
     $this->_internshipBatchService = $internshipBatchService;
     $this->_internshipAssignmentService = $internshipAssignmentService;
+    $this->_companyService = $companyService;
+    $this->_submissionService = $submissionService;
   }
 
   /**
@@ -112,17 +119,138 @@ class StudentDashboardController extends Controller
    */
   public function internship(Request $request, InternshipBatchService $internshipBatchService)
   {
-    // @techdebt: Kiểm tra quyền truy cập
     $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
 
     $batchId = $request->query('batch_id');
     $dashboardData = $internshipBatchService->getStudentDashboardData($student->id, (int)$batchId ?: null);
 
+    // Tính toán can_edit_company
+    $canEditCompany = false;
+    if ($dashboardData['current'] && $dashboardData['current']['start_at']) {
+      $startAt = new \DateTime($dashboardData['current']['start_at']);
+      $now = new \DateTime();
+
+      // TECHDEBT - TODO: Sử dụng web_settings để lấy cấu hình thời gian cho phép khai báo (vd: 21 ngày = 3 tuần)
+      $allowedDays = 21;
+
+      $canEditCompany = true; // Mặc định cho phép sửa
+
+      if (!empty($dashboardData['current']['start_at'])) {
+        $startAt = new \DateTime($dashboardData['current']['start_at']);
+        $now = new \DateTime();
+
+        if ($now > $startAt) {
+          $daysPassed = $now->diff($startAt)->days;
+          $canEditCompany = ($daysPassed <= $allowedDays);
+        }
+      }
+    }
+
     return $this->render('student/dashboard/internship', array_merge([
       'student' => $student,
-      'title' => 'Thông tin thực tập'
+      'title' => 'Thông tin thực tập',
+      'can_edit_company' => $canEditCompany
     ], $dashboardData), layout: 'dashboard_layout');
+  }
+
+  public function updateCompany(Request $request)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+
+    $data = $request->all();
+    $isManual = isset($data['is_manual']) && $data['is_manual'] == 1;
+
+    $validator = new RequestValidator();
+
+    $rules = [
+      'batch_student_id' => ['required'],
+      'tax_code' => $isManual ? ['nullable'] : ['required'],
+      'name' => ['required', 'max:255'],
+      'address' => ['required'],
+      'position' => ['required', 'max:255'],
+      'internship_start_date' => ['required', 'date'],
+      'internship_end_date' => ['required', 'date'],
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect('/student/internship');
+    }
+
+    try {
+      if ($isManual) {
+        $companyId = $this->_companyService->createManual([
+          'tax_code' => $data['tax_code'] ?: null,
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      } else {
+        $companyId = $this->_companyService->upsertFromApi([
+          'tax_code' => $data['tax_code'],
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      }
+
+      $this->_internshipBatchService->updateStudentInternshipInfo((int)$data['batch_student_id'], [
+        'company_id' => $companyId,
+        'position' => $data['position'],
+        'internship_start_date' => $data['internship_start_date'],
+        'internship_end_date' => $data['internship_end_date'],
+      ]);
+
+      $request->session()->flashNotify('success', 'Lưu thông tin công ty thành công!');
+    } catch (\Exception $e) {
+      $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
+    }
+
+    return $this->redirect('/student/internship');
+  }
+
+  public function uploadSubmission(Request $request)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+
+    $batchStudentId = (int)$request->input('batch_student_id');
+    if (!$batchStudentId) {
+      $request->session()->flashNotify('error', 'Thiếu thông tin đợt thực tập.');
+      return $this->redirect('/student/internship');
+    }
+
+    try {
+      $fileHandler = new UploadedFileHandler();
+      $uploadedFile = $fileHandler->fromGlobals('report_file');
+
+      $uploadDir = BASE_PATH . '/public/uploads/internship_reports/';
+      if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+      }
+
+      $fileName = time() . '_' . uniqid() . '.' . $uploadedFile->extension;
+      $destPath = $uploadDir . $fileName;
+
+      if (!move_uploaded_file($uploadedFile->tmpPath, $destPath)) {
+        throw new \Exception('Không thể lưu file vào máy chủ.');
+      }
+
+      $this->_submissionService->createSubmission($batchStudentId, [
+        'type' => 'final_report',
+        'storage_mode' => 'local',
+        'file_path' => '/public/uploads/internship_reports/' . $fileName,
+      ]);
+
+      $request->session()->flashNotify('success', 'Nộp tài liệu thành công!');
+    } catch (\Exception $e) {
+      $request->session()->flashNotify('error', 'Lỗi tải lên: ' . $e->getMessage());
+    }
+
+    return $this->redirect('/student/internship');
   }
 
   /**

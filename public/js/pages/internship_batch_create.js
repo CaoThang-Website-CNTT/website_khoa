@@ -778,7 +778,6 @@ document.addEventListener("DOMContentLoaded", () => {
         max_students: state.selectedTeachers[tId],
       })),
     };
-    console.log(payload);
 
     try {
       showLoader();
@@ -792,9 +791,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const result = await res.json();
-      console.log("result", result);
       const data = result.data;
-      console.log(data);
 
       if (!res.ok)
         throw new Error(

@@ -63,6 +63,7 @@ require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/models/media.php';
 require_once BASE_PATH . '/models/post.php';
+require_once BASE_PATH . '/models/company.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
@@ -78,6 +79,7 @@ require_once BASE_PATH . '/stores/internship_assignment_store.php';
 require_once BASE_PATH . '/stores/internship_submission_store.php';
 require_once BASE_PATH . '/stores/media_store.php';
 require_once BASE_PATH . '/stores/post_store.php';
+require_once BASE_PATH . '/stores/company_store.php';
 
 // Services
 require_once BASE_PATH . '/services/google_oauth_service.php';
@@ -92,6 +94,8 @@ require_once BASE_PATH . '/services/internship_batch_service.php';
 require_once BASE_PATH . '/services/internship_assignment_service.php';
 require_once BASE_PATH . '/services/media_service.php';
 require_once BASE_PATH . '/services/post_service.php';
+require_once BASE_PATH . '/services/company_service.php';
+require_once BASE_PATH . '/services/internship_submission_service.php';
 
 // Controllers
 // Web
@@ -117,3 +121,4 @@ require_once BASE_PATH . '/controllers/api/internship_assignment_api_controller.
 require_once BASE_PATH . '/controllers/api/internship_batch_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_batch_management_api_controller.php';
 require_once BASE_PATH . '/controllers/api/media_api_controller.php';
+require_once BASE_PATH . '/controllers/api/company_api_controller.php';

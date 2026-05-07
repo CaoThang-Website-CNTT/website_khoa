@@ -4,7 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Core\Controller;
 use App\Core\Request;
-use App\Core\Validator;
+use App\Core\RequestValidator;
 use App\Services\InternshipBatchService;
 use Exception;
 
@@ -78,7 +78,7 @@ class InternshipBatchApiController extends Controller
     ob_start();
     try {
       $data = $request->json();
-      $validator = new Validator();
+      $validator = new RequestValidator();
 
       $rules = [
         'title' => ['required', 'max:255'],

@@ -152,4 +152,9 @@ $router->prefix('student')->group(function (Router $router) {
   $router->get('/graduation', [StudentDashboardController::class, 'graduation']);
   // Cập nhật thông tin cá nhân
   $router->post('/profile/update', [StudentDashboardController::class, 'updateProfile']);
+  
+  // Khai báo công ty thực tập
+  $router->post('/internship/company', [StudentDashboardController::class, 'updateCompany']);
+  // Nộp tài liệu
+  $router->post('/internship/upload', [StudentDashboardController::class, 'uploadSubmission']);
 });

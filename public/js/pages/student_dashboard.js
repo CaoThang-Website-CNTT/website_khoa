@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Edit Profile Modal logic
+  const apiBase = window.API_BASE_URL;
   const editProfileBtn = document.getElementById("editProfileBtn");
   const editProfileModal = document.getElementById("editProfileModal");
   const closeModalBtn = document.getElementById("closeModalBtn");
@@ -32,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = Object.fromEntries(formData.entries());
 
       try {
-        const response = await fetch("/api/student/profile/update", {
+        const response = await fetch(`${apiBase}/student/profile/update`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -87,8 +88,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Upload area interaction (Visual feedback)
-  const uploadArea = document.querySelector(".upload-area");
-  if (uploadArea) {
+  const uploadArea = document.getElementById("uploadArea");
+  const fileInput = document.getElementById("report_file");
+  const filePreview = document.getElementById("filePreview");
+  const uploadBtn = document.getElementById("uploadBtn");
+
+  if (uploadArea && fileInput) {
     uploadArea.addEventListener("dragover", (e) => {
       e.preventDefault();
       uploadArea.classList.add("border-primary");
@@ -101,69 +106,188 @@ document.addEventListener("DOMContentLoaded", () => {
     uploadArea.addEventListener("drop", (e) => {
       e.preventDefault();
       uploadArea.classList.remove("border-primary");
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        handleFileUpload(files[0]);
+      if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        updateFilePreview();
       }
     });
 
     uploadArea.addEventListener("click", () => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".pdf,.docx,.zip";
-      input.onchange = (e) => {
-        if (e.target.files.length > 0) {
-          handleFileUpload(e.target.files[0]);
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", () => {
+      updateFilePreview();
+    });
+
+    function updateFilePreview() {
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+          window.toast.error("Lỗi", "Dung lượng file không được vượt quá 50MB");
+          fileInput.value = "";
+          filePreview.classList.add("hidden");
+          if (uploadBtn) uploadBtn.disabled = true;
+          return;
         }
-      };
-      input.click();
+
+        filePreview.textContent = `Đã chọn: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        filePreview.classList.remove("hidden");
+        if (uploadBtn) uploadBtn.disabled = false;
+      } else {
+        filePreview.classList.add("hidden");
+        if (uploadBtn) uploadBtn.disabled = true;
+      }
+    }
+  }
+
+  // Company Tax Code logic
+  const btnCheckMST = document.getElementById("btnCheckMST");
+  const taxCodeInput = document.getElementById("tax_code");
+  const companyNameInput = document.getElementById("company_name");
+  const companyAddressInput = document.getElementById("company_address");
+  const mstLoading = document.getElementById("mstLoading");
+  const mstError = document.getElementById("mstError");
+
+  if (btnCheckMST && taxCodeInput) {
+    // Bật tắt chế độ nhập thủ công
+    const isManualToggle = document.getElementById("is_manual");
+    if (isManualToggle) {
+      isManualToggle.addEventListener("change", () => {
+        const isManual = isManualToggle.checked;
+
+        // Reset inputs
+        if (isManual) {
+          taxCodeInput.value = "";
+          taxCodeInput.setAttribute("disabled", "disabled");
+          taxCodeInput.required = false;
+          btnCheckMST.classList.add("hidden");
+          companyNameInput.removeAttribute("readonly");
+          companyAddressInput.removeAttribute("readonly");
+          mstError.classList.add("hidden");
+        } else {
+          taxCodeInput.removeAttribute("disabled");
+          taxCodeInput.required = true;
+          btnCheckMST.classList.remove("hidden");
+          companyNameInput.setAttribute("readonly", "readonly");
+          companyAddressInput.setAttribute("readonly", "readonly");
+        }
+      });
+    }
+
+    btnCheckMST.addEventListener("click", async () => {
+      const mst = taxCodeInput.value.trim();
+      if (!mst) {
+        mstError.textContent = "Vui lòng nhập mã số thuế.";
+        mstError.classList.remove("hidden");
+        return;
+      }
+
+      mstLoading.classList.remove("hidden");
+      mstError.classList.add("hidden");
+      companyNameInput.value = "";
+      companyAddressInput.value = "";
+
+      try {
+        const response = await fetch(
+          `https://api.vietqr.io/v2/business/${mst}`,
+        );
+        const result = await response.json();
+
+        if (result.code === "00" && result.data) {
+          companyNameInput.value = result.data.name;
+          companyAddressInput.value = result.data.address;
+        } else {
+          mstError.textContent = "Không tìm thấy thông tin công ty.";
+          mstError.classList.remove("hidden");
+        }
+      } catch (error) {
+        mstError.textContent = "Lỗi kết nối API lấy mã số thuế.";
+        mstError.classList.remove("hidden");
+      } finally {
+        mstLoading.classList.add("hidden");
+      }
     });
   }
 
-  function handleFileUpload(file) {
-    // Check file size (30MB)
-    const maxSize = 30 * 1024 * 1024;
-    if (file.size > maxSize) {
-      window.toast.error("Lỗi", "Dung lượng file không được vượt quá 30MB");
-      return;
-    }
+  // Company Autocomplete logic
+  const suggestionsContainer = document.getElementById("companySuggestions");
+  if (companyNameInput && suggestionsContainer) {
+    const debounce = (func, wait) => {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    };
 
-    window.toast.info("Thông báo", `Đang chuẩn bị tải lên: ${file.name}`);
+    const fetchSuggestions = async (query) => {
+      if (query.length < 2) {
+        suggestionsContainer.classList.add("hidden");
+        return;
+      }
 
-    const internshipData = document.getElementById("internship-data");
-    if (!internshipData) {
-      window.toast.error("Lỗi", "Không tìm thấy thông tin đợt thực tập.");
-      return;
-    }
+      try {
+        const response = await fetch(
+          `${apiBase}/companies/suggest-by-name?q=${encodeURIComponent(query)}`,
+        );
+        const result = await response.json();
 
-    const batchStudentId = internshipData.getAttribute("data-batch-student-id");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("batch_student_id", batchStudentId);
-    formData.append("type", "internship_report");
-
-    const uploadArea = document.querySelector(".upload-area");
-    uploadArea.classList.add("opacity-50", "pointer-events-none");
-
-    fetch("/api/student/profile/upload-document", {
-      method: "POST",
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((result) => {
-        if (result.success) {
-          window.toast.success("Thành công", "Tải lên tài liệu thành công!");
-          // Refresh page after a short delay to show new status/history
-          setTimeout(() => window.location.reload(), 1500);
+        if (result.success && result.data.length > 0) {
+          renderSuggestions(result.data);
         } else {
-          window.toast.error("Lỗi", result.message || "Tải lên thất bại.");
+          suggestionsContainer.classList.add("hidden");
         }
-      })
-      .catch((err) => {
-        window.toast.error("Lỗi", "Không thể kết nối đến máy chủ.");
-      })
-      .finally(() => {
-        uploadArea.classList.remove("opacity-50", "pointer-events-none");
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+      }
+    };
+
+    const renderSuggestions = (companies) => {
+      suggestionsContainer.innerHTML = "";
+      companies.forEach((company) => {
+        const div = document.createElement("div");
+        div.className = "suggestions-list__item";
+        div.innerHTML = `
+          <div class="font-medium text-sm">${company.name}</div>
+          <div class="text-xs text-muted-foreground">${company.tax_code || "Không có MST"} - ${company.address}</div>
+        `;
+        div.addEventListener("click", () => {
+          companyNameInput.value = company.name;
+          companyAddressInput.value = company.address;
+          if (company.tax_code) {
+            taxCodeInput.value = company.tax_code;
+          }
+          suggestionsContainer.classList.add("hidden");
+        });
+        suggestionsContainer.appendChild(div);
       });
+      suggestionsContainer.classList.remove("hidden");
+    };
+
+    companyNameInput.addEventListener(
+      "input",
+      debounce((e) => {
+        const isManual = document.getElementById("is_manual")?.checked;
+        if (isManual) {
+          fetchSuggestions(e.target.value);
+        }
+      }, 300),
+    );
+
+    // Đóng danh sách gợi ý khi click ra ngoài
+    document.addEventListener("click", (e) => {
+      if (
+        !companyNameInput.contains(e.target) &&
+        !suggestionsContainer.contains(e.target)
+      ) {
+        suggestionsContainer.classList.add("hidden");
+      }
+    });
   }
 });
