@@ -6,18 +6,18 @@ use App\Stores\CompanyStore;
 use App\Models\Company;
 use Exception;
 use App\Core\Pageable;
-use Override;
 
 interface ICompanyService
 {
   /** @return Pageable */
   public function getCompanies(int $page, int $limit = 15): Pageable;
   //public function createCompanies(array $data): ?Company;
-  public function getById(int $id): ?array;
+  public function getCompanyById(int $id): ?Company;
   public function findByTaxCode(string $taxCode): ?array;
   public function upsertFromApi(array $data): int;
   public function createManual(array $data): int;
   public function suggestByName(string $query): array;
+  public function updateCompany(int $id, array $data): bool;
 }
 
 class CompanyService implements ICompanyService
@@ -29,7 +29,7 @@ class CompanyService implements ICompanyService
     $this->_store = $store;
   }
 
-  public function getById(int $id): ?array
+  public function getCompanyById(int $id): ?Company
   {
     return $this->_store->getById($id);
   }
@@ -62,6 +62,24 @@ class CompanyService implements ICompanyService
     $companies = $this->_store->getPaginated($page, $limit);
     $total = $this->_store->getTotalCount();
     return new Pageable($companies, $total, $limit, $page);
+  }
+
+  public function updateCompany(int $id, array $data): bool
+  {
+    $company = $this->_store->getById($id);
+    if (!$company) {
+      throw new Exception('Không tồn tại công ty này');
+    }
+
+    $company->name = $data['company_name'] ?? $company->name;
+    $company->tax_code = $data['tax_code'] ?? $company->tax_code;
+    $company->phone = $data['phone'] ?? $company->phone;
+    $company->address = $data['address'] ?? $company->address;
+    $company->email = $data['email'] ?? $company->email;
+    $company->website = $data['website'] ?? $company->website;
+    $company->note = $data['note'] ?? $company->note;
+
+    return $this->_store->update($company);
   }
 
   /**

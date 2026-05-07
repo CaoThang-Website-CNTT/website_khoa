@@ -19,13 +19,13 @@ class CompanyStore extends Store
     return $result ?: null;
   }
 
-  public function getById(int $id): ?array
+  public function getById(int $id): ?Company
   {
     $sql = "SELECT * FROM companies WHERE id = :id AND deleted_at IS NULL";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':id' => $id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $result ?: null;
+    return $result ? Company::fromArray($result) : null;
   }
 
   public function upsertFromApi(array $data): int
@@ -126,5 +126,41 @@ class CompanyStore extends Store
 
     $stmt = $this->db->query($sql);
     return (int) $stmt->fetchColumn();
+  }
+
+  /**
+   * Cập nhật thông tin công ty
+   * 
+   * @param Company $company
+   * @return bool
+   */
+  public function update(Company $company): bool
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $fields = [
+      'name' => $company->name,
+      'tax_code' => $company->tax_code,
+      'address' => $company->address,
+      'phone' => $company->phone,
+      'email' => $company->email,
+      'website' => $company->website,
+      'note' => $company->note,
+      'updated_at' => date('Y-m-d H:i:s'),
+    ];
+
+    $query = $builder
+      ->from('companies')
+      ->eq('id', $company->id)
+      ->update($fields);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $success = $stmt->execute($query->getBindings());
+
+    if (!$success) {
+      throw new \Exception('Không thể cập nhật công ty trong cơ sở dữ liệu.');
+    }
+
+    return true;
   }
 }
