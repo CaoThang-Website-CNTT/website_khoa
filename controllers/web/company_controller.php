@@ -137,16 +137,16 @@ class CompanyController extends Controller
     exit;
   }
 
-  public function destroy($student_id, Request $request)
+  public function destroy($id, Request $request)
   {
-    // $isSuccess = $this->_studentService->deleteStudent($student_id);
+    $isSuccess = $this->_companyService->deleteCompany($id);
 
-    // if ($isSuccess) {
-    //   $request->session()->flashNotify('success', 'Xoá sinh viên thành công!');
-    // } else {
-    //   $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
-    // }
+    if ($isSuccess) {
+      $request->session()->flashNotify('success', 'Xoá công ty thành công!');
+    } else {
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+    }
 
-    // return $this->redirect('admin/students');
+    return $this->redirect('admin/companies');
   }
 }

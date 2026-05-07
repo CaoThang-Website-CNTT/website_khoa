@@ -18,6 +18,7 @@ interface ICompanyService
   public function createManual(array $data): int;
   public function suggestByName(string $query): array;
   public function updateCompany(int $id, array $data): bool;
+  public function deleteCompany(int $id): bool;
 }
 
 class CompanyService implements ICompanyService
@@ -80,6 +81,11 @@ class CompanyService implements ICompanyService
     $company->note = $data['note'] ?? $company->note;
 
     return $this->_store->update($company);
+  }
+
+  public function deleteCompany(int $id): bool
+  {
+    return $this->_store->softDelete($id);
   }
 
   /**

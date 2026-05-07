@@ -163,4 +163,29 @@ class CompanyStore extends Store
 
     return true;
   }
+
+  /**
+   * Xóa mềm công ty
+   * 
+   * @param int $id
+   * @return bool
+   */
+  public function softDelete($id): bool
+  {
+    $sql = "
+      UPDATE `companies`
+      SET
+        `deleted_at` = NOW()
+      WHERE `id` = :id;
+    ";
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->execute([':id' => $id]);
+
+    if ($stmt->rowCount() === 0) {
+      throw new \Exception("Không tìm thấy công ty mã: " . $id);
+    }
+
+    return true;
+  }
 }
