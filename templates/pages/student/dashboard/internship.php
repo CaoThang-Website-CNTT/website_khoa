@@ -9,6 +9,7 @@ $student = $student ?? null;
 $current = $current ?? null;
 $batches = $batches ?? [];
 $supervisor = $supervisor ?? null;
+$submissions = $submissions ?? [];
 $logs = $logs ?? [];
 ?>
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
@@ -59,7 +60,7 @@ $logs = $logs ?? [];
       <div class="card shadow">
         <div class="card__header">
           <h3 class="card__title">
-            <i class="fa-solid fa-circle-info text-primary mr-2"></i>
+            <i class="fa-solid fa-circle-info mr-2"></i>
             Chi tiết phân công
           </h3>
         </div>
@@ -67,10 +68,11 @@ $logs = $logs ?? [];
         <div class="card__content">
           <div>
             <p><span class="font-bold">Đợt thực tập:</span> <?= htmlspecialchars($current['title'] ?? '') ?></p>
-            <p><span class="font-bold">Thời gian mở đợt thực tập:</span> từ <time datetime="<?= date("d/m/Y", strtotime($current['start_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['start_at']))) ?></time> đến <time datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?></p>
+            <p><span class="font-bold">Thời gian mở đợt:</span> từ <time datetime="<?= date("d/m/Y", strtotime($current['start_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['start_at']))) ?></time> đến <time datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?></p>
 
 
             <?php if ($supervisor): ?>
+              <hr class="separator" />
               <p><span class="font-bold">Họ & tên GVHD:</span> <?= htmlspecialchars($supervisor->full_name) ?></p>
               <p><span class="font-bold">Email GVHD:</span> <?= htmlspecialchars($supervisor->account->email) ?></p>
               <p><span class="font-bold">Số điện thoại GVHD:</span> <?= htmlspecialchars($supervisor->phone) ?></p>
@@ -85,7 +87,7 @@ $logs = $logs ?? [];
       <div class="card shadow">
         <div class="card__header">
           <h3 class="card__title">
-            <i class="fa-solid fa-building text-primary mr-2"></i>
+            <i class="fa-solid fa-building mr-2"></i>
             Thông tin công ty
           </h3>
           <!-- TODO: hiển thị động thời gian còn lại or hiển thị hạn chót khai báo thông tin? -->
@@ -175,7 +177,7 @@ $logs = $logs ?? [];
           </h3>
         </div>
         <div class="card__content">
-          <div class="text-4xl font-bold text-primary mb-1">--</div>
+          <div class="text-4xl font-bold mb-1">--</div>
           <span class="text-xs text-muted-foreground">Chưa có điểm</span>
         </div>
       </div>
@@ -185,7 +187,7 @@ $logs = $logs ?? [];
         <div class="card shadow">
           <div class="card__header">
             <h3 class="card__title">
-              <i class="fa-solid fa-cloud-arrow-up text-primary mr-2"></i>
+              <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
               Nộp tài liệu thực tập tốt nghiệp
             </h3>
             <p class="text-xs">Tài liệu được gửi cho giảng viên hướng dẫn để đánh giá kết quả thực tập.</p>
@@ -202,13 +204,38 @@ $logs = $logs ?? [];
                 <p class="upload-area__text">Nhấn để chọn file hoặc kéo thả vào đây</p>
                 <p class="upload-area__hint">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty, nhật ký thực tập, hình ảnh liên quan... thành một file nén.</p>
                 <p class="upload-area__hint">Định dạng hỗ trợ: ZIP, RAR. Dung lượng tối đa: 50MB</p>
-                <input type="file" name="report_file" class="hidden" id="report_file" accept=".pdf,.docx,.zip,.rar">
+                <input type="file" name="report_file" class="hidden" id="report_file" accept=".zip,.rar">
               </div>
-              <div id="filePreview" class="hidden mt-4 text-sm text-center text-primary"></div>
+              <div id="filePreview" class="hidden mt-4 text-sm text-center"></div>
               <div class="mt-4 flex justify-end">
                 <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài liệu</button>
               </div>
             </form>
+          </div>
+          <hr class="separator" />
+          <div class="card__header">
+            <h3 class="card__title">
+              <i class="fa-solid fa-upload mr-2"></i>
+              Lịch sử nộp
+            </h3>
+          </div>
+          <hr class="separator" />
+          <div class="card__content">
+            <div class="timeline-container">
+              <?php if (empty($submissions)): ?>
+                <div class="empty-state">
+                  <p class="text-sm">Bạn chưa nộp lần nào. Hãy đảm bảo nộp đúng hạn.</p>
+                </div>
+              <?php else: ?>
+                <?php foreach ($submissions as $submission): ?>
+                  <article class="timeline-item">
+                    <div class="timeline-item__indicator"></div>
+                    <time class="timeline-item__time text-xs text-muted-foreground"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
+                    <div class="timeline-item__action font-medium"><?= $submission['original_file_name'] ?? '--' ?></div>
+                  </article>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
       <?php endif; ?>
@@ -217,25 +244,25 @@ $logs = $logs ?? [];
       <div class="card shadow">
         <div class="card__header">
           <h3 class="card__title">
-            <i class="fa-solid fa-clock-rotate-left text-primary mr-2"></i>
+            <i class="fa-solid fa-clock-rotate-left mr-2"></i>
             Thông báo & Lịch sử
           </h3>
         </div>
         <hr class="separator" />
         <div class="card__content">
-          <div class="log-timeline">
+          <div class="timeline-container">
             <?php if (empty($logs)): ?>
               <div class="empty-state">
                 <p class="text-muted-foreground text-sm">Chưa có lịch sử hoạt động.</p>
               </div>
             <?php else: ?>
               <?php foreach ($logs as $log): ?>
-                <article class="log-item">
-                  <div class="log-item__indicator"></div>
-                  <time class="log-item__time text-xs text-muted-foreground"><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></time>
-                  <div class="log-item__action font-medium"><?= htmlspecialchars($log['action']) ?></div>
+                <article class="timeline-item">
+                  <div class="timeline-item__indicator"></div>
+                  <time class="timeline-item__time text-xs text-muted-foreground"><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></time>
+                  <div class="timeline-item__action font-medium"><?= htmlspecialchars($log['action']) ?></div>
                   <?php if ($log['reason']): ?>
-                    <p class="log-item__reason text-sm text-muted-foreground mt-1"><?= htmlspecialchars($log['reason']) ?></p>
+                    <p class="timeline-item__reason text-sm text-muted-foreground mt-1"><?= htmlspecialchars($log['reason']) ?></p>
                   <?php endif; ?>
                 </article>
               <?php endforeach; ?>

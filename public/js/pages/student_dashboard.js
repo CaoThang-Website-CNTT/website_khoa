@@ -23,11 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const saveBtn = document.getElementById("saveProfileBtn");
       const spinner = saveBtn.querySelector(".fa-spinner");
-      const btnText = saveBtn.querySelector(".btn-text");
 
       saveBtn.disabled = true;
       spinner.classList.remove("hidden");
-      btnText.classList.add("opacity-50");
 
       const formData = new FormData(editProfileForm);
       const data = Object.fromEntries(formData.entries());
@@ -59,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } finally {
         saveBtn.disabled = false;
         spinner.classList.add("hidden");
-        btnText.classList.remove("opacity-50");
       }
     });
   }

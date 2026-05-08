@@ -37,25 +37,28 @@
 }
 
 /* ── Activity Log Timeline ─────────────────────────────────────────────── */
-.log-timeline {
+.timeline-container {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding: 0.75rem;
+  max-height: 12rem;
+  overflow-y: auto;
 }
 
-.log-item {
+.timeline-item {
   position: relative;
   padding-left: 1.5rem;
   padding-bottom: 1.25rem;
   border-left: 1.5px solid var(--border);
 }
 
-.log-item:last-child {
+.timeline-item:last-child {
   padding-bottom: 0;
   border-left-color: transparent;
 }
 
-.log-item__indicator {
+.timeline-item__indicator {
   position: absolute;
   left: -0.4375rem; /* center on 1.5px border */
   top: 0.25rem;
@@ -67,7 +70,7 @@
   box-shadow: 0 0 0 1px var(--border);
 }
 
-.log-item__time {
+.timeline-item__time {
   display: block;
   margin-bottom: 0.125rem;
 }

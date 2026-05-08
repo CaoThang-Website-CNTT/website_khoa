@@ -36,7 +36,7 @@ class UploadedFileHandler
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
     'application/zip',
     'application/x-zip-compressed',
-    'application/vnd.rar',
+    'application/x-rar',
     'application/x-rar-compressed',
   ];
 

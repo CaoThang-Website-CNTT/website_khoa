@@ -595,7 +595,7 @@ document.addEventListener("DOMContentLoaded", () => {
         deptGroup.innerHTML = `
         <div class="department-header">
           <div class="department-title">
-            <i class="fa-solid fa-users-rectangle text-primary"></i>
+            <i class="fa-solid fa-users-rectangle"></i>
             ${deptName}
           </div>
           <div class="flex items-center gap-4">

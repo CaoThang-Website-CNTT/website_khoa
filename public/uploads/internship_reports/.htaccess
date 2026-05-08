@@ -1,0 +1,21 @@
+# Cấm thực thi tất cả các script (PHP, CGI, v.v.)
+Options -ExecCGI -Indexes
+
+# Vô hiệu hóa PHP engine trong thư mục này
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# Chỉ cho phép truy cập các file tĩnh
+<Files ^(*)>
+    Order deny,allow
+    Deny from all
+</Files>
+
+<Files ~* "\.(jpg|jpeg|png|webp|avif|gif|csv|pdf|docx|doc|zip|rar|xlsx)$">
+    Order allow,deny
+    Allow from all
+</Files>

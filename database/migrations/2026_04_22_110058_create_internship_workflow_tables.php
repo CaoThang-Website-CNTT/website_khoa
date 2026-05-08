@@ -54,7 +54,7 @@ return new class extends BaseMigration {
       $table->id();
 
       $table->bigInt('batch_student_id')->unsigned();
-      $table->enum('type', ['internship_form', 'internship_report']);
+      $table->enum('type', ['internship_form', 'internship_report']); //TODO: bỏ?
       $table->enum('storage_mode', ['file', 'link'])->default('file');
       $table->varchar('file_path', 255)->nullable();
       $table->varchar('external_url', 500)->nullable();
@@ -121,7 +121,6 @@ return new class extends BaseMigration {
 
       $table->index(['batch_student_id', 'allow_late_submission_until'], 'idx_student_exceptions');
     });
-
   }
 
   public function back(TableBuilder $schema): void

@@ -43,7 +43,7 @@
 <div class="w-full">
 
   <div id="wizard-loader" class="assignment-loader hidden">
-    <i class="fa-solid fa-spinner fa-spin text-3xl text-primary"></i>
+    <i class="fa-solid fa-spinner fa-spin text-3xl"></i>
   </div>
 
   <form id="form-create-batch" class="detail-layout">
@@ -288,7 +288,7 @@
 </div>
 
 <script>
-window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
-window.REDIRECT_URL = '<?= url('admin/internship_batches/{id}/assignments') ?>';
+  window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
+  window.REDIRECT_URL = '<?= url('admin/internship_batches/{id}/assignments') ?>';
 </script>
 <script src="<?= url('public/js/pages/internship_batch_create.js') ?>"></script>

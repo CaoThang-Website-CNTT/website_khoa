@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore};
+use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore};
 use App\Core\Pageable;
 use Database;
 
@@ -12,17 +12,20 @@ class InternshipBatchService
   private InternshipAssignmentStore $_assignmentStore;
   private TeacherStore $_teacherStore;
   private AccountStore $_accountStore;
+  private InternshipSubmissionStore $_submissionStore;
 
   public function __construct(
     InternshipBatchStore $store,
     InternshipAssignmentStore $assignmentStore,
     TeacherStore $teacherStore,
-    AccountStore $accountStore
+    AccountStore $accountStore,
+    InternshipSubmissionStore $submissionStore
   ) {
     $this->_store = $store;
     $this->_assignmentStore = $assignmentStore;
     $this->_teacherStore = $teacherStore;
     $this->_accountStore = $accountStore;
+    $this->_submissionStore = $submissionStore;
   }
 
   /**
@@ -245,12 +248,14 @@ class InternshipBatchService
 
     $supervisor = null;
     $logs = [];
+    $submissions = [];
     if ($assignment) {
       $supervisor = $this->_teacherStore->getById($assignment->teacher_id);
       if ($supervisor->account_id) {
         $supervisor->account = $this->_accountStore->getById($supervisor->account_id);
       }
       $logs = $this->_assignmentStore->getLogsByBatchStudent($currentBatch['batch_student_id']);
+      $submissions = $this->_submissionStore->getAllByBatchStudentId($currentBatch['batch_student_id']);
     }
 
     return [
@@ -258,6 +263,7 @@ class InternshipBatchService
       'current' => $currentBatch,
       'assignment' => $assignment,
       'supervisor' => $supervisor,
+      'submissions' => $submissions,
       'logs' => $logs
     ];
   }

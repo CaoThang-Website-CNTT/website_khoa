@@ -7,6 +7,7 @@ use App\Core\Request;
 use App\Core\RequestValidator;
 use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService};
 use App\Core\Files\UploadedFileHandler;
+use Exception;
 
 class StudentDashboardController extends Controller
 {
@@ -104,7 +105,7 @@ class StudentDashboardController extends Controller
     try {
       $this->_studentService->updateStudent($student->student_id, $updateData);
       $request->session()->flashNotify('success', 'Cập nhật thông tin cá nhân thành công!');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
       $request->session()->flashNotify('error', 'Có lỗi xảy ra: ' . $e->getMessage());
     }
 
@@ -205,7 +206,7 @@ class StudentDashboardController extends Controller
       ]);
 
       $request->session()->flashNotify('success', 'Lưu thông tin công ty thành công!');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
       $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
     }
 
@@ -226,27 +227,27 @@ class StudentDashboardController extends Controller
     try {
       $fileHandler = new UploadedFileHandler();
       $uploadedFile = $fileHandler->fromGlobals('report_file');
-
-      $uploadDir = BASE_PATH . '/public/uploads/internship_reports/';
+      $subDir = 'internship_reports/' . date('Y/m/d'); // Chia nhỏ, quản lý file theo ngày
+      $uploadDir = BASE_PATH . '/public/uploads/' . $subDir . '/';
       if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
+        mkdir($uploadDir, 0755, true);
       }
 
-      $fileName = time() . '_' . uniqid() . '.' . $uploadedFile->extension;
+      $fileName = bin2hex(random_bytes(16)) . '.' . $uploadedFile->extension;
       $destPath = $uploadDir . $fileName;
 
       if (!move_uploaded_file($uploadedFile->tmpPath, $destPath)) {
-        throw new \Exception('Không thể lưu file vào máy chủ.');
+        throw new Exception('Không thể lưu file vào máy chủ.');
       }
 
       $this->_submissionService->createSubmission($batchStudentId, [
-        'type' => 'final_report',
-        'storage_mode' => 'local',
-        'file_path' => '/public/uploads/internship_reports/' . $fileName,
+        'storage_mode' => 'file',
+        'original_file_name' => $uploadedFile->originalName,
+        'file_path' => $subDir . '/' . $fileName,
       ]);
 
       $request->session()->flashNotify('success', 'Nộp tài liệu thành công!');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
       $request->session()->flashNotify('error', 'Lỗi tải lên: ' . $e->getMessage());
     }
 
