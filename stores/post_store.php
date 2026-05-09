@@ -11,15 +11,10 @@ interface IPostStore
 {
   public function create(Post $post): Post;
 
-  /**
-   * Lấy danh sách bài viết — chỉ trả về các cột cần thiết cho listing:
-   * title, slug, seo_description (excerpt), seo_image_url (thumbnail),
-   * status, view_count, author_id, published_at, created_at.
-   * Không trả về content_json để tránh tải dữ liệu nặng không cần thiết.
-   */
-  public function findAll(int $limit = 20, int $offset = 0): array;
+  /** @return Post[] */
+  public function getPaginated(int $pageTo, int $limit = 15): array;
+  public function getById(int $id): ?Post;
 
-  public function findById(int $id): ?Post;
 
   /**
    * Chỉ cập nhật các field được truyền vào — partial update.
@@ -30,6 +25,7 @@ interface IPostStore
 
   public function findBySlug(string $slug): ?Post;
   public function syncCategories(int $postId, array $categoryIds): bool;
+  public function getTotalCount(): int;
 }
 
 class PostStore extends Store implements IPostStore
@@ -83,8 +79,9 @@ class PostStore extends Store implements IPostStore
     return $post;
   }
 
-  public function findAll(int $limit = 20, int $offset = 0): array
+  public function getPaginated(int $page, int $limit = 20): array
   {
+    $offset = ($page - 1) * $limit;
     $builder = new QueryBuilder(new MySQLCompiler());
 
     $query = $builder
@@ -104,7 +101,7 @@ class PostStore extends Store implements IPostStore
     );
   }
 
-  public function findById(int $id): ?Post
+  public function getById(int $id): ?Post
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
@@ -180,6 +177,15 @@ class PostStore extends Store implements IPostStore
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
+  }
+
+  public function getTotalCount(): int
+  {
+    $sql = "SELECT COUNT(*) as total FROM posts WHERE deleted_at IS NULL";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    return (int) ($row['total'] ?? 0);
   }
 
   public function syncCategories(int $postId, array $newCategoryIds): bool

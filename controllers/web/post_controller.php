@@ -34,14 +34,13 @@ class PostController extends Controller
 
   public function index(Request $request)
   {
-    $limit = max(1, min(100, (int) $request->input('limit', 20)));
-    $offset = max(0, (int) $request->input('offset', 0));
+    $currentPage = $request->query('page') ?? 1;
 
-    $posts = $this->_postService->list(['limit' => $limit, 'offset' => $offset]);
+    $data = $this->_postService->getPosts($currentPage, 15);
 
-    return $this->render('posts', [
-      'posts' => $posts
-    ], layout: 'canva_layout');
+    return $this->render('admin/posts/index', [
+      'data' => $data,
+    ], layout: 'dashboard_layout');
   }
 
   public function store(Request $request)

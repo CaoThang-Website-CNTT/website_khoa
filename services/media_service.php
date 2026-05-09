@@ -10,7 +10,7 @@ interface IMediaService
 {
   public function upload(UploadedFile $file, ?int $postId = null): Media;
   public function delete(int $mediaId): void;
-  public function get(int $mediaId): ?Media;
+  public function getMedia(int $mediaId): ?Media;
   public function attachToPost(array $mediaIds, int $postId): void;
   public function getByPostId(int $postId): array;
   public function updateMetadata(int $mediaId, array $data): Media;
@@ -67,7 +67,7 @@ class MediaService implements IMediaService
     $this->_mediaStore->delete($mediaId);
   }
 
-  public function get(int $mediaId): ?Media
+  public function getMedia(int $mediaId): ?Media
   {
     return $this->_mediaStore->findById($mediaId);
   }

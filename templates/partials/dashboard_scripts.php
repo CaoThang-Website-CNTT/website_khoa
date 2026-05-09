@@ -9,3 +9,5 @@
 <script src="<?= url('/public/js/collapsible.js') ?>"></script>
 <script src="<?= url('/public/js/select.js') ?>"></script>
 <script src="<?= url('/public/js/popover.js') ?>"></script>
+<script src="<?= url('/public/js/dropdown.js') ?>"></script>
+<script type="module" src="<?= url('/public/js/table/index.js') ?>"></script>

@@ -6,19 +6,15 @@ use App\Models\Post;
 use App\Stores\PostStore;
 use App\Stores\AccountStore;
 use App\Stores\MediaStore;
+use App\Core\Pageable;
 use Database;
 
 interface IPostService
 {
   public function create(array $payload): Post;
 
-  /**
-   * Trả về danh sách bài viết dạng listing — không có content_json.
-   * $filters hiện tại hỗ trợ: ['limit' => int, 'offset' => int]
-   */
-  public function list(array $filters = []): array;
-
-  public function get(int $id): Post;
+  public function getPosts(int $page, int $limit = 15): Pageable;
+  public function getPost(int $post_id): Post;
 
   /**
    * Cập nhật nội dung và/hoặc trạng thái của bài viết.
@@ -117,15 +113,31 @@ class PostService implements IPostService
     });
   }
 
-  public function list(array $filters = []): array
+  public function getPosts(int $page, int $limit = 15): Pageable
   {
-    $limit = max(1, (int) ($filters['limit'] ?? 20));
-    $offset = max(0, (int) ($filters['offset'] ?? 0));
+    $posts = $this->_postStore->getPaginated($page, $limit);
+    $total = $this->_postStore->getTotalCount();
 
-    return $this->_postStore->findAll($limit, $offset);
+    // Tối ưu: Load bulk thông tin tác giả để tránh N+1
+    $authorIds = array_unique(array_filter(array_map(fn($p) => $p->author_id, $posts)));
+    if (!empty($authorIds)) {
+      $authors = $this->_accountStore->getByIds($authorIds);
+      $authorMap = [];
+      foreach ($authors as $author) {
+        $authorMap[$author->id] = $author;
+      }
+
+      foreach ($posts as $post) {
+        if ($post->author_id && isset($authorMap[$post->author_id])) {
+          $post->author = $authorMap[$post->author_id];
+        }
+      }
+    }
+
+    return new Pageable($posts, $total, $limit, $page);
   }
 
-  public function get(int $id): Post
+  public function getPost(int $id): Post
   {
     return $this->_postStore->findById($id)
       ?? throw new \RuntimeException("Bài viết #{$id} không tồn tại.");
