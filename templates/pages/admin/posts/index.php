@@ -2,9 +2,9 @@
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
+      toast.<?= $flash['type'] ?>(
+        <?= json_encode($flash['title']) ?>,
+        <?= json_encode($flash['desc']) ?>
       );
     });
   </script>

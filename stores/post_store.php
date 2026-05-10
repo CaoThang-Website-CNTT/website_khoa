@@ -25,6 +25,7 @@ interface IPostStore
 
   public function findBySlug(string $slug): ?Post;
   public function syncCategories(int $postId, array $categoryIds): bool;
+  public function getCategoryIds(int $postId): array;
   public function getTotalCount(): int;
 }
 
@@ -45,7 +46,7 @@ class PostStore extends Store implements IPostStore
   ];
 
   // Các cột không được phép thay đổi sau khi tạo
-  private const IMMUTABLE_COLUMNS = ['id', 'author_id', 'created_at', 'slug'];
+  private const IMMUTABLE_COLUMNS = ['id', 'created_at'];
 
   public function create(Post $post): Post
   {
@@ -144,7 +145,7 @@ class PostStore extends Store implements IPostStore
     $data = array_diff_key($data, array_flip(self::IMMUTABLE_COLUMNS));
 
     if (empty($data)) {
-      return $this->findById($id)
+      return $this->getById($id)
         ?? throw new \RuntimeException("Post #{$id} không tồn tại.");
     }
 
@@ -159,7 +160,7 @@ class PostStore extends Store implements IPostStore
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
 
-    return $this->findById($id)
+    return $this->getById($id)
       ?? throw new \RuntimeException("Post #{$id} không tồn tại sau khi cập nhật.");
   }
 
@@ -179,6 +180,7 @@ class PostStore extends Store implements IPostStore
     $stmt->execute($query->getBindings());
   }
 
+
   public function getTotalCount(): int
   {
     $sql = "SELECT COUNT(*) as total FROM posts WHERE deleted_at IS NULL";
@@ -186,6 +188,17 @@ class PostStore extends Store implements IPostStore
     $stmt->execute();
     $row = $stmt->fetch(\PDO::FETCH_ASSOC);
     return (int) ($row['total'] ?? 0);
+  }
+  public function getCategoryIds(int $postId): array
+  {
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('category_post')
+      ->select('category_id')
+      ->eq('post_id', $postId);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
   }
 
   public function syncCategories(int $postId, array $newCategoryIds): bool

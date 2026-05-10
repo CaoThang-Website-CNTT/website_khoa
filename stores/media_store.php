@@ -10,7 +10,7 @@ use App\Core\Schema\Compiler\MySQLCompiler;
 interface IMediaStore
 {
   public function create(Media $media): Media;
-  public function findById(int $id): ?Media;
+  public function getById(int $id): ?Media;
   public function findByPostId(int $postId): array;
   public function findOrphansOlderThan(\DateTimeInterface $cutoff): array;
   public function update(int $id, array $data): Media;
@@ -46,7 +46,7 @@ class MediaStore extends Store implements IMediaStore
     return $media;
   }
 
-  public function findById(int $id): ?Media
+  public function getById(int $id): ?Media
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
@@ -104,7 +104,7 @@ class MediaStore extends Store implements IMediaStore
     $data = array_diff_key($data, array_flip($immutable));
 
     if (empty($data)) {
-      return $this->findById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại.");
+      return $this->getById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại.");
     }
 
     $data['updated_at'] = (new \DateTime())->format('Y-m-d H:i:s');
@@ -114,7 +114,7 @@ class MediaStore extends Store implements IMediaStore
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
 
-    return $this->findById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại sau khi cập nhật.");
+    return $this->getById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại sau khi cập nhật.");
   }
 
   public function attachToPost(array $mediaIds, int $postId): void

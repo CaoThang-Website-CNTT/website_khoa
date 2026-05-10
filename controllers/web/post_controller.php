@@ -89,10 +89,11 @@ class PostController extends Controller
   public function show(Request $request, int $post_id)
   {
     try {
-      $post = $this->_postService->get($post_id);
+      $post = $this->_postService->getPost($post_id);
 
-      $this->render('admin/posts/show', [
+      $this->render('admin/posts/edit', [
         'post' => $post,
+        'authors' => $this->_accountService->getAllAdmins(),
         'categories' => $this->_categoryService->getAllCategories()
       ], layout: 'canva_layout');
     } catch (\RuntimeException $e) {
@@ -118,7 +119,7 @@ class PostController extends Controller
       $request->session()->flashErrors(['editor_data' => ['Tiêu đề không được để trống khi cập nhật.']]);
       $request->session()->flashNotify('error', 'Cập nhật thất bại', 'Tiêu đề bài viết là bắt buộc.');
       $request->flashOldInputs();
-      return $this->redirect("admin/posts/{$post_id}/edit");
+      return $this->redirect("admin/posts/{$post_id}");
     }
 
     // Kiểm tra cấu trúc Blocks
@@ -126,7 +127,7 @@ class PostController extends Controller
       $request->session()->flashErrors(['editor_data' => ['Dữ liệu nội dung không hợp lệ.']]);
       $request->session()->flashNotify('error', 'Cập nhật thất bại', 'Cấu trúc nội dung (blocks) không đúng định dạng.');
       $request->flashOldInputs();
-      return $this->redirect("admin/posts/{$post_id}/edit");
+      return $this->redirect("admin/posts/{$post_id}");
     }
 
     try {
@@ -138,7 +139,7 @@ class PostController extends Controller
         "Bài viết '" . htmlspecialchars($post->title) . "' đã được cập nhật."
       );
 
-      return $this->redirect('admin/posts');
+      return $this->redirect("admin/posts/{$post_id}");
     } catch (\InvalidArgumentException | \RuntimeException $e) {
       $request->flashOldInputs();
       $request->session()->flashNotify(
@@ -146,7 +147,7 @@ class PostController extends Controller
         'Lỗi cập nhật',
         $e->getMessage()
       );
-      return $this->redirect("admin/posts/{$post_id}/edit");
+      return $this->redirect("admin/posts/{$post_id}");
     }
   }
 

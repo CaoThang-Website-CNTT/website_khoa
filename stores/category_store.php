@@ -19,6 +19,8 @@ interface ICategoryStore
   public function getByParentId(?int $parentId): array;
   /** @return Category[] */
   public function getByType(string $type): array;
+  /** @return Category[] */
+  public function getByIds(array $ids): array;
   public function getById(int $id): ?Category;
   public function getBySlug(string $slug): ?Category;
   public function create(Category $category): ?Category;
@@ -98,6 +100,23 @@ class CategoryStore extends Store implements ICategoryStore
       ORDER BY id ASC
     ");
     $stmt->execute([':type' => $type]);
+
+    return array_map(fn($row) => Category::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  /** @return Category[] */
+  public function getByIds(array $ids): array
+  {
+    if (empty($ids))
+      return [];
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $this->db->prepare("
+      SELECT *
+      FROM `categories`
+      WHERE id IN ($placeholders) AND deleted_at IS NULL
+    ");
+    $stmt->execute($ids);
 
     return array_map(fn($row) => Category::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }

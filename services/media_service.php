@@ -69,7 +69,7 @@ class MediaService implements IMediaService
 
   public function getMedia(int $mediaId): ?Media
   {
-    return $this->_mediaStore->findById($mediaId);
+    return $this->_mediaStore->getById($mediaId);
   }
 
   /**
@@ -178,7 +178,7 @@ class MediaService implements IMediaService
    */
   private function getOrFail(int $mediaId): Media
   {
-    $media = $this->_mediaStore->findById($mediaId);
+    $media = $this->_mediaStore->getById($mediaId);
 
     if ($media === null) {
       throw new \RuntimeException("Media #{$mediaId} không tồn tại.");
