@@ -131,7 +131,7 @@ class PostService implements IPostService
       published_at: $publishedAt,
     );
 
-    return Database::getInstance()->transaction(function () use ($post, $meta, $blocks) {
+    return Database::getInstance()->transaction(function () use ($post, $meta, $payload) {
 
       $post = $this->_postStore->create($post);
 
@@ -141,9 +141,8 @@ class PostService implements IPostService
         $this->_postStore->syncCategories($post->id, $categoryIds);
       }
 
-      // Sau khi có post ID, gắn các media nội bộ được tham chiếu trong blocks
-      // External URL (mediaId === null) bỏ qua — chúng không có record trong DB
-      $internalMediaIds = $this->extractInternalMediaIds($blocks);
+      // Sau khi có post ID, gắn các media nội bộ được tham chiếu trong blocks và meta
+      $internalMediaIds = $this->extractInternalMediaIds($payload);
       if (!empty($internalMediaIds)) {
         $this->_mediaStore->attachToPost($internalMediaIds, $post->id);
       }
@@ -203,16 +202,17 @@ class PostService implements IPostService
       }
 
       $data['content_json'] = $encoded;
-
-      // Đồng bộ media: gắn các media nội bộ vào post sau khi nội dung thay đổi
-      $internalMediaIds = $this->extractInternalMediaIds($blocks);
-      if (!empty($internalMediaIds)) {
-        $this->_mediaStore->attachToPost($internalMediaIds, $id);
-      }
     }
 
-    return Database::getInstance()->transaction(function () use ($id, $data, $meta) {
+    return Database::getInstance()->transaction(function () use ($id, $data, $meta, $payload) {
       $post = $this->_postStore->update($id, $data);
+
+      if (isset($data['content_json']) || isset($data['seo_image_url'])) {
+        // Đồng bộ media: gắn các media nội bộ vào post khi nội dung hoặc ảnh đại diện thay đổi
+        // Sử dụng syncWithPost để gỡ bỏ những media không còn được sử dụng
+        $internalMediaIds = $this->extractInternalMediaIds($payload);
+        $this->_mediaStore->syncWithPost($internalMediaIds, $id);
+      }
 
       // Đồng bộ danh mục nếu có gửi lên
       if (isset($meta['category_ids'])) {
@@ -238,20 +238,29 @@ class PostService implements IPostService
   // ---------------------------------------------------------------------------
 
   /**
-   * Duyệt qua blocks, lấy mediaId của các image block nội bộ.
+   * Duyệt qua blocks và meta, lấy mediaId của các image nội bộ.
    * External URL có mediaId === null → bỏ qua.
    */
-  private function extractInternalMediaIds(array $blocks): array
+  private function extractInternalMediaIds(array $payload): array
   {
     $ids = [];
+    $blocks = $payload['blocks'] ?? [];
+    $meta = $payload['meta'] ?? [];
 
+    // 1. Lấy từ blocks
     foreach ($blocks as $block) {
       if (isset($block['mediaId']) && $block['mediaId'] !== null) {
         $ids[] = (int) $block['mediaId'];
       }
     }
 
-    // array_unique để tránh duplicate khi cùng ảnh xuất hiện nhiều lần
+    // 2. Lấy từ featured_image trong meta
+    $featured = $meta['featured_image'] ?? null;
+    if (is_array($featured) && isset($featured['mediaId']) && $featured['mediaId'] !== null) {
+      $ids[] = (int) $featured['mediaId'];
+    }
+
+    // array_unique để tránh duplicate
     return array_values(array_unique($ids));
   }
 
