@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <td class="font-medium">${s.full_name}</td>
           <td>${s.classroom_name || "N/A"}</td>
           <td><span class="badge badge--pending">${s.status}</span></td>
-          <td class="text-right">
+          <td>
             <button class="btn-icon text-destructive btn-remove-student" data-id="${s.student_id}" title="Xóa khỏi đợt">
               <i class="fa-solid fa-trash"></i>
             </button>
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </button>
             </div>
           </td>
-          <td class="text-right">
+          <td>
             <button class="btn-icon text-destructive btn-remove-supervisor" data-id="${sup.teacher_id}" title="Xóa khỏi đợt">
               <i class="fa-solid fa-user-minus"></i>
             </button>

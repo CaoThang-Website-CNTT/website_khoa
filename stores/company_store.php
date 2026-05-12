@@ -8,7 +8,21 @@ use App\Core\Store;
 use App\Models\Company;
 use PDO;
 
-class CompanyStore extends Store
+interface ICompanyStore
+{
+  /** @return Company[] */
+  public function getPaginated(int $pageTo, int $limit = 15): array;
+  public function getById(int $id): ?Company;
+  public function upsertFromApi(array $data): int;
+  public function createManual(array $data): int;
+  public function suggestByNameAndVerified(string $query): array;
+  public function update(Company $company): bool;
+  public function softDelete(int $id): bool;
+  public function getTotalCount(): int;
+  public function findByTaxCode(string $taxCode): ?array;
+}
+
+class CompanyStore extends Store implements ICompanyStore
 {
   public function findByTaxCode(string $taxCode): ?array
   {

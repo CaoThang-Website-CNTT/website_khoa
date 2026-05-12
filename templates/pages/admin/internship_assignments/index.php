@@ -36,7 +36,7 @@
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="table-wrapper shadow rounded-md mt-4 position-relative">
+<div class="table-wrapper shadow rounded-md mt-4 relative">
   <div id="table-loader" class="assignment-loader hidden">
     <i class="fa-solid fa-spinner fa-spin text-3xl"></i>
   </div>

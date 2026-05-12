@@ -64,6 +64,7 @@ require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/models/media.php';
 require_once BASE_PATH . '/models/post.php';
 require_once BASE_PATH . '/models/company.php';
+require_once BASE_PATH . '/models/referral_letter.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
@@ -80,6 +81,7 @@ require_once BASE_PATH . '/stores/internship_submission_store.php';
 require_once BASE_PATH . '/stores/media_store.php';
 require_once BASE_PATH . '/stores/post_store.php';
 require_once BASE_PATH . '/stores/company_store.php';
+require_once BASE_PATH . '/stores/referral_letter_store.php';
 
 // Services
 require_once BASE_PATH . '/services/google_oauth_service.php';
@@ -96,6 +98,7 @@ require_once BASE_PATH . '/services/media_service.php';
 require_once BASE_PATH . '/services/post_service.php';
 require_once BASE_PATH . '/services/company_service.php';
 require_once BASE_PATH . '/services/internship_submission_service.php';
+require_once BASE_PATH . '/services/referral_letter_service.php';
 
 // Controllers
 // Web

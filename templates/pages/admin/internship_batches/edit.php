@@ -36,7 +36,7 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
       <h2 class="title text-2xl font-semibold">
         Chi tiết đợt thực tập #<?= htmlspecialchars($batchObj->id) ?>
       </h2>
-      <p class="text-sm text-muted-foreground">Quản lý và cập nhật thông tin đợt thực tập</p>
+      <p class="text-sm">Quản lý và cập nhật thông tin đợt thực tập</p>
     </div>
 
     <div class="flex gap-2">
@@ -172,7 +172,7 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
                   <th>Họ và tên</th>
                   <th>Lớp</th>
                   <th>Trạng thái</th>
-                  <th class="text-right">Thao tác</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -201,7 +201,7 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
                   <th>Họ và tên</th>
                   <th>Khoa</th>
                   <th class="text-center">Hạn mức (Đã giao/Tổng)</th>
-                  <th class="text-right">Thao tác</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>

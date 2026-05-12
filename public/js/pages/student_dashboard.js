@@ -1,90 +1,160 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Edit Profile Modal logic
   const apiBase = window.API_BASE_URL;
-  const editProfileBtn = document.getElementById("editProfileBtn");
-  const editProfileModal = document.getElementById("editProfileModal");
-  const closeModalBtn = document.getElementById("closeModalBtn");
-  const cancelEditBtn = document.getElementById("cancelEditBtn");
-  const editProfileForm = document.getElementById("editProfileForm");
 
-  if (editProfileBtn && editProfileModal) {
-    editProfileBtn.addEventListener("click", () => {
-      editProfileModal.classList.remove("dashboard-modal--hidden");
-    });
+  // Khởi tạo tính năng tìm MST và autocomplete cho một tập các elements
+  window.initCompanyFormLogic = function (prefix) {
+    const isManualToggle = document.getElementById(`${prefix}is_manual`);
+    const btnCheckMST = document.getElementById(`${prefix}btnCheckMST`);
+    const taxCodeInput = document.getElementById(`${prefix}tax_code`);
+    const companyNameInput = document.getElementById(`${prefix}company_name`);
+    const companyAddressInput = document.getElementById(
+      `${prefix}company_address`,
+    );
+    const mstLoading = document.getElementById(`${prefix}mstLoading`);
+    const mstError = document.getElementById(`${prefix}mstError`);
+    const suggestionsContainer = document.getElementById(
+      `${prefix}companySuggestions`,
+    );
 
-    const closeModal = () => {
-      editProfileModal.classList.add("dashboard-modal--hidden");
-    };
-
-    closeModalBtn.addEventListener("click", closeModal);
-    cancelEditBtn.addEventListener("click", closeModal);
-
-    editProfileForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const saveBtn = document.getElementById("saveProfileBtn");
-      const spinner = saveBtn.querySelector(".fa-spinner");
-
-      saveBtn.disabled = true;
-      spinner.classList.remove("hidden");
-
-      const formData = new FormData(editProfileForm);
-      const data = Object.fromEntries(formData.entries());
-
-      try {
-        const response = await fetch(`${apiBase}/student/profile/update`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
+    if (btnCheckMST && taxCodeInput) {
+      if (isManualToggle) {
+        isManualToggle.addEventListener("change", () => {
+          const isManual = isManualToggle.checked;
+          if (isManual) {
+            taxCodeInput.value = "";
+            taxCodeInput.setAttribute("disabled", "disabled");
+            taxCodeInput.required = false;
+            btnCheckMST.classList.add("hidden");
+            companyNameInput.removeAttribute("readonly");
+            companyAddressInput.removeAttribute("readonly");
+            if (mstError) mstError.classList.add("hidden");
+          } else {
+            taxCodeInput.removeAttribute("disabled");
+            taxCodeInput.required = true;
+            btnCheckMST.classList.remove("hidden");
+            companyNameInput.setAttribute("readonly", "readonly");
+            companyAddressInput.setAttribute("readonly", "readonly");
+          }
         });
+      }
 
-        const result = await response.json();
-
-        if (result.success) {
-          window.toast.success("Thành công", "Cập nhật thông tin thành công!");
-          // Update UI
-          updateProfileUI(data);
-          closeModal();
-        } else {
-          window.toast.error(
-            "Lỗi",
-            result.message || "Có lỗi xảy ra khi cập nhật.",
-          );
+      btnCheckMST.addEventListener("click", async () => {
+        const mst = taxCodeInput.value.trim();
+        if (!mst) {
+          mstError.textContent = "Vui lòng nhập mã số thuế.";
+          mstError.classList.remove("hidden");
+          return;
         }
-      } catch (error) {
-        window.toast.error("Lỗi", "Không thể kết nối đến máy chủ.");
-      } finally {
-        saveBtn.disabled = false;
-        spinner.classList.add("hidden");
-      }
-    });
-  }
 
-  function updateProfileUI(data) {
-    if (data.full_name)
-      document.getElementById("val-full_name").textContent = data.full_name;
-    if (data.dob) {
-      const parts = data.dob.split("-");
-      if (parts.length === 3) {
-        document.getElementById("val-dob").textContent =
-          `${parts[2]}/${parts[1]}/${parts[0]}`;
-      }
-    }
-    if (data.gender) {
-      const genderMap = { male: "Nam", female: "Nữ", other: "Khác" };
-      document.getElementById("val-gender").textContent =
-        genderMap[data.gender] || data.gender;
-    }
-    if (data.phone)
-      document.getElementById("val-phone").textContent = data.phone;
-    if (data.address)
-      document.getElementById("val-address").textContent = data.address;
-    if (data.birth_place)
-      document.getElementById("val-birth_place").textContent = data.birth_place;
-  }
+        mstLoading.classList.remove("hidden");
+        mstError.classList.add("hidden");
+        companyNameInput.value = "";
+        companyAddressInput.value = "";
 
-  // Upload area interaction (Visual feedback)
+        try {
+          const response = await fetch(
+            `https://api.vietqr.io/v2/business/${mst}`,
+          );
+          const result = await response.json();
+
+          if (result.code === "00" && result.data) {
+            companyNameInput.value = result.data.name;
+            companyAddressInput.value = result.data.address;
+          } else {
+            mstError.textContent = "Không tìm thấy thông tin công ty.";
+            mstError.classList.remove("hidden");
+          }
+        } catch (error) {
+          mstError.textContent = "Lỗi kết nối API lấy mã số thuế.";
+          mstError.classList.remove("hidden");
+        } finally {
+          mstLoading.classList.add("hidden");
+        }
+      });
+    }
+
+    if (companyNameInput && suggestionsContainer) {
+      const debounce = (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      };
+
+      const fetchSuggestions = async (query) => {
+        if (query.length < 2) {
+          suggestionsContainer.classList.add("hidden");
+          return;
+        }
+        try {
+          const response = await fetch(
+            `${apiBase}/companies/suggest-by-name?q=${encodeURIComponent(query)}`,
+          );
+          const result = await response.json();
+
+          if (result.success && result.data.length > 0) {
+            renderSuggestions(result.data);
+          } else {
+            suggestionsContainer.classList.add("hidden");
+          }
+        } catch (error) {
+          console.error("Error fetching suggestions:", error);
+        }
+      };
+
+      const renderSuggestions = (companies) => {
+        suggestionsContainer.innerHTML = "";
+        companies.forEach((company) => {
+          const div = document.createElement("div");
+          div.className = "suggestions-list__item";
+          div.innerHTML = `
+            <div class="font-medium text-sm">${company.name}</div>
+            <div class="text-xs text-muted-foreground">${company.tax_code || "Không có MST"} - ${company.address}</div>
+          `;
+          div.addEventListener("click", () => {
+            companyNameInput.value = company.name;
+            companyAddressInput.value = company.address;
+            if (company.tax_code && taxCodeInput) {
+              taxCodeInput.value = company.tax_code;
+            }
+            suggestionsContainer.classList.add("hidden");
+          });
+          suggestionsContainer.appendChild(div);
+        });
+        suggestionsContainer.classList.remove("hidden");
+      };
+
+      companyNameInput.addEventListener(
+        "input",
+        debounce((e) => {
+          const isManual = isManualToggle?.checked;
+          if (isManual) {
+            fetchSuggestions(e.target.value);
+          }
+        }, 300),
+      );
+
+      document.addEventListener("click", (e) => {
+        if (
+          !companyNameInput.contains(e.target) &&
+          !suggestionsContainer.contains(e.target)
+        ) {
+          suggestionsContainer.classList.add("hidden");
+        }
+      });
+    }
+  };
+
+  // Khởi tạo cho Form công ty hiện tại (không có prefix)
+  window.initCompanyFormLogic("");
+
+  // Khởi tạo cho Modal đăng ký giấy giới thiệu (prefix = 'rl_')
+  window.initCompanyFormLogic("rl_");
   const uploadArea = document.getElementById("uploadArea");
   const fileInput = document.getElementById("report_file");
   const filePreview = document.getElementById("filePreview");
@@ -137,154 +207,5 @@ document.addEventListener("DOMContentLoaded", () => {
         if (uploadBtn) uploadBtn.disabled = true;
       }
     }
-  }
-
-  // Company Tax Code logic
-  const btnCheckMST = document.getElementById("btnCheckMST");
-  const taxCodeInput = document.getElementById("tax_code");
-  const companyNameInput = document.getElementById("company_name");
-  const companyAddressInput = document.getElementById("company_address");
-  const mstLoading = document.getElementById("mstLoading");
-  const mstError = document.getElementById("mstError");
-
-  if (btnCheckMST && taxCodeInput) {
-    // Bật tắt chế độ nhập thủ công
-    const isManualToggle = document.getElementById("is_manual");
-    if (isManualToggle) {
-      isManualToggle.addEventListener("change", () => {
-        const isManual = isManualToggle.checked;
-
-        // Reset inputs
-        if (isManual) {
-          taxCodeInput.value = "";
-          taxCodeInput.setAttribute("disabled", "disabled");
-          taxCodeInput.required = false;
-          btnCheckMST.classList.add("hidden");
-          companyNameInput.removeAttribute("readonly");
-          companyAddressInput.removeAttribute("readonly");
-          mstError.classList.add("hidden");
-        } else {
-          taxCodeInput.removeAttribute("disabled");
-          taxCodeInput.required = true;
-          btnCheckMST.classList.remove("hidden");
-          companyNameInput.setAttribute("readonly", "readonly");
-          companyAddressInput.setAttribute("readonly", "readonly");
-        }
-      });
-    }
-
-    btnCheckMST.addEventListener("click", async () => {
-      const mst = taxCodeInput.value.trim();
-      if (!mst) {
-        mstError.textContent = "Vui lòng nhập mã số thuế.";
-        mstError.classList.remove("hidden");
-        return;
-      }
-
-      mstLoading.classList.remove("hidden");
-      mstError.classList.add("hidden");
-      companyNameInput.value = "";
-      companyAddressInput.value = "";
-
-      try {
-        const response = await fetch(
-          `https://api.vietqr.io/v2/business/${mst}`,
-        );
-        const result = await response.json();
-
-        if (result.code === "00" && result.data) {
-          companyNameInput.value = result.data.name;
-          companyAddressInput.value = result.data.address;
-        } else {
-          mstError.textContent = "Không tìm thấy thông tin công ty.";
-          mstError.classList.remove("hidden");
-        }
-      } catch (error) {
-        mstError.textContent = "Lỗi kết nối API lấy mã số thuế.";
-        mstError.classList.remove("hidden");
-      } finally {
-        mstLoading.classList.add("hidden");
-      }
-    });
-  }
-
-  // Company Autocomplete logic
-  const suggestionsContainer = document.getElementById("companySuggestions");
-  if (companyNameInput && suggestionsContainer) {
-    const debounce = (func, wait) => {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    };
-
-    const fetchSuggestions = async (query) => {
-      if (query.length < 2) {
-        suggestionsContainer.classList.add("hidden");
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `${apiBase}/companies/suggest-by-name?q=${encodeURIComponent(query)}`,
-        );
-        const result = await response.json();
-
-        if (result.success && result.data.length > 0) {
-          renderSuggestions(result.data);
-        } else {
-          suggestionsContainer.classList.add("hidden");
-        }
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-      }
-    };
-
-    const renderSuggestions = (companies) => {
-      suggestionsContainer.innerHTML = "";
-      companies.forEach((company) => {
-        const div = document.createElement("div");
-        div.className = "suggestions-list__item";
-        div.innerHTML = `
-          <div class="font-medium text-sm">${company.name}</div>
-          <div class="text-xs text-muted-foreground">${company.tax_code || "Không có MST"} - ${company.address}</div>
-        `;
-        div.addEventListener("click", () => {
-          companyNameInput.value = company.name;
-          companyAddressInput.value = company.address;
-          if (company.tax_code) {
-            taxCodeInput.value = company.tax_code;
-          }
-          suggestionsContainer.classList.add("hidden");
-        });
-        suggestionsContainer.appendChild(div);
-      });
-      suggestionsContainer.classList.remove("hidden");
-    };
-
-    companyNameInput.addEventListener(
-      "input",
-      debounce((e) => {
-        const isManual = document.getElementById("is_manual")?.checked;
-        if (isManual) {
-          fetchSuggestions(e.target.value);
-        }
-      }, 300),
-    );
-
-    // Đóng danh sách gợi ý khi click ra ngoài
-    document.addEventListener("click", (e) => {
-      if (
-        !companyNameInput.contains(e.target) &&
-        !suggestionsContainer.contains(e.target)
-      ) {
-        suggestionsContainer.classList.add("hidden");
-      }
-    });
   }
 });

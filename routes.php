@@ -157,14 +157,24 @@ $router->prefix('student')->group(function (Router $router) {
   // Thông tin tổng quan, tài khoản.
   $router->get('/', [StudentDashboardController::class, 'index']);
   // Thông tin thực tập.
-  $router->get('/internship', [StudentDashboardController::class, 'internship']);
+  $router->get('/internship', [StudentDashboardController::class, 'internshipRedirect']);
+  $router->get('/internship/{batch_id}', [StudentDashboardController::class, 'internship']);
   // Thông tin đồ án tốt nghiệp
   $router->get('/graduation', [StudentDashboardController::class, 'graduation']);
   // Cập nhật thông tin cá nhân
   $router->post('/profile/update', [StudentDashboardController::class, 'updateProfile']);
 
   // Khai báo công ty thực tập
-  $router->post('/internship/company', [StudentDashboardController::class, 'updateCompany']);
+  $router->post('/internship/{batch_id}/company', [StudentDashboardController::class, 'updateCompany']);
   // Nộp tài liệu
-  $router->post('/internship/upload', [StudentDashboardController::class, 'uploadSubmission']);
+  $router->post('/internship/{batch_id}/upload', [StudentDashboardController::class, 'uploadSubmission']);
+  // Đăng ký giấy giới thiệu
+  $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
+  
+  // Trang danh sách giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
+  // Hủy giấy giới thiệu
+  $router->post('/internship/{batch_id}/referral_letters/{letter_id}/cancel', [StudentDashboardController::class, 'cancelReferralLetter']);
+  // Cập nhật công ty cho giấy giới thiệu (pending)
+  $router->post('/internship/{batch_id}/referral_letters/{letter_id}/update-company', [StudentDashboardController::class, 'updateReferralLetterCompany']);
 });

@@ -32,11 +32,15 @@ $logs = $logs ?? [];
 
     <div class="flex items-center gap-4">
       <?php if ($current): ?>
+        <button type="button" class="btn" data-variant="primary" data-size="lg" data-modal-trigger="#rl_requestModal">
+          <i class="fa-solid fa-file-contract mr-2"></i>
+          Đăng ký giấy giới thiệu
+        </button>
         <div id="internship-data" data-batch-student-id="<?= $current['batch_student_id'] ?>" class="hidden"></div>
       <?php endif; ?>
 
       <div class="field">
-        <select class="field__input" onchange="window.location.href = '?batch_id=' + this.value">
+        <select class="field__input" onchange="window.location.href = '<?= url('student/internship') ?>/' + this.value">
           <?php if (empty($batches)): ?>
             <option disabled selected>Chưa tham gia đợt nào</option>
           <?php else: ?>
@@ -98,7 +102,7 @@ $logs = $logs ?? [];
         <hr class="separator" />
         <div class="card__content">
           <?php if ($can_edit_company): ?>
-            <form action="<?= url('student/internship/company') ?>" method="POST" id="companyForm">
+            <form action="<?= url("student/internship/{$current['id']}/company") ?>" method="POST" id="companyForm">
               <?= csrf_field() ?>
               <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
 
@@ -165,13 +169,52 @@ $logs = $logs ?? [];
           <?php endif; ?>
         </div>
       </div>
+
+      <!-- Giấy giới thiệu -->
+      <div class="card shadow">
+        <div class="card__header">
+          <h3 class="card__title">
+            <i class="fa-solid fa-file-contract mr-2"></i>
+            Giấy giới thiệu
+          </h3>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <?php if (empty($recent_referral_letters)): ?>
+            <p class="text-sm text-center">Chưa đăng ký giấy nào.</p>
+          <?php else: ?>
+            <div class="space-y-3">
+              <?php foreach ($recent_referral_letters as $rl): ?>
+                <div class="border rounded p-3 text-sm">
+                  <div class="font-bold mb-1" title="<?= htmlspecialchars($rl['company_name']) ?>"><?= htmlspecialchars($rl['company_name']) ?></div>
+                  <div class="flex justify-between items-center mt-2">
+                    <span class="text-xs"><?= date('d/m/Y', strtotime($rl['created_at'])) ?></span>
+                    <?php if ($rl['status'] === 'pending'): ?>
+                      <span class="badge" data-variant="secondary">Đang xử lý</span>
+                    <?php elseif ($rl['status'] === 'printed'): ?>
+                      <span class="badge" data-variant="primary">Đã in</span>
+                    <?php else: ?>
+                      <span class="badge" data-variant="destructive">Đã hủy</span>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </div>
+        <div class="card__footer">
+          <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>" class="btn w-full" data-variant="outline" data-size="sm">
+            Xem tất cả (<?= $total_referral_letters ?>)
+          </a>
+        </div>
+      </div>
     </div>
 
     <div class="detail-layout__sidebar">
       <!-- Kết quả -->
       <div class="card shadow result-card text-center py-8">
         <div class="card__header flex-col items-center gap-2">
-          <h3 class="card__title text-sm uppercase tracking-wider text-muted-foreground">
+          <h3 class="card__title text-sm">
             <i class="fa-solid fa-star text-warning mr-1"></i>
             Kết quả
           </h3>
@@ -194,7 +237,7 @@ $logs = $logs ?? [];
           </div>
           <hr class="separator" />
           <div class="card__content">
-            <form action="<?= url('student/internship/upload') ?>" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <form action="<?= url("student/internship/{$current['id']}/upload") ?>" method="POST" enctype="multipart/form-data" id="uploadForm">
               <?= csrf_field() ?>
               <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
               <div class="upload-area" id="uploadArea">
@@ -288,3 +331,54 @@ $logs = $logs ?? [];
   window.API_BASE_URL = '<?= url('api/v1') ?>';
 </script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
+
+<?php if ($current): ?>
+  <!-- Modal Đăng ký Giấy giới thiệu -->
+  <div id="rl_requestModal" class="modal" data-state="closed">
+    <div class="modal__content modal--lg">
+      <div class="modal__header">
+        <h3 class="modal__title">Đăng ký giấy giới thiệu thực tập</h3>
+        <button class="modal__close" data-modal-close="rl_requestModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal__body">
+        <form action="<?= url("student/internship/{$current['id']}/referral_letters") ?>" method="POST" id="rl_requestForm">
+          <?= csrf_field() ?>
+
+          <div class="field mb-4" data-orientation="horizontal">
+            <input type="checkbox" id="rl_is_manual" name="is_manual" value="1" class="field__input">
+            <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số thuế</label>
+          </div>
+
+          <div class="field mb-4" data-field-required>
+            <label class="field__label">Mã số thuế</label>
+            <div class="field__input-group">
+              <input type="text" name="tax_code" id="rl_tax_code" class="field__input" required>
+              <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm tra</button>
+            </div>
+            <div id="rl_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin...</div>
+            <div id="rl_mstError" class="field__error hidden"></div>
+          </div>
+
+          <div class="field mb-4" data-field-required>
+            <label class="field__label">Tên công ty</label>
+            <div class="field__suggest-wrapper">
+              <input type="text" name="name" id="rl_company_name" class="field__input relative" required readonly autocomplete="off">
+              <div id="rl_companySuggestions" class="suggestions-list hidden"></div>
+            </div>
+          </div>
+
+          <div class="field mb-4" data-field-required>
+            <label class="field__label">Địa chỉ</label>
+            <textarea name="address" id="rl_company_address" class="field__input" required readonly></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn" data-variant="outline" data-modal-close="rl_requestModal">Hủy</button>
+        <button type="submit" form="rl_requestForm" class="btn" data-variant="primary">Gửi đăng ký</button>
+      </div>
+    </div>
+  </div>
+<?php endif; ?>

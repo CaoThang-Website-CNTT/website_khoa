@@ -2,30 +2,61 @@
 
 namespace App\Services;
 
-use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore};
+use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore};
 use App\Core\Pageable;
 use Database;
 
-class InternshipBatchService
+interface IInternshipBatchService
+{
+  public function createFullBatch(array $batchData, array $studentIds, array $supervisors, array $classroomIds, int $adminId): int;
+  public function getEligibleStudentsByClassroom(int $classroomId): array;
+  public function getEligibleStudentsByClassrooms(array $classroomIds): array;
+  public function validateStudentsBulk(array $studentIds): array;
+  public function getActiveTeachers(): array;
+  public function getAllClassrooms(): array;
+  public function getBatches(int $page, int $limit = 15): Pageable;
+  public function getBatchById(int $id): ?array;
+  public function getBatchWithStats(int $id): ?array;
+  public function updateBatch(int $id, array $data): bool;
+  public function deleteBatch(int $id): bool;
+  public function publishBatch(int $id): bool;
+  public function closeBatch(int $id): bool;
+  public function getBatchStudents(int $batchId): array;
+  public function getBatchSupervisors(int $batchId): array;
+  public function addStudentToBatch(int $batchId, int $studentId): bool;
+  public function removeStudentFromBatch(int $batchId, int $studentId): bool;
+  public function addSupervisorToBatch(int $batchId, int $teacherId, int $maxStudents): bool;
+  public function removeSupervisorFromBatch(int $batchId, int $teacherId): bool;
+  public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool;
+  public function searchEligibleStudents(int $batchId, string $query = '', ?int $classroomId = null): array;
+  public function searchEligibleTeachers(int $batchId, string $query = ''): array;
+  public function getStudentDashboardData(int $studentId, ?int $batchId = null): array;
+  public function updateStudentInternshipInfo(int $batchStudentId, array $data): bool;
+}
+
+class InternshipBatchService implements IInternshipBatchService
 {
   private InternshipBatchStore $_store;
   private InternshipAssignmentStore $_assignmentStore;
   private TeacherStore $_teacherStore;
   private AccountStore $_accountStore;
   private InternshipSubmissionStore $_submissionStore;
+  private ReferralLetterStore $_referralLetterStore;
 
   public function __construct(
     InternshipBatchStore $store,
     InternshipAssignmentStore $assignmentStore,
     TeacherStore $teacherStore,
     AccountStore $accountStore,
-    InternshipSubmissionStore $submissionStore
+    InternshipSubmissionStore $submissionStore,
+    ReferralLetterStore $referralLetterStore
   ) {
     $this->_store = $store;
     $this->_assignmentStore = $assignmentStore;
     $this->_teacherStore = $teacherStore;
     $this->_accountStore = $accountStore;
     $this->_submissionStore = $submissionStore;
+    $this->_referralLetterStore = $referralLetterStore;
   }
 
   /**
@@ -249,6 +280,7 @@ class InternshipBatchService
     $supervisor = null;
     $logs = [];
     $submissions = [];
+    $referralLetters = [];
     if ($assignment) {
       $supervisor = $this->_teacherStore->getById($assignment->teacher_id);
       if ($supervisor->account_id) {
@@ -256,6 +288,7 @@ class InternshipBatchService
       }
       $logs = $this->_assignmentStore->getLogsByBatchStudent($currentBatch['batch_student_id']);
       $submissions = $this->_submissionStore->getAllByBatchStudentId($currentBatch['batch_student_id']);
+      $referralLetters = $this->_referralLetterStore->getLettersWithCompanyByBatchStudentId($currentBatch['batch_student_id']);
     }
 
     return [
@@ -264,7 +297,8 @@ class InternshipBatchService
       'assignment' => $assignment,
       'supervisor' => $supervisor,
       'submissions' => $submissions,
-      'logs' => $logs
+      'logs' => $logs,
+      'referralLetters' => $referralLetters
     ];
   }
 

@@ -4,7 +4,7 @@
 
 /* ── Upload Area ────────────────────────────────────────────────────────── */
 .upload-area {
-  padding: 2.5rem;
+  padding: 0.5rem;
   border: 2px dashed var(--border);
   border-radius: var(--radius-xl);
   text-align: center;
@@ -19,9 +19,9 @@
 }
 
 .upload-area__icon {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   color: var(--primary);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   opacity: 0.6;
 }
 
