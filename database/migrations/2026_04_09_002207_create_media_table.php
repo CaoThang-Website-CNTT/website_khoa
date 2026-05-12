@@ -9,7 +9,7 @@ return new class extends BaseMigration {
    */
   public function forward(TableBuilder $schema): void
   {
-    $schema->create('media', function ($table) {
+    $schema->create('medias', function ($table) {
       $table->id();
 
       $table->varchar('file_name', 255);
@@ -32,7 +32,7 @@ return new class extends BaseMigration {
   {
     $schema->disableForeignKeys();
 
-    $schema->drop('media');
+    $schema->drop('medias');
 
     $schema->enableForeignKeys();
   }

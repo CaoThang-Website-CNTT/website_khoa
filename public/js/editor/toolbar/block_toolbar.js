@@ -83,7 +83,7 @@ export class BlockToolbar extends EditorToolbar {
       e.preventDefault();
       if (!this.currentBlock) return;
 
-      this.bus.dispatch('block:removed', { blockId: this.currentBlock.id });
+      this.bus.dispatch('block:remove_request', { blockId: this.currentBlock.id });
       this.close(BlockToolbar.DROPDOWN_ID); // đóng sau action
     }, { signal });
 
@@ -91,7 +91,7 @@ export class BlockToolbar extends EditorToolbar {
     this.root.addEventListener('dropdown:select', (e) => {
       const { item } = e.detail;
       if (item.dataset.action === 'remove' && this.currentBlock) {
-        this.bus.dispatch('block:removed', { blockId: this.currentBlock.id });
+        this.bus.dispatch('block:remove_request', { blockId: this.currentBlock.id });
       }
     }, { signal });
 

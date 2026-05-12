@@ -158,8 +158,11 @@ export class EditorManager {
     });
 
     // Lắng nghe sự kiên drop block
-    DnDMonitor.on('dragend', ({ item, from, to, oldIndex, newIndex, canceled }) => {
-      console.log(item, from, to, oldIndex, newIndex, canceled)
+    // Lắng nghe sự kiên drop block để cập nhật lại order trong Canvas
+    DnDMonitor.on('dragend', () => {
+      const orderedIds = Array.from(this.#blockList.querySelectorAll('.be-block-card'))
+        .map(el => el.dataset.beBlockId);
+      this.#canvas.reorderBlocks(orderedIds);
     });
 
     this.#blockList.addEventListener('click', (e) => {
@@ -202,28 +205,7 @@ export class EditorManager {
   }
 
   #onBlockAddRequested({ type, data = {}, afterId = null }) {
-    // this.#commitPendingInput();
-    // this.#contextStore.beginRecord();
-    const newBlock = this.#canvas.addBlock(type, data, afterId);
-
-    /* 
-    Tạm thời gỡ bỏ undo/redo
-    const index = this.#canvas.getBlocks().findIndex(b => b.id === newBlock.id);
-    this.#contextStore.recordOperation({
-      blockId: newBlock.id,
-      attribute: 'lifecycle',
-      prev: null,
-      next: { type: newBlock.type, data: newBlock.data, index },
-      label: `Thêm block ${type}`,
-      action: 'LIFECYCLE'
-    });
-    */
-
-    setTimeout(() => {
-      if (newBlock && typeof newBlock.focus === 'function') {
-        newBlock.focus(this.#bus, 'start');
-      }
-    }, 0);
+    this.#canvas.addBlock(type, data, afterId);
   }
 
   #onBlockSelected({ blockId }) {
@@ -276,15 +258,7 @@ export class EditorManager {
   }
 
   #onBlockRemoveRequested({ blockId }) {
-    // this.#commitPendingInput();
-    const block = this.#canvas.getBlock(blockId);
-    if (!block) return;
-
-    // this.#contextStore.beginRecord();
-    const index = this.#canvas.getBlocks().findIndex(b => b.id === blockId);
-
-    // Thực thi vật lý luôn, không thông qua record
-    this.#performPhysicalAction('LIFECYCLE', blockId, 'lifecycle', null, null, false, `Xóa block ${block.type}`);
+    this.#canvas.removeBlock(blockId);
   }
 
   #onBlockRemoved({ blockId, index }) {
@@ -441,72 +415,24 @@ export class EditorManager {
     this.#isDirty = true;
   }
 
-  #onUndoApplied({ blockId, action, attr, value, cursor, label }) {
-    this.#performPhysicalAction(action || 'UPDATE', blockId, attr, value, cursor, true, label);
-  }
-
-  #onRedoApplied({ blockId, action, attr, value, cursor, label }) {
-    this.#performPhysicalAction(action || 'UPDATE', blockId, attr, value, cursor, true, label);
-  }
-
   /**
-   * Unified Action Performer - Phễu trung tâm điều khiển DOM & Canvas
-   */
-  #performPhysicalAction(action, blockId, attr, value, cursor = null, isUndoRedo = false, label = '') {
-    if (action === 'LIFECYCLE') {
-      if (value === null) {
-        this.#canvas.removeBlock(blockId);
-      } else {
-        const blocks = this.#canvas.getBlocks();
-        const afterId = value.index === 0 ? 'START' : (blocks[value.index - 1]?.id || null);
-        this.#canvas.addBlock(value.type, value.data, afterId, blockId);
-      }
-    } else {
-      const block = this.#canvas.getBlock(blockId);
-      if (!block) return;
-
-      // Cập nhật thẻ data trong Canvas (Luôn SILENT cho content để tránh re-render card)
-      const isSilent = (attr === 'content') ? true : !isUndoRedo;
-      this.#canvas.updateBlock(blockId, { [attr]: value }, { silent: isSilent });
-
-      // CHỈ CẬP NHẬT DOM NẾU:
-      // 1. Đó là Undo/Redo (cần khôi phục hình ảnh cũ)
-      // 2. Đó là lệnh từ Toolbar/Format (cần áp dụng style mới)
-      // KHÔNG CẬP NHẬT NẾU: Đang gõ văn bản (Typing) - vì DOM đã có sẵn nội dung rồi.
-      if (attr === 'content' && (isUndoRedo || label !== 'Typing')) {
-        const editable = this.#getEditableEl(blockId);
-        if (editable) {
-          // Serialize tokens -> HTML một cách chuẩn mực
-          const tokens = Array.isArray(value) ? BlockSerializer.segmentsToTokens(value) : value;
-          editable.innerHTML = InlineFormatter.serialize(tokens);
-        }
-      }
-    }
-
-    // Khôi phục con trỏ nếu có thông tin (chủ yếu dùng cho Undo/Redo hoặc Format)
-    if (cursor && cursor.charOffset !== null) {
-      setTimeout(() => {
-        const editable = this.#getEditableEl(blockId);
-        if (editable) {
-          editable.focus();
-          const off = cursor.charOffset;
-          this.#restoreSelectionByOffset(editable, off, off);
-        }
-      }, isUndoRedo ? 10 : 0);
-    }
-  }
-
-  /**
-   * Thực thi và ghi lại một Operation
+   * Unified Action Performer - Đã được đơn giản hóa, chỉ xử lý cập nhật data.
    */
   #recordAndApply(blockId, attr, prev, next, label, action = 'UPDATE') {
-    // const op = { blockId, attribute: attr, prev, next, label, action };
+    const block = this.#canvas.getBlock(blockId);
+    if (!block) return;
 
-    // 1. Ghi vào store (Tạm thời vô hiệu hóa)
-    // this.#contextStore.recordOperation(op);
+    // Cập nhật thẻ data trong Canvas
+    this.#canvas.updateBlock(blockId, { [attr]: next }, { silent: true });
 
-    // 2. Thực thi vật lý
-    this.#performPhysicalAction(action, blockId, attr, next, null, false, label);
+    // Cập nhật DOM nếu là thay đổi content (từ Toolbar/Format)
+    if (attr === 'content') {
+      const editable = this.#getEditableEl(blockId);
+      if (editable) {
+        const tokens = Array.isArray(next) ? BlockSerializer.segmentsToTokens(next) : next;
+        editable.innerHTML = InlineFormatter.serialize(tokens);
+      }
+    }
   }
 
   #onBlockInput({ blockId }) {

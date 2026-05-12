@@ -10,11 +10,12 @@ use App\Core\Schema\Compiler\MySQLCompiler;
 interface IMediaStore
 {
   public function create(Media $media): Media;
-  public function findById(int $id): ?Media;
+  public function getById(int $id): ?Media;
   public function findByPostId(int $postId): array;
   public function findOrphansOlderThan(\DateTimeInterface $cutoff): array;
   public function update(int $id, array $data): Media;
   public function attachToPost(array $mediaIds, int $postId): void;
+  public function syncWithPost(array $mediaIds, int $postId): void;
   public function delete(int $id): void;
 }
 
@@ -24,7 +25,7 @@ class MediaStore extends Store implements IMediaStore
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
-    $query = $builder->from('media')->insert([
+    $query = $builder->from('medias')->insert([
       'file_name' => $media->file_name,
       'file_path' => $media->file_path,
       'mime_type' => $media->mime_type,
@@ -46,11 +47,11 @@ class MediaStore extends Store implements IMediaStore
     return $media;
   }
 
-  public function findById(int $id): ?Media
+  public function getById(int $id): ?Media
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
-    $query = $builder->from('media')->select('*')->eq('id', $id)->limit(1);
+    $query = $builder->from('medias')->select('*')->eq('id', $id)->limit(1);
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -63,7 +64,7 @@ class MediaStore extends Store implements IMediaStore
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
-    $query = $builder->from('media')
+    $query = $builder->from('medias')
       ->select('*')
       ->eq('post_id', $postId)
       ->order('created_at', ['ascending' => true]);
@@ -81,7 +82,7 @@ class MediaStore extends Store implements IMediaStore
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
-    $query = $builder->from('media')
+    $query = $builder->from('medias')
       ->select('*')
       ->eq('post_id', null)
       ->lt('created_at', $cutoff->format('Y-m-d H:i:s'));
@@ -104,17 +105,17 @@ class MediaStore extends Store implements IMediaStore
     $data = array_diff_key($data, array_flip($immutable));
 
     if (empty($data)) {
-      return $this->findById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại.");
+      return $this->getById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại.");
     }
 
     $data['updated_at'] = (new \DateTime())->format('Y-m-d H:i:s');
 
-    $query = $builder->from('media')->update($data)->eq('id', $id);
+    $query = $builder->from('medias')->update($data)->eq('id', $id);
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
 
-    return $this->findById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại sau khi cập nhật.");
+    return $this->getById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại sau khi cập nhật.");
   }
 
   public function attachToPost(array $mediaIds, int $postId): void
@@ -124,7 +125,7 @@ class MediaStore extends Store implements IMediaStore
     }
     $builder = new QueryBuilder(new MySQLCompiler());
 
-    $query = $builder->from('media')
+    $query = $builder->from('medias')
       ->update(['post_id' => $postId])
       ->in('id', $mediaIds);
 
@@ -132,11 +133,30 @@ class MediaStore extends Store implements IMediaStore
     $stmt->execute($query->getBindings());
   }
 
+  public function syncWithPost(array $mediaIds, int $postId): void
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    // 1. Gỡ bỏ post_id của tất cả media hiện tại thuộc post này
+    $detachQuery = (new QueryBuilder(new MySQLCompiler()))
+      ->from('medias')
+      ->update(['post_id' => null])
+      ->eq('post_id', $postId);
+
+    $stmtDetach = $this->db->prepare($detachQuery->toSql());
+    $stmtDetach->execute($detachQuery->getBindings());
+
+    // 2. Gắn post_id cho danh sách media mới (nếu có)
+    if (!empty($mediaIds)) {
+      $this->attachToPost($mediaIds, $postId);
+    }
+  }
+
   public function delete(int $id): void
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
-    $query = $builder->from('media')->delete()->eq('id', $id);
+    $query = $builder->from('medias')->delete()->eq('id', $id);
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());

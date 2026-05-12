@@ -6,19 +6,16 @@ use App\Models\Post;
 use App\Stores\PostStore;
 use App\Stores\AccountStore;
 use App\Stores\MediaStore;
+use App\Stores\CategoryStore;
+use App\Core\Pageable;
 use Database;
 
 interface IPostService
 {
   public function create(array $payload): Post;
 
-  /**
-   * Trả về danh sách bài viết dạng listing — không có content_json.
-   * $filters hiện tại hỗ trợ: ['limit' => int, 'offset' => int]
-   */
-  public function list(array $filters = []): array;
-
-  public function get(int $id): Post;
+  public function getPosts(int $page, int $limit = 15): Pageable;
+  public function getPost(int $post_id): Post;
 
   /**
    * Cập nhật nội dung và/hoặc trạng thái của bài viết.
@@ -34,15 +31,53 @@ class PostService implements IPostService
   private PostStore $_postStore;
   private MediaStore $_mediaStore;
   private AccountStore $_accountStore;
+  private CategoryStore $_categoryStore;
 
   public function __construct(
     PostStore $postStore,
     MediaStore $mediaStore,
-    AccountStore $accountStore
+    AccountStore $accountStore,
+    CategoryStore $categoryStore
   ) {
     $this->_postStore = $postStore;
     $this->_mediaStore = $mediaStore;
     $this->_accountStore = $accountStore;
+    $this->_categoryStore = $categoryStore;
+  }
+
+    public function getPosts(int $page, int $limit = 15): Pageable
+  {
+    $posts = $this->_postStore->getPaginated($page, $limit);
+    $total = $this->_postStore->getTotalCount();
+
+    // Tối ưu: Load bulk thông tin tác giả để tránh N+1
+    $authorIds = array_unique(array_filter(array_map(fn($p) => $p->author_id, $posts)));
+    if (!empty($authorIds)) {
+      $authors = $this->_accountStore->getByIds($authorIds);
+      $authorMap = [];
+      foreach ($authors as $author) {
+        $authorMap[$author->id] = $author;
+      }
+
+      foreach ($posts as $post) {
+        if ($post->author_id && isset($authorMap[$post->author_id])) {
+          $post->author = $authorMap[$post->author_id];
+        }
+      }
+    }
+
+    return new Pageable($posts, $total, $limit, $page);
+  }
+
+  public function getPost(int $id): Post
+  {
+    $post = $this->_postStore->getById($id)
+      ?? throw new \RuntimeException("Bài viết #{$id} không tồn tại.");
+
+    $categoryIds = $this->_postStore->getCategoryIds($id);
+    $post->categories = $this->_categoryStore->getByIds($categoryIds);
+
+    return $post;
   }
 
   public function create(array $payload): Post
@@ -96,7 +131,7 @@ class PostService implements IPostService
       published_at: $publishedAt,
     );
 
-    return Database::getInstance()->transaction(function () use ($post, $meta, $blocks) {
+    return Database::getInstance()->transaction(function () use ($post, $meta, $payload) {
 
       $post = $this->_postStore->create($post);
 
@@ -106,9 +141,8 @@ class PostService implements IPostService
         $this->_postStore->syncCategories($post->id, $categoryIds);
       }
 
-      // Sau khi có post ID, gắn các media nội bộ được tham chiếu trong blocks
-      // External URL (mediaId === null) bỏ qua — chúng không có record trong DB
-      $internalMediaIds = $this->extractInternalMediaIds($blocks);
+      // Sau khi có post ID, gắn các media nội bộ được tham chiếu trong blocks và meta
+      $internalMediaIds = $this->extractInternalMediaIds($payload);
       if (!empty($internalMediaIds)) {
         $this->_mediaStore->attachToPost($internalMediaIds, $post->id);
       }
@@ -117,41 +151,41 @@ class PostService implements IPostService
     });
   }
 
-  public function list(array $filters = []): array
-  {
-    $limit = max(1, (int) ($filters['limit'] ?? 20));
-    $offset = max(0, (int) ($filters['offset'] ?? 0));
-
-    return $this->_postStore->findAll($limit, $offset);
-  }
-
-  public function get(int $id): Post
-  {
-    return $this->_postStore->findById($id)
-      ?? throw new \RuntimeException("Bài viết #{$id} không tồn tại.");
-  }
-
   public function update(int $id, array $payload): Post
   {
-    // Xác nhận post tồn tại trước — lỗi sớm, rõ nguyên nhân
-    $existing = $this->_postStore->findById($id)
+    $existing = $this->_postStore->getById($id)
       ?? throw new \RuntimeException("Bài viết #{$id} không tồn tại.");
 
     $meta = $payload['meta'] ?? [];
-    $blocks = $payload['blocks'] ?? null; // null = không gửi blocks → không update content
+    $blocks = $payload['blocks'] ?? null;
 
     $data = [];
 
-    // Chỉ map các field client chủ động gửi lên
-    if (isset($meta['title']))
-      $data['title'] = $meta['title'];
-    if (isset($meta['excerpt']))
-      $data['seo_description'] = $meta['excerpt'];
-    if (isset($meta['status']))
-      $data['status'] = $meta['status'];
+    $mutableFields = [
+      'title'           => 'title',
+      'slug'            => 'slug',
+      'author_id'       => 'author_id',
+      'excerpt'         => 'seo_description',
+      'status'          => 'status',
+      'featured_image'  => 'seo_image_url',
+      'settings'        => 'settings_json',
+      'init_view_count' => 'view_count'
+    ];
 
-    if (isset($meta['featured_image'])) {
-      $data['seo_image_url'] = $this->resolveSeoImage($meta['featured_image']);
+    foreach ($mutableFields as $metaKey => $dbKey) {
+      if (!isset($meta[$metaKey]))
+        continue;
+
+      $val = $meta[$metaKey];
+
+      $data[$dbKey] = match ($metaKey) {
+        'slug'            => $this->resolveSlug($val, $meta['title'] ?? $existing->title),
+        'author_id'       => (int) $val,
+        'featured_image'  => $this->resolveSeoImage($val),
+        'settings'        => json_encode($val, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        'init_view_count' => (int) $val,
+        default           => $val
+      };
     }
 
     // published_at: chỉ ghi lần đầu khi chuyển sang published
@@ -168,26 +202,32 @@ class PostService implements IPostService
       }
 
       $data['content_json'] = $encoded;
+    }
 
-      // Đồng bộ media: gắn các media nội bộ vào post sau khi nội dung thay đổi
-      $internalMediaIds = $this->extractInternalMediaIds($blocks);
-      if (!empty($internalMediaIds)) {
-        $this->_mediaStore->attachToPost($internalMediaIds, $id);
+    return Database::getInstance()->transaction(function () use ($id, $data, $meta, $payload) {
+      $post = $this->_postStore->update($id, $data);
+
+      if (isset($data['content_json']) || isset($data['seo_image_url'])) {
+        // Đồng bộ media: gắn các media nội bộ vào post khi nội dung hoặc ảnh đại diện thay đổi
+        // Sử dụng syncWithPost để gỡ bỏ những media không còn được sử dụng
+        $internalMediaIds = $this->extractInternalMediaIds($payload);
+        $this->_mediaStore->syncWithPost($internalMediaIds, $id);
       }
-    }
 
-    if (empty($data)) {
-      // Không có gì cần cập nhật — trả về post hiện tại, tránh query thừa
-      return $existing;
-    }
+      // Đồng bộ danh mục nếu có gửi lên
+      if (isset($meta['category_ids'])) {
+        $categoryIds = is_array($meta['category_ids']) ? $meta['category_ids'] : [$meta['category_ids']];
+        $this->_postStore->syncCategories($id, $categoryIds);
+      }
 
-    return $this->_postStore->update($id, $data);
+      return $post;
+    });
   }
 
   public function delete(int $id): void
   {
     // Xác nhận tồn tại trước để trả lỗi rõ ràng thay vì silent no-op
-    $this->_postStore->findById($id)
+    $this->_postStore->getById($id)
       ?? throw new \RuntimeException("Bài viết #{$id} không tồn tại.");
 
     $this->_postStore->softDelete($id);
@@ -198,20 +238,29 @@ class PostService implements IPostService
   // ---------------------------------------------------------------------------
 
   /**
-   * Duyệt qua blocks, lấy mediaId của các image block nội bộ.
+   * Duyệt qua blocks và meta, lấy mediaId của các image nội bộ.
    * External URL có mediaId === null → bỏ qua.
    */
-  private function extractInternalMediaIds(array $blocks): array
+  private function extractInternalMediaIds(array $payload): array
   {
     $ids = [];
+    $blocks = $payload['blocks'] ?? [];
+    $meta = $payload['meta'] ?? [];
 
+    // 1. Lấy từ blocks
     foreach ($blocks as $block) {
       if (isset($block['mediaId']) && $block['mediaId'] !== null) {
         $ids[] = (int) $block['mediaId'];
       }
     }
 
-    // array_unique để tránh duplicate khi cùng ảnh xuất hiện nhiều lần
+    // 2. Lấy từ featured_image trong meta
+    $featured = $meta['featured_image'] ?? null;
+    if (is_array($featured) && isset($featured['mediaId']) && $featured['mediaId'] !== null) {
+      $ids[] = (int) $featured['mediaId'];
+    }
+
+    // array_unique để tránh duplicate
     return array_values(array_unique($ids));
   }
 

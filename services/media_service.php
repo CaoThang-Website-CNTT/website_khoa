@@ -10,7 +10,7 @@ interface IMediaService
 {
   public function upload(UploadedFile $file, ?int $postId = null): Media;
   public function delete(int $mediaId): void;
-  public function get(int $mediaId): ?Media;
+  public function getMedia(int $mediaId): ?Media;
   public function attachToPost(array $mediaIds, int $postId): void;
   public function getByPostId(int $postId): array;
   public function updateMetadata(int $mediaId, array $data): Media;
@@ -67,9 +67,9 @@ class MediaService implements IMediaService
     $this->_mediaStore->delete($mediaId);
   }
 
-  public function get(int $mediaId): ?Media
+  public function getMedia(int $mediaId): ?Media
   {
-    return $this->_mediaStore->findById($mediaId);
+    return $this->_mediaStore->getById($mediaId);
   }
 
   /**
@@ -178,7 +178,7 @@ class MediaService implements IMediaService
    */
   private function getOrFail(int $mediaId): Media
   {
-    $media = $this->_mediaStore->findById($mediaId);
+    $media = $this->_mediaStore->getById($mediaId);
 
     if ($media === null) {
       throw new \RuntimeException("Media #{$mediaId} không tồn tại.");

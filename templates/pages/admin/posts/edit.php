@@ -8,8 +8,24 @@ if ($oldEditorData) {
     $initialPayload = json_decode($oldEditorData, true);
   } catch (\Exception $e) {
   }
+} else if (isset($post)) {
+  $initialPayload = [
+    'meta' => [
+      'title' => $post->title,
+      'slug' => $post->slug,
+      'status' => $post->status,
+      'author_id' => $post->author_id,
+      'category_ids' => array_map(fn($c) => $c->id, $post->categories ?? []),
+      'excerpt' => $post->seo_description,
+      'featured_image' => $post->seo_image_url,
+      'init_view_count' => $post->view_count,
+      'settings' => json_decode($post->settings_json ?? '{}', true)
+    ],
+    'blocks' => json_decode($post->content_json ?? '[]', true)
+  ];
 }
 
+$oldTitle = $initialPayload['meta']['title'] ?? '';
 $current_user = request()->session()->authUser() ?? ['account_id' => null];
 ?>
 
@@ -28,7 +44,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 <!-- ── TOPBAR ─────────────────────────────────────────────── -->
 <div id="be-topbar">
   <div id="be-topbar-left">
-    <a href="<?= request()->previous(fallback: url('admin/posts')) ?>" class="btn" data-size="md" data-variant="outline">
+    <a href="<?= request()->previous('admin/posts') ?>" class="btn" data-size="md" data-variant="outline">
       <i class="fa-solid fa-chevron-left"></i>
       Quay lại
     </a>
@@ -220,7 +236,8 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
             <div class="field">
               <span class="field__label">Trạng thái</span>
               <button type="button" class="select" data-select-id="be-status-select" data-select-placeholder="Chọn"
-                name="status" data-be-meta-key="status" role="listbox" data-select-default-value="draft"
+                name="status" data-be-meta-key="status" role="listbox"
+                data-select-default-value="<?= $initialPayload['meta']['status'] ?? 'draft' ?>"
                 data-select-placeholder="Chọn trạng thái">
                 <div class="select__content">
                   <div class="select__item" data-select-value="draft">Nháp</div>
@@ -266,7 +283,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
               <span class="field__label">Mô tả</span>
               <textarea id="be-excerpt-input" class="field__input" rows="3" name="seo_desc"
                 placeholder="Để trống: tự lấy từ đoạn văn đầu tiên" maxlength="500"
-                data-be-meta-key="seo_desc"><?= htmlspecialchars($post->seo_desc ?? '') ?></textarea>
+                data-be-meta-key="excerpt"><?= htmlspecialchars($initialPayload['meta']['excerpt'] ?? '') ?></textarea>
             </div>
 
             <div class="field" data-orientation="horizontal">
@@ -274,6 +291,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
                 <span class="field__label">Hiển thị Tác giả</span>
               </div>
               <button class="switch" type="button" role="switch" name="show_author"
+                data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_author'] ?? true) ? 'checked' : '' ?>"
                 data-be-meta-key="settings.show_author">
                 <span class="switch__thumb"></span>
               </button>
@@ -283,8 +301,9 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
               <div class="field__content">
                 <span class="field__label">Hiển thị Ngày xuất bản</span>
               </div>
-              <button class="switch" type="button" role="switch" data-switch-default-state="checked" name="show_date"
-                data-be-meta-key="settings.show_date">
+              <button class="switch" type="button" role="switch"
+                data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_date'] ?? true) ? 'checked' : '' ?>"
+                name="show_date" data-be-meta-key="settings.show_date">
                 <span class="switch__thumb"></span>
               </button>
             </div>
@@ -294,6 +313,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
                 <span class="field__label">Hiển thị Lượt xem</span>
               </div>
               <button class="switch" type="button" role="switch" name="show_view_count"
+                data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_view_count'] ?? true) ? 'checked' : '' ?>"
                 data-be-meta-key="settings.show_view_count">
                 <span class="switch__thumb"></span>
               </button>
@@ -301,8 +321,8 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 
             <div class="field" data-be-meta-preview="settings.show_view_count" data-be-preview-action="toggle">
               <span class="field__label">Lượt xem khởi tạo</span>
-              <input type="number" class="field__input" data-be-meta-key="init_view_count" placeholder="VD: 500"
-                min="0">
+              <input type="number" class="field__input" data-be-meta-key="init_view_count"
+                value="<?= $initialPayload['meta']['init_view_count'] ?? 0 ?>" placeholder="VD: 500" min="0">
             </div>
           </div>
         </div>
@@ -313,8 +333,9 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 </div>
 <!-- ════ END: BODY ════ -->
 
-<form id="be-post-form" method="POST" action="<?= url("admin/posts"); ?>" class="hidden">
+<form id="be-post-form" method="POST" action="<?= url("admin/posts/{$post->id}"); ?>" class="hidden">
   <?= csrf_field() ?>
+  <input type="hidden" name="_method" value="PUT">
   <input type="hidden" id="be-editor-data" name="editor_data" />
 </form>
 
@@ -328,7 +349,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
     authorSelect.addEventListener('select:change', (e) => {
       const { label, value } = e.detail;
 
-      const author = authors.find(a => Number(authors[0].id) === Number(value));
+      const author = authors.find(a => Number(a.id) === Number(value));
       document.getElementById('be-author-name-preview').textContent = author?.email ?? '';
     });
 

@@ -34,14 +34,13 @@ class PostController extends Controller
 
   public function index(Request $request)
   {
-    $limit = max(1, min(100, (int) $request->input('limit', 20)));
-    $offset = max(0, (int) $request->input('offset', 0));
+    $currentPage = $request->query('page') ?? 1;
 
-    $posts = $this->_postService->list(['limit' => $limit, 'offset' => $offset]);
+    $data = $this->_postService->getPosts($currentPage, 15);
 
-    return $this->render('posts', [
-      'posts' => $posts
-    ], layout: 'canva_layout');
+    return $this->render('admin/posts/index', [
+      'data' => $data,
+    ], layout: 'dashboard_layout');
   }
 
   public function store(Request $request)
@@ -90,10 +89,11 @@ class PostController extends Controller
   public function show(Request $request, int $post_id)
   {
     try {
-      $post = $this->_postService->get($post_id);
+      $post = $this->_postService->getPost($post_id);
 
-      $this->render('admin/posts/show', [
+      $this->render('admin/posts/edit', [
         'post' => $post,
+        'authors' => $this->_accountService->getAllAdmins(),
         'categories' => $this->_categoryService->getAllCategories()
       ], layout: 'canva_layout');
     } catch (\RuntimeException $e) {
@@ -119,7 +119,7 @@ class PostController extends Controller
       $request->session()->flashErrors(['editor_data' => ['Tiêu đề không được để trống khi cập nhật.']]);
       $request->session()->flashNotify('error', 'Cập nhật thất bại', 'Tiêu đề bài viết là bắt buộc.');
       $request->flashOldInputs();
-      return $this->redirect("admin/posts/{$post_id}/edit");
+      return $this->redirect("admin/posts/{$post_id}");
     }
 
     // Kiểm tra cấu trúc Blocks
@@ -127,7 +127,7 @@ class PostController extends Controller
       $request->session()->flashErrors(['editor_data' => ['Dữ liệu nội dung không hợp lệ.']]);
       $request->session()->flashNotify('error', 'Cập nhật thất bại', 'Cấu trúc nội dung (blocks) không đúng định dạng.');
       $request->flashOldInputs();
-      return $this->redirect("admin/posts/{$post_id}/edit");
+      return $this->redirect("admin/posts/{$post_id}");
     }
 
     try {
@@ -139,7 +139,7 @@ class PostController extends Controller
         "Bài viết '" . htmlspecialchars($post->title) . "' đã được cập nhật."
       );
 
-      return $this->redirect('admin/posts');
+      return $this->redirect("admin/posts/{$post_id}");
     } catch (\InvalidArgumentException | \RuntimeException $e) {
       $request->flashOldInputs();
       $request->session()->flashNotify(
@@ -147,7 +147,7 @@ class PostController extends Controller
         'Lỗi cập nhật',
         $e->getMessage()
       );
-      return $this->redirect("admin/posts/{$post_id}/edit");
+      return $this->redirect("admin/posts/{$post_id}");
     }
   }
 

@@ -52,7 +52,7 @@ $currentPath = request()->path();
                 <div class="collapsible__content">
                   <ul class="sidebar__menu-sub">
                     <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/posts/create') ?>" class="sidebar__menu-sub-item-btn">Bài Viết</a>
+                      <a href="<?= url('admin/posts') ?>" class="sidebar__menu-sub-item-btn">Bài Viết</a>
                     </li>
                     <li class="sidebar__menu-sub-item">
                       <a href="<?= url('admin/categories') ?>" class="sidebar__menu-sub-item-btn">Danh Mục</a>
