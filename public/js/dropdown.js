@@ -341,7 +341,7 @@ class DropdownHandler {
     this._instances.forEach(other => {
       if (other !== instance) this._close(other);
     });
-    this._position(instance.content, instance.trigger, 'bottom');
+    this._position(instance.content, instance.trigger, instance.trigger.dataset.side || 'bottom');
     // Panel mở sau luôn có z-index cao hơn
     instance.content.style.zIndex = DropdownHandler.BASE_Z_INDEX + (++DropdownHandler._zCounter);
     instance.content.dataset.state = 'open';

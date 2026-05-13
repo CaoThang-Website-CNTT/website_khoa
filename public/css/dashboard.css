@@ -181,7 +181,7 @@ body {
   color: var(--muted-foreground);
 }
 
-.sidebar__menu-btn:not(:has(.collapsible__trigger)) {
+.sidebar__content .sidebar__menu-btn:not(:has(.collapsible__trigger)) {
   padding: 0.5rem;
 }
 
@@ -242,6 +242,27 @@ body {
 
 .sidebar__footer {
   padding: 0.5rem;
+}
+
+.sidebar__footer .avatar-dropdown {
+  width: 100%;
+}
+
+.avatar-dropdown__content {
+  min-width: 10rem;
+}
+
+.avatar__trigger {
+  width: 100%;
+  padding: 0.25rem;
+}
+
+.avatar-dropdown__item--destructive {
+  color: var(--destructive);
+}
+
+.avatar-dropdown__item--destructive:hover {
+  background: color-mix(in oklab, var(--destructive) 10%, transparent);
 }
 
 .main-wrapper {

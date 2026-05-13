@@ -134,7 +134,23 @@
     </div>
 
     <div class="sidebar__footer">
-      Hello, User 123!
+      <ul class="sidebar__menu">
+        <li class="sidebar__menu-item">
+          <div class="sidebar__menu-btn">
+            <?php 
+            $avatarComp = BASE_PATH . '/templates/components/user_avatar.php';
+            if (file_exists($avatarComp)) {
+              include $avatarComp;
+            } else {
+              echo '<a href="'.url('logout').'" class="sidebar__menu-btn">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              Đăng xuất
+              </a>';
+            }
+          ?>
+          </div>
+        </li>
+      </ul>
     </div>
   </aside>
 </div>
