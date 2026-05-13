@@ -34,13 +34,10 @@
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="card">
-  <div class="card__header" id="posts-table-header"></div>
-  <div class="card__content">
-  <div class="tm-container" data-tm="posts_table" data-tm-mode="client" data-tm-searchable 
-    data-tm-toolbar-target="#posts-table-header">
+<div class="tm-container" data-tm="posts_table" data-tm-mode="client" data-tm-searchable 
+  data-tm-toolbar-target="#posts-table-header">
 
-    <!-- Khai báo phân trang -->
+  <!-- Khai báo phân trang -->
     <template data-tm-pagination></template>
 
     <!-- Cột ID -->
@@ -73,7 +70,6 @@
     <template data-tm-col="created_at" data-tm-label="Ngày tạo" data-tm-sortable></template>
   </div>
   </div>
-</div>
 
 <!-- Bootstrap Data Source -->
 <script type="application/json" data-tm-data="posts_table">

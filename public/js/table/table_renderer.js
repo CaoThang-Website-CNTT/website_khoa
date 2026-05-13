@@ -12,6 +12,9 @@ export class TableRenderer {
     const toolbar = document.createElement('div');
     toolbar.className = 'tm-toolbar';
 
+    const topRow = document.createElement('div');
+    topRow.className = 'tm-toolbar__top';
+
     // Tìm kiếm
     if ('tmSearchable' in inst.root.dataset) {
       const externalSel = inst.root.dataset.tmSearchTarget;
@@ -33,7 +36,7 @@ export class TableRenderer {
         `;
         search.querySelector('input').addEventListener('input', e => inst.filter.setSearch(e.target.value));
         wrap.appendChild(search);
-        toolbar.appendChild(wrap);
+        topRow.appendChild(wrap);
       }
     }
 
@@ -43,8 +46,9 @@ export class TableRenderer {
       const filterBar = document.createElement('div');
       filterBar.className = 'tm-filter-bar';
       filterCols.forEach(col => filterBar.appendChild(this.#buildFilterDropdown(col)));
-      toolbar.appendChild(filterBar);
+      topRow.appendChild(filterBar);
     }
+    toolbar.appendChild(topRow);
 
     // Vùng hiển thị các pill bộ lọc
     const pills = document.createElement('div');
