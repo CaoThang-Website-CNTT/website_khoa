@@ -31,6 +31,16 @@ class TableInstance {
 
     this.columns = new ColumnRegistry(root, DEFAULT_FILTER_OPS);
 
+    // Tự động thêm cột Drag Handle & Checkbox ở đầu
+    this.columns.all.unshift({
+      key: '__selector',
+      label: '',
+      width: '48px',
+      align: 'center',
+      sortable: false,
+      isSpecial: true
+    });
+
     const inlineRows = TableInstance.#readInlineData(this.id);
     const mode = root.dataset.tmMode ?? 'server';
     const src = root.dataset.tmSrc ?? null;
@@ -71,13 +81,21 @@ class TableInstance {
     wrapper.className = 'tm-wrapper';
     wrapper.dataset.tmWrapper = this.id;
 
-    // 1. Header Controls
-    const header = document.createElement('div');
-    header.className = 'tm-header-controls';
-    header.appendChild(this.#renderer.buildToolbar());
-    wrapper.appendChild(header);
+    // Header Controls
+    const headerTarget = this.root.dataset.tmToolbarTarget;
+    const externalHeader = headerTarget ? document.querySelector(headerTarget) : null;
+    const toolbar = this.#renderer.buildToolbar();
 
-    // 2. Data Wrapper
+    if (externalHeader) {
+      externalHeader.appendChild(toolbar);
+    } else {
+      const header = document.createElement('div');
+      header.className = 'tm-header-controls';
+      header.appendChild(toolbar);
+      wrapper.appendChild(header);
+    }
+
+    // Data Wrapper
     const dataWrapper = document.createElement('div');
     dataWrapper.className = 'tm-data-wrapper';
 
@@ -94,35 +112,47 @@ class TableInstance {
     dataWrapper.appendChild(overlay);
     wrapper.appendChild(dataWrapper);
 
-    // 3. Footer Controls
-    const footer = document.createElement('div');
-    footer.className = 'tm-footer-controls';
+    // Footer Controls
+    const footerTarget = this.root.dataset.tmFooterTarget;
+    const externalFooter = footerTarget ? document.querySelector(footerTarget) : null;
 
     const pagId = this.id;
-    // Check if there is an EXTERNAL pagination container defined anywhere on the page
+    const hasInternalTemplate = this.root.querySelector('template[data-tm-pagination]');
     const externalPag = document.querySelector(`[data-tm-pagination="${pagId}"]`);
     const isExternal = externalPag && !this.root.contains(externalPag);
 
-    // Check for declarative pagination template inside the root
-    const hasInternalTemplate = this.root.querySelector('template[data-tm-pagination]');
+    if (hasInternalTemplate || isExternal) {
+      const footer = document.createElement('div');
+      footer.className = 'tm-footer-controls';
 
-    // If we have an internal template AND no external container, build footer pagination
-    if (hasInternalTemplate && !isExternal) {
+      // Info "Trang X/Y"
       const info = document.createElement('div');
       info.className = 'tm-page-info';
       info.dataset.tmPageInfo = pagId;
       footer.appendChild(info);
 
-      const pagContainer = document.createElement('div');
-      pagContainer.dataset.tmPagination = pagId;
-      footer.appendChild(pagContainer);
+      // Container cho các nút số trang
+      if (!isExternal) {
+        const pagContainer = document.createElement('div');
+        pagContainer.dataset.tmPagination = pagId;
+        footer.appendChild(pagContainer);
+      }
 
-      wrapper.appendChild(footer);
-    }
-    // If there is an external one, we might still want the footer for other controls, 
-    // but we won't create a second pagination container inside it.
-    else if (footer.children.length > 0) {
-      wrapper.appendChild(footer);
+      if (externalFooter) {
+        externalFooter.appendChild(footer);
+      } else {
+        const tfoot = this.#table.querySelector('tfoot');
+        if (tfoot) {
+          tfoot.innerHTML = '';
+          const tr = document.createElement('tr');
+          tr.className = 'tm-footer-tr';
+          const td = document.createElement('td');
+          td.colSpan = this.columns.all.length;
+          td.appendChild(footer);
+          tr.appendChild(td);
+          tfoot.appendChild(tr);
+        }
+      }
     }
 
     this.root.appendChild(wrapper);
@@ -159,9 +189,9 @@ class TableInstance {
     this.#renderer.renderPagination(this.pagination);
     this.#renderer.renderFilters(this.filter.rules);
     console.log(`[TableManager] Render "${this.id}":`, {
-        rows: rows.length,
-        sort: this.sort.state,
-        filters: this.filter.rules.length
+      rows: rows.length,
+      sort: this.sort.state,
+      filters: this.filter.rules.length
     });
   }
 

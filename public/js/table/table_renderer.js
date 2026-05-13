@@ -236,7 +236,9 @@ export class TableRenderer {
       th.dataset.tmColKey = col.key;
       th.style.textAlign = col.align;
 
-      if (col.sortable) {
+      if (col.key === '__selector') {
+        th.innerHTML = `<input type="checkbox" class="tm-bulk-checkbox-all">`;
+      } else if (col.sortable) {
         th.classList.add('tm-th--sortable');
         th.dataset.tmSortCol = col.key;
         th.innerHTML = `
@@ -290,7 +292,13 @@ export class TableRenderer {
         td.style.textAlign = col.align;
 
         const value = row[col.key];
-        if (col.render) {
+        if (col.key === '__selector') {
+          td.innerHTML = `
+            <div class="tm-selector-cell">
+              <input type="checkbox" class="tm-bulk-checkbox">
+            </div>
+          `;
+        } else if (col.render) {
           td.appendChild(col.render(row, value));
         } else {
           td.textContent = value ?? '';
@@ -334,7 +342,7 @@ export class TableRenderer {
       el.className = 'tm-page-btn';
       if (active) el.classList.add('tm-page-btn--active');
       if (disabled) el.classList.add('tm-page-btn--disabled');
-      el.textContent = label;
+      el.innerHTML = label;
 
       if (strategy === 'qs' && el.tagName === 'A') {
         el.href = pag.buildUrl(targetPage);
@@ -348,7 +356,7 @@ export class TableRenderer {
       return el;
     };
 
-    container.appendChild(makeItem('‹', page - 1, page <= 1));
+    container.appendChild(makeItem('<i class="fa-solid fa-angle-left"></i>', page - 1, page <= 1));
     pages.forEach(p => {
       if (p === '…') {
         const span = document.createElement('span');
@@ -359,7 +367,7 @@ export class TableRenderer {
         container.appendChild(makeItem(p, p, false, p === page));
       }
     });
-    container.appendChild(makeItem('›', page + 1, page >= totalPages));
+    container.appendChild(makeItem('<i class="fa-solid fa-angle-right"></i>', page + 1, page >= totalPages));
 
     // Văn bản thông tin trang
     document.querySelectorAll(`[data-tm-page-info="${id}"]`).forEach(el => {
