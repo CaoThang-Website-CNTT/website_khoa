@@ -739,6 +739,7 @@
     background-color: var(--background);
     border: 1px solid var(--input);
     border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
     position: relative;
     transition: all 0.1s ease;
     vertical-align: middle;
