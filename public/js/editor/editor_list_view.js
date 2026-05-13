@@ -62,6 +62,7 @@ export class EditorListView {
         <span class="be-list-view__icon">${icon}</span>
         <div class="be-list-view__info">
           <span class="be-list-view__title">${title}</span>
+          ${block.data.meta.anchor_id ? `<span class="be-list-view__anchor">#${block.data.meta.anchor_id}</span>` : ''}
         </div>
       `;
 

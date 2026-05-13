@@ -132,8 +132,13 @@ export class EditorUI {
     this.switchRightTab('block');
 
     this.blockSettingsPanel.innerHTML = "";
+    const wrapper = document.createElement('div');
+    wrapper.classList.add("field__set");
     const schema = block.schema;
     const currentData = block.data;
+
+    const commonUI = this.#inspector.renderCommonSettings(block, this.#bus);
+    wrapper.appendChild(commonUI);
 
     if (schema.supports) {
       if (schema.supports.typography) {
@@ -146,9 +151,12 @@ export class EditorUI {
       const customUI = block.renderInspectorControls();
 
       const divider = document.createElement('hr');
-      this.blockSettingsPanel.appendChild(divider);
-      this.blockSettingsPanel.appendChild(customUI);
+      divider.classList.add("separator");
+      wrapper.appendChild(divider);
+      wrapper.appendChild(customUI);
     }
+
+    this.blockSettingsPanel.appendChild(wrapper);
   }
 
   sync() {

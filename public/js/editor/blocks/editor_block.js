@@ -17,15 +17,31 @@ export class EditorBlock {
     this.bus = bus;
 
     /** @type {HTMLElement|null} */
-    this.dom = null;
+    this._dom = null;
+  }
+
+  get dom() {
+    return this._dom;
+  }
+
+  set dom(el) {
+    this._dom = el;
+    if (this._dom && this.data.meta.anchor_id) {
+      this._dom.id = this.data.meta.anchor_id;
+    }
   }
 
   // ─── Schema ───────────────────────────────────────────────────────────────
 
   #parseDataWithSchema(currentData, schema) {
+    const meta = this.#parseMeta(currentData.meta ?? {}, schema.meta ?? {});
+
+    // Luôn đảm bảo có anchor_id trong meta để dùng chung
+    meta.anchor_id = currentData.meta?.anchor_id ?? '';
+
     return {
       rich_text: currentData.rich_text ?? [],
-      meta: this.#parseMeta(currentData.meta ?? {}, schema.meta ?? {}),
+      meta: meta,
     };
   }
 
