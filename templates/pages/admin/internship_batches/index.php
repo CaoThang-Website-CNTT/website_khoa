@@ -35,92 +35,59 @@
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="table-wrapper shadow rounded-md mt-4">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>
-          <h6>Tên đợt</h6>
-        </th>
-        <th>
-          <h6>Mô tả</h6>
-        </th>
-        <th>
-          <h6>Khóa</h6>
-        </th>
-        <th>
-          <h6>Bậc học</h6>
-        </th>
-        <th>
-          <h6>Bắt đầu</h6>
-        </th>
-        <th>
-          <h6>Kết thúc</h6>
-        </th>
-        <th>
-          <h6>Công bố</h6>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($data->getItems())): ?>
-        <?php foreach ($data->getItems() as $batch): ?>
-          <?php
-          $batchObj = (object)$batch;
-          $statusVariant = 'secondary';
-          if ($batchObj->status === 'published') $statusVariant = 'primary';
-          if ($batchObj->status === 'closed') $statusVariant = 'destructive';
+<div class="card">
+  <div class="tm-container" data-tm="batches_table" data-tm-mode="client" data-tm-searchable>
 
-          $startDate = $batchObj->start_at ? date('d/m/Y', strtotime($batchObj->start_at)) : 'N/A';
-          $endDate = $batchObj->end_at ? date('d/m/Y', strtotime($batchObj->end_at)) : 'N/A';
-          $publishDate = $batchObj->published_at ? date('d/m/Y', strtotime($batchObj->published_at)) : '-';
-          ?>
-          <tr class="internship-batches__row" onclick="window.location.href='<?= url('admin/internship_batches/' . $batchObj->id) ?>'">
-            <td class="data-table__id">
-              <?= '#' . htmlspecialchars($batchObj->id) ?>
-            </td>
-            <td class="font-medium text-foreground">
-              <?= htmlspecialchars($batchObj->title) ?>
-            </td>
-            <td>
-              <div class="internship-batches__description-wrapper">
-                <div class="internship-batches__description" title="<?= htmlspecialchars($batchObj->description ?? '') ?>">
-                  <?= htmlspecialchars($batchObj->description ?? 'Không có mô tả') ?>
-                </div>
-              </div>
-            </td>
-            <td class="text-center">
-              <?= htmlspecialchars($batchObj->class_of ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($batchObj->level ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= $startDate ?>
-            </td>
-            <td>
-              <?= $endDate ?>
-            </td>
-            <td>
-              <?= $publishDate ?>
-            </td>
-          <?php endforeach; ?>
-        <?php else: ?>
-          <tr>
-            <td colspan="9" class="text-center py-8">
-              <div class="flex flex-col items-center gap-2">
-                <i class="fa-solid fa-folder-open text-4xl text-muted"></i>
-                <p>Không tìm thấy đợt thực tập nào.</p>
-              </div>
-            </td>
-          </tr>
-        <?php endif; ?>
-    </tbody>
-  </table>
+    <!-- Cột ID -->
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
 
-  <?php
-  $page = $data;
-  include BASE_PATH . '/templates/components/pagination.php';
-  ?>
+    <!-- Cột Tên đợt -->
+    <template data-tm-col="title" data-tm-label="Tên đợt" data-tm-sortable data-tm-filter-type="text">
+      <a href="<?= url('admin/internship_batches/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+    </template>
+
+    <!-- Cột Khóa -->
+    <template data-tm-col="class_of" data-tm-label="Khóa" data-tm-sortable data-tm-filter-type="text"></template>
+
+    <!-- Cột Bậc học -->
+    <template data-tm-col="level" data-tm-label="Bậc học" data-tm-filter-type="select"
+      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Cao đẳng","value":"Cao đẳng"},{"label":"Đại học","value":"Đại học"}]'></template>
+
+    <!-- Cột Ngày bắt đầu -->
+    <template data-tm-col="start_at" data-tm-label="Bắt đầu" data-tm-sortable></template>
+
+    <!-- Cột Ngày kết thúc -->
+    <template data-tm-col="end_at" data-tm-label="Kết thúc" data-tm-sortable></template>
+
+    <!-- Cột Trạng thái -->
+    <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
+      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đang chờ","value":"draft"},{"label":"Đã công bố","value":"published"},{"label":"Đã kết thúc","value":"closed"}]'>
+      <span class="badge" data-variant="{{ value === 'published' ? 'primary' : (value === 'closed' ? 'destructive' : 'secondary') }}">
+        {{ value === 'published' ? 'Đã công bố' : (value === 'closed' ? 'Đã kết thúc' : 'Đang chờ') }}
+      </span>
+    </template>
+
+    <template data-tm-pagination></template>
+  </div>
 </div>
+
+<!-- JSON Data Source cho TableManager -->
+<script type="application/json" data-tm-data="batches_table">
+  <?= json_encode([
+    'rows' => array_map(function ($batch) {
+      $b = (object)$batch;
+      return [
+        'id' => '#' . $b->id,
+        'title' => $b->title ?? 'N/A',
+        'class_of' => $b->class_of ?? 'N/A',
+        'level' => $b->level ?? 'N/A',
+        'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
+        'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
+        'status' => $b->status ?? 'draft'
+      ];
+    }, $data->getItems()),
+    'total' => $data->getTotal(),
+    'page' => $data->getCurrentPage(),
+    'limit' => $data->getPerPage()
+  ]) ?>
+</script>

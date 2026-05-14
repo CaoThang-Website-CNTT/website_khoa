@@ -23,9 +23,11 @@ class CategoryController extends Controller
     $currentPage = $request->query('page') ?? 1;
 
     $data = $this->_categoryService->getCategories($currentPage, 15);
+    $allCategories = $this->_categoryService->getAllCategories();
 
     $this->render("admin/categories/index", [
       'data' => $data,
+      'allCategories' => $allCategories
     ], layout: 'dashboard_layout');
   }
 

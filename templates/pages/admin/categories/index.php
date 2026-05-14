@@ -30,58 +30,58 @@
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="table-wrapper shadow rounded-md">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>
-          <h6>Name</h6>
-        </th>
-        <th>
-          <h6>Slug</h6>
-        </th>
-        <th>
-          <h6>Type</h6>
-        </th>
-        <th>
-          <h6>Description</h6>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($data->getItems())): ?>
-        <?php foreach ($data->getItems() as $category): ?>
-          <tr onclick="window.location.href='<?= url('admin/categories/' . $category->id) ?>'">
-            <td>
-              <?= htmlspecialchars($category->name) ?>
-            </td>
-            <td><?= htmlspecialchars($category->slug ?? 'N/A') ?></td>
-            <td>
-              <?php if ($category->type === 'const'): ?>
-                <span class="badge" data-variant="primary">Hệ thống</span>
-              <?php else: ?>
-                <span class="badge" data-variant="secondary">Tùy chỉnh</span>
-              <?php endif; ?>
-            </td>
-            <td>
-              <?php if (!isset($category->parent_id)): ?>
-                <span class="badge" data-variant="primary">Cha</span>
-              <?php else: ?>
-                <span class="badge" data-variant="secondary">Con</span>
-              <?php endif; ?>
-            </td>
-            <td><?= htmlspecialchars($category->description ?? 'N/A') ?></td>
-          </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="5" class="text-center">Không tìm thấy Danh Mục nào.</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-  <?php
-  $page = $data;
-  include BASE_PATH . '/templates/components/pagination.php'
-    ?>
+<div class="card">
+  <div class="tm-container" data-tm="categories_table" data-tm-mode="client" data-tm-searchable>
+
+    <!-- Cột ID -->
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
+
+    <!-- Cột Tên -->
+    <template data-tm-col="name" data-tm-label="Tên danh mục" data-tm-sortable data-tm-filter-type="text">
+      <a href="<?= url('admin/categories/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+    </template>
+
+    <!-- Cột Slug -->
+    <template data-tm-col="slug" data-tm-label="Slug" data-tm-sortable data-tm-filter-type="text"></template>
+
+    <!-- Cột Loại -->
+    <template data-tm-col="type" data-tm-label="Loại" data-tm-filter-type="select" 
+      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Hệ thống","value":"const"},{"label":"Tùy chỉnh","value":"custom"}]'>
+      <span class="badge" data-variant="{{ value === 'const' ? 'primary' : 'secondary' }}">
+        {{ value === 'const' ? 'Hệ thống' : 'Tùy chỉnh' }}
+      </span>
+    </template>
+
+    <!-- Cột Phân cấp -->
+    <template data-tm-col="hierarchy" data-tm-label="Cấp bậc" data-tm-filter-type="select" 
+      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Danh mục cha","value":"parent"},{"label":"Danh mục con","value":"child"}]'>
+      <span class="badge" data-variant="{{ value === 'parent' ? 'primary' : 'secondary' }}">
+        {{ value === 'parent' ? 'Cha' : 'Con' }}
+      </span>
+    </template>
+
+    <!-- Cột Mô tả -->
+    <template data-tm-col="description" data-tm-label="Mô tả"></template>
+
+    <template data-tm-pagination></template>
+  </div>
 </div>
+
+<!-- JSON Data Source cho TableManager -->
+<script type="application/json" data-tm-data="categories_table">
+  <?= json_encode([
+    'rows' => array_map(function($category) {
+      return [
+        'id' => '#' . $category->id,
+        'name' => $category->name,
+        'slug' => $category->slug ?? 'N/A',
+        'type' => $category->type,
+        'hierarchy' => !isset($category->parent_id) ? 'parent' : 'child',
+        'description' => $category->description ?? 'N/A'
+      ];
+    }, $data->getItems()),
+    'total' => $data->getTotal(),
+    'page' => $data->getCurrentPage(),
+    'limit' => $data->getPerPage()
+  ]) ?>
+</script>
