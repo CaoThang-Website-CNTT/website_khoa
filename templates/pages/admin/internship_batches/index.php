@@ -39,7 +39,7 @@
   <div class="tm-container" data-tm="batches_table" data-tm-mode="client" data-tm-searchable>
 
     <!-- Cột ID -->
-    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
 
     <!-- Cột Tên đợt -->
     <template data-tm-col="title" data-tm-label="Tên đợt" data-tm-sortable data-tm-filter-type="text">
@@ -77,7 +77,7 @@
     'rows' => array_map(function ($batch) {
       $b = (object)$batch;
       return [
-        'id' => '#' . $b->id,
+        'id' => $b->id,
         'title' => $b->title ?? 'N/A',
         'class_of' => $b->class_of ?? 'N/A',
         'level' => $b->level ?? 'N/A',

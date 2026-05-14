@@ -40,7 +40,7 @@
   <div class="tm-container" data-tm="students_table" data-tm-mode="client" data-tm-searchable>
 
     <!-- Cột ID -->
-    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
 
     <!-- Cột Tên -->
     <template data-tm-col="full_name" data-tm-label="Họ tên" data-tm-sortable data-tm-filter-type="text">
@@ -84,7 +84,7 @@
   <?= json_encode([
     'rows' => array_map(function($student) {
       return [
-        'id' => '#' . ($student->id ?? 'N/A'),
+        'id' => $student->id,
         'full_name' => $student->full_name ?? 'N/A',
         'student_id' => $student->student_id ?? 'N/A',
         'gender' => $student->gender ?? 'N/A',

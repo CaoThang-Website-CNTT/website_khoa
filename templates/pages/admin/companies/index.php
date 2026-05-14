@@ -36,7 +36,7 @@
   <div class="tm-container" data-tm="companies_table" data-tm-mode="client" data-tm-searchable>
 
     <!-- Cột ID -->
-    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
 
     <!-- Cột Tên -->
     <template data-tm-col="name" data-tm-label="Tên công ty" data-tm-sortable data-tm-filter-type="text">
@@ -66,7 +66,7 @@
   <?= json_encode([
     'rows' => array_map(function ($company) {
       return [
-        'id' => '#' . $company->id,
+        'id' => $company->id,
         'name' => $company->name ?? 'N/A',
         'tax_code' => $company->tax_code ?? 'N/A',
         'address' => $company->address ?? 'N/A',

@@ -34,7 +34,7 @@
   <div class="tm-container" data-tm="categories_table" data-tm-mode="client" data-tm-searchable>
 
     <!-- Cột ID -->
-    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
 
     <!-- Cột Tên -->
     <template data-tm-col="name" data-tm-label="Tên danh mục" data-tm-sortable data-tm-filter-type="text">
@@ -72,7 +72,7 @@
   <?= json_encode([
     'rows' => array_map(function($category) {
       return [
-        'id' => '#' . $category->id,
+        'id' => $category->id,
         'name' => $category->name,
         'slug' => $category->slug ?? 'N/A',
         'type' => $category->type,

@@ -36,7 +36,7 @@
   <div class="tm-container" data-tm="classrooms_table" data-tm-mode="client" data-tm-searchable>
 
     <!-- Cột ID -->
-    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
 
     <!-- Cột Tên lớp -->
     <template data-tm-col="short_name" data-tm-label="Tên lớp" data-tm-sortable data-tm-filter-type="text">
@@ -72,7 +72,7 @@
   <?= json_encode([
     'rows' => array_map(function ($classroom) {
       return [
-        'id' => '#' . $classroom->id,
+        'id' => $classroom->id,
         'short_name' => $classroom->short_name ?? 'N/A',
         'major_name' => $classroom->major->full_name ?? 'N/A',
         'specialization_name' => $classroom->specialization->full_name ?? 'N/A'
