@@ -151,8 +151,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
         <!-- is_active -->
         <div class="field" data-orientation="horizontal">
-          <label class="field__label">Kích hoạt slide</label>
-          <input type="checkbox" class="field__input" name="slides[__INDEX__][is_active]" value="1" checked>
+          <label class="field__label" for="is_active-[__INDEX__]">Kích hoạt slide</label>
+          <input id="is_active-[__INDEX__]" type="checkbox" class="field__input" name="slides[__INDEX__][is_active]"
+            value="1" checked>
         </div>
 
         <!-- title + title_highlight -->
@@ -213,9 +214,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
         <!-- use_custom_html toggle -->
         <div class="field" data-orientation="horizontal">
-          <label class="field__label">Dùng HTML tuỳ chỉnh</label>
-          <input type="checkbox" class="field__input use-custom-html-toggle" name="slides[__INDEX__][use_custom_html]"
-            value="1">
+          <label class="field__label" for="use_custom_html-[__INDEX__]">Dùng HTML tuỳ chỉnh</label>
+          <input id="use_custom_html-[__INDEX__]" type="checkbox" class="field__input use-custom-html-toggle"
+            name="slides[__INDEX__][use_custom_html]" value="1">
         </div>
 
         <!-- custom_html (ẩn mặc định) -->
@@ -248,7 +249,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const manager = new DragDropManager();
 
     const form = document.querySelector('#carousel-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
@@ -276,7 +276,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
         item.querySelector('.slide-number').textContent = i + 1;
         item.querySelector('.slide-sort-order').value = i + 1;
       });
-      manager.reindexGroup('slides');
+    }
+
+    if (slidesContainer) {
+      new DnD(slidesContainer, {
+        animation: 150,
+        group: "slides",
+        handle: '.card__header',
+      });
     }
 
     addSlideBtn.addEventListener('click', () => {
@@ -291,6 +298,15 @@ $old_input = request()->session()->getOldInputs() ?? [];
         input.name = input.name.replace(/__INDEX__/g, index);
       });
 
+      // Fill __INDEX__ id của thẻ label và input
+      el.querySelectorAll('label').forEach(label => {
+        label.htmlFor = label.htmlFor.replace(/__INDEX__/g, index);
+      });
+
+      el.querySelectorAll('[id]').forEach(input => {
+        input.id = input.id.replace(/__INDEX__/g, index);
+      });
+
       el.dataset.slideIndex = id;
 
       const toggle = el.querySelector('.use-custom-html-toggle');
@@ -300,33 +316,17 @@ $old_input = request()->session()->getOldInputs() ?? [];
       });
 
       el.querySelector('.remove-slide-btn').addEventListener('click', () => {
-        const s = manager.registry.draggables.get(id);
-        s?.destroy?.();
-
         el.remove();
         reindexSlides();
       });
 
       slidesContainer.appendChild(el);
 
-      new Sortable({
-        id,
-        element: el,
-        handle: el.querySelector('.card__header'),
-        group: 'slides',
-        index: slideCount - 1,
-      }, manager)
-
       reindexSlides();
     });
 
-    manager.monitor.addEventListener('dragend', e => {
-      const s = e.operation.source;
-      if (!e.canceled && isSortable(s)) {
-        s.initialIndex = s.index;
-        s.initialGroup = s.group;
-        reindexSlides();
-      }
+    DnDMonitor.on('dragend', e => {
+      reindexSlides();
     });
 
     confirmBtn.addEventListener('click', () => form.submit());

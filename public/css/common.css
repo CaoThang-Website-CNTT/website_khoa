@@ -777,7 +777,7 @@
     color: var(--destructive);
   }
 
-  .field__input:not(:has(.switch)) {
+  .field__input:not(:has(.switch)):not(input[type="checkbox"]) {
     height: 2rem;
     width: 100%;
     min-width: 0;
@@ -886,7 +886,7 @@
     color: var(--destructive);
   }
 
-  .field[data-orientation="horizontal"] .field__input {
+  .field[data-orientation="horizontal"] .field__input:not(input[type="checkbox"]) {
     width: auto;
   }
 
