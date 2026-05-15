@@ -1,5 +1,5 @@
 <?php
-$errors = request()->session()->getErrors()() ?? [];
+$errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 $isConst = $category->type === 'const';
 ?>
