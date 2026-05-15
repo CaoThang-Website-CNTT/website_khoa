@@ -8,6 +8,8 @@ require_once BASE_PATH . '/includes/core/store.php';
 use App\Core\Store;
 use App\Models\Carousel;
 use App\Models\CarouselSlide;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 use PDO;
 
 interface ICarouselStore
@@ -36,53 +38,115 @@ class CarouselStore extends Store implements ICarouselStore
   /** @return Carousel[] */
   public function getAll(): array
   {
-    $stmt = $this->db->prepare("SELECT * FROM `carousels` WHERE `deleted_at` IS NULL ORDER BY `id` ASC");
-    $stmt->execute();
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->is('deleted_at', null)
+      ->order('id', ['ascending' => true]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     return array_map(fn($row) => Carousel::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
   /** @return Carousel[] */
   public function getPaginated(int $page, int $limit = 15): array
   {
     $offset = (max(1, $page) - 1) * $limit;
-    $stmt = $this->db->prepare("SELECT * FROM `carousels` WHERE `deleted_at` IS NULL ORDER BY `id` ASC LIMIT :limit OFFSET :offset");
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->is('deleted_at', null)
+      ->order('id', ['ascending' => true])
+      ->limit($limit)
+      ->range($offset, $offset + $limit - 1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     return array_map(fn($row) => Carousel::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
   public function getById(int $id): ?Carousel
   {
-    $stmt = $this->db->prepare("SELECT * FROM `carousels` WHERE `id` = :id AND `deleted_at` IS NULL");
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->eq('id', $id)
+      ->is('deleted_at', null)
+      ->limit(1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Carousel::fromArray($row) : null;
   }
   public function getBySlug(string $slug): ?Carousel
   {
-    $stmt = $this->db->prepare("SELECT * FROM `carousels` WHERE `slug` = :slug AND `deleted_at` IS NULL");
-    $stmt->execute([':slug' => $slug]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->eq('slug', $slug)
+      ->is('deleted_at', null)
+      ->limit(1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Carousel::fromArray($row) : null;
   }
   public function create(array $data): int
   {
-    $stmt = $this->db->prepare("INSERT INTO `carousels` (`name`, `slug`, `is_active`) VALUES (:name, :slug, :is_active)");
-    $stmt->execute([':name' => $data['name'], ':slug' => $data['slug'], ':is_active' => $data['is_active'] ?? 1]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->insert([
+        'name' => $data['name'],
+        'slug' => $data['slug'],
+        'is_active' => $data['is_active'] ?? 1,
+      ]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     return (int) $this->db->lastInsertId();
   }
   public function update(int $id, array $data): bool
   {
-    $stmt = $this->db->prepare("UPDATE `carousels` SET `name` = :name, `slug` = :slug, `is_active` = :is_active, `updated_at` = NOW() WHERE `id` = :id AND `deleted_at` IS NULL");
-    return $stmt->execute([':name' => $data['name'], ':slug' => $data['slug'], ':is_active' => $data['is_active'] ?? 1, ':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->update([
+        'name' => $data['name'],
+        'slug' => $data['slug'],
+        'is_active' => $data['is_active'] ?? 1,
+        'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+      ])
+      ->eq('id', $id)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
   public function delete(int $id): bool
   {
     $this->db->beginTransaction();
     try {
-      $stmtSlides = $this->db->prepare("UPDATE `carousel_slides` SET `deleted_at` = NOW() WHERE `carousel_id` = :carousel_id AND `deleted_at` IS NULL");
-      $stmtSlides->execute([':carousel_id' => $id]);
-      $stmtCarousel = $this->db->prepare("UPDATE `carousels` SET `deleted_at` = NOW() WHERE `id` = :id AND `deleted_at` IS NULL");
-      $stmtCarousel->execute([':id' => $id]);
+      $now = (new \DateTime())->format('Y-m-d H:i:s');
+
+      $slidesQuery = (new QueryBuilder(new MySQLCompiler()))
+        ->from('carousel_slides')
+        ->update(['deleted_at' => $now])
+        ->eq('carousel_id', $id)
+        ->is('deleted_at', null);
+
+      $stmtSlides = $this->db->prepare($slidesQuery->toSql());
+      $stmtSlides->execute($slidesQuery->getBindings());
+
+      $carouselQuery = (new QueryBuilder(new MySQLCompiler()))
+        ->from('carousels')
+        ->update(['deleted_at' => $now])
+        ->eq('id', $id)
+        ->is('deleted_at', null);
+
+      $stmtCarousel = $this->db->prepare($carouselQuery->toSql());
+      $stmtCarousel->execute($carouselQuery->getBindings());
+
       $this->db->commit();
       return true;
     } catch (\Exception $e) {
@@ -92,100 +156,178 @@ class CarouselStore extends Store implements ICarouselStore
   }
   public function isSlugUnique(string $slug, ?int $excludeId = null): bool
   {
-    $sql = "SELECT COUNT(*) FROM `carousels` WHERE `slug` = :slug AND `deleted_at` IS NULL";
-    $params = [':slug' => $slug];
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->select('COUNT(*)')
+      ->eq('slug', $slug)
+      ->is('deleted_at', null);
+
     if ($excludeId) {
-      $sql .= " AND `id` != :exclude_id";
-      $params[':exclude_id'] = $excludeId;
+      $query->neq('id', $excludeId);
     }
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($params);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return $stmt->fetchColumn() == 0;
   }
   /** @return CarouselSlide[] */
   public function getSlides(int $carouselId): array
   {
-    $stmt = $this->db->prepare("SELECT * FROM `carousel_slides` WHERE `carousel_id` = :carousel_id AND `deleted_at` IS NULL ORDER BY `sort_order` ASC");
-    $stmt->execute([':carousel_id' => $carouselId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->eq('carousel_id', $carouselId)
+      ->is('deleted_at', null)
+      ->order('sort_order', ['ascending' => true]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     return array_map(fn($row) => CarouselSlide::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
   public function getSlideById(int $id): ?CarouselSlide
   {
-    $stmt = $this->db->prepare("SELECT * FROM `carousel_slides` WHERE `id` = :id AND `deleted_at` IS NULL");
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->eq('id', $id)
+      ->is('deleted_at', null)
+      ->limit(1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? CarouselSlide::fromArray($row) : null;
   }
   public function createSlide(array $data): int
   {
-    $stmt = $this->db->prepare("INSERT INTO `carousel_slides` (`carousel_id`, `title`, `title_highlight`, `description`, `image_path`, `image_alt`, `cta_label`, `cta_url`, `cta_variant`, `custom_html`, `use_custom_html`, `sort_order`, `is_active`) VALUES (:carousel_id, :title, :title_highlight, :description, :image_path, :image_alt, :cta_label, :cta_url, :cta_variant, :custom_html, :use_custom_html, :sort_order, :is_active)");
-    $stmt->execute([
-      ':carousel_id' => $data['carousel_id'],
-      ':title' => $data['title'],
-      ':title_highlight' => $data['title_highlight'] ?? null,
-      ':description' => $data['description'] ?? null,
-      ':image_path' => $data['image_path'],
-      ':image_alt' => $data['image_alt'] ?? '',
-      ':cta_label' => $data['cta_label'] ?? null,
-      ':cta_url' => $data['cta_url'] ?? null,
-      ':cta_variant' => $data['cta_variant'] ?? 'primary',
-      ':custom_html' => $data['custom_html'] ?? null,
-      ':use_custom_html' => $data['use_custom_html'] ?? 0,
-      ':sort_order' => $data['sort_order'] ?? 0,
-      ':is_active' => $data['is_active'] ?? 1,
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->insert([
+        'carousel_id' => $data['carousel_id'],
+        'title' => $data['title'],
+        'title_highlight' => $data['title_highlight'] ?? null,
+        'description' => $data['description'] ?? null,
+        'image_path' => $data['image_path'],
+        'image_alt' => $data['image_alt'] ?? '',
+        'cta_label' => $data['cta_label'] ?? null,
+        'cta_url' => $data['cta_url'] ?? null,
+        'cta_variant' => $data['cta_variant'] ?? 'primary',
+        'custom_html' => $data['custom_html'] ?? null,
+        'use_custom_html' => $data['use_custom_html'] ?? 0,
+        'sort_order' => $data['sort_order'] ?? 0,
+        'is_active' => $data['is_active'] ?? 1,
+      ]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     return (int) $this->db->lastInsertId();
   }
   public function updateSlide(int $id, array $data): bool
   {
-    $stmt = $this->db->prepare("UPDATE `carousel_slides` SET `title` = :title, `title_highlight` = :title_highlight, `description` = :description, `image_path` = :image_path, `image_alt` = :image_alt, `cta_label` = :cta_label, `cta_url` = :cta_url, `cta_variant` = :cta_variant, `custom_html` = :custom_html, `use_custom_html` = :use_custom_html, `sort_order` = :sort_order, `is_active` = :is_active, `updated_at` = NOW() WHERE `id` = :id AND `deleted_at` IS NULL");
-    return $stmt->execute([
-      ':title' => $data['title'],
-      ':title_highlight' => $data['title_highlight'] ?? null,
-      ':description' => $data['description'] ?? null,
-      ':image_path' => $data['image_path'],
-      ':image_alt' => $data['image_alt'] ?? '',
-      ':cta_label' => $data['cta_label'] ?? null,
-      ':cta_url' => $data['cta_url'] ?? null,
-      ':cta_variant' => $data['cta_variant'] ?? 'primary',
-      ':custom_html' => $data['custom_html'] ?? null,
-      ':use_custom_html' => $data['use_custom_html'] ?? 0,
-      ':sort_order' => $data['sort_order'] ?? 0,
-      ':is_active' => $data['is_active'] ?? 1,
-      ':id' => $id,
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->update([
+        'title' => $data['title'],
+        'title_highlight' => $data['title_highlight'] ?? null,
+        'description' => $data['description'] ?? null,
+        'image_path' => $data['image_path'],
+        'image_alt' => $data['image_alt'] ?? '',
+        'cta_label' => $data['cta_label'] ?? null,
+        'cta_url' => $data['cta_url'] ?? null,
+        'cta_variant' => $data['cta_variant'] ?? 'primary',
+        'custom_html' => $data['custom_html'] ?? null,
+        'use_custom_html' => $data['use_custom_html'] ?? 0,
+        'sort_order' => $data['sort_order'] ?? 0,
+        'is_active' => $data['is_active'] ?? 1,
+        'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+      ])
+      ->eq('id', $id)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
   public function deleteSlide(int $id): bool
   {
-    $stmt = $this->db->prepare("UPDATE `carousel_slides` SET `deleted_at` = NOW() WHERE `id` = :id AND `deleted_at` IS NULL");
-    return $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->update(['deleted_at' => (new \DateTime())->format('Y-m-d H:i:s')])
+      ->eq('id', $id)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
   public function getTotalCarouselsCount(): int
   {
-    $stmt = $this->db->query("SELECT COUNT(*) FROM `carousels` WHERE `deleted_at` IS NULL");
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousels')
+      ->select('COUNT(*)')
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return (int) $stmt->fetchColumn();
   }
   public function reorderSlides(int $moveId, string $direction): bool
   {
-    $stmt = $this->db->prepare("SELECT `id`, `sort_order` FROM `carousel_slides` WHERE `id` = :id AND `deleted_at` IS NULL");
-    $stmt->execute([':id' => $moveId]);
+    $targetQuery = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->select('id', 'sort_order')
+      ->eq('id', $moveId)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($targetQuery->toSql());
+    $stmt->execute($targetQuery->getBindings());
     $target = $stmt->fetch(PDO::FETCH_ASSOC);
+
     if (!$target)
       return false;
+
+    $neighbourQuery = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->select('id', 'sort_order')
+      ->is('deleted_at', null)
+      ->limit(1);
+
     if ($direction === 'up') {
-      $stmt = $this->db->prepare("SELECT `id`, `sort_order` FROM `carousel_slides` WHERE `sort_order` < :sort_order AND `deleted_at` IS NULL ORDER BY `sort_order` DESC LIMIT 1");
+      $neighbourQuery->lt('sort_order', $target['sort_order'])
+        ->order('sort_order', ['ascending' => false]);
     } else {
-      $stmt = $this->db->prepare("SELECT `id`, `sort_order` FROM `carousel_slides` WHERE `sort_order` > :sort_order AND `deleted_at` IS NULL ORDER BY `sort_order` ASC LIMIT 1");
+      $neighbourQuery->gt('sort_order', $target['sort_order'])
+        ->order('sort_order', ['ascending' => true]);
     }
-    $stmt->execute([':sort_order' => $target['sort_order']]);
+
+    $stmt = $this->db->prepare($neighbourQuery->toSql());
+    $stmt->execute($neighbourQuery->getBindings());
     $neighbour = $stmt->fetch(PDO::FETCH_ASSOC);
+
     if (!$neighbour)
       return false;
+
     $this->db->beginTransaction();
     try {
-      $swap = $this->db->prepare("UPDATE `carousel_slides` SET `sort_order` = :sort_order, `updated_at` = NOW() WHERE `id` = :id AND `deleted_at` IS NULL");
-      $swap->execute([':sort_order' => $neighbour['sort_order'], ':id' => $target['id']]);
-      $swap->execute([':sort_order' => $target['sort_order'], ':id' => $neighbour['id']]);
+      $now = (new \DateTime())->format('Y-m-d H:i:s');
+
+      $updateTarget = (new QueryBuilder(new MySQLCompiler()))
+        ->from('carousel_slides')
+        ->update(['sort_order' => $neighbour['sort_order'], 'updated_at' => $now])
+        ->eq('id', $target['id'])
+        ->is('deleted_at', null);
+
+      $stmt1 = $this->db->prepare($updateTarget->toSql());
+      $stmt1->execute($updateTarget->getBindings());
+
+      $updateNeighbour = (new QueryBuilder(new MySQLCompiler()))
+        ->from('carousel_slides')
+        ->update(['sort_order' => $target['sort_order'], 'updated_at' => $now])
+        ->eq('id', $neighbour['id'])
+        ->is('deleted_at', null);
+
+      $stmt2 = $this->db->prepare($updateNeighbour->toSql());
+      $stmt2->execute($updateNeighbour->getBindings());
+
       $this->db->commit();
       return true;
     } catch (\Exception $e) {

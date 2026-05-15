@@ -28,6 +28,7 @@ interface ICarouselService
   public function addSlide(int $carouselId, array $data): int;
   public function updateSlide(int $id, array $data): bool;
   public function deleteSlide(int $id): bool;
+  public function getSlideById(int $id): ?CarouselSlide;
   public function reorderSlides(int $moveId, string $direction): bool;
 }
 
@@ -136,9 +137,7 @@ class CarouselService implements ICarouselService
         $this->_carouselStore->createSlide(['carousel_id' => $carouselId] + $slide);
       }
 
-      $carousel = $this->_carouselStore->getById($carouselId);
-      $carousel->slides = $this->_carouselStore->getSlides($carouselId);
-      return $carousel;
+      return $this->getWithSlides($carouselId);
     });
   }
 
@@ -192,6 +191,11 @@ class CarouselService implements ICarouselService
   public function deleteSlide(int $id): bool
   {
     return $this->_carouselStore->deleteSlide($id);
+  }
+
+  public function getSlideById(int $id): ?CarouselSlide
+  {
+    return $this->_carouselStore->getSlideById($id);
   }
 
   public function reorderSlides(int $moveId, string $direction): bool

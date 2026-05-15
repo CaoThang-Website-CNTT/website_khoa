@@ -86,7 +86,7 @@ class CarouselController extends Controller
 
   public function edit(string $id)
   {
-    $carousel = $this->_carouselService->getById((int) $id);
+    $carousel = $this->_carouselService->getWithSlides((int) $id);
     if (!$carousel)
       $this->abort(404);
     $this->render('admin/carousels/edit', ['carousel' => $carousel], layout: 'dashboard_layout');
@@ -203,6 +203,9 @@ class CarouselController extends Controller
       return $this->redirect("admin/carousels/{$carouselId}/slides/{$slideId}");
     }
     $slide = $this->_carouselService->getSlideById((int) $slideId);
+    if (!$slide)
+      $this->abort(404);
+
     $isSuccess = $this->_carouselService->updateSlide((int) $slideId, [
       'title' => $data['title'],
       'title_highlight' => $data['title_highlight'] ?? null,

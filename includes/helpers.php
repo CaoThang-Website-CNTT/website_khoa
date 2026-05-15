@@ -10,10 +10,37 @@ if (!defined('APP_URL')) {
 
 /**
  * Hàm hỗ trợ tạo link tuyệt đối
- * @param string $path Đường dẫn mong muốn (ví dụ: 'assets/css/main.css')
+ * @param string $path Đường dẫn mong muốn (ví dụ: 'assets/css/main.css' hoặc 'https://google.com')
+ * @param bool $strict Nếu true (chặt chẽ), link ngoại sẽ bị ép về domain dự án. Nếu false (nới lỏng), giữ nguyên link ngoại.
  */
-function url(string $path = ''): string
+function url(string $path = '', bool $strict = false): string
 {
+  if ($path === '') {
+    return APP_URL;
+  }
+
+  // Kiểm tra nếu là URL tuyệt đối (bắt đầu bằng http:// hoặc https://)
+  if (preg_match('/^https?:\/\//i', $path)) {
+    $appHost = parse_url(APP_URL, PHP_URL_HOST);
+    $pathHost = parse_url($path, PHP_URL_HOST);
+
+    // Nếu khác domain dự án
+    if ($pathHost !== $appHost) {
+      if ($strict) {
+        // Chế độ strict: Gỡ bỏ domain lạ, giữ lại path/query/fragment và gắn vào APP_URL
+        $parsed = parse_url($path);
+        $relative = ($parsed['path'] ?? '') . 
+                    (isset($parsed['query']) ? '?' . $parsed['query'] : '') . 
+                    (isset($parsed['fragment']) ? '#' . $parsed['fragment'] : '');
+        return APP_URL . ltrim($relative, '/');
+      }
+      // Chế độ loose: Giữ nguyên link ngoại
+      return $path;
+    }
+    // Cùng domain thì trả về luôn
+    return $path;
+  }
+
   return APP_URL . ltrim($path, '/');
 }
 
