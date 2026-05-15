@@ -29,7 +29,7 @@ interface ICarouselService
   public function updateSlide(int $id, array $data): bool;
   public function deleteSlide(int $id): bool;
   public function getSlideById(int $id): ?CarouselSlide;
-  public function reorderSlides(int $moveId, string $direction): bool;
+  public function sortSlides(array $ids): bool;
 }
 
 class CarouselService implements ICarouselService
@@ -198,8 +198,8 @@ class CarouselService implements ICarouselService
     return $this->_carouselStore->getSlideById($id);
   }
 
-  public function reorderSlides(int $moveId, string $direction): bool
+  public function sortSlides(array $ids): bool
   {
-    return $this->_carouselStore->reorderSlides($moveId, $direction);
+    return $this->_carouselStore->sortSlides($ids);
   }
 }

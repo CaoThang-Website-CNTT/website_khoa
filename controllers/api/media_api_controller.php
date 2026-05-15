@@ -28,9 +28,6 @@ class MediaApiController extends Controller
         ? (int) $request->input('post_id')
         : null;
 
-      // UploadedFileHandler is the sole point of contact with $_FILES.
-      // It validates structure, PHP upload error code, extension whitelist,
-      // and MIME type (magic-byte sniffing) before returning a safe UploadedFile.
       $uploadedFile = $this->_fileHandler->fromGlobals('file', $altText);
 
       $media = $this->_mediaService->upload($uploadedFile, $postId);

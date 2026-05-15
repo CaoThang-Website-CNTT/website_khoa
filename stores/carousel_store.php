@@ -31,7 +31,7 @@ interface ICarouselStore
   public function updateSlide(int $id, array $data): bool;
   public function deleteSlide(int $id): bool;
   public function getTotalCarouselsCount(): int;
-  public function reorderSlides(int $moveId, string $direction): bool;
+  public function sortSlides(array $ids): bool;
 }
 class CarouselStore extends Store implements ICarouselStore
 {
@@ -270,64 +270,27 @@ class CarouselStore extends Store implements ICarouselStore
     $stmt->execute($query->getBindings());
     return (int) $stmt->fetchColumn();
   }
-  public function reorderSlides(int $moveId, string $direction): bool
+  public function sortSlides(array $ids): bool
   {
-    $targetQuery = (new QueryBuilder(new MySQLCompiler()))
-      ->from('carousel_slides')
-      ->select('id', 'sort_order')
-      ->eq('id', $moveId)
-      ->is('deleted_at', null);
-
-    $stmt = $this->db->prepare($targetQuery->toSql());
-    $stmt->execute($targetQuery->getBindings());
-    $target = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$target)
+    if (empty($ids)) {
       return false;
-
-    $neighbourQuery = (new QueryBuilder(new MySQLCompiler()))
-      ->from('carousel_slides')
-      ->select('id', 'sort_order')
-      ->is('deleted_at', null)
-      ->limit(1);
-
-    if ($direction === 'up') {
-      $neighbourQuery->lt('sort_order', $target['sort_order'])
-        ->order('sort_order', ['ascending' => false]);
-    } else {
-      $neighbourQuery->gt('sort_order', $target['sort_order'])
-        ->order('sort_order', ['ascending' => true]);
     }
-
-    $stmt = $this->db->prepare($neighbourQuery->toSql());
-    $stmt->execute($neighbourQuery->getBindings());
-    $neighbour = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$neighbour)
-      return false;
 
     $this->db->beginTransaction();
     try {
       $now = (new \DateTime())->format('Y-m-d H:i:s');
-
-      $updateTarget = (new QueryBuilder(new MySQLCompiler()))
-        ->from('carousel_slides')
-        ->update(['sort_order' => $neighbour['sort_order'], 'updated_at' => $now])
-        ->eq('id', $target['id'])
-        ->is('deleted_at', null);
-
-      $stmt1 = $this->db->prepare($updateTarget->toSql());
-      $stmt1->execute($updateTarget->getBindings());
-
-      $updateNeighbour = (new QueryBuilder(new MySQLCompiler()))
-        ->from('carousel_slides')
-        ->update(['sort_order' => $target['sort_order'], 'updated_at' => $now])
-        ->eq('id', $neighbour['id'])
-        ->is('deleted_at', null);
-
-      $stmt2 = $this->db->prepare($updateNeighbour->toSql());
-      $stmt2->execute($updateNeighbour->getBindings());
-
+      foreach ($ids as $order => $id) {
+        $query = (new QueryBuilder(new MySQLCompiler()))
+          ->from('carousel_slides')
+          ->update([
+            'sort_order' => $order,
+            'updated_at' => $now
+          ])
+          ->eq('id', (int)$id)
+          ->is('deleted_at', null);
+        $stmt = $this->db->prepare($query->toSql());
+        $stmt->execute($query->getBindings());
+      }
       $this->db->commit();
       return true;
     } catch (\Exception $e) {

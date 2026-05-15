@@ -1,5 +1,5 @@
 <?php
-use App\Controllers\Api\{MediaApiController, StudentApiController};
+use App\Controllers\Api\{MediaApiController, StudentApiController, CarouselApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
@@ -20,6 +20,11 @@ $router->prefix('api')->group(function ($router) {
       $router->post('/attach', [MediaApiController::class, 'attachToPost']);
       $router->delete('/{media_id}', [MediaApiController::class, 'delete']);
       $router->delete('/orphans', [MediaApiController::class, 'deleteOrphans']);
+    });
+
+    // Carousels
+    $router->prefix('carousels')->group(function (Router $router) {
+      $router->post('/{carousel_id}/slides/sort', [CarouselApiController::class, 'sortSlides']);
     });
   });
 });

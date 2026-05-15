@@ -32,35 +32,16 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
       <div class="card__content space-y-4">
         <?php include BASE_PATH . '/templates/components/flash_alert.php'; ?>
+        <div id="slides-container" class="space-y-4" data-id="<?= $carousel->id ?>">
+
 
         <?php if (!empty($carousel->slides)): ?>
           <?php foreach ($carousel->slides as $index => $slide): ?>
-            <?php
-            $canUp = $index > 0;
-            $canDown = $index < count($carousel->slides) - 1;
-            ?>
-            <div class="flex items-center gap-2">
-
+            <div class="slide-item flex items-center gap-2" data-dnd-draggable data-id="<?= $slide->id ?>">
               <div class="shrink-0 flex flex-col overflow-hidden rounded-xl border">
-                <form method="POST" action="<?= url('admin/carousels/' . $carousel->id . '/slides/reorder') ?>">
-                  <?= csrf_field() ?>
-                  <?php if ($canUp): ?>
-                    <input type="hidden" name="move_id" value="<?= $carousel->id ?>">
-                    <input type="hidden" name="direction" value="up">
-                  <?php endif; ?>
-                  <button type="<?= $canUp ? 'submit' : 'button' ?>" data-variant="outline" data-size="md"
-                    class="btn border-0 rounded-none" <?= !$canUp ? 'disabled' : '' ?> title="Lên">↑</button>
-                </form>
-
-                <form method="POST" action="<?= url('admin/carousels/' . $carousel->id . '/slides/reorder') ?>">
-                  <?= csrf_field() ?>
-                  <?php if ($canDown): ?>
-                    <input type="hidden" name="move_id" value="<?= $carousel->id ?>">
-                    <input type="hidden" name="direction" value="down">
-                  <?php endif; ?>
-                  <button type="<?= $canDown ? 'submit' : 'button' ?>" data-variant="outline" data-size="md"
-                    class="btn border-0 rounded-none" <?= !$canDown ? 'disabled' : '' ?> title="Xuống">↓</button>
-                </form>
+                <div class="card__header drag-handle cursor-grab flex items-center justify-center p-3 hover:bg-gray-50 transition-colors">
+                  <i class="fa-solid fa-grip-vertical text-gray-500"></i>
+                </div>
               </div>
 
               <div class="flex-1 flex items-center gap-3 border rounded-md px-3 py-3 h-full">
@@ -90,14 +71,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
                   </a>
                 </div>
               </div>
-
             </div>
-          <?php endforeach; ?>
+        <?php endforeach; ?>
         <?php else: ?>
           <p class="text-gray-500">
             Chưa có slide nào. Thêm slide đầu tiên bên dưới.
           </p>
         <?php endif; ?>
+      </div> <!-- close slides-container -->
       </div>
 
       <div class="card__footer">
@@ -209,5 +190,33 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const deleteForm = document.querySelector('#carousel-delete-form');
     const deleteConfirmBtn = document.querySelector('#delete-confirm-btn');
     if (deleteConfirmBtn) deleteConfirmBtn.addEventListener('click', () => deleteForm.submit());
+
+    // DnD initialization
+    const slidesContainer = document.querySelector('#slides-container');
+
+    if (slidesContainer) {
+      new DnD(slidesContainer, {
+        animation: 150,
+        group: "slides",
+        handle: '.drag-handle',
+      });
+
+      DnDMonitor.on('dragend', async e => {
+        const ordered = Array.from(slidesContainer.querySelectorAll('.slide-item')).map(el => el.dataset.id); // array of slide IDs
+        const formData = new FormData();
+        ordered.forEach(id => formData.append('ids[]', id));
+        const response = await fetch(`<?= url('/api/v1/carousels/' . $carousel->id . '/slides/sort') ?>`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast.success(data.message);
+        } else {
+          toast.error(data.message);
+        }
+      });
+    }
   });
+
 </script>

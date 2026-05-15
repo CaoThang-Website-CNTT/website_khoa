@@ -101,3 +101,4 @@ require_once BASE_PATH . '/controllers/web/post_controller.php';
 // Api
 require_once BASE_PATH . '/controllers/api/student_api_controller.php';
 require_once BASE_PATH . '/controllers/api/media_api_controller.php';
+require_once BASE_PATH . '/controllers/api/carousel_api_controller.php';
