@@ -56,6 +56,12 @@ class MenuService implements IMenuService
   {
     $menus = $this->_menuStore->getPaginated($page, $limit);
     $total = $this->_menuStore->getTotalCount();
+
+    foreach ($menus as $menu) {
+      $menuItems = $this->_menuStore->getItemsByMenuId($menu->id);
+      $menu->items = $menuItems;
+    }
+
     return new Pageable($menus, $total, $limit, $page);
   }
 

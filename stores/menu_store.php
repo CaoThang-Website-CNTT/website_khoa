@@ -10,6 +10,9 @@ use App\Core\Store;
 use App\Models\{Menu, MenuItem};
 use PDO;
 
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
+
 interface IMenuStore
 {
   // ── Menus ──────────────────────────────────────────────────────────────────
@@ -43,13 +46,16 @@ class MenuStore extends Store implements IMenuStore
   /** @return Menu[] */
   public function getAll(): array
   {
-    $stmt = $this->db->prepare("
-      SELECT *
-      FROM `menus`
-      WHERE deleted_at IS NULL
-      ORDER BY sort_order ASC, id ASC
-    ");
-    $stmt->execute();
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->select('*')
+      ->is('deleted_at', null)
+      ->order('sort_order', ['ascending' => true])
+      ->order('id', ['ascending' => true]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return array_map(fn($row) => Menu::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
@@ -58,114 +64,140 @@ class MenuStore extends Store implements IMenuStore
   public function getPaginated(int $pageTo, int $limit = 15): array
   {
     $offset = (max(1, $pageTo) - 1) * $limit;
+    
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->select('*')
+      ->is('deleted_at', null)
+      ->order('sort_order', ['ascending' => true])
+      ->order('id', ['ascending' => true])
+      ->limit($limit)
+      ->range($offset, $offset + $limit - 1);
 
-    $stmt = $this->db->prepare("
-      SELECT *
-      FROM `menus`
-      WHERE deleted_at IS NULL
-      ORDER BY sort_order ASC, id ASC
-      LIMIT :limit OFFSET :offset
-    ");
-    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return array_map(fn($row) => Menu::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function getById(int $id): ?Menu
   {
-    $stmt = $this->db->prepare("
-      SELECT *
-      FROM `menus`
-      WHERE id = :id AND deleted_at IS NULL
-      LIMIT 1
-    ");
-    $stmt->execute([':id' => $id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->select('*')
+      ->eq('id', $id)
+      ->is('deleted_at', null)
+      ->limit(1);
 
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Menu::fromArray($row) : null;
   }
 
   public function getByKey(string $key): ?Menu
   {
-    $stmt = $this->db->prepare("
-      SELECT *
-      FROM `menus`
-      WHERE `key` = :key AND deleted_at IS NULL
-      LIMIT 1
-    ");
-    $stmt->execute([':key' => $key]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->select('*')
+      ->eq('key', $key)
+      ->is('deleted_at', null)
+      ->limit(1);
 
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Menu::fromArray($row) : null;
   }
 
   public function create(Menu $menu): int
   {
-    $this->db->prepare("
-      INSERT INTO `menus` (`key`, `label`, `description`, `type`, `sort_order`)
-      VALUES (:key, :label, :description, :type, :sort_order)
-    ")->execute([
-          ':key' => $menu->key,
-          ':label' => $menu->label,
-          ':description' => $menu->description,
-          ':type' => $menu->type,
-          ':sort_order' => $menu->sort_order,
-        ]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('menus')->insert([
+      'key' => $menu->key,
+      'label' => $menu->label,
+      'description' => $menu->description,
+      'type' => $menu->type,
+      'sort_order' => $menu->sort_order,
+      'created_at' => date('Y-m-d H:i:s'),
+      'updated_at' => date('Y-m-d H:i:s'),
+    ]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return (int) $this->db->lastInsertId();
   }
 
   public function update(Menu $menu): bool
   {
-    return $this->db->prepare("
-      UPDATE `menus` SET
-        `key`       = :key,
-        `label`     = :label,
-        `description` = :description,
-        `type`      = :type,
-        `sort_order` = :sort_order,
-        `updated_at` = NOW()
-      WHERE id = :id AND deleted_at IS NULL
-    ")->execute([
-          ':key' => $menu->key,
-          ':label' => $menu->label,
-          ':description' => $menu->description,
-          ':type' => $menu->type,
-          ':sort_order' => $menu->sort_order,
-          ':id' => $menu->id,
-        ]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->update([
+        'key' => $menu->key,
+        'label' => $menu->label,
+        'description' => $menu->description,
+        'type' => $menu->type,
+        'sort_order' => $menu->sort_order,
+        'updated_at' => date('Y-m-d H:i:s'),
+      ])
+      ->eq('id', $menu->id)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function softDelete(int $id): bool
   {
-    return $this->db->prepare("
-      UPDATE `menus` SET deleted_at = NOW()
-      WHERE id = :id
-    ")->execute([':id' => $id]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->update(['deleted_at' => date('Y-m-d H:i:s')])
+      ->eq('id', $id);
+
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function isKeyUnique(string $key, ?int $excludeId = null): bool
   {
-    $sql = "SELECT COUNT(*) FROM `menus` WHERE `key` = :key AND deleted_at IS NULL";
-    $params = [':key' => $key];
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->select('COUNT(id) as total')
+      ->eq('key', $key)
+      ->is('deleted_at', null);
 
     if ($excludeId !== null) {
-      $sql .= " AND id != :exclude_id";
-      $params[':exclude_id'] = $excludeId;
+      $query->neq('id', $excludeId);
     }
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($params);
-
-    return (int) $stmt->fetchColumn() === 0;
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return (int) ($row['total'] ?? 0) === 0;
   }
 
   public function getTotalCount(): int
   {
-    $stmt = $this->db->query("SELECT COUNT(id) FROM `menus` WHERE `deleted_at` IS NULL");
-    return (int) $stmt->fetchColumn();
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menus')
+      ->select('*')
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    return $stmt->rowCount();
   }
 
   // ── Menu Items ─────────────────────────────────────────────────────────────
@@ -173,72 +205,86 @@ class MenuStore extends Store implements IMenuStore
   /** @return MenuItem[] */
   public function getItemsByMenuId(int $menuId): array
   {
-    $stmt = $this->db->prepare("
-      SELECT *
-      FROM `menu_items`
-      WHERE menu_id = :menu_id AND deleted_at IS NULL
-      ORDER BY sort_order ASC, id ASC
-    ");
-    $stmt->execute([':menu_id' => $menuId]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menu_items')
+      ->select('*')
+      ->eq('menu_id', $menuId)
+      ->is('deleted_at', null)
+      ->order('sort_order', ['ascending' => true])
+      ->order('id', ['ascending' => true]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return array_map(fn($row) => MenuItem::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function getItemById(int $id): ?MenuItem
   {
-    $stmt = $this->db->prepare("
-      SELECT *
-      FROM `menu_items`
-      WHERE id = :id AND deleted_at IS NULL
-      LIMIT 1
-    ");
-    $stmt->execute([':id' => $id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menu_items')
+      ->select('*')
+      ->eq('id', $id)
+      ->is('deleted_at', null)
+      ->limit(1);
 
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? MenuItem::fromArray($row) : null;
   }
 
   public function createItem(MenuItem $item): int
   {
-    $this->db->prepare("
-      INSERT INTO `menu_items` (`menu_id`, `parent_id`, `label`, `url`, `sort_order`)
-      VALUES (:menu_id, :parent_id, :label, :url, :sort_order)
-    ")->execute([
-          ':menu_id' => $item->menu_id,
-          ':parent_id' => $item->parent_id,
-          ':label' => $item->label,
-          ':url' => $item->url,
-          ':sort_order' => $item->sort_order,
-        ]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('menu_items')->insert([
+      'menu_id' => $item->menu_id,
+      'parent_id' => $item->parent_id,
+      'label' => $item->label,
+      'url' => $item->url,
+      'sort_order' => $item->sort_order,
+      'created_at' => date('Y-m-d H:i:s'),
+      'updated_at' => date('Y-m-d H:i:s'),
+    ]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return (int) $this->db->lastInsertId();
   }
 
   public function updateItem(MenuItem $item): bool
   {
-    return $this->db->prepare("
-      UPDATE `menu_items` SET
-        `parent_id`  = :parent_id,
-        `label`      = :label,
-        `url`        = :url,
-        `sort_order` = :sort_order,
-        `updated_at` = NOW()
-      WHERE id = :id AND deleted_at IS NULL
-    ")->execute([
-          ':parent_id' => $item->parent_id,
-          ':label' => $item->label,
-          ':url' => $item->url,
-          ':sort_order' => $item->sort_order,
-          ':id' => $item->id,
-        ]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menu_items')
+      ->update([
+        'parent_id' => $item->parent_id,
+        'label' => $item->label,
+        'url' => $item->url,
+        'sort_order' => $item->sort_order,
+        'updated_at' => date('Y-m-d H:i:s'),
+      ])
+      ->eq('id', $item->id)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function softDeleteItem(int $id): bool
   {
-    return $this->db->prepare("
-      UPDATE `menu_items` SET deleted_at = NOW()
-      WHERE id = :id
-    ")->execute([':id' => $id]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder
+      ->from('menu_items')
+      ->update(['deleted_at' => date('Y-m-d H:i:s')])
+      ->eq('id', $id);
+
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   /**

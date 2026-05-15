@@ -134,7 +134,7 @@ function renderMenuItems(array $items, object $menu, int $depth = 0): void
             </div>
             <div class="field">
               <label>Loại</label>
-              <input class="field__input" type="text" value="<?= $menu->isConst() ? 'Hệ thống' : 'Tuỳ chỉnh' ?>"
+              <input class="field__input" type="text" value="<?= $menu->isEditable() ? 'Hệ thống' : 'Tuỳ chỉnh' ?>"
                 disabled>
             </div>
             <div class="field">

@@ -41,9 +41,42 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <form class="detail-layout" id="menu-add-form" action="<?= url('admin/menus') ?>" method="POST">
   <?= csrf_field() ?>
-  <div class="detail-layout__main">
-
-    <!-- ── Card 1: Thông tin nhóm menu ── -->
+  <div class="detail-layout__main flex-1">
+    <!-- ── Card 1: Menu Items ── -->
+    <div class="card shadow">
+      <fieldset class="field__set">
+        <div class="card__header">
+          <div class="flex justify-between items-center">
+            <div>
+              <legend class="field__legend">Các mục menu</legend>
+              <p class="field__description">Thêm các mục cho nhóm menu này. Có thể thiết lập quan hệ cha–con.</p>
+            </div>
+            <button type="button" id="add-item-btn" data-variant="outline" data-size="lg" class="btn">
+              <i class="fa-solid fa-plus"></i>
+              Thêm mục
+            </button>
+          </div>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div id="items-container" class="space-y-4">
+            <div id="items-empty-hint" class="empty">
+              <div class="empty__header">
+                <div class="empty__title">
+                  Chưa có item nào
+                </div>
+                <div class="empty__description">
+                  Nhấn "Thêm item" để tạo item mới.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+  <div class="detail-layout__sidebar">
+    <!-- ── Card 2: Thông tin nhóm menu ── -->
     <div class="card shadow">
       <fieldset class="field__set">
         <div class="card__header">
@@ -84,40 +117,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
         </div>
       </fieldset>
     </div>
-
-    <!-- ── Card 2: Menu Items ── -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <div class="flex justify-between items-center">
-            <div>
-              <legend class="field__legend">Các mục menu</legend>
-              <p class="field__description">Thêm các mục cho nhóm menu này. Có thể thiết lập quan hệ cha–con.</p>
-            </div>
-            <button type="button" id="add-item-btn" data-variant="outline" data-size="lg" class="btn">
-              <i class="fa-solid fa-plus"></i>
-              Thêm mục
-            </button>
-          </div>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div id="items-container" class="space-y-4">
-            <div id="items-empty-hint" class="empty">
-              <div class="empty__header">
-                <div class="empty__title">
-                  Chưa có item nào
-                </div>
-                <div class="empty__description">
-                  Nhấn "Thêm item" để tạo item mới.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-    </div>
-
   </div>
 </form>
 
@@ -192,12 +191,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const form = document.querySelector('#menu-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
     const addItemBtn = document.querySelector('#add-item-btn');
-    const container = document.querySelector('#items-container');
+    const itemsContainer = document.querySelector('#items-container');
     const emptyHint = document.querySelector('#items-empty-hint');
     const template = document.querySelector('#item-template');
-
-    // 1. Initialize your custom DragDropManager
-    const manager = new DragDropManager();
 
     // ── Key auto-format ───────────────────────────────────────────────────
     document.querySelector('#key').addEventListener('input', function () {
@@ -211,7 +207,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
     // Helper: Read the live DOM to get current visual order
     function getLiveItems() {
-      return Array.from(container.querySelectorAll('.item-row'));
+      return Array.from(itemsContainer.querySelectorAll('.item-row'));
     }
 
     // Rebuild all parent-ref dropdowns based on current visual order
@@ -261,11 +257,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
       manager.reindexGroup('menu-items');
     }
 
-    // 2. Listen to your custom dragend event to trigger re-indexing
-    manager.monitor.addEventListener('dragend', () => {
-      reindex();
-    });
-
     // ── Add item ──────────────────────────────────────────────────────────
     addItemBtn.addEventListener('click', () => {
       const index = itemCount++;
@@ -293,16 +284,16 @@ $old_input = request()->session()->getOldInputs() ?? [];
         reindex();
       });
 
-      container.appendChild(el);
+      itemsContainer.appendChild(el);
 
-      // 4. Initialize your custom Sortable for the new element
-      new Sortable({
-        id: id,
-        element: el,
-        handle: el.querySelector('.card__header'),
+      new DnD(itemsContainer, {
+        handle: '.card__header',
         group: 'menu-items',
-        index: getLiveItems().length - 1
-      }, manager);
+      });
+
+      DndMonitor.on('dragend', () => {
+        reindex();
+      });
 
       reindex();
     });
