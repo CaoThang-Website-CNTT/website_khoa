@@ -286,7 +286,7 @@ class Toast {
 
     // Kiểm tra phần tữ cũ nhất vượt quá max của config
     // -> Loại bỏ
-    if (this._stack.length > this._config.max_visible) {
+    if (this._stack.length > this._config.maxVisible) {
       const oldest = this._stack[this._stack.length - 1];
       this.remove(oldest.id);
     }
@@ -373,7 +373,7 @@ class Toast {
     // Set chiều cao của stack (tổng các toast)
     this._container.style.setProperty(
       '--toast-stack-height',
-      this._stackHeight ? `${this._stackHeight}px` : '0px'
+      stackHeight ? `${stackHeight}px` : '0px'
     );
   }
 

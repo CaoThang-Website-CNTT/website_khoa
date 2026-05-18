@@ -70,11 +70,31 @@ Hệ thống soạn thảo dạng khối (Gutenberg/Notion style).
 - Hỗ trợ Undo/Redo (Command Pattern).
 - Lưu trữ dưới dạng JSON Schema (Rich Text & Meta).
 
+### 3.3 Drag-and-Drop (DnD) Module
+Hệ thống quản lý kéo thả (Drag and Drop) dùng để sắp xếp các phần tử trên giao diện một cách trực quan (Ví dụ: sắp xếp carousel slide, menu items).
+- Nằm tại `public/js/dnd.js`.
+- Hỗ trợ sắp xếp phần tử và gửi request API cập nhật thứ tự (batch sorting) dưới nền (asynchronous).
+
+### 3.4 File & Image Processing
+Các module xử lý tệp tin và hình ảnh được tải lên.
+- **UploadedFileHandler**: Xử lý upload file an toàn (`includes/files/uploaded_file_handler.php`).
+- **ImageProcessor**: Xử lý, tối ưu hóa, thay đổi kích thước (resize/crop) hình ảnh (`includes/core/image_processor.php`).
+- **XLSX Reader**: Đọc file dữ liệu Excel, hỗ trợ import (`includes/files/xlsx_reader.php`).
+
+### 3.5 Router System
+Hệ thống định tuyến cho cả Web và API.
+- Nằm tại `includes/core/router.php`.
+- Hỗ trợ route grouping, middlewares, và RESTful patterns.
+- Định nghĩa các route tại `routes.php` (Web) và `api_routes.php` (API).
+
 ### Nguồn tham chiếu (References):
 - Logic Table Manager: `public/js/table/table_manager.js`
 - Logic Table Renderer: `public/js/table/table_renderer.js`
 - Block Editor Core: `public/js/editor/editor.js`
 - Block Editor UI: `public/js/editor/editor_ui.js`
+- Drag and Drop Logic: `public/js/dnd.js`
+- Router Logic: `includes/core/router.php`
+- Image Processor Logic: `includes/core/image_processor.php`
 
 ---
 

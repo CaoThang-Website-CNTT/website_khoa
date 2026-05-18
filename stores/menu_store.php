@@ -37,6 +37,8 @@ interface IMenuStore
   public function softDeleteItem(int $id): bool;
   /** Cập nhật sort_order hàng loạt: [itemId => sortOrder, ...] */
   public function reorderItems(array $orderMap): bool;
+  /** Sắp xếp cấu trúc phân cấp cây menu items hàng loạt */
+  public function sortItems(array $items): bool;
 }
 
 class MenuStore extends Store implements IMenuStore
@@ -310,5 +312,43 @@ class MenuStore extends Store implements IMenuStore
     }
 
     return true;
+  }
+
+  public function sortItems(array $items): bool
+  {
+    if (empty($items)) {
+      return true;
+    }
+
+    $this->db->beginTransaction();
+    try {
+      foreach ($items as $item) {
+        $parentId = (isset($item['parent_id']) && $item['parent_id'] !== '' && $item['parent_id'] !== 'null') 
+          ? (int) $item['parent_id'] 
+          : null;
+        $sortOrder = isset($item['sort_order']) ? (int) $item['sort_order'] : 0;
+        $id = (int) $item['id'];
+
+        $builder = new QueryBuilder(new MySQLCompiler());
+        $query = $builder
+          ->from('menu_items')
+          ->update([
+            'parent_id' => $parentId,
+            'sort_order' => $sortOrder,
+            'updated_at' => date('Y-m-d H:i:s')
+          ])
+          ->eq('id', $id)
+          ->is('deleted_at', null);
+
+        $stmt = $this->db->prepare($query->toSql());
+        $stmt->execute($query->getBindings());
+      }
+
+      $this->db->commit();
+      return true;
+    } catch (\Exception $e) {
+      $this->db->rollBack();
+      return false;
+    }
   }
 }

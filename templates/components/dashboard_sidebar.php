@@ -53,32 +53,6 @@
                 </div>
               </div>
             </li>
-
-            <!-- ── Nhân sự ────────────────────────────────────────────── -->
-            <li class="sidebar__menu-item">
-              <div class="collapsible">
-                <div class="sidebar__menu-btn">
-                  <button class="collapsible__trigger">
-                    <i class="fa-solid fa-users"></i>
-                    Nhân Sự
-                    <i class="fa-solid fa-angle-down"></i>
-                  </button>
-                </div>
-                <div class="collapsible__content">
-                  <ul class="sidebar__menu-sub">
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/students') ?>" class="sidebar__menu-sub-item-btn">Sinh Viên</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/classrooms') ?>" class="sidebar__menu-sub-item-btn">Lớp Học</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/teachers') ?>" class="sidebar__menu-sub-item-btn">Giảng Viên</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
           </ul>
         </div>
 

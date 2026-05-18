@@ -34,6 +34,19 @@ body {
   background: var(--dash-background);
 }
 
+::-webkit-scrollbar {
+  width: 0.25rem;
+  height: 0.25rem;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-md);
+}
+
 .img-bg {
   background-position: center center;
   background-size: cover;
@@ -309,6 +322,38 @@ body {
 .detail-layout--reverse .detail-layout__sidebar {
   order: 1;
 }
+.detail-modal {
+  max-height: 60vh;
+  overflow-y: scroll;
+}
+
+/* DnD effect */
+.dnd-ghost {
+  opacity: 0.4 !important;
+  border: 2px dashed var(--primary) !important;
+  border-radius: var(--radius-md);
+  background-color: color-mix(in oklab, var(--primary) 5%, transparent) !important;
+}
+
+#dnd-ghost .dnd-ghost {
+  opacity: 0.95 !important;
+  border: 1px solid var(--border) !important;
+  background-color: var(--background) !important;
+  box-shadow: var(--shadow-xl) !important;
+  transform: scale(1.02) !important;
+}
+
+.dnd-chosen {
+  box-shadow: var(--shadow-lg) !important;
+  transform: scale(1.02);
+  transition: transform 150ms ease;
+}
+.drag-handle {
+  transition: color 150ms ease;
+}
+.drag-handle:hover {
+  color: var(--primary);
+}
 
 .metadata-card dt {
   font-size: var(--text-sm);
@@ -389,4 +434,38 @@ body {
 .carousel-card .carousel__indicator[data-state="active"] {
   width: 1rem;
   border-radius: var(--radius-lg);
+}
+
+.menu-item-children {
+  position: relative;
+}
+
+.menu-item-children > .menu-item:first-child {
+  margin-top: 0.5rem;
+}
+
+.menu-item {
+  position: relative;
+}
+
+.menu-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -1rem;
+  width: 2px;
+  height: calc(100% + 0.5rem); /* 0.5rem = mt-2 is the gap between menu items */
+  border-left: 2px dashed var(--border);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.menu-item:last-child::before {
+  top: 0;
+  height: 100%;
+}
+
+#menu-items-root > .menu-item::before,
+#dnd-ghost .menu-item::before {
+  display: none !important;
 }

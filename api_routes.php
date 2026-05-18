@@ -1,5 +1,5 @@
 <?php
-use App\Controllers\Api\{MediaApiController, StudentApiController, CarouselApiController};
+use App\Controllers\Api\{MediaApiController, StudentApiController, CarouselApiController, MenuApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
@@ -25,6 +25,11 @@ $router->prefix('api')->group(function ($router) {
     // Carousels
     $router->prefix('carousels')->group(function (Router $router) {
       $router->post('/{carousel_id}/slides/sort', [CarouselApiController::class, 'sortSlides']);
+    });
+
+    // Menus
+    $router->prefix('menus')->group(function (Router $router) {
+      $router->post('/{menu_id}/items/sort', [MenuApiController::class, 'sortItems']);
     });
   });
 });

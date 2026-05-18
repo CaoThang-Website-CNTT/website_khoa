@@ -517,7 +517,27 @@ class DnD {
   }
 
   #doSort(dragEl, overItem, pos, nativeEvent) {
-    if (!overItem || overItem === dragEl) return;
+    // Xử lý khi di chuyển vào một container trống rỗng
+    if (!overItem) {
+      if (this.#el.children.length === 0) {
+        const moveResult = this.#opts.onMove?.({
+          to: this.#el, from: STATE.fromEl,
+          dragged: dragEl, related: null,
+          originalEvent: nativeEvent,
+        });
+        if (moveResult === false) return;
+
+        const playAnim = flipSnapshot(this.#el, dragEl, this.#opts.animation);
+        this.#el.appendChild(dragEl);
+        playAnim();
+      }
+      return;
+    }
+
+    if (overItem === dragEl) return;
+
+    // Không cho phép chèn phần tử cha vào bên trong chính con cháu của nó
+    if (dragEl.contains(overItem)) return;
 
     // onMove callback — return false để cancel
     const moveResult = this.#opts.onMove?.({
@@ -621,6 +641,9 @@ class DnD {
    *   - Khác container: cùng group name hoặc put cho phép
    */
   #canReceive() {
+    // Ngăn chặn chèn phần tử đang kéo vào bên trong các container con/cháu của chính nó!
+    if (STATE.dragEl && STATE.dragEl.contains(this.#el)) return false;
+
     const srcInst = _instances.get(STATE.fromEl);
     const myGroup = this.#opts.group;
     const srcGroup = srcInst?.options.group;
@@ -663,6 +686,21 @@ class DnD {
     // Walk up DOM tìm container có DnD instance
     let node = el;
     while (node) {
+      // Hỗ trợ kéo thả làm con đệ quy (nested tree drop-zone trống)
+      if (node.classList.contains('menu-item')) {
+        const subContainer = node.querySelector('.menu-item-children');
+        if (subContainer) {
+          const subInst = _instances.get(subContainer);
+          if (subInst && !subInst.options.disabled) {
+            const rect = node.getBoundingClientRect();
+            // Nếu chuột nằm lệch sang bên phải (> 22% chiều rộng của item cha)
+            if (pos.x > rect.left + rect.width * 0.22) {
+              return subInst; // Chuyển hướng mục tiêu sang container con đệ quy!
+            }
+          }
+        }
+      }
+
       const inst = _instances.get(node);
       if (inst && !inst.options.disabled) return inst;
       node = node.parentElement;

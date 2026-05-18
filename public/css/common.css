@@ -238,6 +238,10 @@
     color: var(--primary);
   }
 
+  .btn[data-variant="primary"]:not(:disabled):hover {
+    background: color-mix(in oklab, var(--primary) 80%, transparent);
+  }
+
   .btn[data-variant="outline"]:not(:disabled):hover,
   .btn[data-variant="outline-alt"]:not(:disabled):hover {
     background: var(--muted);
@@ -582,6 +586,14 @@
     bottom: 0;
     left: 0;
     width: 100%;
+  }
+
+  #toast-portal[data-position*="bottom"] .toast {
+    transform-origin: bottom center;
+  }
+
+  #toast-portal[data-position*="top"] .toast {
+    transform-origin: top center;
   }
 
   .toast[data-mounted="false"] {

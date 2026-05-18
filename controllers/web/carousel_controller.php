@@ -160,7 +160,7 @@ class CarouselController extends Controller
     if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect("admin/carousels/{$carouselId}/slides/create");
+      return $this->redirect("admin/carousels/{$carouselId}");
     }
     $newSlideId = $this->_carouselService->addSlide((int) $carouselId, [
       'title' => $data['title'],
@@ -181,7 +181,7 @@ class CarouselController extends Controller
     } else {
       $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
-    return $this->redirect("admin/carousels/{$carouselId}/slides");
+    return $this->redirect("admin/carousels/{$carouselId}");
   }
 
   public function editSlide(string $carouselId, string $slideId)
@@ -200,7 +200,7 @@ class CarouselController extends Controller
     if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect("admin/carousels/{$carouselId}/slides/{$slideId}");
+      return $this->redirect("admin/carousels/{$carouselId}");
     }
     $slide = $this->_carouselService->getSlideById((int) $slideId);
     if (!$slide)
@@ -225,7 +225,7 @@ class CarouselController extends Controller
     } else {
       $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
-    return $this->redirect("admin/carousels/{$carouselId}/slides/{$slideId}");
+    return $this->redirect("admin/carousels/{$carouselId}");
   }
 
   public function destroySlide(string $carouselId, string $slideId, Request $request)

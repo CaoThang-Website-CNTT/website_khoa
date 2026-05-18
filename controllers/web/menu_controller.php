@@ -40,7 +40,6 @@ class MenuController extends Controller
   {
     $data = $request->all();
 
-    // ── 1. Validate menu fields ───────────────────────────────────────────
     $validator = new RequestValidator();
     $rules = [
       'key' => ['required', 'max:60'],
@@ -55,7 +54,6 @@ class MenuController extends Controller
       return $this->redirect('admin/menus/create');
     }
 
-    // ── 2. Key uniqueness ─────────────────────────────────────────────────
     if (!$this->_menuService->isKeyUnique($data['key'])) {
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
@@ -63,7 +61,6 @@ class MenuController extends Controller
       return $this->redirect('admin/menus/create');
     }
 
-    // ── 3. Validate each inline item (label + url required) ───────────────
     $rawItems = is_array($data['items'] ?? null) ? $data['items'] : [];
     foreach ($rawItems as $i => $item) {
       if (empty($item['label'])) {
@@ -80,7 +77,6 @@ class MenuController extends Controller
       return $this->redirect('admin/menus/create');
     }
 
-    // ── 4. Delegate to service ────────────────────────────────────────────
     try {
       $newMenu = $this->_menuService->create([
         'key' => $data['key'],
@@ -225,7 +221,7 @@ class MenuController extends Controller
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect('admin/menus/create');
+      return $this->redirect('admin/menus/' . $menuId);
     }
 
     try {
@@ -234,7 +230,7 @@ class MenuController extends Controller
       $validator->addError('key', 'Key này đã tồn tại, vui lòng chọn key khác.');
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect('admin/menus/create');
+      return $this->redirect('admin/menus/' . $menuId);
     }
 
     if ($newId) {
@@ -243,7 +239,7 @@ class MenuController extends Controller
       $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/menus/create');
+    return $this->redirect('admin/menus/' . $menuId);
   }
 
   public function editItem($itemId)
@@ -280,7 +276,7 @@ class MenuController extends Controller
     if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect('admin/menu-items/' . $itemId);
+      return $this->redirect('admin/menus/' . $item->menu_id);
     }
 
     $isSuccess = $this->_menuService->updateItem((int) $itemId, [
@@ -296,7 +292,7 @@ class MenuController extends Controller
       $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    return $this->redirect('admin/menu-items/' . $itemId);
+    return $this->redirect('admin/menus/' . $item->menu_id);
   }
 
   public function destroyItem($itemId, Request $request)

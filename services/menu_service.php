@@ -33,6 +33,8 @@ interface IMenuService
   public function removeItem(int $id): bool;
   /** $orderMap = [itemId => sortOrder, ...] */
   public function reorderItems(array $orderMap): bool;
+  /** Sắp xếp cấu trúc phân cấp cây menu items */
+  public function sortItems(array $items): bool;
 }
 
 class MenuService implements IMenuService
@@ -254,6 +256,11 @@ class MenuService implements IMenuService
   public function reorderItems(array $orderMap): bool
   {
     return $this->_menuStore->reorderItems($orderMap);
+  }
+
+  public function sortItems(array $items): bool
+  {
+    return $this->_menuStore->sortItems($items);
   }
   /**
    * Chuyển đổi danh sách MenuItem[] phẳng thành cây lồng nhau.
