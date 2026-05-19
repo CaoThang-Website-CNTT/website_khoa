@@ -4,15 +4,18 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\InternshipBatchService;
+use App\Services\ReferralLetterService;
 use App\Core\Request;
 
 class InternshipBatchController extends Controller
 {
   private InternshipBatchService $_internshipBatchService;
+  private ReferralLetterService $_referralLetterService;
 
-  public function __construct(InternshipBatchService $internshipBatchService)
+  public function __construct(InternshipBatchService $internshipBatchService, ReferralLetterService $referralLetterService)
   {
     $this->_internshipBatchService = $internshipBatchService;
+    $this->_referralLetterService = $referralLetterService;
   }
 
   public function index(Request $request)
@@ -40,6 +43,22 @@ class InternshipBatchController extends Controller
 
     $this->render("admin/internship_batches/edit", [
       'batch' => $batch
+    ], layout: "dashboard_layout");
+  }
+
+  public function referralLetters($id, Request $request)
+  {
+    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    if (!$batch) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
+      return $this->redirect('admin/internship_batches');
+    }
+
+    $letters = $this->_referralLetterService->getAllWithDetailsByBatchId((int)$id);
+
+    $this->render("admin/internship_batches/referral_letters", [
+      'batch' => $batch,
+      'letters' => $letters
     ], layout: "dashboard_layout");
   }
 

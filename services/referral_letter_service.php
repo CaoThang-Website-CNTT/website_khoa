@@ -16,6 +16,9 @@ interface IReferralLetterService
   public function getByIdWithCompany(int $id): ?array;
   public function cancel(int $id, string $reason = ''): bool;
   public function updateCompany(int $id, int $companyId): bool;
+  public function getAllWithDetailsByBatchId(int $batchId): array;
+  public function bulkApprove(array $ids, int $processedBy): int;
+  public function bulkCancel(array $ids, string $reason, int $processedBy): int;
 }
 
 class ReferralLetterService implements IReferralLetterService
@@ -76,5 +79,62 @@ class ReferralLetterService implements IReferralLetterService
     }
 
     return $this->_store->updateCompanyId($id, $companyId);
+  }
+
+  public function getAllWithDetailsByBatchId(int $batchId): array
+  {
+    return $this->_store->getAllWithDetailsByBatchId($batchId);
+  }
+
+  public function bulkApprove(array $ids, int $processedBy): int
+  {
+    if (empty($ids)) return 0;
+    
+    $letters = $this->_store->getByIds($ids);
+    $processedCount = 0;
+    
+    foreach ($letters as $letter) {
+      if ($letter->status !== 'pending') {
+        throw new Exception("Giấy giới thiệu #{$letter->id} không ở trạng thái chờ xử lý, không thể duyệt.");
+      }
+    }
+    
+    foreach ($letters as $letter) {
+      $success = $this->_store->updateStatus($letter->id, 'printed', [
+        'printed_at' => date('Y-m-d H:i:s'),
+        'processed_by' => $processedBy
+      ]);
+      if ($success) {
+        $processedCount++;
+      }
+    }
+    
+    return $processedCount;
+  }
+
+  public function bulkCancel(array $ids, string $reason, int $processedBy): int
+  {
+    if (empty($ids)) return 0;
+    
+    $letters = $this->_store->getByIds($ids);
+    $processedCount = 0;
+    
+    foreach ($letters as $letter) {
+      if ($letter->status !== 'pending') {
+        throw new Exception("Giấy giới thiệu #{$letter->id} không ở trạng thái chờ xử lý, không thể hủy.");
+      }
+    }
+    
+    foreach ($letters as $letter) {
+      $success = $this->_store->updateStatus($letter->id, 'cancelled', [
+        'cancel_reason' => $reason,
+        'processed_by' => $processedBy
+      ]);
+      if ($success) {
+        $processedCount++;
+      }
+    }
+    
+    return $processedCount;
   }
 }

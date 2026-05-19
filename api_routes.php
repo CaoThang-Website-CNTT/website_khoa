@@ -31,6 +31,8 @@ $router->prefix('api')->group(function ($router) {
 
         $router->get('/search-eligible-students', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'searchStudents']);
         $router->get('/search-eligible-teachers', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'searchTeachers']);
+        
+        $router->post('/referral-letters/bulk-action', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'bulkActionReferralLetters']);
       });
 
       $router->get('/{id}/assignments', [InternshipAssignmentApiController::class, 'getAssignments']);

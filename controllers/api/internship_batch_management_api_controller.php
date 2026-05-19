@@ -5,15 +5,18 @@ namespace App\Controllers\Api;
 use App\Core\Request;
 use App\Core\Controller;
 use App\Services\InternshipBatchService;
+use App\Services\ReferralLetterService;
 use Exception;
 
 class InternshipBatchManagementApiController extends Controller
 {
   private InternshipBatchService $_batchService;
+  private ReferralLetterService $_referralLetterService;
 
-  public function __construct(InternshipBatchService $batchService)
+  public function __construct(InternshipBatchService $batchService, ReferralLetterService $referralLetterService)
   {
     $this->_batchService = $batchService;
+    $this->_referralLetterService = $referralLetterService;
   }
 
   /**
@@ -157,6 +160,43 @@ class InternshipBatchManagementApiController extends Controller
       return $this->json($teachers, 200);
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 500);
+    }
+  }
+
+  /**
+   * Xử lý thao tác hàng loạt cho giấy giới thiệu
+   */
+  public function bulkActionReferralLetters($id, Request $request)
+  {
+    $data = $request->json();
+    $ids = $data['ids'] ?? [];
+    $action = $data['action'] ?? '';
+    $reason = $data['reason'] ?? '';
+
+    if (empty($ids) || !is_array($ids)) {
+      return $this->json(['message' => 'Không có giấy giới thiệu nào được chọn.'], 422);
+    }
+
+    $processedBy = $request->session()->authUser()['account_id'] ?? null;
+    if (!$processedBy) {
+      return $this->json(['message' => 'Lỗi xác thực người dùng.'], 401);
+    }
+
+    try {
+      if ($action === 'approve') {
+        $count = $this->_referralLetterService->bulkApprove($ids, $processedBy);
+        return $this->json(['count' => $count], 200, "Đã duyệt {$count} giấy giới thiệu thành công.");
+      } elseif ($action === 'cancel') {
+        if (empty(trim($reason))) {
+          return $this->json(['message' => 'Vui lòng nhập lý do hủy.'], 422);
+        }
+        $count = $this->_referralLetterService->bulkCancel($ids, trim($reason), $processedBy);
+        return $this->json(['count' => $count], 200, "Đã hủy {$count} giấy giới thiệu thành công.");
+      } else {
+        return $this->json(['message' => 'Thao tác không hợp lệ.'], 400);
+      }
+    } catch (Exception $e) {
+      return $this->json(['message' => $e->getMessage()], 400);
     }
   }
 }

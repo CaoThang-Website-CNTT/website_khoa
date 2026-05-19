@@ -139,6 +139,9 @@ $router->prefix('admin')->group(function (Router $router) {
 
     // Internship Assignments
     $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);
+    
+    // Referral Letters
+    $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
   });
 
   // Companies

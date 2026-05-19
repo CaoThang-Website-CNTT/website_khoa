@@ -20,6 +20,8 @@ interface IReferralLetterStore
   public function getPaginated(int $pageTo, int $limit = 15): array;
   public function updateStatus(int $id, string $status, array $extraData = []): bool;
   public function updateCompanyId(int $id, int $companyId): bool;
+  public function getAllWithDetailsByBatchId(int $batchId): array;
+  public function getByIds(array $ids): array;
 }
 
 class ReferralLetterStore extends Store implements IReferralLetterStore
@@ -70,6 +72,38 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_student_id' => $batchStudentId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getAllWithDetailsByBatchId(int $batchId): array
+  {
+    $sql = "
+      SELECT rl.*, 
+             c.name as company_name, c.tax_code as company_tax_code, c.address as company_address, c.is_verified as company_is_verified,
+             s.student_id as student_code, s.full_name as student_full_name, cl.short_name as classroom_name
+      FROM referral_letters rl
+      JOIN internship_batch_students bs ON rl.batch_student_id = bs.id
+      JOIN students s ON bs.student_id = s.id
+      LEFT JOIN classrooms cl ON s.classroom_id = cl.id
+      LEFT JOIN companies c ON rl.company_id = c.id
+      WHERE bs.batch_id = :batch_id
+      ORDER BY rl.created_at DESC
+    ";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getByIds(array $ids): array
+  {
+    if (empty($ids)) return [];
+
+    $inClause = implode(',', array_fill(0, count($ids), '?'));
+    $sql = "SELECT * FROM referral_letters WHERE id IN ($inClause)";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($ids);
+
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return array_map(fn($item) => ReferralLetter::fromArray($item), $result);
   }
 
   /**
