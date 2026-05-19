@@ -65,6 +65,12 @@ function renderMenuItems(array $items, object $menu): void
   </script>
 <?php endif; ?>
 
+<?php if (!$menu->isEditable()): ?>
+  <section class="banner" data-variant="info" role="region" aria-label="Thông báo trạng thái">
+    <i class="fa-solid fa-lock"></i> Nhóm menu hệ thống. Bạn chỉ có quyền xem dữ liệu này.
+  </section>
+<?php endif; ?>
+
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
     <div class="col-6 col-md-6">
@@ -223,23 +229,7 @@ function renderMenuItems(array $items, object $menu): void
 <!-- ==========================================================================
      MODALS SECTION
      ========================================================================== -->
-
-<!-- 1. Confirm Update Modal -->
-<div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
-    <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
-  </div>
-  <div class="modal__footer">
-    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu</button>
-  </div>
-  <button class="modal__close" type="button" data-modal-close>
-    <i class="fa-solid fa-xmark"></i>
-  </button>
-</div>
-
-<!-- 2. Item CRUD Modal -->
+<!-- 1. Item CRUD Modal -->
 <div class="modal detail-modal" id="item-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title" id="item-modal-title">Thêm mục mới</h2>
@@ -304,6 +294,22 @@ function renderMenuItems(array $items, object $menu): void
   </button>
 </div>
 
+<!-- 2. Confirm Update Modal -->
+<?php if ($isEditable): ?>
+<div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
+    <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close>
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
 <!-- 3. Confirm Delete Modal (Stacked) -->
 <div class="modal" id="item-delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
@@ -323,10 +329,66 @@ function renderMenuItems(array $items, object $menu): void
 <form id="item-delete-form" method="POST" action="" class="hidden">
   <?= csrf_field() ?>
 </form>
+<?php endif; ?>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // ── Drag & Drop Orchestrator ──────────────────────────────────────────
+    // ── BIẾN DÙNG CHUNG CỦA MODAL ──────────────────────────────────────────
+    const itemModal = document.querySelector('#item-modal');
+    const itemModalTitle = itemModal?.querySelector('#item-modal-title');
+    const itemModalDescription = itemModal?.querySelector('#item-modal-description');
+    const itemForm = itemModal?.querySelector('#item-form');
+    const itemDeleteBtn = itemModal?.querySelector('#item-delete-btn');
+
+    // Hàm reset form
+    function resetItemForm() {
+      if (itemForm) itemForm.reset();
+      if (itemDeleteBtn) itemDeleteBtn.classList.add('hidden');
+    }
+
+    document.querySelectorAll('.edit-item-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        resetItemForm();
+        const item = JSON.parse(btn.dataset.item);
+
+        if (itemModalTitle) {
+          itemModalTitle.textContent = `<?= $isEditable ? 'Chỉnh sửa mục menu' : 'Chi tiết mục menu' ?>`;
+        }
+        if (itemModalDescription) {
+          itemModalDescription.textContent = `<?= $isEditable ? 'Thay đổi thông tin mục menu bên dưới.' : 'Thông tin chi tiết của mục menu hệ thống.' ?>`;
+        }
+
+        if (itemForm) {
+          itemForm.querySelector('#item-label').value = item.label || '';
+          itemForm.querySelector('#item-url').value = item.url || '';
+          itemForm.querySelector('#item-sort-order').value = item.sort_order || 0;
+
+          // Xử lý mục cha tĩnh cho trường hợp read-only
+          const parentSelect = itemForm.querySelector('#item-parent-id');
+          if (parentSelect) {
+            parentSelect.innerHTML = '';
+            
+            // Tìm nhãn mục cha trực tiếp từ cấu trúc DOM ngoài danh sách
+            let parentLabel = '-- Không có (mục gốc) --';
+            if (item.parent_id) {
+              const parentEl = document.querySelector(`.menu-item[data-id="${item.parent_id}"]`);
+              parentLabel = parentEl?.querySelector('.item-label')?.textContent.trim() || `Mục cha (ID: ${item.parent_id})`;
+            }
+
+            const opt = document.createElement('option');
+            opt.value = item.parent_id || '';
+            opt.textContent = parentLabel;
+            parentSelect.appendChild(opt);
+            parentSelect.value = item.parent_id || '';
+          }
+        }
+      });
+    });
+
+    <?php if ($isEditable): ?>
+    // ── CHỈ CHẠY LOGIC EDIT / CUD KHI EDITABLE ──────────────────────────────
+    
+    // 1. Drag & Drop Orchestrator
     function handleDragEnd() {
       const rootContainer = document.querySelector('#menu-items-root');
       const serializedData = serializeMenuTree(rootContainer, null);
@@ -400,7 +462,7 @@ function renderMenuItems(array $items, object $menu): void
       updateMenuItemsListFromDOM();
     }
 
-    // ── Dialog & Modal Crud Handling ─────────────────────────────────────
+    // 2. Dialog & Modal Crud Handling
     let menuItemsList = [];
 
     // Tự động thu thập toàn bộ menu item hiện hữu từ DOM
@@ -418,21 +480,10 @@ function renderMenuItems(array $items, object $menu): void
     const confirmBtn = confirmModal?.querySelector('#confirm-modal-btn');
     confirmBtn?.addEventListener('click', () => editForm.submit());
 
-    const itemModal = document.querySelector('#item-modal');
-    const itemModalTitle = itemModal?.querySelector('#item-modal-title');
-    const itemModalDescription = itemModal?.querySelector('#item-modal-description');
-    const itemForm = itemModal?.querySelector('#item-form');
     const itemSaveBtn = itemModal?.querySelector('#item-save-btn');
-    const itemDeleteBtn = itemModal?.querySelector('#item-delete-btn');
     const itemDeleteForm = document.querySelector('#item-delete-form');
-
     const itemDeleteConfirmModal = document.querySelector('#item-delete-confirm-modal');
     const confirmDeleteBtn = itemDeleteConfirmModal?.querySelector('#item-delete-confirm-btn');
-
-    function resetItemForm() {
-      itemForm.reset();
-      itemDeleteBtn.classList.add('hidden');
-    }
 
     // Dựng dropdown parent dynamic
     function populateParentSelect(excludeId = null) {
@@ -458,28 +509,15 @@ function renderMenuItems(array $items, object $menu): void
       });
     }
 
-    // Sửa item
+    // Sửa/Xem item cho chế độ Editable (Được phép sửa action và gán nút xóa)
     document.querySelectorAll('.edit-item-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        resetItemForm();
         const item = JSON.parse(btn.dataset.item);
-
-        itemModalTitle.textContent = 'Chỉnh sửa mục menu';
-        itemModalDescription.textContent = 'Thay đổi thông tin mục menu bên dưới.';
         itemForm.action = `<?= url('admin/menu-items/') ?>` + item.id;
-
-        itemForm.querySelector('#item-label').value = item.label || '';
-        itemForm.querySelector('#item-url').value = item.url || '';
-        itemForm.querySelector('#item-sort-order').value = item.sort_order || 0;
-
         populateParentSelect(item.id);
         
-        const parentId = item.parent_id;
-        if (parentId) {
-          itemForm.querySelector('#item-parent-id').value = parentId;
-        } else {
-          itemForm.querySelector('#item-parent-id').value = '';
-        }
+        // Cập nhật giá trị cha
+        itemForm.querySelector('#item-parent-id').value = item.parent_id || '';
 
         if (itemDeleteBtn) {
           itemDeleteBtn.classList.remove('hidden');
@@ -505,11 +543,10 @@ function renderMenuItems(array $items, object $menu): void
     }
 
     updateMenuItemsListFromDOM();
-    const isEditable = <?= json_encode($isEditable) ?>;
-    if (isEditable) {
-      initializeNestedDnD();
-    } else {
-      document.querySelectorAll('.drag-handle').forEach(el => el.style.display = 'none');
-    }
+    initializeNestedDnD();
+    <?php else: ?>
+    // Chế độ chỉ xem: Ẩn các nút kéo thả (drag handles)
+    document.querySelectorAll('.drag-handle').forEach(el => el.style.display = 'none');
+    <?php endif; ?>
   });
 </script>

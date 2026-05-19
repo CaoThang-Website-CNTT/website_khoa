@@ -57,7 +57,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
           Thêm slide
         </button>
       </div>
-
+      <hr class="separator">
       <div class="card__content">
         <div id="slides-container" class="space-y-2" data-id="<?= $carousel->id ?>">
 
@@ -136,7 +136,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       <div class="card__header">
         <legend class="card__title field__legend">Thông tin Carousel</legend>
       </div>
-
+      <hr class="separator">
       <div class="card__content">
         <form id="carousel-edit-form" method="POST" action="<?= url('admin/carousels/' . $carousel->id) ?>">
           <?= csrf_field() ?>

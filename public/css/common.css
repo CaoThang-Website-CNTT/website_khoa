@@ -2375,6 +2375,10 @@
     color: var(--secondary-foreground);
   }
 
+  .banner[data-variant="secondary"] :is(svg, .fa-solid, .fa-regular, .fa-brand) {
+    color: var(--secondary-foreground);
+  }
+
   .banner[data-variant="error"] {
     --banner-bg: var(--toast-error-bg);
     --banner-border-color: var(--toast-error-border);
