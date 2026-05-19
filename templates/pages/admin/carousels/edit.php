@@ -41,18 +41,15 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <div class="detail-layout">
   <div class="detail-layout__main flex-1">
+    <!-- Carousel Slides Card -->
     <div class="card shadow">
       <div class="card__header">
-        <div class="flex justify-between items-center">
-          <div>
-            <legend class="field__legend">Các slide trong Carousel</legend>
-            <p class="field__description">Kéo thả để sắp xếp thứ tự hiển thị của các slide.</p>
-          </div>
-          <button type="button" id="add-item-btn" data-modal-trigger="#slide-modal" data-variant="outline" data-size="lg" class="btn">
-            <i class="fa-solid fa-plus"></i>
-            Thêm slide
-          </button>
-        </div>
+        <legend class="card__title field__legend">Các slide trong Carousel</legend>
+        <p class="card__description field__description">Kéo thả để sắp xếp thứ tự hiển thị của các slide.</p>
+        <button class="btn card__action" type="button" id="add-item-btn" data-modal-trigger="#slide-modal" data-variant="outline" data-size="lg">
+          <i class="fa-solid fa-plus"></i>
+          Thêm slide
+        </button>
       </div>
 
       <div class="card__content">
@@ -120,18 +117,16 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 
   <div class="detail-layout__sidebar">
+    <!-- Info Card -->
     <div class="card shadow">
-      <div class="card__header flex justify-between items-center">
-        <div>
-          <div class="card__title">
-            <h6>Thông tin Carousel</h6>
-          </div>
-        </div>
+      <div class="card__header">
+        <legend class="card__title field__legend">Thông tin Carousel</legend>
       </div>
 
       <div class="card__content">
         <form id="carousel-edit-form" method="POST" action="<?= url('admin/carousels/' . $carousel->id) ?>">
           <?= csrf_field() ?>
+          <input type="hidden" id="carousel-reorder-input" name="reorder" value="">
           <div class="field-group">
             <div class="field" data-field-required>
               <label class="field__label" for="name">Tên Carousel</label>
@@ -154,19 +149,47 @@ $old_input = request()->session()->getOldInputs() ?? [];
           </div>
         </form>
       </div>
+    </div>
 
-      <div class="card__footer">
-        <button data-modal-trigger="#delete-modal" type="button" data-variant="destructive" data-size="sm" class="btn">
-          Xóa
-        </button>
-        <button data-modal-trigger="#confirm-modal" id="update-submit-btn" type="button" data-variant="primary"
-          data-size="lg" class="btn w-full">
-          Lưu thông tin
-        </button>
+    <!-- Metadata -->
+    <div class="metadata-card card shadow">
+      <div class="card__header">
+        <div class="card__title">
+          Thông tin bản ghi
+        </div>
+      </div>
+      <hr class="separator">
+      <div class="card__content space-y-4">
+        <dl class="flex justify-between">
+          <dt>ID</dt>
+          <dd><?= htmlspecialchars($carousel->id) ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Được tạo vào</dt>
+          <dd><?= htmlspecialchars($carousel->created_at) ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Lần cuối cập nhật</dt>
+          <dd><?= htmlspecialchars($carousel->updated_at ? $carousel->updated_at : "Không có") ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Trạng thái dữ liệu</dt>
+          <dd>
+            <?php if ($carousel->deleted_at): ?>
+              <span class="badge" data-variant="destructive">
+                Đã xóa
+              </span>
+            <?php else: ?>
+              <span class="badge" data-variant="primary">Hoạt động</span>
+            <?php endif; ?>
+          </dd>
+        </dl>
       </div>
     </div>
   </div>
-
 </div>
 
 <form id="carousel-delete-form" method="POST" action="<?= url('admin/carousels/delete/' . $carousel->id) ?>">
@@ -320,19 +343,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
         handle: '.drag-handle',
         ghostClass: 'dnd-ghost',
         chosenClass: 'dnd-chosen',
-        onEnd: async e => {
+        onEnd: e => {
           const ordered = Array.from(slidesContainer.querySelectorAll('.slide-item')).map(el => el.dataset.id); // array of slide IDs
-          const formData = new FormData();
-          ordered.forEach(id => formData.append('ids[]', id));
-          const response = await fetch(`<?= url('/api/v1/carousels/' . $carousel->id . '/slides/sort') ?>`, {
-            method: 'POST',
-            body: formData
-          });
-          const data = await response.json();
-          if (data.success) {
-            toast.success(data.message);
-          } else {
-            toast.error(data.message);
+          const reorderInput = document.querySelector('#carousel-reorder-input');
+          if (reorderInput) {
+            reorderInput.value = JSON.stringify(ordered);
           }
         }
       });

@@ -99,7 +99,11 @@ class CarouselController extends Controller
       $this->abort(404);
     $data = $request->all();
     $validator = new RequestValidator();
-    if (!$validator->validate($data, ['name' => ['required', 'max:255'], 'slug' => ['max:255']])) {
+    if (!$validator->validate($data, [
+      'name' => ['required', 'max:255'],
+      'slug' => ['max:255'],
+      'reorder' => [],
+    ])) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/' . $id);
@@ -117,6 +121,7 @@ class CarouselController extends Controller
       'name' => $data['name'],
       'slug' => $data['slug'],
       'is_active' => !empty($data['is_active']) ? 1 : 0,
+      'reorder' => $data['reorder'] ?? null,
     ]);
     if ($isSuccess) {
       $request->session()->flashNotify('success', 'Cập nhật carousel thành công!');

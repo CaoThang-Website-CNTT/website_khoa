@@ -142,6 +142,7 @@ function renderMenuItems(array $items, object $menu): void
       <div class="card__content">
         <form id="menu-edit-form" method="POST" action="<?= url('admin/menus/' . $menu->id) ?>">
           <?= csrf_field() ?>
+          <input type="hidden" id="menu-reorder-input" name="reorder" value="">
           <div class="field-group">
             <div class="field">
               <label class="field__label">Loại</label>
@@ -182,7 +183,9 @@ function renderMenuItems(array $items, object $menu): void
     <!-- Metadata -->
     <div class="metadata-card card shadow">
       <div class="card__header">
-        Thông tin bản ghi
+        <div class="card__title">
+          Thông tin bản ghi
+        </div>
       </div>
       <hr class="separator">
       <div class="card__content space-y-4">
@@ -247,20 +250,20 @@ function renderMenuItems(array $items, object $menu): void
           <!-- label -->
           <div class="field" data-field-required>
             <label class="field__label" for="item-label">Tên hiển thị (Nhãn)</label>
-            <input id="item-label" class="field__input" type="text" name="label" required placeholder="VD: Trang chủ">
+            <input id="item-label" class="field__input" type="text" name="label" required placeholder="VD: Trang chủ" <?= $isEditable ? '' : 'disabled' ?>>
           </div>
   
           <!-- url -->
           <div class="field" data-field-required>
             <label class="field__label" for="item-url">Đường dẫn (URL)</label>
-            <input id="item-url" class="field__input" type="text" name="url" required placeholder="/duong-dan hoặc https://...">
+            <input id="item-url" class="field__input" type="text" name="url" required placeholder="/duong-dan hoặc https://..." <?= $isEditable ? '' : 'disabled' ?>>
           </div>
         </div>
 
         <!-- parent_id -->
         <div class="field">
           <label class="field__label" for="item-parent-id">Mục cha</label>
-          <select id="item-parent-id" class="field__input" name="parent_id">
+          <select id="item-parent-id" class="field__input" name="parent_id" <?= $isEditable ? '' : 'disabled' ?>>
             <option value="">-- Không có (mục gốc) --</option>
           </select>
           <p class="field__description">Chọn mục cha để tạo menu con.</p>
@@ -269,18 +272,26 @@ function renderMenuItems(array $items, object $menu): void
         <!-- sort_order -->
         <div class="field">
           <label class="field__label" for="item-sort-order">Thứ tự hiển thị</label>
-          <input id="item-sort-order" class="field__input" type="number" name="sort_order" min="0" value="0">
+          <input id="item-sort-order" class="field__input" type="number" name="sort_order" min="0" value="0" <?= $isEditable ? '' : 'disabled' ?>>
         </div>
       </div>
     </div>
   </form>
   <div class="modal__footer flex justify-between items-center">
-    <button class="btn" id="item-delete-btn" type="button" data-variant="destructive" data-size="lg">Xóa</button>
+    <!-- Editable Modal Footer -->
+    <?php if ($isEditable): ?>
+      <button class="btn" id="item-delete-btn" type="button" data-variant="destructive" data-size="lg">Xóa</button>
 
-    <div class="flex gap-2 ml-auto">
-      <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-      <button id="item-save-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu mục</button>
-    </div>
+      <div class="flex gap-2 ml-auto">
+        <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+        <button id="item-save-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu mục</button>
+      </div>
+    <!-- Non-editable Modal Footer -->
+    <?php else: ?>
+      <div class="flex gap-2 justify-end w-full">
+        <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+      </div>
+    <?php endif; ?>
   </div>
 
   <button class="modal__close" type="button" data-modal-close>
@@ -300,7 +311,13 @@ function renderMenuItems(array $items, object $menu): void
     function handleDragEnd() {
       const rootContainer = document.querySelector('#menu-items-root');
       const serializedData = serializeMenuTree(rootContainer, null);
-      saveMenuStructure(serializedData);
+      
+      const reorderInput = document.querySelector('#menu-reorder-input');
+      if (reorderInput) {
+        reorderInput.value = JSON.stringify(serializedData);
+      }
+      
+      updateMenuDOMStates(serializedData);
     }
 
     function initializeNestedDnD() {
@@ -362,36 +379,6 @@ function renderMenuItems(array $items, object $menu): void
       });
 
       updateMenuItemsListFromDOM();
-    }
-
-    // Lưu cấu trúc cây mới lên Server bằng Ajax
-    function saveMenuStructure(items) {
-      const url = `<?= url('api/v1/menus/' . $menu->id . '/items/sort') ?>`;
-      
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': '<?= csrf_token() ?>'
-        },
-        body: JSON.stringify({ items: items })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        return res.json();
-      })
-      .then(res => {
-        if (res.success) {
-          toast.success('Thành công', 'Cấu trúc menu đã được cập nhật!');
-          updateMenuDOMStates(items);
-        } else {
-          toast.error('Lỗi', res.message || 'Không thể lưu cấu trúc menu.');
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        toast.error('Lỗi kết nối', 'Không thể gửi yêu cầu lưu cấu trúc menu.');
-      });
     }
 
     // ── Dialog & Modal Crud Handling ─────────────────────────────────────
@@ -468,13 +455,15 @@ function renderMenuItems(array $items, object $menu): void
           document.querySelector('#item-parent-id').value = '';
         }
 
-        itemDeleteBtn.classList.remove('hidden');
-        itemDeleteBtn.onclick = () => {
-          if (confirm('Bạn có chắc chắn muốn xóa mục menu này và toàn bộ mục con bên dưới?')) {
-            itemDeleteForm.action = `<?= url('admin/menu-items/') ?>` + item.id + '/delete';
-            itemDeleteForm.submit();
-          }
-        };
+        if (itemDeleteBtn) {
+          itemDeleteBtn.classList.remove('hidden');
+          itemDeleteBtn.onclick = () => {
+            if (confirm('Bạn có chắc chắn muốn xóa mục menu này và toàn bộ mục con bên dưới?')) {
+              itemDeleteForm.action = `<?= url('admin/menu-items/') ?>` + item.id + '/delete';
+              itemDeleteForm.submit();
+            }
+          };
+        }
       });
     });
 
@@ -487,6 +476,11 @@ function renderMenuItems(array $items, object $menu): void
     }
 
     updateMenuItemsListFromDOM();
-    initializeNestedDnD();
+    const isEditable = <?= json_encode($isEditable) ?>;
+    if (isEditable) {
+      initializeNestedDnD();
+    } else {
+      document.querySelectorAll('.drag-handle').forEach(el => el.style.display = 'none');
+    }
   });
 </script>

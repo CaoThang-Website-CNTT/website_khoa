@@ -189,7 +189,24 @@ class MenuService implements IMenuService
     $menu->type = $data['type'] ?? $menu->type;
     $menu->sort_order = $data['sort_order'] ?? $menu->sort_order;
 
-    return $this->_menuStore->update($menu);
+    // Cập nhật thông tin nhóm menu
+    $isSuccess = $this->_menuStore->update($menu);
+    if (!$isSuccess) {
+      return false;
+    }
+
+    // Nếu có dữ liệu sắp xếp lại menu items
+    if (!empty($data['reorder'])) {
+      $reorderItems = json_decode($data['reorder'], true);
+      if (is_array($reorderItems)) {
+        $sortSuccess = $this->_menuStore->sortItems($reorderItems);
+        if (!$sortSuccess) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   public function deleteMenu(int $id): bool

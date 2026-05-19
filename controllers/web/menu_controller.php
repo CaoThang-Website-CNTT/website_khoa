@@ -133,6 +133,7 @@ class MenuController extends Controller
       'label' => ['required', 'max:100'],
       'description' => ['max:255'],
       'sort_order' => [],
+      'reorder' => [],
     ];
 
     if (!$validator->validate($data, $rules)) {

@@ -156,7 +156,30 @@ class CarouselService implements ICarouselService
     if ($data['slug'] !== $carousel->slug && !$this->_carouselStore->isSlugUnique($data['slug'], $id)) {
       throw new \InvalidArgumentException("Slug '{$data['slug']}' đã tồn tại.");
     }
-    return $this->_carouselStore->update($id, $data);
+
+    // Cập nhật thông tin carousel
+    $isSuccess = $this->_carouselStore->update($id, [
+      'name' => $data['name'],
+      'slug' => $data['slug'],
+      'is_active' => $data['is_active'],
+    ]);
+    if (!$isSuccess) {
+      return false;
+    }
+
+    // Nếu có dữ liệu sắp xếp lại slides
+    if (!empty($data['reorder'])) {
+      $slideIds = json_decode($data['reorder'], true);
+      if (is_array($slideIds)) {
+        $normalizedIds = array_map('intval', $slideIds);
+        $sortSuccess = $this->_carouselStore->sortSlides($normalizedIds);
+        if (!$sortSuccess) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   public function delete(int $id): bool
