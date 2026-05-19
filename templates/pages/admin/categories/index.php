@@ -14,7 +14,7 @@
   <div class="flex justify-between items-center">
     <div class="col-6 col-md-6">
       <h2 class="title text-2xl font-semibold">
-        Categories
+        Danh mục
         <span class="badge" data-variant="primary">
           <?= $data->getTotal(); ?>
         </span>

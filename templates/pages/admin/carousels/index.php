@@ -12,7 +12,7 @@
   <div class="flex justify-between items-center">
     <div>
       <h2 class="title text-2xl font-semibold">
-        Quản lý Carousel
+        Carousel
         <span class="badge" data-variant="primary">
           <?= count($data ?? []); ?>
         </span>
