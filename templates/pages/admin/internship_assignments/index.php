@@ -19,7 +19,7 @@
       <h2 class="title text-2xl font-semibold">
         Phân công: <?= htmlspecialchars($batch->title) ?>
       </h2>
-      <p class="text-sm text-muted-foreground">Quản lý phân công sinh viên cho giảng viên hướng dẫn</p>
+      <p class="text-sm">Quản lý phân công sinh viên cho giảng viên hướng dẫn</p>
     </div>
 
     <div class="flex gap-2 items-center">
@@ -93,7 +93,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3 class="title text-xl font-semibold">Phân công Giảng viên</h3>
-      <p class="text-sm text-muted-foreground mt-1">Gán <span id="bulk-student-count" class="font-bold">0</span> sinh viên cho giảng viên được chọn dưới đây:</p>
+      <p class="text-sm mt-1">Gán <span id="bulk-student-count" class="font-bold">0</span> sinh viên cho giảng viên được chọn dưới đây:</p>
     </div>
     <div class="modal-body py-4">
       <div class="field">
@@ -121,7 +121,7 @@
     </div>
     <div class="modal-body py-4">
       <p>Bạn có chắc chắn muốn hủy phân công cho <span id="bulk-unassign-count" class="font-bold">0</span> sinh viên đã chọn?</p>
-      <p class="text-sm text-muted-foreground mt-2">Sau khi hủy, các sinh viên này sẽ không có Giảng viên hướng dẫn.</p>
+      <p class="text-sm mt-2">Sau khi hủy, các sinh viên này sẽ không có Giảng viên hướng dẫn.</p>
     </div>
     <div class="modal-footer flex justify-end gap-2 mt-4">
       <button type="button" id="btn-close-unassign-modal" class="btn" data-size="md" data-variant="outline">Hủy bỏ</button>

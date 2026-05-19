@@ -22,7 +22,7 @@
           <?= $data->getTotal() ?>
         </span>
       </h2>
-      <p class="text-sm text-muted-foreground">Quản lý các đợt thực tập của khoa</p>
+      <p class="text-sm">Quản lý các đợt thực tập của khoa</p>
     </div>
 
     <div class="flex gap-2">

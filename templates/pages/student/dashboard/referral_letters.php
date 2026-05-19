@@ -24,7 +24,7 @@ $referralLetters = $referralLetters ?? [];
       <h2 class="title text-2xl font-semibold">
         Giấy giới thiệu thực tập
       </h2>
-      <p class="text-sm text-muted-foreground">Danh sách các giấy giới thiệu bạn đã đăng ký trong đợt "<?= $current['title'] ?? '' ?>".</p>
+      <p class="text-sm">Danh sách các giấy giới thiệu bạn đã đăng ký trong đợt "<?= $current['title'] ?? '' ?>".</p>
     </div>
 
     <div class="flex gap-2 items-center">

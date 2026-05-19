@@ -170,7 +170,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <hr class="separator">
         <dl class="flex justify-between items-center">
           <dt class="text-sm font-medium">Cập nhật lần cuối</dt>
-          <dd class="text-sm text-muted-foreground">
+          <dd class="text-sm">
             <?= $student->updated_at ? date('d/m/Y H:i', strtotime($student->updated_at)) : 'Chưa cập nhật' ?>
           </dd>
         </dl>

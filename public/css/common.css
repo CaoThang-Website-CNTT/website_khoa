@@ -1938,25 +1938,29 @@
     color: color-mix(in oklab, var(--muted) 80%, transparent);
   }
 
-  .tm-scroll {
+  .tm-scroll,
+  .table-wrapper {
     overflow-x: auto;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
   }
 
-  .tm-table {
+  .tm-table,
+  .data-table {
     width: 100%;
     border-collapse: collapse;
     font-size: var(--text-sm);
     background: var(--background);
   }
 
-  .tm-thead {
+  .tm-thead,
+  .data-table thead {
     background: var(--muted);
   }
 
-  .tm-th {
+  .tm-th,
+  .data-table thead th {
     padding: 0.625rem 0.5rem;
     text-align: left;
     font-size: var(--text-xs);
@@ -2019,17 +2023,21 @@
     color: var(--border);
   }
 
-  .tm-tbody .tm-tr {
+  .tm-tbody .tm-tr,
+  .data-table tbody tr {
     transition: background 0.1s;
   }
-  .tm-tbody .tm-tr:nth-child(even) {
+  .tm-tbody .tm-tr:nth-child(even),
+  .data-table tbody tr:nth-child(even) {
     background: var(--background);
   }
-  .tm-tbody .tm-tr:hover {
+  .tm-tbody .tm-tr:hover,
+  .data-table tbody tr:hover {
     background: var(--secondary);
   }
 
-  .tm-td {
+  .tm-td,
+  .data-table tbody td {
     padding: 0.625rem 0.5rem;
     font-size: var(--text-sm);
     color: var(--foreground);
@@ -2037,7 +2045,8 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .tm-tbody .tm-tr:last-child .tm-td {
+  .tm-tbody .tm-tr:last-child .tm-td,
+  .data-table tbody tr:last-child td {
     border-bottom: none;
   }
 

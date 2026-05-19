@@ -221,7 +221,7 @@ $logs = $logs ?? [];
         </div>
         <div class="card__content">
           <div class="text-4xl font-bold mb-1">--</div>
-          <span class="text-xs text-muted-foreground">Chưa có điểm</span>
+          <span class="text-xs">Chưa có điểm</span>
         </div>
       </div>
 
@@ -273,7 +273,7 @@ $logs = $logs ?? [];
                 <?php foreach ($submissions as $submission): ?>
                   <article class="timeline-item">
                     <div class="timeline-item__indicator"></div>
-                    <time class="timeline-item__time text-xs text-muted-foreground"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
+                    <time class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
                     <div class="timeline-item__action font-medium"><?= $submission['original_file_name'] ?? '--' ?></div>
                   </article>
                 <?php endforeach; ?>
@@ -296,16 +296,16 @@ $logs = $logs ?? [];
           <div class="timeline-container">
             <?php if (empty($logs)): ?>
               <div class="empty-state">
-                <p class="text-muted-foreground text-sm">Chưa có lịch sử hoạt động.</p>
+                <p class="text-sm">Chưa có lịch sử hoạt động.</p>
               </div>
             <?php else: ?>
               <?php foreach ($logs as $log): ?>
                 <article class="timeline-item">
                   <div class="timeline-item__indicator"></div>
-                  <time class="timeline-item__time text-xs text-muted-foreground"><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></time>
+                  <time class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></time>
                   <div class="timeline-item__action font-medium"><?= htmlspecialchars($log['action']) ?></div>
                   <?php if ($log['reason']): ?>
-                    <p class="timeline-item__reason text-sm text-muted-foreground mt-1"><?= htmlspecialchars($log['reason']) ?></p>
+                    <p class="timeline-item__reason text-sm mt-1"><?= htmlspecialchars($log['reason']) ?></p>
                   <?php endif; ?>
                 </article>
               <?php endforeach; ?>
@@ -318,11 +318,11 @@ $logs = $logs ?? [];
 <?php else: ?>
   <div class="card shadow py-12 text-center">
     <div class="card__content flex flex-col items-center">
-      <div class="text-5xl text-muted-foreground/20 mb-6">
+      <div class="text-5xl mb-6">
         <i class="fa-solid fa-calendar-xmark"></i>
       </div>
       <h2 class="text-xl font-semibold mb-2">Chưa tham gia đợt thực tập nào</h2>
-      <p class="text-muted-foreground max-w-sm mx-auto">Thông tin thực tập sẽ hiển thị sau khi bạn được đưa vào danh sách đợt thực tập mới.</p>
+      <p class="max-w-sm mx-auto">Thông tin thực tập sẽ hiển thị sau khi bạn được đưa vào danh sách đợt thực tập mới.</p>
     </div>
   </div>
 <?php endif; ?>

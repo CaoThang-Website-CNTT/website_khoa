@@ -2,6 +2,7 @@
    Styles cho trang Chi tiết đợt thực tập
 */
 
+/* label placeholder aria-label */
 .detail-layout {
   display: grid;
   grid-template-columns: 1fr var(--container-xs);
@@ -32,7 +33,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
 }
 
 .stat-card {
@@ -215,4 +215,31 @@ textarea#description {
 .readonly-info__value {
   font-weight: var(--fw-semibold);
   color: var(--foreground);
+}
+
+/* Interactive stat cards */
+.stat-card--interactive {
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md) !important;
+}
+
+.stat-card__arrow {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.stat-card--interactive:hover .stat-card__arrow {
+  transform: translateX(3px);
+  color: var(--primary);
+}
+
+.stat-card__badge-pending {
+  color: #f59e0b;
+  font-weight: var(--fw-semibold);
 }

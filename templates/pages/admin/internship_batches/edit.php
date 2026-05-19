@@ -88,8 +88,12 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
 
     <!-- Stats Grid -->
     <div class="stats-grid">
-      <div class="stat-card shadow-sm">
-        <span class="stat-card__label">Sinh viên</span>
+      <!-- Sinh viên Card -->
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>" class="stat-card stat-card--interactive shadow-sm">
+        <div class="flex justify-between items-start">
+          <span class="stat-card__label">Sinh viên</span>
+          <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
+        </div>
         <span class="stat-card__value"><?= $stats['total_students'] ?></span>
         <div class="stat-card__footer">
           Đã phân công: <?= $stats['assigned_students'] ?>
@@ -97,123 +101,79 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
             <div class="progress-bar" style="--progress: <?= $assignedPercent ?>%"></div>
           </div>
         </div>
-      </div>
-      <div class="stat-card shadow-sm">
-        <span class="stat-card__label">Giảng viên</span>
+      </a>
+
+      <!-- Giảng viên Card -->
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/teachers') ?>" class="stat-card stat-card--interactive shadow-sm">
+        <div class="flex justify-between items-start">
+          <span class="stat-card__label">Giảng viên</span>
+          <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
+        </div>
         <span class="stat-card__value"><?= $stats['total_supervisors'] ?></span>
-      </div>
+        <div class="stat-card__footer">
+          Xem danh sách giảng viên
+        </div>
+      </a>
+
+      <!-- Giấy giới thiệu Card -->
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/referral_letters') ?>" class="stat-card stat-card--interactive shadow-sm">
+        <div class="flex justify-between items-start">
+          <span class="stat-card__label">Giấy giới thiệu</span>
+          <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
+        </div>
+        <span class="stat-card__value"><?= $stats['total_referrals'] ?></span>
+        <div class="stat-card__footer">
+          Chờ duyệt: <span class="stat-card__badge-pending"><?= $stats['pending_referrals'] ?></span>
+        </div>
+      </a>
+
+      <!-- Trạng thái Card -->
       <div class="stat-card shadow-sm">
         <span class="stat-card__label">Trạng thái</span>
         <span class="stat-card__value">
           <span class="<?= $currentStatus['class'] ?>"><?= $currentStatus['label'] ?></span>
         </span>
+        <div class="stat-card__footer">
+          Trạng thái hoạt động đợt thực tập
+        </div>
       </div>
     </div>
 
-    <!-- Tabs: Quản lý chi tiết -->
-    <div class="tabs-container mt-6">
-      <div class="tabs-list border-b mb-4">
-        <button class="tab-trigger" data-tab="overview" data-state="active">Tổng quan</button>
-        <button class="tab-trigger" data-tab="students" data-state="inactive">Danh sách Sinh viên (<?= $stats['total_students'] ?>)</button>
-        <button class="tab-trigger" data-tab="supervisors" data-state="inactive">Giảng viên hướng dẫn (<?= $stats['total_supervisors'] ?>)</button>
-      </div>
-
-      <!-- Tab 1: Tổng quan -->
-      <div class="tab-content" id="tab-overview" data-state="active">
-        <div class="card shadow-sm">
-          <form id="batch-edit-form" action="<?= url('admin/internship_batches/' . $batchObj->id) ?>" method="POST">
-            <?= csrf_field() ?>
-            <div class="card__header">
-              <h3 class="font-semibold">Thông tin cơ bản</h3>
+    <!-- Thông tin cơ bản -->
+    <div class="card shadow-sm">
+      <form id="batch-edit-form" action="<?= url('admin/internship_batches/' . $batchObj->id) ?>" method="POST">
+        <?= csrf_field() ?>
+        <div class="card__header">
+          <h3 class="font-semibold">Thông tin cơ bản</h3>
+        </div>
+        <hr class="separator">
+        <div class="card__content p-6">
+          <div class="field-group">
+            <div class="field" data-field-required>
+              <label class="field__label" for="title">Tên đợt thực tập</label>
+              <input type="text" id="title" name="title" class="field__input" value="<?= htmlspecialchars($batchObj->title) ?>" required>
             </div>
-            <hr class="separator">
-            <div class="card__content p-6">
-              <div class="field-group">
-                <div class="field" data-field-required>
-                  <label class="field__label" for="title">Tên đợt thực tập</label>
-                  <input type="text" id="title" name="title" class="field__input" value="<?= htmlspecialchars($batchObj->title) ?>" required>
-                </div>
 
-                <div class="field">
-                  <label class="field__label" for="description">Mô tả</label>
-                  <textarea id="description" name="description" class="field__input" rows="6"><?= htmlspecialchars($batchObj->description ?? '') ?></textarea>
-                </div>
+            <div class="field">
+              <label class="field__label" for="description">Mô tả</label>
+              <textarea id="description" name="description" class="field__input" rows="6"><?= htmlspecialchars($batchObj->description ?? '') ?></textarea>
+            </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="field" data-field-required>
-                    <label class="field__label" for="start_at">Ngày bắt đầu</label>
-                    <input type="date" id="start_at" name="start_at" class="field__input" value="<?= date('Y-m-d', strtotime($batchObj->start_at)) ?>" required>
-                  </div>
-                  <div class="field" data-field-required>
-                    <label class="field__label" for="end_at">Ngày kết thúc</label>
-                    <input type="date" id="end_at" name="end_at" class="field__input" value="<?= date('Y-m-d', strtotime($batchObj->end_at)) ?>" required>
-                  </div>
-                </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="field" data-field-required>
+                <label class="field__label" for="start_at">Ngày bắt đầu</label>
+                <input type="date" id="start_at" name="start_at" class="field__input" value="<?= date('Y-m-d', strtotime($batchObj->start_at)) ?>" required>
+              </div>
+              <div class="field" data-field-required>
+                <label class="field__label" for="end_at">Ngày kết thúc</label>
+                <input type="date" id="end_at" name="end_at" class="field__input" value="<?= date('Y-m-d', strtotime($batchObj->end_at)) ?>" required>
               </div>
             </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Tab 2: Sinh viên -->
-      <div class="tab-content hidden" id="tab-students" data-state="inactive">
-        <div class="card shadow-sm">
-          <div class="card__header flex justify-between items-center p-4">
-            <h4 class="font-semibold text-sm">Sinh viên tham gia</h4>
-            <button type="button" class="btn" data-variant="outline" data-size="sm" id="btn-add-student">
-              <i class="fa-solid fa-plus mr-1"></i> Thêm sinh viên
-            </button>
-          </div>
-          <div class="table-wrapper">
-            <table class="table" id="table-batch-students">
-              <thead>
-                <tr>
-                  <th>MSSV</th>
-                  <th>Họ và tên</th>
-                  <th>Lớp</th>
-                  <th>Trạng thái</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="5" class="text-center p-4">Đang tải dữ liệu...</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
-      </div>
-
-      <!-- Tab 3: Giảng viên -->
-      <div class="tab-content hidden" id="tab-supervisors" data-state="inactive">
-        <div class="card shadow-sm">
-          <div class="card__header flex justify-between items-center p-4">
-            <h4 class="font-semibold text-sm">Giảng viên hướng dẫn</h4>
-            <button type="button" class="btn" data-variant="outline" data-size="sm" id="btn-add-supervisor">
-              <i class="fa-solid fa-plus mr-1"></i> Thêm giảng viên
-            </button>
-          </div>
-          <div class="table-wrapper">
-            <table class="table" id="table-batch-supervisors">
-              <thead>
-                <tr>
-                  <th>Họ và tên</th>
-                  <th>Khoa</th>
-                  <th class="text-center">Hạn mức (Đã giao/Tổng)</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="4" class="text-center p-4">Đang tải dữ liệu...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
+
   </div>
 
   <!-- SIDEBAR -->
@@ -240,15 +200,15 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
       <hr class="separator">
       <div class="card__content p-4 text-xs space-y-3">
         <div class="flex justify-between">
-          <span class="text-muted-foreground">ID:</span>
+          <span>ID:</span>
           <span class="font-medium">#<?= $batchObj->id ?></span>
         </div>
         <div class="flex justify-between">
-          <span class="text-muted-foreground">Ngày tạo:</span>
+          <span>Ngày tạo:</span>
           <span class="font-medium"><?= date('d/m/Y H:i', strtotime($batchObj->created_at)) ?></span>
         </div>
         <div class="flex justify-between">
-          <span class="text-muted-foreground">Cập nhật cuối:</span>
+          <span>Cập nhật cuối:</span>
           <span class="font-medium"><?= $batchObj->updated_at ? date('d/m/Y H:i', strtotime($batchObj->updated_at)) : 'N/A' ?></span>
         </div>
       </div>
@@ -297,83 +257,6 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
     <button id="publish-confirm-modal-btn" data-variant="primary" class="btn" type="button">Xác nhận công bố</button>
-  </div>
-  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
-</div>
-
-<!-- Modal: Thêm Sinh viên -->
-<div class="modal modal--lg" id="modal-add-student" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h2 class="modal__title">Thêm sinh viên vào đợt</h2>
-    <p class="modal__description">Tìm kiếm sinh viên từ danh sách toàn trường để thêm vào đợt thực tập này.</p>
-  </div>
-  <div class="modal__content p-6">
-    <div class="flex gap-4 mb-4">
-      <div class="flex-1">
-        <input type="text" id="search-student-query" class="field__input" placeholder="Tìm theo tên hoặc MSSV...">
-      </div>
-      <div class="w-48">
-        <select id="search-student-classroom" class="field__input">
-          <option value="">Tất cả lớp</option>
-        </select>
-      </div>
-      <button type="button" class="btn" data-variant="primary" id="btn-do-search-student">
-        <i class="fa-solid fa-magnifying-glass"></i>
-      </button>
-    </div>
-    <div class="table-wrapper max-h-96 overflow-y-auto">
-      <table class="table" id="table-search-student-results">
-        <thead>
-          <tr>
-            <th width="40"></th>
-            <th>MSSV</th>
-            <th>Họ tên</th>
-            <th>Lớp</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="4" class="text-center p-8 text-muted">Nhập thông tin để tìm kiếm...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
-    <button id="btn-confirm-add-students" data-variant="primary" class="btn" type="button" disabled>Thêm sinh viên đã chọn</button>
-  </div>
-  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
-</div>
-
-<!-- Modal: Thêm Giảng viên -->
-<div class="modal" id="modal-add-supervisor" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h2 class="modal__title">Thêm giảng viên hướng dẫn</h2>
-    <p class="modal__description">Chọn giảng viên và thiết lập định mức hướng dẫn tối đa.</p>
-  </div>
-  <div class="modal__content p-6">
-    <div class="field mb-4">
-      <label class="field__label">Tìm giảng viên</label>
-      <div class="flex gap-2">
-        <input type="text" id="search-teacher-query" class="field__input" placeholder="Tên giảng viên...">
-        <button type="button" class="btn" data-variant="outline" id="btn-do-search-teacher">Tìm</button>
-      </div>
-    </div>
-    <div class="field mb-4">
-      <label class="field__label">Chọn giảng viên</label>
-      <select id="select-teacher-id" class="field__input">
-        <option value="">-- Chọn giảng viên --</option>
-      </select>
-    </div>
-    <div class="field">
-      <label class="field__label">Định mức tối đa (Sinh viên)</label>
-      <input type="number" id="input-teacher-quota" class="field__input" value="15" min="1">
-    </div>
-  </div>
-  <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
-    <button id="btn-confirm-add-supervisor" data-variant="primary" class="btn" type="button">Xác nhận thêm</button>
   </div>
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>

@@ -221,6 +221,8 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
       'total_students' => 0,
       'total_supervisors' => 0,
       'assigned_students' => 0,
+      'total_referrals' => 0,
+      'pending_referrals' => 0,
       'has_submissions' => false,
       'has_grades' => false
     ];
@@ -244,6 +246,22 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $stmt = $this->db->prepare($sqlAssigned);
     $stmt->execute([':id' => $id]);
     $stats['assigned_students'] = (int)$stmt->fetchColumn();
+
+    // Đếm tổng số giấy giới thiệu
+    $sqlReferrals = "SELECT COUNT(*) FROM referral_letters rl
+                     JOIN internship_batch_students bs ON rl.batch_student_id = bs.id
+                     WHERE bs.batch_id = :id";
+    $stmt = $this->db->prepare($sqlReferrals);
+    $stmt->execute([':id' => $id]);
+    $stats['total_referrals'] = (int)$stmt->fetchColumn();
+
+    // Đếm số giấy giới thiệu chờ duyệt
+    $sqlPendingReferrals = "SELECT COUNT(*) FROM referral_letters rl
+                            JOIN internship_batch_students bs ON rl.batch_student_id = bs.id
+                            WHERE bs.batch_id = :id AND rl.status = 'pending'";
+    $stmt = $this->db->prepare($sqlPendingReferrals);
+    $stmt->execute([':id' => $id]);
+    $stats['pending_referrals'] = (int)$stmt->fetchColumn();
 
     // Kiểm tra bài nộp
     $sqlSubmissions = "SELECT COUNT(*) FROM internship_submissions s
