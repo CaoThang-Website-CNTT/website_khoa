@@ -11,6 +11,11 @@ class MySQLCompiler extends BaseSQLCompiler
     if ($value === '*')
       return '*';
 
+    // Đừng wrap nếu là SQL function thô (chứa dấu ngoặc đơn mở/đóng, ví dụ: COUNT(*))
+    if (str_contains($value, '(') && str_contains($value, ')')) {
+      return $value;
+    }
+
     // Handle 'table.column'
     if (str_contains($value, '.')) {
       return implode('.', array_map(fn($p) => "`$p`", explode('.', $value)));

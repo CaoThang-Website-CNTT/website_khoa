@@ -193,13 +193,13 @@ class MenuStore extends Store implements IMenuStore
     $builder = new QueryBuilder(new MySQLCompiler());
     $query = $builder
       ->from('menus')
-      ->select('*')
+      ->select('COUNT(*)')
       ->is('deleted_at', null);
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
 
-    return $stmt->rowCount();
+    return (int) $stmt->fetchColumn();
   }
 
   // ── Menu Items ─────────────────────────────────────────────────────────────
