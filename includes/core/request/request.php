@@ -160,16 +160,25 @@ class Request
    */
   public function previous(string $fallback = 'index'): string
   {
+    $protocol = (!empty($this->server['HTTPS']) && $this->server['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $this->server['HTTP_HOST'] ?? 'localhost';
+    $uri = $this->server['REQUEST_URI'] ?? '/';
+    $currentUrl = $protocol . '://' . $host . $uri;
+
+    // Thử lấy previous URL thực tế từ Session (đã lọc các đợt submit POST/redirect)
+    if (isset($this->session)) {
+      $previousUrl = $this->session->get('_url.previous');
+      if ($previousUrl && $previousUrl !== $currentUrl) {
+        return htmlspecialchars($previousUrl, ENT_QUOTES, 'UTF-8');
+      }
+    }
+
+    // Dự phòng (Fallback) về HTTP_REFERER nếu không có lịch sử Session
     $referer = $this->server['HTTP_REFERER'] ?? null;
 
     if (!$referer) {
       return $fallback;
     }
-
-    $protocol = (!empty($this->server['HTTPS']) && $this->server['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = $this->server['HTTP_HOST'] ?? 'localhost';
-    $uri = $this->server['REQUEST_URI'] ?? '/';
-    $currentUrl = $protocol . '://' . $host . $uri;
 
     $refererHost = parse_url($referer, PHP_URL_HOST);
 
