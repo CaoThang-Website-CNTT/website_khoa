@@ -251,7 +251,7 @@ function renderCarousel(array $carouselSlides): void
         </div>
 
         <div
-          class="wcu__stat-card wcu__stat-card--gradient col-start-3 row-start-2 bg-pink-gradient rounded-3xl p-8 flex flex-col gap-2 justify-center text-white">
+          class="wcu__stat-card wcu__stat-card--gradient col-start-3 row-start-2 rounded-3xl p-8 flex flex-col gap-2 justify-center">
           <h2 class="wcu__stat-card-number text-7xl font-bold">95%</h2>
           <p class="wcu__stat-card-title text-xl font-semibold">Tỷ lệ việc làm</p>
           <p class="wcu__stat-card-description text-base font-normal">
@@ -281,7 +281,7 @@ function renderCarousel(array $carouselSlides): void
           <h4 class="wcu__perk-item-title text-base font-semibold text-foreground mb-2">
             Cộng đồng Mạnh mẽ
           </h4>
-          <p class="wcu__perk-item-description text-sm font-normal text-muted-foreground">
+          <p class="wcu__perk-item-description text-sm font-normal">
             Kết nối với 10,000+ sinh viên và cựu sinh viên trên toàn quốc
           </p>
         </div>
@@ -293,7 +293,7 @@ function renderCarousel(array $carouselSlides): void
           <h4 class="wcu__perk-item-title text-base font-semibold text-foreground mb-2">
             Chất lượng Quốc tế
           </h4>
-          <p class="wcu__perk-item-description text-sm font-normal text-muted-foreground">
+          <p class="wcu__perk-item-description text-sm font-normal">
             Chương trình đạt chuẩn ABET và kiểm định quốc tế
           </p>
         </div>
@@ -305,7 +305,7 @@ function renderCarousel(array $carouselSlides): void
           <h4 class="wcu__perk-item-title text-base font-semibold text-foreground mb-2">
             Khởi nghiệp
           </h4>
-          <p class="wcu__perk-item-description text-sm font-normal text-muted-foreground">
+          <p class="wcu__perk-item-description text-sm font-normal">
             Hỗ trợ ý tưởng startup và kết nối nhà đầu tư
           </p>
         </div>
@@ -317,7 +317,7 @@ function renderCarousel(array $carouselSlides): void
           <img class="wcu__highlight-item-image image object-fit"
             src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Trường Cao Thắng">
           <div
-            class="wcu__highlight-item-content wcu__highlight-item-content--blue absolute inset-0 bg-blue-gradient flex flex-col justify-end items-start p-6">
+            class="wcu__highlight-item-content wcu__highlight-item-content--blue absolute inset-0 flex flex-col justify-end items-start p-6">
             <h3 class="wcu__highlight-item-title text-2xl font-semibold mb-2">
               Nghiên cứu &amp; Phát triển
             </h3>
@@ -331,7 +331,7 @@ function renderCarousel(array $carouselSlides): void
           <img class="wcu__highlight-item-image image object-fit"
             src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Trường Cao Thắng">
           <div
-            class="wcu__highlight-item-content wcu__highlight-item-content--green absolute inset-0 bg-green-gradient flex flex-col justify-end items-start p-6">
+            class="wcu__highlight-item-content wcu__highlight-item-content--green absolute inset-0 flex flex-col justify-end items-start p-6">
             <h3 class="wcu__highlight-item-title text-2xl font-semibold mb-2">
               Hợp tác Quốc tế
             </h3>

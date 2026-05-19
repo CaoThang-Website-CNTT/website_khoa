@@ -17,14 +17,14 @@ function renderMenuItems(array $items, object $menu): void
     ?>
     <div class="menu-item" data-id="<?= $item->id ?>">
       <!-- Khối hiển thị Item -->
-      <div class="menu-item-content flex items-center gap-2 border rounded-md px-3 py-3 bg-card shadow-sm">
-        <div class="drag-handle shrink-0 p-1 cursor-grab active:cursor-grabbing text-muted-foreground">
+      <div class="menu-item-content flex items-center gap-2 border rounded-md px-3 py-3 shadow-sm">
+        <div class="drag-handle shrink-0 p-1 cursor-grab active:cursor-grabbing">
           <i class="fa-solid fa-grip-vertical"></i>
         </div>
         <span class="flex-1 font-medium item-label">
           <?= htmlspecialchars($item->label) ?>
         </span>
-        <span class="font-mono text-xs text-muted-foreground bg-slate-100 px-2 py-0.5 rounded border">
+        <span class="font-mono text-xs px-2 py-0.5 rounded border">
           <?= htmlspecialchars($item->url) ?>
         </span>
         <div>
@@ -37,7 +37,7 @@ function renderMenuItems(array $items, object $menu): void
               'parent_id' => $item->parent_id,
               'sort_order' => $item->sort_order
             ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
-            Xem
+            <i class="fa-solid fa-eye"></i>
           </button>
         </div>
       </div>
@@ -86,8 +86,7 @@ function renderMenuItems(array $items, object $menu): void
         <?php if ($isEditable): ?>
         <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
           data-size="lg" class="btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Lưu thay đổi
+          Lưu
         </button>
         <?php endif; ?>
       </div>
@@ -118,7 +117,7 @@ function renderMenuItems(array $items, object $menu): void
           <?php if (!empty($menu->items)): ?>
             <?php renderMenuItems($menu->items, $menu); ?>
           <?php else: ?>
-            <p class="empty-hint text-muted-foreground text-center py-4">
+            <p class="empty-hint text-center py-4">
               Chưa có mục nào. Thêm mục đầu tiên bên dưới.
             </p>
           <?php endif; ?>
@@ -237,14 +236,14 @@ function renderMenuItems(array $items, object $menu): void
 </div>
 
 <!-- Item CRUD Modal -->
-<div class="modal" id="item-modal" tabindex="-1" data-state="closed">
+<div class="modal detail-modal" id="item-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title" id="item-modal-title">Thêm mục mới</h2>
     <p class="modal__description">Điền thông tin mục menu bên dưới.</p>
   </div>
   <form id="item-form" method="POST" action="">
     <?= csrf_field() ?>
-    <div class="detail-modal space-y-4">
+    <div class="detail-modal__form space-y-4">
       <div class="field-group">
         <div class="grid grid-cols-2 gap-4">
           <!-- label -->
@@ -304,6 +303,20 @@ function renderMenuItems(array $items, object $menu): void
 <form id="item-delete-form" method="POST" action="" class="hidden">
   <?= csrf_field() ?>
 </form>
+
+<div class="modal" id="item-delete-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h2 class="modal__title">Xác nhận xóa Mục Menu</h2>
+    <p class="modal__description">Bạn có chắc chắn muốn xóa mục menu này và toàn bộ mục con bên dưới? Hành động này không thể hoàn tác.</p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+    <button id="item-delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xác nhận xóa</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close>
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -458,10 +471,12 @@ function renderMenuItems(array $items, object $menu): void
         if (itemDeleteBtn) {
           itemDeleteBtn.classList.remove('hidden');
           itemDeleteBtn.onclick = () => {
-            if (confirm('Bạn có chắc chắn muốn xóa mục menu này và toàn bộ mục con bên dưới?')) {
+            const confirmDeleteBtn = document.querySelector('#item-delete-confirm-btn');
+            confirmDeleteBtn.onclick = () => {
               itemDeleteForm.action = `<?= url('admin/menu-items/') ?>` + item.id + '/delete';
               itemDeleteForm.submit();
-            }
+            };
+            modalHandler.open('#item-delete-confirm-modal');
           };
         }
       });

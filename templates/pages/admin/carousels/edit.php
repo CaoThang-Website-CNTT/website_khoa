@@ -35,6 +35,12 @@ $old_input = request()->session()->getOldInputs() ?? [];
           Quay lại
         </a>
       </div>
+      <div>
+        <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
+          data-size="lg" class="btn">
+          Lưu
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -100,14 +106,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
                       'custom_html' => $slide->custom_html,
                       'is_active' => $slide->is_active,
                     ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
-                    Sửa
+                    <fa class="fa-solid fa-eye"></fa>
                   </button>
                 </div>
               </div>
             </div>
         <?php endforeach; ?>
         <?php else: ?>
-          <p class="text-gray-500">
+          <p class="">
             Chưa có slide nào. Thêm slide đầu tiên bên dưới.
           </p>
         <?php endif; ?>
@@ -211,7 +217,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <div class="modal" id="delete-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title text-red-600">Xóa Carousel</h2>
+    <h2 class="modal__title">Xóa Carousel</h2>
     <p class="modal__description">Bạn có chắc chắn muốn xóa Carousel này? Các Slides cũng sẽ bị xóa.</p>
   </div>
   <div class="modal__footer">
@@ -224,14 +230,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </div>
 
 <!-- Slide Modal -->
-<div class="modal" id="slide-modal" tabindex="-1" data-state="closed">
+<div class="modal detail-modal" id="slide-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title" id="slide-modal-title">Thêm slide mới</h2>
     <p class="modal__description">Điền thông tin slide bên dưới.</p>
   </div>
   <form id="slide-form" method="POST" action="">
     <?= csrf_field() ?>
-    <div class="detail-modal space-y-4">
+    <div class="detail-modal__form space-y-4">
       <div class="field-group">
         <!-- is_active -->
         <div class="field" data-orientation="horizontal">
@@ -306,10 +312,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </form>
 
     <div class="modal__footer flex justify-between items-center">
-      <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn">Xóa slide</button>
+      <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn">Xóa</button>
       <div class="flex gap-2 ml-auto">
         <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-        <button id="slide-save-btn" data-variant="primary" data-size="lg" class="btn" type="submit">Lưu slide</button>
+        <button id="slide-save-btn" data-variant="primary" data-size="lg" class="btn" type="submit">Lưu</button>
       </div>
     </div>
 
@@ -322,6 +328,20 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <form id="slide-delete-form" method="POST" action="">
   <?= csrf_field() ?>
 </form>
+
+<div class="modal" id="slide-delete-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h2 class="modal__title">Xác nhận xóa Slide</h2>
+    <p class="modal__description">Bạn có chắc chắn muốn xóa slide này? Hành động này không thể hoàn tác.</p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+    <button id="slide-delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xác nhận xóa</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close>
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -412,10 +432,12 @@ $old_input = request()->session()->getOldInputs() ?? [];
         // Show delete button
         slideDeleteBtn.classList.remove('hidden');
         slideDeleteBtn.onclick = () => {
-          if (confirm('Bạn có chắc chắn muốn xóa slide này?')) {
+          const confirmDeleteBtn = document.querySelector('#slide-delete-confirm-btn');
+          confirmDeleteBtn.onclick = () => {
             slideDeleteForm.action = `<?= url('admin/carousels/' . $carousel->id . '/slides/delete/') ?>` + slide.id;
             slideDeleteForm.submit();
-          }
+          };
+          modalHandler.open('#slide-delete-confirm-modal');
         };
       });
     });

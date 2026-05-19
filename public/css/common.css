@@ -922,12 +922,18 @@
     top: 50%;
     left: 50%;
     z-index: 100;
-    min-width: 20rem;
+    min-width: var(--container-xs);
     transform: translate(-50%, -50%);
     background: var(--background);
     border-radius: var(--radius-lg);
     padding: 1rem;
     transform-origin: center center;
+  }
+
+  @media (min-width: 40rem) {
+    .modal {
+      max-width: var(--container-sm);
+    }
   }
 
   @keyframes enter {
@@ -984,10 +990,13 @@
   }
 
   .modal__title {
+    font-size: var(--text-base);
+    line-height: 1;
     font-weight: var(--fw-medium);
   }
 
   .modal__description {
+    font-size: var(--text-sm);
     color: var(--muted-foreground);
   }
 
@@ -1018,7 +1027,7 @@
   }
 
   .modal-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background: color-mix(in oklab, black 10%, transparent);
     backdrop-filter: blur(2px);

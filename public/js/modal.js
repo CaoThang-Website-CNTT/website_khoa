@@ -1,255 +1,122 @@
-// /**
-//  * Class Modal.
-//  * Cung cấp các phương thức để hiển thị, ẩn và quản lý trạng thái của modal.
-//  */
-// class Modal {
-//   /**
-//    * Khởi tạo một đối tượng Modal.
-//    * * @param {HTMLElement|string} element - Element HTML của modal hoặc chuỗi CSS selector.
-//    * @param {Object} [options={}] - Các cấu hình tuỳ chọn.
-//    * @param {boolean} [options.overlay=true] - Bật/tắt màng mờ nền (overlay).
-//    * @throws {Error} Quăng lỗi nếu không tìm thấy element trên DOM.
-//    */
-//   constructor(element, options = {}) {
-//     this.element = typeof element === 'string'
-//       ? document.querySelector(element)
-//       : element;
-
-//     if (!this.element) {
-//       throw new Error('Không tìm thấy modal element');
-//     }
-
-//     this.element._modalInstance = this;
-
-//     this.options = {
-//       overlay: true,
-//       ...options
-//     };
-
-//     this.overlay = null;
-
-//     this._init();
-//   }
-
-//   /**
-//    * Khởi tạo các thành phần cơ bản và gán sự kiện.
-//    * @private
-//    */
-//   _init() {
-//     this.overlay = this._createOverlay();
-//     this._bindCloseButtons();
-//     this._bindOverlay();
-//   }
-
-//   /**
-//    * Tạo mới hoặc lấy overlay có sẵn của modal.
-//    * @private
-//    * @returns {HTMLElement|null} Element overlay được tạo hoặc tìm thấy.
-//    */
-//   _createOverlay() {
-//     const existing = this.element.nextElementSibling;
-//     if (existing?.classList.contains('modal-overlay')) {
-//       return existing;
-//     }
-
-//     const overlay = document.createElement('div');
-//     overlay.className = 'modal-overlay';
-//     this.element.parentNode.insertBefore(overlay, this.element.nextSibling);
-//     return overlay;
-//   }
-
-//   /**
-//    * Tìm và gán sự kiện click cho tất cả các nút đóng bên trong modal.
-//    * @private
-//    */
-//   _bindCloseButtons() {
-//     const closeButtons = this.element.querySelectorAll('[data-modal-close]');
-//     closeButtons.forEach(btn => {
-//       btn.addEventListener('click', (e) => {
-//         e.preventDefault();
-//         this.hide();
-//       });
-//     });
-//   }
-
-//   /**
-//    * Gán sự kiện click vào overlay để đóng modal nếu được cấu hình.
-//    * @private
-//    */
-//   _bindOverlay() {
-//     if (!this.overlay) return;
-
-//     if (this.options.overlay === true) {
-//       this.overlay.addEventListener('click', () => this.hide());
-//     }
-//   }
-
-//   /**
-//    * Kiểm tra trạng thái hiện tại của modal.
-//    * @public
-//    * @returns {boolean} `true` nếu modal đang mở, ngược lại là `false`.
-//    */
-//   isOpen() {
-//     return this.element.getAttribute('data-state') === 'open';
-//   }
-
-//   /**
-//    * Hiển thị modal.
-//    * @public
-//    */
-//   show() {
-//     if (this.isOpen()) return;
-
-//     this.element.setAttribute('data-state', 'open');
-//     if (this.overlay) {
-//       this.overlay.setAttribute('data-state', 'open'); // Thêm dòng này để overlay cũng đồng bộ trạng thái
-//     }
-//   }
-
-//   /**
-//    * Ẩn modal.
-//    * @public
-//    */
-//   hide() {
-//     if (!this.isOpen()) return;
-
-//     this.element.setAttribute('data-state', 'closed');
-
-//     if (this.overlay) {
-//       this.overlay.setAttribute('data-state', 'closed');
-//     }
-//   }
-
-//   /**
-//    * Đảo ngược trạng thái của modal (mở thành đóng, đóng thành mở).
-//    * @public
-//    */
-//   toggle() {
-//     this.isOpen() ? this.hide() : this.show();
-//   }
-
-//   /**
-//    * Lấy instance Modal đã được khởi tạo từ một element.
-//    * @static
-//    * @param {HTMLElement|string} element - Element HTML hoặc chuỗi CSS selector.
-//    * @returns {Modal|null} Instance của Modal, hoặc `null` nếu chưa được khởi tạo.
-//    */
-//   static getInstance(element) {
-//     const el = typeof element === 'string'
-//       ? document.querySelector(element)
-//       : element;
-//     return el?._modalInstance || null;
-//   }
-// }
-
-// // Tự động khởi tạo
-// document.addEventListener('DOMContentLoaded', () => {
-//   const triggers = document.querySelectorAll('[data-modal-trigger]');
-
-//   triggers.forEach(trigger => {
-//     trigger.addEventListener('click', function (e) {
-//       e.preventDefault();
-
-//       const selector = this.getAttribute('data-modal-trigger');
-//       const target = document.querySelector(selector);
-
-//       if (!target) return;
-
-//       const modal = target._modalInstance || new Modal(target);
-
-//       modal.show();
-//     });
-//   });
-// });
 document.addEventListener('DOMContentLoaded', () => {
-  const modalHandler = new ModalHandler();
-  modalHandler.init();
-})
+  ModalHandler.instance.init();
+  window.modalHandler = ModalHandler.instance;
+});
+
+
 class ModalHandler {
+  static #instance = null;
+
   constructor() {
-    this._activeModal = null;
-    this._triggers = document.querySelectorAll('button[data-modal-trigger]');
-    this._closeBtns = document.querySelectorAll('button[data-modal-close]');
+    if (ModalHandler.#instance) return ModalHandler.#instance;
+
+    this._activeModals = [];
     this._portal = null;
     this._overlay = null;
+
+    ModalHandler.#instance = this;
   }
+
+  static get instance() {
+    return ModalHandler.#instance || new ModalHandler();
+  }
+
   init() {
     this._portal = this._createPortal();
     this._overlay = this._createOverlay();
     this._bindEvents();
   }
+
   _createPortal() {
     let portal = document.getElementById("modal-portal");
-
     if (!portal) {
       portal = document.createElement("div");
       portal.id = "modal-portal";
       document.body.appendChild(portal);
     }
-
     return portal;
   }
+
   _createOverlay() {
     let overlay = this._portal.querySelector(".modal-overlay");
-
     if (!overlay) {
       overlay = document.createElement("div");
       overlay.className = "modal-overlay";
       overlay.setAttribute("data-state", "closed");
       this._portal.appendChild(overlay);
     }
-
     return overlay;
   }
+
   _bindEvents() {
-    this._triggers.forEach(trigger => {
-      trigger.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('[data-modal-trigger]');
+      if (trigger) {
         e.preventDefault();
         const selector = trigger.getAttribute('data-modal-trigger');
         this.open(selector);
-      });
-    });
+        return;
+      }
 
-    this._closeBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      const closeBtn = e.target.closest('[data-modal-close]');
+      if (closeBtn) {
         e.preventDefault();
         this.close();
-      });
-    });
+        return;
+      }
 
-    if (this._overlay) {
-      this._overlay.addEventListener('click', () => {
+      if (e.target === this._overlay) {
+        e.preventDefault();
         this.close();
-      });
-    }
+        return;
+      }
+    });
   }
+
   open(selector) {
     const targetModal = document.querySelector(selector);
-
     if (!targetModal) return;
-
-    if (this._activeModal) {
-      this.close();
-    }
 
     if (targetModal.parentElement !== this._portal) {
       this._portal.appendChild(targetModal);
     }
 
-    this._activeModal = targetModal;
+    if (!this._activeModals.includes(targetModal)) {
+      this._activeModals.push(targetModal);
+    }
+
+    this._updateZIndices();
+
     this._overlay.setAttribute("data-state", "open");
-    this._activeModal.setAttribute("data-state", "open");
+    targetModal.setAttribute("data-state", "open");
 
     document.body.style.overflow = "hidden";
   }
+
   close() {
-    if (!this._activeModal) return;
+    if (this._activeModals.length === 0) return;
 
-    this._activeModal.setAttribute("data-state", "closed");
-    this._overlay.setAttribute("data-state", "closed");
+    const targetModal = this._activeModals.pop();
+    targetModal.setAttribute("data-state", "closed");
 
-    document.body.style.overflow = "";
+    if (this._activeModals.length > 0) {
+      this._updateZIndices();
+    } else {
+      this._overlay.setAttribute("data-state", "closed");
+      document.body.style.overflow = "";
+    }
+  }
 
-    this._activeModal = null;
+  _updateZIndices() {
+    const baseZIndex = 100;
+
+    this._activeModals.forEach((modal, index) => {
+      // Mỗi modal được mở sau sẽ có z-index cao hơn để xếp chồng lên nhau
+      modal.style.zIndex = baseZIndex + (index * 2);
+    });
+
+    // Lớp overlay mờ luôn tự động nằm ngay dưới modal trên cùng
+    const topIndex = this._activeModals.length - 1;
+    this._overlay.style.zIndex = baseZIndex + (topIndex * 2) - 1;
   }
 }

@@ -323,6 +323,10 @@ body {
   order: 1;
 }
 .detail-modal {
+  width: calc(100% - 2rem);
+  max-width: 40rem;
+}
+.detail-modal__form {
   max-height: 60vh;
   overflow-y: scroll;
 }

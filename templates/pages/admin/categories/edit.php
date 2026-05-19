@@ -71,7 +71,7 @@ $isConst = $category->type === 'const';
 
   <div class="card__footer">
     <?php if ($isConst): ?>
-      <p class="text-muted" style="font-size: 13px;">
+      <p class="">
         Danh mục hệ thống không thể chỉnh sửa hoặc xóa.
       </p>
     <?php else: ?>
