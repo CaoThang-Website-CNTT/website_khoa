@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
           div.className = "suggestions-list__item";
           div.innerHTML = `
             <div class="font-medium text-sm">${company.name}</div>
-            <div class="text-xs text-muted-foreground">${company.tax_code || "Không có MST"} - ${company.address}</div>
+            <div class="text-xs">${company.tax_code || "Không có MST"} - ${company.address}</div>
           `;
           div.addEventListener("click", () => {
             companyNameInput.value = company.name;

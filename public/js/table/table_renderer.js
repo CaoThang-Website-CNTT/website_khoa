@@ -236,7 +236,33 @@ export class TableRenderer {
       th.dataset.tmColKey = col.key;
       th.style.textAlign = col.align;
 
-      if (col.sortable) {
+      if (col.key === '_checkbox') {
+        th.innerHTML = `
+          <div class="tm-checkbox-wrapper">
+            <label class="checkbox">
+              <input type="checkbox" class="checkbox__input tm-check-all">
+              <span class="checkbox__label"></span>
+            </label>
+          </div>
+        `;
+        const checkAll = th.querySelector('.tm-check-all');
+        checkAll.addEventListener('change', (e) => {
+          const checked = e.target.checked;
+          const visibleCheckboxes = this.#root.querySelectorAll('.tm-row-checkbox');
+          visibleCheckboxes.forEach(cb => {
+            cb.checked = checked;
+            const id = String(cb.value);
+            if (checked) {
+              this.#inst.selectedIds.add(id);
+            } else {
+              this.#inst.selectedIds.delete(id);
+            }
+          });
+          this.#root.dispatchEvent(new CustomEvent('tm:selection-change', {
+            detail: { selectedIds: Array.from(this.#inst.selectedIds) }
+          }));
+        });
+      } else if (col.sortable) {
         th.classList.add('tm-th--sortable');
         th.dataset.tmSortCol = col.key;
         th.innerHTML = `
@@ -245,7 +271,7 @@ export class TableRenderer {
              <i class="fa-solid fa-chevron-up tm-sort-icon__asc"></i>
              <i class="fa-solid fa-chevron-down tm-sort-icon__desc"></i>
            </span>
-        `;
+         `;
         th.addEventListener('click', () => {
           this.#inst.sort.toggle(col.key);
         });
@@ -275,6 +301,9 @@ export class TableRenderer {
       td.colSpan = this.#cols.length;
       td.textContent = 'Không có dữ liệu.';
       tr.appendChild(td); tbody.appendChild(tr);
+      if (typeof this.#inst.updateHeaderCheckbox === 'function') {
+        this.#inst.updateHeaderCheckbox();
+      }
       return;
     }
 
@@ -300,6 +329,9 @@ export class TableRenderer {
       frag.appendChild(tr);
     });
     tbody.appendChild(frag);
+    if (typeof this.#inst.updateHeaderCheckbox === 'function') {
+      this.#inst.updateHeaderCheckbox();
+    }
   }
 
   /** Cập nhật chỉ báo sắp xếp trong <thead> */
