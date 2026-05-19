@@ -88,9 +88,9 @@ export class TableRenderer {
 
     // Input giá trị (text / number / date / select)
     let valueEl;
-    if (col.filterType === 'select' && col.filterOptions) {
-      valueEl = this.#buildCustomSelect(col.filterOptions, 'Giá trị...');
-      valueEl.classList.add('field__input tm-filter-panel__value');
+    if (col.filterType === "select" && col.filterOptions) {
+      valueEl = this.#buildCustomSelect(col.filterOptions, "Giá trị...");
+      valueEl.classList.add("tm-filter-panel__value");
     } else {
       valueEl = document.createElement('input');
       valueEl.className = 'field__input tm-filter-panel__value';

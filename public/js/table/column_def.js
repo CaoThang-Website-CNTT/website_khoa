@@ -20,6 +20,9 @@ export class ColumnDef {
   /** @type {string[]} Danh sách toán tử lọc được phép áp dụng cho cột */
   filterOps;
 
+  /** @type {array|null} Danh sách option cho bộ lọc select */
+  filterOptions;
+
   /** @type {((row: object, value: any) => DocumentFragment)|null} Hàm render DOM tùy chỉnh từ <template> */
   render;
 
@@ -33,6 +36,7 @@ export class ColumnDef {
    * @param {'left'|'center'|'right'} [opts.align='left']
    * @param {string|null} [opts.filterType=null]
    * @param {string[]} [opts.filterOps=[]]
+   * @param {array|null} [opts.filterOptions=null]
    * @param {((row: object, value: any) => DocumentFragment)|null} [opts.render=null]
    */
   constructor(opts) {
@@ -40,9 +44,10 @@ export class ColumnDef {
     this.label = opts.label;
     this.sortable = Boolean(opts.sortable);
     this.width = opts.width ?? null;
-    this.align = opts.align ?? 'left';
+    this.align = opts.align ?? "left";
     this.filterType = opts.filterType ?? null;
     this.filterOps = Array.isArray(opts.filterOps) ? opts.filterOps : [];
+    this.filterOptions = opts.filterOptions ?? null;
     this.render = opts.render ?? null;
   }
 }
