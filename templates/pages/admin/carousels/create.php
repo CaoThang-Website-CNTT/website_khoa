@@ -35,7 +35,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       </div>
       <div>
         <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary"
-          data-size="lg" class="w-full btn">
+          data-size="lg" class="btn">
           <i class="fa-solid fa-floppy-disk"></i>
           Thêm
         </button>
@@ -45,161 +45,148 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<form class="detail-layout" id="carousel-add-form" action="<?= url('admin/carousels') ?>" method="POST">
+<form id="carousel-add-form" action="<?= url('admin/carousels') ?>" method="POST">
   <?= csrf_field() ?>
-  <div class="detail-layout__main">
-    <div class="card shadow">
-      <fieldset class="field__set">
+  
+  <!-- Hidden inputs for slides will be dynamically injected here -->
+  <div id="slides-inputs-container"></div>
+
+  <div class="detail-layout">
+    <div class="detail-layout__main flex-1">
+      <!-- Carousel Slides Card -->
+      <div class="card shadow">
         <div class="card__header">
-          <legend class="field__legend">Thông tin carousel</legend>
-          <p class="field__description">Những trường có dấu * là bắt buộc.</p>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="field-group">
-
-            <div class="field" data-field-required>
-              <label class="field__label" for="name">Tên carousel</label>
-              <input id="name" class="field__input" type="text" name="name" placeholder="VD: Slider Trang chủ" value="">
-            </div>
-
-            <div class="field" data-field-readonly>
-              <label class="field__label" for="slug">Slug</label>
-              <input id="slug" class="field__input" type="text" name="slug" placeholder="slider-trang-chu" value=""
-                readonly>
-              <p class="field__description">Slug được tự động tạo từ tên carousel.</p>
-            </div>
-
-          </div>
-        </div>
-      </fieldset>
-    </div>
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="card__title field__legend">Danh sách slides</legend>
-          <p class="card_description field__description">Thêm và sắp xếp các slide cho carousel này.</p>
-          <button type="button" id="add-slide-btn" data-variant="outline" data-size="lg" class="btn card__action">
+          <legend class="card__title field__legend">Các slide trong Carousel</legend>
+          <p class="card__description field__description">Kéo thả để sắp xếp thứ tự hiển thị của các slide.</p>
+          <button class="btn card__action" type="button" id="add-item-btn" data-variant="outline" data-size="lg">
             <i class="fa-solid fa-plus"></i>
             Thêm slide
           </button>
         </div>
-        <hr class="separator" />
+        <hr class="separator">
         <div class="card__content">
-          <div id="slides-container" class="space-y-4">
-            <!-- Slides will be injected here by JS -->
-            <div id="slides-empty-hint" class="empty">
+          <div id="slides-container" class="space-y-2">
+            <!-- Slides list empty state by default -->
+            <div class="empty" id="slides-empty-hint">
               <div class="empty__header">
-                <div class="empty__title">
-                  Chưa có slide nào
+                <div class="empty__media">
+                  <i class="fa-solid fa-image"></i>
                 </div>
+                <div class="empty__title">Carousel trống</div>
                 <div class="empty__description">
-                  Nhấn "Thêm slide" để tạo slide mới.
+                  Chưa có slide nào. Thêm slide đầu tiên bên dưới.
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </fieldset>
+      </div>
     </div>
 
-  </div>
-
-  <!-- ── Sidebar ── -->
-  <div class="detail-layout__sidebar">
-    <div class="card shadow">
-      <fieldset class="field__set">
+    <!-- Sidebar -->
+    <div class="detail-layout__sidebar">
+      <div class="card shadow">
         <div class="card__header">
-          <legend class="field__legend">Trạng thái</legend>
+          <legend class="card__title field__legend">Thông tin Carousel</legend>
         </div>
-        <hr class="separator" />
+        <hr class="separator">
         <div class="card__content">
           <div class="field-group">
+            <div class="field" data-field-required>
+              <label class="field__label" for="name">Tên Carousel</label>
+              <input id="name" class="field__input" type="text" name="name"
+                placeholder="VD: Slider Trang chủ" value="<?= htmlspecialchars($old_input['name'] ?? '') ?>">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="slug">Slug</label>
+              <input id="slug" class="field__input" type="text" name="slug"
+                placeholder="slider-trang-chu" value="<?= htmlspecialchars($old_input['slug'] ?? '') ?>">
+              <p class="field__description">Slug được tự động tạo từ tên carousel.</p>
+            </div>
 
             <div class="field" data-orientation="horizontal">
-              <label class="field__label" for="is_active">Kích hoạt carousel</label>
-              <input id="is_active" class="field__input" type="checkbox" name="is_active" value="1" checked>
+              <label class="field__label" for="is_active">Kích hoạt</label>
+              <input id="is_active" class="field__input" type="checkbox" name="is_active" value="1" 
+                <?= !isset($old_input['is_active']) || $old_input['is_active'] ? 'checked' : '' ?>>
             </div>
-            <p class="field__description">Carousel sẽ hiển thị trên trang web khi được kích hoạt.</p>
-
           </div>
         </div>
-      </fieldset>
+      </div>
     </div>
   </div>
 </form>
 
-<!-- Slide template -->
-<template id="slide-template">
-  <div class="slide-item card shadow" data-dnd-draggable data-slide-index="">
-    <div class="card__header">
-      <legend class="card__title field__legend">
-        <i class="fa-solid fa-grip-vertical"></i>
-        Slide <span class="slide-number"></span>
-      </legend>
-      <button type="button" class="btn card__action remove-slide-btn" data-variant="destructive" data-size="sm">
-        <i class="fa-solid fa-trash"></i>
-        Xóa
-      </button>
-    </div>
-    <hr class="separator" />
-    <div class="card__content">
+<!-- ── Confirm Carousel Create Modal ── -->
+<div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h2 class="modal__title">Xác nhận tạo Carousel</h2>
+    <p class="modal__description">Bạn có chắc chắn muốn lưu Carousel này cùng toàn bộ slide hiện tại?</p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Xác nhận</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close>
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
+<!-- ── Slide Edit / Create Modal ── -->
+<div class="modal" id="slide-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h2 class="modal__title" id="slide-modal-title">Thêm slide mới</h2>
+    <p class="modal__description">Vui lòng nhập thông tin chi tiết cho slide bên dưới.</p>
+  </div>
+
+  <form id="slide-form" onsubmit="event.preventDefault();">
+    <div class="modal__body">
       <div class="field-group">
-
-        <!-- sort_order -->
-        <input type="hidden" class="slide-sort-order" name="slides[__INDEX__][sort_order]" value="">
-
         <!-- is_active -->
         <div class="field" data-orientation="horizontal">
-          <label class="field__label" for="is_active-[__INDEX__]">Kích hoạt slide</label>
-          <input id="is_active-[__INDEX__]" type="checkbox" class="field__input" name="slides[__INDEX__][is_active]"
-            value="1" checked>
+          <label class="field__label" for="slide-is-active">Kích hoạt slide</label>
+          <input id="slide-is-active" class="field__input" type="checkbox" name="is_active" value="1" checked>
         </div>
 
         <!-- title + title_highlight -->
         <div class="grid grid-cols-2 gap-4">
           <div class="field" data-field-required>
-            <label class="field__label">Tiêu đề</label>
-            <input class="field__input" type="text" name="slides[__INDEX__][title]"
-              placeholder="Tiêu đề chính của slide">
+            <label class="field__label" for="slide-title">Tiêu đề</label>
+            <input id="slide-title" class="field__input" type="text" name="title" placeholder="Tiêu đề chính" required>
           </div>
           <div class="field">
-            <label class="field__label">Tiêu đề nổi bật</label>
-            <input class="field__input" type="text" name="slides[__INDEX__][title_highlight]"
-              placeholder="Phần in đậm / màu khác">
+            <label class="field__label" for="slide-title-highlight">Tiêu đề nổi bật</label>
+            <input id="slide-title-highlight" class="field__input" type="text" name="title_highlight" placeholder="In đậm / tô màu">
           </div>
         </div>
 
         <!-- description -->
         <div class="field">
-          <label class="field__label">Mô tả</label>
-          <textarea class="field__input" name="slides[__INDEX__][description]"
-            placeholder="Mô tả ngắn hiển thị trên slide" rows="2"></textarea>
+          <label class="field__label" for="slide-description">Mô tả</label>
+          <textarea id="slide-description" class="field__input" name="description" placeholder="Mô tả ngắn" rows="3"></textarea>
         </div>
 
         <!-- image_path + image_alt -->
         <div class="grid grid-cols-2 gap-4">
           <div class="field" data-field-required>
-            <label class="field__label">Đường dẫn ảnh</label>
-            <input class="field__input" type="text" name="slides[__INDEX__][image_path]"
-              placeholder="/uploads/slides/anh.jpg">
+            <label class="field__label" for="slide-image-path">Đường dẫn ảnh</label>
+            <input id="slide-image-path" class="field__input" type="text" name="image_path" placeholder="/uploads/slides/anh.jpg" required>
           </div>
           <div class="field">
-            <label class="field__label">Alt text (ảnh)</label>
-            <input class="field__input" type="text" name="slides[__INDEX__][image_alt]"
-              placeholder="Mô tả ảnh cho SEO / accessibility">
+            <label class="field__label" for="slide-image-alt">Alt text (ảnh)</label>
+            <input id="slide-image-alt" class="field__input" type="text" name="image_alt" placeholder="SEO alt text">
           </div>
         </div>
 
-        <!-- CTA -->
+        <!-- CTA label, variant, url -->
         <div class="grid grid-cols-2 gap-4">
           <div class="field">
-            <label class="field__label">Nhãn nút CTA</label>
-            <input class="field__input" type="text" name="slides[__INDEX__][cta_label]" placeholder="VD: Tìm hiểu thêm">
+            <label class="field__label" for="slide-cta-label">Nhãn nút CTA</label>
+            <input id="slide-cta-label" class="field__input" type="text" name="cta_label" placeholder="VD: Tìm hiểu thêm">
           </div>
           <div class="field">
-            <label class="field__label">Kiểu nút CTA</label>
-            <select class="field__input" name="slides[__INDEX__][cta_variant]">
+            <label class="field__label" for="slide-cta-variant">Kiểu nút CTA</label>
+            <select id="slide-cta-variant" class="field__input" name="cta_variant">
               <option value="primary">Primary</option>
               <option value="secondary">Secondary</option>
               <option value="outline">Outline</option>
@@ -207,40 +194,48 @@ $old_input = request()->session()->getOldInputs() ?? [];
           </div>
         </div>
         <div class="field">
-          <label class="field__label">URL nút CTA</label>
-          <input class="field__input" type="text" name="slides[__INDEX__][cta_url]"
-            placeholder="https://... hoặc /duong-dan">
+          <label class="field__label" for="slide-cta-url">URL nút CTA</label>
+          <input id="slide-cta-url" class="field__input" type="text" name="cta_url" placeholder="https://... hoặc /duong-dan">
         </div>
 
         <!-- use_custom_html toggle -->
         <div class="field" data-orientation="horizontal">
-          <label class="field__label" for="use_custom_html-[__INDEX__]">Dùng HTML tuỳ chỉnh</label>
-          <input id="use_custom_html-[__INDEX__]" type="checkbox" class="field__input use-custom-html-toggle"
-            name="slides[__INDEX__][use_custom_html]" value="1">
+          <label class="field__label" for="slide-use-custom-html">Dùng HTML tuỳ chỉnh</label>
+          <input id="slide-use-custom-html" type="checkbox" class="field__input" name="use_custom_html" value="1">
         </div>
 
-        <!-- custom_html (ẩn mặc định) -->
-        <div class="field custom-html-field" style="display: none;">
-          <label class="field__label">Custom HTML</label>
-          <textarea class="field__input field__input--mono" name="slides[__INDEX__][custom_html]"
-            placeholder="<div>Nội dung HTML tuỳ chỉnh...</div>" rows="5" spellcheck="false"></textarea>
-          <p class="field__description">Khi bật, nội dung HTML này sẽ thay thế title/description mặc định.</p>
+        <!-- custom_html (hidden by default) -->
+        <div class="field" id="slide-custom-html-field" style="display: none;">
+          <label class="field__label" for="slide-custom-html">Custom HTML</label>
+          <textarea id="slide-custom-html" class="field__input field__input--mono" name="custom_html" placeholder="<div>HTML...</div>" rows="4" spellcheck="false"></textarea>
+          <p class="field__description">Khi bật, HTML này sẽ thay thế các trường mặc định.</p>
         </div>
-
       </div>
     </div>
-  </div>
-</template>
+  </form>
 
-<!-- ── Confirm Modal ── -->
-<div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__footer flex justify-between items-center">
+    <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn hidden">Xóa</button>
+    <div class="flex gap-2 ml-auto">
+      <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+      <button id="slide-save-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu</button>
+    </div>
+  </div>
+
+  <button class="modal__close" type="button" data-modal-close>
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
+<!-- ── Confirm Delete Slide Modal ── -->
+<div class="modal" id="slide-delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Bạn có chắc</h2>
-    <p class="modal__description">Những thao tác này sẽ không thể hoàn tác.</p>
+    <h2 class="modal__title">Xác nhận xóa Slide</h2>
+    <p class="modal__description">Bạn có chắc chắn muốn xóa slide này khỏi danh sách tạo?</p>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-    <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Chắc chắn</button>
+    <button id="slide-delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xác nhận xóa</button>
   </div>
   <button class="modal__close" type="button" data-modal-close>
     <i class="fa-solid fa-xmark"></i>
@@ -249,86 +244,264 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-
-    const form = document.querySelector('#carousel-add-form');
+    const mainForm = document.querySelector('#carousel-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
     const nameInput = document.querySelector('#name');
     const slugInput = document.querySelector('#slug');
-    const addSlideBtn = document.querySelector('#add-slide-btn');
-    const slidesContainer = document.querySelector('#slides-container');
-    const emptyHint = document.querySelector('#slides-empty-hint');
-    const template = document.querySelector('#slide-template');
 
-    let slideCount = 0;
-
-    nameInput.addEventListener('input', function () {
-      slugInput.value = Utils.toCleanAscii(this.value)
-        .toLowerCase().trim()
+    // Auto-slug normalization
+    nameInput.addEventListener('input', () => {
+      if (slugInput.dataset.manual) return;
+      slugInput.value = nameInput.value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
         .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+        .trim()
+        .replace(/\s+/g, '-');
     });
 
-    function reindexSlides() {
-      const items = slidesContainer.querySelectorAll('.slide-item');
-      emptyHint.style.display = items.length === 0 ? 'flex' : 'none';
-      items.forEach((item, i) => {
-        item.querySelector('.slide-number').textContent = i + 1;
-        item.querySelector('.slide-sort-order').value = i + 1;
+    slugInput.addEventListener('input', () => {
+      slugInput.dataset.manual = 'true';
+    });
+
+    // Submit main form
+    confirmBtn.addEventListener('click', () => {
+      mainForm.submit();
+    });
+
+    // ── SLIDES LOCAL STATE MANAGEMENT ──────────────────────────────────────
+    let localSlides = [];
+    const slidesContainer = document.querySelector('#slides-container');
+    const slidesEmptyHint = document.querySelector('#slides-empty-hint');
+    const slidesInputsContainer = document.querySelector('#slides-inputs-container');
+
+    const slideModal = document.querySelector('#slide-modal');
+    const slideForm = slideModal.querySelector('#slide-form');
+    const slideModalTitle = slideModal.querySelector('#slide-modal-title');
+    const slideUseCustomHtml = slideModal.querySelector('#slide-use-custom-html');
+    const slideCustomHtmlField = slideModal.querySelector('#slide-custom-html-field');
+    const slideDeleteBtn = slideModal.querySelector('#slide-delete-btn');
+    const slideSaveBtn = slideModal.querySelector('#slide-save-btn');
+
+    const slideDeleteConfirmModal = document.querySelector('#slide-delete-confirm-modal');
+    const confirmDeleteBtn = slideDeleteConfirmModal.querySelector('#slide-delete-confirm-btn');
+
+    // Utility: HTML escape
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Toggle Custom HTML field in modal
+    slideUseCustomHtml.addEventListener('change', function() {
+      slideCustomHtmlField.style.display = this.checked ? 'flex' : 'none';
+    });
+
+    // Reset slide modal form
+    function resetSlideForm() {
+      slideForm.reset();
+      slideCustomHtmlField.style.display = 'none';
+      slideDeleteBtn.classList.add('hidden');
+      delete slideModal.dataset.editingTempId;
+    }
+
+    // Open modal to add slide
+    document.querySelector('#add-item-btn').addEventListener('click', () => {
+      resetSlideForm();
+      slideModalTitle.textContent = 'Thêm slide mới';
+      modalHandler.open('#slide-modal');
+    });
+
+    // Render list visual DOM and hidden form inputs
+    function renderSlides() {
+      // 1. Clear old content (keep empty hint template ready if needed)
+      const visualItems = slidesContainer.querySelectorAll('.slide-item');
+      visualItems.forEach(el => el.remove());
+
+      if (localSlides.length === 0) {
+        slidesEmptyHint.style.display = 'flex';
+      } else {
+        slidesEmptyHint.style.display = 'none';
+      }
+
+      // 2. Clear hidden inputs
+      slidesInputsContainer.innerHTML = '';
+
+      // 3. Rebuild visual DOM and inputs
+      localSlides.forEach((slide, index) => {
+        // A. Visual Card
+        const card = document.createElement('div');
+        card.className = 'slide-item flex items-center p-2 border rounded-md gap-2 shadow-sm hover-lift';
+        card.dataset.tempId = slide.tempId;
+        card.setAttribute('data-dnd-draggable', '');
+
+        const imgHtml = slide.image_path 
+          ? `<img class="slide-item__img" src="${escapeHtml(slide.image_path)}" alt="">`
+          : `<div class="slide-item__img"><i class="fa-solid fa-image"></i>N/A</div>`;
+
+        card.innerHTML = `
+          <div class="drag-handle shrink-0 flex flex-col cursor-grab">
+            <i class="fa-solid fa-grip-vertical"></i>
+          </div>
+          <div class="flex-1 flex gap-2 items-center">
+            ${imgHtml}
+            <span class="flex-1 w-full font-medium text-sm">
+              ${escapeHtml(slide.title || '')} 
+              <span class="text-primary font-bold">${escapeHtml(slide.title_highlight || '')}</span>
+            </span>
+            <div>
+              <span class="badge" data-variant="${slide.is_active ? 'primary' : 'secondary'}">
+                ${slide.is_active ? 'Hiển thị' : 'Đã ẩn'}
+              </span>
+              <button type="button" class="btn ml-2 edit-slide-btn" data-variant="outline" data-size="md">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+        `;
+
+        // Attach edit click handler
+        card.querySelector('.edit-slide-btn').addEventListener('click', () => {
+          resetSlideForm();
+          slideModalTitle.textContent = 'Chỉnh sửa slide';
+          slideModal.dataset.editingTempId = slide.tempId;
+
+          // Populate fields
+          slideForm.querySelector('#slide-is-active').checked = Boolean(slide.is_active);
+          slideForm.querySelector('#slide-title').value = slide.title || '';
+          slideForm.querySelector('#slide-title-highlight').value = slide.title_highlight || '';
+          slideForm.querySelector('#slide-description').value = slide.description || '';
+          slideForm.querySelector('#slide-image-path').value = slide.image_path || '';
+          slideForm.querySelector('#slide-image-alt').value = slide.image_alt || '';
+          slideForm.querySelector('#slide-cta-label').value = slide.cta_label || '';
+          slideForm.querySelector('#slide-cta-variant').value = slide.cta_variant || 'primary';
+          slideForm.querySelector('#slide-cta-url').value = slide.cta_url || '';
+          
+          const useCustom = Boolean(slide.use_custom_html);
+          slideUseCustomHtml.checked = useCustom;
+          slideCustomHtmlField.style.display = useCustom ? 'flex' : 'none';
+          slideForm.querySelector('#slide-custom-html').value = slide.custom_html || '';
+
+          slideDeleteBtn.classList.remove('hidden');
+          modalHandler.open('#slide-modal');
+        });
+
+        slidesContainer.appendChild(card);
+
+        // B. Populate hidden inputs (Omit ID completely)
+        const slideFields = [
+          'title', 'title_highlight', 'description', 'image_path', 'image_alt',
+          'cta_label', 'cta_variant', 'cta_url', 'custom_html'
+        ];
+
+        slideFields.forEach(field => {
+          const inp = document.createElement('input');
+          inp.type = 'hidden';
+          inp.name = `slides[${index}][${field}]`;
+          inp.value = slide[field] || '';
+          slidesInputsContainer.appendChild(inp);
+        });
+
+        // Booleans
+        const activeInp = document.createElement('input');
+        activeInp.type = 'hidden';
+        activeInp.name = `slides[${index}][is_active]`;
+        activeInp.value = slide.is_active ? '1' : '0';
+        slidesInputsContainer.appendChild(activeInp);
+
+        const customHtmlInp = document.createElement('input');
+        customHtmlInp.type = 'hidden';
+        customHtmlInp.name = `slides[${index}][use_custom_html]`;
+        customHtmlInp.value = slide.use_custom_html ? '1' : '0';
+        slidesInputsContainer.appendChild(customHtmlInp);
+
+        // sort_order
+        const sortInp = document.createElement('input');
+        sortInp.type = 'hidden';
+        sortInp.name = `slides[${index}][sort_order]`;
+        sortInp.value = String(index + 1);
+        slidesInputsContainer.appendChild(sortInp);
       });
     }
 
+    // Modal Save Button Handler
+    slideSaveBtn.addEventListener('click', () => {
+      if (!slideForm.reportValidity()) return;
+
+      const slideData = {
+        is_active: slideForm.querySelector('#slide-is-active').checked ? 1 : 0,
+        title: slideForm.querySelector('#slide-title').value.trim(),
+        title_highlight: slideForm.querySelector('#slide-title-highlight').value.trim(),
+        description: slideForm.querySelector('#slide-description').value.trim(),
+        image_path: slideForm.querySelector('#slide-image-path').value.trim(),
+        image_alt: slideForm.querySelector('#slide-image-alt').value.trim(),
+        cta_label: slideForm.querySelector('#slide-cta-label').value.trim(),
+        cta_variant: slideForm.querySelector('#slide-cta-variant').value,
+        cta_url: slideForm.querySelector('#slide-cta-url').value.trim(),
+        use_custom_html: slideUseCustomHtml.checked ? 1 : 0,
+        custom_html: slideForm.querySelector('#slide-custom-html').value.trim()
+      };
+
+      const editingTempId = slideModal.dataset.editingTempId;
+      if (editingTempId) {
+        // Edit existing
+        const idx = localSlides.findIndex(s => s.tempId === editingTempId);
+        if (idx !== -1) {
+          localSlides[idx] = { ...localSlides[idx], ...slideData };
+        }
+      } else {
+        // Add new
+        slideData.tempId = 'slide_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localSlides.push(slideData);
+      }
+
+      renderSlides();
+      modalHandler.close('#slide-modal');
+    });
+
+    // Modal Delete Button Handler
+    slideDeleteBtn.addEventListener('click', () => {
+      const editingTempId = slideModal.dataset.editingTempId;
+      if (!editingTempId) return;
+
+      confirmDeleteBtn.onclick = () => {
+        localSlides = localSlides.filter(s => s.tempId !== editingTempId);
+        renderSlides();
+        modalHandler.close('#slide-delete-confirm-modal');
+        modalHandler.close('#slide-modal');
+      };
+      modalHandler.open('#slide-delete-confirm-modal');
+    });
+
+    // ── DRAG AND DROP REORDERING ───────────────────────────────────────────
     if (slidesContainer) {
       new DnD(slidesContainer, {
         animation: 150,
         group: "slides",
-        handle: '.card__header',
+        handle: '.drag-handle',
+        ghostClass: 'dnd-ghost',
+        chosenClass: 'dnd-chosen',
+        onEnd: () => {
+          // Read actual physical order of slides in visual DOM and sort our local array
+          const reorderedTempIds = Array.from(slidesContainer.querySelectorAll('.slide-item')).map(el => el.dataset.tempId);
+          
+          const sortedSlides = [];
+          reorderedTempIds.forEach(tempId => {
+            const found = localSlides.find(s => s.tempId === tempId);
+            if (found) sortedSlides.push(found);
+          });
+          
+          localSlides = sortedSlides;
+          renderSlides(); // Redraws list and synchronizes index arrays cleanly
+        }
       });
     }
-
-    addSlideBtn.addEventListener('click', () => {
-      const index = slideCount++;
-      const id = 'slide-' + index;
-
-      const clone = template.content.cloneNode(true);
-      const el = clone.querySelector('.slide-item');
-
-      // Fill __INDEX__ placeholders
-      el.querySelectorAll('[name]').forEach(input => {
-        input.name = input.name.replace(/__INDEX__/g, index);
-      });
-
-      // Fill __INDEX__ id của thẻ label và input
-      el.querySelectorAll('label').forEach(label => {
-        label.htmlFor = label.htmlFor.replace(/__INDEX__/g, index);
-      });
-
-      el.querySelectorAll('[id]').forEach(input => {
-        input.id = input.id.replace(/__INDEX__/g, index);
-      });
-
-      el.dataset.slideIndex = id;
-
-      const toggle = el.querySelector('.use-custom-html-toggle');
-      const htmlField = el.querySelector('.custom-html-field');
-      toggle.addEventListener('change', () => {
-        htmlField.style.display = toggle.checked ? 'block' : 'none';
-      });
-
-      el.querySelector('.remove-slide-btn').addEventListener('click', () => {
-        el.remove();
-        reindexSlides();
-      });
-
-      slidesContainer.appendChild(el);
-
-      reindexSlides();
-    });
-
-    DnDMonitor.on('dragend', e => {
-      reindexSlides();
-    });
-
-    confirmBtn.addEventListener('click', () => form.submit());
   });
 </script>

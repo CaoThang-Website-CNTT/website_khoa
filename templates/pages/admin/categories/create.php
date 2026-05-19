@@ -48,101 +48,50 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<form class="detail-layout" id="category-add-form" action="<?= url('admin/categories') ?>" method="POST">
+<form id="category-add-form" action="<?= url('admin/categories') ?>" method="POST">
   <?= csrf_field() ?>
-  <div class="detail-layout__main">
-
-    <!-- ── Card 1: Thông tin danh mục ── -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Thông tin danh mục</legend>
-          <p class="field__description">
-            Vui lòng điền đầy đủ thông tin danh mục. Những trường có dấu * là bắt buộc.
-          </p>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="field-group">
-
-            <div class="field" data-field-required>
-              <label class="field__label" for="name">Tên danh mục</label>
-              <input id="name" class="field__input" type="text" name="name" placeholder="VD: Tin tức sự kiện" value="">
-            </div>
-
-            <div class="field" data-field-readonly>
-              <label class="field__label" for="slug">Slug</label>
-              <input id="slug" class="field__input" type="text" name="slug" placeholder="ten-danh-muc" value="">
-              <p class="field__description">Slug được tự động tạo từ tên danh mục</p>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="description">Mô tả</label>
-              <textarea id="description" class="field__input" name="description"
-                placeholder="Mô tả ngắn về danh mục này"></textarea>
-            </div>
-
-          </div>
-        </div>
-      </fieldset>
+  
+  <!-- ── Card 1: Thông tin danh mục ── -->
+  <div class="card shadow w-full">
+    <div class="card__header">
+      <legend class="card__title field__legend">Thông tin danh mục mới</legend>
+      <p class="card__description field__description">
+        Vui lòng điền đầy đủ thông tin danh mục. Những trường có dấu * là bắt buộc.
+      </p>
     </div>
+    <hr class="separator" />
+    <div class="card__content">
+      <div class="field-group">
 
-    <!-- ── Card 2: Meta (JSON) ── -->
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Dữ liệu mở rộng (Meta)</legend>
-          <p class="field__description">
-            Nhập dữ liệu JSON tuỳ chỉnh cho danh mục. Để trống nếu không cần.
-          </p>
+        <div class="field" data-field-required>
+          <label class="field__label" for="name">Tên danh mục</label>
+          <input id="name" class="field__input" type="text" name="name" placeholder="VD: Tin tức sự kiện" value="">
         </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="field-group">
 
-            <div class="field" id="meta-field">
-              <label class="field__label" for="meta">Meta JSON</label>
-              <textarea id="meta" class="field__input field__input--mono" name="meta" placeholder='{"key": "value"}'
-                rows="6" spellcheck="false"></textarea>
-              <p class="field__description" id="meta-hint">Dữ liệu phải là JSON hợp lệ.</p>
-            </div>
-
-          </div>
+        <div class="field">
+          <label class="field__label" for="slug">Slug</label>
+          <input id="slug" class="field__input" type="text" name="slug" placeholder="ten-danh-muc" value="">
         </div>
-      </fieldset>
-    </div>
 
-  </div>
-
-  <!-- ── Sidebar ── -->
-  <div class="detail-layout__sidebar">
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Phân loại</legend>
+        <div class="field">
+          <label class="field__label" for="parent_id">Danh mục cha</label>
+          <select id="parent_id" class="field__input" name="parent_id">
+            <option value="">-- Không có (danh mục gốc) --</option>
+            <?php foreach ($categories as $cat): ?>
+              <option value="<?= htmlspecialchars($cat->id) ?>">
+                <?= str_repeat('—', $cat->depth) . htmlspecialchars($cat->name) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
         </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="field-group">
 
-            <div class="field">
-              <label class="field__label" for="parent_id">Danh mục cha</label>
-              <select id="parent_id" class="field__input" name="parent_id">
-                <option value="">-- Không có (danh mục gốc) --</option>
-                <?php foreach ($categories as $category): ?>
-                  <?php if (!$category->parent_id): // chỉ hiện root để tránh nest sâu ?>
-                    <option value="<?= htmlspecialchars($category->id) ?>">
-                      <?= htmlspecialchars($category->name) ?>
-                    </option>
-                  <?php endif; ?>
-                <?php endforeach; ?>
-              </select>
-              <p class="field__description">Để trống nếu đây là danh mục gốc.</p>
-            </div>
-
-          </div>
+        <div class="field">
+          <label class="field__label" for="description">Mô tả</label>
+          <textarea id="description" class="field__input" name="description" rows="4"
+            placeholder="Mô tả ngắn về danh mục này"></textarea>
         </div>
-      </fieldset>
+
+      </div>
     </div>
   </div>
 </form>
@@ -172,17 +121,22 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const confirmBtn = document.querySelector('#confirm-modal-btn');
     const nameInput = document.querySelector('#name');
     const slugInput = document.querySelector('#slug');
-    const metaInput = document.querySelector('#meta');
-    const metaHint = document.querySelector('#meta-hint');
 
     // ── Slug auto-generation ──────────────────────────────────────────────
-    nameInput.addEventListener('input', function () {
-      slugInput.value = Utils.toCleanAscii(this.value)
+    nameInput.addEventListener('input', () => {
+      if (slugInput.dataset.manual) return;
+      slugInput.value = nameInput.value
         .toLowerCase()
-        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
         .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+        .trim()
+        .replace(/\s+/g, '-');
+    });
+
+    slugInput.addEventListener('input', () => {
+      slugInput.dataset.manual = 'true';
     });
 
     confirmBtn.addEventListener('click', function () {
