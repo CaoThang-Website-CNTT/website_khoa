@@ -440,6 +440,14 @@ body {
   border-radius: var(--radius-lg);
 }
 
+.slide-item__img {
+  width: 5rem;
+  height: 3rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+
 .menu-item-children {
   position: relative;
 }

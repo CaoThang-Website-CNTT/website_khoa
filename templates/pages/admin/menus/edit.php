@@ -17,14 +17,14 @@ function renderMenuItems(array $items, object $menu): void
     ?>
     <div class="menu-item" data-id="<?= $item->id ?>">
       <!-- Khối hiển thị Item -->
-      <div class="menu-item-content flex items-center gap-2 border rounded-md px-3 py-3 shadow-sm">
-        <div class="drag-handle shrink-0 p-1 cursor-grab active:cursor-grabbing">
+      <div class="menu-item-content flex items-center p-2 border rounded-md gap-2 shadow-sm hover-lift">
+        <div class="drag-handle shrink-0 flex flex-col">
           <i class="fa-solid fa-grip-vertical"></i>
         </div>
-        <span class="flex-1 font-medium item-label">
+        <span class="flex-1 font-medium text-sm item-label">
           <?= htmlspecialchars($item->label) ?>
         </span>
-        <span class="font-mono text-xs px-2 py-0.5 rounded border">
+        <span class="font-mono text-xs px-2 py-1 rounded-sm border">
           <?= htmlspecialchars($item->url) ?>
         </span>
         <div>
@@ -220,7 +220,11 @@ function renderMenuItems(array $items, object $menu): void
   </div>
 </div>
 
-<!-- Confirm Update Modal -->
+<!-- ==========================================================================
+     MODALS SECTION
+     ========================================================================== -->
+
+<!-- 1. Confirm Update Modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
@@ -235,11 +239,11 @@ function renderMenuItems(array $items, object $menu): void
   </button>
 </div>
 
-<!-- Item CRUD Modal -->
+<!-- 2. Item CRUD Modal -->
 <div class="modal detail-modal" id="item-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title" id="item-modal-title">Thêm mục mới</h2>
-    <p class="modal__description">Điền thông tin mục menu bên dưới.</p>
+    <p class="modal__description" id="item-modal-description">Điền thông tin mục menu bên dưới.</p>
   </div>
   <form id="item-form" method="POST" action="">
     <?= csrf_field() ?>
@@ -279,7 +283,9 @@ function renderMenuItems(array $items, object $menu): void
   <div class="modal__footer flex justify-between items-center">
     <!-- Editable Modal Footer -->
     <?php if ($isEditable): ?>
-      <button class="btn" id="item-delete-btn" type="button" data-variant="destructive" data-size="lg">Xóa</button>
+      <div>
+        <button class="btn" id="item-delete-btn" type="button" data-variant="destructive" data-size="lg">Xóa</button>
+      </div>
 
       <div class="flex gap-2 ml-auto">
         <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
@@ -298,12 +304,7 @@ function renderMenuItems(array $items, object $menu): void
   </button>
 </div>
 
-<div class="modal-overlay" data-modal-close></div>
-
-<form id="item-delete-form" method="POST" action="" class="hidden">
-  <?= csrf_field() ?>
-</form>
-
+<!-- 3. Confirm Delete Modal (Stacked) -->
 <div class="modal" id="item-delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title">Xác nhận xóa Mục Menu</h2>
@@ -317,6 +318,11 @@ function renderMenuItems(array $items, object $menu): void
     <i class="fa-solid fa-xmark"></i>
   </button>
 </div>
+
+<!-- Hidden Delete Form -->
+<form id="item-delete-form" method="POST" action="" class="hidden">
+  <?= csrf_field() ?>
+</form>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -408,14 +414,20 @@ function renderMenuItems(array $items, object $menu): void
     }
 
     const editForm = document.querySelector('#menu-edit-form');
-    const confirmBtn = document.querySelector('#confirm-modal-btn');
+    const confirmModal = document.querySelector('#confirm-modal');
+    const confirmBtn = confirmModal?.querySelector('#confirm-modal-btn');
     confirmBtn?.addEventListener('click', () => editForm.submit());
 
-    const itemModalTitle = document.querySelector('#item-modal-title');
-    const itemForm = document.querySelector('#item-form');
-    const itemSaveBtn = document.querySelector('#item-save-btn');
-    const itemDeleteBtn = document.querySelector('#item-delete-btn');
+    const itemModal = document.querySelector('#item-modal');
+    const itemModalTitle = itemModal?.querySelector('#item-modal-title');
+    const itemModalDescription = itemModal?.querySelector('#item-modal-description');
+    const itemForm = itemModal?.querySelector('#item-form');
+    const itemSaveBtn = itemModal?.querySelector('#item-save-btn');
+    const itemDeleteBtn = itemModal?.querySelector('#item-delete-btn');
     const itemDeleteForm = document.querySelector('#item-delete-form');
+
+    const itemDeleteConfirmModal = document.querySelector('#item-delete-confirm-modal');
+    const confirmDeleteBtn = itemDeleteConfirmModal?.querySelector('#item-delete-confirm-btn');
 
     function resetItemForm() {
       itemForm.reset();
@@ -424,7 +436,7 @@ function renderMenuItems(array $items, object $menu): void
 
     // Dựng dropdown parent dynamic
     function populateParentSelect(excludeId = null) {
-      const parentSelect = document.querySelector('#item-parent-id');
+      const parentSelect = itemForm.querySelector('#item-parent-id');
       parentSelect.innerHTML = '<option value="">-- Không có (mục gốc) --</option>';
       menuItemsList.forEach(item => {
         if (excludeId && parseInt(item.id) === parseInt(excludeId)) return;
@@ -453,29 +465,31 @@ function renderMenuItems(array $items, object $menu): void
         const item = JSON.parse(btn.dataset.item);
 
         itemModalTitle.textContent = 'Chỉnh sửa mục menu';
+        itemModalDescription.textContent = 'Thay đổi thông tin mục menu bên dưới.';
         itemForm.action = `<?= url('admin/menu-items/') ?>` + item.id;
 
-        document.querySelector('#item-label').value = item.label || '';
-        document.querySelector('#item-url').value = item.url || '';
-        document.querySelector('#item-sort-order').value = item.sort_order || 0;
+        itemForm.querySelector('#item-label').value = item.label || '';
+        itemForm.querySelector('#item-url').value = item.url || '';
+        itemForm.querySelector('#item-sort-order').value = item.sort_order || 0;
 
         populateParentSelect(item.id);
         
         const parentId = item.parent_id;
         if (parentId) {
-          document.querySelector('#item-parent-id').value = parentId;
+          itemForm.querySelector('#item-parent-id').value = parentId;
         } else {
-          document.querySelector('#item-parent-id').value = '';
+          itemForm.querySelector('#item-parent-id').value = '';
         }
 
         if (itemDeleteBtn) {
           itemDeleteBtn.classList.remove('hidden');
           itemDeleteBtn.onclick = () => {
-            const confirmDeleteBtn = document.querySelector('#item-delete-confirm-btn');
-            confirmDeleteBtn.onclick = () => {
-              itemDeleteForm.action = `<?= url('admin/menu-items/') ?>` + item.id + '/delete';
-              itemDeleteForm.submit();
-            };
+            if (confirmDeleteBtn) {
+              confirmDeleteBtn.onclick = () => {
+                itemDeleteForm.action = `<?= url('admin/menu-items/') ?>` + item.id + '/delete';
+                itemDeleteForm.submit();
+              };
+            }
             modalHandler.open('#item-delete-confirm-modal');
           };
         }
