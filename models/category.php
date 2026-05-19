@@ -34,4 +34,9 @@ class Category extends Model
     }
     return json_decode($this->meta, true) ?? [];
   }
+
+    public function isEditable(): bool
+  {
+    return $this->type === "custom";
+  }
 }
