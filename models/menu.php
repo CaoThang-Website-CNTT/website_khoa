@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Menu
+class Menu extends Model
 {
   /**
    * @param MenuItem[] $items Được gán bởi service (eager-load).
@@ -19,21 +19,6 @@ class Menu
     public ?string $deleted_at = null,
     public array $items = [],
   ) {
-  }
-
-  public static function fromArray(array $row): static
-  {
-    return new static(
-      id: isset($row['id']) ? (int) $row['id'] : null,
-      key: $row['key'],
-      label: $row['label'],
-      description: $row['description'] ?? null,
-      type: $row['type'] ?? 'const',
-      sort_order: isset($row['sort_order']) ? (int) $row['sort_order'] : 0,
-      created_at: $row['created_at'] ?? null,
-      updated_at: $row['updated_at'] ?? null,
-      deleted_at: $row['deleted_at'] ?? null,
-    );
   }
 
   public function isEditable(): bool

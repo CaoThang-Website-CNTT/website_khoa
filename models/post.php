@@ -29,26 +29,10 @@ class Post extends Model
   ) {
   }
 
-  public static function fromArray(array $row): static
-  {
-    return new static(
-      id: isset($row['id']) ? (int) $row['id'] : null,
-      title: $row['title'] ?? '',
-      slug: $row['slug'] ?? '',
-      content_json: $row['content_json'] ?? '[]',
-      settings_json: $row['settings_json'] ?? null,
-      author_id: isset($row['author_id']) ? (int) $row['author_id'] : null,
-      status: $row['status'] ?? 'draft',
-      view_count: isset($row['view_count']) ? (int) $row['view_count'] : 0,
-      seo_description: $row['seo_description'] ?? null,
-      seo_image_url: $row['seo_image_url'] ?? null,
-      created_at: $row['created_at'] ?? null,
-      published_at: $row['published_at'] ?? null,
-      updated_at: $row['updated_at'] ?? null,
-      deleted_at: $row['deleted_at'] ?? null,
-    );
-  }
-
+  /**
+   * toArray() được override để loại bỏ các trường ảo
+   * (author, medias, categories) không phải là cột thực tế trong bảng posts
+   */
   public function toArray(): array
   {
     return [

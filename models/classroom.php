@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Classroom
+class Classroom extends Model
 {
   public function __construct(
     public ?int $id = null,
@@ -21,25 +21,5 @@ class Classroom
     public ?Major $major = null,
     public ?Specialization $specialization = null,
   ) {
-  }
-  /**
-   * Tự động mapping trường dữ liệu DB
-   * @param array $data
-   * @return Classroom
-   */
-  public static function fromArray(array $data): self
-  {
-    return new self(
-      id: $data['id'] ?? 0,
-      major_id: $data['major_id'] ?? 0,
-      class_of: $data['class_of'] ?? 0,
-      specialization_id: $data['specialization_id'] ?? null,
-      letter: $data['letter'] ?? null,
-      short_name: $data['short_name'] ?? '',
-      homeroom_teacher_id: $data['homeroom_teacher_id'] ?? null,
-      created_at: $data['created_at'] ?? null,
-      updated_at: $data['updated_at'] ?? null,
-      deleted_at: $data['deleted_at'] ?? null,
-    );
   }
 }

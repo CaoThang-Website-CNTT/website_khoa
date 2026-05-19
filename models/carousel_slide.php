@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class CarouselSlide
+class CarouselSlide extends Model
 {
   public function __construct(
     public int $id,
@@ -19,37 +19,10 @@ class CarouselSlide
     public bool $use_custom_html,
     public int $sort_order,
     public bool $is_active,
-    public string $created_at,
-    public string $updated_at,
+    public ?string $created_at = null,
+    public ?string $updated_at = null,
+    public ?string $deleted_at = null,
   ) {
-  }
-
-  /**
-   * Tự động mapping trường dữ liệu DB
-   *
-   * @param array $data
-   * @return self
-   */
-  public static function fromArray(array $data): self
-  {
-    return new self(
-      id: (int) $data['id'],
-      carousel_id: (int) $data['carousel_id'],
-      title: $data['title'],
-      title_highlight: $data['title_highlight'] ?? null,
-      description: $data['description'] ?? null,
-      image_path: $data['image_path'],
-      image_alt: $data['image_alt'] ?? '',
-      cta_label: $data['cta_label'] ?? null,
-      cta_url: $data['cta_url'] ?? null,
-      cta_variant: $data['cta_variant'] ?? 'primary',
-      custom_html: $data['custom_html'] ?? null,
-      use_custom_html: (bool) $data['use_custom_html'],
-      sort_order: (int) $data['sort_order'],
-      is_active: (bool) $data['is_active'],
-      created_at: $data['created_at'],
-      updated_at: $data['updated_at'],
-    );
   }
 
   /**

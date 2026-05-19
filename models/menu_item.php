@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class MenuItem
+class MenuItem extends Model
 {
   /**
    * @param MenuItem[] $children Được gán bởi MenuService::_buildItemTree(), không phải store.
@@ -19,21 +19,6 @@ class MenuItem
     public ?string $deleted_at = null,
     public array $children = [],
   ) {
-  }
-
-  public static function fromArray(array $row): static
-  {
-    return new static(
-      id: isset($row['id']) ? (int) $row['id'] : null,
-      menu_id: (int) $row['menu_id'],
-      parent_id: isset($row['parent_id']) ? (int) $row['parent_id'] : null,
-      label: $row['label'],
-      url: $row['url'],
-      sort_order: isset($row['sort_order']) ? (int) $row['sort_order'] : 0,
-      created_at: $row['created_at'] ?? null,
-      updated_at: $row['updated_at'] ?? null,
-      deleted_at: $row['deleted_at'] ?? null,
-    );
   }
 
   /** Trả về true nếu item không có cha (tức là item cấp cao nhất). */

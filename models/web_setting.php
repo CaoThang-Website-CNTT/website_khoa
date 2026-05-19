@@ -8,7 +8,7 @@ namespace App\Models;
  * $cast_value được service populate sau khi đọc từ DB —
  * giá trị đã được ép kiểu theo $type, sẵn sàng dùng trong view/controller.
  */
-class WebSetting
+class WebSetting extends Model
 {
   public int $id;
   public string $key;
@@ -41,46 +41,4 @@ class WebSetting
    * Kiểu thực tế phụ thuộc vào $type: int, float, bool, array, string, hoặc null.
    */
   public mixed $cast_value = null;
-
-  public static function fromArray(array $row): self
-  {
-    $setting = new self();
-
-    $setting->id = (int) $row['id'];
-    $setting->key = $row['key'];
-    $setting->group = $row['group'];
-    $setting->type = $row['type'];
-    $setting->value = $row['value'] ?? null;
-    $setting->default_value = $row['default_value'] ?? null;
-    $setting->label = $row['label'];
-    $setting->description = $row['description'] ?? null;
-    $setting->autoload = (bool) $row['autoload'];
-    $setting->is_locked = (bool) $row['is_locked'];
-    $setting->sort_order = (int) $row['sort_order'];
-    $setting->created_at = $row['created_at'] ?? null;
-    $setting->updated_at = $row['updated_at'] ?? null;
-    $setting->updated_by = isset($row['updated_by']) ? (int) $row['updated_by'] : null;
-
-    return $setting;
-  }
-  public function toArray(): array
-  {
-    return [
-      'id' => $this->id,
-      'key' => $this->key,
-      'group' => $this->group,
-      'type' => $this->type,
-      'value' => $this->value,
-      'default_value' => $this->default_value,
-      'label' => $this->label,
-      'description' => $this->description,
-      'autoload' => $this->autoload,
-      'is_locked' => $this->is_locked,
-      'sort_order' => $this->sort_order,
-      'created_at' => $this->created_at,
-      'updated_at' => $this->updated_at,
-      'updated_by' => $this->updated_by,
-      'cast_value' => $this->cast_value,
-    ];
-  }
 }

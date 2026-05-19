@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class Category
+class Category extends Model
 {
   /**
    * @param ?string $meta Chuỗi JSON thô.
@@ -24,22 +24,6 @@ class Category
     public array $children = [],
     public array $posts = [],
   ) {
-  }
-
-  public static function fromArray(array $row): static
-  {
-    return new static(
-      id: isset($row['id']) ? (int) $row['id'] : null,
-      name: $row['name'],
-      slug: $row['slug'] ?? null,
-      type: $row['type'] ?? 'custom',
-      description: $row['description'] ?? null,
-      parent_id: isset($row['parent_id']) ? (int) $row['parent_id'] : null,
-      meta: $row['meta'] ?? null,
-      created_at: $row['created_at'] ?? null,
-      updated_at: $row['updated_at'] ?? null,
-      deleted_at: $row['deleted_at'] ?? null,
-    );
   }
 
   /** Giải mã JSON của trường meta, trả về mảng (mảng rỗng nếu null hoặc không hợp lệ). */
