@@ -26,12 +26,11 @@ return new class extends BaseMigration {
       $table->id();
 
       $table->bigInt('carousel_id')->unsigned();
+      $table->bigInt('media_id')->unsigned();
 
       $table->varchar('title', 255);
       $table->varchar('title_highlight', 255)->nullable();
       $table->text('description')->nullable();
-      $table->varchar('image_path', 500);
-      $table->varchar('image_alt', 255)->default('');
 
       $table->varchar('cta_label', 100)->nullable();
       $table->varchar('cta_url', 500)->nullable();
@@ -50,6 +49,11 @@ return new class extends BaseMigration {
       $table->foreign('carousel_id')
         ->references('id')
         ->on('carousels')
+        ->onDelete('cascade');
+
+      $table->foreign('media_id')
+        ->references('id')
+        ->on('medias')
         ->onDelete('cascade');
     });
   }
