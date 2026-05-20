@@ -17,7 +17,7 @@ TRUNCATE TABLE `specializations`;
 TRUNCATE TABLE `majors`;
 TRUNCATE TABLE `departments`;
 TRUNCATE TABLE `category_post`;
-TRUNCATE TABLE `medias`;
+TRUNCATE TABLE `media`;
 TRUNCATE TABLE `posts`;
 
 -- ============================================================================
@@ -340,8 +340,5 @@ INSERT INTO `category_post` (`post_id`, `category_id`) VALUES
 -- ============================================================================
 -- 17. BẢNG MEDIA
 -- ============================================================================
-INSERT INTO `medias` (`id`, `post_id`, `file_name`, `file_path`, `mime_type`, `file_size`, `created_at`) VALUES
-(1, 1, 'tb-datn-2026.pdf', '/uploads/media/tb-datn-2026.pdf', 'application/pdf', 1024500, '2026-03-25 08:00:00'),
-(2, 2, 'banner-olympic-2026.jpg', '/uploads/media/banner-olympic-2026.jpg', 'image/jpeg', 204800, '2026-03-20 08:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;

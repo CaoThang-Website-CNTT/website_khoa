@@ -53,7 +53,7 @@ return new class extends BaseMigration {
 
       $table->foreign('media_id')
         ->references('id')
-        ->on('medias')
+        ->on('media')
         ->onDelete('cascade');
     });
   }
