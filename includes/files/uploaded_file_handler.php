@@ -72,6 +72,13 @@ class UploadedFileHandler
     $extension = strtolower(pathinfo($fileArray['name'], PATHINFO_EXTENSION));
     $this->assertAllowedExtension($extension);
 
+    $maxMb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
+    $maxBytes = $maxMb * 1024 * 1024;
+    if ((int) $fileArray['size'] > $maxBytes) {
+      throw new \RuntimeException("Kích thước tệp vượt quá giới hạn cấu hình {$maxMb}MB.");
+    }
+
+
     $mimeType = $this->detectMimeType($fileArray['tmp_name']);
     $this->assertAllowedMimeType($mimeType);
 

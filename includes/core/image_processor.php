@@ -1,51 +1,5 @@
 <?php
-
-/**
- * =============================================================================
- * PHÂN TÍCH: CÁC ĐIỂM CÒN THIẾU TRONG MEDIA HIỆN TẠI
- * =============================================================================
- *
- * 1. EXTERNAL URL
- * ---------------
- * Hiện tại Media model và MediaStore không có bất kỳ khái niệm nào về
- * "external URL". Toàn bộ flow upload đều giả định file đến từ $_FILES
- * và sẽ được move vào storage vật lý.
- *
- * Vấn đề: trong content_json của Post, một image block có thể có dạng:
- *   { "mediaId": null, "url": "https://placehold.co/600x400", ... }
- *
- * Với trường hợp này, PostService đã xử lý đúng: extractInternalMediaIds()
- * bỏ qua mọi block có mediaId === null. Tức là external URL chỉ tồn tại
- * trong JSON, không có record trong bảng media — đây là thiết kế đúng.
- *
- * KẾT LUẬN: Media hiện tại KHÔNG cần thay đổi gì cho external URL.
- * PostService đã đảm nhận việc phân biệt nội bộ vs ngoại bộ tại tầng parse.
- *
- *
- * 2. IMAGE VARIANTS & COMPRESSION
- * --------------------------------
- * MediaService.upload() hiện tại chỉ move file thô vào storage, không có
- * bất kỳ xử lý nào về:
- *   - Resize thành các kích thước variants (thumb, medium, large)
- *   - Convert sang WebP hoặc AVIF
- *   - Nén để giảm dung lượng
- *
- * Đây là gap lớn về performance. Cần khai báo contract (interface) ngay bây giờ
- * và implement khi có yêu cầu cụ thể về kích thước/chất lượng.
- *
- * Lý do tách thành interface riêng thay vì nhét vào MediaService:
- *   - Single Responsibility: MediaService quản lý lifecycle của media record,
- *     không nên biết chi tiết về image processing pipeline.
- *   - Có thể swap implementation: GD, Imagick, hay future WASM-based processor
- *     mà không động đến MediaService.
- *   - Có thể chạy async trong tương lai (queue job) mà không refactor service.
- */
-
 namespace App\Core\Image;
-
-// =============================================================================
-// CONTRACT
-// =============================================================================
 
 /**
  * Đại diện cho một variant đã được xử lý.
@@ -86,9 +40,6 @@ interface IImageProcessor
    *   - large:    1600px wide, WebP, quality 85
    *   - original: giữ kích thước, chỉ nén + convert sang WebP
    *
-   * Nếu ảnh gốc nhỏ hơn kích thước target thì bỏ qua variant đó
-   * (không upscale — upscale làm ảnh vỡ và tăng dung lượng vô ích).
-   *
    * @param  string $absoluteSourcePath  Đường dẫn tuyệt đối tới file gốc
    * @param  string $outputDir           Thư mục output tuyệt đối
    * @param  string $baseFilename        Tên file không có extension (dùng để đặt tên variant)
@@ -97,32 +48,34 @@ interface IImageProcessor
   public function process(string $absoluteSourcePath, string $outputDir, string $baseFilename): array;
 
   /**
+   * Nhận đường dẫn tuyệt đối của file gốc, nén và thay đổi kích thước theo chế độ nén cụ thể.
+   * Trả về đối tượng ImageVariant đã tạo hoặc null nếu thất bại.
+   * Chế độ nén: 'thumbnail' (thumb), 'standard' (medium), 'banner' (large), 'lossless' (original).
+   *
+   * @param  string $absoluteSourcePath  Đường dẫn tuyệt đối tới file gốc
+   * @param  string $outputDir           Thư mục output tuyệt đối
+   * @param  string $baseFilename        Tên file không có extension (dùng để đặt tên variant)
+   * @param  string $compressMode        Chế độ nén hình ảnh
+   * @return ImageVariant|null
+   */
+  public function processSingle(string $absoluteSourcePath, string $outputDir, string $baseFilename, string $compressMode): ?ImageVariant;
+
+  /**
    * Kiểm tra file tại đường dẫn có phải ảnh xử lý được không.
    * Dựa trên MIME type thực tế (magic bytes), không phải extension.
    */
   public function supports(string $absolutePath): bool;
 }
 
-// =============================================================================
-// GD IMPLEMENTATION (zero external dependency)
-// =============================================================================
-
 /**
- * GdImageProcessor
+ * ImageProcessor
  *
  * Dùng ext-gd (baked vào PHP mặc định) để:
  *   1. Decode ảnh gốc (JPEG, PNG, GIF, WebP)
  *   2. Resize về các kích thước target với imagescale() — giữ tỉ lệ
  *   3. Export sang WebP với chất lượng cấu hình được
- *
- * Giới hạn của GD:
- *   - Không hỗ trợ AVIF encode (chỉ decode từ PHP 8.1 nếu libavif có)
- *   - Chất lượng resize thấp hơn Imagick (dùng bilinear thay vì Lanczos)
- *   - Không giữ ICC color profile
- *
- * Nếu cần AVIF hoặc ICC profile, swap sang ImagickImageProcessor.
  */
-class GdImageProcessor implements IImageProcessor
+class ImageProcessor implements IImageProcessor
 {
   /** @var array<string, array{width: int, quality: int}> */
   private array $_variantConfig;
@@ -152,7 +105,6 @@ class GdImageProcessor implements IImageProcessor
       'image/webp',
     ];
 
-    // mime_content_type dùng magic bytes, không trust extension
     $mime = mime_content_type($absolutePath);
     return in_array($mime, $supportedMimes, true);
   }
@@ -177,9 +129,7 @@ class GdImageProcessor implements IImageProcessor
       $targetWidth = $config['width'];
       $quality = $config['quality'];
 
-      // Bỏ qua variant nếu ảnh gốc đã nhỏ hơn target (không upscale)
       if ($targetWidth > 0 && $sourceWidth <= $targetWidth) {
-        // Vẫn xử lý 'original' ngay cả khi nhỏ — để đảm bảo convert sang WebP
         if ($variantName !== 'original') {
           continue;
         }
@@ -224,6 +174,75 @@ class GdImageProcessor implements IImageProcessor
     return $variants;
   }
 
+  public function processSingle(string $absoluteSourcePath, string $outputDir, string $baseFilename, string $compressMode): ?ImageVariant
+  {
+    if (!$this->supports($absoluteSourcePath)) {
+      return null;
+    }
+
+    // Map compress mode to variants
+    $variantName = match ($compressMode) {
+      'thumbnail' => 'thumb',
+      'standard' => 'medium',
+      'banner' => 'large',
+      'lossless', 'original' => 'original',
+      default => 'original'
+    };
+
+    $config = $this->_variantConfig[$variantName] ?? $this->_variantConfig['original'];
+    $targetWidth = $config['width'];
+    $quality = $config['quality'];
+
+    $sourceImage = $this->loadImage($absoluteSourcePath);
+    if ($sourceImage === false) {
+      return null;
+    }
+
+    $sourceWidth = imagesx($sourceImage);
+    $sourceHeight = imagesy($sourceImage);
+
+    // Không upscale nếu ảnh nhỏ hơn mục tiêu
+    if ($targetWidth > 0 && $sourceWidth <= $targetWidth) {
+      $variantName = 'original';
+      $targetWidth = 0;
+    }
+
+    $outputImage = $targetWidth === 0
+      ? $this->cloneImage($sourceImage, $sourceWidth, $sourceHeight)
+      : $this->resizeImage($sourceImage, $sourceWidth, $sourceHeight, $targetWidth);
+
+    if ($outputImage === false) {
+      imagedestroy($sourceImage);
+      return null;
+    }
+
+    $outputFilename = "{$baseFilename}_{$variantName}.webp";
+    $outputPath = rtrim($outputDir, '/') . '/' . $outputFilename;
+
+    $relativeParts = explode('/storage/', $outputPath);
+    $relativePath = 'storage/' . ($relativeParts[1] ?? $outputFilename);
+
+    $success = imagewebp($outputImage, $outputPath, $quality);
+    imagedestroy($outputImage);
+    imagedestroy($sourceImage);
+
+    if (!$success) {
+      return null;
+    }
+
+    $actualWidth = $targetWidth === 0 ? $sourceWidth : $this->calcScaledWidth($sourceWidth, $sourceHeight, $targetWidth);
+    $actualHeight = $targetWidth === 0 ? $sourceHeight : $this->calcScaledHeight($sourceWidth, $sourceHeight, $targetWidth);
+
+    return new ImageVariant(
+      name: $variantName,
+      relativePath: $relativePath,
+      width: $actualWidth,
+      height: $actualHeight,
+      fileSize: (int) filesize($outputPath),
+      mimeType: 'image/webp',
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
@@ -241,9 +260,6 @@ class GdImageProcessor implements IImageProcessor
     };
   }
 
-  /**
-   * Resize giữ tỉ lệ — không bao giờ upscale.
-   */
   private function resizeImage(
     \GdImage $source,
     int $srcWidth,
@@ -255,7 +271,6 @@ class GdImageProcessor implements IImageProcessor
 
     $dest = imagecreatetruecolor($scaledWidth, $scaledHeight);
 
-    // Bảo toàn alpha channel cho PNG/WebP có transparency
     imagealphablending($dest, false);
     imagesavealpha($dest, true);
 

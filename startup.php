@@ -35,6 +35,8 @@ require_once BASE_PATH . '/includes/core/response/json_response.php';
 require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/pageable.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
+require_once BASE_PATH . '/includes/core/image_processor.php';
+
 
 // Editor
 require_once BASE_PATH . '/includes/editor/block_schema.php';
@@ -96,6 +98,7 @@ require_once BASE_PATH . '/controllers/web/category_controller.php';
 require_once BASE_PATH . '/controllers/web/menu_controller.php';
 require_once BASE_PATH . '/controllers/web/web_setting_controller.php';
 require_once BASE_PATH . '/controllers/web/carousel_controller.php';
+require_once BASE_PATH . '/controllers/web/media_controller.php';
 require_once BASE_PATH . '/controllers/web/post_controller.php';
 
 // Api
