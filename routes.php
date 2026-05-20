@@ -139,9 +139,12 @@ $router->prefix('admin')->group(function (Router $router) {
 
     // Internship Assignments
     $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);
-    
+
     // Referral Letters
     $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
+
+    // Teachers
+    $router->get('/{id}/teachers', [InternshipBatchController::class, 'teachers']);
   });
 
   // Companies
@@ -173,7 +176,7 @@ $router->prefix('student')->group(function (Router $router) {
   $router->post('/internship/{batch_id}/upload', [StudentDashboardController::class, 'uploadSubmission']);
   // Đăng ký giấy giới thiệu
   $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
-  
+
   // Trang danh sách giấy giới thiệu
   $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
   // Hủy giấy giới thiệu

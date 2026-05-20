@@ -55,10 +55,10 @@ class InternshipBatchManagementApiController extends Controller
   /**
    * Xóa sinh viên khỏi đợt
    */
-  public function removeStudent($id, $studentId)
+  public function removeStudent($id, $student_id)
   {
     try {
-      $this->_batchService->removeStudentFromBatch((int)$id, (int)$studentId);
+      $this->_batchService->removeStudentFromBatch((int)$id, (int)$student_id);
       return $this->json([], 200, 'Đã xóa sinh viên khỏi đợt.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -102,7 +102,7 @@ class InternshipBatchManagementApiController extends Controller
   /**
    * Cập nhật định mức giảng viên
    */
-  public function updateSupervisor($id, $teacherId, Request $request)
+  public function updateSupervisor($id, $teacher_id, Request $request)
   {
     $data = $request->json();
     $newQuota = $data['max_students'] ?? null;
@@ -112,7 +112,7 @@ class InternshipBatchManagementApiController extends Controller
     }
 
     try {
-      $this->_batchService->updateSupervisorQuota((int)$id, (int)$teacherId, (int)$newQuota);
+      $this->_batchService->updateSupervisorQuota((int)$id, (int)$teacher_id, (int)$newQuota);
       return $this->json([], 200, 'Cập nhật định mức thành công.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -122,10 +122,10 @@ class InternshipBatchManagementApiController extends Controller
   /**
    * Xóa giảng viên khỏi đợt
    */
-  public function removeSupervisor($id, $teacherId)
+  public function removeSupervisor($id, $teacher_id)
   {
     try {
-      $this->_batchService->removeSupervisorFromBatch((int)$id, (int)$teacherId);
+      $this->_batchService->removeSupervisorFromBatch((int)$id, (int)$teacher_id);
       return $this->json([], 200, 'Đã xóa giảng viên khỏi đợt.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);

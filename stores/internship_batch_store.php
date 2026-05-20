@@ -346,12 +346,13 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function getBatchSupervisorsWithDetails(int $batchId): array
   {
     $sql = "SELECT bs.id as batch_supervisor_id, bs.teacher_id, t.full_name, t.degree, 
-                   d.short_name as department_name, bs.max_students,
+                   t.phone, a.email, d.short_name as department_name, bs.max_students,
                    (SELECT COUNT(*) FROM internship_assignments a 
                     JOIN internship_batch_students s ON a.batch_student_id = s.id 
                     WHERE s.batch_id = :batch_id_sub AND a.teacher_id = bs.teacher_id) as assigned_count
             FROM internship_batch_supervisors bs
             JOIN teachers t ON bs.teacher_id = t.id
+            LEFT JOIN accounts a ON t.account_id = a.id
             LEFT JOIN departments d ON t.department_id = d.id
             WHERE bs.batch_id = :batch_id AND bs.is_active = 1
             ORDER BY t.full_name ASC";
@@ -376,7 +377,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool
   {
-    $sql = "UPDATE internship_batch_supervisors SET max_students = :max_students 
+    $sql = "UPDATE internship_batch_supervisors SET max_students = :max_students, updated_at = NOW() 
             WHERE batch_id = :batch_id AND teacher_id = :teacher_id";
     $stmt = $this->db->prepare($sql);
     return $stmt->execute([

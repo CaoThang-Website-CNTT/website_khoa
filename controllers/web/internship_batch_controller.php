@@ -62,6 +62,22 @@ class InternshipBatchController extends Controller
     ], layout: "dashboard_layout");
   }
 
+  public function teachers($id, Request $request)
+  {
+    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    if (!$batch) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
+      return $this->redirect('admin/internship_batches');
+    }
+
+    $supervisors = $this->_internshipBatchService->getBatchSupervisors((int)$id);
+
+    $this->render("admin/internship_batches/teachers", [
+      'batch' => $batch,
+      'supervisors' => $supervisors
+    ], layout: "dashboard_layout");
+  }
+
   public function update($id, Request $request)
   {
     $data = $request->all();

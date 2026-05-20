@@ -22,7 +22,7 @@ $letters = $letters ?? [];
   <div class="flex justify-between items-start">
     <div class="col-6 col-md-6">
       <h2 class="title text-2xl font-semibold">Giấy giới thiệu</h2>
-      <p>Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên</p>
+      <p>Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
     </div>
     <div class="flex gap-2">
       <div>
@@ -37,8 +37,8 @@ $letters = $letters ?? [];
 </div>
 
 <div class="card">
-  <div class="card__header flex justify-between items-center pb-0 border-b-0">
-    <div id="bulk-actions" class="flex gap-2 transition-opacity duration-200" style="opacity: 0; pointer-events: none;">
+  <div class="card__header flex justify-between items-center">
+    <div id="bulk-actions" class="flex gap-2" style="opacity: 0; pointer-events: none;">
       <span class="text-sm font-medium self-center mr-2"><span id="selected-count">0</span> đã chọn</span>
       <button type="button" id="btn-bulk-approve" class="btn" data-variant="primary" data-size="sm">
         <i class="fa-solid fa-check mr-2"></i> Duyệt (In giấy)

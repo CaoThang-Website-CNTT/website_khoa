@@ -1,0 +1,64 @@
+/* Click-to-edit Quota Cell */
+.quota-cell__display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.quota-cell__editor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.quota-cell__input {
+  width: 4rem;
+  height: 1.75rem;
+  text-align: center;
+  font-size: var(--text-sm);
+  padding: 0.125rem 0.375rem;
+}
+
+.btn-quota-edit {
+  opacity: 0;
+  color: var(--muted-foreground);
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease;
+}
+
+/* Hiện icon edit khi hover vào dòng bảng */
+tr:hover .btn-quota-edit,
+.btn-quota-edit:focus {
+  opacity: 1;
+}
+
+.btn-quota-edit:hover {
+  color: var(--primary);
+}
+
+.btn-quota-save {
+  color: var(--primary);
+}
+
+.btn-quota-save:hover {
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
+}
+
+.btn-quota-cancel:hover {
+  background: color-mix(in oklab, var(--destructive) 10%, transparent);
+}
+
+/* btn-icon (tái sử dụng từ internship_batch_detail.css) */
+.quota-cell .btn-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
