@@ -151,10 +151,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu</button>
     </div>
     <button class="modal__close" type="button" data-modal-close>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-        <path
-          d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z" />
-      </svg>
+      <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
 
@@ -171,10 +168,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       <button id="delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xóa</button>
     </div>
     <button class="modal__close" type="button" data-modal-close>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-        <path
-          d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z" />
-      </svg>
+      <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
 

@@ -178,7 +178,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </form>
 
   <div class="modal__footer flex justify-between items-center">
-    <button class="btn hidden" id="item-delete-btn" type="button" data-variant="destructive" data-size="lg">Xóa</button>
+    <div>
+      <button class="btn hidden" id="item-delete-btn" type="button" data-variant="destructive" data-size="lg">Xóa</button>
+    </div>
     <div class="flex gap-2 ml-auto">
       <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
       <button id="item-save-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu mục</button>

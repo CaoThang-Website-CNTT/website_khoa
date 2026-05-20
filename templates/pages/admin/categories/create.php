@@ -79,7 +79,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
             <option value="">-- Không có (danh mục gốc) --</option>
             <?php foreach ($categories as $cat): ?>
               <option value="<?= htmlspecialchars($cat->id) ?>">
-                <?= str_repeat('—', $cat->depth) . htmlspecialchars($cat->name) ?>
+                <?= htmlspecialchars($cat->name) ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -97,7 +97,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </form>
 
 <!-- ── Confirm Modal ── -->
-<div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
+<div class="modal detail-modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title">Bạn có chắc</h2>
     <p class="modal__description">
