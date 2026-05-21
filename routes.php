@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController};
+use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
 use App\Core\Router;
 
 $router->get('/', [SiteController::class, 'index']);
@@ -186,4 +186,12 @@ $router->prefix('student')->group(function (Router $router) {
   $router->post('/internship/{batch_id}/referral_letters/{letter_id}/cancel', [StudentDashboardController::class, 'cancelReferralLetter']);
   // Cập nhật công ty cho giấy giới thiệu (pending)
   $router->post('/internship/{batch_id}/referral_letters/{letter_id}/update-company', [StudentDashboardController::class, 'updateReferralLetterCompany']);
+});
+
+// Teacher Dashboard
+$router->prefix('teacher')->group(function (Router $router) {
+  // Thông tin tổng quan, tài khoản.
+  $router->get('/', [TeacherDashboardController::class, 'index']);
+  // Cập nhật thông tin cá nhân
+  $router->post('/profile/update', [TeacherDashboardController::class, 'updateProfile']);
 });

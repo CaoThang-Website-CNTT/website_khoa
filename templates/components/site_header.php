@@ -64,6 +64,11 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
                 <i class="fa-solid fa-gauge-high"></i>
                 Dashboard
               </a>
+              <?php elseif ($authUser['role'] === 'teacher'): ?>
+              <a href="<?= url('/teacher') ?>" class="user-menu__item" role="menuitem">
+                <i class="fa-solid fa-gauge-high"></i>
+                Dashboard
+              </a>
               <?php elseif ($authUser['role'] === 'admin'): ?>
               <a href="<?= url('/admin') ?>" class="user-menu__item" role="menuitem">
                 <i class="fa-solid fa-gauge-high"></i>

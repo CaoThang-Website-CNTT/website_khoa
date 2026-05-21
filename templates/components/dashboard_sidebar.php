@@ -9,7 +9,7 @@ $currentPath = request()->path();
     <div class="sidebar__header">
       <ul class="sidebar__menu">
         <li class="sidebar__menu-item">
-          <a class="sidebar__menu-btn" href="<?= url($role === 'admin' ? 'admin' : 'student') ?>">
+          <a class="sidebar__menu-btn" href="<?= url($role) ?>">
             <div class="sidebar__logo object-contain">
               <img src="<?= url('/public/img/faculty_logo.jpg') ?>" alt="Logo Khoa CNTT">
             </div>
@@ -161,49 +161,64 @@ $currentPath = request()->path();
           </ul>
         </div>
 
+        <?php elseif ($role === 'teacher'): ?>
+        <!-- ── TEACHER MENU ───────────────────────────────────────── -->
+        <div class="sidebar__group">
+          <div class="sidebar__group-label">Cá nhân</div>
+          <ul class="sidebar__menu">
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'teacher') ? 'active' : '' ?>"
+                href="<?= url('teacher') ?>">
+                <i class="fa-solid fa-user"></i>
+                Tổng Quan
+              </a>
+            </li>
+          </ul>
+        </div>
+
         <?php elseif ($role === 'student'): ?>
-          <!-- ── STUDENT MENU ───────────────────────────────────────── -->
-          <div class="sidebar__group">
-            <div class="sidebar__group-label">Cá nhân</div>
-            <ul class="sidebar__menu">
-              <li class="sidebar__menu-item">
-                <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student') ? 'active' : '' ?>"
-                  href="<?= url('student') ?>">
-                  <i class="fa-solid fa-user"></i>
-                  Tổng Quan
-                </a>
-              </li>
-              <li class="sidebar__menu-item">
-                <div class="collapsible">
-                  <div class="sidebar__menu-btn">
-                    <button class="collapsible__trigger">
-                      <i class="fa-solid fa-briefcase"></i>
-                      Thực tập tốt nghiệp
-                      <i class="fa-solid fa-angle-down"></i>
-                    </button>
-                  </div>
-                  <div class="collapsible__content">
-                    <ul class="sidebar__menu-sub">
-                      <li class="sidebar__menu-sub-item">
-                        <a href="<?= url('student/internship') ?>" class="sidebar__menu-sub-item-btn">Đợt thực tập</a>
-                      </li>
-                      <li class="sidebar__menu-sub-item">
-                        <a href="<?= url('student/referral_letter') ?>" class="sidebar__menu-sub-item-btn">Giấy giới
-                          thiệu</a>
-                      </li>
-                    </ul>
-                  </div>
+        <!-- ── STUDENT MENU ───────────────────────────────────────── -->
+        <div class="sidebar__group">
+          <div class="sidebar__group-label">Cá nhân</div>
+          <ul class="sidebar__menu">
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student') ? 'active' : '' ?>"
+                href="<?= url('student') ?>">
+                <i class="fa-solid fa-user"></i>
+                Tổng Quan
+              </a>
+            </li>
+            <li class="sidebar__menu-item">
+              <div class="collapsible">
+                <div class="sidebar__menu-btn">
+                  <button class="collapsible__trigger">
+                    <i class="fa-solid fa-briefcase"></i>
+                    Thực tập tốt nghiệp
+                    <i class="fa-solid fa-angle-down"></i>
+                  </button>
                 </div>
-              </li>
-              <li class="sidebar__menu-item">
-                <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student/graduation') ? 'active' : '' ?>"
-                  href="<?= url('student/graduation') ?>">
-                  <i class="fa-solid fa-graduation-cap"></i>
-                  Đồ Án Tốt Nghiệp
-                </a>
-              </li>
-            </ul>
-          </div>
+                <div class="collapsible__content">
+                  <ul class="sidebar__menu-sub">
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('student/internship') ?>" class="sidebar__menu-sub-item-btn">Đợt thực tập</a>
+                    </li>
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('student/referral_letter') ?>" class="sidebar__menu-sub-item-btn">Giấy giới
+                        thiệu</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student/graduation') ? 'active' : '' ?>"
+                href="<?= url('student/graduation') ?>">
+                <i class="fa-solid fa-graduation-cap"></i>
+                Đồ Án Tốt Nghiệp
+              </a>
+            </li>
+          </ul>
+        </div>
         <?php endif; ?>
 
         <!-- ── CHUNG ────────────────────────────────────────────────── -->

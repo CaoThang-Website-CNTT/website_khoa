@@ -139,6 +139,20 @@ class TeacherService implements ITeacherService
     return $teacher;
   }
 
+  public function getTeacherByAccountId(int $accountId): ?Teacher
+  {
+    $teacher = $this->_teacherStore->getByAccountId($accountId);
+    if (!$teacher) {
+      return null;
+    }
+
+    if ($teacher->account_id) {
+      $teacher->account = $this->_accountStore->getById($teacher->account_id);
+    }
+
+    return $teacher;
+  }
+
   public function updateTeacher(int $id, array $data): bool
   {
     $teacher = $this->_teacherStore->getById($id);
