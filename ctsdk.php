@@ -16,7 +16,7 @@ require_once BASE_PATH . '/includes/core/schema/query_builder.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 
-// Migration
+// Migration System
 require_once BASE_PATH . '/includes/migration/base_migration.php';
 require_once BASE_PATH . '/includes/migration/migration_history_tracker.php';
 require_once BASE_PATH . '/includes/migration/migration_runner.php';
@@ -28,14 +28,17 @@ require_once BASE_PATH . '/includes/console/commands/migrate_command.php';
 require_once BASE_PATH . '/includes/console/commands/rollback_migration_command.php';
 require_once BASE_PATH . '/includes/console/commands/add_migration_command.php';
 
+// Symlink
+require_once BASE_PATH . '/includes/console/commands/storage_link_command.php';
 
 use App\Console\Kernel;
-use App\Console\Commands\{AddMigrationCommand, RollbackMigrationCommand, MigrateCommand};
+use App\Console\Commands\{AddMigrationCommand, RollbackMigrationCommand, MigrateCommand, StorageLinkCommand};
 
 $kernel = new Kernel();
 
 $kernel->register(new AddMigrationCommand());
 $kernel->register(new RollbackMigrationCommand());
 $kernel->register(new MigrateCommand());
+$kernel->register(new StorageLinkCommand());
 
 $kernel->handle($argv);
