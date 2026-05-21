@@ -62,7 +62,7 @@
 }
 
 .modal-overlay.hidden,
-[data-state="closed"] {
+.modal-overlay[data-state="closed"] {
   display: none;
 }
 

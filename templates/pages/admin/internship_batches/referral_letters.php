@@ -7,6 +7,8 @@
 $batch = $batch ?? null;
 $letters = $letters ?? [];
 ?>
+<link rel="stylesheet" href="<?= url('public/css/batch_students.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/referral_letters.css') ?>">
 
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
@@ -37,18 +39,6 @@ $letters = $letters ?? [];
 </div>
 
 <div class="card">
-  <div class="card__header flex justify-between items-center">
-    <div id="bulk-actions" class="flex gap-2" style="opacity: 0; pointer-events: none;">
-      <span class="text-sm font-medium self-center mr-2"><span id="selected-count">0</span> đã chọn</span>
-      <button type="button" id="btn-bulk-approve" class="btn" data-variant="primary" data-size="sm">
-        <i class="fa-solid fa-check mr-2"></i> Duyệt (In giấy)
-      </button>
-      <button type="button" id="btn-bulk-cancel" class="btn" data-variant="destructive" data-size="sm">
-        <i class="fa-solid fa-xmark mr-2"></i> Hủy giấy
-      </button>
-    </div>
-  </div>
-
   <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true" data-tm-selectable="true" data-tm-id-key="id">
 
     <!-- Checkbox column is auto prepended by table-manager -->
@@ -97,20 +87,37 @@ $letters = $letters ?? [];
       </button>
     </template>
 
-    <template data-tm-pagination></template>
+  </div>
+</div>
+
+<!-- Bulk Action Bar -->
+<div id="bulk-action-bar" class="bulk-action-bar hidden shadow-lg" data-state="closed">
+  <div class="flex justify-between items-center gap-2 px-6 py-3">
+    <div class="flex items-center gap-4">
+      <span class="badge" data-variant="primary" id="selected-count">Đã chọn: 0</span>
+    </div>
+    <div class="flex gap-2">
+      <button type="button" class="btn" data-variant="outline" data-size="md" id="btn-cancel-selection">Hủy chọn</button>
+      <button type="button" class="btn" data-variant="destructive" data-size="md" id="btn-bulk-cancel">
+        <i class="fa-solid fa-xmark"></i> Hủy giấy giới thiệu
+      </button>
+      <button type="button" class="btn" data-variant="primary" data-size="md" id="btn-bulk-approve">
+        <i class="fa-solid fa-check"></i> Duyệt & In giấy
+      </button>
+    </div>
   </div>
 </div>
 
 <!-- Modal Chi tiết -->
-<div id="rl_detailModal" class="modal" data-state="closed">
-  <div class="modal__content">
-    <div class="modal__header">
-      <h3 class="modal__title">Chi tiết Giấy giới thiệu</h3>
-      <button class="modal__close" data-modal-close="rl_detailModal">
+<div id="rl_detailModal" class="modal-overlay hidden" data-state="closed">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="title text-xl font-semibold">Chi tiết Giấy giới thiệu</h3>
+      <button class="modal-close" data-modal-close="#rl_detailModal">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="modal__body">
+    <div class="modal-body">
       <div class="grid gap-4">
         <div class="detail-item">
           <div class="text-xs font-semibold mb-1">Sinh viên</div>
@@ -132,50 +139,50 @@ $letters = $letters ?? [];
         </div>
       </div>
     </div>
-    <div class="modal__footer">
-      <button type="button" class="btn" data-variant="outline" data-modal-close="rl_detailModal">Đóng</button>
+    <div class="modal-footer flex justify-end gap-2 mt-4">
+      <button type="button" class="btn" data-variant="outline" data-size="md" data-modal-close="#rl_detailModal">Đóng</button>
     </div>
   </div>
 </div>
 
 <!-- Modal Nhập lý do hủy -->
-<div id="cancel-reason-modal" class="modal" data-state="closed">
-  <div class="modal__content">
-    <div class="modal__header">
-      <h3 class="modal__title text-xl font-semibold">Hủy giấy giới thiệu</h3>
-      <button type="button" class="modal__close" data-modal-close="cancel-reason-modal">
+<div id="cancel-reason-modal" class="modal-overlay hidden" data-state="closed">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="title text-xl font-semibold">Hủy giấy giới thiệu</h3>
+      <button type="button" class="modal-close" data-modal-close="#cancel-reason-modal">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="modal__body py-4">
+    <div class="modal-body py-4">
       <p class="mb-4">Vui lòng nhập lý do hủy cho <span id="cancel-count" class="font-bold">0</span> giấy giới thiệu đã chọn:</p>
       <div class="field" data-field-required>
         <label class="field__label">Lý do hủy</label>
         <textarea id="cancel_reason_input" class="field__input" required rows="3" placeholder="Nhập lý do hủy..."></textarea>
       </div>
     </div>
-    <div class="modal__footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-size="md" data-variant="outline" data-modal-close="cancel-reason-modal">Hủy bỏ</button>
+    <div class="modal-footer flex justify-end gap-2 mt-4">
+      <button type="button" class="btn" data-size="md" data-variant="outline" data-modal-close="#cancel-reason-modal">Hủy bỏ</button>
       <button type="button" id="btn-confirm-cancel" class="btn" data-size="md" data-variant="destructive">Xác nhận Hủy</button>
     </div>
   </div>
 </div>
 
 <!-- Modal Xác nhận Duyệt -->
-<div id="approve-confirm-modal" class="modal" data-state="closed">
-  <div class="modal__content">
-    <div class="modal__header">
-      <h3 class="modal__title text-xl font-semibold">Xác nhận Duyệt</h3>
-      <button type="button" class="modal__close" data-modal-close="approve-confirm-modal">
+<div id="approve-confirm-modal" class="modal-overlay hidden" data-state="closed">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="title text-xl font-semibold">Xác nhận Duyệt</h3>
+      <button type="button" class="modal-close" data-modal-close="#approve-confirm-modal">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="modal__body py-4">
+    <div class="modal-body py-4">
       <p>Bạn có chắc chắn muốn duyệt và in <span id="approve-count" class="font-bold">0</span> giấy giới thiệu đã chọn?</p>
       <p class="text-sm mt-2">Lưu ý: Các giấy không ở trạng thái "Chờ duyệt" sẽ bị từ chối/bỏ qua.</p>
     </div>
-    <div class="modal__footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-size="md" data-variant="outline" data-modal-close="approve-confirm-modal">Hủy bỏ</button>
+    <div class="modal-footer flex justify-end gap-2 mt-4">
+      <button type="button" class="btn" data-size="md" data-variant="outline" data-modal-close="#approve-confirm-modal">Hủy bỏ</button>
       <button type="button" id="btn-confirm-approve" class="btn" data-size="md" data-variant="primary">Xác nhận Duyệt</button>
     </div>
   </div>
@@ -224,4 +231,4 @@ $letters = $letters ?? [];
   window.API_BASE_URL = '<?= url('api/v1') ?>';
   const BATCH_ID = <?= $batch['id'] ?>;
 </script>
-<script src="<?= url('public/js/pages/referral_letters_manager.js') ?>"></script>
+<script type="module" src="<?= url('public/js/pages/referral_letters_manager.js') ?>"></script>

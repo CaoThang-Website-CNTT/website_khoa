@@ -168,12 +168,16 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
               c.short_name as classroom_name,
               a.id as assignment_id,
               a.teacher_id,
-              t.full_name as teacher_name
+              t.full_name as teacher_name,
+              c_info.name as company_name,
+              c_info.tax_code as company_tax_code,
+              c_info.address as company_address
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
             LEFT JOIN internship_assignments a ON bs.id = a.batch_student_id
             LEFT JOIN teachers t ON a.teacher_id = t.id
+            LEFT JOIN companies c_info ON bs.company_id = c_info.id
             WHERE bs.batch_id = :batch_id";
 
     $stmt = $this->db->prepare($sql);

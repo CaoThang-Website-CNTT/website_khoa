@@ -1,6 +1,8 @@
+import { TableManager } from '../table/index.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const tableContainer = document.querySelector('[data-tm="referral_letters_table"]');
-  const bulkActionsBar = document.getElementById('bulk-actions');
+  const bulkActionBar = document.getElementById('bulk-action-bar');
   const selectedCountEl = document.getElementById('selected-count');
   const btnBulkApprove = document.getElementById('btn-bulk-approve');
   const btnBulkCancel = document.getElementById('btn-bulk-cancel');
@@ -15,14 +17,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (tableContainer) {
     tableContainer.addEventListener('tm:selection-change', (e) => {
       currentSelectedIds = e.detail.selectedIds;
-      if (currentSelectedIds.length > 0) {
-        selectedCountEl.textContent = currentSelectedIds.length;
-        bulkActionsBar.style.opacity = '1';
-        bulkActionsBar.style.pointerEvents = 'auto';
+      const count = currentSelectedIds.length;
+
+      if (count > 0) {
+        bulkActionBar.classList.remove('hidden');
+        bulkActionBar.setAttribute('data-state', 'open');
+        selectedCountEl.textContent = `Đã chọn: ${count}`;
       } else {
-        bulkActionsBar.style.opacity = '0';
-        bulkActionsBar.style.pointerEvents = 'none';
+        bulkActionBar.classList.add('hidden');
+        bulkActionBar.setAttribute('data-state', 'closed');
       }
+    });
+
+    // Bulk Action: Cancel selection
+    document.querySelector('#btn-cancel-selection')?.addEventListener('click', () => {
+      TableManager.clearSelection('referral_letters_table');
     });
     
     // Delegation for Detail buttons inside Table Manager

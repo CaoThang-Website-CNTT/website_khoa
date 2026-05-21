@@ -273,6 +273,36 @@ class TableInstance {
     const overlay = this.root.querySelector('[data-tm-loading]');
     if (overlay) overlay.style.display = on ? 'flex' : 'none';
   }
+
+  getSelectedIds() {
+    return Array.from(this.selectedIds || []);
+  }
+
+  clearSelection() {
+    if (!this.selectedIds) return;
+    this.selectedIds.clear();
+
+    const checkboxes = this.root.querySelectorAll('.tm-row-checkbox, .tm-check-all');
+    checkboxes.forEach(cb => cb.checked = false);
+
+    this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
+      detail: { selectedIds: [] }
+    }));
+  }
+
+  updateHeaderCheckbox() {
+    const checkAll = this.root.querySelector('.tm-check-all');
+    if (!checkAll) return;
+
+    const visibleCheckboxes = this.root.querySelectorAll('.tm-row-checkbox');
+    if (visibleCheckboxes.length === 0) {
+      checkAll.checked = false;
+      return;
+    }
+
+    const allChecked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+    checkAll.checked = allChecked;
+  }
 }
 
 export class TableManager {

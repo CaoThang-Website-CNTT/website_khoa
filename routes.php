@@ -143,6 +143,9 @@ $router->prefix('admin')->group(function (Router $router) {
     // Referral Letters
     $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
 
+    // Students
+    $router->get('/{id}/students', [InternshipBatchController::class, 'students']);
+
     // Teachers
     $router->get('/{id}/teachers', [InternshipBatchController::class, 'teachers']);
   });
