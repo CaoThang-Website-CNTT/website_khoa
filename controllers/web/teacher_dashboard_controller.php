@@ -114,4 +114,25 @@ class TeacherDashboardController extends Controller
 
     return $this->redirect('/teacher');
   }
+
+  public function internshipIndex(Request $request)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) {
+      $request->session()->flashNotify('error', 'Không tìm thấy hồ sơ giảng viên.');
+      return $this->redirect('/');
+    }
+
+    $currentPage = $request->query('page') ?? 1;
+    $data = $this->_internshipBatchService->getBatchesByTeacherId($teacher->id, $currentPage, 15);
+
+    $this->render("teacher/internship_batches/index", [
+      'data' => $data
+    ], layout: "dashboard_layout");
+  }
 }

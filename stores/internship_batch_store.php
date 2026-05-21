@@ -199,10 +199,36 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
+  public function getPaginatedByTeacherId(int $teacherId, int $page, int $limit = 15): array
+  {
+    $offset = ($page - 1) * $limit;
+    $sql = "SELECT * FROM internship_batches ib
+            JOIN internship_batch_supervisors ibs ON ib.id = ibs.batch_id
+            WHERE ib.deleted_at IS NULL AND ibs.teacher_id = :teacher_id
+            ORDER BY ib.created_at DESC 
+            LIMIT :limit OFFSET :offset";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->bindValue(':teacher_id', $teacherId, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
   public function getTotalCount(): int
   {
     $sql = "SELECT COUNT(*) FROM internship_batches WHERE deleted_at IS NULL";
     $stmt = $this->db->query($sql);
+    return (int)$stmt->fetchColumn();
+  }
+
+  public function getTotalCountByTeacherId(int $teacherId): int
+  {
+    $sql = "SELECT COUNT(*) FROM internship_batches ib
+            JOIN internship_batch_supervisors ibs ON ib.id = ibs.batch_id
+            WHERE ib.deleted_at IS NULL AND ibs.teacher_id = :teacher_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':teacher_id' => $teacherId]);
     return (int)$stmt->fetchColumn();
   }
 

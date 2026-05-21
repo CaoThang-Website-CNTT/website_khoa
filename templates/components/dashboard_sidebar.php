@@ -173,6 +173,13 @@ $currentPath = request()->path();
                 Tổng Quan
               </a>
             </li>
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'teacher/internship_batches') ? 'active' : '' ?>"
+                href="<?= url('teacher/internship_batches') ?>">
+                <i class="fa-solid fa-briefcase"></i>
+                Thực tập tốt nghiệp
+              </a>
+            </li>
           </ul>
         </div>
 

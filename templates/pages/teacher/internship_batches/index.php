@@ -22,15 +22,16 @@
           <?= $data->getTotal() ?>
         </span>
       </h2>
-      <p class="text-sm">Quản lý các đợt thực tập của khoa</p>
+      <p class="text-sm">Quản lý các đợt thực tập mà giảng viên tham gia hướng dẫn</p>
     </div>
 
-    <div class="flex gap-2">
-      <a href="<?= url('admin/internship_batches/create') ?>" data-variant="primary" data-size="md" class="btn">
+    <!-- Các nút chức năng -->
+    <!-- <div class="flex gap-2">
+      <a href="" data-variant="primary" data-size="md" class="btn">
         <i class="fa-solid fa-plus"></i>
         Thêm đợt mới
       </a>
-    </div>
+    </div> -->
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
@@ -43,7 +44,7 @@
 
     <!-- Cột Tên đợt -->
     <template data-tm-col="title" data-tm-label="Tên đợt" data-tm-sortable data-tm-filter-type="text">
-      <a href="<?= url('admin/internship_batches/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+      <a href="<?= url('teacher/internship_batches/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
     </template>
 
     <!-- Cột Khóa -->

@@ -148,6 +148,14 @@ class InternshipBatchService implements IInternshipBatchService
     return new Pageable($items, $total, $limit, $page);
   }
 
+  public function getBatchesByTeacherId(int $teacherId, int $page, int $limit = 15): Pageable
+  {
+    $items = $this->_store->getPaginatedByTeacherId($teacherId, $page, $limit);
+    $total = $this->_store->getTotalCountByTeacherId($teacherId);
+
+    return new Pageable($items, $total, $limit, $page);
+  }
+
   public function getBatchById(int $id): ?array
   {
     return $this->_store->getById($id);
