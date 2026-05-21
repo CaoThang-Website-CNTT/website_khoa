@@ -3,52 +3,66 @@
 namespace App\Services;
 
 use App\Core\Files\UploadedFile;
+use App\Core\Image\ImageProcessor;
+use App\Core\Pageable;
 use App\Models\Media;
-use App\Stores\MediaStore;
+use App\Stores\{CarouselStore, MediaStore};
 
 interface IMediaService
 {
-  public function upload(UploadedFile $file, ?int $postId = null): Media;
+  public function getMedias(int $page, int $limit = 15, ?string $search = null): Pageable;
+  public function getMediaById(int $mediaId): ?Media;
+  public function upload(UploadedFile $file, ?int $postId = null, ?string $compressMode = null): Media;
+  public function updateMetadata(int $mediaId, array $data): Media;
   public function delete(int $mediaId): void;
-  public function getMedia(int $mediaId): ?Media;
   public function attachToPost(array $mediaIds, int $postId): void;
   public function getByPostId(int $postId): array;
-  public function updateMetadata(int $mediaId, array $data): Media;
   public function deleteOrphans(\DateTimeInterface $olderThan): int;
 }
 
 /**
  * MediaService - Xử lý logic nghiệp vụ và I/O file cho Media
- * Lưu file: {storageRoot}/media/YYYY/MM/{uuid}.{ext}
+ * Lưu file: {storageRoot}/media/YYYY/MM/{uuid}.webp (sau khi nén)
  */
 class MediaService implements IMediaService
 {
   private MediaStore $_mediaStore;
+  private CarouselStore $_carouselStore;
+  private ImageProcessor $_imageProcessor;
   private string $_storageRoot;
+
+  /** Dung lượng tối đa tải về từ URL (bytes). Đọc từ ENV MAX_UPLOAD_SIZE (MB). */
+  private int $_maxUrlBytes;
 
   public function __construct(
     MediaStore $mediaStore,
+    ImageProcessor $imageProcessor,
   ) {
     $this->_mediaStore = $mediaStore;
-    $this->_storageRoot = "storage";
+    $this->_imageProcessor = $imageProcessor;
+    $this->_storageRoot = BASE_PATH . '/storage';
+
+    $maxMb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
+    $this->_maxUrlBytes = $maxMb * 1024 * 1024;
   }
 
   /**
-   * Di chuyển file upload vào storage và lưu metadata vào DB
+   * Upload file từ HTTP multipart, hỗ trợ compress.
+   * @param string|null $compressMode 'lossless'|'thumbnail'|'standard'|'banner'
    */
-  public function upload(UploadedFile $file, ?int $postId = null): Media
+  public function upload(UploadedFile $file, ?int $postId = null, ?string $compressMode = null): Media
   {
-    $relativePath = $this->moveToStorage($file);
+    [$relativePath, $finalMime, $finalSize] = $this->processAndSave($file->tmpPath, $file->originalName, $compressMode, isUploadedFile: true);
 
     $media = new Media(
       file_name: $file->originalName,
       file_path: $relativePath,
-      mime_type: $file->mimeType,
-      file_size: $file->fileSize,
+      mime_type: $finalMime,
+      file_size: $finalSize,
       alt_text: $file->altText ?? '',
       post_id: $postId,
     );
-
+    
     return $this->_mediaStore->create($media);
   }
 
@@ -58,7 +72,7 @@ class MediaService implements IMediaService
   public function delete(int $mediaId): void
   {
     $media = $this->getOrFail($mediaId);
-    $absolutePath = $this->absolutePath($media->file_path);
+    $absolutePath = $this->_storageRoot . '/' . ltrim($media->file_path, '/');
 
     if (file_exists($absolutePath) && !unlink($absolutePath)) {
       throw new \RuntimeException("Không thể xóa file vật lý: {$absolutePath}");
@@ -67,7 +81,7 @@ class MediaService implements IMediaService
     $this->_mediaStore->delete($mediaId);
   }
 
-  public function getMedia(int $mediaId): ?Media
+  public function getMediaById(int $mediaId): ?Media
   {
     return $this->_mediaStore->getById($mediaId);
   }
@@ -105,7 +119,7 @@ class MediaService implements IMediaService
   }
 
   /**
-   * Xóa các media orphan (không có post) cũ hơn mốc thời gian chỉ định
+   * Xóa các media orphan (không có post và không dùng trong carousel_slides) cũ hơn mốc thời gian
    */
   public function deleteOrphans(\DateTimeInterface $olderThan): int
   {
@@ -113,6 +127,11 @@ class MediaService implements IMediaService
     $deleted = 0;
 
     foreach ($orphans as $media) {
+      // Kiểm tra xem media có đang dùng trong carousel_slides không
+      if ($this->isUsed($media->file_path)) {
+        continue;
+      }
+
       try {
         $this->delete($media->id);
         $deleted++;
@@ -126,51 +145,87 @@ class MediaService implements IMediaService
   }
 
   /**
-   * Di chuyển file từ tmp sang storage, trả về relative path
+   * Lấy danh sách media phân trang, hỗ trợ tìm kiếm.
    */
-  private function moveToStorage(UploadedFile $file): string
+  public function getMedias(int $page, int $limit = 15, ?string $search = null): Pageable
+  {
+    $items = $this->_mediaStore->getPaginated($page, $limit, $search);
+    $total = $this->_mediaStore->getTotalCount($search);
+    return new Pageable($items, $total, $limit, $page);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Xử lý ảnh (nén + convert nếu có ImageProcessor) và lưu vào storage.
+   * Trả về [relativePath, mimeType, fileSize].
+   */
+  private function processAndSave(string $sourcePath, string $originalName, ?string $compressMode, bool $isUploadedFile): array
   {
     $relativDir = 'media/' . date('Y/m');
-    $absoluteDir = $this->_storageRoot . '/' . $relativDir;
+    $absoluteDir = $this->_storageRoot . '/' . ltrim($relativDir, '/');
 
     if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0755, recursive: true)) {
       throw new \RuntimeException("Không thể tạo thư mục lưu trữ: {$absoluteDir}");
     }
 
-    $uniqueName = $this->generateFilename($file->extension);
-    $relativePath = $relativDir . '/' . $uniqueName;
-    $absolutePath = $this->_storageRoot . '/' . $relativePath;
+    $baseFilename = $this->generateUuid();
 
-    // Dùng move_uploaded_file để đảm bảo nguồn file là upload hợp lệ
-    if (!move_uploaded_file($file->tmpPath, $absolutePath)) {
-      throw new \RuntimeException("Không thể di chuyển file đã upload đến: {$absolutePath}");
+    // Thử xử lý qua ImageProcessor nếu file là ảnh được hỗ trợ
+    if ($compressMode !== null && $this->_imageProcessor->supports($sourcePath)) {
+      $variant = $this->_imageProcessor->processSingle($sourcePath, $absoluteDir, $baseFilename, $compressMode);
+
+      if ($variant !== null) {
+        // Lưu thành công qua processor — xóa file gốc nếu không phải uploaded_file PHP
+        // (uploaded_file sẽ tự bị xóa sau request; file tạm từ URL cần xóa thủ công ở caller)
+        $relativePath = $relativDir . '/' . basename($variant->relativePath);
+        return [$relativePath, $variant->mimeType, $variant->fileSize];
+      }
     }
 
-    return $relativePath;
+    // Fallback: không nén — lưu file gốc thẳng
+    $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION)) ?: 'bin';
+    $fileName = $baseFilename . '.' . $extension;
+    $absolutePath = $absoluteDir . '/' . $fileName;
+    $relativePath = $relativDir . '/' . $fileName;
+
+    if ($isUploadedFile) {
+      if (!move_uploaded_file($sourcePath, $absolutePath)) {
+        throw new \RuntimeException("Không thể di chuyển file upload đến: {$absolutePath}");
+      }
+    } else {
+      if (!copy($sourcePath, $absolutePath)) {
+        throw new \RuntimeException("Không thể sao chép file tạm đến: {$absolutePath}");
+      }
+    }
+
+    $mime = mime_content_type($absolutePath) ?: 'application/octet-stream';
+    return [$relativePath, $mime, (int) filesize($absolutePath)];
   }
 
   /**
-   * Tạo filename dạng UUID v4 để tránh trùng và bảo mật
+   * Kiểm tra file_path có đang dùng trong bảng carousel_slides không.
    */
-  private function generateFilename(string $extension): string
+  private function isUsed(string $filePath): bool
+  {
+    try {
+      return $this->_carouselStore->isImageUsed($filePath);
+    } catch (\Throwable) {
+      return false;
+    }
+  }
+
+  /**
+   * Tạo UUID v4 theo RFC 4122
+   */
+  private function generateUuid(): string
   {
     $bytes = random_bytes(16);
-
-    // Format UUID v4 theo RFC 4122
     $bytes[6] = chr((ord($bytes[6]) & 0x0F) | 0x40);
     $bytes[8] = chr((ord($bytes[8]) & 0x3F) | 0x80);
-
-    $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
-
-    return $uuid . '.' . $extension;
-  }
-
-  /**
-   * Chuyển relative path thành absolute path
-   */
-  private function absolutePath(string $relativePath): string
-  {
-    return $this->_storageRoot . '/' . ltrim($relativePath, '/');
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
   }
 
   /**

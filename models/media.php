@@ -12,7 +12,7 @@ class Media extends Model
     public string $file_path = '',
     public string $mime_type = '',
     public int $file_size = 0,
-    public string $alt_text = '',
+    public ?string $alt_text = null,
     public ?int $post_id = null,
     public ?int $uploader_id = null,
     public ?string $created_at = null,

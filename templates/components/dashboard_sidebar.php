@@ -49,6 +49,9 @@
                     <li class="sidebar__menu-sub-item">
                       <a href="<?= url('admin/categories') ?>" class="sidebar__menu-sub-item-btn">Danh Mục</a>
                     </li>
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('admin/media') ?>" class="sidebar__menu-sub-item-btn">Thư Viện</a>
+                    </li>
                   </ul>
                 </div>
               </div>

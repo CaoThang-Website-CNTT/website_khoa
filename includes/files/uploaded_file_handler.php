@@ -50,18 +50,6 @@ class UploadedFileHandler
   ];
 
   /**
-   * Lấy file từ $_FILES
-   */
-  public function fromGlobals(string $fieldName, ?string $altText = null): UploadedFile
-  {
-    if (!isset($_FILES[$fieldName])) {
-      throw new \RuntimeException("Không tìm thấy trường file: '{$fieldName}'.");
-    }
-
-    return $this->processUpload($_FILES[$fieldName], $altText);
-  }
-
-  /**
    * Validate $_FILES array và trả về UploadedFile
    */
   public function processUpload(array $fileArray, ?string $altText = null): UploadedFile

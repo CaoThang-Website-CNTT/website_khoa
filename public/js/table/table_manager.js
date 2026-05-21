@@ -110,7 +110,6 @@ class TableInstance {
     overlay.dataset.tmLoading = '';
     overlay.innerHTML = '<div class="tm-spinner"></div>';
     dataWrapper.appendChild(overlay);
-    wrapper.appendChild(dataWrapper);
 
     // Footer Controls
     const footerTarget = this.root.dataset.tmFooterTarget;
@@ -141,19 +140,10 @@ class TableInstance {
       if (externalFooter) {
         externalFooter.appendChild(footer);
       } else {
-        const tfoot = this.#table.querySelector('tfoot');
-        if (tfoot) {
-          tfoot.innerHTML = '';
-          const tr = document.createElement('tr');
-          tr.className = 'tm-footer-tr';
-          const td = document.createElement('td');
-          td.colSpan = this.columns.all.length;
-          td.appendChild(footer);
-          tr.appendChild(td);
-          tfoot.appendChild(tr);
-        }
+        dataWrapper.appendChild(footer);
       }
     }
+    wrapper.appendChild(dataWrapper);
 
     this.root.appendChild(wrapper);
     console.log(`[TableManager] Bảng "${this.id}" đã được khởi tạo.`, {

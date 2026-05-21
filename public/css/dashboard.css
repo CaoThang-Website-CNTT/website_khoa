@@ -38,6 +38,7 @@ body {
   width: 0.25rem;
   height: 0.25rem;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
@@ -238,7 +239,9 @@ body {
   margin-left: auto;
 }
 
-.sidebar__menu-btn .collapsible__trigger[data-state="open"] :is(svg, .fa-solid):last-child {
+.sidebar__menu-btn
+  .collapsible__trigger[data-state="open"]
+  :is(svg, .fa-solid):last-child {
   transform: rotate(-180deg);
 }
 
@@ -275,7 +278,6 @@ body {
   width: 100%;
 }
 
-
 /* ==========================================================================
    AVATAR DROPDOWN
    ========================================================================== */
@@ -302,6 +304,7 @@ body {
   flex: 1;
   gap: 1rem;
   padding: 1rem;
+  max-width: calc(100vw - var(--sidebar-width));
 }
 
 /* ==========================================================================
@@ -339,24 +342,66 @@ body {
 .detail-layout--reverse .detail-layout__main {
   order: 2;
 }
+
 .detail-layout--reverse .detail-layout__sidebar {
   order: 1;
 }
+
 .detail-modal {
   width: calc(100% - 2rem);
   max-width: 40rem;
 }
+
 .detail-modal__form {
   max-height: 60vh;
   overflow-y: scroll;
 }
 
-/* DnD effect */
+/* ==========================================================================
+   MEDIA INPUT/PREVIEW
+   ========================================================================== */
+.media-input {
+  position: relative;
+}
+
+.media-input__img {
+  max-width: 100%;
+  height: auto;
+}
+
+.media-upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  text-align: center;
+}
+
+:is(.media-upload-zone, .media-preview)[hidden] {
+  display: none;
+}
+
+.media-upload-zone--draging {
+  opacity: 0.4;
+  background: var(--muted);
+  border-color: var(--primary);
+}
+
+.media-upload-zone__preview {
+  text-align: center;
+}
+
+/* ==========================================================================
+   DnD EFFECT
+   ========================================================================== */
 .dnd-ghost {
   opacity: 0.4 !important;
   border: 2px dashed var(--primary) !important;
   border-radius: var(--radius-md);
-  background-color: color-mix(in oklab, var(--primary) 5%, transparent) !important;
+  background-color: color-mix(
+    in oklab,
+    var(--primary) 5%,
+    transparent
+  ) !important;
 }
 
 #dnd-ghost .dnd-ghost {
@@ -372,9 +417,11 @@ body {
   transform: scale(1.02);
   transition: transform 150ms ease;
 }
+
 .drag-handle {
   transition: color 150ms ease;
 }
+
 .drag-handle:hover {
   color: var(--primary);
 }
@@ -383,81 +430,10 @@ body {
   font-size: var(--text-sm);
   font-weight: var(--fw-medium);
 }
+
 .metadata-card dd {
   font-size: var(--text-sm);
   color: var(--muted-foreground);
-}
-
-.carousel-card {
-  padding: 0;
-}
-
-.carousel-card .carousel__item {
-  position: relative;
-  padding: 0;
-}
-
-.carousel-card .carousel__content {
-  position: absolute;
-  left: 1rem;
-  bottom: 1.75rem;
-  z-index: 15;
-}
-
-.carousel-card .carousel__description {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  width: 40%;
-  overflow: hidden;
-  display: -webkit-box;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  text-overflow: ellipsis;
-}
-
-.carousel-card .carousel__image-wrapper {
-  background-color: black;
-  width: 100%;
-  height: 20rem;
-  max-width: unset;
-  box-shadow: none;
-  border-top-left-radius: var(--radius-md);
-  border-top-right-radius: var(--radius-md);
-}
-
-.carousel-card .carousel__image-wrapper::after {
-  position: absolute;
-  content: "";
-  inset: 0 0;
-  background: color-mix(in oklab, black 25%, transparent);
-}
-
-.carousel-card .carousel__control {
-  width: 2rem;
-  height: 2rem;
-  background: transparent;
-  color: var(--input);
-  border: 2px solid var(--input);
-  z-index: 15;
-}
-
-.carousel-card .carousel__indicators {
-  position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  gap: 0.25rem;
-}
-
-.carousel-card .carousel__indicator {
-  width: 0.5rem;
-  height: 0.5rem;
-}
-
-.carousel-card .carousel__indicator[data-state="active"] {
-  width: 1rem;
-  border-radius: var(--radius-lg);
 }
 
 .slide-item__img {
@@ -481,12 +457,13 @@ body {
 }
 
 .menu-item::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -1rem;
   width: 2px;
-  height: calc(100% + 0.5rem); /* 0.5rem = mt-2 is the gap between menu items */
+  height: calc(100% + 0.5rem);
+  /* 0.5rem = mt-2 là gap giữa menu items */
   border-left: 2px dashed var(--border);
   z-index: 1;
   pointer-events: none;

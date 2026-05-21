@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
+use App\Controllers\{AuthController, DashboardController, MediaController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
 use App\Core\Router;
 
 $router->get('/', [SiteController::class, 'index']);
@@ -16,15 +16,23 @@ $router->prefix('admin')->group(function (Router $router) {
   $router->get('/', [DashboardController::class, 'index']);
 
   // Media
+  $router->prefix('media')->group(function ($router) {
+    $router->get('/', [MediaController::class, 'index']);
+    $router->get('/create', [MediaController::class, 'create']);
+    $router->post('/', [MediaController::class, 'store']);
+    $router->get('/{media_id}', [MediaController::class, 'edit']);
+    $router->post('/{media_id}', [MediaController::class, 'update']);
+    $router->delete('/{media_id}', [MediaController::class, 'destroy']);
+  });
 
   // Posts
   $router->prefix('posts')->group(function ($router) {
     $router->get('/', [PostController::class, 'index']);
-    $router->post('/', [PostController::class, 'store']);
     $router->get('/create', [PostController::class, 'create']);
+    $router->post('/', [PostController::class, 'store']);
     $router->get('/{post_id}', [PostController::class, 'show']);
     $router->put('/{post_id}', [PostController::class, 'update']);
-    $router->delete('/{post_id}', [PostController::class, 'delete']);
+    $router->delete('/{post_id}', [PostController::class, 'destroy']);
   });
 
   // Students

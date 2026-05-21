@@ -212,11 +212,6 @@ export class TableRenderer {
     tbody.dataset.tmBody = '';
     table.appendChild(tbody);
 
-    const tfoot = document.createElement('tfoot');
-    tfoot.className = 'tm-tfoot';
-    tfoot.dataset.tmFoot = '';
-    table.appendChild(tfoot);
-
     return table;
   }
 
