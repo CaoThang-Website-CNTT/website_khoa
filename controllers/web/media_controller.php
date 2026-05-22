@@ -28,9 +28,10 @@ class MediaController extends Controller
    */
   public function index(Request $request)
   {
-    $currentPage = $request->query('page') ?? 1;
+    $currentPage = (int)$request->query('page', 1);
+    $limit = (int)$request->query('limit', 15);
 
-    $data = $this->_mediaService->getMedias($currentPage, 15);
+    $data = $this->_mediaService->getMedias($currentPage, $limit);
 
     $this->render('admin/media/index', [
       'data' => $data,

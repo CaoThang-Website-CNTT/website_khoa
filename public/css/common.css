@@ -2,6 +2,7 @@
    COMPONENTS
    ========================================================================== */
 @layer components {
+
   /* ==========================================================================
      AVATAR
      ========================================================================== */
@@ -207,6 +208,11 @@
     outline-offset: 2px;
   }
 
+  .btn[disabled] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   .btn[data-size="sm"] {
     height: 1.75rem;
   }
@@ -344,8 +350,7 @@
 
   button.radio-group__item[aria-invalid="true"] {
     color: var(--destructive);
-    box-shadow: 0 0 0 3px
-      color-mix(in oklab, var(--destructive) 20%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 20%, transparent);
   }
 
   /* ==========================================================================
@@ -570,7 +575,7 @@
     transform: translateY(0) scale(1);
   }
 
-  #toast-portal > * {
+  #toast-portal>* {
     margin-block-start: 0.5rem;
     margin-block-end: 0.5rem;
   }
@@ -693,7 +698,7 @@
     opacity: 1;
   }
 
-  .alert + .alert {
+  .alert+.alert {
     margin-block-start: 0.5rem;
     margin-block-end: 0.5rem;
   }
@@ -711,12 +716,12 @@
     font-size: var(--text-base);
   }
 
-  .field__set > .field__legend,
-  .field__set > .field__label {
+  .field__set>.field__legend,
+  .field__set>.field__label {
     margin-bottom: 0.375rem;
   }
 
-  .field__legend + .field__description {
+  .field__legend+.field__description {
     margin-top: -0.375rem;
   }
 
@@ -899,8 +904,7 @@
     color: var(--destructive);
   }
 
-  .field[data-orientation="horizontal"]
-    .field__input:not(input[type="checkbox"]) {
+  .field[data-orientation="horizontal"] .field__input:not(input[type="checkbox"]) {
     width: auto;
   }
 
@@ -970,7 +974,7 @@
   }
 
   .modal[data-state="open"],
-  .modal[data-state="open"] + .modal-overlay {
+  .modal[data-state="open"]+.modal-overlay {
     display: grid;
   }
 
@@ -979,7 +983,7 @@
   }
 
   .modal[data-state="closed"],
-  .modal[data-state="closed"] + .modal-overlay {
+  .modal[data-state="closed"]+.modal-overlay {
     display: none;
   }
 
@@ -1099,7 +1103,7 @@
     padding: 0 1rem;
   }
 
-  .card__content > .alert {
+  .card__content>.alert {
     margin-block-end: 1rem;
   }
 
@@ -1245,13 +1249,13 @@
     align-items: center;
   }
 
-  .select__icon-wrapper > .fa-solid,
-  .select__icon-wrapper > .fa-brand,
-  .select__icon-wrapper > .fa-regular {
+  .select__icon-wrapper>.fa-solid,
+  .select__icon-wrapper>.fa-brand,
+  .select__icon-wrapper>.fa-regular {
     font-size: var(--text-xs);
   }
 
-  .select__viewport > .select__search-wrap .select__search {
+  .select__viewport>.select__search-wrap .select__search {
     position: sticky;
     top: 0;
   }
@@ -1340,7 +1344,7 @@
     user-select: none;
   }
 
-  .select__group + .select__group {
+  .select__group+.select__group {
     margin-top: 4px;
     border-top: 1px solid var(--border);
     padding-top: 4px;
@@ -1455,9 +1459,7 @@
     padding: 0 0.5rem;
   }
 
-  .pagination-link:hover:not([data-disabled]):not(
-      .pagination-link[data-active]
-    ) {
+  .pagination-link:hover:not([data-disabled]):not(.pagination-link[data-active]) {
     background-color: var(--accent);
     color: var(--accent-foreground);
   }
@@ -1590,7 +1592,7 @@
     box-shadow: 0 0 0 3px var(--ring) / 0.5;
   }
 
-  .badge > :is(svg, .fa-solid, .fa-brand) {
+  .badge> :is(svg, .fa-solid, .fa-brand) {
     pointer-events: none;
     flex-shrink: 0;
     width: 12px;
@@ -1731,7 +1733,7 @@
     background: var(--muted);
   }
 
-  .dropdown__item > * {
+  .dropdown__item>* {
     display: flex;
     align-items: center;
     width: 100%;
@@ -2069,7 +2071,7 @@
     font-size: var(--text-sm);
   }
 
-  .tm-filter-pill__text > * {
+  .tm-filter-pill__text>* {
     font-size: inherit;
   }
 
@@ -2404,8 +2406,7 @@
     color: var(--secondary-foreground);
   }
 
-  .banner[data-variant="secondary"]
-    :is(svg, .fa-solid, .fa-regular, .fa-brand) {
+  .banner[data-variant="secondary"] :is(svg, .fa-solid, .fa-regular, .fa-brand) {
     color: var(--secondary-foreground);
   }
 
@@ -2438,12 +2439,9 @@
     border-color: var(--banner-border);
   }
 
-  .banner:is(
-      [data-variant="error"],
-      [data-variant="warning"],
-      [data-variant="info"]
-    )
-    :is(svg, .fa-solid, .fa-regular) {
+  .banner:is([data-variant="error"],
+    [data-variant="warning"],
+    [data-variant="info"]) :is(svg, .fa-solid, .fa-regular) {
     color: var(--banner-icon-color);
   }
 

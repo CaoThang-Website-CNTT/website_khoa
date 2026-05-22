@@ -59,21 +59,20 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <?= csrf_field() ?>
           <div class="field-group">
 
-            <div class="field" <?= $category->isEditable() ? 'data-field-required' : '' ?>>
+            <div class="field" <?= $category->isEditable() ? 'data-field-required' : '' ?> <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
               <label class="field__label" for="name">Tên danh mục</label>
-              <input id="name" class="field__input" type="text" name="name" value="<?= htmlspecialchars($category->name) ?>"
-                <?= !$category->isEditable() ? 'disabled' : '' ?>>
+              <input id="name" class="field__input" type="text" name="name" value="<?= htmlspecialchars($category->name) ?>">
             </div>
 
-            <div class="field">
+            <div class="field" <?= $category->isEditable() ? 'data-field-required' : '' ?> <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
               <label class="field__label" for="slug">Slug</label>
               <input id="slug" class="field__input" type="text" name="slug"
-                value="<?= htmlspecialchars($category->slug ?? '') ?>" <?= !$category->isEditable() ? 'disabled' : '' ?>>
+                value="<?= htmlspecialchars($category->slug ?? '') ?>">
             </div>
 
-            <div class="field">
+            <div class="field" <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
               <label class="field__label" for="parent_id">Danh mục cha</label>
-              <select id="parent_id" class="field__input" name="parent_id" <?= !$category->isEditable() ? 'disabled' : '' ?>>
+              <select id="parent_id" class="field__input" name="parent_id">
                 <option value="">-- Không có (danh mục gốc) --</option>
                 <?php foreach ($categories as $cat): ?>
                   <?php if ($cat->id === $category->id)
@@ -85,9 +84,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
               </select>
             </div>
 
-            <div class="field">
+            <div class="field" <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
               <label class="field__label" for="description">Mô tả</label>
-              <textarea id="description" class="field__input" name="description" rows="4" <?= !$category->isEditable() ? 'disabled' : '' ?>><?= htmlspecialchars($category->description ?? '') ?></textarea>
+              <textarea id="description" class="field__input" name="description" rows="4"><?= htmlspecialchars($category->description ?? '') ?></textarea>
             </div>
           </div>
         </form>

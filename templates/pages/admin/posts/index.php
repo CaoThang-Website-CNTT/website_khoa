@@ -68,8 +68,7 @@
 
     <!-- Cột Ngày tạo -->
     <template data-tm-col="created_at" data-tm-label="Ngày tạo" data-tm-sortable></template>
-  </div>
-  </div>
+</div>
 
 <!-- Bootstrap Data Source -->
 <script type="application/json" data-tm-data="posts_table">

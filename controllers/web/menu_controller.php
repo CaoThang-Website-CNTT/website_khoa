@@ -22,9 +22,10 @@ class MenuController extends Controller
 
   public function index(Request $request)
   {
-    $currentPage = $request->query('page') ?? 1;
+    $currentPage = (int)$request->query('page', 1);
+    $limit = (int)$request->query('limit', 15);
 
-    $data = $this->_menuService->getMenus($currentPage, 15);
+    $data = $this->_menuService->getMenus($currentPage, $limit);
 
     $this->render('admin/menus/index', [
       'data' => $data,

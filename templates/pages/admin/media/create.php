@@ -74,8 +74,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
             </div>
 
             <div class="field" data-field-required>
-              <label class="field__label" for="file_name">Tên file</label>
-              <input id="file_name" class="field__input" type="text"
+              <label class="field__label" for="file-name">Tên file</label>
+              <input id="file-name" class="field__input" type="text"
                      name="file_name" placeholder="Tự động điền khi chọn file"
                      value="<?= htmlspecialchars($old_input['file_name'] ?? '') ?>">
             </div>
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const uploadZone    = document.querySelector('#upload-zone');
   const uploadPreview = document.querySelector('#upload-preview');
   const previewMedia  = document.querySelector('#preview-media');
-  const fileNameInput = document.querySelector('#file_name');
+  const fileNameInput = document.querySelector('#file-name');
   const form          = document.querySelector('#media-form');
   const confirmBtn    = document.querySelector('#confirm-btn');
 

@@ -20,9 +20,10 @@ class CategoryController extends Controller
 
   public function index(Request $request)
   {
-    $currentPage = $request->query('page') ?? 1;
+    $currentPage = (int)$request->query('page', 1);
+    $limit = (int)$request->query('limit', 15);
 
-    $data = $this->_categoryService->getCategories($currentPage, 15);
+    $data = $this->_categoryService->getCategories($currentPage, $limit);
 
     $this->render("admin/categories/index", [
       'data' => $data,

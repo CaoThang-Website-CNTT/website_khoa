@@ -91,6 +91,14 @@ class ModalHandler {
     targetModal.setAttribute("data-state", "open");
 
     document.body.style.overflow = "hidden";
+
+    // Dispatch Event
+    targetModal.dispatchEvent(new CustomEvent("modal:open", {
+      bubbles: true,
+      detail: {
+        modal: targetModal
+      },
+    }));
   }
 
   close() {
@@ -105,6 +113,14 @@ class ModalHandler {
       this._overlay.setAttribute("data-state", "closed");
       document.body.style.overflow = "";
     }
+
+    // Dispatch Event
+    targetModal.dispatchEvent(new CustomEvent("modal:close", {
+      bubbles: true,
+      detail: {
+        modal: targetModal,
+      },
+    }));
   }
 
   _updateZIndices() {

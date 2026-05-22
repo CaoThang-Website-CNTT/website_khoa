@@ -241,31 +241,31 @@ function renderMenuItems(array $items, object $menu): void
       <div class="field-group">
         <div class="grid grid-cols-2 gap-4">
           <!-- label -->
-          <div class="field" data-field-required>
+          <div class="field" data-field-required <?= !$isEditable ? ' data-field-readonly' : '' ?>>
             <label class="field__label" for="item-label">Tên hiển thị (Nhãn)</label>
-            <input id="item-label" class="field__input" type="text" name="label" required placeholder="VD: Trang chủ" <?= $isEditable ? '' : 'disabled' ?>>
+            <input id="item-label" class="field__input" type="text" name="label" required placeholder="VD: Trang chủ">
           </div>
   
           <!-- url -->
-          <div class="field" data-field-required>
+          <div class="field" data-field-required <?= !$isEditable ? ' data-field-readonly' : '' ?>>
             <label class="field__label" for="item-url">Đường dẫn (URL)</label>
-            <input id="item-url" class="field__input" type="text" name="url" required placeholder="/duong-dan hoặc https://..." <?= $isEditable ? '' : 'disabled' ?>>
+            <input id="item-url" class="field__input" type="text" name="url" placeholder="/duong-dan hoặc https://...">
           </div>
         </div>
 
         <!-- parent_id -->
-        <div class="field">
+        <div class="field" <?= !$isEditable ? ' data-field-readonly' : '' ?>>
           <label class="field__label" for="item-parent-id">Mục cha</label>
-          <select id="item-parent-id" class="field__input" name="parent_id" <?= $isEditable ? '' : 'disabled' ?>>
+          <select id="item-parent-id" class="field__input" name="parent_id">
             <option value="">-- Không có (mục gốc) --</option>
           </select>
           <p class="field__description">Chọn mục cha để tạo menu con.</p>
         </div>
 
         <!-- sort_order -->
-        <div class="field">
+        <div class="field" <?= !$isEditable ? ' data-field-readonly' : '' ?>>
           <label class="field__label" for="item-sort-order">Thứ tự hiển thị</label>
-          <input id="item-sort-order" class="field__input" type="number" name="sort_order" min="0" value="0" <?= $isEditable ? '' : 'disabled' ?>>
+          <input id="item-sort-order" class="field__input" type="number" name="sort_order" min="0" value="0">
         </div>
       </div>
     </div>

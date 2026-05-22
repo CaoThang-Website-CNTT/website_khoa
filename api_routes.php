@@ -14,7 +14,7 @@ $router->prefix('api')->group(function ($router) {
     // Media
     $router->prefix('media')->group(function (Router $router) {
       $router->post('/', [MediaApiController::class, 'upload']);
-      $router->get('/', [MediaApiController::class, 'indexByPost']);
+      $router->get('/', [MediaApiController::class, 'index']);
       $router->get('/{media_id}', [MediaApiController::class, 'show']);
       $router->patch('/{media_id}', [MediaApiController::class, 'updateMetadata']);
       $router->post('/attach', [MediaApiController::class, 'attachToPost']);
