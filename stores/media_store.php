@@ -9,19 +9,22 @@ use App\Core\Schema\Compiler\MySQLCompiler;
 
 interface IMediaStore
 {
+  // C
   public function create(Media $media): Media;
-  public function getById(int $id): ?Media;
-  /** @return Media[] */
-  public function getByIds(array $ids): array;
-  public function findByPostId(int $postId): array;
-  public function findOrphansOlderThan(\DateTimeInterface $cutoff): array;
-  public function update(int $id, array $data): Media;
-  public function attachToPost(array $mediaIds, int $postId): void;
-  public function syncWithPost(array $mediaIds, int $postId): void;
-  public function delete(int $id): void;
+
+  // R
   /** @return Media[] */
   public function getPaginated(int $page, int $perPage, ?string $search = null): array;
   public function getTotalCount(?string $search = null): int;
+  public function getById(int $id): ?Media;
+  /** @return Media[] */
+  public function getByIds(array $ids): array;
+
+  // U
+  public function update(int $id, array $data): Media;
+
+  // D
+  public function delete(int $id): void;
 }
 
 class MediaStore extends Store implements IMediaStore
@@ -31,12 +34,15 @@ class MediaStore extends Store implements IMediaStore
     $builder = new QueryBuilder(new MySQLCompiler());
 
     $query = $builder->from('media')->insert([
+      'title' => $media->title,
       'file_name' => $media->file_name,
       'file_path' => $media->file_path,
       'mime_type' => $media->mime_type,
-      'file_size' => $media->file_size,
       'alt_text' => $media->alt_text,
-      'post_id' => $media->post_id,
+      'width' => $media->width,
+      'height' => $media->height,
+      'file_size' => $media->file_size,
+      'metadata' => $media->metadata ? json_encode($media->metadata) : null,
       'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
       'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
     ]);
@@ -52,6 +58,48 @@ class MediaStore extends Store implements IMediaStore
     return $media;
   }
 
+    public function getPaginated(int $pageTo, int $limit = 15, ?string $search = null): array
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $builder->from('media')
+      ->select('*')
+      ->order('created_at', ['ascending' => false]);
+
+    $builder->range(($pageTo - 1) * $limit, $pageTo * $limit - 1);
+
+    if ($search !== null && $search !== '') {
+      $builder->like('file_name', '%' . $search . '%');
+    }
+
+    $stmt = $this->db->prepare($builder->toSql());
+    $stmt->execute($builder->getBindings());
+
+    return array_map(function (array $row) {
+      if (isset($row['metadata']) && is_string($row['metadata'])) {
+        $row['metadata'] = json_decode($row['metadata'], true);
+      }
+      return Media::fromArray($row);
+    }, $stmt->fetchAll(\PDO::FETCH_ASSOC));
+  }
+
+  public function getTotalCount(?string $search = null): int
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $builder->from('media')->select('COUNT(*) AS total');
+
+    if ($search !== null && $search !== '') {
+      $builder->like('file_name', '%' . $search . '%');
+    }
+
+    $stmt = $this->db->prepare($builder->toSql());
+    $stmt->execute($builder->getBindings());
+
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    return $row ? (int) $row['total'] : 0;
+  }
+
   public function getById(int $id): ?Media
   {
     $builder = new QueryBuilder(new MySQLCompiler());
@@ -62,6 +110,9 @@ class MediaStore extends Store implements IMediaStore
     $stmt->execute($query->getBindings());
 
     $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    if ($row && isset($row['metadata']) && is_string($row['metadata'])) {
+      $row['metadata'] = json_decode($row['metadata'], true);
+    }
     return $row ? Media::fromArray($row) : null;
   }
 
@@ -80,55 +131,27 @@ class MediaStore extends Store implements IMediaStore
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
 
-    return array_map(fn(array $row) => Media::fromArray($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
-  }
-
-  public function findByPostId(int $postId): array
-  {
-    $builder = new QueryBuilder(new MySQLCompiler());
-
-    $query = $builder->from('media')
-      ->select('*')
-      ->eq('post_id', $postId)
-      ->order('created_at', ['ascending' => true]);
-
-    $stmt = $this->db->prepare($query->toSql());
-    $stmt->execute($query->getBindings());
-
-    return array_map(
-      static fn(array $row) => Media::fromArray($row),
-      $stmt->fetchAll(\PDO::FETCH_ASSOC),
-    );
-  }
-
-  public function findOrphansOlderThan(\DateTimeInterface $cutoff): array
-  {
-    $builder = new QueryBuilder(new MySQLCompiler());
-
-    $query = $builder->from('media')
-      ->select('*')
-      ->eq('post_id', null)
-      ->lt('created_at', $cutoff->format('Y-m-d H:i:s'));
-
-    $stmt = $this->db->prepare($query->toSql());
-    $stmt->execute($query->getBindings());
-
-    return array_map(
-      static fn(array $row) => Media::fromArray($row),
-      $stmt->fetchAll(\PDO::FETCH_ASSOC),
-    );
+    return array_map(function (array $row) {
+      if (isset($row['metadata']) && is_string($row['metadata'])) {
+        $row['metadata'] = json_decode($row['metadata'], true);
+      }
+      return Media::fromArray($row);
+    }, $stmt->fetchAll(\PDO::FETCH_ASSOC));
   }
 
   public function update(int $id, array $data): Media
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
-    // Chặn các field immutable
     $immutable = ['id', 'file_path', 'created_at'];
     $data = array_diff_key($data, array_flip($immutable));
 
     if (empty($data)) {
       return $this->getById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại.");
+    }
+
+    if (array_key_exists('metadata', $data)) {
+      $data['metadata'] = $data['metadata'] ? json_encode($data['metadata']) : null;
     }
 
     $data['updated_at'] = (new \DateTime())->format('Y-m-d H:i:s');
@@ -141,40 +164,6 @@ class MediaStore extends Store implements IMediaStore
     return $this->getById($id) ?? throw new \RuntimeException("Media #{$id} không tồn tại sau khi cập nhật.");
   }
 
-  public function attachToPost(array $mediaIds, int $postId): void
-  {
-    if (empty($mediaIds)) {
-      return;
-    }
-    $builder = new QueryBuilder(new MySQLCompiler());
-
-    $query = $builder->from('media')
-      ->update(['post_id' => $postId])
-      ->in('id', $mediaIds);
-
-    $stmt = $this->db->prepare($query->toSql());
-    $stmt->execute($query->getBindings());
-  }
-
-  public function syncWithPost(array $mediaIds, int $postId): void
-  {
-    $builder = new QueryBuilder(new MySQLCompiler());
-
-    // 1. Gỡ bỏ post_id của tất cả media hiện tại thuộc post này
-    $detachQuery = (new QueryBuilder(new MySQLCompiler()))
-      ->from('media')
-      ->update(['post_id' => null])
-      ->eq('post_id', $postId);
-
-    $stmtDetach = $this->db->prepare($detachQuery->toSql());
-    $stmtDetach->execute($detachQuery->getBindings());
-
-    // 2. Gắn post_id cho danh sách media mới (nếu có)
-    if (!empty($mediaIds)) {
-      $this->attachToPost($mediaIds, $postId);
-    }
-  }
-
   public function delete(int $id): void
   {
     $builder = new QueryBuilder(new MySQLCompiler());
@@ -183,42 +172,5 @@ class MediaStore extends Store implements IMediaStore
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
-  }
-
-  public function getPaginated(int $pageTo, int $limit = 15, ?string $search = null): array
-  {
-    $builder = new QueryBuilder(new MySQLCompiler());
-
-    $builder->from('media')
-      ->select('*')
-      ->order('created_at', ['ascending' => false]);
-
-    $builder->range(($pageTo - 1) * $limit, $pageTo * $limit - 1);
-
-    if ($search !== null && $search !== '') {
-      $builder->like('file_name', '%' . $search . '%');
-    }
-
-    $stmt = $this->db->prepare($builder->toSql());
-    $stmt->execute($builder->getBindings());
-
-    return array_map(fn(array $row) => Media::fromArray($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
-  }
-
-  public function getTotalCount(?string $search = null): int
-  {
-    $builder = new QueryBuilder(new MySQLCompiler());
-
-    $builder->from('media')->select('COUNT(*) AS total');
-
-    if ($search !== null && $search !== '') {
-      $builder->like('file_name', '%' . $search . '%');
-    }
-
-    $stmt = $this->db->prepare($builder->toSql());
-    $stmt->execute($builder->getBindings());
-
-    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-    return $row ? (int) $row['total'] : 0;
   }
 }
