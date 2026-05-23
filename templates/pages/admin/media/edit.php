@@ -1,6 +1,7 @@
 <?php
 $errors    = request()->session()->getErrors()    ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
+$max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
 ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
@@ -11,10 +12,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <div class="flex justify-between items-center">
     <div class="col-6 col-md-6">
       <h2 class="title text-2xl font-semibold">
-        Media
-        <?= '#' . $media->id; ?>
+        Media <?= '#' . $media->id ?>
       </h2>
-      <p>Upload & điền thông tin media mới vào các trường dưới đây</p>
+      <p>Chỉnh sửa thông tin và thay thế file media nếu cần</p>
     </div>
     <div class="flex gap-2">
       <a href="<?= request()->previous(fallback: 'admin/media') ?>"
@@ -34,7 +34,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
       <div class="card__header">
         <legend class="card__title field__legend">Sửa media</legend>
-        <p class="card__description field__description">Upload file ảnh hoặc video từ máy tính</p>
+        <p class="card__description field__description">Thay thế file hoặc cập nhật thông tin bên dưới</p>
       </div>
 
       <hr class="separator">
@@ -44,25 +44,73 @@ $old_input = request()->session()->getOldInputs() ?? [];
               action="<?= url('admin/media/' . $media->id) ?>"
               enctype="multipart/form-data">
           <?= csrf_field() ?>
+
           <div class="field-group">
-            <div class="media-upload-zone__preview" id="upload-preview" hidden>
-              <div class="media-upload-zone__preview-wrapper" id="preview-media"></div>
+
+            <div class="media-upload-zone"
+                 id="media-edit-upload-zone"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Khu vực kéo thả file"
+                 data-mu-zone
+                 data-mu-max-bytes="<?= $max_mb * 1024 * 1024 ?>"
+                 <?php if (!empty($media->file_path)): ?>
+                   data-mu-import-url="<?= htmlspecialchars(url('storage/' . $media->file_path)) ?>"
+                   data-mu-import-name="<?= htmlspecialchars($media->file_name ?? basename($media->file_path)) ?>"
+                   data-mu-import-mime="<?= htmlspecialchars($media->mime_type ?? '') ?>"
+                   data-mu-import-size="<?= (int) ($media->file_size ?? 0) ?>"
+                 <?php endif ?>
+            >
+
+              <input type="file"
+                     name="file"
+                     accept="image/*,video/*,application/pdf,.doc,.docx,.txt"
+                     hidden
+                     data-mu-input>
+
+              <div class="empty media-upload-zone-content" data-mu-empty>
+                <div class="empty__header">
+                  <div class="empty__media">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <div class="empty__title">Kéo thả file vào đây</div>
+                  <div class="empty__description">
+                    Tối đa <?= $max_mb ?>MB · Ảnh, Video, PDF, Word
+                  </div>
+                </div>
+                <div class="empty__content">
+                  <span>hoặc</span>
+                  <button type="button" class="btn" data-variant="primary" data-size="md" data-mu-trigger>
+                    Chọn file mới
+                  </button>
+                </div>
+              </div>
+
+              <div class="media-preview-content" hidden data-mu-preview>
+                <div class="media-preview-frame" data-mu-preview-frame></div>
+                <p class="text-sm" data-mu-preview-info></p>
+                <button type="button" class="btn" data-variant="destructive" data-size="sm" data-mu-remove>
+                  <i class="fa-solid fa-trash"></i> Xóa
+                </button>
+              </div>
+
             </div>
-  
-            <div class="field" data-field-required>
-              <label class="field__label" for="file_name">Tên file</label>
-              <input id="file_name" class="field__input" type="text"
-                     name="file_name" placeholder="Tự động điền khi chọn file"
-                     value="<?= htmlspecialchars($old_input['file_name'] ?? $media->file_name) ?>">
+
+            <div class="field">
+              <label class="field__label" for="title">Tiêu đề</label>
+              <input id="title" class="field__input" type="text"
+                     name="title"
+                     value="<?= htmlspecialchars($old_input['title'] ?? $media->title) ?>">
+              <p class="field__description">Đặt tên dễ nhớ (Optional)</p>
             </div>
-  
+
             <div class="field">
               <label class="field__label" for="alt_text">Alt text</label>
               <input id="alt_text" class="field__input" type="text"
                      name="alt_text" placeholder="Mô tả nội dung media (SEO, accessibility)"
                      value="<?= htmlspecialchars($old_input['alt_text'] ?? $media->alt_text) ?>">
             </div>
-          </div>
+
           </div>
         </form>
       </div>
@@ -89,48 +137,24 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const uploadPreview   = document.querySelector('#upload-preview');
-  const previewMedia    = document.querySelector('#preview-media');
-  const fileNameInput   = document.querySelector('#file_name');
-  const form            = document.querySelector('#media-form');
-  const confirmBtn      = document.querySelector('#confirm-btn');
-  const existingMediaUrl = <?= json_encode($media->file_path ? url('public/img/' . $media->file_path) : null) ?>;
-  const existingMimeType = <?= json_encode($media->mime_type ?? '') ?>;
+  const zone       = document.querySelector('[data-mu-zone]');
+  const titleInput = document.querySelector('#title');
+  const form       = document.querySelector('#media-form');
+  const confirmBtn = document.querySelector('#confirm-btn');
 
-  if (existingMediaUrl && existingMimeType) {
-    renderExistingPreview(existingMediaUrl, existingMimeType);
-  }
-
-  function renderExistingPreview(url, mimeType) {
-    previewMedia.innerHTML = '';
-
-    if (mimeType.startsWith('image/')) {
-      const img = document.createElement('img');
-      img.src = url;
-      img.className = 'upload-preview__img';
-      img.alt = 'Preview';
-      previewMedia.appendChild(img);
-
-    } else if (mimeType.startsWith('video/')) {
-      const video = document.createElement('video');
-      video.src = url;
-      video.className = 'upload-preview__video';
-      video.controls = true;
-      video.muted = true;
-      previewMedia.appendChild(video);
-
-    } else {
-      const filename = url.substring(url.lastIndexOf('/') + 1);
-      previewMedia.innerHTML = `<p class="upload-preview__unknown">
-        <i class="fa-solid fa-file"></i> ${filename}
-      </p>`;
+  zone.addEventListener('mu:file-selected', (e) => {
+    const { name } = e.detail;
+    if (!titleInput.value.trim()) {
+      titleInput.value = name.replace(/\.[^.]+$/, '');
     }
+  });
 
-    uploadPreview.hidden = false;
-  }
+  zone.addEventListener('mu:error', (e) => {
+    const { reason, maxBytes } = e.detail;
+    if (reason === 'type') alert('Định dạng file không được hỗ trợ.');
+    if (reason === 'size') alert(`File vượt quá dung lượng cho phép (${Math.round(maxBytes / 1024 / 1024)} MB).`);
+  });
 
-  // ── Submit qua confirm modal ─────────────────────────────────────────────
   confirmBtn.addEventListener('click', () => form.submit());
-
 });
 </script>

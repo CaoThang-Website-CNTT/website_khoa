@@ -38,11 +38,13 @@
     <img src="{{ value }}" alt="{{ row.alt_text }}" class="w-10 h-10 object-cover">
   </template>
 
-  <template data-tm-col="file_name" data-tm-label="Tên" data-tm-sortable>
+  <template data-tm-col="title" data-tm-label="Tiêu đề" data-tm-sortable>
     <a href="<?= url('admin/media/') ?>{{ row.id }}">{{ value }}</a>
   </template>
 
-  <template data-tm-col="file_path" data-tm-label="Slug" data-tm-sortable></template>
+  <template data-tm-col="file_name" data-tm-label="Tên File" data-tm-sortable>
+    <a href="<?= url('admin/media/') ?>{{ row.id }}">{{ value }}</a>
+  </template>
 
   <template data-tm-col="mime_type" data-tm-label="Loại" data-tm-sortable>
     <span class="badge" data-variant="primary">
@@ -53,14 +55,13 @@
   <template data-tm-col="file_size" data-tm-label="Dung lượng" data-tm-sortable>
     {{ value }}
   </template>
-
-  <template data-tm-col="alt_text" data-tm-label="Mô tả" data-tm-sortable></template>
 </div>
 
 <script type="application/json" data-tm-data="media_table">
   <?= json_encode([
     'rows' => array_map(fn($media) => [
       'id' => $media->id,
+      'title' => $media->title ?? 'N/A',
       'file_name' => $media->file_name ?? 'N/A',
       'file_path' => url('public/img/' . $media->file_path) ?? 'N/A',
       'mime_type' => $media->mime_type ?? 'custom',

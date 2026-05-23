@@ -26,10 +26,6 @@
         <?= $content; ?>
       </div>
       <!-- ======== main-wrapper end =========== -->
-
-      <!-- ========== Dashboard Footer =========== -->
-      <?php include_once BASE_PATH . '/templates/components/dashboard_footer.php'; ?>
-      <!-- ========== Dashboard Footer End =========== -->
     </main>
   </div>
 

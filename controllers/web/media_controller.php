@@ -72,7 +72,8 @@ class MediaController extends Controller
 
     $validator = new RequestValidator();
     $rules = [
-        'alt_text' => ['max:255'],
+      'title' => ['max:255'],
+      'alt_text' => ['max:255'],
     ];
 
     if (!$validator->validate($data, $rules)) {
@@ -89,7 +90,7 @@ class MediaController extends Controller
 
     try {
         $uploadedFile = $this->_fileHandler->processUpload($request->file('file'), $data['alt_text'] ?? '');
-        $media = $this->_mediaService->upload($uploadedFile, compressMode: 'standard');
+        $media = $this->_mediaService->create($uploadedFile, $data, compressMode: 'standard');
 
         $request->session()->flashNotify(
             'success',
@@ -97,7 +98,6 @@ class MediaController extends Controller
             'Media ' . $media->file_name . ' đã được tạo.'
         );
     } catch (\RuntimeException $e) {
-        // RuntimeException từ Service: lỗi I/O, file không hợp lệ...
         $request->session()->flashNotify('error', $e->getMessage());
         return $this->redirect('admin/media/create');
     }
@@ -116,7 +116,7 @@ class MediaController extends Controller
 
       $validator = new RequestValidator();
       $rules = [
-          'file_name' => ['required', 'max:255'],
+          'title' => ['max:255'],
           'alt_text'  => ['max:255'],
       ];
 
@@ -128,7 +128,7 @@ class MediaController extends Controller
 
       try {
           $this->_mediaService->updateMetadata($media_id, [
-              'file_name' => $data['file_name'],
+              'title' => $data['title'],
               'alt_text'  => $data['alt_text'] ?? '',
           ]);
 
