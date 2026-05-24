@@ -5,6 +5,7 @@ namespace App\Controllers\Api;
 use App\Core\Request;
 use App\Core\Controller;
 use App\Services\MediaService;
+use App\Core\RequestValidator;
 use App\Core\Files\UploadedFileHandler;
 use Exception;
 
@@ -54,22 +55,32 @@ class MediaApiController extends Controller
   public function upload(Request $request)
   {
     try {
-      $altText = trim($request->input('alt_text', '')) ?: null;
-      $postId = $request->input('post_id')
-        ? (int) $request->input('post_id')
-        : null;
-      $compressMode = $request->input('compress_mode') ?: 'standard';
+      $data = $request->all();
 
-      $urlInput = trim($request->input('url', ''));
+      $validator = new RequestValidator();
+      $rules = [
+        'title' => ['max:255'],
+        'alt_text' => ['max:255'],
+      ];
 
-      if ($urlInput !== '') {
-        // Upload từ URL
-        $media = $this->_mediaService->uploadFromUrl($urlInput, $altText, $postId, $compressMode);
-      } else {
-        // Upload multipart file
-        $uploadedFile = $this->_fileHandler->fromGlobals('file', $altText);
-        $media = $this->_mediaService->upload($uploadedFile, $postId, $compressMode);
+      $validator->validate($data, $rules);
+
+      if (!$request->hasFile('file')) {
+        $validator->addError("file", "Vui lòng chọn file để tải lên.");
       }
+
+      if ($validator->hasErrors()) {
+        throw new \Exception(
+          implode("\n", array_map(
+            fn($k, $v) => "{$k}: {$v}", 
+            array_keys($validator->getErrors()), 
+            $validator->getErrors()
+          )) . "\n"
+        );
+      }
+
+      $uploadedFile = $this->_fileHandler->processUpload($request->file('file'), $data['alt_text'] ?? '');
+        $media = $this->_mediaService->create($uploadedFile, $data, compressMode: 'standard');
 
       return $this->json(
         data: $media->toArray(),
@@ -90,22 +101,6 @@ class MediaApiController extends Controller
     }
 
     return $this->json(data: $media->toArray(), message: 'OK');
-  }
-
-  public function indexByPost(Request $request)
-  {
-    $postId = (int) $request->input('post_id', 0);
-
-    if ($postId <= 0) {
-      return $this->json(data: null, message: 'post_id không hợp lệ.', status: 400);
-    }
-
-    $mediaList = $this->_mediaService->getByPostId($postId);
-
-    return $this->json(
-      data: array_map(fn($m) => $m->toArray(), $mediaList),
-      message: 'OK',
-    );
   }
 
   public function updateMetadata(Request $request, int $id)
@@ -137,40 +132,6 @@ class MediaApiController extends Controller
       return $this->json(data: null, message: 'Đã xóa thành công.');
     } catch (\RuntimeException $e) {
       return $this->json(data: null, message: $e->getMessage(), status: 422);
-    }
-  }
-
-  public function attachToPost(Request $request)
-  {
-    try {
-      $mediaIds = array_map('intval', (array) $request->input('media_ids', []));
-      $postId = (int) $request->input('post_id', 0);
-
-      if (empty($mediaIds) || $postId <= 0) {
-        return $this->json(data: null, message: 'media_ids và post_id là bắt buộc.', status: 400);
-      }
-
-      $this->_mediaService->attachToPost($mediaIds, $postId);
-
-      return $this->json(data: null, message: 'Gắn media vào bài viết thành công.');
-    } catch (\RuntimeException $e) {
-      return $this->json(data: null, message: $e->getMessage(), status: 422);
-    }
-  }
-
-  public function deleteOrphans(Request $request)
-  {
-    try {
-      $hours = max(1, (int) $request->input('older_than_hours', 24));
-      $cutoff = new \DateTime("-{$hours} hours");
-      $deleted = $this->_mediaService->deleteOrphans($cutoff);
-
-      return $this->json(
-        data: ['deleted_count' => $deleted],
-        message: "Đã xóa {$deleted} file mồ côi.",
-      );
-    } catch (\RuntimeException $e) {
-      return $this->json(data: null, message: $e->getMessage(), status: 500);
     }
   }
 }

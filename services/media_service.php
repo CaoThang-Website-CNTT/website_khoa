@@ -57,7 +57,7 @@ class MediaService implements IMediaService
     );
 
     $media = new Media(
-      title: $data['title'],
+      title: trim($data['title']) !== "" ? $data['title'] : pathinfo($file->originalName, PATHINFO_FILENAME),
       file_name: $file->originalName,
       file_path: $relativePath,
       mime_type: $finalMime,

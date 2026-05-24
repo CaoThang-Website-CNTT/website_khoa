@@ -51,6 +51,9 @@ interface ITableBuilder
 
   /**
    * Constraints & Indexes
+   * 
+   * @example
+   * $table->index(['mime_type', 'created_at'], 'idx_media_mime_type_created_at');
    */
   public function index(string|array $columns, ?string $name = null): static;
   public function unique(string|array $columns, ?string $name = null): static;
@@ -135,7 +138,10 @@ class TableBuilder implements ITableBuilder
 
   public function decimal(string $name, int $precision = 8, int $scale = 2): ColumnDefinition
   {
-    return $this->addColumn('decimal', $name, ['precision' => $precision, 'scale' => $scale]);
+    return $this->addColumn('decimal', $name, [
+      'precision' => $precision,
+      'scale' => $scale
+    ]);
   }
 
   public function float(string $name): ColumnDefinition

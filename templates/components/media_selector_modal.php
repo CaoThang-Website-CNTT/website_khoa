@@ -4,10 +4,8 @@
     <p class="modal__description">Chọn ảnh từ thư viện hoặc tải lên ảnh mới.</p>
   </div>
 <div class="msm-content">
-  <!-- Tabs: Media Selector -->
-  <div class="tabs" data-tabs data-id="media-selector-tabs" data-active="library">
+  <div class="tabs" data-tabs data-tabs-id="media-selector-tabs" data-tabs-panel-active="library">
   
-    <!-- Tab List -->
     <div class="tabs__list" role="tablist">
       <a href="#media-selector-tabs:library"
         role="tab"
@@ -25,23 +23,22 @@
       </a>
     </div>
   
-    <!-- Panel: Thư viện -->
     <div id="media-selector-tabs-panel-library"
       role="tabpanel"
       data-tabs-panel="library"
       class="tabs__panel">
   
       <div class="media-modal-toolbar">
-        <div>
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="msm-search" class="field__input" type="search"
+        <div class="msm-search-bar">
+          <label for="msm-search">
+            <i class="msm-search-bar__icon fa-solid fa-magnifying-glass"></i>
+          </label>
+          <input id="msm-search" class="msm-search-bar__input" type="search"
             placeholder="Tìm theo tên, alt text...">
         </div>
       </div>
   
-      <div id="msm-grid" class="msm-grid msm-grid">
-        <!-- Populated by JS -->
-      </div>
+      <div id="msm-grid" class="msm-grid msm-grid"></div>
   
       <div id="msm-empty" class="empty">
         <div class="empty__header">
@@ -59,18 +56,24 @@
       <div id="msm-pagination" class="flex justify-center gap-2 mt-3"></div>
     </div>
   
-    <!-- Panel: Tải lên -->
     <div id="media-selector-tabs-panel-upload"
       role="tabpanel"
       data-tabs-panel="upload"
       class="tabs__panel">
   
       <div class="field-group">
-  
-        <!-- Drag & Drop Zone -->
-        <div id="msm-upload-zone" class="msm-upload-zone" role="button" tabindex="0" aria-label="Khu vực kéo thả ảnh">
-          <input type="file" id="msm-file-input" name="file" accept="image/*,video/*" hidden required>
-          <div class="empty msm-upload-zone__content" id="msm-upload-zone-content">
+
+        <div id="msm-upload-zone"
+             class="msm-upload-zone"
+             role="button"
+             tabindex="0"
+             aria-label="Khu vực kéo thả ảnh"
+             data-mu-zone
+             data-mu-max-bytes="<?= (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5) * 1024 * 1024 ?>">
+
+          <input type="file" name="file" accept="image/*,video/*" hidden data-mu-input>
+
+          <div class="empty msm-upload-zone__content" data-mu-empty>
             <div class="empty__header">
               <div class="empty__media">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -82,101 +85,61 @@
             </div>
             <div class="empty__content">
               <span>hoặc</span>
-              <button type="button" class="btn" data-variant="primary" data-size="md" id="msm-upload-trigger">
+              <button type="button" class="btn" data-variant="primary" data-size="md" data-mu-trigger>
                 Chọn file
               </button>
             </div>
           </div>
-          <div id="msm-preview-content">
-            <img id="msm-preview-img" src="" alt="">
-            <div>
-              <p id="msm-preview-info" class="text-sm"></p>
-            </div>
-            <button type="button" id="msm-remove-file" class="btn"
-              data-variant="destructive" data-size="sm">
+
+          <div class="msm-preview-content" hidden data-mu-preview>
+            <div data-mu-preview-frame></div>
+            <p class="text-sm" data-mu-preview-info></p>
+            <button type="button" class="btn" data-variant="destructive" data-size="sm" data-mu-remove>
               <i class="fa-solid fa-trash"></i> Xóa
             </button>
           </div>
+
         </div>
 
-        <!-- Title -->
-        <div class="field" data-field-required>
+        <div class="field">
           <label class="field__label" for="msm-title-input">Tiêu đề</label>
           <input id="msm-title-input" class="field__input" type="text" name="title" placeholder="Nhập tiêu đề" value="">
-        </div>
-
-        <!-- File Name -->
-        <div class="field" data-field-required data-field-readonly>
-          <label class="field__label" for="msm-file-name-input">Tên file</label>
-          <input id="msm-file-name-input" class="field__input" type="text"
-                name="file_name" placeholder="Tự động điền khi chọn file"
-                value="">
+          <p class="field__description">Đặt tên dễ nhớ (Optional)</p>
         </div>
   
-        <!-- Alt Text -->
         <div class="field">
           <label class="field__label" for="msm-alt-text">Alt Text</label>
           <input id="msm-alt-text" class="field__input" type="text"
             placeholder="Mô tả nội dung media (SEO, accessibility)">
-        </div>
-  
-        <!-- Compress Mode -->
-        <div class="field" data-field-required>
-          <label class="field__label" for="msm-compress-select">Chế độ nén ảnh</label>
-          <button type="button" class="select" data-select-id="msm-compress-select" data-select-placeholder="Chọn" name="compress_mode" id="msm-compress-select" role="listbox" data-select-default-value="default" data-select-placeholder="Chọn chế độ nén">
-            <div class="select__content">
-              <div class="select__item" data-select-value="default">Kích thước chuẩn (max 800px, WebP 80%)</div>
-              <div class="select__item" data-select-value="thumbnail">Ảnh thu nhỏ (max 320px, WebP 75%)</div>
-            </div>
-          </button>
-          <p class="field__description">
-            Hệ thống sẽ nén và chuyển đổi sang định dạng WebP tối ưu.
-          </p>
-        </div>
-  
-        <!-- Client-side compress preview -->
-        <div id="msm-client-preview">
-          <div class="media-compress-preview">
-            <div class="media-compress-preview__col">
-              <p class="text-sm font-medium">Gốc</p>
-              <canvas id="msm-canvas-original"></canvas>
-              <p id="msm-original-size" class="text-sm"></p>
-            </div>
-            <div class="media-compress-preview__col">
-              <p class="text-sm font-medium">
-                Sau nén
-                <span id="msm-compress-label" class="badge" data-variant="primary"></span>
-              </p>
-              <canvas id="msm-canvas-preview"></canvas>
-              <p id="msm-preview-size" class="text-sm"></p>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Upload Progress -->
-        <div id="msm-progress">
-          <div class="msm-progress-bar">
-            <div id="msm-progress-fill" class="msm-progress-bar__fill"></div>
-          </div>
-          <p id="msm-progress-label" class="text-sm">
-            Đang tải lên...
-          </p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-  <!-- Footer -->
-  <div class="modal__footer flex justify-between items-center">
-    <div id="msm-selected-info">
-      Chưa chọn ảnh nào
+  <div class="modal__footer">
+    <div data-tabs-observe="media-selector-tabs:library" class="msm-footer-container flex justify-between items-center w-full">
+      <div id="msm-selected-info" class="text-sm text-muted-foreground">
+        Chưa chọn ảnh nào
+      </div>
+      <div class="flex gap-2 ml-auto">
+        <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+        <button id="msm-select-btn" type="button" data-variant="primary" data-size="lg" class="btn" disabled>
+          <i class="fa-solid fa-check"></i> Chọn ảnh này
+        </button>
+      </div>
     </div>
-    <div class="flex gap-2 ml-auto">
-      <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-      <button id="msm-select-btn" type="button" data-variant="primary" data-size="lg" class="btn" disabled>
-        <i class="fa-solid fa-check"></i> Chọn ảnh này
-      </button>
+
+    <div data-tabs-observe="media-selector-tabs:upload" class="msm-footer-container flex justify-between items-center w-full">
+      <div class="text-sm text-muted-foreground">
+        Vui lòng điền đủ thông tin trước khi tải lên
+      </div>
+      <div class="flex gap-2 ml-auto">
+        <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+        <button id="msm-upload-submit-btn" type="button" data-variant="primary" data-size="lg" class="btn" disabled>
+          Tải lên
+        </button>
+      </div>
     </div>
   </div>
 
@@ -191,12 +154,6 @@
   const MEDIA_BASE = '<?= url('public') ?>';
   const CSRF = '<?= csrf_token() ?>';
   const MAX_BYTES = <?= (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5) * 1024 * 1024 ?>;
-
-  // Compress mode config (maps client-side preview widths)
-  const COMPRESS_CONFIG = {
-    default: { width: 0, quality: 0.85, label: 'Default' },
-    thumbnail: { width: 320, quality: 0.75, label: 'Thumbnail 320px' },
-  };
 
   let _selectCallback = null;
   let _selectedMedia = null;
@@ -215,30 +172,13 @@
   const msmPagination = document.querySelector('#msm-pagination');
   const msmSearch = document.querySelector('#msm-search');
 
-  const fileInput = document.querySelector('#msm-file-input');
   const uploadZone = document.querySelector('#msm-upload-zone');
-  const uploadTrigger = document.querySelector('#msm-upload-trigger');
-  const uploadZoneContent = document.querySelector('#msm-upload-zone-content');
-  const fileNameInput = document.querySelector('#msm-file-name-input');
-  const previewContent = document.querySelector('#msm-preview-content');
-  const previewImg = document.querySelector('#msm-preview-img');
-  const previewInfo = document.querySelector('#msm-preview-info');
-  const removeFileBtn = document.querySelector('#msm-remove-file');
-
-  const altText = document.querySelector('#msm-alt-text');
-  const clientPreview = document.querySelector('#msm-client-preview');
-  const canvasOriginal = document.querySelector('#msm-canvas-original');
-  const canvasPreview = document.querySelector('#msm-canvas-preview');
-  const originalSizeLabel = document.querySelector('#msm-original-size');
-  const previewSizeLabel = document.querySelector('#msm-preview-size');
-  const compressLabel = document.querySelector('#msm-compress-label');
-
-  const progressWrapper = document.querySelector('#msm-progress');
-  const progressFill = document.querySelector('#msm-progress-fill');
-  const progressLabel = document.querySelector('#msm-progress-label');
+  const msmTitleInput = document.querySelector('#msm-title-input');
+  const msmAltText = document.querySelector('#msm-alt-text');
 
   const selectedInfo = document.querySelector('#msm-selected-info');
   const selectBtn = document.querySelector('#msm-select-btn');
+  const uploadSubmitBtn = document.querySelector('#msm-upload-submit-btn');
 
   modal.addEventListener('modal:open', (e) => {
     const { modal: targetModal } = e.detail;
@@ -246,8 +186,15 @@
 
     loadLibrary(1);
   });
-  
-  uploadTrigger.addEventListener('click', () => fileInput.click());
+
+  modal.addEventListener('mu:file-selected', () => {
+    uploadSubmitBtn.disabled = false;
+  })
+
+  modal.addEventListener('mu:file-removed', () => {
+    uploadSubmitBtn.disabled = true;
+  })
+
 
   // ── Library: Load grid ─────────────────────────────────────────────────────
   async function loadLibrary(page = 1) {
@@ -262,7 +209,6 @@
     msmPagination.style.display = 'none';
 
     try {
-      console.log(`${API_MEDIA}?${params}`);
       const res = await fetch(`${API_MEDIA}?${params}`);
       const data = await res.json();
       const items = data?.data ?? [];
@@ -292,8 +238,8 @@
             </div>
           </div>
           <div class="card__footer">
-            <div class="media-card__info">
-              <div class="msm-card__name" title="${escHtml(item.file_name)}">${escHtml(item.file_name)}</div>
+            <div class="msm-card__info">
+              <div class="msm-card__name" title="${escHtml(item.title)}">${escHtml(item.title)}</div>
               <div class="msm-card__meta">${fmtBytes(item.file_size)}</div>
             </div>
           </div>
@@ -346,7 +292,7 @@
     card.dataset.selected = "true";
 
     _selectedMedia = item;
-    selectedInfo.textContent = item.file_name;
+    selectedInfo.textContent = `${item.title} (${item.file_name})`;
     selectBtn.disabled = false;
   }
 
@@ -355,126 +301,85 @@
     _searchTimeout = setTimeout(() => loadLibrary(1), 400);
   });
 
-  // ── File input & Drag/Drop ─────────────────────────────────────────────────
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  // ── File upload — delegated to MediaUploader module ──────────────────────
+  uploadZone.addEventListener('mu:file-selected', (e) => {
+    const { file } = e.detail;
+    _pendingFile = file;
   });
 
-    uploadZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadZone.classList.add('media-upload-zone--draging');
+  uploadZone.addEventListener('mu:preview-ready', (e) => {
+    const { kind, file } = e.detail;
+
+    if (kind === 'image' && file) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        _loadedImg = img;
+      };
+      img.src = url;
+    }
   });
 
-  ['dragleave', 'dragend'].forEach(ev =>
-    uploadZone.addEventListener(ev, () =>
-      uploadZone.classList.remove('media-upload-zone--draging')
-    )
-  );
-
-  uploadZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadZone.classList.remove('media-upload-zone--draging');
-
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    fileInput.files = dt.files;
-
-    handleFile(file);
-  });
-
-  removeFileBtn.addEventListener('click', () => {
+  uploadZone.addEventListener('mu:file-removed', () => {
     _pendingFile = null;
     _loadedImg = null;
-    fileInput.value = '';
-    uploadZoneContent.style.display = '';
-    previewContent.style.display = 'none';
-    clientPreview.style.display = 'none';
   });
 
-  function handleFile(file) {
-    if (file.size > MAX_BYTES) {
-      toast.error(
-        'Có lỗi xảy ra!',
-        `File quá lớn! Tối đa ${MAX_BYTES / 1024 / 1024}MB.`
-      );
+  uploadZone.addEventListener('mu:error', (e) => {
+    const { reason, maxBytes } = e.detail;
+    if (reason === 'size') toast.error('Có lỗi xảy ra!', `File quá lớn! Tối đa ${Math.round(maxBytes / 1024 / 1024)}MB.`);
+    if (reason === 'type') toast.error('Có lỗi xảy ra!', 'Định dạng file không được hỗ trợ.');
+  });
+
+  // ── Xử lý gửi Form tải ảnh ────────────────────────────────────────────────
+  uploadSubmitBtn.addEventListener('click', async () => {
+    if (!_pendingFile) {
+      toast.error('Lỗi', 'Vui lòng chọn ảnh trước khi tải lên.');
       return;
     }
-    renderPreview(file);
-    autoFillName(file.name);
-  }
 
-  function renderPreview(file) {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        previewImg.src = e.target.result;
-        previewInfo.textContent = `${fmtBytes(file.size)} · ${file.type}`;
-        uploadZoneContent.style.display = 'none';
-        previewContent.style.display = 'flex';
-      };
-      reader.readAsDataURL(file);
-    } else if (file.type.startsWith('video/')) {
-      const video = document.createElement('video');
-      video.controls = true;
-      video.src = URL.createObjectURL(file);
-      previewContent.style.display = 'flex';
-      previewContent.innerHTML = '';
-      previewContent.appendChild(video);
+    try {
+      uploadSubmitBtn.disabled = true;
+      
+      const formData = new FormData();
+      formData.append('file', _pendingFile);
+      formData.append('title', msmTitleInput.value.trim());
+      formData.append('alt_text', msmAltText.value.trim());
+      formData.append('_token', CSRF);
+
+      const response = await fetch(API_MEDIA, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        toast.success('Thành công', 'Ảnh đã được tải lên.');
+        
+        // Reset form upload
+        _pendingFile = null;
+        msmTitleInput.value = '';
+        msmAltText.value = '';
+        
+        // Quay lại tab thư viện và đồng bộ container footer
+        const libraryTrigger = document.querySelector('[data-tabs-trigger="library"]');
+        if (libraryTrigger) {
+          libraryTrigger.click();
+        } else {
+          syncObservers('media-selector-tabs', 'library');
+        }
+
+        // Tải lại thư viện để cập nhật ảnh vừa tải lên
+        loadLibrary(1);
+      } else {
+        toast.error('Thất bại', 'Tải lên không thành công.');
+      }
+    } catch (e) {
+      toast.error('Lỗi', 'Có lỗi xảy ra trong quá trình kết nối.');
+    } finally {
+      uploadSubmitBtn.disabled = false;
     }
-  }
-
-  function autoFillName(rawFileName) {
-    const nameWithoutExt = rawFileName.replace(/\.[^.]+$/, '');
-    if (!fileNameInput.value.trim()) {
-      fileNameInput.value = nameWithoutExt;
-    }
-  }
-
-  // ── Compress preview ───────────────────────────────────────────────────────
-  function renderCompressPreview() {
-    if (!_loadedImg) return;
-
-    clientPreview.style.display = '';
-    const mode = "";
-    const cfg = COMPRESS_CONFIG[mode] ?? COMPRESS_CONFIG.standard;
-
-    compressLabel.textContent = cfg.label;
-
-    // Original canvas
-    const ctxO = canvasOriginal.getContext('2d');
-    canvasOriginal.width = _loadedImg.naturalWidth;
-    canvasOriginal.height = _loadedImg.naturalHeight;
-    ctxO.drawImage(_loadedImg, 0, 0);
-    const origSize = dataUrlSize(canvasOriginal.toDataURL('image/png'));
-    originalSizeLabel.textContent = `${_loadedImg.naturalWidth}×${_loadedImg.naturalHeight} · ${fmtBytes(origSize)}`;
-
-    // Preview canvas
-    let targetW = cfg.width > 0 ? Math.min(cfg.width, _loadedImg.naturalWidth) : _loadedImg.naturalWidth;
-    const scale = targetW / _loadedImg.naturalWidth;
-    const targetH = Math.round(_loadedImg.naturalHeight * scale);
-    canvasPreview.width = targetW;
-    canvasPreview.height = targetH;
-    const ctxP = canvasPreview.getContext('2d');
-    ctxP.drawImage(_loadedImg, 0, 0, targetW, targetH);
-
-    const previewDataUrl = canvasPreview.toDataURL('image/webp', cfg.quality);
-    const previewSize = dataUrlSize(previewDataUrl);
-    previewSizeLabel.textContent = `${targetW}×${targetH} · ~${fmtBytes(previewSize)} (WebP)`;
-  }
-
-  modal.addEventListener('select:change', (e) => {
-    const { detail } = e;
-    console.log(detail);
-    renderCompressPreview();
   });
-
-  function dataUrlSize(dataUrl) {
-    const base64 = dataUrl.split(',')[1] ?? '';
-    return Math.round((base64.length * 3) / 4);
-  }
 
   // ── Select button ──────────────────────────────────────────────────────────
   selectBtn.addEventListener('click', () => {
@@ -523,18 +428,32 @@
   flex: 1;
 }
 
-.media-modal-toolbar .fa-magnifying-glass {
-  position: absolute;
-  left: 0.6rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted-foreground);
-  font-size: var(--text-sm);
+.msm-search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0 0.75rem;
+  gap: 0.5rem;
 }
 
-.media-modal-toolbar #msm-search {
-  padding-left: 2rem;
-  height: 2rem;
+.msm-search-bar__icon {
+  color: var(--muted-foreground);
+    display: flex;
+    font-size: 0.875rem;
+}
+
+.msm-search-bar__input {
+  padding: 0.5rem 0;
+    border: none;
+    background: transparent;
+    font-size: var(--text-sm);
+    outline: none;
+    color: var(--foreground);
+    min-width: 200px;
+    width: 100%;
 }
 
 /* Empty States */
@@ -573,7 +492,6 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 1 / 1;
   padding: 0;
   cursor: pointer;
   gap: 0rem;
@@ -583,9 +501,9 @@
   content: "";
   width: 100%;
   height: 100%;
-  background: black;
+  background: var(--ring);
   border-radius: var(--rounded-md);
-  opacity: 0.4;
+  opacity: 0.1;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -604,6 +522,11 @@
 }
 
 .msm-card__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;     
+  overflow: hidden;
+  height: 3em;
   font-size: var(--text-sm);
 }
 
@@ -619,7 +542,7 @@
 
 /* Pagination */
 #msm-pagination {
-  display: none !important; /* Mặc định ẩn, điều khiển hiển thị bằng JS */
+  display: none !important;
 }
 
 #msm-pagination span {
@@ -636,107 +559,62 @@
   border-radius: var(--radius-md);
   padding: 2rem;
   text-align: center;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 
-#msm-upload-zone .msm-file-input {
-  width: 20rem;
+.msm-upload-zone.mu--dragging {
+  opacity: 0.5;
+  background-color: var(--muted);
+  border-color: var(--primary);
 }
 
-#msm-preview-content {
-  display: none;
-  width: 100%;
-  height: 100%;
+.msm-upload-zone .mu-empty {
+  display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1rem;
 }
 
-#msm-preview-img {
+.msm-upload-zone.mu--has-file .mu-empty {
+  display: none;
+}
+
+.msm-preview-content {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.msm-upload-zone:not(.mu--has-file) .msm-preview-content {
+  display: none;
+}
+
+.mu-preview__img {
   max-height: 10rem;
   max-width: 100%;
   object-fit: contain;
   border-radius: var(--radius-md);
 }
 
-#msm-preview-content > div:nth-child(2) {
-  margin-top: 0.5rem;
-}
-
-#msm-preview-name {
-  color: var(--foreground);
-}
-
-#msm-preview-info {
-  color: var(--muted-foreground);
-}
-
-#msm-remove-file {
-  margin-top: 0.5rem;
-}
-
-#msm-compress-mode {
-  height: 2.25rem;
-}
-
-/* Client-side Compress Preview Section */
-#msm-client-preview {
-  display: none;
-}
-
-.media-compress-preview {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.media-compress-preview__col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-#msm-canvas-original,
-#msm-canvas-preview {
+.mu-preview__video {
+  max-height: 10rem;
   max-width: 100%;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
-#msm-original-size,
-#msm-preview-size {
+[data-mu-preview-info] {
   color: var(--muted-foreground);
-}
-
-#msm-compress-label {
-  font-size: 0.7rem;
-}
-
-/* Upload Progress Components */
-#msm-progress {
-  display: none;
-}
-
-#msm-progress-label {
-  color: var(--muted-foreground);
-  margin-top: 0.25rem;
-  text-align: center;
+  font-size: var(--text-sm);
 }
 
 /* Modal Footer layout & Elements */
-.modal__footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.msm-footer-container {
+  display: none !important;
 }
 
-#msm-selected-info {
-  font-size: var(--text-sm);
-  color: var(--muted-foreground);
-}
-
-.modal__footer .flex.gap-2 {
-  display: flex;
-  gap: 0.5rem;
-  margin-left: auto;
+.msm-footer-container[data-tabs-panel-state="active"] {
+  display: flex !important;
 }
 </style>

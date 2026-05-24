@@ -11,16 +11,16 @@ class StartSession extends BaseMiddleware
   {
     $session = new Session();
     $request->setSession($session);
-
-    // Lưu vết lịch sử URL (chỉ áp dụng cho request GET thông thường, không phải AJAX, không phải file tĩnh/favicon)
-    if ($request->method() === 'GET' && !$request->isAjax() && !$this->isStaticResource($request)) {
+    
+    // Lưu vết lịch sử URL (chỉ áp dụng cho request GET thông thường, không phải AJAX, không phải file tĩnh/favicon, không phải API request)
+    if ($request->method() === 'GET' && !$request->isAjax() && !$this->isStaticResource($request) && !$this->isApiRequest($request)) {
       $currentUrl = $this->getCurrentUrl($request);
       
       $prevUrlSession = $session->get('_url.current');
       if ($prevUrlSession && $prevUrlSession !== $currentUrl) {
         $session->put('_url.previous', $prevUrlSession);
-      }
-      $session->put('_url.current', $currentUrl);
+        }
+        $session->put('_url.current', $currentUrl);
     }
 
     $response = $next($request);
@@ -46,6 +46,13 @@ class StartSession extends BaseMiddleware
     }
 
     return false;
+  }
+
+  private function isApiRequest(Request $request): bool
+  {
+    $uri = strtolower($request->uri());
+    // Check if URI matches /api/v[1-9]+/ pattern
+    return preg_match('/^\/api\/v\d+\//', $uri) === 1;
   }
 
   private function getCurrentUrl(Request $request): string
