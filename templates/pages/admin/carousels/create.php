@@ -133,14 +133,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </div>
 
 <!-- ── Slide Edit / Create Modal ── -->
-<div class="modal" id="slide-modal" tabindex="-1" data-state="closed">
+<div class="modal detail-modal" id="slide-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title" id="slide-modal-title">Thêm slide mới</h2>
     <p class="modal__description">Vui lòng nhập thông tin chi tiết cho slide bên dưới.</p>
   </div>
 
-  <form id="slide-form" onsubmit="event.preventDefault();">
-    <div class="modal__body">
+  <form class="detail-modal__form space-y-4" id="slide-form" onsubmit="event.preventDefault();">
       <div class="field-group">
         <!-- is_active -->
         <div class="field" data-orientation="horizontal">
@@ -210,12 +209,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <textarea id="slide-custom-html" class="field__input field__input--mono" name="custom_html" placeholder="<div>HTML...</div>" rows="4" spellcheck="false"></textarea>
           <p class="field__description">Khi bật, HTML này sẽ thay thế các trường mặc định.</p>
         </div>
-      </div>
     </div>
   </form>
 
   <div class="modal__footer flex justify-between items-center">
-    <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn hidden">Xóa</button>
+    <div>
+      <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn hidden">Xóa</button>
+    </div>
     <div class="flex gap-2 ml-auto">
       <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
       <button id="slide-save-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu</button>

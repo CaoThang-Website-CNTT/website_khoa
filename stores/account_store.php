@@ -86,15 +86,15 @@ class AccountStore extends Store implements IAccountStore
       return [];
     }
 
-    $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+    $builder = new QueryBuilder(new MySQLCompiler());
 
-    $sql = "
-      SELECT *
-      FROM accounts WHERE id IN ($placeholders) AND deleted_at IS NULL
-    ";
+    $query = $builder->from('accounts')
+      ->select('*')
+      ->in('id', $ids)
+      ->is('deleted_at', null);
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($ids);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return array_map(fn($row) => Account::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }

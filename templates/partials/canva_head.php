@@ -34,6 +34,8 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <script src="<?= url('/public/js/dnd.js') ?>"></script>
 
 <script>
+  window.PUBLIC_MEDIA_BASE = '<?= url('public/media') ?>';
+
   // Khởi tạo toast
   document.addEventListener('DOMContentLoaded', () => {
     window.toast = new Toast({ position: 'bottom-right', });

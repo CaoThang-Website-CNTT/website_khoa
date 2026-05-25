@@ -56,8 +56,7 @@ export class ImageBlock extends EditorBlock {
           <i class="fa-regular fa-image"></i>
         </div>
         <div class="be-image-placeholder__actions">
-          <button type="button" class="btn be-upload-btn" data-variant="primary" data-size="md">Tải lên</button>
-          <input type="file" class="be-file-input" accept="image/*" hidden>
+          <button type="button" class="btn be-upload-btn" data-variant="primary" data-size="md" data-modal-trigger="#media-selector-modal">Tải lên</button>
           <span class="be-placeholder-divider">hoặc</span>
           <div class="be-image-url-input-group">
             <input type="text" class="be-image-external-url" placeholder="Dán URL hình ảnh...">
@@ -68,15 +67,31 @@ export class ImageBlock extends EditorBlock {
     `;
 
     const uploadBtn = this.dom.querySelector('.be-upload-btn');
-    const fileInput = this.dom.querySelector('.be-file-input');
     const urlInput = this.dom.querySelector('.be-image-external-url');
     const applyBtn = this.dom.querySelector('.be-apply-url-btn');
 
-    uploadBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (file) await this.#handleUpload(file);
-    });
+    const handleMediaSubmit = ({ detail }) => {
+      const { media, close } = detail;
+      if (!media || !media.file_path) return;
+
+      // Cập nhật thông tin ảnh từ thư viện vào meta của block
+      this.data.meta.mediaId = media.id;
+      this.data.meta.alt = media.alt_text || media.title || '';
+
+      // Xử lý URL theo cấu trúc bạn yêu cầu
+      const mediaBase = (window.PUBLIC_MEDIA_BASE || `${location.origin}/public`).replace(/\/$/, '');
+      const filePath = media.file_path.replace(/^\//, '');
+      this.data.meta.url = `${mediaBase}/${filePath}`;
+
+      this.bus?.dispatch('block:updated', { block: this });
+      this.#renderCurrentState();
+
+      if (typeof close === 'function') close();
+
+      document.removeEventListener("msm:submit", handleMediaSubmit);
+    };
+
+    document.addEventListener("msm:submit", handleMediaSubmit);
 
     const applyExternalUrl = () => {
       const url = urlInput.value.trim();
@@ -90,55 +105,6 @@ export class ImageBlock extends EditorBlock {
     urlInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); applyExternalUrl(); }
     });
-  }
-
-  async #handleUpload(file) {
-    const blobUrl = URL.createObjectURL(file);
-
-    this.dom.innerHTML = `
-      <div class="be-image-loading" style="position:relative;">
-        <img src="${blobUrl}" style="opacity:0.5;max-width:100%;border-radius:var(--radius-md);">
-        <div class="be-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
-          <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
-        </div>
-      </div>
-    `;
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (this.data.meta.alt) formData.append('alt_text', this.data.meta.alt);
-      if (this.#postId) formData.append('post_id', this.#postId);
-
-      const response = await fetch('http://localhost/website_khoa/api/v1/media', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || `HTTP ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      this.data.meta.mediaId = result.data.id;
-      this.data.meta.url = `http://localhost/website_khoa/storage/${result.data.file_path}`;
-
-      if (result.data.alt_text && !this.data.meta.alt) {
-        this.data.meta.alt = result.data.alt_text;
-      }
-
-      this.bus?.dispatch('block:updated', { block: this });
-      this.#renderCurrentState();
-
-    } catch (error) {
-      console.error('[ImageBlock] Lỗi upload:', error);
-      alert('Không thể tải ảnh lên. Vui lòng thử lại.');
-      this.#renderCurrentState();
-    } finally {
-      URL.revokeObjectURL(blobUrl);
-    }
   }
 
   #renderResolved() {

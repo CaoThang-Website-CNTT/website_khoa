@@ -155,7 +155,6 @@
   const CSRF = '<?= csrf_token() ?>';
   const MAX_BYTES = <?= (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5) * 1024 * 1024 ?>;
 
-  let _selectCallback = null;
   let _selectedMedia = null;
   let _pendingFile = null;
   let _pendingUrl = '';
@@ -232,7 +231,7 @@
           <div class="card__content">
             <div class="msm-thumb">
               ${item.mime_type?.startsWith('image/')
-                ? `<img src="<?php echo url('public/img/'); ?>/${escHtml(imgUrl)}" alt="${escHtml(item.alt_text || item.file_name)}" loading="lazy">`
+                ? `<img src="<?= url('public/media'); ?>/${escHtml(imgUrl)}" alt="${escHtml(item.alt_text || item.file_name)}" loading="lazy">`
                 : `<div class="media-card__thumb-icon"><i class="fa-solid fa-file"></i></div>`
               }
             </div>
@@ -383,10 +382,22 @@
 
   // ── Select button ──────────────────────────────────────────────────────────
   selectBtn.addEventListener('click', () => {
-    if (!_selectedMedia || !_selectCallback) return;
-    _selectCallback(_selectedMedia);
-    modalHandler.close('#media-selector-modal');
-    _selectCallback = null;
+    if (!_selectedMedia) return;
+
+    modal.dispatchEvent(new CustomEvent('msm:submit', {
+      bubbles: true,
+      detail: {
+        media: _selectedMedia,
+        pendingFile: _pendingFile, 
+        close: () => {
+          if (typeof modalHandler !== 'undefined' && modalHandler.close) {
+            modalHandler.close('#media-selector-modal');
+          } else if (modal.dataset.state) {
+            modal.dataset.state = 'closed';
+          }
+        }
+      }
+    }));
   });
 
   // ── Utilities ──────────────────────────────────────────────────────────────

@@ -24,14 +24,14 @@ class Post extends Model
     public ?string $deleted_at = null,
 
     public ?Account $author = null,
-    public ?array $medias = [],
+    public ?array $media = [],
     public ?array $categories = [],
   ) {
   }
 
   /**
    * toArray() được override để loại bỏ các trường ảo
-   * (author, medias, categories) không phải là cột thực tế trong bảng posts
+   * (author, media, categories) không phải là cột thực tế trong bảng posts
    */
   public function toArray(): array
   {

@@ -88,16 +88,16 @@ class PostStore extends Store implements IPostStore
     $query = $builder
       ->from('posts')
       ->select(self::LISTING_COLUMNS)
-      ->is('deleted_at', null)          // loại trừ soft-deleted
+      ->is('deleted_at', null)
       ->order('created_at', ['ascending' => false])
       ->limit($limit)
       ->range($offset, $offset + $limit - 1);
 
     $stmt = $this->db->prepare($query->toSql());
-    $stmt->execute($query->getBindings());
+    $stmt->execute();
 
     return array_map(
-      static fn(array $row) => Post::fromArray($row),
+      fn(array $row) => Post::fromArray($row),
       $stmt->fetchAll(\PDO::FETCH_ASSOC),
     );
   }
@@ -183,11 +183,15 @@ class PostStore extends Store implements IPostStore
 
   public function getTotalCount(): int
   {
-    $sql = "SELECT COUNT(*) as total FROM posts WHERE deleted_at IS NULL";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute();
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder->from('posts')->select('COUNT(*) AS total')->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
     $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-    return (int) ($row['total'] ?? 0);
+    return $row ? (int) $row['total'] : 0;
   }
   public function getCategoryIds(int $postId): array
   {

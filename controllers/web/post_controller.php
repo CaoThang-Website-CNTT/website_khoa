@@ -34,9 +34,10 @@ class PostController extends Controller
 
   public function index(Request $request)
   {
-    $currentPage = $request->query('page') ?? 1;
+    $currentPage = (int)$request->query('page', 1);
+    $limit = (int)$request->query('limit', 15);
 
-    $data = $this->_postService->getPosts($currentPage, 15);
+    $data = $this->_postService->getPosts($currentPage, $limit);
 
     return $this->render('admin/posts/index', [
       'data' => $data,
