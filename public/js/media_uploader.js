@@ -113,6 +113,7 @@ class MediaUploader {
     this.#removeBtn?.addEventListener('click', () => this.clear());
 
     this.#zone.addEventListener('dragover', (e) => {
+      if (this.#hasFile()) return;
       e.preventDefault();
       this.#zone.classList.add('mu--dragging');
     });
@@ -122,8 +123,9 @@ class MediaUploader {
     );
 
     this.#zone.addEventListener('drop', (e) => {
-      e.preventDefault();
       this.#zone.classList.remove('mu--dragging');
+      if (this.#hasFile()) return;
+      e.preventDefault();
       const file = e.dataTransfer?.files?.[0];
       if (!file) return;
 
@@ -286,6 +288,10 @@ class MediaUploader {
   }
 
   // ─── State helpers ────────────────────────────────────────────────────────
+
+  #hasFile() {
+    return this.#zone.classList.contains('mu--has-file');
+  }
 
   #showEmpty() {
     this.#empty?.removeAttribute('hidden');
