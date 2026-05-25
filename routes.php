@@ -88,29 +88,19 @@ $router->prefix('admin')->group(function (Router $router) {
     $router->post('/{id}', [MenuController::class, 'update']);
     $router->post('/delete/{id}', [MenuController::class, 'destroy']);
 
-    // Nested Menu Items mapped to a specific Menu
-    $router->prefix('{menuId}/items')->group(function ($router) {
+    // Cần có menu_id để biết menu_item thuộc menu nào?
+    // Nên có 2 route sẽ thuộc sub route của menu. Còn lại có route riêng (LƯU Ý).
+    $router->prefix('{menu_id}/items')->group(function ($router) {
       $router->get('/create', [MenuController::class, 'createItem']);
       $router->post('/', [MenuController::class, 'storeItem']);
-      $router->post('/reorder', [MenuController::class, 'reorderItems']);
     });
   });
 
   // Menu Items
   $router->prefix('menu-items')->group(function ($router) {
-    $router->get('/{itemId}/edit', [MenuController::class, 'editItem']);
-    $router->post('/{itemId}', [MenuController::class, 'updateItem']);
-    $router->post('/{itemId}/delete', [MenuController::class, 'destroyItem']);
-  });
-
-  // Web Settings
-  $router->prefix('web_settings')->group(function ($router) {
-    $router->get('/', [WebSettingsController::class, 'index']);
-    $router->get('/create', [WebSettingsController::class, 'create']);
-    $router->post('/', [WebSettingsController::class, 'store']);
-    $router->get('/{group}/edit', [WebSettingsController::class, 'edit']);
-    $router->post('/{group}', [WebSettingsController::class, 'batchUpdate']);
-    $router->post('/delete/{id}', [WebSettingsController::class, 'destroy']);
+    $router->get('/{item_id}/edit', [MenuController::class, 'editItem']);
+    $router->post('/{item_id}', [MenuController::class, 'updateItem']);
+    $router->post('/{item_id}/delete', [MenuController::class, 'destroyItem']);
   });
 
   // Carousels
@@ -122,15 +112,28 @@ $router->prefix('admin')->group(function (Router $router) {
     $router->post('/{id}', [CarouselController::class, 'update']);
     $router->post('/delete/{id}', [CarouselController::class, 'destroy']);
 
-    // Carousel Slides mapped to a specific Carousel
-    $router->prefix('{carouselId}/slides')->group(function ($router) {
-      $router->get('/', [CarouselController::class, 'slides']);
+    // Cần có slide_id để biết slide_item thuộc slide nào?
+    // Nên có 2 route sẽ thuộc sub route của slide. Còn lại có route riêng (LƯU Ý).
+    $router->prefix('{carousel_id}/slides')->group(function ($router) {
       $router->get('/create', [CarouselController::class, 'createSlide']);
       $router->post('/', [CarouselController::class, 'storeSlide']);
-      $router->post('/reorder', [CarouselController::class, 'reorder']);
-      $router->get('/{slideId}', [CarouselController::class, 'editSlide']);
-      $router->post('/{slideId}', [CarouselController::class, 'updateSlide']);
-      $router->post('/delete/{slideId}', [CarouselController::class, 'destroySlide']);
     });
+  });
+
+  // Carousel Slides
+  $router->prefix('carousel-slides')->group(function ($router) {
+    $router->get('/{slide_id}/edit', [CarouselController::class, 'editSlide']);
+    $router->post('/{slide_id}', [CarouselController::class, 'updateSlide']);
+    $router->post('/{slide_id}/delete', [CarouselController::class, 'destroySlide']);
+  });
+
+  // Web Settings
+  $router->prefix('web_settings')->group(function ($router) {
+    $router->get('/', [WebSettingsController::class, 'index']);
+    $router->get('/create', [WebSettingsController::class, 'create']);
+    $router->post('/', [WebSettingsController::class, 'store']);
+    $router->get('/{group}/edit', [WebSettingsController::class, 'edit']);
+    $router->post('/{group}', [WebSettingsController::class, 'batchUpdate']);
+    $router->post('/delete/{id}', [WebSettingsController::class, 'destroy']);
   });
 });

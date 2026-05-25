@@ -10,8 +10,7 @@ class CarouselSlide extends Model
     public string $title,
     public ?string $title_highlight,
     public ?string $description,
-    public string $image_path,
-    public string $image_alt,
+    public int $media_id,
     public ?string $cta_label,
     public ?string $cta_url,
     public string $cta_variant,
@@ -22,6 +21,8 @@ class CarouselSlide extends Model
     public ?string $created_at = null,
     public ?string $updated_at = null,
     public ?string $deleted_at = null,
+
+    public ?Media $media = null,
   ) {
   }
 

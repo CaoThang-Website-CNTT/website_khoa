@@ -388,7 +388,6 @@ function renderMenuItems(array $items, object $menu): void
     <?php if ($isEditable): ?>
     // ── CHỈ CHẠY LOGIC EDIT / CUD KHI EDITABLE ──────────────────────────────
     
-    // 1. Drag & Drop Orchestrator
     function handleDragEnd() {
       const rootContainer = document.querySelector('#menu-items-root');
       const serializedData = serializeMenuTree(rootContainer, null);
@@ -401,14 +400,6 @@ function renderMenuItems(array $items, object $menu): void
       updateMenuDOMStates(serializedData);
     }
 
-    function initializeNestedDnD() {
-      // Huỷ các DnD instances cũ trước khi đăng ký mới
-      document.querySelectorAll('.menu-item-children, #menu-items-root').forEach(container => {
-        const inst = DnD.get(container);
-        if (inst) inst.destroy();
-      });
-
-      // Đăng ký DnD cho mọi ngóc ngách của sơ đồ cây
       document.querySelectorAll('.menu-item-children, #menu-items-root').forEach(container => {
         new DnD(container, {
           animation: 150,
@@ -420,7 +411,6 @@ function renderMenuItems(array $items, object $menu): void
           onEnd: handleDragEnd
         });
       });
-    }
 
     // Trích xuất cây DOM đệ quy thành mảng cấu trúc phẳng
     function serializeMenuTree(container, parentId = null) {
@@ -462,7 +452,7 @@ function renderMenuItems(array $items, object $menu): void
       updateMenuItemsListFromDOM();
     }
 
-    // 2. Dialog & Modal Crud Handling
+    // Dialog & Modal Crud Handling
     let menuItemsList = [];
 
     // Tự động thu thập toàn bộ menu item hiện hữu từ DOM
@@ -480,6 +470,7 @@ function renderMenuItems(array $items, object $menu): void
     const confirmBtn = confirmModal?.querySelector('#confirm-modal-btn');
     confirmBtn?.addEventListener('click', () => editForm.submit());
 
+    const itemAddBtn = document.querySelector('#add-item-btn');
     const itemSaveBtn = itemModal?.querySelector('#item-save-btn');
     const itemDeleteForm = document.querySelector('#item-delete-form');
     const itemDeleteConfirmModal = document.querySelector('#item-delete-confirm-modal');
@@ -499,9 +490,8 @@ function renderMenuItems(array $items, object $menu): void
     }
 
     // Thêm item mới
-    const addBtn = document.querySelector('#add-item-btn');
-    if (addBtn) {
-      addBtn.addEventListener('click', () => {
+    if (itemAddBtn) {
+      itemAddBtn.addEventListener('click', () => {
         resetItemForm();
         itemModalTitle.textContent = 'Thêm mục mới';
         itemForm.action = `<?= url('admin/menus/' . $menu->id . '/items') ?>`;
@@ -543,7 +533,6 @@ function renderMenuItems(array $items, object $menu): void
     }
 
     updateMenuItemsListFromDOM();
-    initializeNestedDnD();
     <?php else: ?>
     // Chế độ chỉ xem: Ẩn các nút kéo thả (drag handles)
     document.querySelectorAll('.drag-handle').forEach(el => el.style.display = 'none');

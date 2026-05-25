@@ -38,11 +38,6 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
       <i class="fa-solid fa-cube"></i>
       Blocks
     </button>
-    <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-left"
-      title="Ẩn/hiện panel block" data-modal-trigger="#media-selector-modal">
-      <i class="fa-solid fa-image"></i>
-      Media
-    </button>
   </div>
 
   <div id="be-topbar-center">

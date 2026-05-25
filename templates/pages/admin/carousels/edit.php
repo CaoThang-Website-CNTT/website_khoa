@@ -7,6 +7,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
+<!-- Modal select media -->
+<?php require_once(BASE_PATH . '/templates/components/media_selector_modal.php'); ?>
+
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -69,12 +72,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
               </div>
 
               <div class="flex-1 flex gap-2 items-center">
-                <?php if (!empty($slide->image_path)): ?>
-                  <img class="slide-item__img" src="<?= url($slide->image_path) ?>" alt="">
+                <?php if (!empty($slide->media->file_path)): ?>
+                  <img class="slide-item__img" src="<?= url('public/media/' . $slide->media->file_path) ?>" alt="">
                 <?php else: ?>
                   <div class="slide-item__img">
-                    <i class="fa-solid fa-image"></i>
-                    N/A
+                    <div class="w-full h-full flex justify-center items-center gap-1">
+                        <i class="fa-solid fa-image"></i>
+                        N/A
+                    </div>
                   </div>
                 <?php endif; ?>
 
@@ -93,18 +98,19 @@ $old_input = request()->session()->getOldInputs() ?? [];
                   <button type="button" class="btn ml-2 edit-slide-btn" data-variant="outline" data-size="md"
                     data-modal-trigger="#slide-modal"
                     data-slide='<?= json_encode([
-                      'id' => $slide->id,
-                      'title' => $slide->title,
+                      'id'             => $slide->id,
+                      'title'          => $slide->title,
                       'title_highlight' => $slide->title_highlight,
-                      'description' => $slide->description,
-                      'image_path' => $slide->image_path,
-                      'image_alt' => $slide->image_alt,
-                      'cta_label' => $slide->cta_label,
-                      'cta_variant' => $slide->cta_variant,
-                      'cta_url' => $slide->cta_url,
+                      'description'    => $slide->description,
+                      'media_id'       => $slide->media_id,
+                      'media_url'      => !empty($slide->media->file_path) ? url('public/media/' . $slide->media->file_path) : null,
+                      'media_alt'      => $slide->media->alt_text ?? null,
+                      'cta_label'      => $slide->cta_label,
+                      'cta_variant'    => $slide->cta_variant,
+                      'cta_url'        => $slide->cta_url,
                       'use_custom_html' => $slide->use_custom_html,
-                      'custom_html' => $slide->custom_html,
-                      'is_active' => $slide->is_active,
+                      'custom_html'    => $slide->custom_html,
+                      'is_active'      => $slide->is_active,
                     ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
                     <fa class="fa-solid fa-eye"></fa>
                   </button>
@@ -273,16 +279,23 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <textarea id="slide-description" class="field__input" name="description" placeholder="Mô tả ngắn hiển thị trên slide" rows="2"></textarea>
         </div>
 
-        <!-- image_path + image_alt -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="field" data-field-required>
-            <label class="field__label">Đường dẫn ảnh</label>
-            <input id="slide-image-path" class="field__input" type="text" name="image_path" placeholder="/uploads/slides/anh.jpg" required>
+        <!-- media_id (hidden) -->
+        <input type="hidden" id="slide-media-id" name="media_id" value="">
+
+        <!-- Media preview + picker -->
+        <div class="field" data-field-required>
+          <label class="field__label">Hình ảnh slide</label>
+          <div id="slide-media-preview" class="slide-media-preview">
+            <div class="slide-media-preview__empty" id="slide-media-empty">
+              <i class="fa-solid fa-image"></i>
+              <span>Chưa có ảnh</span>
+            </div>
+            <img id="slide-media-img" class="slide-media-preview__img" src="" alt="" hidden>
           </div>
-          <div class="field">
-            <label class="field__label">Alt text (ảnh)</label>
-            <input id="slide-image-alt" class="field__input" type="text" name="image_alt" placeholder="Mô tả ảnh cho SEO / accessibility">
-          </div>
+          <button type="button" class="btn mt-2" data-variant="outline" data-size="sm"
+                  id="slide-change-media-btn" data-modal-trigger="#media-selector-modal">
+            <i class="fa-solid fa-image"></i> Thay đổi
+          </button>
         </div>
 
         <!-- CTA -->
@@ -293,11 +306,15 @@ $old_input = request()->session()->getOldInputs() ?? [];
           </div>
           <div class="field">
             <label class="field__label">Kiểu nút CTA</label>
-            <select id="slide-cta-variant" class="field__input" name="cta_variant">
-              <option value="primary">Primary</option>
-              <option value="secondary">Secondary</option>
-              <option value="outline">Outline</option>
-            </select>
+            <button type="button" id="slide-cta-variant" class="select" data-select-id="slide-cta-variant" data-select-placeholder="Chọn"
+                name="status" data-be-meta-key="status" role="listbox" data-select-default-value="primary"
+                data-select-placeholder="Chọn">
+                <div class="select__content">
+                  <div class="select__item" data-select-value="primary">Primary</div>
+                  <div class="select__item" data-select-value="secondary">Secondary</div>
+                  <div class="select__item" data-select-value="outline">Outline</div>
+                </div>
+              </button>
           </div>
         </div>
         <div class="field">
@@ -322,7 +339,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </form>
 
   <div class="modal__footer flex justify-between items-center">
-    <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn">Xóa</button>
+    <div>
+      <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn">Xóa</button>
+    </div>
     <div class="flex gap-2 ml-auto">
       <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
       <button id="slide-save-btn" data-variant="primary" data-size="lg" class="btn" type="button">Lưu</button>
@@ -371,7 +390,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const deleteConfirmBtn = deleteModal?.querySelector('#delete-confirm-btn');
     if (deleteConfirmBtn) deleteConfirmBtn.addEventListener('click', () => deleteForm.submit());
 
-    // DnD initialization
     const slidesContainer = document.querySelector('#slides-container');
 
     if (slidesContainer) {
@@ -400,25 +418,29 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const slideDeleteBtn = slideModal?.querySelector('#slide-delete-btn');
     const slideDeleteForm = document.querySelector('#slide-delete-form');
 
+    const slideAddBtn = document.querySelector('#add-item-btn');
     const slideDeleteConfirmModal = document.querySelector('#slide-delete-confirm-modal');
+    const slideSaveBtn = slideModal?.querySelector('#slide-save-btn');
     const confirmDeleteBtn = slideDeleteConfirmModal?.querySelector('#slide-delete-confirm-btn');
 
-    // Toggle Custom HTML field display
     slideUseCustomHtml.addEventListener('change', function() {
       slideCustomHtmlField.style.display = this.checked ? 'flex' : 'none';
     });
 
-    // Function to reset Form
     function resetSlideForm() {
       slideForm.reset();
       slideCustomHtmlField.style.display = 'none';
       slideDeleteBtn.classList.add('hidden');
+
+      slideForm.querySelector('#slide-media-id').value = '';
+      document.querySelector('#slide-media-img').hidden = true;
+      document.querySelector('#slide-media-img').src = '';
+      document.querySelector('#slide-media-empty').hidden = false;
     }
 
-    // Add Button Click Handler
-    const addSlideBtn = document.querySelector('#add-item-btn');
-    if (addSlideBtn) {
-      addSlideBtn.addEventListener('click', () => {
+    // Thêm slide mới
+    if (slideAddBtn) {
+      slideAddBtn.addEventListener('click', () => {
         resetSlideForm();
         slideModalTitle.textContent = 'Thêm slide mới';
         slideForm.action = `<?= url('admin/carousels/' . $carousel->id . '/slides') ?>`;
@@ -426,50 +448,78 @@ $old_input = request()->session()->getOldInputs() ?? [];
       });
     }
 
-    // Edit Buttons Click Handler
+    // Sửa/Xem slide
     document.querySelectorAll('.edit-slide-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         resetSlideForm();
         const slide = JSON.parse(btn.dataset.slide);
 
         slideModalTitle.textContent = 'Chỉnh sửa slide';
-        slideForm.action = `<?= url('admin/carousels/' . $carousel->id . '/slides/') ?>` + slide.id;
+        slideForm.action = `<?= url('admin/carousel-slides/') ?>` + slide.id;
 
-        // Populate fields
         slideForm.querySelector('#slide-is-active').checked = Boolean(slide.is_active);
         slideForm.querySelector('#slide-title').value = slide.title || '';
         slideForm.querySelector('#slide-title-highlight').value = slide.title_highlight || '';
         slideForm.querySelector('#slide-description').value = slide.description || '';
-        slideForm.querySelector('#slide-image-path').value = slide.image_path || '';
-        slideForm.querySelector('#slide-image-alt').value = slide.image_alt || '';
+        slideForm.querySelector('#slide-media-id').value = slide.media_id || '';
         slideForm.querySelector('#slide-cta-label').value = slide.cta_label || '';
         slideForm.querySelector('#slide-cta-variant').value = slide.cta_variant || 'primary';
         slideForm.querySelector('#slide-cta-url').value = slide.cta_url || '';
+
+        const slideImg   = document.querySelector('#slide-media-img');
+        const slideEmpty = document.querySelector('#slide-media-empty');
+        if (slide.media_url) {
+          slideImg.src    = slide.media_url;
+          slideImg.alt    = slide.media_alt || '';
+          slideImg.hidden = false;
+          slideEmpty.hidden = true;
+        } else {
+          slideImg.hidden   = true;
+          slideImg.src      = '';
+          slideEmpty.hidden = false;
+        }
         
         const useCustom = Boolean(slide.use_custom_html);
         slideUseCustomHtml.checked = useCustom;
         slideCustomHtmlField.style.display = useCustom ? 'flex' : 'none';
         slideForm.querySelector('#slide-custom-html').value = slide.custom_html || '';
 
-        // Show delete button
-        slideDeleteBtn.classList.remove('hidden');
-        slideDeleteBtn.onclick = () => {
-          if (confirmDeleteBtn) {
-            confirmDeleteBtn.onclick = () => {
-              slideDeleteForm.action = `<?= url('admin/carousels/' . $carousel->id . '/slides/delete/') ?>` + slide.id;
-              slideDeleteForm.submit();
-            };
-          }
-          modalHandler.open('#slide-delete-confirm-modal');
-        };
+        if (slideDeleteBtn) {
+          slideDeleteBtn.classList.remove('hidden');
+          slideDeleteBtn.onclick = () => {
+            if (confirmDeleteBtn) {
+              confirmDeleteBtn.onclick = () => {
+                slideDeleteForm.action = `<?= url('admin/carousel-slides/') ?>` + slide.id + '/delete';
+                slideDeleteForm.submit();
+              };
+            }
+            modalHandler.open('#slide-delete-confirm-modal');
+          };
+        }
       });
     });
 
-    // Handle slide form submit when save button is clicked
-    const slideSaveBtn = slideModal?.querySelector('#slide-save-btn');
+    document.querySelector('#media-selector-modal')?.addEventListener('msm:submit', (e) => {
+      const { media, close } = e.detail;
+
+      // Cập nhật hidden input
+      slideForm.querySelector('#slide-media-id').value = media.id;
+
+      // Cập nhật thumbnail preview
+      const slideImg   = document.querySelector('#slide-media-img');
+      const slideEmpty = document.querySelector('#slide-media-empty');
+      const mediaUrl   = `<?= url('public/media/') ?>/${media.file_path}`;
+
+      slideImg.src      = mediaUrl;
+      slideImg.alt      = media.alt_text || '';
+      slideImg.hidden   = false;
+      slideEmpty.hidden = true;
+
+      close();
+    });
+
     if (slideSaveBtn) {
       slideSaveBtn.addEventListener('click', () => {
-        // Trigger standard browser validation since submit() ignores it on button clicks
         if (slideForm.reportValidity()) {
           slideForm.submit();
         }

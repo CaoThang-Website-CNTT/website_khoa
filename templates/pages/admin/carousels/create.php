@@ -7,6 +7,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
+<!-- Modal select media -->
+<?php require_once(BASE_PATH . '/templates/components/media_selector_modal.php'); ?>
+
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -151,33 +154,40 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <div class="grid grid-cols-2 gap-4">
           <div class="field" data-field-required>
             <label class="field__label" for="slide-title">Tiêu đề</label>
-            <input id="slide-title" class="field__input" type="text" name="title" placeholder="Tiêu đề chính" required>
+            <input id="slide-title" class="field__input" type="text" name="title" placeholder="Tiêu đề chính của slide" required>
           </div>
           <div class="field">
             <label class="field__label" for="slide-title-highlight">Tiêu đề nổi bật</label>
-            <input id="slide-title-highlight" class="field__input" type="text" name="title_highlight" placeholder="In đậm / tô màu">
+            <input id="slide-title-highlight" class="field__input" type="text" name="title_highlight" placeholder="Phần in đậm / màu khác">
           </div>
         </div>
 
         <!-- description -->
         <div class="field">
           <label class="field__label" for="slide-description">Mô tả</label>
-          <textarea id="slide-description" class="field__input" name="description" placeholder="Mô tả ngắn" rows="3"></textarea>
+          <textarea id="slide-description" class="field__input" name="description" placeholder="Mô tả ngắn hiển thị trên slide" rows="2"></textarea>
         </div>
 
-        <!-- image_path + image_alt -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="field" data-field-required>
-            <label class="field__label" for="slide-image-path">Đường dẫn ảnh</label>
-            <input id="slide-image-path" class="field__input" type="text" name="image_path" placeholder="/uploads/slides/anh.jpg" required>
+        <!-- media_id (hidden) -->
+        <input type="hidden" id="slide-media-id" name="media_id" value="">
+
+        <!-- Media preview + picker -->
+        <div class="field" data-field-required>
+          <label class="field__label">Hình ảnh slide</label>
+          <div id="slide-media-preview" class="slide-media-preview">
+            <div class="slide-media-preview__empty" id="slide-media-empty">
+              <i class="fa-solid fa-image"></i>
+              <span>Chưa có ảnh</span>
+            </div>
+            <img id="slide-media-img" class="slide-media-preview__img" src="" alt="" hidden>
           </div>
-          <div class="field">
-            <label class="field__label" for="slide-image-alt">Alt text (ảnh)</label>
-            <input id="slide-image-alt" class="field__input" type="text" name="image_alt" placeholder="SEO alt text">
-          </div>
+          <button type="button" class="btn mt-2" data-variant="outline" data-size="sm"
+                  id="slide-change-media-btn" data-modal-trigger="#media-selector-modal">
+            <i class="fa-solid fa-image"></i> Thay đổi
+          </button>
         </div>
 
-        <!-- CTA label, variant, url -->
+        <!-- CTA -->
         <div class="grid grid-cols-2 gap-4">
           <div class="field">
             <label class="field__label" for="slide-cta-label">Nhãn nút CTA</label>
@@ -206,8 +216,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <!-- custom_html (hidden by default) -->
         <div class="field" id="slide-custom-html-field" style="display: none;">
           <label class="field__label" for="slide-custom-html">Custom HTML</label>
-          <textarea id="slide-custom-html" class="field__input field__input--mono" name="custom_html" placeholder="<div>HTML...</div>" rows="4" spellcheck="false"></textarea>
-          <p class="field__description">Khi bật, HTML này sẽ thay thế các trường mặc định.</p>
+          <textarea id="slide-custom-html" class="field__input field__input--mono" name="custom_html" placeholder="<div>Nội dung HTML tuỳ chỉnh...</div>" rows="4" spellcheck="false"></textarea>
+          <p class="field__description">Khi bật, nội dung HTML này sẽ thay thế title/description mặc định.</p>
         </div>
     </div>
   </form>
@@ -310,6 +320,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
       slideCustomHtmlField.style.display = 'none';
       slideDeleteBtn.classList.add('hidden');
       delete slideModal.dataset.editingTempId;
+
+      slideForm.querySelector('#slide-media-id').value = '';
+      document.querySelector('#slide-media-img').hidden = true;
+      document.querySelector('#slide-media-img').src = '';
+      document.querySelector('#slide-media-empty').hidden = false;
     }
 
     // Open modal to add slide
@@ -342,9 +357,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
         card.dataset.tempId = slide.tempId;
         card.setAttribute('data-dnd-draggable', '');
 
-        const imgHtml = slide.image_path 
-          ? `<img class="slide-item__img" src="${escapeHtml(slide.image_path)}" alt="">`
-          : `<div class="slide-item__img"><i class="fa-solid fa-image"></i>N/A</div>`;
+        const imgHtml = slide.media_url 
+          ? `<img class="slide-item__img" src="${escapeHtml(slide.media_url)}" alt="">`
+          : `<div class="slide-item__img"><div class="w-full h-full flex justify-center items-center gap-1"><i class="fa-solid fa-image"></i>N/A</div></div>`;
 
         card.innerHTML = `
           <div class="drag-handle shrink-0 flex flex-col cursor-grab">
@@ -378,11 +393,23 @@ $old_input = request()->session()->getOldInputs() ?? [];
           slideForm.querySelector('#slide-title').value = slide.title || '';
           slideForm.querySelector('#slide-title-highlight').value = slide.title_highlight || '';
           slideForm.querySelector('#slide-description').value = slide.description || '';
-          slideForm.querySelector('#slide-image-path').value = slide.image_path || '';
-          slideForm.querySelector('#slide-image-alt').value = slide.image_alt || '';
+          slideForm.querySelector('#slide-media-id').value = slide.media_id || '';
           slideForm.querySelector('#slide-cta-label').value = slide.cta_label || '';
           slideForm.querySelector('#slide-cta-variant').value = slide.cta_variant || 'primary';
           slideForm.querySelector('#slide-cta-url').value = slide.cta_url || '';
+          
+          const slideImg   = document.querySelector('#slide-media-img');
+          const slideEmpty = document.querySelector('#slide-media-empty');
+          if (slide.media_url) {
+            slideImg.src    = slide.media_url;
+            slideImg.alt    = slide.media_alt || '';
+            slideImg.hidden = false;
+            slideEmpty.hidden = true;
+          } else {
+            slideImg.hidden   = true;
+            slideImg.src      = '';
+            slideEmpty.hidden = false;
+          }
           
           const useCustom = Boolean(slide.use_custom_html);
           slideUseCustomHtml.checked = useCustom;
@@ -395,9 +422,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
         slidesContainer.appendChild(card);
 
-        // B. Populate hidden inputs (Omit ID completely)
         const slideFields = [
-          'title', 'title_highlight', 'description', 'image_path', 'image_alt',
+          'title', 'title_highlight', 'description', 'media_id',
           'cta_label', 'cta_variant', 'cta_url', 'custom_html'
         ];
 
@@ -440,8 +466,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
         title: slideForm.querySelector('#slide-title').value.trim(),
         title_highlight: slideForm.querySelector('#slide-title-highlight').value.trim(),
         description: slideForm.querySelector('#slide-description').value.trim(),
-        image_path: slideForm.querySelector('#slide-image-path').value.trim(),
-        image_alt: slideForm.querySelector('#slide-image-alt').value.trim(),
+        media_id: slideForm.querySelector('#slide-media-id').value,
+        media_url: document.querySelector('#slide-media-img').src,
+        media_alt: document.querySelector('#slide-media-img').alt,
         cta_label: slideForm.querySelector('#slide-cta-label').value.trim(),
         cta_variant: slideForm.querySelector('#slide-cta-variant').value,
         cta_url: slideForm.querySelector('#slide-cta-url').value.trim(),
@@ -480,7 +507,26 @@ $old_input = request()->session()->getOldInputs() ?? [];
       modalHandler.open('#slide-delete-confirm-modal');
     });
 
-    // ── DRAG AND DROP REORDERING ───────────────────────────────────────────
+    // Media Selector Modal Handler
+    document.querySelector('#media-selector-modal')?.addEventListener('msm:submit', (e) => {
+      const { media, close } = e.detail;
+
+      // Cập nhật hidden input
+      slideForm.querySelector('#slide-media-id').value = media.id;
+
+      // Cập nhật thumbnail preview
+      const slideImg   = document.querySelector('#slide-media-img');
+      const slideEmpty = document.querySelector('#slide-media-empty');
+      const mediaUrl   = `<?= url('public/media/') ?>/${media.file_path}`;
+
+      slideImg.src      = mediaUrl;
+      slideImg.alt      = media.alt_text || '';
+      slideImg.hidden   = false;
+      slideEmpty.hidden = true;
+
+      close();
+    });
+
     if (slidesContainer) {
       new DnD(slidesContainer, {
         animation: 150,
@@ -489,7 +535,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
         ghostClass: 'dnd-ghost',
         chosenClass: 'dnd-chosen',
         onEnd: () => {
-          // Read actual physical order of slides in visual DOM and sort our local array
           const reorderedTempIds = Array.from(slidesContainer.querySelectorAll('.slide-item')).map(el => el.dataset.tempId);
           
           const sortedSlides = [];
@@ -499,7 +544,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
           });
           
           localSlides = sortedSlides;
-          renderSlides(); // Redraws list and synchronizes index arrays cleanly
+          renderSlides();
         }
       });
     }

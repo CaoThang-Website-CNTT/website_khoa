@@ -32,6 +32,12 @@ interface ICarouselStore
   public function deleteSlide(int $id): bool;
   public function getTotalCarouselsCount(): int;
   public function sortSlides(array $ids): bool;
+  /**
+   * Kiểm tra xem file có đang được sử dụng trong carousel không
+   * @param string $filePath Đường dẫn file
+   * @return bool
+   */
+  public function isImageUsed(string $filePath): bool;
 }
 class CarouselStore extends Store implements ICarouselStore
 {
@@ -207,8 +213,7 @@ class CarouselStore extends Store implements ICarouselStore
         'title' => $data['title'],
         'title_highlight' => $data['title_highlight'] ?? null,
         'description' => $data['description'] ?? null,
-        'image_path' => $data['image_path'],
-        'image_alt' => $data['image_alt'] ?? '',
+        'media_id' => $data['media_id'] ?? null,
         'cta_label' => $data['cta_label'] ?? null,
         'cta_url' => $data['cta_url'] ?? null,
         'cta_variant' => $data['cta_variant'] ?? 'primary',
@@ -231,8 +236,7 @@ class CarouselStore extends Store implements ICarouselStore
         'title' => $data['title'],
         'title_highlight' => $data['title_highlight'] ?? null,
         'description' => $data['description'] ?? null,
-        'image_path' => $data['image_path'],
-        'image_alt' => $data['image_alt'] ?? '',
+        'media_id' => $data['media_id'],
         'cta_label' => $data['cta_label'] ?? null,
         'cta_url' => $data['cta_url'] ?? null,
         'cta_variant' => $data['cta_variant'] ?? 'primary',
@@ -297,5 +301,18 @@ class CarouselStore extends Store implements ICarouselStore
       $this->db->rollBack();
       return false;
     }
+  }
+  public function isImageUsed(string $filePath): bool
+  {
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('carousel_slides')
+      ->select('COUNT(*)')
+      ->eq('image_path', $filePath)
+      ->is('deleted_at', null)
+      ->limit(1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->fetchColumn() > 0;
   }
 }

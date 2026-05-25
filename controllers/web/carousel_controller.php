@@ -1,9 +1,6 @@
 <?php
 namespace App\Controllers;
 
-require_once BASE_PATH . '/includes/helpers.php';
-require_once BASE_PATH . '/services/carousel_service.php';
-
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
@@ -18,10 +15,16 @@ class CarouselController extends Controller
     $this->_carouselService = $carouselService;
   }
 
-  public function index()
+  public function index(Request $request)
   {
-    $data = $this->_carouselService->getAllWithSlides();
-    $this->render('admin/carousels/index', ['data' => $data], layout: 'dashboard_layout');
+    $currentPage = (int)$request->query('page', 1);
+    $limit = (int)$request->query('limit', 15);
+
+    $data = $this->_carouselService->getCarousels($currentPage, $limit);
+
+    $this->render('admin/carousels/index', [
+      'data' => $data
+    ], layout: 'dashboard_layout');
   }
 
   public function create()
@@ -34,11 +37,14 @@ class CarouselController extends Controller
     $data = $request->all();
 
     $validator = new RequestValidator();
-    $rule = [
+    $rules = [
       'name' => ['required', 'max:255'],
+      'slug' => ['max:255'],
+      'is_active' => [],
+      'slides' => [],
     ];
 
-    if (!$validator->validate($data, $rule)) {
+    if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/create');
@@ -49,8 +55,8 @@ class CarouselController extends Controller
       if (empty($slide['title'])) {
         $validator->addError("slides.{$i}.title", "Slide " . ($i + 1) . ": tiêu đề không được để trống.");
       }
-      if (empty($slide['image_path'])) {
-        $validator->addError("slides.{$i}.image_path", "Slide " . ($i + 1) . ": đường dẫn ảnh không được để trống.");
+      if (empty($slide['media_id'])) {
+        $validator->addError("slides.{$i}.media_id", "Slide " . ($i + 1) . ": ảnh không được để trống.");
       }
     }
 
@@ -65,200 +71,275 @@ class CarouselController extends Controller
       return $this->redirect('admin/carousels/create');
     }
 
-    $newCarousel = $this->_carouselService->create([
-      'name' => $data['name'],
-      'slug' => $slug,
-      'is_active' => !empty($data['is_active']) ? 1 : 0,
-      'slides' => $rawSlides,
-    ]);
+    try {
+      $newCarousel = $this->_carouselService->create([
+        'name' => $data['name'],
+        'slug' => $slug,
+        'is_active' => !empty($data['is_active']) ? 1 : 0,
+        'slides' => $rawSlides,
+      ]);
 
-    if ($newCarousel) {
+      $slideCount = count($newCarousel->slides ?? []);
       $request->session()->flashNotify(
         'success',
         'Tạo carousel thành công!',
-        'Carousel ' . $newCarousel->name . ' đã được tạo.'
+        "Carousel \"{$newCarousel->name}\" đã được tạo" . ($slideCount ? " với {$slideCount} slide." : '.')
       );
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      return $this->redirect('admin/carousels');
+    } catch (\Exception $e) {
+      $request->session()->flashNotify(
+        'error',
+        'Có lỗi xảy ra, vui lòng thử lại.',
+        $e->getMessage()
+      );
+      return $this->redirect('admin/carousels/create');
     }
-    return $this->redirect('admin/carousels/create');
   }
 
-  public function edit(string $id)
+  public function edit($id)
   {
-    $carousel = $this->_carouselService->getWithSlides((int) $id);
+    $carousel = $this->_carouselService->getWithSlides($id);
+
     if (!$carousel)
       $this->abort(404);
-    $this->render('admin/carousels/edit', ['carousel' => $carousel], layout: 'dashboard_layout');
+
+    $this->render('admin/carousels/edit', [
+      'carousel' => $carousel
+    ], layout: 'dashboard_layout');
   }
 
-  public function update(string $id, Request $request)
+  public function update($id, Request $request)
   {
-    $carousel = $this->_carouselService->getById((int) $id);
-    if (!$carousel)
+    $carousel = $this->_carouselService->getCarouselById($id);
+
+    if (!$carousel) {
       $this->abort(404);
+    }
+
     $data = $request->all();
+
     $validator = new RequestValidator();
-    if (!$validator->validate($data, [
+    $rules = [
       'name' => ['required', 'max:255'],
       'slug' => ['max:255'],
       'reorder' => [],
-    ])) {
+    ];
+
+    if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/' . $id);
     }
+
     if (empty($data['slug'])) {
       $data['slug'] = generateSlug($data['name']);
     }
+
     if (!$this->_carouselService->isSlugUnique($data['slug'], (int) $id)) {
       $validator->addError('slug', 'Slug này đã tồn tại, vui lòng chọn slug khác.');
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/carousels/' . $id);
     }
-    $isSuccess = $this->_carouselService->update((int) $id, [
-      'name' => $data['name'],
-      'slug' => $data['slug'],
-      'is_active' => !empty($data['is_active']) ? 1 : 0,
-      'reorder' => $data['reorder'] ?? null,
-    ]);
-    if ($isSuccess) {
+
+    try {
+      $this->_carouselService->update((int) $id, [
+        'name' => $data['name'],
+        'slug' => $data['slug'],
+        'is_active' => !empty($data['is_active']) ? 1 : 0,
+        'reorder' => $data['reorder'] ?? null,
+      ]);
       $request->session()->flashNotify('success', 'Cập nhật carousel thành công!');
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      return $this->redirect('admin/carousels/' . $id);
+    } catch (\Exception $e) {
+      $request->session()->flashNotify(
+        'error',
+        'Có lỗi xảy ra, vui lòng thử lại.',
+        $e->getMessage()
+      );
+      return $this->redirect('admin/carousels/' . $id);
     }
-    return $this->redirect('admin/carousels/' . $id);
   }
 
   public function destroy(string $id, Request $request)
   {
-    $isSuccess = $this->_carouselService->delete((int) $id);
-    if ($isSuccess) {
-      $request->session()->flashNotify('success', 'Xoá carousel thành công!');
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+    $carousel = $this->_carouselService->getCarouselById((int) $id);
+
+    if (!$carousel) {
+      $this->abort(404);
     }
+
+    try {
+      $this->_carouselService->delete((int) $id);
+      $request->session()->flashNotify('success', 'Xóa carousel thành công!');
+    } catch (\Exception $e) {
+      $request->session()->flashNotify(
+        'error',
+        'Có lỗi xảy ra, vui lòng thử lại.',
+        $e->getMessage()
+      );
+    }
+
     return $this->redirect('admin/carousels');
   }
 
-  public function slides(string $carouselId)
+  public function slides(string $carousel_id)
   {
-    $carousel = $this->_carouselService->getWithSlides((int) $carouselId);
+    $carousel = $this->_carouselService->getWithSlides((int) $carousel_id);
     if (!$carousel)
       $this->abort(404);
     $this->render('admin/carousels/slides/index', ['carousel' => $carousel], layout: 'dashboard_layout');
   }
 
-  public function createSlide(string $carouselId)
+  public function createSlide(string $carousel_id)
   {
-    $carousel = $this->_carouselService->getById((int) $carouselId);
+    $carousel = $this->_carouselService->getCarouselById((int) $carousel_id);
     if (!$carousel)
       $this->abort(404);
     $this->render('admin/carousels/slides/create', ['carousel' => $carousel], layout: 'dashboard_layout');
   }
 
-  public function storeSlide(string $carouselId, Request $request)
+  public function storeSlide(string $carousel_id, Request $request)
   {
+    $carousel = $this->_carouselService->getCarouselById((int) $carousel_id);
+
+    if (!$carousel) {
+      $this->abort(404);
+    }
+
     $data = $request->all();
+
     $validator = new RequestValidator();
-    if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
+    $rules = [
+      'title' => ['required', 'max:255'],
+      'media_id' => ['required'],
+      'title_highlight' => ['max:255'],
+      'description' => [],
+      'cta_label' => ['max:255'],
+      'cta_url' => ['max:500'],
+      'cta_variant' => [],
+      'custom_html' => [],
+      'use_custom_html' => [],
+      'is_active' => [],
+    ];
+
+    if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect("admin/carousels/{$carouselId}");
+      return $this->redirect("admin/carousels/{$carousel_id}");
     }
-    $newSlideId = $this->_carouselService->addSlide((int) $carouselId, [
-      'title' => $data['title'],
-      'title_highlight' => $data['title_highlight'] ?? null,
-      'description' => $data['description'] ?? null,
-      'image_path' => $data['image_path'],
-      'image_alt' => $data['image_alt'] ?? '',
-      'cta_label' => $data['cta_label'] ?? null,
-      'cta_url' => $data['cta_url'] ?? null,
-      'cta_variant' => $data['cta_variant'] ?? 'primary',
-      'custom_html' => $data['custom_html'] ?? null,
-      'use_custom_html' => !empty($data['use_custom_html']) ? 1 : 0,
-      'is_active' => !empty($data['is_active']) ? 1 : 0,
-      'sort_order' => 0,
-    ]);
-    if ($newSlideId) {
+
+    try {
+      $newSlideId = $this->_carouselService->addSlide((int) $carousel_id, [
+        'title' => $data['title'],
+        'title_highlight' => $data['title_highlight'] ?? null,
+        'description' => $data['description'] ?? null,
+        'media_id' => (int) $data['media_id'],
+        'cta_label' => $data['cta_label'] ?? null,
+        'cta_url' => $data['cta_url'] ?? null,
+        'cta_variant' => $data['cta_variant'] ?? 'primary',
+        'custom_html' => $data['custom_html'] ?? null,
+        'use_custom_html' => !empty($data['use_custom_html']) ? 1 : 0,
+        'is_active' => !empty($data['is_active']) ? 1 : 0,
+        'sort_order' => 0,
+      ]);
+
       $request->session()->flashNotify('success', 'Thêm slide thành công!');
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      return $this->redirect("admin/carousels/{$carousel_id}");
+    } catch (\Exception $e) {
+      $request->session()->flashNotify(
+        'error',
+        'Có lỗi xảy ra, vui lòng thử lại.',
+        $e->getMessage()
+      );
+      return $this->redirect("admin/carousels/{$carousel_id}");
     }
-    return $this->redirect("admin/carousels/{$carouselId}");
   }
 
-  public function editSlide(string $carouselId, string $slideId)
+  public function editSlide(string $carousel_id, string $slide_id)
   {
-    $carousel = $this->_carouselService->getById((int) $carouselId);
-    $slide = $this->_carouselService->getSlideById((int) $slideId);
+    $carousel = $this->_carouselService->getCarouselById((int) $carousel_id);
+    $slide = $this->_carouselService->getSlideById((int) $slide_id);
     if (!$carousel || !$slide)
       $this->abort(404);
     $this->render('admin/carousels/slides/edit', ['carousel' => $carousel, 'slide' => $slide], layout: 'dashboard_layout');
   }
 
-  public function updateSlide(string $carouselId, string $slideId, Request $request)
+  public function updateSlide(string $slide_id, Request $request)
   {
+    $slide = $this->_carouselService->getSlideById((int) $slide_id);
+
+    if (!$slide) {
+      $this->abort(404);
+    }
+
     $data = $request->all();
+
     $validator = new RequestValidator();
-    if (!$validator->validate($data, ['title' => ['required', 'max:255'], 'image_path' => ['required']])) {
+    $rules = [
+      'title' => ['required', 'max:255'],
+      'media_id' => ['required'],
+      'title_highlight' => ['max:255'],
+      'description' => [],
+      'cta_label' => ['max:255'],
+      'cta_url' => ['max:500'],
+      'cta_variant' => [],
+      'custom_html' => [],
+      'use_custom_html' => [],
+      'is_active' => [],
+    ];
+
+    if (!$validator->validate($data, $rules)) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect("admin/carousels/{$carouselId}");
+      return $this->redirect("admin/carousels/". $slide->carousel_id);
     }
-    $slide = $this->_carouselService->getSlideById((int) $slideId);
-    if (!$slide)
-      $this->abort(404);
 
-    $isSuccess = $this->_carouselService->updateSlide((int) $slideId, [
-      'title' => $data['title'],
-      'title_highlight' => $data['title_highlight'] ?? null,
-      'description' => $data['description'] ?? null,
-      'image_path' => $data['image_path'],
-      'image_alt' => $data['image_alt'] ?? '',
-      'cta_label' => $data['cta_label'] ?? null,
-      'cta_url' => $data['cta_url'] ?? null,
-      'cta_variant' => $data['cta_variant'] ?? 'primary',
-      'custom_html' => $data['custom_html'] ?? null,
-      'use_custom_html' => !empty($data['use_custom_html']) ? 1 : 0,
-      'is_active' => !empty($data['is_active']) ? 1 : 0,
-      'sort_order' => $request->input('sort_order', $slide->sort_order),
-    ]);
-    if ($isSuccess) {
+    try {
+      $this->_carouselService->updateSlide((int) $slide_id, [
+        'title' => $data['title'],
+        'title_highlight' => $data['title_highlight'] ?? null,
+        'description' => $data['description'] ?? null,
+        'media_id' => (int) $data['media_id'],
+        'cta_label' => $data['cta_label'] ?? null,
+        'cta_url' => $data['cta_url'] ?? null,
+        'cta_variant' => $data['cta_variant'] ?? 'primary',
+        'custom_html' => $data['custom_html'] ?? null,
+        'use_custom_html' => !empty($data['use_custom_html']) ? 1 : 0,
+        'is_active' => !empty($data['is_active']) ? 1 : 0,
+        'sort_order' => $request->input('sort_order', $slide->sort_order),
+      ]);
       $request->session()->flashNotify('success', 'Cập nhật slide thành công!');
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+      return $this->redirect("admin/carousels/". $slide->carousel_id);
+    } catch (\Exception $e) {
+      $request->session()->flashNotify(
+        'error',
+        'Có lỗi xảy ra, vui lòng thử lại.',
+        $e->getMessage()
+      );
+      return $this->redirect("admin/carousels/". $slide->carousel_id);
     }
-    return $this->redirect("admin/carousels/{$carouselId}");
   }
 
-  public function destroySlide(string $carouselId, string $slideId, Request $request)
+  public function destroySlide(string $carousel_id, string $slide_id, Request $request)
   {
-    $isSuccess = $this->_carouselService->deleteSlide((int) $slideId);
-    if ($isSuccess) {
-      $request->session()->flashNotify('success', 'Xoá slide thành công!');
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
-    }
-    return $this->redirect("admin/carousels/{$carouselId}");
-  }
+    $slide = $this->_carouselService->getSlideById((int) $slide_id);
 
-  public function reorder(string $carouselId, Request $request)
-  {
-    $data = $request->all();
-    $moveId = !empty($data['move_id']) ? (int) $data['move_id'] : null;
-    $direction = $data['direction'] ?? null;
-    if (!$moveId || !in_array($direction, ['up', 'down'])) {
-      $request->session()->flashNotify('error', 'Dữ liệu sắp xếp không hợp lệ.');
-      return $this->redirect('admin/carousels/' . $carouselId);
+    if (!$slide) {
+      $this->abort(404);
     }
-    $isSuccess = $this->_carouselService->reorderSlides($moveId, $direction);
-    if ($isSuccess) {
-      $request->session()->flashNotify('success', 'Đã cập nhật thứ tự slide.');
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+
+    try {
+      $this->_carouselService->deleteSlide((int) $slide_id);
+      $request->session()->flashNotify('success', 'Xóa slide thành công!');
+    } catch (\Exception $e) {
+      $request->session()->flashNotify(
+        'error',
+        'Có lỗi xảy ra, vui lòng thử lại.',
+        $e->getMessage()
+      );
     }
-    return $this->redirect('admin/carousels/' . $carouselId);
+
+    return $this->redirect("admin/carousels/{$carousel_id}");
   }
 }

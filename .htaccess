@@ -1,8 +1,8 @@
 RewriteEngine On
 RewriteBase /website_khoa/
 
-# Bỏ qua các request tài nguyên tĩnh trong thư mục public / assets / storage / api / 
-RewriteCond %{REQUEST_URI} !^/(public|assets|storage|api)(/|$) [NC]
+# Bỏ qua các request tài nguyên tĩnh trong thư mục public / assets / storage / 
+RewriteCond %{REQUEST_URI} !^/(public|assets|storage)(/|$) [NC]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 

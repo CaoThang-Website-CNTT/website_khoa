@@ -306,7 +306,7 @@ VALUES
 (1, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', '1', 'Tìm hiểu thêm', NULL, NULL, 1),
 (2, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', '2', 'Tìm hiểu thêm', NULL, NULL, 2),
 (3, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', '3', 'Tìm hiểu thêm', NULL, NULL, 3),
-(4, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', '4', 'Tìm hiểu thêm', NULL, NULL, 4);
+(4, 1, 'Môi trường học tập', 'Chuyên nghiệp & Sáng tạo.', 'Không gian học tập mở, khuyến khích sự sáng tạo và hợp tác, với sự hỗ trợ từ đội ngũ giảng viên giàu kinh nghiệm và tận tâm.', '1', 'Tìm hiểu thêm', NULL, NULL, 4);
 
 -- ============================================================================
 -- 15. BẢNG POSTS
@@ -342,9 +342,9 @@ INSERT INTO `category_post` (`post_id`, `category_id`) VALUES
 -- 17. BẢNG MEDIA
 -- ============================================================================
 INSERT INTO `media` (`id`, `title`, `file_name`, `file_path`, `mime_type`, `alt_text`, `width`, `height`, `file_size`, `metadata`, `created_at`, `updated_at`) VALUES
-(9, 'demo-1', 'john-FlPc9_VocJ4-unsplash.jpg', 'media/2026/05/6dace5fb-fcc9-44f2-a066-2f1734185b02_medium.webp', 'image/webp', 'demo-1', 800, 533, 24250, '{\"aspect_ratio\":1.5,\"processed_mode\":\"standard\"}', '2026-05-24 22:31:48', '2026-05-24 22:31:48'),
-(10, 'demo-2', 'susan-q-yin-2JIvboGLeho-unsplash.jpg', 'media/2026/05/251d5979-1bb2-4b06-99fa-2ae2e91b157a_medium.webp', 'image/webp', 'demo-2', 800, 534, 57904, '{\"aspect_ratio\":1.5,\"processed_mode\":\"standard\"}', '2026-05-24 22:32:08', '2026-05-24 22:32:08'),
-(11, 'demo-3', 'yue-wu-iM1coCUa5gI-unsplash.jpg', 'media/2026/05/c0b493fe-ea8f-4f27-93a1-357e1be09d41_medium.webp', 'image/webp', 'demo-3', 800, 533, 84052, '{\"aspect_ratio\":1.5,\"processed_mode\":\"standard\"}', '2026-05-24 22:32:31', '2026-05-24 22:32:31');
+(1, 'demo-1', 'john-FlPc9_VocJ4-unsplash.jpg', 'media/2026/05/6dace5fb-fcc9-44f2-a066-2f1734185b02_medium.webp', 'image/webp', 'demo-1', 800, 533, 24250, '{\"aspect_ratio\":1.5,\"processed_mode\":\"standard\"}', '2026-05-24 22:31:48', '2026-05-24 22:31:48'),
+(2, 'demo-2', 'susan-q-yin-2JIvboGLeho-unsplash.jpg', 'media/2026/05/251d5979-1bb2-4b06-99fa-2ae2e91b157a_medium.webp', 'image/webp', 'demo-2', 800, 534, 57904, '{\"aspect_ratio\":1.5,\"processed_mode\":\"standard\"}', '2026-05-24 22:32:08', '2026-05-24 22:32:08'),
+(3, 'demo-3', 'yue-wu-iM1coCUa5gI-unsplash.jpg', 'media/2026/05/c0b493fe-ea8f-4f27-93a1-357e1be09d41_medium.webp', 'image/webp', 'demo-3', 800, 533, 84052, '{\"aspect_ratio\":1.5,\"processed_mode\":\"standard\"}', '2026-05-24 22:32:31', '2026-05-24 22:32:31');
 
 COMMIT;
 

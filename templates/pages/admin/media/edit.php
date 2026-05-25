@@ -14,7 +14,7 @@ $max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
       <h2 class="title text-2xl font-semibold">
         Media <?= '#' . $media->id ?>
       </h2>
-      <p>Chỉnh sửa thông tin và thay thế file media nếu cần</p>
+      <p>Chỉnh sửa thông tin media nếu cần</p>
     </div>
     <div class="flex gap-2">
       <a href="<?= request()->previous(fallback: 'admin/media') ?>"
@@ -34,7 +34,7 @@ $max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
 
       <div class="card__header">
         <legend class="card__title field__legend">Sửa media</legend>
-        <p class="card__description field__description">Thay thế file hoặc cập nhật thông tin bên dưới</p>
+        <p class="card__description field__description">Cập nhật thông tin media bên dưới (Không thể thay thế file media)</p>
       </div>
 
       <hr class="separator">
@@ -89,9 +89,6 @@ $max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
               <div class="media-preview-content" hidden data-mu-preview>
                 <div class="media-preview-frame" data-mu-preview-frame></div>
                 <p class="text-sm" data-mu-preview-info></p>
-                <button type="button" class="btn" data-variant="destructive" data-size="sm" data-mu-remove>
-                  <i class="fa-solid fa-trash"></i> Xóa
-                </button>
               </div>
 
             </div>
