@@ -197,5 +197,6 @@ $router->prefix('teacher')->group(function (Router $router) {
   // Thông tin thực tập.
   $router->prefix('internship_batches')->group(function ($router) {
     $router->get('/', [TeacherDashboardController::class, 'internshipIndex']);
+    $router->get('/{id}', [TeacherDashboardController::class, 'internshipShow']);
   });
 });

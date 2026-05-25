@@ -135,4 +135,44 @@ class TeacherDashboardController extends Controller
       'data' => $data
     ], layout: "dashboard_layout");
   }
+
+  public function internshipShow(Request $request, int $id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) {
+      $request->session()->flashNotify('error', 'Không tìm thấy hồ sơ giảng viên.');
+      return $this->redirect('/');
+    }
+
+    // Kiểm tra quyền
+    if (!$this->_internshipBatchService->isSupervisorOfBatch($id, $teacher->id)) {
+      $request->session()->flashNotify('error', 'Bạn không được phân công tham gia hướng dẫn đợt thực tập này.');
+      return $this->redirect('/teacher/internship_batches');
+    }
+
+    $detail = $this->_internshipBatchService->getTeacherBatchDetail($id, $teacher->id);
+    if (!$detail) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập.');
+      return $this->redirect('/teacher/internship_batches');
+    }
+
+    // Không cho xem đợt draft
+    if ($detail['batch']['status'] === 'draft') {
+      $request->session()->flashNotify('error', 'Đợt thực tập này chưa được công bố.');
+      return $this->redirect('/teacher/internship_batches');
+    }
+
+    return $this->render('teacher/internship_batches/show', [
+      'teacher' => $teacher,
+      'batch' => $detail['batch'],
+      'stats' => $detail['stats'],
+      'students' => $detail['students'],
+      'title' => 'Chi tiết đợt thực tập #' . $detail['batch']['id']
+    ], layout: 'dashboard_layout');
+  }
 }

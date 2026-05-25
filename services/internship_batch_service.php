@@ -32,6 +32,8 @@ interface IInternshipBatchService
   public function searchEligibleTeachers(int $batchId, string $query = ''): array;
   public function getStudentDashboardData(int $studentId, ?int $batchId = null): array;
   public function updateStudentInternshipInfo(int $batchStudentId, array $data): bool;
+  public function getTeacherBatchDetail(int $batchId, int $teacherId): ?array;
+  public function isSupervisorOfBatch(int $batchId, int $teacherId): bool;
 }
 
 class InternshipBatchService implements IInternshipBatchService
@@ -313,5 +315,25 @@ class InternshipBatchService implements IInternshipBatchService
   public function updateStudentInternshipInfo(int $batchStudentId, array $data): bool
   {
     return $this->_store->updateBatchStudentCompany($batchStudentId, $data);
+  }
+
+  public function getTeacherBatchDetail(int $batchId, int $teacherId): ?array
+  {
+    $batch = $this->_store->getById($batchId);
+    if (!$batch) return null;
+
+    $stats = $this->_store->getTeacherBatchStats($batchId, $teacherId);
+    $students = $this->_store->getTeacherStudentsInBatch($batchId, $teacherId);
+
+    return [
+      'batch' => $batch,
+      'stats' => $stats,
+      'students' => $students
+    ];
+  }
+
+  public function isSupervisorOfBatch(int $batchId, int $teacherId): bool
+  {
+    return $this->_store->isSupervisorOfBatch($batchId, $teacherId);
   }
 }

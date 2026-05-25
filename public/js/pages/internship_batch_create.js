@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
       allClassroomsData = result.data || [];
       renderClassrooms(allClassroomsData);
     } catch (err) {
-      classroomsContainer.innerHTML = `<span class="text-danger">${err.message}</span>`;
+      classroomsContainer.innerHTML = `<span>${err.message}</span>`;
     }
   };
 

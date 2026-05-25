@@ -32,6 +32,9 @@ interface IInternshipBatchStore
   public function searchEligibleStudents(int $batchId, string $query = '', ?int $classroomId = null): array;
   public function searchEligibleTeachers(int $batchId, string $query = ''): array;
   public function getBatchesByStudentId(int $studentId): array;
+  public function getTeacherStudentsInBatch(int $batchId, int $teacherId): array;
+  public function getTeacherBatchStats(int $batchId, int $teacherId): array;
+  public function isSupervisorOfBatch(int $batchId, int $teacherId): bool;
 }
 
 class InternshipBatchStore extends Store implements IInternshipBatchStore
@@ -202,9 +205,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function getPaginatedByTeacherId(int $teacherId, int $page, int $limit = 15): array
   {
     $offset = ($page - 1) * $limit;
-    $sql = "SELECT * FROM internship_batches ib
+    $sql = "SELECT ib.* FROM internship_batches ib
             JOIN internship_batch_supervisors ibs ON ib.id = ibs.batch_id
-            WHERE ib.deleted_at IS NULL AND ibs.teacher_id = :teacher_id
+            WHERE ib.deleted_at IS NULL AND ibs.teacher_id = :teacher_id AND ib.status != 'draft'
             ORDER BY ib.created_at DESC 
             LIMIT :limit OFFSET :offset";
     $stmt = $this->db->prepare($sql);
@@ -226,7 +229,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   {
     $sql = "SELECT COUNT(*) FROM internship_batches ib
             JOIN internship_batch_supervisors ibs ON ib.id = ibs.batch_id
-            WHERE ib.deleted_at IS NULL AND ibs.teacher_id = :teacher_id";
+            WHERE ib.deleted_at IS NULL AND ibs.teacher_id = :teacher_id AND ib.status != 'draft'";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':teacher_id' => $teacherId]);
     return (int)$stmt->fetchColumn();
@@ -495,5 +498,92 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
       ':internship_start_date' => $data['internship_start_date'],
       ':internship_end_date' => $data['internship_end_date']
     ]);
+  }
+
+  public function getTeacherStudentsInBatch(int $batchId, int $teacherId): array
+  {
+    $sql = "SELECT
+              s.student_id AS student_code,
+              s.full_name,
+              c.short_name AS classroom_name,
+              co.name AS company_name,
+              sub_latest.original_file_name AS submission_name,
+              sub_latest.file_path AS submission_path,
+              sub_count.total_submissions AS submission_count,
+              g.final_score AS grade,
+              bs.id AS batch_student_id
+            FROM internship_assignments a
+            JOIN internship_batch_students bs ON a.batch_student_id = bs.id
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN companies co ON bs.company_id = co.id
+            LEFT JOIN (
+              SELECT batch_student_id, original_file_name, file_path
+              FROM internship_submissions
+              WHERE is_latest = 1
+            ) sub_latest ON sub_latest.batch_student_id = bs.id
+            LEFT JOIN (
+              SELECT batch_student_id, COUNT(*) AS total_submissions
+              FROM internship_submissions
+              GROUP BY batch_student_id
+            ) sub_count ON sub_count.batch_student_id = bs.id
+            LEFT JOIN internship_grades g ON g.batch_student_id = bs.id
+            WHERE bs.batch_id = :batch_id AND a.teacher_id = :teacher_id
+            ORDER BY s.full_name ASC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+      ':batch_id' => $batchId,
+      ':teacher_id' => $teacherId
+    ]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getTeacherBatchStats(int $batchId, int $teacherId): array
+  {
+    $stats = [
+      'total_students' => 0,
+      'has_submission' => 0,
+      'has_company' => 0,
+      'has_grade' => 0
+    ];
+
+    // Lấy danh sách ID sinh viên (batch_student_id) do GV này hướng dẫn trong đợt
+    $sqlIds = "SELECT bs.id
+               FROM internship_assignments a
+               JOIN internship_batch_students bs ON a.batch_student_id = bs.id
+               WHERE bs.batch_id = :batch_id AND a.teacher_id = :teacher_id";
+    $stmt = $this->db->prepare($sqlIds);
+    $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+    $batchStudentIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    if (empty($batchStudentIds)) {
+      return $stats;
+    }
+
+    $stats['total_students'] = count($batchStudentIds);
+    $inClause = implode(',', array_map(function($id) { return (int)$id; }, $batchStudentIds));
+
+    // Đếm có tài liệu
+    $sqlSub = "SELECT COUNT(DISTINCT batch_student_id) FROM internship_submissions WHERE batch_student_id IN ($inClause)";
+    $stats['has_submission'] = (int)$this->db->query($sqlSub)->fetchColumn();
+
+    // Đếm có công ty
+    $sqlComp = "SELECT COUNT(*) FROM internship_batch_students WHERE id IN ($inClause) AND company_id IS NOT NULL";
+    $stats['has_company'] = (int)$this->db->query($sqlComp)->fetchColumn();
+
+    // Đếm có điểm
+    $sqlGrade = "SELECT COUNT(DISTINCT batch_student_id) FROM internship_grades WHERE batch_student_id IN ($inClause)";
+    $stats['has_grade'] = (int)$this->db->query($sqlGrade)->fetchColumn();
+
+    return $stats;
+  }
+
+  public function isSupervisorOfBatch(int $batchId, int $teacherId): bool
+  {
+    $sql = "SELECT 1 FROM internship_batch_supervisors 
+            WHERE batch_id = :batch_id AND teacher_id = :teacher_id AND is_active = 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+    return (bool)$stmt->fetchColumn();
   }
 }
