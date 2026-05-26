@@ -1,3 +1,5 @@
 .prettierignore
 .env.local
 /storage/media/**
+docs
+.cursorrules

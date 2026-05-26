@@ -11,7 +11,7 @@ class RequestValidator
     foreach ($rules as $field => $fieldRules) {
       $value = $this->getValueByPath($data, $field);
 
-      $isEmpty = $value === null || trim((string) $value) === '';
+      $isEmpty = $value === null || (is_array($value) ? empty($value) : trim((string) $value) === '');
       if ($isEmpty && in_array('nullable', $fieldRules)) {
         continue;
       }
@@ -37,9 +37,16 @@ class RequestValidator
 
     switch ($rule) {
       case 'required':
-        if (is_null($value) || trim($value) === '') {
-          $this->addError($field, "Ô này không được để trống.");
-          return;
+        if (is_null($value)) {
+          $this->addError($field, "Trường này không được để trống.");
+        } elseif (is_array($value)) {
+          if (empty($value)) {
+            $this->addError($field, "Trường này không được để trống.");
+          }
+        } else {
+          if (trim((string)$value) === '') {
+            $this->addError($field, "Trường này không được để trống.");
+          }
         }
         break;
       case 'password':

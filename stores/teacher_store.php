@@ -72,6 +72,22 @@ class TeacherStore extends Store implements ITeacherStore
 
     return $row ? Teacher::fromArray($row) : null;
   }
+  public function getByAccountId(int $accountId): ?Teacher
+  {
+    $sql = "
+      SELECT * 
+      FROM `teachers`
+      WHERE `account_id` = :account_id
+      AND `deleted_at` IS NULL
+      LIMIT 1
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['account_id' => $accountId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $row ? Teacher::fromArray($row) : null;
+  }
 
   /** @return Teacher[] */
   public function getByIds(array $ids): array

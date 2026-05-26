@@ -14,8 +14,7 @@ class UploadedFile
     public string $mimeType,
     public int $fileSize,
     public ?string $altText = null,
-  ) {
-  }
+  ) {}
 }
 
 
@@ -35,6 +34,10 @@ class UploadedFileHandler
     'image/x-icon',
     'image/vnd.microsoft.icon',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-rar',
+    'application/x-rar-compressed',
   ];
 
   /** Extensions được phép */
@@ -47,7 +50,11 @@ class UploadedFileHandler
     'avif',
     'ico',
     'xlsx',
+    'zip',
+    'rar',
   ];
+
+  private const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
   /**
    * Validate $_FILES array và trả về UploadedFile
@@ -70,6 +77,8 @@ class UploadedFileHandler
     $mimeType = $this->detectMimeType($fileArray['tmp_name']);
     $this->assertAllowedMimeType($mimeType);
 
+    $this->assertAllowedSize((int) $fileArray['size']);
+
     return new UploadedFile(
       tmpPath: $fileArray['tmp_name'],
       originalName: $fileArray['name'],
@@ -78,6 +87,14 @@ class UploadedFileHandler
       fileSize: (int) $fileArray['size'],
       altText: $altText,
     );
+  }
+
+  private function assertAllowedSize(int $size): void
+  {
+    if ($size > self::MAX_FILE_SIZE) {
+      $maxMb = self::MAX_FILE_SIZE / 1024 / 1024;
+      throw new \RuntimeException("Dung lượng file vượt quá giới hạn cho phép ({$maxMb}MB).");
+    }
   }
 
   private function assertValidStructure(array $fileArray): void

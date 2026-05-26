@@ -1,4 +1,5 @@
 import { ColumnRegistry } from './column_registry.js';
+import { ColumnDef } from './column_def.js';
 import { DataAdapter } from './data_adapter.js';
 import { SortController } from './sort_controller.js';
 import { FilterController } from './filter_controller.js';
@@ -40,6 +41,47 @@ class TableInstance {
       sortable: false,
       isSpecial: true
     });
+    const selectable = 'tmSelectable' in root.dataset && root.dataset.tmSelectable === 'true';
+    if (selectable) {
+      this.idKey = root.dataset.tmIdKey ?? 'id';
+      this.selectedIds = new Set();
+      this.columns.prepend(new ColumnDef({
+        key: '_checkbox',
+        label: '',
+        sortable: false,
+        width: '40px',
+        align: 'center',
+        render: (row) => {
+          const frag = document.createDocumentFragment();
+          const cbWrap = document.createElement('div');
+          cbWrap.className = 'tm-checkbox-wrapper';
+          cbWrap.innerHTML = `
+            <label class="checkbox">
+              <input type="checkbox" class="checkbox__input tm-row-checkbox" value="${row[this.idKey]}">
+              <span class="checkbox__label"></span>
+            </label>
+          `;
+          const input = cbWrap.querySelector('input');
+          const id = String(row[this.idKey]);
+          if (this.selectedIds.has(id)) {
+            input.checked = true;
+          }
+          input.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              this.selectedIds.add(id);
+            } else {
+              this.selectedIds.delete(id);
+            }
+            this.updateHeaderCheckbox();
+            this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
+              detail: { selectedIds: Array.from(this.selectedIds) }
+            }));
+          });
+          frag.appendChild(cbWrap);
+          return frag;
+        }
+      }));
+    }
 
     const inlineRows = TableInstance.#readInlineData(this.id);
     const mode = root.dataset.tmMode ?? 'server';
@@ -74,6 +116,43 @@ class TableInstance {
     const el = document.querySelector(`script[data-tm-data="${id}"]`);
     if (!el) return { rows: [], total: 0, page: 1, limit: 20 };
     try { return JSON.parse(el.textContent); } catch { return { rows: [], total: 0, page: 1, limit: 20 }; }
+  }
+
+  updateHeaderCheckbox() {
+    const checkAll = this.root.querySelector('.tm-check-all');
+    if (!checkAll) return;
+
+    const visibleCheckboxes = this.root.querySelectorAll('.tm-row-checkbox');
+    if (visibleCheckboxes.length === 0) {
+      checkAll.checked = false;
+      checkAll.disabled = true;
+      return;
+    }
+    checkAll.disabled = false;
+
+    let allChecked = true;
+    visibleCheckboxes.forEach(cb => {
+      if (!cb.checked) allChecked = false;
+    });
+    checkAll.checked = allChecked;
+  }
+
+  getSelectedIds() {
+    return Array.from(this.selectedIds || new Set());
+  }
+
+  clearSelection() {
+    if (this.selectedIds) {
+      this.selectedIds.clear();
+      const visibleCheckboxes = this.root.querySelectorAll('.tm-row-checkbox');
+      visibleCheckboxes.forEach(cb => {
+        cb.checked = false;
+      });
+      this.updateHeaderCheckbox();
+      this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
+        detail: { selectedIds: [] }
+      }));
+    }
   }
 
   init() {
@@ -213,6 +292,36 @@ class TableInstance {
     const overlay = this.root.querySelector('[data-tm-loading]');
     if (overlay) overlay.style.display = on ? 'flex' : 'none';
   }
+
+  getSelectedIds() {
+    return Array.from(this.selectedIds || []);
+  }
+
+  clearSelection() {
+    if (!this.selectedIds) return;
+    this.selectedIds.clear();
+
+    const checkboxes = this.root.querySelectorAll('.tm-row-checkbox, .tm-check-all');
+    checkboxes.forEach(cb => cb.checked = false);
+
+    this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
+      detail: { selectedIds: [] }
+    }));
+  }
+
+  updateHeaderCheckbox() {
+    const checkAll = this.root.querySelector('.tm-check-all');
+    if (!checkAll) return;
+
+    const visibleCheckboxes = this.root.querySelectorAll('.tm-row-checkbox');
+    if (visibleCheckboxes.length === 0) {
+      checkAll.checked = false;
+      return;
+    }
+
+    const allChecked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+    checkAll.checked = allChecked;
+  }
 }
 
 export class TableManager {
@@ -246,5 +355,13 @@ export class TableManager {
     if (!inst) return;
     const colDef = inst.columns.all.find(c => c.key === col);
     if (colDef) colDef.filterOptions = options;
+  }
+
+  static getSelectedIds(tableId) {
+    return TableManager.get(tableId)?.getSelectedIds() || [];
+  }
+
+  static clearSelection(tableId) {
+    TableManager.get(tableId)?.clearSelection();
   }
 }

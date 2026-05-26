@@ -272,6 +272,14 @@ body {
 
 .sidebar__footer {
   padding: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar__user-info {
+  padding: 0.5rem 1rem;
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  font-weight: var(--fw-medium);
 }
 
 .sidebar__footer .avatar-dropdown {

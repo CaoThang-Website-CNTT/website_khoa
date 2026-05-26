@@ -1,10 +1,15 @@
+<?php
+$authUser = request()->session()->authUser();
+$role = $authUser['role'] ?? 'guest';
+$currentPath = request()->path();
+?>
 <div class="sidebar__gap"></div>
 <div class="sidebar__container">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar__header">
       <ul class="sidebar__menu">
         <li class="sidebar__menu-item">
-          <a class="sidebar__menu-btn" href="<?= url('admin') ?>">
+          <a class="sidebar__menu-btn" href="<?= url($role) ?>">
             <div class="sidebar__logo object-contain">
               <img src="<?= url('/public/img/faculty_logo.jpg') ?>" alt="Logo Khoa CNTT">
             </div>
@@ -19,13 +24,16 @@
 
     <div class="sidebar__content">
       <nav class="sidebar__nav">
+        <?php if ($role === 'admin'): ?>
+        <!-- ── ADMIN MENU ─────────────────────────────────────────── -->
         <div class="sidebar__group">
           <div class="sidebar__group-label">Chức năng chính</div>
           <ul class="sidebar__menu">
 
             <!-- ── Tổng quan ─────────────────────────────────────────── -->
             <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn" href="<?= url('admin') ?>">
+              <a class="sidebar__menu-btn <?= str_ends_with($currentPath, 'admin') ? 'active' : '' ?>"
+                href="<?= url('admin') ?>">
                 <i class="fa-solid fa-house"></i>
                 Tổng Quan
               </a>
@@ -51,6 +59,29 @@
                     </li>
                     <li class="sidebar__menu-sub-item">
                       <a href="<?= url('admin/media') ?>" class="sidebar__menu-sub-item-btn">Thư Viện</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+
+            <!-- ── Thực tập ────────────────────────────────────────────── -->
+            <li class="sidebar__menu-item">
+              <div class="collapsible">
+                <div class="sidebar__menu-btn">
+                  <button class="collapsible__trigger">
+                    <i class="fa-solid fa-house-laptop"></i>
+                    Thực tập tốt nghiệp
+                    <i class="fa-solid fa-angle-down"></i>
+                  </button>
+                </div>
+                <div class="collapsible__content">
+                  <ul class="sidebar__menu-sub">
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('admin/internship_batches') ?>" class="sidebar__menu-sub-item-btn">Quản lý đợt</a>
+                    </li>
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('admin/companies') ?>" class="sidebar__menu-sub-item-btn">Quản lý công ty</a>
                     </li>
                   </ul>
                 </div>
@@ -104,7 +135,86 @@
                 </div>
               </div>
             </li>
+          </ul>
+        </div>
 
+        <?php elseif ($role === 'teacher'): ?>
+        <!-- ── TEACHER MENU ───────────────────────────────────────── -->
+        <div class="sidebar__group">
+          <div class="sidebar__group-label">Cá nhân</div>
+          <ul class="sidebar__menu">
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'teacher') ? 'active' : '' ?>"
+                href="<?= url('teacher') ?>">
+                <i class="fa-solid fa-user"></i>
+                Tổng Quan
+              </a>
+            </li>
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'teacher/internship_batches') ? 'active' : '' ?>"
+                href="<?= url('teacher/internship_batches') ?>">
+                <i class="fa-solid fa-briefcase"></i>
+                Thực tập tốt nghiệp
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <?php elseif ($role === 'student'): ?>
+        <!-- ── STUDENT MENU ───────────────────────────────────────── -->
+        <div class="sidebar__group">
+          <div class="sidebar__group-label">Cá nhân</div>
+          <ul class="sidebar__menu">
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student') ? 'active' : '' ?>"
+                href="<?= url('student') ?>">
+                <i class="fa-solid fa-user"></i>
+                Tổng Quan
+              </a>
+            </li>
+            <li class="sidebar__menu-item">
+              <div class="collapsible">
+                <div class="sidebar__menu-btn">
+                  <button class="collapsible__trigger">
+                    <i class="fa-solid fa-briefcase"></i>
+                    Thực tập tốt nghiệp
+                    <i class="fa-solid fa-angle-down"></i>
+                  </button>
+                </div>
+                <div class="collapsible__content">
+                  <ul class="sidebar__menu-sub">
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('student/internship') ?>" class="sidebar__menu-sub-item-btn">Đợt thực tập</a>
+                    </li>
+                    <li class="sidebar__menu-sub-item">
+                      <a href="<?= url('student/referral_letter') ?>" class="sidebar__menu-sub-item-btn">Giấy giới
+                        thiệu</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student/graduation') ? 'active' : '' ?>"
+                href="<?= url('student/graduation') ?>">
+                <i class="fa-solid fa-graduation-cap"></i>
+                Đồ Án Tốt Nghiệp
+              </a>
+            </li>
+          </ul>
+        </div>
+        <?php endif; ?>
+
+        <!-- ── CHUNG ────────────────────────────────────────────────── -->
+        <div class="sidebar__group">
+          <div class="sidebar__group-label">Tài khoản</div>
+          <ul class="sidebar__menu">
+            <li class="sidebar__menu-item">
+              <a class="sidebar__menu-btn" href="<?= url('logout') ?>" style="color: var(--destructive);">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Đăng xuất
+              </a>
+            </li>
           </ul>
         </div>
       </nav>

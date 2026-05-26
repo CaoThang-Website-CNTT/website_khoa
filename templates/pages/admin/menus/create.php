@@ -27,7 +27,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       <p>Điền thông tin nhóm menu và các mục bên dưới</p>
     </div>
     <div class="flex gap-2">
-      <a href="<?= request()->previous(fallback: 'admin/menus') ?>" data-variant="outline" data-size="lg" class="btn">
+      <a href="<?= request()->previous(fallback: url('admin/menus')) ?>" data-variant="outline" data-size="lg" class="btn">
         <i class="fa-solid fa-chevron-left"></i>
         Quay lại
       </a>

@@ -25,9 +25,11 @@ class StudentController extends Controller
     $currentPage = $request->query('page') ?? 1;
 
     $data = $this->_studentService->getStudents($currentPage, 15);
+    $classrooms = $this->_classroomService->getAllClassrooms();
 
     $this->render("admin/students/index", [
       'data' => $data,
+      'classrooms' => $classrooms
     ], layout: "dashboard_layout");
   }
 

@@ -26,9 +26,13 @@ class ClassroomController extends Controller
     $currentPage = $request->query('page') ?? 1;
 
     $data = $this->_classroomService->getClassroomsPaginated((int) $currentPage);
+    $majors = $this->_classroomService->getAllMajors();
+    $specializations = $this->_classroomService->getAllSpecializations();
 
     $this->render('admin/classrooms/index', [
       'data' => $data,
+      'majors' => $majors,
+      'specializations' => $specializations
     ], layout: 'dashboard_layout');
   }
 

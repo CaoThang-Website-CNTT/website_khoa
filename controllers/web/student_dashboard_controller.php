@@ -1,0 +1,512 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Core\Controller;
+use App\Core\Request;
+use App\Core\RequestValidator;
+use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService};
+use App\Core\Files\UploadedFileHandler;
+use Exception;
+
+class StudentDashboardController extends Controller
+{
+  private StudentService $_studentService;
+  private ClassroomService $_classroomService;
+  private InternshipBatchService $_internshipBatchService;
+  private InternshipAssignmentService $_internshipAssignmentService;
+  private CompanyService $_companyService;
+  private InternshipSubmissionService $_submissionService;
+  private ReferralLetterService $_referralLetterService;
+
+  public function __construct(
+    StudentService $studentService,
+    ClassroomService $classroomService,
+    InternshipBatchService $internshipBatchService,
+    InternshipAssignmentService $internshipAssignmentService,
+    CompanyService $companyService,
+    InternshipSubmissionService $submissionService,
+    ReferralLetterService $referralLetterService
+  ) {
+    $this->_studentService = $studentService;
+    $this->_classroomService = $classroomService;
+    $this->_internshipBatchService = $internshipBatchService;
+    $this->_internshipAssignmentService = $internshipAssignmentService;
+    $this->_companyService = $companyService;
+    $this->_submissionService = $submissionService;
+    $this->_referralLetterService = $referralLetterService;
+  }
+
+  /**
+   * Hiển thị trang tổng quan sinh viên
+   * 
+   * @param Request $request
+   */
+  public function index(Request $request)
+  {
+    // @techdebt: Cần triển khai Middleware để kiểm tra quyền truy cập thay vì kiểm tra thủ công
+    $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
+
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+    if (!$student) {
+      $request->session()->flashNotify('error', 'Không tìm thấy hồ sơ sinh viên.');
+      return $this->redirect('/');
+    }
+
+    return $this->render('student/dashboard/index', [
+      'student' => $student,
+      'title' => 'Tổng quan sinh viên'
+    ], layout: 'dashboard_layout');
+  }
+
+  /**
+   * Cập nhật thông tin cá nhân sinh viên
+   */
+  public function updateProfile(Request $request)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
+
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+    if (!$student) {
+      return $this->redirect('/');
+    }
+
+    $data = $request->all();
+    $validator = new RequestValidator();
+
+    // Chỉ cho phép cập nhật một số thông tin cơ bản
+    $rules = [
+      'full_name' => ['required', 'max:255'],
+      'dob' => ['required', 'date'],
+      'gender' => ['required', 'in:male,female,other'],
+      'phone' => ['required', 'phone', 'max:15'],
+      'address' => ['required'],
+      'birth_place' => ['required', 'max:255'],
+      'national_id' => ['required', 'size:12'],
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $request->flashOldInputs();
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect('/student');
+    }
+
+    // Giữ nguyên các thông tin học tập
+    $updateData = array_merge([
+      'student_id' => $student->student_id,
+      'classroom_id' => $student->classroom_id,
+      'status' => $student->status,
+      'notes' => $student->notes,
+    ], $data);
+
+    try {
+      $this->_studentService->updateStudent($student->student_id, $updateData);
+      $request->session()->flashNotify('success', 'Cập nhật thông tin cá nhân thành công!');
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+    }
+
+    return $this->redirect('/student');
+  }
+
+  public function internshipRedirect(Request $request)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, null);
+
+    if ($dashboardData['current']) {
+      return $this->redirect('/student/internship/' . $dashboardData['current']['id']);
+    }
+
+    $request->session()->flashNotify('warning', 'Bạn chưa tham gia đợt thực tập nào.');
+    return $this->redirect('/student');
+  }
+
+  private function checkOwnershipAndGetBatchStudentId(int $studentId, int $batchId): ?int
+  {
+    $dashboardData = $this->_internshipBatchService->getStudentDashboardData($studentId, $batchId);
+    if ($dashboardData['current'] && $dashboardData['current']['id'] == $batchId) {
+      return (int)$dashboardData['current']['batch_student_id'];
+    }
+    return null;
+  }
+
+  /**
+   * Hiển thị thông tin thực tập của sinh viên
+   * 
+   * @param Request $request
+   * @param int $batch_id
+   */
+  public function internship(Request $request, int $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, $batch_id);
+
+    if (!$dashboardData['current'] || $dashboardData['current']['id'] != $batch_id) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này hoặc đợt không tồn tại.');
+      return $this->redirect('/student/internship');
+    }
+
+    // Tính toán can_edit_company
+    $canEditCompany = false;
+    if ($dashboardData['current'] && $dashboardData['current']['start_at']) {
+      $startAt = new \DateTime($dashboardData['current']['start_at']);
+      $now = new \DateTime();
+
+      // TECHDEBT - TODO: Sử dụng web_settings để lấy cấu hình thời gian cho phép khai báo (vd: 21 ngày = 3 tuần)
+      $allowedDays = 21;
+
+      $canEditCompany = true; // Mặc định cho phép sửa
+
+      if (!empty($dashboardData['current']['start_at'])) {
+        $startAt = new \DateTime($dashboardData['current']['start_at']);
+        $now = new \DateTime();
+
+        if ($now > $startAt) {
+          $daysPassed = $now->diff($startAt)->days;
+          $canEditCompany = ($daysPassed <= $allowedDays);
+        }
+      }
+    }
+
+    // Lấy 2 giấy giới thiệu mới nhất
+    $allLetters = $this->_referralLetterService->getLettersWithCompanyByBatchStudentId((int)$dashboardData['current']['batch_student_id']);
+    $recentReferralLetters = array_slice($allLetters, 0, 2);
+
+    return $this->render('student/dashboard/internship', array_merge($dashboardData, [
+      'student' => $student,
+      'title' => 'Thông tin thực tập',
+      'can_edit_company' => $canEditCompany,
+      'recent_referral_letters' => $recentReferralLetters,
+      'total_referral_letters' => count($allLetters)
+    ]), layout: 'dashboard_layout');
+  }
+
+  public function updateCompany(Request $request, int $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $batchStudentId = $this->checkOwnershipAndGetBatchStudentId($student->id, $batch_id);
+    if (!$batchStudentId) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    $data = $request->all();
+    $isManual = isset($data['is_manual']) && $data['is_manual'] == 1;
+
+    $validator = new RequestValidator();
+
+    $rules = [
+      'tax_code' => $isManual ? ['nullable'] : ['required'],
+      'name' => ['required', 'max:255'],
+      'address' => ['required'],
+      'position' => ['required', 'max:255'],
+      'internship_start_date' => ['required', 'date'],
+      'internship_end_date' => ['required', 'date'],
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect("/student/internship/{$batch_id}");
+    }
+
+    try {
+      if ($isManual) {
+        $companyId = $this->_companyService->createManual([
+          'tax_code' => $data['tax_code'] ?: null,
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      } else {
+        $companyId = $this->_companyService->upsertFromApi([
+          'tax_code' => $data['tax_code'],
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      }
+
+      $success = $this->_internshipBatchService->updateStudentInternshipInfo($batchStudentId, [
+        'company_id' => $companyId,
+        'position' => $data['position'],
+        'internship_start_date' => $data['internship_start_date'],
+        'internship_end_date' => $data['internship_end_date'],
+      ]);
+
+      if ($success) {
+        $request->session()->flashNotify('success', 'Lưu thông tin công ty thành công!');
+      } else {
+        $request->session()->flashNotify('error', 'Lỗi khi lưu thông tin công ty!');
+      }
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
+    }
+
+    return $this->redirect("/student/internship/{$batch_id}");
+  }
+
+  public function uploadSubmission(Request $request, int $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $batchStudentId = $this->checkOwnershipAndGetBatchStudentId($student->id, $batch_id);
+    if (!$batchStudentId) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    try {
+      $fileHandler = new UploadedFileHandler();
+      $uploadedFile = $fileHandler->fromGlobals('report_file');
+      $subDir = 'internship_reports/' . date('Y/m/d'); // Chia nhỏ, quản lý file theo ngày
+      $uploadDir = BASE_PATH . '/public/uploads/' . $subDir . '/';
+      if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+      }
+
+      $fileName = bin2hex(random_bytes(16)) . '.' . $uploadedFile->extension;
+      $destPath = $uploadDir . $fileName;
+
+      if (!move_uploaded_file($uploadedFile->tmpPath, $destPath)) {
+        throw new Exception('Không thể lưu file vào máy chủ.');
+      }
+
+      $this->_submissionService->createSubmission($batchStudentId, [
+        'storage_mode' => 'file',
+        'original_file_name' => $uploadedFile->originalName,
+        'file_path' => $subDir . '/' . $fileName,
+      ]);
+
+      $request->session()->flashNotify('success', 'Nộp tài liệu thành công!');
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', 'Lỗi tải lên: ' . $e->getMessage());
+    }
+
+    return $this->redirect("/student/internship/{$batch_id}");
+  }
+
+  public function requestReferralLetter(Request $request, int $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $batchStudentId = $this->checkOwnershipAndGetBatchStudentId($student->id, $batch_id);
+    if (!$batchStudentId) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    $data = $request->all();
+    $isManual = isset($data['is_manual']) && $data['is_manual'] == 1;
+
+    $validator = new RequestValidator();
+
+    $rules = [
+      'tax_code' => $isManual ? ['nullable'] : ['required'],
+      'name' => ['required', 'max:255'],
+      'address' => ['required']
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+    }
+
+    try {
+      if ($isManual) {
+        $companyId = $this->_companyService->createManual([
+          'tax_code' => $data['tax_code'] ?: null,
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      } else {
+        $companyId = $this->_companyService->upsertFromApi([
+          'tax_code' => $data['tax_code'],
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      }
+
+      $success = $this->_referralLetterService->create([
+        'batch_student_id' => $batchStudentId,
+        'company_id' => $companyId
+      ]);
+
+      if ($success) {
+        $request->session()->flashNotify('success', 'Đăng ký nhận giấy giới thiệu thành công!');
+      } else {
+        $request->session()->flashNotify('error', 'Lỗi trong lúc đăng ký giấy giới thiệu!');
+      }
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
+    }
+
+    return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+  }
+
+  public function referralLetters(Request $request, int $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, $batch_id);
+    if (!$dashboardData['current'] || $dashboardData['current']['id'] != $batch_id) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    $referralLetters = $this->_referralLetterService->getLettersWithCompanyByBatchStudentId((int)$dashboardData['current']['batch_student_id']);
+    $total_referral_letters = count($referralLetters);
+    $recent_referral_letters = array_slice($referralLetters, 0, 2);
+
+    return $this->render('student/dashboard/referral_letters', array_merge($dashboardData, [
+      'student' => $student,
+      'title' => 'Quản lý Giấy giới thiệu',
+      'referralLetters' => $referralLetters,
+      'total_referral_letters' => $total_referral_letters,
+      'recent_referral_letters' => $recent_referral_letters
+    ]), layout: 'dashboard_layout');
+  }
+
+  public function cancelReferralLetter(Request $request, int $batch_id, int $letter_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $batchStudentId = $this->checkOwnershipAndGetBatchStudentId($student->id, $batch_id);
+    if (!$batchStudentId) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    // Verify ownership of the letter
+    $letter = $this->_referralLetterService->getById($letter_id);
+    if (!$letter || $letter->batch_student_id !== $batchStudentId) {
+      $request->session()->flashNotify('error', 'Giấy giới thiệu không tồn tại hoặc bạn không có quyền hủy.');
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+    }
+
+    $reason = $request->input('cancel_reason') ?: '';
+
+    try {
+      if ($this->_referralLetterService->cancel($letter_id, $reason)) {
+        $request->session()->flashNotify('success', 'Đã hủy đăng ký giấy giới thiệu.');
+      } else {
+        $request->session()->flashNotify('error', 'Có lỗi xảy ra khi hủy giấy giới thiệu.');
+      }
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+    }
+
+    return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+  }
+
+  public function updateReferralLetterCompany(Request $request, int $batch_id, int $letter_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $batchStudentId = $this->checkOwnershipAndGetBatchStudentId($student->id, $batch_id);
+    if (!$batchStudentId) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    // Verify ownership of the letter
+    $letter = $this->_referralLetterService->getById($letter_id);
+    if (!$letter || $letter->batch_student_id !== $batchStudentId) {
+      $request->session()->flashNotify('error', 'Giấy giới thiệu không tồn tại hoặc bạn không có quyền thao tác.');
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+    }
+
+    $data = $request->all();
+    $isManual = isset($data['is_manual']) && $data['is_manual'] == 1;
+
+    $validator = new RequestValidator();
+
+    $rules = [
+      'tax_code' => $isManual ? ['nullable'] : ['required'],
+      'name' => ['required', 'max:255'],
+      'address' => ['required']
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+    }
+
+    try {
+      if ($isManual) {
+        $companyId = $this->_companyService->createManual([
+          'tax_code' => $data['tax_code'] ?: null,
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      } else {
+        $companyId = $this->_companyService->upsertFromApi([
+          'tax_code' => $data['tax_code'],
+          'name' => $data['name'],
+          'address' => $data['address'],
+        ]);
+      }
+
+      // Theo yêu cầu Q7: Tạo record mới, và hủy record cũ
+      $cancelSuccess = $this->_referralLetterService->cancel($letter_id, 'Thay đổi công ty mới');
+      if ($cancelSuccess) {
+        $createSuccess = $this->_referralLetterService->create([
+          'batch_student_id' => $batchStudentId,
+          'company_id' => $companyId
+        ]);
+        if ($createSuccess) {
+           $request->session()->flashNotify('success', 'Đã cập nhật công ty mới (Hủy giấy cũ, tạo giấy mới)!');
+        } else {
+           $request->session()->flashNotify('error', 'Đã hủy giấy cũ nhưng không tạo được giấy mới.');
+        }
+      } else {
+        $request->session()->flashNotify('error', 'Có lỗi khi hủy giấy giới thiệu cũ.');
+      }
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
+    }
+
+    return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+  }
+
+  /**
+   * Hiển thị thông tin đồ án tốt nghiệp
+   */
+  public function graduation(Request $request)
+  {
+    // @techdebt: Kiểm tra quyền truy cập
+    $authUser = $request->session()->authUser();
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    //TODO: Lấy thông tin đồ án tốt nghiệp từ database
+    return $this->render('student/dashboard/graduation', [
+      'student' => $student,
+      'title' => 'Đồ án tốt nghiệp'
+    ], layout: 'dashboard_layout');
+  }
+}

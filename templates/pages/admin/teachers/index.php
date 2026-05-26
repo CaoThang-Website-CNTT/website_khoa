@@ -33,75 +33,64 @@
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
-<div class="table-wrapper shadow rounded-md">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>
-          <h6>Name</h6>
-        </th>
-        <th>
-          <h6>Mã GV</h6>
-        </th>
-        <th>
-          <h6>Gender</h6>
-        </th>
-        <th>
-          <h6>Date of Bỉrth</h6>
-        </th>
-        <th>
-          <h6>Positon</h6>
-        </th>
-        <th>
-          <h6>Department</h6>
-        </th>
-        <th>
-          <h6>Contract</h6>
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($data->getItems())): ?>
-        <?php foreach ($data->getItems() as $index => $teacher): ?>
-          <tr onclick="window.location.href='<?= url('admin/teachers/' . $teacher->id) ?>'">
-            <td class="data-table__id">
-              <?= '#' . htmlspecialchars($teacher->id ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($teacher->full_name ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($teacher->staff_code ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($teacher->gender ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($teacher->dob ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($teacher->position ?? 'N/A') ?>
-            </td>
-            <td>
-              <?= htmlspecialchars($teacher->department ?? 'N/A') ?>
-            </td>
-            <td>
-              <span class="badge" data-variant="primary">
-                <?= htmlspecialchars($teacher->contract_type ?? 'N/A') ?>
-              </span>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="6" class="text-center">Không tìm thấy Giảng Viên nào.</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-  <?php
-  $page = $data;
-  include BASE_PATH . '/templates/components/pagination.php'
-    ?>
+<div class="card">
+  <div class="tm-container" data-tm="teachers_table" data-tm-mode="client" data-tm-searchable>
+
+    <!-- Cột ID -->
+    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
+
+    <!-- Cột Tên -->
+    <template data-tm-col="full_name" data-tm-label="Họ tên" data-tm-sortable data-tm-filter-type="text">
+      <a href="<?= url('admin/teachers/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+    </template>
+
+    <!-- Cột Mã GV -->
+    <template data-tm-col="staff_code" data-tm-label="Mã GV" data-tm-sortable data-tm-filter-type="text"></template>
+
+    <!-- Cột Giới tính -->
+    <template data-tm-col="gender" data-tm-label="Giới tính" data-tm-filter-type="select"
+      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Nam","value":"male"},{"label":"Nữ","value":"female"}]'>
+      {{ value === 'male' ? 'Nam' : (value === 'female' ? 'Nữ' : value) }}
+    </template>
+
+    <!-- Cột Ngày sinh -->
+    <template data-tm-col="dob" data-tm-label="Ngày sinh" data-tm-sortable></template>
+
+    <!-- Cột Chức vụ -->
+    <template data-tm-col="position" data-tm-label="Chức vụ" data-tm-filter-type="text"></template>
+
+    <!-- Cột Bộ môn -->
+    <template data-tm-col="department" data-tm-label="Bộ môn" data-tm-filter-type="text"></template>
+
+    <!-- Cột Hợp đồng -->
+    <template data-tm-col="contract_type" data-tm-label="Hợp đồng" data-tm-filter-type="select"
+      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Toàn thời gian","value":"full_time"},{"label":"Bán thời gian","value":"part_time"},{"label":"Thỉnh giảng","value":"visiting"},{"label":"Hợp đồng","value":"contract"}]'>
+      <span class="badge" data-variant="primary">
+        {{ value === 'full_time' ? 'Toàn thời gian' : (value === 'part_time' ? 'Bán thời gian' : (value === 'visiting' ? 'Thỉnh giảng' : 'Hợp đồng')) }}
+      </span>
+    </template>
+
+    <template data-tm-pagination></template>
+  </div>
 </div>
+
+<!-- JSON Data Source cho TableManager -->
+<script type="application/json" data-tm-data="teachers_table">
+  <?= json_encode([
+    'rows' => array_map(function ($teacher) {
+      return [
+        'id' => $teacher->id,
+        'full_name' => $teacher->full_name ?? 'N/A',
+        'staff_code' => $teacher->staff_code ?? 'N/A',
+        'gender' => $teacher->gender ?? 'N/A',
+        'dob' => $teacher->dob ?? 'N/A',
+        'position' => $teacher->position ?? 'N/A',
+        'department' => $teacher->department ?? 'N/A',
+        'contract_type' => $teacher->contract_type ?? 'N/A'
+      ];
+    }, $data->getItems()),
+    'total' => $data->getTotal(),
+    'page' => $data->getCurrentPage(),
+    'limit' => $data->getPerPage()
+  ]) ?>
+</script>

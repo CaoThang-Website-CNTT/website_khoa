@@ -40,4 +40,12 @@ export class ColumnRegistry {
 
   /** @returns {ColumnDef[]} */
   get all() { return this.#cols; }
+
+  /**
+   * Prepend a column definition to the registry.
+   * @param {ColumnDef} col
+   */
+  prepend(col) {
+    this.#cols.unshift(col);
+  }
 }

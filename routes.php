@@ -1,6 +1,10 @@
 <?php
 
+<<<<<<< HEAD
 use App\Controllers\{AuthController, DashboardController, MediaController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
+=======
+use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
+>>>>>>> 2a710bff2f6bd8656ed639b9b3b6f4e9c8aad4bc
 use App\Core\Router;
 
 $router->get('/', [SiteController::class, 'index']);
@@ -11,6 +15,7 @@ $router->get('/login', [AuthController::class, 'show']);
 $router->get('/login/oauth/callback', [AuthController::class, 'googleOAuthCallback']);
 $router->get('/onboarding', [AuthController::class, 'onboard']);
 $router->post('/onboarding', [AuthController::class, 'completeOnboarding']);
+$router->get('/logout', [AuthController::class, 'logout']);
 
 $router->prefix('admin')->group(function (Router $router) {
   $router->get('/', [DashboardController::class, 'index']);
@@ -135,5 +140,78 @@ $router->prefix('admin')->group(function (Router $router) {
     $router->get('/{group}/edit', [WebSettingsController::class, 'edit']);
     $router->post('/{group}', [WebSettingsController::class, 'batchUpdate']);
     $router->post('/delete/{id}', [WebSettingsController::class, 'destroy']);
+  });
+});
+  // Internship Batches
+  $router->prefix('internship_batches')->group(function ($router) {
+    $router->get('/', [InternshipBatchController::class, 'index']);
+    $router->get('/create', [InternshipBatchController::class, 'create']);
+    $router->get('/{id}', [InternshipBatchController::class, 'show']);
+    $router->post('/{id}', [InternshipBatchController::class, 'update']);
+    $router->post('/delete/{id}', [InternshipBatchController::class, 'destroy']);
+    $router->post('/{id}/publish', [InternshipBatchController::class, 'publish']);
+    $router->post('/{id}/close', [InternshipBatchController::class, 'close']);
+
+    // Internship Assignments
+    $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);
+
+    // Referral Letters
+    $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
+
+    // Students
+    $router->get('/{id}/students', [InternshipBatchController::class, 'students']);
+
+    // Teachers
+    $router->get('/{id}/teachers', [InternshipBatchController::class, 'teachers']);
+  });
+
+  // Companies
+  $router->prefix('companies')->group(function ($router) {
+    $router->get('/', [CompanyController::class, 'index']);
+    $router->get('/create', [CompanyController::class, 'create']);
+    $router->post('/', [CompanyController::class, 'store']);
+    $router->get('/{id}', [CompanyController::class, 'edit']);
+    $router->post('/{id}', [CompanyController::class, 'update']);
+    $router->post('/delete/{id}', [CompanyController::class, 'destroy']);
+  });
+});
+
+// Student Dashboard
+$router->prefix('student')->group(function (Router $router) {
+  // Thông tin tổng quan, tài khoản.
+  $router->get('/', [StudentDashboardController::class, 'index']);
+  // Thông tin thực tập.
+  $router->get('/internship', [StudentDashboardController::class, 'internshipRedirect']);
+  $router->get('/internship/{batch_id}', [StudentDashboardController::class, 'internship']);
+  // Thông tin đồ án tốt nghiệp
+  $router->get('/graduation', [StudentDashboardController::class, 'graduation']);
+  // Cập nhật thông tin cá nhân
+  $router->post('/profile/update', [StudentDashboardController::class, 'updateProfile']);
+
+  // Khai báo công ty thực tập
+  $router->post('/internship/{batch_id}/company', [StudentDashboardController::class, 'updateCompany']);
+  // Nộp tài liệu
+  $router->post('/internship/{batch_id}/upload', [StudentDashboardController::class, 'uploadSubmission']);
+  // Đăng ký giấy giới thiệu
+  $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
+
+  // Trang danh sách giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
+  // Hủy giấy giới thiệu
+  $router->post('/internship/{batch_id}/referral_letters/{letter_id}/cancel', [StudentDashboardController::class, 'cancelReferralLetter']);
+  // Cập nhật công ty cho giấy giới thiệu (pending)
+  $router->post('/internship/{batch_id}/referral_letters/{letter_id}/update-company', [StudentDashboardController::class, 'updateReferralLetterCompany']);
+});
+
+// Teacher Dashboard
+$router->prefix('teacher')->group(function (Router $router) {
+  // Thông tin tổng quan, tài khoản.
+  $router->get('/', [TeacherDashboardController::class, 'index']);
+  // Cập nhật thông tin cá nhân
+  $router->post('/profile/update', [TeacherDashboardController::class, 'updateProfile']);
+  // Thông tin thực tập.
+  $router->prefix('internship_batches')->group(function ($router) {
+    $router->get('/', [TeacherDashboardController::class, 'internshipIndex']);
+    $router->get('/{id}', [TeacherDashboardController::class, 'internshipShow']);
   });
 });

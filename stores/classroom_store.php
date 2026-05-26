@@ -254,8 +254,8 @@ class ClassroomStore extends Store implements IClassroomStore
     $query = $builder
       ->from('majors')
       ->select('*')
-      ->join('classrooms', 'classrooms.id', '=', 'major_id')
-      ->eq('majors.id', $classroom_id);
+      ->join('classrooms', 'majors.id', '=', 'major_id')
+      ->eq('classrooms.id', $classroom_id);
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());

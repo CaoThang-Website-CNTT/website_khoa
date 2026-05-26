@@ -1,0 +1,136 @@
+/* ==========================================================================
+   STUDENT DASHBOARD COMPONENTS
+   ========================================================================== */
+
+/* ── Upload Area ────────────────────────────────────────────────────────── */
+.upload-area {
+  padding: 0.5rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: color-mix(in oklab, var(--muted) 30%, transparent);
+}
+
+.upload-area:hover {
+  background: color-mix(in oklab, var(--primary) 5%, transparent);
+  border-color: var(--primary);
+}
+
+.upload-area__icon {
+  font-size: 1.5rem;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+  opacity: 0.6;
+}
+
+.upload-area__text {
+  font-weight: var(--fw-semibold);
+  color: var(--foreground);
+  margin-bottom: 0.25rem;
+}
+
+.upload-area__hint {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+
+/* ── Activity Log Timeline ─────────────────────────────────────────────── */
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-left: 1.5px solid var(--border);
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+  border-left-color: transparent;
+}
+
+.timeline-item__indicator {
+  position: absolute;
+  left: -0.4375rem; /* center on 1.5px border */
+  top: 0.25rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--background);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.timeline-item__time {
+  display: block;
+  margin-bottom: 0.125rem;
+}
+
+/* ── Misc Components ────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+.result-card .card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Company Suggestion List ────────────────────────────────────────────── */
+.field__input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.field__input-group .field__input {
+  flex: 1;
+}
+
+.field__suggest-wrapper {
+  position: relative;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 0.25rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.suggestions-list__item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--border);
+}
+
+.suggestions-list__item:last-child {
+  border-bottom: none;
+}
+
+.suggestions-list__item:hover {
+  background-color: var(--muted);
+}

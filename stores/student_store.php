@@ -18,6 +18,7 @@ interface IStudentStore
   /** @return Student[] */
   public function getPaginated(int $pageTo, int $limit = 15): array;
   public function getById(int $id): ?Student;
+  public function getByAccountId(int $accountId): ?Student;
   public function getByStudentId(int $student_id): ?Student;
   public function create(Student $student): Student;
   public function update(Student $student): Student;
@@ -62,11 +63,29 @@ class StudentStore extends Store implements IStudentStore
       SELECT * 
       FROM `students`
       WHERE `id` = :id
+      AND `deleted_at` IS NULL
       LIMIT 1
     ";
 
     $stmt = $this->db->prepare($sql);
     $stmt->execute(['id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $row ? Student::fromArray($row) : null;
+  }
+
+  public function getByAccountId(int $accountId): ?Student
+  {
+    $sql = "
+      SELECT * 
+      FROM `students`
+      WHERE `account_id` = :account_id
+      AND `deleted_at` IS NULL
+      LIMIT 1
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['account_id' => $accountId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     return $row ? Student::fromArray($row) : null;
@@ -85,7 +104,6 @@ class StudentStore extends Store implements IStudentStore
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     return $row ? Student::fromArray($row) : null;
-
   }
   public function create(Student $student): Student
   {
@@ -208,4 +226,3 @@ class StudentStore extends Store implements IStudentStore
     return (int) $stmt->fetchColumn();
   }
 }
-?>

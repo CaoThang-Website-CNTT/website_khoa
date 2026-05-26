@@ -23,6 +23,7 @@ interface IStudentService
   public function isStudentIdUnique(string $studentId): bool;
   public function createStudent(array $data): ?Student;
   public function getStudentByStudentId(int $student_id): ?Student;
+  public function getStudentByAccountId(int $accountId): ?Student;
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
   public function updateStudent(int $id, array $data): ?Student;
@@ -153,6 +154,23 @@ class StudentService implements IStudentService
     return $student;
   }
 
+  public function getStudentByAccountId(int $accountId): ?Student
+  {
+    $student = $this->_studentStore->getByAccountId($accountId);
+    if (!$student) {
+      return null;
+    }
+
+    if ($student->classroom_id) {
+      $student->classroom = $this->_classroomStore->getById($student->classroom_id);
+    }
+    if ($student->account_id) {
+      $student->account = $this->_accountStore->getById($student->account_id);
+    }
+
+    return $student;
+  }
+
   /** @return Classroom[] */
   public function getAllClassrooms(): array
   {
@@ -167,7 +185,7 @@ class StudentService implements IStudentService
       throw new \Exception('Không tồn tại sinh viên này');
     }
     // Check major tồn tại
-    $major = $this->_classroomStore->getMajorById($data['classroom_id']);
+    $major = $this->_classroomStore->getMajorByClassroomId($data['classroom_id']);
     if (!$major) {
       throw new \RuntimeException('Lớp học không hợp lệ.', 422);
     }

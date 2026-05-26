@@ -42,4 +42,8 @@ export class DataAdapter {
   }
 
   get allRows() { return this.#inlineRows; }
+
+  updateInlineRows(newRows) {
+    this.#inlineRows = newRows;
+  }
 }
