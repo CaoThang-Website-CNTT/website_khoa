@@ -287,6 +287,10 @@ class EditorMetaBinder {
       else if (el.tagName === 'SELECT') {
         el.value = value;
       }
+      // Contenteditable element
+      else if (el.isContentEditable) {
+        el.innerText = value;
+      }
       else {
         el.value = value ?? '';
       }

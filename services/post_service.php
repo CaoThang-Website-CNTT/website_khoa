@@ -207,13 +207,6 @@ class PostService implements IPostService
     return Database::getInstance()->transaction(function () use ($id, $data, $meta, $payload) {
       $post = $this->_postStore->update($id, $data);
 
-      if (isset($data['content_json']) || isset($data['seo_image_url'])) {
-        // Đồng bộ media: gắn các media nội bộ vào post khi nội dung hoặc ảnh đại diện thay đổi
-        // Sử dụng syncWithPost để gỡ bỏ những media không còn được sử dụng
-        $internalMediaIds = $this->extractInternalMediaIds($payload);
-        $this->_mediaStore->syncWithPost($internalMediaIds, $id);
-      }
-
       // Đồng bộ danh mục nếu có gửi lên
       if (isset($meta['category_ids'])) {
         $categoryIds = is_array($meta['category_ids']) ? $meta['category_ids'] : [$meta['category_ids']];
@@ -236,33 +229,6 @@ class PostService implements IPostService
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
-
-  /**
-   * Duyệt qua blocks và meta, lấy mediaId của các image nội bộ.
-   * External URL có mediaId === null → bỏ qua.
-   */
-  private function extractInternalMediaIds(array $payload): array
-  {
-    $ids = [];
-    $blocks = $payload['blocks'] ?? [];
-    $meta = $payload['meta'] ?? [];
-
-    // 1. Lấy từ blocks
-    foreach ($blocks as $block) {
-      if (isset($block['mediaId']) && $block['mediaId'] !== null) {
-        $ids[] = (int) $block['mediaId'];
-      }
-    }
-
-    // 2. Lấy từ featured_image trong meta
-    $featured = $meta['featured_image'] ?? null;
-    if (is_array($featured) && isset($featured['mediaId']) && $featured['mediaId'] !== null) {
-      $ids[] = (int) $featured['mediaId'];
-    }
-
-    // array_unique để tránh duplicate
-    return array_values(array_unique($ids));
-  }
 
   /**
    * Slug resolution: ưu tiên slug client gửi, fallback sang generate từ title.

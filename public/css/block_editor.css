@@ -130,10 +130,8 @@ body {
   right: calc(-1 * var(--right-panel-width));
 }
 
-.be-panel__wrapper:has(#be-left[data-be-panel-state="collapsed"])
-  .be-panel__gap,
-.be-panel__wrapper:has(#be-right[data-be-panel-state="collapsed"])
-  .be-panel__gap {
+.be-panel__wrapper:has(#be-left[data-be-panel-state="collapsed"]) .be-panel__gap,
+.be-panel__wrapper:has(#be-right[data-be-panel-state="collapsed"]) .be-panel__gap {
   width: 0;
 }
 
@@ -185,7 +183,7 @@ body {
   gap: 0.5rem;
 }
 
-.be-block-group + .be-block-group {
+.be-block-group+.be-block-group {
   margin-top: 2rem;
 }
 
@@ -225,8 +223,7 @@ body {
   position: relative;
 }
 
-.be-canvas__content-wrapper {
-}
+.be-canvas__content-wrapper {}
 
 .be-canvas__content {
   max-width: var(--container-2xl);
@@ -247,7 +244,7 @@ body {
 
 .be-canvas-meta__info span,
 .be-canvas-meta__info,
-.be-canvas-meta__info > i {
+.be-canvas-meta__info>i {
   font-size: var(--text-sm);
 }
 
@@ -363,10 +360,12 @@ body {
 .inline-toolbar__btn:hover {
   color: var(--foreground);
 }
+
 .inline-toolbar__btn.is-active {
   background: var(--primary);
   color: var(--primary-foreground);
 }
+
 .inline-toolbar__btn--destructive:hover {
   color: var(--destructive);
 }
@@ -389,6 +388,7 @@ body {
 .inline-toolbar__link-input.is-invalid {
   border-color: var(--destructive);
 }
+
 /* =============================================================
    List view
    ============================================================= */
@@ -444,6 +444,7 @@ body {
   color: var(--primary);
   font-family: var(--font-mono);
 }
+
 /* =============================================================
    BLOCK PREVIEWS — trong canvas, render như trang public thật
    ============================================================= */
@@ -517,6 +518,11 @@ body {
   pointer-events: none;
 }
 
+.be-list-item-text {
+  width: 100%;
+  display: inline-block;
+}
+
 .be-list-item-text:empty::before {
   content: attr(data-placeholder);
   color: var(--muted-foreground);
@@ -538,31 +544,33 @@ body {
   opacity: 0.6;
 }
 
-.be-table-col-handle > *,
-.be-table-row-handle > * {
+.be-table-col-handle>*,
+.be-table-row-handle>* {
   font-size: inherit;
 }
+
 .be-table-col-handle:hover,
 .be-table-row-handle:hover {
   background-color: var(--primary);
   color: var(--primary-foreground);
 }
+
 .be-table-col-handle {
   height: 1rem;
   width: 1.5rem;
   top: 0;
 }
+
 .be-table-row-handle {
   width: 1rem;
   height: 1.5rem;
   left: 0;
 }
+
 .be-table td.be-cell-selected,
 .be-table th.be-cell-selected {
-  background-color: color-mix(
-    in oklab,
-    var(--primary) 5%,
-    transparent
-  ) !important;
+  background-color: color-mix(in oklab,
+      var(--primary) 5%,
+      transparent) !important;
   transition: background-color 0.15s ease;
 }

@@ -61,7 +61,7 @@ export class ListBlock extends EditorBlock {
   }
 
   /** @param {HTMLElement} liEl @param {'start'|'end'} position */
-  #focusLi(liEl, position = 'end') {
+  #focusLi(liEl) {
     const span = liEl.querySelector(':scope > span.be-list-item-text');
     if (!span) return;
     span.focus();
@@ -77,6 +77,9 @@ export class ListBlock extends EditorBlock {
 
     this.dom = rootEl;
     this.#rootEl = rootEl;
+
+    // Gán event handler cấp root el
+    this.#attachEvents(rootEl);
 
     this.#renderTree(this.data.meta.items, rootEl, []);
     return rootEl;
@@ -94,6 +97,7 @@ export class ListBlock extends EditorBlock {
       const li = this.#createLi(node, path);
       listEl.appendChild(li);
 
+      // Đệ quy render list con nếu có
       if (node.children?.length > 0) {
         const subTag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
         const subList = document.createElement(subTag);
@@ -103,6 +107,29 @@ export class ListBlock extends EditorBlock {
       }
     });
   }
+
+  // ─── Re-render ────────────────────────────────────────────────────────────
+  #rerender(afterRender) {
+    const tag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
+
+    if (this.dom.tagName.toLowerCase() !== tag) {
+      const newRoot = document.createElement(tag);
+      newRoot.className = this.dom.className;
+
+      this.#attachEvents(newRoot);
+
+      this.dom.parentElement?.replaceChild(newRoot, this.dom);
+      this.dom = newRoot;
+      this.#rootEl = newRoot;
+    }
+
+    this.dom.innerHTML = '';
+    this.#renderTree(this.data.meta.items, this.dom, []);
+
+    this.bus?.dispatch('block:updated', { block: this });
+    if (afterRender) requestAnimationFrame(afterRender);
+  }
+
 
   /**
    * Tạo <li> kèm <span contenteditable>.
@@ -125,39 +152,60 @@ export class ListBlock extends EditorBlock {
 
     li.appendChild(span);
 
-    // Input: sync content → RichSegment[] ngay
-    span.addEventListener('input', () => {
+    return li;
+  }
+
+  #attachEvents(el) {
+    el.addEventListener('input', (e) => {
+      const span = e.target.closest('.be-list-item-text');
+      if (!span) return;
+
+      const liEl = span.closest('li[data-path]');
+      const path = this.#pathOf(liEl);
+
       const { node: n } = this.#nodeAt(path);
       if (!n) return;
+
       const html = span.innerHTML?.trim() ?? '';
-      n.rich_text = html
-        ? BlockSerializer.tokensToSegments(RichTextParser.parse(html))
-        : [];
+      n.rich_text = html ? BlockSerializer.tokensToSegments(RichTextParser.parse(html)) : [];
     });
 
-    span.addEventListener('paste', (e) => {
+    el.addEventListener('keydown', (e) => {
+      const span = e.target.closest('.be-list-item-text');
+      if (!span) return;
+
+      const liEl = span.closest('li[data-path]');
+      const path = this.#pathOf(liEl);
+
+      this.#handleKeydown(e, liEl, path);
+    });
+
+    el.addEventListener('paste', (e) => {
+      const span = e.target.closest('.be-list-item-text');
+      if (!span) return;
+
       e.preventDefault();
       const text = (e.originalEvent || e).clipboardData.getData('text/plain');
       this.paste(this.esc(text));
     });
-
-    span.addEventListener('keydown', (e) => this.#handleKeydown(e, li, path));
-
-    return li;
   }
 
   // ─── Keyboard ─────────────────────────────────────────────────────────────
 
   #handleKeydown(e, liEl, path) {
+    // New item
     if (e.key === 'Enter') {
       e.preventDefault();
       this.#handleEnter(liEl, path);
+      // Indent (Thụt vào trong)
     } else if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       this.#handleIndent(liEl, path);
+      // Outdent (Thụt ra ngoài)
     } else if (e.key === 'Tab' && e.shiftKey) {
       e.preventDefault();
       this.#handleOutdent(liEl, path);
+      // Delete
     } else if (e.key === 'Backspace') {
       const span = liEl.querySelector(':scope > span.be-list-item-text');
       if (span && span.innerHTML.trim() === '') {
@@ -256,26 +304,6 @@ export class ListBlock extends EditorBlock {
     this.bus?.dispatch('block:add_request', { type: 'blocks/paragraph', afterId: this.id });
   }
 
-  // ─── Re-render ────────────────────────────────────────────────────────────
-
-  #rerender(afterRender) {
-    const tag = this.data.meta.style === 'ordered' ? 'ol' : 'ul';
-
-    if (this.dom.tagName.toLowerCase() !== tag) {
-      const newRoot = document.createElement(tag);
-      newRoot.className = this.dom.className;
-      this.dom.parentElement?.replaceChild(newRoot, this.dom);
-      this.dom = newRoot;
-      this.#rootEl = newRoot;
-    }
-
-    this.dom.innerHTML = '';
-    this.#renderTree(this.data.meta.items, this.dom, []);
-
-    this.bus?.dispatch('block:updated', { block: this });
-    if (afterRender) requestAnimationFrame(afterRender);
-  }
-
   // ─── Overrides ────────────────────────────────────────────────────────────
 
   /**
@@ -329,12 +357,12 @@ export class ListBlock extends EditorBlock {
     return wrap;
   }
 
-  focus(bus, position = 'end') {
+  focus(position = 'end') {
     if (!this.dom) return;
 
     const all = Array.from(this.dom.querySelectorAll('li[data-path]'));
     const target = position === 'end' ? all[all.length - 1] : all[0];
-    if (target) this.#focusLi(target, position);
+    if (target) this.#focusLi(target);
 
     this.bus.dispatch('block:selected', { blockId: this.id });
   }
