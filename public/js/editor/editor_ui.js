@@ -294,7 +294,6 @@ class EditorMetaBinder {
   }
 
   #syncPreview(key, value, allMeta) {
-    console.log(key, this.previews.get(key), allMeta);
     this.previews.get(key)?.forEach(el => {
       const action = el.dataset.bePreviewAction || 'text';
       switch (action) {

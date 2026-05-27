@@ -1,10 +1,6 @@
 <?php
 
-<<<<<<< HEAD
-use App\Controllers\{AuthController, DashboardController, MediaController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController};
-=======
-use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
->>>>>>> 2a710bff2f6bd8656ed639b9b3b6f4e9c8aad4bc
+use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
 use App\Core\Router;
 
 $router->get('/', [SiteController::class, 'index']);
@@ -141,7 +137,7 @@ $router->prefix('admin')->group(function (Router $router) {
     $router->post('/{group}', [WebSettingsController::class, 'batchUpdate']);
     $router->post('/delete/{id}', [WebSettingsController::class, 'destroy']);
   });
-});
+
   // Internship Batches
   $router->prefix('internship_batches')->group(function ($router) {
     $router->get('/', [InternshipBatchController::class, 'index']);

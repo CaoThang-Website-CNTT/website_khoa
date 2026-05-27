@@ -1,8 +1,122 @@
 <?php
 $authUser = request()->session()->authUser();
-$role = $authUser['role'] ?? 'guest';
+$role = $authUser['role'] ?? 'admin';
 $currentPath = request()->path();
+
+// Định nghĩa cấu trúc menu theo từng Role
+$menuConfig = [
+    'admin' => [
+        [
+            'group_label' => 'Chức năng chính',
+            'items' => [
+                [
+                    'type' => 'link',
+                    'label' => 'Tổng Quan',
+                    'icon' => 'fa-solid fa-house',
+                    'url' => 'admin',
+                    'active' => str_ends_with($currentPath, 'admin')
+                ],
+                [
+                    'type' => 'collapsible',
+                    'label' => 'Nội dung',
+                    'icon' => 'fa-solid fa-list',
+                    'children' => [
+                        ['label' => 'Bài Viết', 'url' => 'admin/posts'],
+                        ['label' => 'Danh Mục', 'url' => 'admin/categories'],
+                        ['label' => 'Thư Viện', 'url' => 'admin/media'],
+                    ]
+                ],
+                [
+                    'type' => 'collapsible',
+                    'label' => 'Thực tập tốt nghiệp',
+                    'icon' => 'fa-solid fa-house-laptop',
+                    'children' => [
+                        ['label' => 'Quản lý đợt', 'url' => 'admin/internship_batches'],
+                        ['label' => 'Quản lý công ty', 'url' => 'admin/companies'],
+                    ]
+                ]
+            ]
+        ],
+        [
+            'group_label' => 'Hệ Thống',
+            'items' => [
+                [
+                    'type' => 'collapsible',
+                    'label' => 'Giao Diện',
+                    'icon' => 'fa-solid fa-palette',
+                    'children' => [
+                        ['label' => 'Menu', 'url' => 'admin/menus'],
+                        ['label' => 'Carousel', 'url' => 'admin/carousels'],
+                    ]
+                ],
+                [
+                    'type' => 'collapsible',
+                    'label' => 'Cài Đặt',
+                    'icon' => 'fa-solid fa-gear',
+                    'children' => [
+                        ['label' => 'Web Settings', 'url' => 'admin/web_settings'],
+                    ]
+                ]
+            ]
+        ]
+    ],
+    'teacher' => [
+        [
+            'group_label' => 'Cá nhân',
+            'items' => [
+                [
+                    'type' => 'link',
+                    'label' => 'Tổng Quan',
+                    'icon' => 'fa-solid fa-user',
+                    'url' => 'teacher',
+                    'active' => str_contains($currentPath, 'teacher') && !str_contains($currentPath, 'teacher/internship_batches')
+                ],
+                [
+                    'type' => 'link',
+                    'label' => 'Thực tập tốt nghiệp',
+                    'icon' => 'fa-solid fa-briefcase',
+                    'url' => 'teacher/internship_batches',
+                    'active' => str_contains($currentPath, 'teacher/internship_batches')
+                ]
+            ]
+        ]
+    ],
+    'student' => [
+        [
+            'group_label' => 'Cá nhân',
+            'items' => [
+                [
+                    'type' => 'link',
+                    'label' => 'Tổng Quan',
+                    'icon' => 'fa-solid fa-user',
+                    'url' => 'student',
+                    'active' => str_contains($currentPath, 'student') && !str_contains($currentPath, 'student/internship') && !str_contains($currentPath, 'student/graduation')
+                ],
+                [
+                    'type' => 'collapsible',
+                    'label' => 'Thực tập tốt nghiệp',
+                    'icon' => 'fa-solid fa-briefcase',
+                    'children' => [
+                        ['label' => 'Đợt thực tập', 'url' => 'student/internship'],
+                        ['label' => 'Giấy giới thiệu', 'url' => 'student/referral_letter'],
+                    ]
+                ],
+                [
+                    'type' => 'link',
+                    'label' => 'Đồ Án Tốt Nghiệp',
+                    'icon' => 'fa-solid fa-graduation-cap',
+                    'url' => 'student/graduation',
+                    'active' => str_contains($currentPath, 'student/graduation')
+                ]
+            ]
+        ]
+    ]
+];
+
+// Lấy danh sách group menu theo role hiện tại, mặc định mảng rỗng nếu không khớp role
+$currentGroups = $menuConfig[$role] ?? [];
 ?>
+
 <div class="sidebar__gap"></div>
 <div class="sidebar__container">
   <aside class="sidebar" id="sidebar">
@@ -24,199 +138,51 @@ $currentPath = request()->path();
 
     <div class="sidebar__content">
       <nav class="sidebar__nav">
-        <?php if ($role === 'admin'): ?>
-        <!-- ── ADMIN MENU ─────────────────────────────────────────── -->
-        <div class="sidebar__group">
-          <div class="sidebar__group-label">Chức năng chính</div>
-          <ul class="sidebar__menu">
+        
+        <?php foreach ($currentGroups as $group): ?>
+          <div class="sidebar__group">
+            <div class="sidebar__group-label"><?= htmlspecialchars($group['group_label']) ?></div>
+            <ul class="sidebar__menu">
+              
+              <?php foreach ($group['items'] as $item): ?>
+                
+                <?php if ($item['type'] === 'link'): ?>
+                  <li class="sidebar__menu-item">
+                    <a class="sidebar__menu-btn <?= ($item['active'] ?? false) ? 'active' : '' ?>" href="<?= url($item['url']) ?>">
+                      <i class="<?= $item['icon'] ?>"></i>
+                      <?= htmlspecialchars($item['label']) ?>
+                    </a>
+                  </li>
+                  
+                <?php elseif ($item['type'] === 'collapsible'): ?>
+                  <li class="sidebar__menu-item">
+                    <div class="collapsible">
+                      <div class="sidebar__menu-btn">
+                        <button class="collapsible__trigger">
+                          <i class="<?= $item['icon'] ?>"></i>
+                          <?= htmlspecialchars($item['label']) ?>
+                          <i class="fa-solid fa-angle-down"></i>
+                        </button>
+                      </div>
+                      <div class="collapsible__content">
+                        <ul class="sidebar__menu-sub">
+                          <?php foreach ($item['children'] as $child): ?>
+                            <li class="sidebar__menu-sub-item">
+                              <a href="<?= url($child['url']) ?>" class="sidebar__menu-sub-item-btn"><?= htmlspecialchars($child['label']) ?></a>
+                            </li>
+                          <?php endforeach; ?>
+                        </ul>
+                      </div>
+                    </div>
+                  </li>
+                <?php endif; ?>
 
-            <!-- ── Tổng quan ─────────────────────────────────────────── -->
-            <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn <?= str_ends_with($currentPath, 'admin') ? 'active' : '' ?>"
-                href="<?= url('admin') ?>">
-                <i class="fa-solid fa-house"></i>
-                Tổng Quan
-              </a>
-            </li>
+              <?php endforeach; ?>
+              
+            </ul>
+          </div>
+        <?php endforeach; ?>
 
-            <!-- ── Nội dung ───────────────────────────────────────────── -->
-            <li class="sidebar__menu-item">
-              <div class="collapsible">
-                <div class="sidebar__menu-btn">
-                  <button class="collapsible__trigger">
-                    <i class="fa-solid fa-list"></i>
-                    Nội dung
-                    <i class="fa-solid fa-angle-down"></i>
-                  </button>
-                </div>
-                <div class="collapsible__content">
-                  <ul class="sidebar__menu-sub">
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/posts') ?>" class="sidebar__menu-sub-item-btn">Bài Viết</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/categories') ?>" class="sidebar__menu-sub-item-btn">Danh Mục</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/media') ?>" class="sidebar__menu-sub-item-btn">Thư Viện</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
-
-            <!-- ── Thực tập ────────────────────────────────────────────── -->
-            <li class="sidebar__menu-item">
-              <div class="collapsible">
-                <div class="sidebar__menu-btn">
-                  <button class="collapsible__trigger">
-                    <i class="fa-solid fa-house-laptop"></i>
-                    Thực tập tốt nghiệp
-                    <i class="fa-solid fa-angle-down"></i>
-                  </button>
-                </div>
-                <div class="collapsible__content">
-                  <ul class="sidebar__menu-sub">
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/internship_batches') ?>" class="sidebar__menu-sub-item-btn">Quản lý đợt</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/companies') ?>" class="sidebar__menu-sub-item-btn">Quản lý công ty</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <div class="sidebar__group">
-          <div class="sidebar__group-label">Hệ Thống</div>
-          <ul class="sidebar__menu">
-            <!-- ── Giao diện ──────────────────────────────────────────── -->
-            <li class="sidebar__menu-item">
-              <div class="collapsible">
-                <div class="sidebar__menu-btn">
-                  <button class="collapsible__trigger">
-                    <i class="fa-solid fa-palette"></i>
-                    Giao Diện
-                    <i class="fa-solid fa-angle-down"></i>
-                  </button>
-                </div>
-                <div class="collapsible__content">
-                  <ul class="sidebar__menu-sub">
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/menus') ?>" class="sidebar__menu-sub-item-btn">Menu</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/carousels') ?>" class="sidebar__menu-sub-item-btn">Carousel</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
-
-            <!-- ── Cài đặt ────────────────────────────────────────────── -->
-            <li class="sidebar__menu-item">
-              <div class="collapsible">
-                <div class="sidebar__menu-btn">
-                  <button class="collapsible__trigger">
-                    <i class="fa-solid fa-gear"></i>
-                    Cài Đặt
-                    <i class="fa-solid fa-angle-down"></i>
-                  </button>
-                </div>
-                <div class="collapsible__content">
-                  <ul class="sidebar__menu-sub">
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('admin/web_settings') ?>" class="sidebar__menu-sub-item-btn">Web Settings</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <?php elseif ($role === 'teacher'): ?>
-        <!-- ── TEACHER MENU ───────────────────────────────────────── -->
-        <div class="sidebar__group">
-          <div class="sidebar__group-label">Cá nhân</div>
-          <ul class="sidebar__menu">
-            <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'teacher') ? 'active' : '' ?>"
-                href="<?= url('teacher') ?>">
-                <i class="fa-solid fa-user"></i>
-                Tổng Quan
-              </a>
-            </li>
-            <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'teacher/internship_batches') ? 'active' : '' ?>"
-                href="<?= url('teacher/internship_batches') ?>">
-                <i class="fa-solid fa-briefcase"></i>
-                Thực tập tốt nghiệp
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <?php elseif ($role === 'student'): ?>
-        <!-- ── STUDENT MENU ───────────────────────────────────────── -->
-        <div class="sidebar__group">
-          <div class="sidebar__group-label">Cá nhân</div>
-          <ul class="sidebar__menu">
-            <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student') ? 'active' : '' ?>"
-                href="<?= url('student') ?>">
-                <i class="fa-solid fa-user"></i>
-                Tổng Quan
-              </a>
-            </li>
-            <li class="sidebar__menu-item">
-              <div class="collapsible">
-                <div class="sidebar__menu-btn">
-                  <button class="collapsible__trigger">
-                    <i class="fa-solid fa-briefcase"></i>
-                    Thực tập tốt nghiệp
-                    <i class="fa-solid fa-angle-down"></i>
-                  </button>
-                </div>
-                <div class="collapsible__content">
-                  <ul class="sidebar__menu-sub">
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('student/internship') ?>" class="sidebar__menu-sub-item-btn">Đợt thực tập</a>
-                    </li>
-                    <li class="sidebar__menu-sub-item">
-                      <a href="<?= url('student/referral_letter') ?>" class="sidebar__menu-sub-item-btn">Giấy giới
-                        thiệu</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </li>
-            <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn <?= str_contains($currentPath, 'student/graduation') ? 'active' : '' ?>"
-                href="<?= url('student/graduation') ?>">
-                <i class="fa-solid fa-graduation-cap"></i>
-                Đồ Án Tốt Nghiệp
-              </a>
-            </li>
-          </ul>
-        </div>
-        <?php endif; ?>
-
-        <!-- ── CHUNG ────────────────────────────────────────────────── -->
-        <div class="sidebar__group">
-          <div class="sidebar__group-label">Tài khoản</div>
-          <ul class="sidebar__menu">
-            <li class="sidebar__menu-item">
-              <a class="sidebar__menu-btn" href="<?= url('logout') ?>" style="color: var(--destructive);">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                Đăng xuất
-              </a>
-            </li>
-          </ul>
-        </div>
       </nav>
     </div>
 
