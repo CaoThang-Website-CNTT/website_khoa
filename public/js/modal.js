@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
   ModalHandler.instance.init();
-  window.modalHandler = ModalHandler.instance;
 });
 
 

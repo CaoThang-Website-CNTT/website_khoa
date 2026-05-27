@@ -1,9 +1,6 @@
-import { ColumnRegistry } from './column_registry.js';
-import { ColumnDef } from './column_def.js';
-import { DataAdapter } from './data_adapter.js';
+import { ColumnDef, ColumnRegistry } from './column_registry.js';
 import { SortController } from './sort_controller.js';
 import { FilterController } from './filter_controller.js';
-import { PaginationController } from './pagination_controller.js';
 import { TableRenderer } from './table_renderer.js';
 
 export const DEFAULT_FILTER_OPS = {
@@ -16,11 +13,23 @@ export const DEFAULT_FILTER_OPS = {
 class TableInstance {
   id;
   root;
+  #state = {
+    /** @type {[rowId: string]: boolean} */
+    rowSelection,
+    /** @type {{pageIndex: number, pageSize: number}} */
+    pagination,
+    /** @type {Array<{ id: string, asc: boolean }>} */
+    sorting,
+    /** @type {any} */
+    globalFilter,
+    /** @type {Array<{ id: string, value: any }>} */
+    columnFilters
+  };
+  selectable = false;
+  data = [];
   columns;
-  adapter;
   sort;
   filter;
-  pagination;
   #renderer;
   #table = null;
   #loading = false;
@@ -28,21 +37,20 @@ class TableInstance {
   constructor(root) {
     this.root = root;
     this.id = root.dataset.tm;
-    if (!this.id) throw new Error('[TableManager] Missing data-tm id');
+    if (!this.id) throw new Error('[TableManager] Thiếu data-tm=[id]');
+
+    this.state = {
+      rowSelection: {},
+      pagination: { pageIndex: 0, pageSize: 20 },
+      sorting: [],
+      globalFilter: '',
+      columnFilters: []
+    };
 
     this.columns = new ColumnRegistry(root, DEFAULT_FILTER_OPS);
 
-    // Tự động thêm cột Drag Handle & Checkbox ở đầu
-    this.columns.all.unshift({
-      key: '__selector',
-      label: '',
-      width: '48px',
-      align: 'center',
-      sortable: false,
-      isSpecial: true
-    });
-    const selectable = 'tmSelectable' in root.dataset && root.dataset.tmSelectable === 'true';
-    if (selectable) {
+    this.selectable = "tmSelectable" in root.dataset;
+    if (this.selectable) {
       this.idKey = root.dataset.tmIdKey ?? 'id';
       this.selectedIds = new Set();
       this.columns.prepend(new ColumnDef({
@@ -83,39 +91,10 @@ class TableInstance {
       }));
     }
 
-    const inlineRows = TableInstance.#readInlineData(this.id);
-    const mode = root.dataset.tmMode ?? 'server';
-    const src = root.dataset.tmSrc ?? null;
-
-    this.adapter = new DataAdapter({ src, mode, inlineRows: inlineRows.rows });
-
-    const pageParam = root.dataset.tmPageParam ?? `${this.id}_page`;
-    const strategy = root.dataset.tmStrategy ?? 'qs';
-    const initPage = Number(new URLSearchParams(window.location.search).get(pageParam)) || inlineRows.page || 1;
-
-    this.sort = new SortController(() => { if (this.adapter.isServerDriven) this.reload(); else this.render(); });
-    this.filter = new FilterController(() => { if (this.adapter.isServerDriven) this.reload(); else this.render(); });
-
-    this.pagination = new PaginationController({
-      page: initPage,
-      limit: inlineRows.limit ?? 20,
-      total: inlineRows.total ?? inlineRows.rows.length,
-      pageParam,
-      strategy,
-      onChange: (page) => {
-        if (strategy === 'ajax') {
-          this.reload();
-        }
-      },
-    });
+    this.sort = new SortController(() => { this.render(); });
+    this.filter = new FilterController(() => { this.render(); });
 
     this.#renderer = new TableRenderer(this);
-  }
-
-  static #readInlineData(id) {
-    const el = document.querySelector(`script[data-tm-data="${id}"]`);
-    if (!el) return { rows: [], total: 0, page: 1, limit: 20 };
-    try { return JSON.parse(el.textContent); } catch { return { rows: [], total: 0, page: 1, limit: 20 }; }
   }
 
   updateHeaderCheckbox() {
@@ -155,6 +134,7 @@ class TableInstance {
     }
   }
 
+  // Khởi tạo các element
   init() {
     const wrapper = document.createElement('div');
     wrapper.className = 'tm-wrapper';
@@ -227,7 +207,6 @@ class TableInstance {
     this.root.appendChild(wrapper);
     console.log(`[TableManager] Bảng "${this.id}" đã được khởi tạo.`, {
       columns: this.columns.all.length,
-      mode: this.adapter.mode,
       hasPagination: !!(hasInternalTemplate || isExternal)
     });
     this.render();
@@ -235,27 +214,27 @@ class TableInstance {
 
   render() {
     if (!this.#table) return;
-    const { mode } = this.adapter;
-    let rows = this.adapter.allRows;
+    let rows = [];
 
-    if (mode === 'client' || !this.adapter.isServerDriven) {
-      const searchKeys = this.columns.all.map(c => c.key);
-      rows = rows.filter(r => this.filter.predicate(r, searchKeys));
+    const searchKeys = this.columns.all.map(c => c.key);
+    rows = rows.filter(r => this.filter.predicate(r, searchKeys));
 
-      const cmp = this.sort.comparator();
-      if (cmp) rows = [...rows].sort(cmp);
+    const cmp = this.sort.comparator();
+    if (cmp) rows = [...rows].sort(cmp);
 
-      this.pagination.update({ total: rows.length });
+    this.pagination.update({ total: rows.length });
 
-      const { page, limit } = this.pagination;
-      if (limit !== Infinity) {
-        rows = rows.slice((page - 1) * limit, page * limit);
-      }
+    const { page, limit } = this.pagination;
+    if (limit !== Infinity) {
+      rows = rows.slice((page - 1) * limit, page * limit);
     }
 
     this.#renderer.renderRows(rows, this.#table);
     this.#renderer.updateSortUI(this.#table, this.sort.state);
-    this.#renderer.renderPagination(this.pagination);
+    this.#renderer.renderPagination({
+      pagState: this.#state.pagination,
+      totalRows: this.data.length,
+    });
     this.#renderer.renderFilters(this.filter.rules);
     console.log(`[TableManager] Render "${this.id}":`, {
       rows: rows.length,
@@ -264,49 +243,40 @@ class TableInstance {
     });
   }
 
-  async reload() {
-    if (this.#loading) return;
-    this.#loading = true;
-    this.#setLoading(true);
-    const params = {
-      ...this.sort.toParams(),
-      ...this.filter.toParams(),
-      ...this.pagination.toParams(),
-    };
-
-    try {
-      const result = await this.adapter.fetch(params);
-      this.pagination.update(result);
-      this.#renderer.renderRows(result.rows, this.#table);
-      this.#renderer.updateSortUI(this.#table, this.sort.state);
-      this.#renderer.renderPagination(this.pagination);
-    } catch (err) {
-      console.error('[TableManager] reload error:', err);
-    } finally {
-      this.#loading = false;
-      this.#setLoading(false);
-    }
+  // Public API
+  // Pagination
+  canPrevPage() {
+    return this.#state.pagination.pageIndex > 0;
+  }
+  canNextPage() {
+    return this.#state.pagination.pageIndex < this.#state.pagination.totalPages - 1;
+  }
+  nextPage() {
+    this.#state.pagination.pageIndex++;
+    this.render();
+  }
+  prevPage() {
+    this.#state.pagination.pageIndex--;
+    this.render();
+  }
+  setPageIndex(index) {
+    this.#state.pagination.pageIndex = index;
+    this.render();
+  }
+  setPageSize(size) {
+    this.#state.pagination.pageSize = size;
+    this.render();
+  }
+  getVisibleRows() {
+    return this.data.slice(
+      (this.#state.pagination.pageIndex - 1) * this.#state.pagination.pageSize,
+      this.#state.pagination.pageIndex * this.#state.pagination.pageSize
+    );
   }
 
   #setLoading(on) {
     const overlay = this.root.querySelector('[data-tm-loading]');
     if (overlay) overlay.style.display = on ? 'flex' : 'none';
-  }
-
-  getSelectedIds() {
-    return Array.from(this.selectedIds || []);
-  }
-
-  clearSelection() {
-    if (!this.selectedIds) return;
-    this.selectedIds.clear();
-
-    const checkboxes = this.root.querySelectorAll('.tm-row-checkbox, .tm-check-all');
-    checkboxes.forEach(cb => cb.checked = false);
-
-    this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
-      detail: { selectedIds: [] }
-    }));
   }
 
   updateHeaderCheckbox() {
@@ -325,19 +295,47 @@ class TableInstance {
 }
 
 export class TableManager {
+  static #instance = null;
   static #registry = new Map();
 
-  static init() {
-    document.querySelectorAll('[data-tm]:not([data-tm-initialized])').forEach(root => {
+  #isBootstrapped = false;
+
+  constructor() {
+    if (TableManager.#instance) {
+      return TableManager.#instance;
+    }
+    TableManager.#instance = this;
+
+    this.#bootstrap();
+  }
+
+  static get instance() {
+    return TableManager.#instance || new TableManager();
+  }
+
+  #bootstrap() {
+    if (this.#isBootstrapped) return;
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.init());
+    } else {
+      this.init();
+    }
+    this.#isBootstrapped = true;
+  }
+
+  init() {
+    document.querySelectorAll('[data-tm]').forEach(root => {
       try {
         const id = root.dataset.tm;
-        if (TableManager.#registry.has(id)) return;
+        if (TableManager.#registry.has(id)) {
+          console.warn(`[TableManager] Đã đăng ký bảng: ${id}`);
+          return;
+        }
 
         const inst = new TableInstance(root);
         TableManager.#registry.set(inst.id, inst);
         inst.init();
-        root.dataset.tmInitialized = 'true';
-        console.log(`[TableManager] Đã đăng ký bảng: ${id}`);
       } catch (e) {
         console.error('[TableManager] Không thể khởi tạo bảng:', e);
       }

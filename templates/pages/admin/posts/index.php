@@ -34,7 +34,7 @@
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="tm-container" data-tm="posts_table" data-tm-mode="client" data-tm-searchable 
+<div class="tm-container" id="posts_table" data-tm="posts_table" data-tm-mode="client" data-tm-selectable data-tm-searchable 
   data-tm-toolbar-target="#posts-table-header">
 
   <!-- Khai báo phân trang -->
@@ -86,4 +86,13 @@
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()
   ]) ?>
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log(TableManager.get("posts_table"));
+  })
+
+  document.querySelector("#posts_table").addEventListener("tm:selection-change", (e)=>{
+  })
 </script>

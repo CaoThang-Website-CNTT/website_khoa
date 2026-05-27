@@ -357,16 +357,28 @@ export class TableRenderer {
    * Render phân trang vào container [data-tm-pagination="id"], nếu có.
    * Cũng cập nhật các node văn bản [data-tm-page-info="id"].
    */
-  renderPagination(pag) {
+  renderPagination({
+    pagState,
+    totalRows
+  }) {
     const id = this.#inst.id;
     const container = document.querySelector(`[data-tm-pagination="${id}"]`);
     if (!container) return;
     container.innerHTML = '';
-    const { page, totalPages, strategy } = pag;
-    const pages = pag.window();
+    const { pageIndex, pageSize } = pagState;
+    const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+    const currentPage = pageIndex + 1;
+
+    const pages = totalPages <= 7
+      ? Array.from({ length: totalPages }, (_, i) => i + 1)
+      : currentPage <= 4
+        ? [1, 2, 3, 4, 5, '…', totalPages]
+        : currentPage >= totalPages - 3
+          ? [1, '…', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+          : [1, '…', currentPage - 1, currentPage, currentPage + 1, '…', totalPages];
 
     const makeItem = (label, targetPage, disabled = false, active = false) => {
-      const el = strategy === 'qs' && !disabled && !active
+      const el = !disabled && !active
         ? document.createElement('a')
         : document.createElement('button');
 
@@ -375,7 +387,7 @@ export class TableRenderer {
       if (disabled) el.classList.add('tm-page-btn--disabled');
       el.innerHTML = label;
 
-      if (strategy === 'qs' && el.tagName === 'A') {
+      if (el.tagName === 'A') {
         el.href = pag.buildUrl(targetPage);
       } else {
         el.type = 'button';
