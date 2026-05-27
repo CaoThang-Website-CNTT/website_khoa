@@ -6,6 +6,75 @@ export class TableRenderer {
   get #root() { return this.#inst.root; }
   get #cols() { return this.#inst.columns.all; }
 
+  buildLayout() {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tm-wrapper';
+    wrapper.dataset.tmWrapper = this.#inst.id;
+
+    const headerTarget = this.#inst.root.dataset.tmToolbarTarget;
+    const externalHeader = headerTarget ? document.querySelector(headerTarget) : null;
+    const toolbar = this.buildToolbar();
+
+    if (externalHeader) {
+      externalHeader.appendChild(toolbar);
+    } else {
+      const header = document.createElement('div');
+      header.className = 'tm-header-controls';
+      header.appendChild(toolbar);
+      wrapper.appendChild(header);
+    }
+
+    const dataWrapper = document.createElement('div');
+    dataWrapper.className = 'tm-data-wrapper';
+
+    const scroll = document.createElement('div');
+    scroll.className = 'tm-scroll';
+    const table = this.buildTable();
+    scroll.appendChild(table);
+    dataWrapper.appendChild(scroll);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'tm-loading-overlay';
+    overlay.dataset.tmLoading = '';
+    overlay.innerHTML = '<div class="tm-spinner"></div>';
+    dataWrapper.appendChild(overlay);
+
+    const footerTarget = this.#inst.root.dataset.tmFooterTarget;
+    const externalFooter = footerTarget ? document.querySelector(footerTarget) : null;
+    const pagId = this.#inst.id;
+    const hasInternalTemplate = this.#inst.root.querySelector('template[data-tm-pagination]');
+    const externalPag = document.querySelector(`[data-tm-pagination="${pagId}"]`);
+    const isExternal = externalPag && !this.#inst.root.contains(externalPag);
+    const hasPagination = !!(hasInternalTemplate || isExternal);
+
+    if (hasPagination) {
+      const footer = document.createElement('div');
+      footer.className = 'tm-footer-controls';
+
+      const info = document.createElement('div');
+      info.className = 'tm-page-info';
+      info.dataset.tmPageInfo = pagId;
+      footer.appendChild(info);
+
+      if (!isExternal) {
+        const pagContainer = document.createElement('div');
+        pagContainer.dataset.tmPagination = pagId;
+        footer.appendChild(pagContainer);
+      }
+
+      if (externalFooter) {
+        externalFooter.appendChild(footer);
+      } else {
+        dataWrapper.appendChild(footer);
+      }
+    }
+
+    wrapper.appendChild(dataWrapper);
+    this.#inst.root.appendChild(wrapper);
+
+    return { table, hasPagination };
+  }
+
   // ── Toolbar (tìm kiếm + bộ lọc) ───────────────────────────────────────────
   buildToolbar() {
     const inst = this.#inst;
@@ -127,8 +196,8 @@ export class TableRenderer {
       if (!val && col.filterType !== 'select') return;
       inst.filter.setRule(col.key, op, val);
 
-      if (DropdownHandler.instance) {
-        DropdownHandler.instance.close(wrap.dataset.dropdownId);
+      if (window.DropdownHandler?.instance) {
+        window.DropdownHandler.instance.close(wrap.dataset.dropdownId);
       }
     };
     applyBtn.addEventListener('click', activate);
@@ -139,9 +208,9 @@ export class TableRenderer {
       valueEl.addEventListener('keydown', e => { if (e.key === 'Enter') activate(); });
     }
 
-    if (DropdownHandler.instance) {
+    if (window.DropdownHandler?.instance) {
       console.log(`[TableManager] Đã đăng ký dropdown cho cột: ${col.label}`);
-      requestAnimationFrame(() => DropdownHandler.instance.register(wrap));
+      requestAnimationFrame(() => window.DropdownHandler.instance.register(wrap));
     } else {
       console.warn('[TableManager] DropdownHandler không được tìm thấy! Filter sẽ không hoạt động.');
     }
@@ -326,6 +395,8 @@ export class TableRenderer {
               <input type="checkbox" class="tm-bulk-checkbox">
             </div>
           `;
+        } else if (col.key === '_checkbox') {
+          td.appendChild(this.#buildRowCheckbox(row));
         } else if (col.render) {
           td.appendChild(col.render(row, value));
         } else {
@@ -339,6 +410,35 @@ export class TableRenderer {
     if (typeof this.#inst.updateHeaderCheckbox === 'function') {
       this.#inst.updateHeaderCheckbox();
     }
+  }
+
+  #buildRowCheckbox(row) {
+    const wrap = document.createElement('div');
+    wrap.className = 'tm-checkbox-wrapper';
+    wrap.innerHTML = `
+      <label class="checkbox">
+        <input type="checkbox" class="checkbox__input tm-row-checkbox">
+        <span class="checkbox__label"></span>
+      </label>
+    `;
+    const input = wrap.querySelector('input');
+    const rawId = row?.[this.#inst.idKey];
+    const id = rawId == null ? '' : String(rawId);
+    input.value = id;
+    input.checked = this.#inst.selectedIds?.has(id) ?? false;
+    input.addEventListener('change', (e) => {
+      if (!this.#inst.selectedIds) return;
+      if (e.target.checked) {
+        this.#inst.selectedIds.add(id);
+      } else {
+        this.#inst.selectedIds.delete(id);
+      }
+      this.#inst.updateHeaderCheckbox();
+      this.#root.dispatchEvent(new CustomEvent('tm:selection-change', {
+        detail: { selectedIds: Array.from(this.#inst.selectedIds) }
+      }));
+    });
+    return wrap;
   }
 
   /** Cập nhật chỉ báo sắp xếp trong <thead> */
@@ -388,18 +488,20 @@ export class TableRenderer {
       el.innerHTML = label;
 
       if (el.tagName === 'A') {
-        el.href = pag.buildUrl(targetPage);
+        const url = new URL(window.location.href);
+        url.searchParams.set(`${id}_page`, String(targetPage));
+        el.href = url.toString();
       } else {
         el.type = 'button';
         if (!disabled && !active) {
-          el.addEventListener('click', () => pag.goTo(targetPage));
+          el.addEventListener('click', () => this.#inst.setPageIndex(targetPage - 1));
         }
       }
       el.dataset.tmPage = targetPage;
       return el;
     };
 
-    container.appendChild(makeItem('<i class="fa-solid fa-angle-left"></i>', page - 1, page <= 1));
+    container.appendChild(makeItem('<i class="fa-solid fa-angle-left"></i>', currentPage - 1, currentPage <= 1));
     pages.forEach(p => {
       if (p === '…') {
         const span = document.createElement('span');
@@ -407,14 +509,14 @@ export class TableRenderer {
         span.textContent = '…';
         container.appendChild(span);
       } else {
-        container.appendChild(makeItem(p, p, false, p === page));
+        container.appendChild(makeItem(p, p, false, p === currentPage));
       }
     });
-    container.appendChild(makeItem('<i class="fa-solid fa-angle-right"></i>', page + 1, page >= totalPages));
+    container.appendChild(makeItem('<i class="fa-solid fa-angle-right"></i>', currentPage + 1, currentPage >= totalPages));
 
     // Văn bản thông tin trang
     document.querySelectorAll(`[data-tm-page-info="${id}"]`).forEach(el => {
-      el.textContent = `Trang ${page} / ${totalPages}`;
+      el.textContent = `Trang ${currentPage} / ${totalPages}`;
     });
   }
   #buildCustomSelect(options, placeholder, defaultValue = '') {
@@ -440,8 +542,8 @@ export class TableRenderer {
       el._currentValue = e.detail.value;
     });
 
-    if (window.SelectHandler) {
-      requestAnimationFrame(() => SelectHandler.instance.register(el));
+    if (window.SelectHandler?.instance) {
+      requestAnimationFrame(() => window.SelectHandler.instance.register(el));
     }
 
     return el;

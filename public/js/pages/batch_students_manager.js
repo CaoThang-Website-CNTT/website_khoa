@@ -54,8 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tm || retries > 5) {
         clearInterval(interval);
         if (tm) {
-          tm.adapter.updateInlineRows(tableData);
-          tm.render();
+          tm.loadData(tableData);
           attachTableEvents();
         }
       }

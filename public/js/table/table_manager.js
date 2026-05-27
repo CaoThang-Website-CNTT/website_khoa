@@ -14,16 +14,11 @@ class TableInstance {
   id;
   root;
   #state = {
-    /** @type {[rowId: string]: boolean} */
-    rowSelection,
-    /** @type {{pageIndex: number, pageSize: number}} */
-    pagination,
-    /** @type {Array<{ id: string, asc: boolean }>} */
-    sorting,
-    /** @type {any} */
-    globalFilter,
-    /** @type {Array<{ id: string, value: any }>} */
-    columnFilters
+    rowSelection: {},
+    pagination: { pageIndex: 0, pageSize: 20 },
+    sorting: [],
+    globalFilter: '',
+    columnFilters: []
   };
   selectable = false;
   data = [];
@@ -32,20 +27,11 @@ class TableInstance {
   filter;
   #renderer;
   #table = null;
-  #loading = false;
 
   constructor(root) {
     this.root = root;
     this.id = root.dataset.tm;
     if (!this.id) throw new Error('[TableManager] Thiếu data-tm=[id]');
-
-    this.state = {
-      rowSelection: {},
-      pagination: { pageIndex: 0, pageSize: 20 },
-      sorting: [],
-      globalFilter: '',
-      columnFilters: []
-    };
 
     this.columns = new ColumnRegistry(root, DEFAULT_FILTER_OPS);
 
@@ -58,36 +44,7 @@ class TableInstance {
         label: '',
         sortable: false,
         width: '40px',
-        align: 'center',
-        render: (row) => {
-          const frag = document.createDocumentFragment();
-          const cbWrap = document.createElement('div');
-          cbWrap.className = 'tm-checkbox-wrapper';
-          cbWrap.innerHTML = `
-            <label class="checkbox">
-              <input type="checkbox" class="checkbox__input tm-row-checkbox" value="${row[this.idKey]}">
-              <span class="checkbox__label"></span>
-            </label>
-          `;
-          const input = cbWrap.querySelector('input');
-          const id = String(row[this.idKey]);
-          if (this.selectedIds.has(id)) {
-            input.checked = true;
-          }
-          input.addEventListener('change', (e) => {
-            if (e.target.checked) {
-              this.selectedIds.add(id);
-            } else {
-              this.selectedIds.delete(id);
-            }
-            this.updateHeaderCheckbox();
-            this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
-              detail: { selectedIds: Array.from(this.selectedIds) }
-            }));
-          });
-          frag.appendChild(cbWrap);
-          return frag;
-        }
+        align: 'center'
       }));
     }
 
@@ -136,85 +93,18 @@ class TableInstance {
 
   // Khởi tạo các element
   init() {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'tm-wrapper';
-    wrapper.dataset.tmWrapper = this.id;
-
-    // Header Controls
-    const headerTarget = this.root.dataset.tmToolbarTarget;
-    const externalHeader = headerTarget ? document.querySelector(headerTarget) : null;
-    const toolbar = this.#renderer.buildToolbar();
-
-    if (externalHeader) {
-      externalHeader.appendChild(toolbar);
-    } else {
-      const header = document.createElement('div');
-      header.className = 'tm-header-controls';
-      header.appendChild(toolbar);
-      wrapper.appendChild(header);
-    }
-
-    // Data Wrapper
-    const dataWrapper = document.createElement('div');
-    dataWrapper.className = 'tm-data-wrapper';
-
-    const scroll = document.createElement('div');
-    scroll.className = 'tm-scroll';
-    this.#table = this.#renderer.buildTable();
-    scroll.appendChild(this.#table);
-    dataWrapper.appendChild(scroll);
-
-    const overlay = document.createElement('div');
-    overlay.className = 'tm-loading-overlay';
-    overlay.dataset.tmLoading = '';
-    overlay.innerHTML = '<div class="tm-spinner"></div>';
-    dataWrapper.appendChild(overlay);
-
-    // Footer Controls
-    const footerTarget = this.root.dataset.tmFooterTarget;
-    const externalFooter = footerTarget ? document.querySelector(footerTarget) : null;
-
-    const pagId = this.id;
-    const hasInternalTemplate = this.root.querySelector('template[data-tm-pagination]');
-    const externalPag = document.querySelector(`[data-tm-pagination="${pagId}"]`);
-    const isExternal = externalPag && !this.root.contains(externalPag);
-
-    if (hasInternalTemplate || isExternal) {
-      const footer = document.createElement('div');
-      footer.className = 'tm-footer-controls';
-
-      // Info "Trang X/Y"
-      const info = document.createElement('div');
-      info.className = 'tm-page-info';
-      info.dataset.tmPageInfo = pagId;
-      footer.appendChild(info);
-
-      // Container cho các nút số trang
-      if (!isExternal) {
-        const pagContainer = document.createElement('div');
-        pagContainer.dataset.tmPagination = pagId;
-        footer.appendChild(pagContainer);
-      }
-
-      if (externalFooter) {
-        externalFooter.appendChild(footer);
-      } else {
-        dataWrapper.appendChild(footer);
-      }
-    }
-    wrapper.appendChild(dataWrapper);
-
-    this.root.appendChild(wrapper);
+    const layout = this.#renderer.buildLayout();
+    this.#table = layout.table;
     console.log(`[TableManager] Bảng "${this.id}" đã được khởi tạo.`, {
       columns: this.columns.all.length,
-      hasPagination: !!(hasInternalTemplate || isExternal)
+      hasPagination: layout.hasPagination
     });
     this.render();
   }
 
   render() {
     if (!this.#table) return;
-    let rows = [];
+    let rows = [...this.data];
 
     const searchKeys = this.columns.all.map(c => c.key);
     rows = rows.filter(r => this.filter.predicate(r, searchKeys));
@@ -222,20 +112,28 @@ class TableInstance {
     const cmp = this.sort.comparator();
     if (cmp) rows = [...rows].sort(cmp);
 
-    this.pagination.update({ total: rows.length });
-
-    const { page, limit } = this.pagination;
-    if (limit !== Infinity) {
-      rows = rows.slice((page - 1) * limit, page * limit);
+    const totalRows = rows.length;
+    const { pageIndex, pageSize } = this.#state.pagination;
+    if (pageSize !== Infinity) {
+      const start = pageIndex * pageSize;
+      rows = rows.slice(start, start + pageSize);
     }
 
     this.#renderer.renderRows(rows, this.#table);
     this.#renderer.updateSortUI(this.#table, this.sort.state);
     this.#renderer.renderPagination({
       pagState: this.#state.pagination,
-      totalRows: this.data.length,
+      totalRows,
     });
     this.#renderer.renderFilters(this.filter.rules);
+    this.root.dispatchEvent(new CustomEvent('tm:render', {
+      detail: {
+        tableId: this.id,
+        visibleRows: rows,
+        totalRows,
+        state: this.getState()
+      }
+    }));
     console.log(`[TableManager] Render "${this.id}":`, {
       rows: rows.length,
       sort: this.sort.state,
@@ -244,54 +142,81 @@ class TableInstance {
   }
 
   // Public API
+  getState() {
+    return {
+      ...this.#state,
+      rowSelection: { ...this.#state.rowSelection },
+      pagination: { ...this.#state.pagination },
+      sorting: [...this.#state.sorting],
+      columnFilters: [...this.#state.columnFilters]
+    };
+  }
+  setData(rows) {
+    this.data = Array.isArray(rows) ? rows : [];
+    this.#state.pagination.pageIndex = 0;
+    this.render();
+  }
+  loadData(payload) {
+    const rows = Array.isArray(payload) ? payload : payload?.rows;
+    const page = payload?.page;
+    const limit = payload?.limit;
+    this.data = Array.isArray(rows) ? rows : [];
+    if (page != null) this.#state.pagination.pageIndex = Math.max(0, Number(page) - 1);
+    if (limit != null) this.#state.pagination.pageSize = Math.max(1, Number(limit));
+    if (page == null) this.#state.pagination.pageIndex = 0;
+    this.render();
+  }
+  setPageCount() {}
+  getPageCount() {
+    const total = this.filter.search || this.filter.rules.length
+      ? this.getFilteredCount()
+      : this.data.length;
+    return Math.max(1, Math.ceil(total / this.#state.pagination.pageSize));
+  }
+  getFilteredCount() {
+    const searchKeys = this.columns.all.map(c => c.key);
+    let rows = this.data.filter(r => this.filter.predicate(r, searchKeys));
+    const cmp = this.sort.comparator();
+    if (cmp) rows = [...rows].sort(cmp);
+    return rows.length;
+  }
   // Pagination
   canPrevPage() {
     return this.#state.pagination.pageIndex > 0;
   }
   canNextPage() {
-    return this.#state.pagination.pageIndex < this.#state.pagination.totalPages - 1;
+    return this.#state.pagination.pageIndex < this.getPageCount() - 1;
   }
   nextPage() {
+    if (!this.canNextPage()) return;
     this.#state.pagination.pageIndex++;
     this.render();
   }
   prevPage() {
+    if (!this.canPrevPage()) return;
     this.#state.pagination.pageIndex--;
     this.render();
   }
   setPageIndex(index) {
-    this.#state.pagination.pageIndex = index;
+    const next = Math.max(0, Math.min(Number(index) || 0, this.getPageCount() - 1));
+    this.#state.pagination.pageIndex = next;
     this.render();
   }
   setPageSize(size) {
-    this.#state.pagination.pageSize = size;
+    const nextSize = Number(size);
+    this.#state.pagination.pageSize = Number.isFinite(nextSize) && nextSize > 0 ? nextSize : 20;
+    this.#state.pagination.pageIndex = 0;
     this.render();
   }
   getVisibleRows() {
-    return this.data.slice(
-      (this.#state.pagination.pageIndex - 1) * this.#state.pagination.pageSize,
-      this.#state.pagination.pageIndex * this.#state.pagination.pageSize
-    );
+    const searchKeys = this.columns.all.map(c => c.key);
+    const filtered = this.data.filter(r => this.filter.predicate(r, searchKeys));
+    const cmp = this.sort.comparator();
+    const sorted = cmp ? [...filtered].sort(cmp) : filtered;
+    const start = this.#state.pagination.pageIndex * this.#state.pagination.pageSize;
+    return sorted.slice(start, start + this.#state.pagination.pageSize);
   }
 
-  #setLoading(on) {
-    const overlay = this.root.querySelector('[data-tm-loading]');
-    if (overlay) overlay.style.display = on ? 'flex' : 'none';
-  }
-
-  updateHeaderCheckbox() {
-    const checkAll = this.root.querySelector('.tm-check-all');
-    if (!checkAll) return;
-
-    const visibleCheckboxes = this.root.querySelectorAll('.tm-row-checkbox');
-    if (visibleCheckboxes.length === 0) {
-      checkAll.checked = false;
-      return;
-    }
-
-    const allChecked = Array.from(visibleCheckboxes).every(cb => cb.checked);
-    checkAll.checked = allChecked;
-  }
 }
 
 export class TableManager {
@@ -336,10 +261,25 @@ export class TableManager {
         const inst = new TableInstance(root);
         TableManager.#registry.set(inst.id, inst);
         inst.init();
+        const inlineData = TableManager.#readInlineData(inst.id);
+        if (inlineData) {
+          inst.loadData(inlineData);
+        }
       } catch (e) {
         console.error('[TableManager] Không thể khởi tạo bảng:', e);
       }
     });
+  }
+
+  static #readInlineData(tableId) {
+    const el = document.querySelector(`script[data-tm-data="${tableId}"]`);
+    if (!el) return null;
+    try {
+      return JSON.parse(el.textContent);
+    } catch {
+      console.warn(`[TableManager] Dữ liệu inline không hợp lệ: ${tableId}`);
+      return null;
+    }
   }
 
   static get(id) { return TableManager.#registry.get(id); }
@@ -361,5 +301,9 @@ export class TableManager {
 
   static clearSelection(tableId) {
     TableManager.get(tableId)?.clearSelection();
+  }
+
+  static loadData(tableId, payload) {
+    TableManager.get(tableId)?.loadData(payload);
   }
 }
