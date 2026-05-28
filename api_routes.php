@@ -16,6 +16,7 @@ $router->prefix('api')->group(function ($router) {
       $router->get('/classrooms', [InternshipBatchApiController::class, 'getClassrooms']);
       $router->get('/students-eligible', [InternshipBatchApiController::class, 'getEligibleStudents']);
       $router->post('/validate-students-bulk', [InternshipBatchApiController::class, 'validateStudentsBulk']);
+      $router->post('/parse-import', [InternshipBatchApiController::class, 'parseImport']);
       $router->get('/teachers-active', [InternshipBatchApiController::class, 'getActiveTeachers']);
       $router->post('/', [InternshipBatchApiController::class, 'store']);
 

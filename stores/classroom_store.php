@@ -20,6 +20,7 @@ interface IClassroomStore
   /** @return Classroom[] */
   public function getPaginated(int $page, int $limit = 15): array;
   public function getById(int $id): ?Classroom;
+  public function getByShortName(string $shortName): ?Classroom;
   /** @return Classroom[] */
   public function getByIds(array $ids): array;
   public function create(Classroom $classroom): ?Classroom;
@@ -33,6 +34,7 @@ interface IClassroomStore
   public function getAllMajors(): array;
   public function getMajorById(int $id): ?Major;
   public function getMajorByClassroomId(int $classroom_id): ?Major;
+  public function getMajorByShortNameAndLevel(string $shortName, string $level): ?Major;
   /** @return Major[] */
   public function getByMajorIds(array $majorIds): array;
   public function createMajor(Major $major): int;
@@ -41,6 +43,7 @@ interface IClassroomStore
 
   /** @return Specialization[] */
   public function getSpecializationsByMajorId(int $majorId): array;
+  public function getSpecializationByShortNameAndMajorId(string $shortName, int $majorId): ?Specialization;
   public function getSpecializationById(int $id): ?Specialization;
   /** @return Specialization[]*/
   public function getAllSpecializations(): array;
@@ -100,6 +103,22 @@ class ClassroomStore extends Store implements IClassroomStore
 
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':id' => $id]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ? Classroom::fromArray($row) : null;
+  }
+
+  public function getByShortName(string $shortName): ?Classroom
+  {
+    $sql = "
+      SELECT *
+      FROM classrooms
+      WHERE REPLACE(short_name, ' ', '') = REPLACE(:short_name, ' ', '')
+      AND deleted_at IS NULL
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':short_name' => $shortName]);
 
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Classroom::fromArray($row) : null;
@@ -331,6 +350,23 @@ class ClassroomStore extends Store implements IClassroomStore
     return $stmt->execute([':id' => $id]);
   }
 
+  public function getMajorByShortNameAndLevel(string $shortName, string $level): ?Major
+  {
+    $sql = "
+      SELECT *
+      FROM majors
+      WHERE REPLACE(short_name, ' ', '') = REPLACE(:short_name, ' ', '') 
+      AND level = :level 
+      AND deleted_at IS NULL
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':short_name' => $shortName, ':level' => $level]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ? Major::fromArray($row) : null;
+  }
+
   // Specializations
   /** @return Specialization[] */
   public function getAllSpecializations(): array
@@ -353,7 +389,25 @@ class ClassroomStore extends Store implements IClassroomStore
       WHERE major_id = :major_id AND deleted_at IS NULL ORDER BY full_name
     ");
     $stmt->execute([':major_id' => $majorId]);
+    $stmt->execute([':major_id' => $majorId]);
     return array_map(fn($row) => Specialization::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  public function getSpecializationByShortNameAndMajorId(string $shortName, int $majorId): ?Specialization
+  {
+    $sql = "
+      SELECT *
+      FROM specializations
+      WHERE REPLACE(short_name, ' ', '') = REPLACE(:short_name, ' ', '') 
+      AND major_id = :major_id 
+      AND deleted_at IS NULL
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':short_name' => $shortName, ':major_id' => $majorId]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ? Specialization::fromArray($row) : null;
   }
 
   public function getSpecializationById(int $id): ?Specialization

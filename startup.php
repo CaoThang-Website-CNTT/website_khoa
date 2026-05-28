@@ -35,6 +35,7 @@ require_once BASE_PATH . '/includes/core/response/json_response.php';
 require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/pageable.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
+require_once BASE_PATH . '/includes/files/batch_student_importer.php';
 
 // Editor
 require_once BASE_PATH . '/includes/editor/block_schema.php';

@@ -73,7 +73,7 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
         </button>
       <?php endif; ?>
 
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/assignments') ?>" data-variant="primary" data-size="md" class="btn">
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>" data-variant="primary" data-size="md" class="btn">
         <i class="fa-solid fa-users-gear"></i>
         Phân công hướng dẫn
       </a>

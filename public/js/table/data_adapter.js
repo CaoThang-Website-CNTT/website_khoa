@@ -38,7 +38,7 @@ export class DataAdapter {
       return json;
     }
     // Client-side hoặc PHP-inline: áp dụng sort + filter + pagination trong JS
-    return { rows: this.#inlineRows, total: this.#inlineRows.length, page: 1, limit: Infinity };
+    return { rows: this.#inlineRows, total: this.#inlineRows.length };
   }
 
   get allRows() { return this.#inlineRows; }

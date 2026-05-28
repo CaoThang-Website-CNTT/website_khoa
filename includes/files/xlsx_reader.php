@@ -109,7 +109,7 @@ class XlsxReader
   public static function refToRowCol(string $ref): array
   {
     if (!preg_match('/^([A-Za-z]+)(\d+)$/', $ref, $m)) {
-      throw new InvalidArgumentException("Tọa độ ô không hợp lệ: {$ref}");
+      throw new \InvalidArgumentException("Tọa độ ô không hợp lệ: {$ref}");
     }
     return [(int) $m[2], self::colLettersToIndex(strtoupper($m[1]))];
   }
@@ -135,7 +135,7 @@ class XlsxReader
       throw new \RuntimeException("Không tìm thấy file: {$filePath}");
     }
 
-    $zip = new ZipArchive();
+    $zip = new \ZipArchive();
     if ($zip->open($filePath) !== true) {
       throw new \RuntimeException("Không thể mở file XLSX (không phải định dạng ZIP hợp lệ): {$filePath}");
     }
@@ -155,14 +155,14 @@ class XlsxReader
    * Xử lý cả văn bản thường và văn bản có định dạng (rich-text).
    * Trả về mảng rỗng nếu file không có sharedStrings (vd: file chỉ chứa số).
    */
-  private function loadSharedStrings(ZipArchive $zip): array
+  private function loadSharedStrings(\ZipArchive $zip): array
   {
     $xml = $zip->getFromName('xl/sharedStrings.xml');
     if ($xml === false) {
       return []; // sharedStrings.xml là không bắt buộc
     }
 
-    $sxe = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+    $sxe = simplexml_load_string($xml, '\SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
       throw new \RuntimeException("Lỗi phân tích cú pháp xl/sharedStrings.xml.");
     }
@@ -189,7 +189,7 @@ class XlsxReader
    * Tìm và đọc nội dung XML của sheet đầu tiên.
    * Đọc file cấu hình để biết tên chính xác của sheet thay vì tự đoán là "sheet1.xml".
    */
-  private function loadFirstSheetXml(ZipArchive $zip): string
+  private function loadFirstSheetXml(\ZipArchive $zip): string
   {
     $path = $this->resolveFirstSheetPath($zip);
     $content = $zip->getFromName($path);
@@ -203,7 +203,7 @@ class XlsxReader
    * Đọc file workbook.xml.rels để tìm đường dẫn của sheet đầu tiên trong ZIP.
    * Nếu không có file rels, sẽ thử quét các tên phổ biến.
    */
-  private function resolveFirstSheetPath(ZipArchive $zip): string
+  private function resolveFirstSheetPath(\ZipArchive $zip): string
   {
     $relsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
 
@@ -217,7 +217,7 @@ class XlsxReader
       throw new \RuntimeException("Không tìm thấy sheet: thiếu file xl/_rels/workbook.xml.rels.");
     }
 
-    $sxe = simplexml_load_string($relsXml, 'SimpleXMLElement', LIBXML_NOCDATA);
+    $sxe = simplexml_load_string($relsXml, '\SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
       throw new \RuntimeException("Lỗi phân tích cú pháp xl/_rels/workbook.xml.rels.");
     }
@@ -247,7 +247,7 @@ class XlsxReader
    */
   private function parseSheetXml(string $xml, array $sharedStrings): array
   {
-    $sxe = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+    $sxe = simplexml_load_string($xml, '\SimpleXMLElement', LIBXML_NOCDATA);
     if ($sxe === false) {
       throw new \RuntimeException("Lỗi phân tích cú pháp XML của sheet.");
     }

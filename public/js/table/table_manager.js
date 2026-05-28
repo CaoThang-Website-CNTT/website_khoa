@@ -258,9 +258,9 @@ class TableInstance {
     try {
       const result = await this.adapter.fetch(params);
       this.pagination.update(result);
-      this.#renderer.renderRows(result.rows, this.#table);
-      this.#renderer.updateSortUI(this.#table, this.sort.state);
-      this.#renderer.renderPagination(this.pagination);
+
+      // Gọi render() để thực hiện logic slice/sort/filter
+      this.render();
     } catch (err) {
       console.error('[TableManager] reload error:', err);
     } finally {

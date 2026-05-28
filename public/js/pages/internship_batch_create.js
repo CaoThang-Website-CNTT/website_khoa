@@ -1,3 +1,5 @@
+import { TableManager } from "../table/table_manager.js";
+
 document.addEventListener("DOMContentLoaded", () => {
   const apiBase = window.API_BASE_URL;
 
@@ -5,8 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let state = {
     currentStep: 1,
     batchData: {},
-    selectedClassrooms: new Set(),
-    eligibleStudents: [],
+    importedStudents: [], // Dùng để nạp JSON trả về từ backend
     selectedStudents: new Set(),
     teachers: [],
     selectedTeachers: {}, // { teacherId: maxStudents }
@@ -20,21 +21,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("form-create-batch");
   const loader = document.getElementById("wizard-loader");
 
-  const classroomsContainer = document.getElementById("classrooms-container");
-  const searchClassroomsInput = document.getElementById("search-classrooms");
-  const searchStudentsInput = document.getElementById("search-students");
-  const studentsTbody = document.getElementById("students-tbody");
+  // --- STEP 2 ELEMENTS ---
+  const fileUploadStudents = document.getElementById("file-upload-students");
+  const uploadStatusText = document.getElementById("upload-status-text");
   const selectedStudentsCount = document.getElementById(
     "selected-students-count",
   );
   const checkAllStudents = document.getElementById("check-all-students");
-
-  const btnOpenImportModal = document.getElementById("btn-open-import-modal");
-  const btnProcessImport = document.getElementById("btn-process-import");
-  const importTextarea = document.getElementById("import-student-ids-textarea");
-  const importResultsContainer = document.getElementById(
-    "import-results-container",
+  const wrapperTableStudents = document.getElementById(
+    "wrapper-table-students-import",
   );
+
+  let tableManager = null;
 
   const teachersContainer = document.getElementById("teachers-container");
   const btnSubmit = document.getElementById("btn-submit-batch");
@@ -50,11 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const hideLoader = () => loader.classList.add("hidden");
 
   const updateCounter = () => {
-    const importCount = state.eligibleStudents.filter(
-      (s) => s.source === "bulk_import" && state.selectedStudents.has(s.id),
-    ).length;
-    const dbCount = state.selectedStudents.size - importCount;
-    selectedStudentsCount.textContent = `Đã chọn: ${state.selectedStudents.size} SV (${dbCount} từ Database, ${importCount} từ Import)`;
+    selectedStudentsCount.textContent = `Đã chọn: ${state.selectedStudents.size} SV`;
   };
 
   // --- WIZARD NAVIGATION ---
@@ -89,36 +83,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
-    const oldClassOf = state.batchData.class_of;
-    const oldLevel = state.batchData.level;
-
     const formData = new FormData(form);
-    const newClassOf = parseInt(formData.get("class_of"));
-    const newLevel = formData.get("level");
-
-    if (
-      oldClassOf &&
-      oldLevel &&
-      (oldClassOf !== newClassOf || oldLevel !== newLevel)
-    ) {
-      // Reset Step 2 selection if Step 1 filter changed
-      state.selectedClassrooms.clear();
-      state.eligibleStudents = state.eligibleStudents.filter(
-        (s) => s.source === "bulk_import",
-      );
-      state.selectedStudents = new Set(state.eligibleStudents.map((s) => s.id));
-
-      if (window.toast)
-        toast.info(
-          "Thông báo",
-          "Niên khóa/Bậc học thay đổi, danh sách lớp đã được đặt lại.",
-        );
-    }
-
     state.batchData = {
       title: formData.get("title"),
-      class_of: newClassOf,
-      level: newLevel,
       description: formData.get("description"),
       start_at: formData.get("start_at"),
       end_at: formData.get("end_at"),
@@ -142,9 +109,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (state.currentStep === 2 && !validateStep2()) return;
 
       state.currentStep++;
-      if (state.currentStep === 2) {
-        renderClassrooms(allClassroomsData);
-      }
       if (state.currentStep === 3) {
         renderTeachers();
       }
@@ -169,320 +133,101 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // --- STEP 2: CHỌN SINH VIÊN ---
-  let allClassroomsData = [];
-  const loadClassrooms = async () => {
-    try {
-      const res = await fetch(`${apiBase}/classrooms`);
-      if (!res.ok) throw new Error("Không thể tải danh sách lớp");
-      const result = await res.json();
-      allClassroomsData = result.data || [];
-      renderClassrooms(allClassroomsData);
-    } catch (err) {
-      classroomsContainer.innerHTML = `<span>${err.message}</span>`;
-    }
-  };
+  // --- STEP 2: CHỌN SINH VIÊN QUA IMPORT XLSX ---
 
-  const renderClassrooms = (classrooms) => {
-    classroomsContainer.innerHTML = "";
+  if (fileUploadStudents) {
+    fileUploadStudents.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-    // Lọc theo thông tin ở Step 1
-    let filtered = classrooms;
-    if (state.batchData.class_of && state.batchData.level) {
-      filtered = classrooms.filter(
-        (cls) =>
-          cls.class_of == state.batchData.class_of &&
-          cls.level == state.batchData.level,
-      );
-    }
+      const formData = new FormData();
+      formData.append("file_import", file);
 
-    if (!filtered || filtered.length === 0) {
-      classroomsContainer.innerHTML = `<span class="text-sm">Không tìm thấy lớp học phù hợp với Khóa ${state.batchData.class_of || ""} và Hệ ${state.batchData.level || ""}.</span>`;
-      return;
-    }
-
-    filtered.forEach((cls) => {
-      const badge = document.createElement("span");
-      badge.className = `classroom-badge ${state.selectedClassrooms.has(cls.id) ? "selected" : ""}`;
-      badge.textContent = cls.name;
-      badge.dataset.id = cls.id;
-
-      badge.addEventListener("click", () => toggleClassroom(badge, cls.id));
-      classroomsContainer.appendChild(badge);
-    });
-  };
-
-  // Filter Classrooms (by Search Input)
-  if (searchClassroomsInput) {
-    searchClassroomsInput.addEventListener("input", (e) => {
-      const term = e.target.value.toLowerCase().trim();
-
-      // Lấy danh sách đã qua filter Step 1 trước
-      let step1Filtered = allClassroomsData;
-      if (state.batchData.class_of && state.batchData.level) {
-        step1Filtered = allClassroomsData.filter(
-          (cls) =>
-            cls.class_of == state.batchData.class_of &&
-            cls.level == state.batchData.level,
-        );
-      }
-
-      const searched = step1Filtered.filter((cls) =>
-        cls.name.toLowerCase().includes(term),
-      );
-      renderClassrooms(searched); // Lưu ý: renderClassrooms cũng có logic filter Step 1, nên truyền searched vào sẽ bị filter 2 lần.
-      // Tốt nhất là renderClassrooms không nên tự filter nếu đã nhận input là searched.
-    });
-  }
-
-  // Batching API Requests
-  let queuedClassroomIds = new Set();
-  let fetchQueueTimeout = null;
-
-  const toggleClassroom = (badge, clsId) => {
-    badge.classList.toggle("selected");
-    if (badge.classList.contains("selected")) {
-      state.selectedClassrooms.add(clsId);
-      queuedClassroomIds.add(clsId);
-
-      clearTimeout(fetchQueueTimeout);
-      fetchQueueTimeout = setTimeout(processClassroomQueue, 500); // Debounce 500ms
-    } else {
-      state.selectedClassrooms.delete(clsId);
-      queuedClassroomIds.delete(clsId);
-      removeStudentsOfClassroom(clsId);
-    }
-  };
-
-  const processClassroomQueue = async () => {
-    if (queuedClassroomIds.size === 0) return;
-
-    const idsToFetch = Array.from(queuedClassroomIds);
-    queuedClassroomIds.clear();
-
-    showLoader();
-    try {
-      const query = idsToFetch.map((id) => `classroom_ids[]=${id}`).join("&");
-      const res = await fetch(`${apiBase}/students-eligible?${query}`);
-      if (!res.ok) throw new Error("Không thể tải danh sách sinh viên");
-      const result = await res.json();
-      const students = result.data || [];
-
-      students.forEach((s) => (s.source = "db_select"));
-
-      state.eligibleStudents = [...state.eligibleStudents, ...students];
-      students.forEach((s) => state.selectedStudents.add(s.id));
-
-      renderStudentsTable();
-    } catch (err) {
-      if (window.toast) toast.error("Lỗi", err.message);
-    } finally {
-      hideLoader();
-    }
-  };
-
-  const removeStudentsOfClassroom = (classroomId) => {
-    const studentsToRemove = state.eligibleStudents.filter(
-      (s) => s.classroom_id == classroomId,
-    );
-    studentsToRemove.forEach((s) => state.selectedStudents.delete(s.id));
-    state.eligibleStudents = state.eligibleStudents.filter(
-      (s) => s.classroom_id != classroomId,
-    );
-    renderStudentsTable();
-  };
-
-  // Filter Students
-  if (searchStudentsInput) {
-    searchStudentsInput.addEventListener("input", () => {
-      renderStudentsTable();
-    });
-  }
-
-  const renderStudentsTable = () => {
-    studentsTbody.innerHTML = "";
-
-    const searchTerm = searchStudentsInput
-      ? searchStudentsInput.value.toLowerCase().trim()
-      : "";
-    let filteredStudents = state.eligibleStudents;
-
-    if (searchTerm) {
-      filteredStudents = filteredStudents.filter(
-        (s) =>
-          (s.student_id && s.student_id.toLowerCase().includes(searchTerm)) ||
-          (s.full_name && s.full_name.toLowerCase().includes(searchTerm)),
-      );
-    }
-
-    if (filteredStudents.length === 0) {
-      studentsTbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Không có dữ liệu sinh viên.</td></tr>`;
-      checkAllStudents.checked = false;
+      // Reset state
+      state.importedStudents = [];
+      state.selectedStudents.clear();
       updateCounter();
-      return;
-    }
-
-    // Grouping
-    const groups = {};
-    filteredStudents.forEach((s) => {
-      const groupKey = s.source === "bulk_import" ? "import" : s.classroom_id;
-      if (!groups[groupKey]) groups[groupKey] = [];
-      groups[groupKey].push(s);
-    });
-
-    let allChecked = true;
-
-    // Render bulk import first
-    if (groups["import"]) {
-      renderGroup("Danh sách Import thủ công", groups["import"]);
-      delete groups["import"];
-    }
-
-    // Render other classrooms
-    Object.keys(groups).forEach((classroomId) => {
-      const badge = document.querySelector(
-        `.classroom-badge[data-id="${classroomId}"]`,
-      );
-      const className = badge ? badge.textContent : `Lớp ID: ${classroomId}`;
-      renderGroup(className, groups[classroomId]);
-    });
-
-    function renderGroup(groupName, students) {
-      const headerTr = document.createElement("tr");
-      headerTr.innerHTML = `
-        <td colspan="10" class="td-classroom font-medium text-sm py-2 ml-4">
-          <i class="fa-solid fa-chalkboard-user mr-4"></i>
-          ${groupName} 
-          <span class="text-xs font-normal ml-2">(${students.length} SV)</span>
-        </td>
-      `;
-      studentsTbody.appendChild(headerTr);
-
-      students.forEach((student) => {
-        const isChecked = state.selectedStudents.has(student.id);
-        if (!isChecked) allChecked = false;
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><input type="checkbox" class="student-checkbox" value="${student.id}" ${isChecked ? "checked" : ""}></td>
-          <td>${student.student_id}</td>
-          <td>${student.full_name}</td>
-          <td>${student.phone}</td>
-          <td>${student.source === "bulk_import" ? `<span class="badge" data-variant="secondary">${student.classroom_name}</span>` : groupName}</td>
-        `;
-        studentsTbody.appendChild(tr);
-      });
-    }
-
-    checkAllStudents.checked = allChecked;
-    updateCounter();
-    bindCheckboxEvents();
-  };
-
-  const bindCheckboxEvents = () => {
-    document.querySelectorAll(".student-checkbox").forEach((cb) => {
-      cb.addEventListener("change", (e) => {
-        const id = parseInt(e.target.value);
-        if (e.target.checked) state.selectedStudents.add(id);
-        else state.selectedStudents.delete(id);
-
-        updateCounter();
-
-        const allBoxes = document.querySelectorAll(".student-checkbox");
-        const checkedBoxes = document.querySelectorAll(
-          ".student-checkbox:checked",
-        );
-        checkAllStudents.checked = allBoxes.length === checkedBoxes.length;
-      });
-    });
-  };
-
-  checkAllStudents.addEventListener("change", (e) => {
-    const isChecked = e.target.checked;
-    document.querySelectorAll(".student-checkbox").forEach((cb) => {
-      cb.checked = isChecked;
-      const id = parseInt(cb.value);
-      if (isChecked) state.selectedStudents.add(id);
-      else state.selectedStudents.delete(id);
-    });
-    updateCounter();
-  });
-
-  // --- MODAL BULK IMPORT ---
-  if (btnOpenImportModal) {
-    btnOpenImportModal.addEventListener("click", () => {
-      importResultsContainer.classList.add("hidden");
-      importTextarea.value = "";
-    });
-  }
-
-  if (btnProcessImport) {
-    btnProcessImport.addEventListener("click", async () => {
-      const rawText = importTextarea.value;
-      // Lọc bằng Regex: Cắt theo xuống dòng, bỏ khoảng trắng dư, chỉ lấy các dòng có nội dung
-
-      const studentIds = rawText
-        .split(/\r?\n/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-
-      if (studentIds.length === 0) {
-        if (window.toast)
-          toast.warning("Cảnh báo", "Vui lòng nhập ít nhất 1 MSSV.");
-        return;
-      }
-
-      btnProcessImport.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
-      btnProcessImport.setAttribute("disabled", "disabled");
+      uploadStatusText.textContent = "Đang xử lý file...";
 
       try {
-        const res = await fetch(`${apiBase}/validate-students-bulk`, {
+        const response = await fetch(`${apiBase}/parse-import`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ student_ids: studentIds }),
+          body: formData,
         });
 
-        if (!res.ok) throw new Error("Lỗi khi kiểm tra danh sách");
-        const result = await res.json();
-        const data = result.data;
+        const result = await response.json();
 
-        // Render kết quả
-        importResultsContainer.classList.remove("hidden");
+        if (!response.ok) {
+          throw new Error(result.message || "Lỗi khi phân tích file.");
+        }
 
-        const validList = document.getElementById("import-valid-list");
-        const invalidList = document.getElementById("import-invalid-list");
-        document.getElementById("import-valid-count").textContent =
-          data.valid.length;
-        document.getElementById("import-invalid-count").textContent =
-          data.invalid.length;
+        const data = result.data || [];
 
-        validList.innerHTML = "";
-        invalidList.innerHTML = "";
+        if (data.length === 0) {
+          throw new Error("Không tìm thấy dữ liệu sinh viên trong file.");
+        }
 
-        data.valid.forEach((s) => {
-          validList.innerHTML += `<li>${s.student_id} - ${s.full_name}</li>`;
-          // Thêm vào state
-          // Kiểm tra xem đã có trong eligible chưa để tránh trùng
-          if (!state.eligibleStudents.some((es) => es.id === s.id)) {
-            s.source = "bulk_import";
-            state.eligibleStudents.push(s);
-          }
-          state.selectedStudents.add(s.id);
+        // Tự động fake 1 thuộc tính _id duy nhất (hoặc lấy mssv làm id) cho TableManager
+        data.forEach((student, index) => {
+          student._id = student.student_code;
+          // Mặc định chọn tất cả
+          state.selectedStudents.add(student._id);
         });
 
-        data.invalid.forEach((err) => {
-          invalidList.innerHTML += `<li><b>${err.student_id}</b>: ${err.reason}</li>`;
-        });
+        state.importedStudents = data;
+        uploadStatusText.innerHTML = `<span class="text-success"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
 
-        renderStudentsTable();
-      } catch (err) {
-        if (window.toast) toast.error("Lỗi", err.message);
-      } finally {
-        btnProcessImport.innerHTML = `Kiểm tra & Thêm`;
-        btnProcessImport.removeAttribute("disabled");
+        initOrReloadTableManager();
+      } catch (error) {
+        uploadStatusText.innerHTML = `<span><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
+        if (window.toast) toast.error("Lỗi Import", error.message);
+
+        wrapperTableStudents.setAttribute("data-state", "closed");
       }
     });
   }
+
+  const initOrReloadTableManager = () => {
+    wrapperTableStudents.removeAttribute("data-state");
+
+    const tableId = "table-students-import";
+    let inst = TableManager.get(tableId);
+
+    if (!inst) {
+      TableManager.init();
+      inst = TableManager.get(tableId);
+    }
+
+    if (inst && !inst.root.dataset.selectionListenerBound) {
+      // Lắng nghe sự kiện thay đổi checkbox từ TableManager
+      inst.root.addEventListener("tm:selection-change", (e) => {
+        state.selectedStudents = new Set(e.detail.selectedIds.map(String));
+        updateCounter();
+      });
+      inst.root.dataset.selectionListenerBound = "true";
+    }
+
+    if (inst) {
+      // Cập nhật dữ liệu vào adapter (mode client)
+      inst.adapter.updateInlineRows([...state.importedStudents]);
+
+      // Mặc định chọn tất cả khi mới import
+      if (
+        state.selectedStudents.size === 0 &&
+        state.importedStudents.length > 0
+      ) {
+        state.importedStudents.forEach((s) =>
+          state.selectedStudents.add(String(s._id)),
+        );
+      }
+
+      // Đồng bộ vào instance của TableManager
+      inst.selectedIds = new Set(state.selectedStudents);
+
+      inst.reload(); // Render lại bảng
+      updateCounter(); // Cập nhật badge
+    }
+  };
 
   // --- STEP 3: CHỈ ĐỊNH GIẢNG VIÊN ---
   const loadTeachers = async () => {
@@ -771,8 +516,9 @@ document.addEventListener("DOMContentLoaded", () => {
   btnSubmit.addEventListener("click", async () => {
     const payload = {
       ...state.batchData,
-      classroom_ids: Array.from(state.selectedClassrooms),
-      student_ids: Array.from(state.selectedStudents),
+      students: state.importedStudents.filter((s) =>
+        state.selectedStudents.has(String(s._id)),
+      ),
       supervisors: Object.keys(state.selectedTeachers).map((tId) => ({
         teacher_id: parseInt(tId),
         max_students: state.selectedTeachers[tId],
@@ -793,12 +539,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await res.json();
       const data = result.data;
 
-      if (!res.ok)
-        throw new Error(
-          data.message || data.errors
-            ? Object.values(data.errors)[0]
-            : "Lỗi khi tạo đợt",
-        );
+      if (!res.ok) {
+        let errorMsg = result.message || "Lỗi khi tạo đợt";
+        if (data && data.errors) {
+          errorMsg = Object.values(data.errors)[0];
+        } else if (data && data.message) {
+          errorMsg = data.message;
+        }
+        throw new Error(errorMsg);
+      }
 
       if (window.toast) toast.success("Thành công", data.message);
 
@@ -820,6 +569,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Init
   updateWizardUI();
-  loadClassrooms();
   loadTeachers();
 });

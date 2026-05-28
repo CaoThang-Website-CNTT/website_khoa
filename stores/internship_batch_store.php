@@ -49,8 +49,8 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $stmt->execute([
       ':title' => $data['title'],
       ':description' => $data['description'] ?? null,
-      ':class_of' => $data['class_of'],
-      ':level' => $data['level'],
+      ':class_of' => $data['class_of'] ?? null,
+      ':level' => $data['level'] ?? null,
       ':start_at' => $data['start_at'],
       ':end_at' => $data['end_at'],
       ':status' => 'draft',
