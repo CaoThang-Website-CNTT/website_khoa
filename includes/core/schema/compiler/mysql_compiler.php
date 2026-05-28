@@ -111,6 +111,7 @@ class MySQLCompiler extends BaseSQLCompiler
       return match ($command['type']) {
         'index' => "INDEX ($cols)",
         'unique' => "UNIQUE INDEX ($cols)",
+        'primary' => "PRIMARY KEY ($cols)",
         default => null
       };
     }

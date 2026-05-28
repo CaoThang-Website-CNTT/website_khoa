@@ -230,26 +230,26 @@ INSERT INTO `web_settings` (`key`, `group`, `group_label`, `type`, `value`, `lab
 -- 9. BẢNG CATEGORIES
 -- ---------------------------------------------------------------------------- 
 INSERT INTO `categories` (`id`, `name`, `slug`, `type`, `parent_id`) VALUES
-(1, 'Tin tức sự kiện', 'tin-tuc-su-kien', 'const', NULL),
-(2, 'Hoạt động nổi bật', 'hoat-dong-noi-bat', 'custom', 1),
-(3, 'Đoàn Thanh niên', 'doan-thanh-nien', 'custom', 1),
-(4, 'Đào tạo', 'dao-tao', 'const', NULL),
-(5, 'Thông báo học vụ', 'thong-bao-hoc-vu', 'custom', 4),
-(6, 'Lịch thi', 'lich-thi', 'custom', 4),
-(7, 'Sinh viên', 'sinh-vien', 'const', NULL),
-(8, 'Học bổng', 'hoc-bong', 'custom', 7),
-(9, 'Việc làm', 'viec-lam', 'custom', 7),
-(10, 'Tuyển sinh', 'tuyen-sinh', 'const', NULL),
-(11, 'Thông báo tuyển sinh', 'thong-bao-tuyen-sinh', 'custom', 10),
-(12, 'Hướng nghiệp', 'huong-nghiep', 'custom', 10),
-(13, 'Doanh nghiệp', 'doanh-nghiep', 'const', NULL),
-(14, 'Cơ hội việc làm', 'co-hoi-viec-lam', 'custom', 13),
-(15, 'Khoa học Công nghệ', 'khoa-hoc-cong-nghe', 'const', NULL),
-(16, 'Nghiên cứu khoa học', 'nghien-cuu-khoa-hoc', 'custom', 15),
-(17, 'Sáng tạo khởi nghiệp', 'sang-tao-khoi-nghiep', 'custom', 15),
-(18, 'Góc sinh viên', 'goc-sinh-vien', 'custom', 7),
-(19, 'Tin nội bộ', 'tin-noi-bo', 'custom', 1),
-(20, 'Sự kiện', 'su-kien', 'custom', 1);
+(1, 'Tin khoa', 'tin-khoa', 'const', NULL),
+(2, 'Nghiên cứu', 'nghien-cuu', 'const', NULL),
+(3, 'Sự kiện', 'su-kien', 'const', NULL),
+(4, 'Sinh viên', 'sinh-vien', 'const', NULL),
+(5, 'Tuyển dụng', 'tuyen-dung', 'const', NULL),
+(6, 'Giải thưởng', 'giai-thuong', 'const', NULL),
+(7, 'Hoạt động nổi bật', 'hoat-dong-noi-bat', 'custom', 1),
+(8, 'Đoàn Thanh niên', 'doan-thanh-nien', 'custom', 1),
+(9, 'Thông báo học vụ', 'thong-bao-hoc-vu', 'custom', 4),
+(10, 'Lịch thi', 'lich-thi', 'custom', 4),
+(11, 'Học bổng', 'hoc-bong', 'custom', 10),
+(12, 'Việc làm', 'viec-lam', 'custom', 4),
+(13, 'Tuyển sinh', 'tuyen-sinh', 'const', NULL),
+(14, 'Thông báo tuyển sinh', 'thong-bao-tuyen-sinh', 'custom', 13),
+(15, 'Hướng nghiệp', 'huong-nghiep', 'custom', 13),
+(16, 'Doanh nghiệp', 'doanh-nghiep', 'const', NULL),
+(17, 'Cơ hội việc làm', 'co-hoi-viec-lam', 'custom', 15),
+(18, 'Sáng tạo khởi nghiệp', 'sang-tao-khoi-nghiep', 'custom', 19),
+(19, 'Góc sinh viên', 'goc-sinh-vien', 'custom', 9),
+(20, 'Tin nội bộ', 'tin-noi-bo', 'custom', 1);
 
 
 -- ---------------------------------------------------------------------------- 
@@ -339,15 +339,9 @@ INSERT INTO `posts` (`id`, `title`, `slug`, `content_json`, `author_id`, `status
 -- ============================================================================
 INSERT INTO `category_post` (`post_id`, `category_id`) VALUES
 (1, 1),
-(2, 1),
+(2, 3),
 (3, 1),
-(4, 1),
-(5, 1),
-(6, 1),
-(7, 1),
-(8, 1),
-(9, 1),
-(10, 1);
+(4, 1);
 
 -- ============================================================================
 -- 17. BẢNG MEDIA
