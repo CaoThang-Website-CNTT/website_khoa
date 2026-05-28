@@ -92,7 +92,7 @@ class PostController extends Controller
     try {
       $post = $this->_postService->getPost($post_id);
 
-      $this->render('admin/posts/edit', [
+      return $this->render('admin/posts/edit', [
         'post' => $post,
         'authors' => $this->_accountService->getAllAdmins(),
         'categories' => $this->_categoryService->getAllCategories()

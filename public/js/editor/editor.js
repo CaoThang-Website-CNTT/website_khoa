@@ -529,6 +529,13 @@ export class EditorManager {
       const traverse = (obj, prefix = '') => {
         for (const [key, value] of Object.entries(obj)) {
           const path = prefix ? `${prefix}.${key}` : key;
+
+          // Nếu key là 'settings' và value là mảng, skip (sai structure)
+          if (key === 'settings' && Array.isArray(value)) {
+            console.warn(`[EditorManager] Bỏ qua settings là mảng. Dữ liệu từ server sai format.`, value);
+            continue;
+          }
+
           if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
             traverse(value, path);
           } else {
@@ -755,6 +762,7 @@ class EditorCanvasMetadata {
       show_date: true,
       show_read_time: false,
       show_view_count: false,
+      is_featured: false,
     },
     read_time: 0, // minute
     init_view_count: 0
@@ -767,9 +775,32 @@ class EditorCanvasMetadata {
   constructor(bus, initialData = {}) {
     this.#bus = bus;
 
-    this.#data = { ...this.#data, ...initialData };
+    // Deep merge để bảo vệ structure mặc định
+    this.#data = this.#deepMerge(this.#data, initialData);
 
     this.#initEvents();
+  }
+
+  /**
+   * Deep merge objects
+   * @private
+   */
+  #deepMerge(target, source) {
+    const result = { ...target };
+
+    for (const [key, value] of Object.entries(source)) {
+      if (value === null || value === undefined) {
+        result[key] = value;
+      } else if (typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object' && !Array.isArray(target[key])) {
+        // Nếu cả 2 đều là object (không phải array), merge đệ quy
+        result[key] = this.#deepMerge(target[key] || {}, value);
+      } else {
+        // Nếu là array hoặc type khác, ghi đè trực tiếp
+        result[key] = value;
+      }
+    }
+
+    return result;
   }
 
   #initEvents() {
@@ -812,7 +843,10 @@ class EditorCanvasMetadata {
     // Duyệt sâu để tìm đúng field (hỗ trợ dot notation)
     for (let i = 0; i < keys.length - 1; i++) {
       const k = keys[i];
-      if (!target[k]) target[k] = {};
+      if (!target[k] || typeof target[k] !== 'object' || Array.isArray(target[k])) {
+        // Nếu chưa tồn tại hoặc là array/primitive, khởi tạo object mới
+        target[k] = {};
+      }
       target = target[k];
     }
 

@@ -9,7 +9,7 @@ return new class extends BaseMigration {
    */
   public function forward(TableBuilder $schema): void
   {
-    $schema->create('posts', function ($table) {
+    $schema->create('posts', function (TableBuilder $table) {
       $table->id();
 
       $table->varchar('title', 255);
@@ -21,6 +21,7 @@ return new class extends BaseMigration {
       $table->int('view_count')->default(0);
       $table->varchar('seo_description', 400)->nullable();
       $table->varchar('seo_image_url', 255)->nullable();
+      $table->boolean('is_featured')->default(false);
 
       $table->timestamp('published_at')->nullable();
       $table->timestamps();

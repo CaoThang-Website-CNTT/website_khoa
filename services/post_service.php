@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Post;
 use App\Stores\PostStore;
 use App\Stores\AccountStore;
-use App\Stores\MediaStore;
 use App\Stores\CategoryStore;
 use App\Core\Pageable;
 use Database;
@@ -29,18 +28,15 @@ interface IPostService
 class PostService implements IPostService
 {
   private PostStore $_postStore;
-  private MediaStore $_mediaStore;
   private AccountStore $_accountStore;
   private CategoryStore $_categoryStore;
 
   public function __construct(
     PostStore $postStore,
-    MediaStore $mediaStore,
     AccountStore $accountStore,
     CategoryStore $categoryStore
   ) {
     $this->_postStore = $postStore;
-    $this->_mediaStore = $mediaStore;
     $this->_accountStore = $accountStore;
     $this->_categoryStore = $categoryStore;
   }
@@ -128,6 +124,7 @@ class PostService implements IPostService
       view_count: (int) ($meta['init_view_count'] ?? 0),
       seo_description: $meta['excerpt'] ?? null,
       seo_image_url: $this->resolveSeoImage($meta['featured_image'] ?? null),
+      is_featured: $meta['settings']['is_featured'] ?? false,
       published_at: $publishedAt,
     );
 
@@ -139,12 +136,6 @@ class PostService implements IPostService
       if (isset($meta['category_ids'])) {
         $categoryIds = is_array($meta['category_ids']) ? $meta['category_ids'] : [$meta['category_ids']];
         $this->_postStore->syncCategories($post->id, $categoryIds);
-      }
-
-      // Sau khi có post ID, gắn các media nội bộ được tham chiếu trong blocks và meta
-      $internalMediaIds = $this->extractInternalMediaIds($payload);
-      if (!empty($internalMediaIds)) {
-        $this->_mediaStore->attachToPost($internalMediaIds, $post->id);
       }
 
       return $post;
@@ -161,31 +152,26 @@ class PostService implements IPostService
 
     $data = [];
 
-    $mutableFields = [
-      'title'           => 'title',
-      'slug'            => 'slug',
-      'author_id'       => 'author_id',
-      'excerpt'         => 'seo_description',
-      'status'          => 'status',
-      'featured_image'  => 'seo_image_url',
-      'settings'        => 'settings_json',
-      'init_view_count' => 'view_count'
-    ];
+    if (isset($meta['title']))           $data['title'] = $meta['title'];
+    if (isset($meta['author_id']))       $data['author_id'] = (int) $meta['author_id'];
+    if (isset($meta['excerpt']))         $data['seo_description'] = $meta['excerpt'];
+    if (isset($meta['status']))          $data['status'] = $meta['status'];
+    if (isset($meta['init_view_count'])) $data['view_count'] = (int) $meta['init_view_count'];
 
-    foreach ($mutableFields as $metaKey => $dbKey) {
-      if (!isset($meta[$metaKey]))
-        continue;
+    if (isset($meta['slug'])) {
+        $data['slug'] = $this->resolveSlug($meta['slug'], $meta['title'] ?? $existing->title);
+    }
 
-      $val = $meta[$metaKey];
+    if (isset($meta['featured_image'])) {
+        $data['seo_image_url'] = $this->resolveSeoImage($meta['featured_image']);
+    }
 
-      $data[$dbKey] = match ($metaKey) {
-        'slug'            => $this->resolveSlug($val, $meta['title'] ?? $existing->title),
-        'author_id'       => (int) $val,
-        'featured_image'  => $this->resolveSeoImage($val),
-        'settings'        => json_encode($val, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-        'init_view_count' => (int) $val,
-        default           => $val
-      };
+    if (isset($meta['settings'])) {
+        $data['settings_json'] = json_encode($meta['settings'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    if (isset($meta['settings']['is_featured'])) {
+        $data['is_featured'] = (bool) $meta['settings']['is_featured'];
     }
 
     // published_at: chỉ ghi lần đầu khi chuyển sang published
@@ -204,7 +190,7 @@ class PostService implements IPostService
       $data['content_json'] = $encoded;
     }
 
-    return Database::getInstance()->transaction(function () use ($id, $data, $meta, $payload) {
+    return Database::getInstance()->transaction(function () use ($id, $data, $meta) {
       $post = $this->_postStore->update($id, $data);
 
       // Đồng bộ danh mục nếu có gửi lên

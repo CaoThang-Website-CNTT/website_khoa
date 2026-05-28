@@ -17,6 +17,7 @@ class Post extends Model
     public int $view_count = 0,
     public ?string $seo_description = null,
     public ?string $seo_image_url = null,
+    public bool $is_featured = false,
 
     public ?string $created_at = null,
     public ?string $published_at = null,
@@ -24,7 +25,9 @@ class Post extends Model
     public ?string $deleted_at = null,
 
     public ?Account $author = null,
+    /** @var Media[] */
     public ?array $media = [],
+    /** @var Category[] */
     public ?array $categories = [],
   ) {
   }

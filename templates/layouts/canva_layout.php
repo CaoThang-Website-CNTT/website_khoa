@@ -30,14 +30,6 @@ $isEdit = isset($post); // Biến cờ xác định chế độ
 $current_user = request()->session()->authUser() ?? ['account_id' => null];
 ?>
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>(<?= json_encode($flash['title']) ?>, <?= json_encode($flash['desc']) ?>);
-    });
-  </script>
-<?php endif; ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -58,7 +50,6 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
     <!-- ========== Canva Header ========== -->
     <?php include_once BASE_PATH . '/templates/components/canva_header.php'; ?>
     <!-- ========== Canva Header End ========== -->
-
 
     <!-- ======== Canva Main =========== -->
     <div id="be-topbar">
@@ -84,7 +75,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
         <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-right" title="Ẩn/hiện panel settings">
           <i class="fa-solid fa-table-columns"></i> Cấu Hình
         </button>
-        <button type="button" class="btn" data-variant="primary" data-size="md" id="be-publish-btn">
+        <button type="button" class="btn" data-variant="primary" data-size="md" id="be-publish-btn" data-modal-trigger="#confirm-modal">
           Lưu
         </button>
       </div>
@@ -244,6 +235,14 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
                   <span class="field__label">Lượt xem khởi tạo</span>
                   <input type="number" class="field__input" data-be-meta-key="init_view_count" value="<?= $initialPayload['meta']['init_view_count'] ?? 0 ?>" placeholder="VD: 500" min="0">
                 </div>
+
+                <div class="field" data-orientation="horizontal">
+                  <div class="field__content">
+                    <span class="field__label">Bài viết nổi bật</span>
+                    <div class="field__description">Bài viết sẽ được hiển thị ở vị trí nổi bật trên trang chủ</div>
+                  </div>
+                  <button class="switch" type="button" role="switch" name="is_featured" data-switch-default-state="<?= ($initialPayload['meta']['settings']['is_featured'] ?? false) ? 'checked' : '' ?>" data-be-meta-key="settings.is_featured"><span class="switch__thumb"></span></button>
+                </div>
               </div>
             </div>
           </div>
@@ -260,10 +259,45 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
     </form>
     <?= $content; ?>
   </main>
+
+  <div class="modal detail-modal" id="confirm-modal" tabindex="-1" data-state="closed">
+    <div class="modal__header">
+      <h2 class="modal__title">Bạn có chắc</h2>
+      <p class="modal__description">
+        <?php if ($isEdit): ?>
+          Những thay đổi sẽ được áp dụng vào bài viết `<span class="text-sm font-medium" data-be-meta-preview="title"></span>`
+        <?php else: ?>
+          Nội dung bạn đã nhập sẽ được lưu thành bài viết `<span class="text-sm font-medium" data-be-meta-preview="title"></span>`
+        <?php endif; ?>
+      </p>
+    </div>
+
+    <div class="modal__footer">
+      <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
+      <button id="confirm-modal-btn" data-variant="primary" data-size="lg" class="btn" type="button">Chắc chắn</button>
+    </div>
+
+    <button class="modal__close" type="button" data-modal-close>
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
   <!-- ======== Canva Main End =========== -->
 
   <!-- ========= Canva Scripts ======== -->
   <?php include_once BASE_PATH . '/templates/partials/canva_scripts.php'; ?>
+
+  <!-- Tạo toast thông báo -->
+  <?php if ($flash = request()->session()->getFlash("notification")): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        toast.<?= $flash['type'] ?>(
+          "<?= htmlspecialchars($flash['title']) ?>",
+          "<?= htmlspecialchars($flash['desc']) ?>"
+        );
+      });
+    </script>
+  <?php endif; ?>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -283,7 +317,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
         window.BeEditor.importPayload(initialPayload);
       }
 
-      document.querySelector('#be-publish-btn')?.addEventListener('click', () => {
+      document.querySelector('#confirm-modal-btn')?.addEventListener('click', () => {
         const payload = window.BeEditor.getPayload();
         document.querySelector('#be-editor-data').value = JSON.stringify(payload);
         form.submit();

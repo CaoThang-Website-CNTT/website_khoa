@@ -158,9 +158,6 @@ class PostStore extends Store implements IPostStore
       ->is('deleted_at', null);
 
     $stmt = $this->db->prepare($query->toSql());
-    print_r($query->toSql());
-    print_r($query->getBindings());
-    exit;
     $stmt->execute($query->getBindings());
 
     return $this->getById($id)
