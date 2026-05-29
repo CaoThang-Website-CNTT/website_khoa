@@ -1,3 +1,10 @@
+<?php
+
+use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
+
+// CSS
+?>
 <link rel="stylesheet" href="<?= url('public/css/internship_batches.css') ?>">
 
 <!-- Toast khi redirect về đây có set flash -->
@@ -60,10 +67,10 @@
     <template data-tm-col="end_at" data-tm-label="Kết thúc" data-tm-sortable></template>
 
     <!-- Cột Trạng thái -->
-    <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
-      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đang chờ","value":"draft"},{"label":"Đã công bố","value":"published"},{"label":"Đã kết thúc","value":"closed"}]'>
-      <span class="badge" data-variant="{{ value === 'published' ? 'primary' : (value === 'closed' ? 'destructive' : 'secondary') }}">
-        {{ value === 'published' ? 'Đã công bố' : (value === 'closed' ? 'Đã kết thúc' : 'Đang chờ') }}
+    <template data-tm-col="effective_status" data-tm-label="Trạng thái" data-tm-filter-type="select"
+      data-tm-filter-options='<?= json_encode(BatchStatus::getEffectiveOptions()) ?>'>
+      <span class="badge" data-variant="{{ row.effective_status_variant }}">
+        {{ row.effective_status_label }}
       </span>
     </template>
 
@@ -76,6 +83,14 @@
   <?= json_encode([
     'rows' => array_map(function ($batch) {
       $b = (object)$batch;
+
+      $batchModel = new InternshipBatch();
+      $batchModel->status = $b->status ?? 'draft';
+      $batchModel->start_at = $b->start_at ?? null;
+      $batchModel->end_at = $b->end_at ?? null;
+
+      $effStatus = $batchModel->getEffectiveStatus();
+
       return [
         'id' => $b->id,
         'title' => $b->title ?? 'N/A',
@@ -83,7 +98,10 @@
         'level' => $b->level ?? 'N/A',
         'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
         'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
-        'status' => $b->status ?? 'draft'
+        'status' => $b->status ?? 'draft',
+        'effective_status' => $effStatus,
+        'effective_status_label' => BatchStatus::getLabel($effStatus),
+        'effective_status_variant' => BatchStatus::getVariant($effStatus)
       ];
     }, $data->getItems()),
     'total' => $data->getTotal(),

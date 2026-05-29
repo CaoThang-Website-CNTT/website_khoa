@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
+
 /**
  * View: Thông tin thực tập sinh viên
  * Route: /student/internship
@@ -11,6 +14,18 @@ $batches = $batches ?? [];
 $supervisor = $supervisor ?? null;
 $submissions = $submissions ?? [];
 $logs = $logs ?? [];
+
+$batchModel = new InternshipBatch();
+if ($current) {
+  $batchModel->status = $current['status'] ?? 'draft';
+  $batchModel->start_at = $current['start_at'] ?? null;
+  $batchModel->end_at = $current['end_at'] ?? null;
+}
+$effStatus = $current ? $batchModel->getEffectiveStatus() : null;
+$effectiveMetadata = $effStatus ? [
+  'label' => BatchStatus::getLabel($effStatus),
+  'variant' => BatchStatus::getVariant($effStatus)
+] : null;
 ?>
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
@@ -26,7 +41,12 @@ $logs = $logs ?? [];
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
     <div>
-      <h1 class="title text-2xl font-semibold">Thông tin thực tập</h1>
+      <div class="flex items-center gap-2">
+        <h1 class="title text-2xl font-semibold">Thông tin thực tập</h1>
+        <?php if ($effectiveMetadata): ?>
+          <span class="badge" data-variant="<?= $effectiveMetadata['variant'] ?>"><?= $effectiveMetadata['label'] ?></span>
+        <?php endif; ?>
+      </div>
       <p>Xem chi tiết đợt thực tập và kết quả đánh giá.</p>
     </div>
 
@@ -226,7 +246,7 @@ $logs = $logs ?? [];
       </div>
 
       <!-- Nộp tài liệu -->
-      <?php if ($current['status'] === 'published'): ?>
+      <?php if ($effStatus === BatchStatus::ACTIVE): ?>
         <div class="card shadow">
           <div class="card__header">
             <h3 class="card__title">

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore};
 use App\Models\{Student, Classroom};
 use App\Core\Pageable;
+use App\Enums\BatchStatus;
 use Database;
 
 interface IInternshipBatchService
@@ -316,14 +317,14 @@ class InternshipBatchService implements IInternshipBatchService
 
   public function publishBatch(int $id): bool
   {
-    return $this->_store->updateStatus($id, 'published', [
+    return $this->_store->updateStatus($id, BatchStatus::PUBLISHED, [
       'published_at' => date('Y-m-d H:i:s')
     ]);
   }
 
   public function closeBatch(int $id): bool
   {
-    return $this->_store->updateStatus($id, 'closed', [
+    return $this->_store->updateStatus($id, BatchStatus::CLOSED, [
       'closed_at' => date('Y-m-d H:i:s')
     ]);
   }

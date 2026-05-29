@@ -1,5 +1,6 @@
 <?php
-
+use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
 use App\Core\Auth;
 
 /**
@@ -47,8 +48,15 @@ foreach ($classrooms as $c) {
       </h2>
       <div class="text-sm mt-1 flex items-center" style="color: var(--muted-foreground)">
         <?= htmlspecialchars((string)$batch['title']) ?>
-        <span class="badge ml-2" data-variant="<?= $batch['status'] == 'published' ? 'primary' : ($batch['status'] == 'closed' ? 'secondary' : 'destructive') ?>">
-          <?= $batch['status'] == 'published' ? 'Đã công bố' : ($batch['status'] == 'closed' ? 'Đã kết thúc' : 'Bản nháp') ?>
+        <?php 
+          $batchModel = new \App\Models\InternshipBatch();
+          $batchModel->status = $batch['status'] ?? 'draft';
+          $batchModel->start_at = $batch['start_at'] ?? null;
+          $batchModel->end_at = $batch['end_at'] ?? null;
+          $effStatus = $batchModel->getEffectiveStatus();
+        ?>
+        <span class="badge ml-2" data-variant="<?= BatchStatus::getVariant($effStatus) ?>">
+          <?= BatchStatus::getLabel($effStatus) ?>
         </span>
       </div>
     </div>

@@ -18,6 +18,9 @@ require_once BASE_PATH . '/includes/core/schema/model.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/base_sql_compiler.php';
 require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 
+// Enums
+require_once BASE_PATH . '/includes/core/enums/batch_status.php';
+
 // Session
 require_once BASE_PATH . '/includes/core/session/session.php';
 // Middelware
