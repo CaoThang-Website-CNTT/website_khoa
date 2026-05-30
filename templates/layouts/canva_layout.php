@@ -10,17 +10,7 @@ if ($oldEditorData) {
 } else if (isset($post)) {
   // Nếu là Edit, map dữ liệu của bài viết sang payload dạng JSON
   $initialPayload = [
-    'meta' => [
-      'title' => $post->title,
-      'slug' => $post->slug,
-      'status' => $post->status,
-      'author_id' => $post->author_id,
-      'category_ids' => array_map(fn($c) => $c->id, $post->categories ?? []),
-      'excerpt' => $post->seo_description,
-      'featured_image' => $post->seo_image_url,
-      'init_view_count' => $post->view_count,
-      'settings' => json_decode($post->settings_json ?? '{}', true)
-    ],
+    'meta' => json_decode($post->settings_json ?? '{}', true),
     'blocks' => json_decode($post->content_json ?? '[]', true)
   ];
 }
@@ -218,17 +208,17 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 
                 <div class="field" data-orientation="horizontal">
                   <div class="field__content"><span class="field__label">Hiển thị Tác giả</span></div>
-                  <button class="switch" type="button" role="switch" name="show_author" data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_author'] ?? true) ? 'checked' : '' ?>" data-be-meta-key="settings.show_author"><span class="switch__thumb"></span></button>
+                  <button class="switch" type="button" role="switch" name="settings.show_author" data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_author'] ?? true) ? 'checked' : '' ?>" data-be-meta-key="settings.show_author"><span class="switch__thumb"></span></button>
                 </div>
 
                 <div class="field" data-orientation="horizontal">
                   <div class="field__content"><span class="field__label">Hiển thị Ngày xuất bản</span></div>
-                  <button class="switch" type="button" role="switch" name="show_date" data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_date'] ?? true) ? 'checked' : '' ?>" data-be-meta-key="settings.show_date"><span class="switch__thumb"></span></button>
+                  <button class="switch" type="button" role="switch" name="settings.show_date" data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_date'] ?? true) ? 'checked' : '' ?>" data-be-meta-key="settings.show_date"><span class="switch__thumb"></span></button>
                 </div>
 
                 <div class="field" data-orientation="horizontal">
                   <div class="field__content"><span class="field__label">Hiển thị Lượt xem</span></div>
-                  <button class="switch" type="button" role="switch" name="show_view_count" data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_view_count'] ?? true) ? 'checked' : '' ?>" data-be-meta-key="settings.show_view_count"><span class="switch__thumb"></span></button>
+                  <button class="switch" type="button" role="switch" name="settings.show_view_count" data-switch-default-state="<?= ($initialPayload['meta']['settings']['show_view_count'] ?? true) ? 'checked' : '' ?>" data-be-meta-key="settings.show_view_count"><span class="switch__thumb"></span></button>
                 </div>
 
                 <div class="field" data-be-meta-preview="settings.show_view_count" data-be-preview-action="toggle">
@@ -241,7 +231,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
                     <span class="field__label">Bài viết nổi bật</span>
                     <div class="field__description">Bài viết sẽ được hiển thị ở vị trí nổi bật trên trang chủ</div>
                   </div>
-                  <button class="switch" type="button" role="switch" name="is_featured" data-switch-default-state="<?= ($initialPayload['meta']['settings']['is_featured'] ?? false) ? 'checked' : '' ?>" data-be-meta-key="settings.is_featured"><span class="switch__thumb"></span></button>
+                  <button class="switch" type="button" role="switch" name="settings.is_featured" data-switch-default-state="<?= ($initialPayload['meta']['settings']['is_featured'] ?? false) ? 'checked' : '' ?>" data-be-meta-key="settings.is_featured"><span class="switch__thumb"></span></button>
                 </div>
               </div>
             </div>

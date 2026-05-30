@@ -525,25 +525,8 @@ export class EditorManager {
     if (!payload) return;
 
     if (payload.meta) {
-      // Đệ quy để nạp metadata (hỗ trợ dot-notation tự động)
-      const traverse = (obj, prefix = '') => {
-        for (const [key, value] of Object.entries(obj)) {
-          const path = prefix ? `${prefix}.${key}` : key;
 
-          // Nếu key là 'settings' và value là mảng, skip (sai structure)
-          if (key === 'settings' && Array.isArray(value)) {
-            console.warn(`[EditorManager] Bỏ qua settings là mảng. Dữ liệu từ server sai format.`, value);
-            continue;
-          }
-
-          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-            traverse(value, path);
-          } else {
-            this.#metadata.setData(path, value);
-          }
-        }
-      };
-      traverse(payload.meta);
+      this.#metadata.mergeData(payload.meta);
 
       // Force UI sync sau khi nạp xong
       this.#bus.dispatch('meta:sync_request');
@@ -781,11 +764,16 @@ class EditorCanvasMetadata {
     this.#initEvents();
   }
 
+  mergeData(payload) {
+    this.#data = this.#deepMerge(this.#data, payload);
+  }
+
   /**
    * Deep merge objects
    * @private
    */
   #deepMerge(target, source) {
+    console.log(target, source);
     const result = { ...target };
 
     for (const [key, value] of Object.entries(source)) {
@@ -811,23 +799,13 @@ class EditorCanvasMetadata {
     this.#bus.subscribe('meta:sync_request', () => {
       console.log('[EditorCanvasMetadata] Đang đồng bộ State khởi tạo xuống UI...');
 
-      const traverse = (obj, prefix = '') => {
-        for (const [key, value] of Object.entries(obj)) {
-          const path = prefix ? `${prefix}.${key}` : key;
-
-          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-            traverse(value, path);
-          } else {
-            this.#bus.dispatch('meta:updated', {
-              key: path,
-              value: value,
-              allMeta: this.getData()
-            });
-          }
-        }
+      for (const [key, value] of Object.entries(this.#data)) {
+        this.#bus.dispatch('meta:updated', {
+          key: key, // Chỉ lấy key cấp 1 (VD: 'title', 'settings')
+          value: value,
+          allMeta: this.getData()
+        });
       }
-
-      traverse(this.#data);
     });
   }
 
@@ -837,6 +815,7 @@ class EditorCanvasMetadata {
    * @param {any} value - Giá trị mới
    */
   setData(key, value) {
+    console.log(this.#data, key, value);
     const keys = key.split('.');
     let target = this.#data;
 

@@ -2,14 +2,13 @@
 
 namespace App\Controllers;
 
-require_once BASE_PATH . "/includes/core/controller.php";
-
 use App\Core\Controller;
-use App\Services\{CarouselService, MenuService, WebSettingsService};
+use App\Services\{PostService, CarouselService, MenuService, WebSettingsService};
 
 class SiteController extends Controller
 {
   private MenuService $_menuService;
+  private PostService $_postService;
   private CarouselService $_carouselService;
   private WebSettingsService $_settingService;
 
@@ -34,32 +33,56 @@ class SiteController extends Controller
   public function __construct(
     MenuService $menuService,
     CarouselService $carouselService,
+    PostService $postService,
     WebSettingsService $settingService,
   ) {
     $this->_menuService = $menuService;
     $this->_carouselService = $carouselService;
+    $this->_postService = $postService;
     $this->_settingService = $settingService;
 
     $this->_loadSettings();
   }
 
-  // ============================================================================
-  // Pages
-  // ============================================================================
-
-  public function index(): void
+  public function index()
   {
-    // Sử dụng method mới: lấy thẳng menu cùng cây items của nó
     $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
     $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
 
     // Lấy slide carousel (Kèm fallback an toàn nếu chưa có dữ liệu)
-    $carousel = $this->_carouselService->getBySlugWithSlides("landing-page");
+    $carousel = $this->_carouselService->getBySlugWithSlides("landing-page", with_media: true);
     $carouselSlides = $carousel !== null ? $carousel->slides : [];
 
-    $this->render('site/landing', [
+    return $this->render('site/landing', [
       'headerMenu' => $headerMenuItems,
       'carouselSlides' => $carouselSlides,
+      'settings' => $this->_settings,
+    ], "site_layout");
+  }
+
+  public function news_index()
+  {
+    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
+    $featuredNews = $this->_postService->getFeaturedPosts(2);
+    $allNews = $this->_postService->getPosts(page: 1, limit: 6);
+
+    return $this->render('site/news/index', [
+      'headerMenu' => $headerMenuItems,
+      'featuredNews' => $featuredNews,
+      'allNews' => $allNews,
+      'settings' => $this->_settings,
+    ], "site_layout");
+  }
+
+  public function news_show($slug) {
+    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
+    $news = $this->_postService->getPostBySlug($slug);
+
+    return $this->render('site/news/detail', [
+      'headerMenu' => $headerMenuItems,
+      'news' => $news,
       'settings' => $this->_settings,
     ], "site_layout");
   }

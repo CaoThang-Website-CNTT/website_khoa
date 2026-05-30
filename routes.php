@@ -3,8 +3,14 @@
 use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
 use App\Core\Router;
 
+// Site
 $router->get('/', [SiteController::class, 'index']);
-$router->get('/admin', [DashboardController::class, 'index']);
+$router->prefix('tin-tuc')->group(function (Router $router) {
+  $router->get('/', [SiteController::class, 'news_index']);
+  $router->get('/{slug}', [SiteController::class, 'news_show']);
+});
+$router->get('/gioi-thieu', [SiteController::class, 'about']);
+$router->get('/lien-he', [SiteController::class, 'contact']);
 
 // Auth
 $router->get('/login', [AuthController::class, 'show']);
@@ -13,6 +19,8 @@ $router->get('/onboarding', [AuthController::class, 'onboard']);
 $router->post('/onboarding', [AuthController::class, 'completeOnboarding']);
 $router->get('/logout', [AuthController::class, 'logout']);
 
+// Admin
+$router->get('/admin', [DashboardController::class, 'index']);
 $router->prefix('admin')->group(function (Router $router) {
   $router->get('/', [DashboardController::class, 'index']);
 

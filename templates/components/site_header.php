@@ -43,10 +43,12 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
         </div>
         <?php if ($headerMode === "full"): ?>
         <div class="flex items-center gap-4">
-          <div class="search-bar flex items-center px-4 gap-2 rounded-3xl text-sm">
-            <i class="fa-brands fa-sistrix"></i>
-            <input class="search-bar__input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
-          </div>
+          <label class="search-bar flex items-center px-4 gap-2 rounded-3xl text-sm" data-variant="alt" for="search-input" >
+            <span class="search-bar__icon" aria-hidden="true">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input class="search-bar__input" id="search-input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
+          </label>
 
           <?php $authUser = request()->session()->authUser(); ?>
           <?php if ($authUser): ?>

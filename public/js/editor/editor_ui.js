@@ -201,8 +201,18 @@ class EditorMetaBinder {
     this.#bindEvents();
 
     this.bus.subscribe('meta:updated', ({ key, value, allMeta }) => {
-      this.#syncControl(key, value);
-      this.#syncPreview(key, value, allMeta);
+      const syncToDOM = (currentPath, currentVal) => {
+        if (currentVal !== null && typeof currentVal === 'object' && !Array.isArray(currentVal)) {
+          for (const [subKey, subValue] of Object.entries(currentVal)) {
+            syncToDOM(`${currentPath}.${subKey}`, subValue);
+          }
+        } else {
+          this.#syncControl(currentPath, currentVal);
+          this.#syncPreview(currentPath, currentVal, allMeta);
+        }
+      };
+
+      syncToDOM(key, value);
     });
 
     this.bus.dispatch('meta:sync_request');
@@ -315,7 +325,7 @@ class EditorMetaBinder {
         }
       }
 
-      if (key === 'show_view_count') {
+      if (key === 'settings.show_view_count' || key === 'show_view_count') {
         document.getElementById('be-view-botting-wrapper')?.classList.toggle('hidden', !value);
       }
     });

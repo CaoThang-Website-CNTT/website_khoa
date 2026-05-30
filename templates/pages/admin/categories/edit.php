@@ -7,6 +7,18 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
+<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php if ($flash = request()->session()->getFlash("notification")): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      toast.<?= ($flash['type']) ?>(
+        '<?= $flash['title'] ?>',
+        '<?= $flash['desc'] ?>'
+      );
+    });
+  </script>
+<?php endif; ?>
+
 <?php if (!$category->isEditable()): ?>
   <section class="banner" data-variant="info" role="region" aria-label="Thông báo trạng thái">
     <i class="fa-solid fa-lock"></i> Danh mục hệ thống. Bạn chỉ có quyền xem dữ liệu này.

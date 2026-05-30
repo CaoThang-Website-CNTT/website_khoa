@@ -48,8 +48,8 @@ function renderCarousel(array $carouselSlides): void
             </div>
 
             <div class="image-wrapper carousel__image-wrapper rounded-3xl">
-              <img src="<?= htmlspecialchars($slide->image_path) ?>"
-                alt="<?= htmlspecialchars($slide->image_alt ?: $slide->title) ?>" class="image carousel__image">
+              <img src="<?= htmlspecialchars(url('public/media/' . $slide->media->file_path)) ?>"
+                alt="<?= htmlspecialchars($slide->media->alt_text ?: $slide->title) ?>" class="image carousel__image">
             </div>
 
           <?php endif; ?>
@@ -522,7 +522,7 @@ function renderCarousel(array $carouselSlides): void
 
       <div id="featured-news" class="newsfeed__featured-group flex flex-col gap-6">
 
-        <div class="news-card news-card--featured relative overflow-hidden rounded-3xl">
+        <article class="news-card news-card--featured relative overflow-hidden rounded-3xl">
           <div class="news-card__image-wrapper image-wrapper">
             <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
               alt="This is an image of a student won a tournament"
@@ -550,7 +550,7 @@ function renderCarousel(array $carouselSlides): void
               </a>
             </div>
           </div>
-        </div>
+        </article>
 
         <div class="newsfeed__secondary-grid flex gap-6 justify-center items-stretch self-stretch">
 

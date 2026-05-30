@@ -10,10 +10,11 @@ function renderLeafItem(MenuItem $item): void
 {
   $disabled = !empty($item->disabled) ? 'data-disabled' : '';
   $hasUrl = $item->url && $item->url !== '#';
+  $itemUrl = htmlspecialchars(url($item->url));
   ?>
   <div class="dropdown__item" role="menuitem" tabindex="-1" <?= $disabled ?>>
     <?php if ($hasUrl): ?>
-      <a href="<?= htmlspecialchars($item->url) ?>" class="navbar__link">
+      <a href="<?= $itemUrl ?>" class="navbar__link">
         <?= htmlspecialchars($item->label) ?>
       </a>
     <?php else: ?>
@@ -40,11 +41,13 @@ function renderDropdownItem(
   string $triggerMode = 'hover',
   int $depth = 0,
   int $maxDepth = 2
-): void {
+): void
+{
   if ($depth > $maxDepth)
     return;
 
   $hasChildren = $item->hasChildren();
+  $itemUrl = htmlspecialchars(url($item->url));
 
   /* ---- Depth 0: Root trigger + content panel --------------------- */
   if ($depth === 0) {
@@ -55,7 +58,7 @@ function renderDropdownItem(
       <div class="navbar__item<?= $activeClass ?> dropdown__trigger"
         data-dropdown-trigger-mode="<?= htmlspecialchars($triggerMode) ?>" data-state="closed" role="button" tabindex="0"
         aria-haspopup="menu" aria-expanded="false">
-        <a href="<?= htmlspecialchars($item->url) ?>" class="navbar__link" tabindex="-1">
+        <a href="<?= $itemUrl ?>" class="navbar__link" tabindex="-1">
           <?= htmlspecialchars($item->label) ?>
         </a>
         <?php if ($hasChildren): ?>
@@ -84,7 +87,7 @@ function renderDropdownItem(
 
         <div class="dropdown__sub-trigger dropdown__item" data-state="closed" role="menuitem" aria-haspopup="menu"
           aria-expanded="false" <?= $disabled ?>>
-          <a href="<?= htmlspecialchars($item->url) ?>" class="navbar__link" tabindex="-1">
+          <a href="<?= $itemUrl ?>" class="navbar__link" tabindex="-1">
             <?= htmlspecialchars($item->label) ?>
             <svg class="dropdown__item-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true" width="14" height="14">
               <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
@@ -156,8 +159,10 @@ function renderNav(
         <?php if ($item->hasChildren()): ?>
           <?php renderDropdownItem($item, $triggerMode, 0, $maxDepth); ?>
         <?php else: ?>
+          <?php $itemUrl = htmlspecialchars(url($item->url)); ?>
+          
           <div class="navbar__item <?= $item->isActive(request()->path()) ? 'navbar__item--active' : '' ?>">
-            <a href="<?= htmlspecialchars($item->url) ?>" class="navbar__link">
+            <a href="<?= $itemUrl ?>" class="navbar__link">
               <?= htmlspecialchars($item->label) ?>
             </a>
           </div>

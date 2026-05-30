@@ -103,6 +103,7 @@ class SelectHandler {
     const trigger = root.querySelector(':scope > .select__trigger') || this._buildTrigger(root, isDisabled, placeholder, isMultiple);
     const contentWrapper = document.createElement("div");
     contentWrapper.classList.add("select__content-wrapper");
+    contentWrapper.dataset.selectFor = id;
     contentWrapper.appendChild(root.querySelector(':scope > .select__content') || this._buildContent(root, isSearchable))
     const content = contentWrapper;
 

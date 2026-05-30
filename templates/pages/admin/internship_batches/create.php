@@ -126,7 +126,7 @@
               <div class="flex justify-between items-center w-full mb-2">
                 <label class="field__label mb-0">Chọn nhanh theo Lớp học:</label>
                 <div class="search-bar flex items-center px-4 gap-2 rounded-xl text-sm">
-                  <i class="fa-brands fa-sistrix"></i>
+                  <i class="fa-solid fa-magnifying-glass"></i>
                   <input type="text" id="search-classrooms" class="search-bar__input" placeholder="Tìm lớp/ngành..."
                     autocomplete="off" autocorrect="off">
                 </div>
@@ -139,7 +139,7 @@
 
             <div class="flex justify-between items-center mb-4 gap-4">
               <div class="search-bar search-bar--students flex items-center px-4 gap-2 rounded-xl text-sm mb-2">
-                <i class="fa-brands fa-sistrix"></i>
+                <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="search-students" class="search-bar__input"
                   placeholder="Tìm SV trong bảng (theo MSSV hoặc Tên)..." autocomplete="off" autocorrect="off">
               </div>
@@ -215,7 +215,7 @@
                     <i class="fa-solid fa-scale-balanced mr-1"></i> Chia đều
                   </button>
                   <div class="search-bar flex items-center px-4 gap-2 rounded-3xl text-sm">
-                    <i class="fa-brands fa-sistrix"></i>
+                    <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" id="search-teachers" class="search-bar__input"
                       placeholder="Tìm tên/email giảng viên..." autocomplete="off" autocorrect="off">
                   </div>

@@ -22,6 +22,7 @@ return new class extends BaseMigration {
       $table->varchar('seo_description', 400)->nullable();
       $table->varchar('seo_image_url', 255)->nullable();
       $table->boolean('is_featured')->default(false);
+      $table->int('read_time')->default(0)->comment('Hệ thống sẽ tự làm tròn lên. Nếu là 0 thì show_read_time không bật, > 0 thì hiển thị. Đơn vị: phút');
 
       $table->timestamp('published_at')->nullable();
       $table->timestamps();

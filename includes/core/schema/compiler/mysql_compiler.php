@@ -16,6 +16,31 @@ class MySQLCompiler extends BaseSQLCompiler
       return $value;
     }
 
+    // Hỗ trợ alias với cú pháp "column AS alias" hoặc "table.column AS alias"
+    if (stripos($value, ' as ') !== false) {
+      $segments = preg_split('/\s+as\s+/i', $value);
+      return $this->wrap($segments[0]) . ' AS ' . $this->wrap($segments[1]);
+    }
+
+    // JSON
+    // Toán tử "->>": lấy text
+    if (str_contains($value, '->>')) {
+      $parts = explode('->>', $value);
+      $column = $this->wrap(trim($parts[0])); // Đệ quy wrap tên cột
+      $path = "$." . ltrim(trim($parts[1]), '$.'); // Đảm bảo luôn bắt đầu bằng $.
+      
+      return "JSON_UNQUOTE(JSON_EXTRACT({$column}, '{$path}'))";
+    }
+
+    // Toán tử "->": lấy JSON thô
+    if (str_contains($value, '->')) {
+      $parts = explode('->', $value);
+      $column = $this->wrap(trim($parts[0]));
+      $path = "$." . ltrim(trim($parts[1]), '$.');
+      
+      return "JSON_EXTRACT({$column}, '{$path}')";
+    }
+
     // Handle 'table.column'
     if (str_contains($value, '.')) {
       return implode('.', array_map(fn($p) => "`$p`", explode('.', $value)));

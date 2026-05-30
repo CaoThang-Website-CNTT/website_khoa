@@ -18,6 +18,7 @@ class Post extends Model
     public ?string $seo_description = null,
     public ?string $seo_image_url = null,
     public bool $is_featured = false,
+    public int $read_time = 0,
 
     public ?string $created_at = null,
     public ?string $published_at = null,
@@ -49,6 +50,7 @@ class Post extends Model
       'view_count' => $this->view_count,
       'seo_description' => $this->seo_description,
       'seo_image_url' => $this->seo_image_url,
+      'read_time' => $this->read_time,
       'published_at' => $this->published_at,
       'created_at' => $this->created_at,
       'updated_at' => $this->updated_at,

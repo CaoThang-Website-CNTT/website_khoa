@@ -39,7 +39,15 @@ require_once BASE_PATH . '/includes/core/image_processor.php';
 
 
 // Editor
-require_once BASE_PATH . '/includes/editor/block_schema.php';
+require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/abstract_block_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/heading_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/paragraph_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/quote_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/list_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/image_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/table_renderer.php';
+require_once BASE_PATH . '/includes/editor/block_validator.php';
 require_once BASE_PATH . '/includes/editor/block_renderer.php';
 
 // Helpers

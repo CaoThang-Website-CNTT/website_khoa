@@ -40,6 +40,8 @@ class PostStore extends Store implements IPostStore
     'seo_image_url',
     'status',
     'view_count',
+    'is_featured',
+    'read_time',
     'author_id',
     'published_at',
     'created_at',
@@ -118,6 +120,27 @@ class PostStore extends Store implements IPostStore
 
     $row = $stmt->fetch(\PDO::FETCH_ASSOC);
     return $row ? Post::fromArray($row) : null;
+  }
+
+  public function getFeatured(int $limit = 5): array
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder
+      ->from('posts')
+      ->select(self::LISTING_COLUMNS)
+      ->is('deleted_at', null)
+      ->eq('is_featured', "1")
+      ->order('created_at', ['ascending' => false])
+      ->limit($limit);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    return array_map(
+      fn(array $row) => Post::fromArray($row),
+      $stmt->fetchAll(\PDO::FETCH_ASSOC),
+    );
   }
 
   public function findBySlug(string $slug): ?Post

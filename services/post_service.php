@@ -15,7 +15,13 @@ interface IPostService
 
   public function getPosts(int $page, int $limit = 15): Pageable;
   public function getPost(int $post_id): Post;
-
+  public function getPostBySlug(string $slug): Post;
+  /**
+   * Lấy n (mặc định là 5) bài viết nổi bật nhất (featured).
+   * 
+   * @return Post[]
+   */
+  public function getFeaturedPosts(int $limit = 5): array;
   /**
    * Cập nhật nội dung và/hoặc trạng thái của bài viết.
    * Chỉ các field được truyền mới bị ghi đè — các field còn lại giữ nguyên.
@@ -76,6 +82,23 @@ class PostService implements IPostService
     return $post;
   }
 
+  public function getPostBySlug(string $slug): Post
+  {
+    $post = $this->_postStore->findBySlug($slug)
+      ?? throw new \RuntimeException("Bài viết với slug '{$slug}' không tồn tại.");
+
+    $categoryIds = $this->_postStore->getCategoryIds($post->id);
+    $post->categories = $this->_categoryStore->getByIds($categoryIds);
+
+    return $post;
+  }
+
+  /** @return Post[] */
+  public function getFeaturedPosts(int $limit = 5): array
+  {
+    return $this->_postStore->getFeatured($limit);
+  }
+
   public function create(array $payload): Post
   {
     $meta = $payload['meta'] ?? [];
@@ -124,7 +147,7 @@ class PostService implements IPostService
       view_count: (int) ($meta['init_view_count'] ?? 0),
       seo_description: $meta['excerpt'] ?? null,
       seo_image_url: $this->resolveSeoImage($meta['featured_image'] ?? null),
-      is_featured: $meta['settings']['is_featured'] ?? false,
+      is_featured: $meta['is_featured'] ?? false,
       published_at: $publishedAt,
     );
 
@@ -153,31 +176,23 @@ class PostService implements IPostService
     $data = [];
 
     if (isset($meta['title']))           $data['title'] = $meta['title'];
+    if (isset($meta['slug']))            $data['slug'] = $this->resolveSlug($meta['slug'], $meta['title'] ?? $existing->title);
     if (isset($meta['author_id']))       $data['author_id'] = (int) $meta['author_id'];
-    if (isset($meta['excerpt']))         $data['seo_description'] = $meta['excerpt'];
     if (isset($meta['status']))          $data['status'] = $meta['status'];
     if (isset($meta['init_view_count'])) $data['view_count'] = (int) $meta['init_view_count'];
-
-    if (isset($meta['slug'])) {
-        $data['slug'] = $this->resolveSlug($meta['slug'], $meta['title'] ?? $existing->title);
-    }
-
-    if (isset($meta['featured_image'])) {
-        $data['seo_image_url'] = $this->resolveSeoImage($meta['featured_image']);
-    }
-
-    if (isset($meta['settings'])) {
-        $data['settings_json'] = json_encode($meta['settings'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    }
-
-    if (isset($meta['settings']['is_featured'])) {
-        $data['is_featured'] = (bool) $meta['settings']['is_featured'];
-    }
-
+    if (isset($meta['excerpt']))         $data['seo_description'] = $meta['excerpt'];
+    if (isset($meta['featured_image']))  $data['seo_image_url'] = $this->resolveSeoImage($meta['featured_image']);
+    if (isset($meta['read_time']))       $data['read_time'] = (int) $meta['read_time'];
+    if (isset($meta['settings']['is_featured']))     $data['is_featured'] = $meta['settings']['is_featured'];
+    
     // published_at: chỉ ghi lần đầu khi chuyển sang published
     // Nếu đã có published_at trước đó thì giữ nguyên
     if (isset($meta['status']) && $meta['status'] === 'published' && $existing->published_at === null) {
       $data['published_at'] = (new \DateTime())->format('Y-m-d H:i:s');
+    }
+
+    if (isset($meta)) {
+      $data['settings_json'] = json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     if ($blocks !== null) {

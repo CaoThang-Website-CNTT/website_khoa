@@ -9,11 +9,12 @@
             Menu
           </button>
         </div>
-        <div class="search-bar flex items-center px-4 gap-2 rounded-3xl text-sm">
-          <i class="fa-brands fa-sistrix"></i>
-
-          <input class="search-bar__input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
-        </div>
+        <label class="search-bar" data-variant="alt" for="dashboard-search-input">
+          <span class="search-bar__icon" aria-hidden="true">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input class="search-bar__input" id="dashboard-search-input" placeholder="Tìm kiếm..." autocomplete="off" autocorrect="off">
+        </label>
       </div>
     </div>
   </div>

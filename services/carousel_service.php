@@ -19,7 +19,7 @@ interface ICarouselService
   public function getCarouselById(int $id): ?Carousel;
   public function getBySlug(string $slug): ?Carousel;
   public function getWithSlides(int $id): ?Carousel;
-  public function getBySlugWithSlides(string $slug): ?Carousel;
+  public function getBySlugWithSlides(string $slug, bool $with_media = false): ?Carousel;
   public function create(array $data): ?Carousel;
   public function update(int $id, array $data): bool;
   public function delete(int $id): bool;
@@ -93,13 +93,27 @@ class CarouselService implements ICarouselService
     return $carousel;
   }
 
-  public function getBySlugWithSlides(string $slug): ?Carousel
+  public function getBySlugWithSlides(string $slug, bool $with_media = false): ?Carousel
   {
     $carousel = $this->_carouselStore->getBySlug($slug);
     if ($carousel === null) {
       return null;
     }
     $carousel->slides = $this->_carouselStore->getSlides($carousel->id);
+    if ($with_media) {
+      $mediaIds = [];
+      foreach ($carousel->slides as $slide) {
+        if ($slide->media_id) {
+          $mediaIds[] = $slide->media_id;
+        }
+      }
+      $mediaList = array_column($this->_mediaStore->getByIds($mediaIds), null, 'id');
+      foreach ($carousel->slides as $slide) {
+        if ($slide->media_id) {
+          $slide->media = $mediaList[$slide->media_id];
+        }
+      }
+    }
     return $carousel;
   }
 
