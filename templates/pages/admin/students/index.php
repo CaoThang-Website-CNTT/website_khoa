@@ -45,7 +45,7 @@
     <!-- Cột Tên -->
     <template data-tm-col="full_name" data-tm-label="Họ tên" data-tm-sortable data-tm-filter-type="text">
       <div class="flex flex-col">
-        <a href="<?= url('admin/students/') ?>{{ row.student_id }}" class="font-medium text-primary">{{ value }}</a>
+        <a href="<?= url('admin/students/') ?>{{ row.student_id }}" class="font-medium">{{ value }}</a>
       </div>
     </template>
 
@@ -54,13 +54,13 @@
 
     <!-- Cột Lớp -->
     <?php
-      $classOptions = [['label' => 'Tất cả', 'value' => '']];
-      foreach ($classrooms as $c) {
-        $classOptions[] = ['label' => $c->short_name, 'value' => $c->short_name];
-      }
+    $classOptions = [['label' => 'Tất cả', 'value' => '']];
+    foreach ($classrooms as $c) {
+      $classOptions[] = ['label' => $c->short_name, 'value' => $c->short_name];
+    }
     ?>
-    <template data-tm-col="class_name" data-tm-label="Lớp" 
-      data-tm-filter-type="select" 
+    <template data-tm-col="class_name" data-tm-label="Lớp"
+      data-tm-filter-type="select"
       data-tm-filter-options='<?= json_encode($classOptions, JSON_UNESCAPED_UNICODE) ?>'></template>
 
     <!-- Cột Gender -->
@@ -82,7 +82,7 @@
 <!-- JSON Data Source cho TableManager -->
 <script type="application/json" data-tm-data="students_table">
   <?= json_encode([
-    'rows' => array_map(function($student) {
+    'rows' => array_map(function ($student) {
       return [
         'id' => $student->id,
         'full_name' => $student->full_name ?? 'N/A',

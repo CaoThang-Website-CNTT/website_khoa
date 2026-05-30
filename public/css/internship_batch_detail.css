@@ -221,7 +221,10 @@ textarea#description {
 .stat-card--interactive {
   text-decoration: none;
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .stat-card--interactive:hover {
@@ -231,7 +234,9 @@ textarea#description {
 }
 
 .stat-card__arrow {
-  transition: transform 0.2s ease, color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
 }
 
 .stat-card--interactive:hover .stat-card__arrow {

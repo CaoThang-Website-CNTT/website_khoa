@@ -40,7 +40,7 @@
 
     <!-- Cột Tên lớp -->
     <template data-tm-col="short_name" data-tm-label="Tên lớp" data-tm-sortable data-tm-filter-type="text">
-      <a href="<?= url('admin/classrooms/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+      <a href="<?= url('admin/classrooms/') ?>{{ row.id }}" class="font-medium">{{ value }}</a>
     </template>
 
     <!-- Cột Ngành -->

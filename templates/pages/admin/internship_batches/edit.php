@@ -94,7 +94,7 @@ $currentStatus = [
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="detail-layout mt-6">
+<div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
 
@@ -145,9 +145,6 @@ $currentStatus = [
         <span class="stat-card__value">
           <span class="<?= $currentStatus['class'] ?>" data-variant="<?= $currentStatus['variant'] ?>"><?= $currentStatus['label'] ?></span>
         </span>
-        <div class="stat-card__footer">
-          Trạng thái hoạt động đợt thực tập
-        </div>
       </div>
     </div>
 
@@ -190,21 +187,6 @@ $currentStatus = [
 
   <!-- SIDEBAR -->
   <div class="detail-layout__sidebar">
-    <!-- Card: Đối tượng áp dụng -->
-    <div class="card shadow-sm">
-      <div class="card__header text-sm font-semibold">Đối tượng áp dụng</div>
-      <hr class="separator">
-      <div class="card__content p-4 space-y-1">
-        <div class="readonly-info">
-          <span class="readonly-info__label">Niên khóa:</span>
-          <span class="readonly-info__value">Khóa <?= htmlspecialchars($batchObj->class_of) ?></span>
-        </div>
-        <div class="readonly-info">
-          <span class="readonly-info__label">Bậc học:</span>
-          <span class="readonly-info__value"><?= htmlspecialchars($batchObj->level) ?></span>
-        </div>
-      </div>
-    </div>
 
     <!-- Card: Thông tin khác -->
     <div class="card shadow-sm">

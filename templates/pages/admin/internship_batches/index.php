@@ -50,15 +50,8 @@ use App\Models\InternshipBatch;
 
     <!-- Cột Tên đợt -->
     <template data-tm-col="title" data-tm-label="Tên đợt" data-tm-sortable data-tm-filter-type="text">
-      <a href="<?= url('admin/internship_batches/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+      <a href="<?= url('admin/internship_batches/') ?>{{ row.id }}" class="font-medium">{{ value }}</a>
     </template>
-
-    <!-- Cột Khóa -->
-    <template data-tm-col="class_of" data-tm-label="Khóa" data-tm-sortable data-tm-filter-type="text"></template>
-
-    <!-- Cột Bậc học -->
-    <template data-tm-col="level" data-tm-label="Bậc học" data-tm-filter-type="select"
-      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Cao đẳng ngành","value":"CĐ"},{"label":"Cao đẳng nghề","value":"CĐN"}]'></template>
 
     <!-- Cột Ngày bắt đầu -->
     <template data-tm-col="start_at" data-tm-label="Bắt đầu" data-tm-sortable></template>

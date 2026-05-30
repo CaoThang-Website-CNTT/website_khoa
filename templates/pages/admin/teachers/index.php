@@ -41,7 +41,7 @@
 
     <!-- Cột Tên -->
     <template data-tm-col="full_name" data-tm-label="Họ tên" data-tm-sortable data-tm-filter-type="text">
-      <a href="<?= url('admin/teachers/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+      <a href="<?= url('admin/teachers/') ?>{{ row.id }}" class="font-medium">{{ value }}</a>
     </template>
 
     <!-- Cột Mã GV -->

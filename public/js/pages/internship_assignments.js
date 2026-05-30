@@ -66,8 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isSelected) tr.classList.add("assignment-row--selected");
 
       // Inline Edit UI
-      const teacherName =
-        ass.teacher_name || '<span class="text-muted">Chưa phân công</span>';
+      const teacherName = ass.teacher_name || "<span>Chưa phân công</span>";
 
       tr.innerHTML = `
         <td>
@@ -86,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="teacher-edit-container">
               <select class="field__input teacher-inline-select">
                 <option value="">-- Chọn Giảng viên --</option>
-                <option value="unassign" class="text-destructive font-bold" ${!ass.teacher_id ? "disabled" : ""}>Không có</option>
+                <option value="unassign" class="font-bold" ${!ass.teacher_id ? "disabled" : ""}>Không có</option>
                 <hr>
                 ${supervisors
                   .map(
