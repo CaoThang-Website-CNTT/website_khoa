@@ -1,74 +1,150 @@
 <?php
-
 namespace App\Editor;
 
-/**
- * BlockRenderer
- * 
- * Nhận mảng blocks từ DB (đã json_decode), render từng block
- * bằng cách dispatch sang file template riêng theo type + version.
- * 
- * Pattern: Strategy dispatch qua filesystem.
- * Mỗi block type có thư mục riêng, mỗi version có file riêng:
- *   templates/blocks/heading/v1.php
- *   templates/blocks/paragraph/v1.php
- *   ...
- * 
- * Lợi ích: thêm block type mới không đụng vào class này.
- * Migration: v2.php ra đời mà v1.php vẫn serve bài viết cũ.
- */
-class BlockRenderer
+use App\Editor\Blocks\AbstractBlockRenderer;
+use App\Editor\Blocks\HeadingRenderer;
+use App\Editor\Blocks\ImageRenderer;
+use App\Editor\Blocks\ListRenderer;
+use App\Editor\Blocks\ParagraphRenderer;
+use App\Editor\Blocks\QuoteRenderer;
+use App\Editor\Blocks\TableRenderer;
+
+final class BlockRenderer
 {
-  private string $templateBase;
+    /**
+     * Registry: block type → renderer instance.
+     * Lazy-init lần đầu gọi, sau đó reuse.
+     *
+     * @var array<string, AbstractBlockRenderer>|null
+     */
+    private static ?array $registry = null;
 
-  public function __construct(string $templateBase)
-  {
-    // VD: BASE_PATH . '/templates/blocks'
-    $this->templateBase = rtrim($templateBase, '/');
-  }
+    // ─── Public API ───────────────────────────────────────────────────────────
 
-  /**
-   * Render toàn bộ mảng blocks thành HTML string.
-   * Dùng cho SSR + file cache.
-   * 
-   * @param  array  $blocks   Mảng block đã json_decode
-   * @return string           HTML đã render
-   */
-  public function render(array $blocks): string
-  {
-    // Đảm bảo thứ tự theo field 'order' trước khi render
-    usort($blocks, fn($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+    /**
+     * Render từ JSON string (raw từ DB).
+     *
+     * @param  string|null  $json          — Giá trị json từ DB (Phải có blocks, meta)
+     * @param  array        $options       — Tùy chọn render (xem renderBlocks())
+     * @return string                      — HTML string, safe to echo
+     */
+    public static function fromJson(?string $contentJson, array $options = []): string
+    {
+        if ($contentJson === null || $contentJson === '') {
+          return '';
+        }
 
-    return implode("\n", array_map(
-      fn($block) => $this->renderBlock($block),
-      $blocks
-    ));
-  }
+        $payload = json_decode($contentJson, true);
 
-  /**
-   * Render một block đơn lẻ.
-   * Trả về empty string nếu template không tồn tại — graceful degradation.
-   */
-  private function renderBlock(array $block): string
-  {
-    $type = $block['type'] ?? '';
-    $version = (int) ($block['version'] ?? 1);
-    $data = $block['data'] ?? [];
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return '';
+        }
 
-    $tpl = "{$this->templateBase}/{$type}/v{$version}.php";
-
-    if (!file_exists($tpl)) {
-      // Log để biết có block type chưa có template, nhưng không crash trang
-      error_log("[BlockRenderer] Template không tồn tại: {$tpl}");
-      return '';
+        return self::fromArray($payload, $options);
     }
 
-    ob_start();
-    // extract() đưa các key của $data thành biến cục bộ cho template
-    // heading: $text, $level
-    // image:   $url, $caption, $alt
-    extract($data, EXTR_SKIP);
-    require $tpl;
-    return ob_get_clean();
-  }
+    /**
+     * Render từ array đã decode (dùng khi đã json_decode trước đó).
+     *
+     * @param  array|null  $payload
+     * @param  array       $options
+     * @return string
+     */
+    public static function fromArray(?array $payload, array $options = []): string
+    {
+      if (empty($payload)) {
+        return '';
+      }
+
+      try {
+        $normalized = BlockValidator::validatePayload($payload);
+      } catch (BlockValidationException $e) {
+        return '';
+      }
+
+      return self::renderBlocks($normalized['blocks'], $options);
+    }
+
+    // ─── Core render pipeline ─────────────────────────────────────────────────
+
+    /**
+     * Render mảng blocks đã normalized thành HTML.
+     *
+     * Options:
+     *   'wrapper'       => string|false   — CSS class của wrapper div (false = không wrap)
+     *   'eager_first'   => bool           — Render ảnh đầu tiên với loading="eager" (LCP)
+     *
+     * @param  array  $blocks    Normalized blocks từ BlockValidator
+     * @param  array  $options
+     */
+    private static function renderBlocks(array $blocks, array $options = []): string
+    {
+      $registry = self::getRegistry();
+      $html     = '';
+
+      foreach ($blocks as $block) {
+        $type     = $block['type'];
+        $renderer = $registry[$type] ?? null;
+
+        if ($renderer === null) {
+          // Type không có renderer → bỏ qua (forward compatible)
+          continue;
+        }
+
+        try {
+          $html .= $renderer->render($block);
+        } catch (\Throwable $e) {
+          // Một block lỗi không được phá cả trang
+          continue;
+        }
+      }
+
+      // Wrap nếu cần
+      $wrapperClass = $options['wrapper'] ?? 'be-content';
+      if ($wrapperClass !== false && $wrapperClass !== '') {
+        $safeClass = htmlspecialchars((string) $wrapperClass, ENT_QUOTES, 'UTF-8');
+        $html = "<div class=\"{$safeClass}\">{$html}</div>";
+      }
+
+      return $html;
+    }
+
+    // ─── Registry ─────────────────────────────────────────────────────────────
+
+    /**
+     * Build registry lần đầu, reuse từ lần sau.
+     * Không dùng DI container để giữ class này zero-dependency.
+     *
+     * @return array<string, AbstractBlockRenderer>
+     */
+    private static function getRegistry(): array
+    {
+      if (self::$registry !== null) {
+        return self::$registry;
+      }
+
+      self::$registry = [
+        'blocks/heading'   => new HeadingRenderer(),
+        'blocks/paragraph' => new ParagraphRenderer(),
+        'blocks/quote'     => new QuoteRenderer(),
+        'blocks/list'      => new ListRenderer(),
+        'blocks/image'     => new ImageRenderer(),
+        'blocks/table'     => new TableRenderer(),
+      ];
+
+      return self::$registry;
+    }
+
+    /**
+     * Đăng ký thêm renderer tùy chỉnh (dùng cho extension/plugin).
+     * Gọi trước lần render đầu tiên (ví dụ trong AppServiceProvider).
+     *
+     * @param  string                 $type      Ví dụ 'blocks/video'
+     * @param  AbstractBlockRenderer  $renderer
+     */
+    public static function register(string $type, AbstractBlockRenderer $renderer): void
+    {
+      self::getRegistry(); // Đảm bảo registry đã init
+      self::$registry[$type] = $renderer;
+    }
 }
