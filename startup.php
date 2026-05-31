@@ -37,19 +37,6 @@ require_once BASE_PATH . '/includes/core/pageable.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
 require_once BASE_PATH . '/includes/core/image_processor.php';
 
-
-// Editor
-require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
-require_once BASE_PATH . '/includes/editor/blocks/abstract_block_renderer.php';
-require_once BASE_PATH . '/includes/editor/blocks/heading_renderer.php';
-require_once BASE_PATH . '/includes/editor/blocks/paragraph_renderer.php';
-require_once BASE_PATH . '/includes/editor/blocks/quote_renderer.php';
-require_once BASE_PATH . '/includes/editor/blocks/list_renderer.php';
-require_once BASE_PATH . '/includes/editor/blocks/image_renderer.php';
-require_once BASE_PATH . '/includes/editor/blocks/table_renderer.php';
-require_once BASE_PATH . '/includes/editor/block_validator.php';
-require_once BASE_PATH . '/includes/editor/block_renderer.php';
-
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';
 
@@ -75,6 +62,20 @@ require_once BASE_PATH . '/models/media.php';
 require_once BASE_PATH . '/models/post.php';
 require_once BASE_PATH . '/models/company.php';
 require_once BASE_PATH . '/models/referral_letter.php';
+
+// Editor (Post)
+require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
+require_once BASE_PATH . '/includes/editor/render_result.php';
+require_once BASE_PATH . '/includes/editor/blocks/abstract_block_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/heading_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/paragraph_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/quote_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/list_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/image_renderer.php';
+require_once BASE_PATH . '/includes/editor/blocks/table_renderer.php';
+require_once BASE_PATH . '/includes/editor/block_validator.php';
+require_once BASE_PATH . '/includes/editor/block_renderer.php';
+
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';

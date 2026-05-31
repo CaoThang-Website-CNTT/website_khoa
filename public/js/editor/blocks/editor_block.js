@@ -91,13 +91,6 @@ export class EditorBlock {
     };
   }
 
-  // ─── Stats (read time) ────────────────────────────────────────────────────
-
-  /**
-   * Trả về số giây đọc ước tính của block.
-   * Text block dùng WPM, block cấu trúc override với weight riêng.
-   * @returns {{ seconds: number }}
-   */
   // ─── Rich text helpers ────────────────────────────────────────────────────
 
   /**

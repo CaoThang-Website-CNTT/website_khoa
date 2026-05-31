@@ -41,7 +41,6 @@ class PostStore extends Store implements IPostStore
     'status',
     'view_count',
     'is_featured',
-    'read_time',
     'author_id',
     'published_at',
     'created_at',

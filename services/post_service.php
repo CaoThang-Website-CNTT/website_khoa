@@ -15,7 +15,7 @@ interface IPostService
 
   public function getPosts(int $page, int $limit = 15): Pageable;
   public function getPost(int $post_id): Post;
-  public function getPostBySlug(string $slug): Post;
+  public function getPostBySlug(string $slug, bool $with_author = false): Post;
   /**
    * Lấy n (mặc định là 5) bài viết nổi bật nhất (featured).
    * 
@@ -47,7 +47,7 @@ class PostService implements IPostService
     $this->_categoryStore = $categoryStore;
   }
 
-    public function getPosts(int $page, int $limit = 15): Pageable
+  public function getPosts(int $page, int $limit = 15): Pageable
   {
     $posts = $this->_postStore->getPaginated($page, $limit);
     $total = $this->_postStore->getTotalCount();
@@ -82,13 +82,17 @@ class PostService implements IPostService
     return $post;
   }
 
-  public function getPostBySlug(string $slug): Post
+  public function getPostBySlug(string $slug, bool $with_author = false): Post
   {
     $post = $this->_postStore->findBySlug($slug)
       ?? throw new \RuntimeException("Bài viết với slug '{$slug}' không tồn tại.");
 
     $categoryIds = $this->_postStore->getCategoryIds($post->id);
     $post->categories = $this->_categoryStore->getByIds($categoryIds);
+
+    if ($with_author && $post->author_id) {
+      $post->author = $this->_accountStore->getById($post->author_id);
+    }
 
     return $post;
   }
@@ -175,16 +179,23 @@ class PostService implements IPostService
 
     $data = [];
 
-    if (isset($meta['title']))           $data['title'] = $meta['title'];
-    if (isset($meta['slug']))            $data['slug'] = $this->resolveSlug($meta['slug'], $meta['title'] ?? $existing->title);
-    if (isset($meta['author_id']))       $data['author_id'] = (int) $meta['author_id'];
-    if (isset($meta['status']))          $data['status'] = $meta['status'];
-    if (isset($meta['init_view_count'])) $data['view_count'] = (int) $meta['init_view_count'];
-    if (isset($meta['excerpt']))         $data['seo_description'] = $meta['excerpt'];
-    if (isset($meta['featured_image']))  $data['seo_image_url'] = $this->resolveSeoImage($meta['featured_image']);
-    if (isset($meta['read_time']))       $data['read_time'] = (int) $meta['read_time'];
-    if (isset($meta['settings']['is_featured']))     $data['is_featured'] = $meta['settings']['is_featured'];
-    
+    if (isset($meta['title']))
+      $data['title'] = $meta['title'];
+    if (isset($meta['slug']))
+      $data['slug'] = $this->resolveSlug($meta['slug'], $meta['title'] ?? $existing->title);
+    if (isset($meta['author_id']))
+      $data['author_id'] = (int) $meta['author_id'];
+    if (isset($meta['status']))
+      $data['status'] = $meta['status'];
+    if (isset($meta['init_view_count']))
+      $data['view_count'] = (int) $meta['init_view_count'];
+    if (isset($meta['excerpt']))
+      $data['seo_description'] = $meta['excerpt'];
+    if (isset($meta['featured_image']))
+      $data['seo_image_url'] = $this->resolveSeoImage($meta['featured_image']);
+    if (isset($meta['settings']['is_featured']))
+      $data['is_featured'] = $meta['settings']['is_featured'];
+
     // published_at: chỉ ghi lần đầu khi chuyển sang published
     // Nếu đã có published_at trước đó thì giữ nguyên
     if (isset($meta['status']) && $meta['status'] === 'published' && $existing->published_at === null) {

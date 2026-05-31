@@ -15,11 +15,11 @@
   <div class="container">
     <div class="container-wrapper">
       <?php
-        include_once BASE_PATH . '/templates/components/breadcrumb.php';
-        renderBreadcrumb([
-          ['icon' => '<i class="fa-regular fa-house"></i>', 'url' => '/', 'title' => 'Trang chủ'],
-          ['url' => '/tin-tuc', 'title' => 'Tin tức & Sự kiện'],
-        ]);
+      include_once BASE_PATH . '/templates/components/breadcrumb.php';
+      renderBreadcrumb([
+        ['icon' => '<i class="fa-regular fa-house"></i>', 'url' => url('/'), 'title' => 'Trang chủ'],
+        ['url' => url('/tin-tuc'), 'title' => 'Tin tức & Sự kiện'],
+      ]);
       ?>
     </div>
   </div>
@@ -34,29 +34,17 @@
 
     <section class="news-searchbar" aria-labelledby="search-title">
       <h2 id="search-title" class="sr-only">Tìm kiếm và lọc tin tức</h2>
-        
+
       <div class="news-search">
         <label class="flex-1 search-bar rounded-full" data-variant="alt" for="news-search-input">
           <!-- <span class="search-bar__icon" aria-hidden="true" >
             <i class="fa-solid fa-magnifying-glass" role="img" aria-hidden="true"></i>
           </span> -->
-          <input 
-            type="search" 
-            id="news-search-input"
-            class="search-bar__input" 
-            placeholder="Tìm kiếm tin tức..."
-            autocomplete="off"
-            autocorrect="off"
-            aria-label="Tìm kiếm tin tức"
-          >
+          <input type="search" id="news-search-input" class="search-bar__input" placeholder="Tìm kiếm tin tức..."
+            autocomplete="off" autocorrect="off" aria-label="Tìm kiếm tin tức">
         </label>
-        <button 
-          class="btn news-searchbar__btn" 
-          data-variant="primary"
-          data-size="lg"
-          aria-label="Tìm kiếm"
-          type="button"
-        >
+        <button class="btn news-searchbar__btn" data-variant="primary" data-size="lg" aria-label="Tìm kiếm"
+          type="button">
           <i class="fa-solid fa-magnifying-glass" role="img" aria-hidden="true"></i>
           Tìm kiếm
         </button>
@@ -65,37 +53,43 @@
       <div class="separator"></div>
 
       <div class="news-filters" role="group" aria-label="Danh mục tin tức">
-        <button class="btn news-filters__tag" data-variant="primary" data-size="lg" data-category="all" aria-pressed="true">Tất cả</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="tin-khoa" aria-pressed="false">Tin khoa</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="nghien-cuu" aria-pressed="false">Nghiên cứu</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="su-kien" aria-pressed="false">Sự kiện</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="sinh-vien" aria-pressed="false">Sinh viên</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="tuyen-dung" aria-pressed="false">Tuyển dụng</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="giai-thuong" aria-pressed="false">Giải thưởng</button>
+        <button class="btn news-filters__tag" data-variant="primary" data-size="lg" data-category="all"
+          aria-pressed="true">Tất cả</button>
+        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="tin-khoa"
+          aria-pressed="false">Tin khoa</button>
+        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="nghien-cuu"
+          aria-pressed="false">Nghiên cứu</button>
+        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="su-kien"
+          aria-pressed="false">Sự kiện</button>
+        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="sinh-vien"
+          aria-pressed="false">Sinh viên</button>
+        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="tuyen-dung"
+          aria-pressed="false">Tuyển dụng</button>
+        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="giai-thuong"
+          aria-pressed="false">Giải thưởng</button>
       </div>
     </section>
 
     <?php if (!empty($featuredNews)): ?>
-      <section class="news-section" aria-labelledby="featured-title">        
+      <section class="news-section" aria-labelledby="featured-title">
         <h2 id="featured-title" class="news-section__title">
-          <i class="fa-solid fa-arrow-trend-up" role="img" aria-hidden="true"></i>  
+          <i class="fa-solid fa-arrow-trend-up" role="img" aria-hidden="true"></i>
           Nổi bật
         </h2>
 
         <div class="news-featured__grid" role="list" aria-live="polite">
-          <?php foreach($featuredNews as $news): ?>
+          <?php foreach ($featuredNews as $news): ?>
             <article class="card news-card hover-lift" role="listitem" data-id="<?= $news->id ?>">
               <div class="card__header news-card__header">
                 <a class="news-card__image-wrapper" href="<?= url('tin-tuc/' . $news->slug) ?>">
-                  <img 
-                    src="<?= url('public/media/' . $news->seo_image_url) ?>" 
-                    alt="<?= htmlspecialchars($news->title) ?>"
-                    class="news-card__image"
-                  >
+                  <img src="<?= url('public/media/' . $news->seo_image_url) ?>" alt="<?= htmlspecialchars($news->title) ?>"
+                    class="news-card__image">
                 </a>
-                <span class="badge news-card__badge" data-variant="primary"><?= htmlspecialchars($news->categories[0]->name ?? 'Tin tức') ?></span>
-                <span class="badge news-card__views-badge" aria-label="<?= number_format($news->view_count) ?> lượt xem" data-variant="secondary">
-                  <i class="fa-solid fa-arrow-trend-up" role="img" aria-hidden="true"></i>  
+                <span class="badge news-card__badge"
+                  data-variant="primary"><?= htmlspecialchars($news->categories[0]->name ?? 'Tin tức') ?></span>
+                <span class="badge news-card__views-badge" aria-label="<?= number_format($news->view_count) ?> lượt xem"
+                  data-variant="secondary">
+                  <i class="fa-solid fa-arrow-trend-up" role="img" aria-hidden="true"></i>
                   <?= number_format($news->view_count) ?> lượt xem
                 </span>
               </div>
@@ -107,10 +101,7 @@
                       <?= date('d/m/Y', strtotime($news->published_at)) ?>
                     </time>
                   </div>
-                  <div>
-                    <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                    <span><?= htmlspecialchars($news->read_time ?? '') ?> phút đọc</span>
-                  </div>
+
                 </div>
                 <h3 class="news-card__title">
                   <a href="<?= url('tin-tuc/' . $news->slug) ?>"><?= htmlspecialchars($news->title) ?></a>
@@ -132,7 +123,8 @@
         <h2 id="all-news-title" class="news-section__title">Tất cả tin tức</h2>
         <div class="news-list__sort">
           <label for="all-news-sort-select">Sắp xếp:</label>
-          <button type="button" id="all-news-sort-select" class="select" data-select-id="all-news-sort-select" name="all-news-sort" role="listbox" data-select-default-value="newest">
+          <button type="button" id="all-news-sort-select" class="select" data-select-id="all-news-sort-select"
+            name="all-news-sort" role="listbox" data-select-default-value="newest">
             <div class="select__content">
               <div class="select__item" data-select-value="newest">Mới nhất</div>
               <div class="select__item" data-select-value="oldest">Cũ nhất</div>
@@ -143,31 +135,25 @@
       </div>
 
       <div class="all-news__list" role="list" aria-live="polite">
-        <?php foreach($allNews->getItems() as $news): ?>
+        <?php foreach ($allNews->getItems() as $news): ?>
           <article class="card news-card news-card--horizontal hover-lift" role="listitem" data-id="<?= $news->id ?>">
             <div class="card__header news-card__header">
               <a class="news-card__image-wrapper" href="<?= url('tin-tuc/' . $news->slug) ?>">
-                <img 
-                  src="<?= url('public/media/' . $news->seo_image_url) ?>" 
-                  alt="<?= htmlspecialchars($news->title) ?>"
-                  class="news-card__image"
-                >
+                <img src="<?= url('public/media/' . $news->seo_image_url) ?>" alt="<?= htmlspecialchars($news->title) ?>"
+                  class="news-card__image">
               </a>
             </div>
             <div class="card__content news-card__content">
               <div class="news-card__meta">
                 <div>
-                  <span class="badge news-card__badge" data-variant="primary"><?= htmlspecialchars($news->categories[0]->name ?? 'Tin tức') ?></span>
+                  <span class="badge news-card__badge"
+                    data-variant="primary"><?= htmlspecialchars($news->categories[0]->name ?? 'Tin tức') ?></span>
                 </div>
                 <div>
                   <i class="fa-regular fa-calendar" aria-hidden="true"></i>
                   <time datetime="<?= date('Y-m-d', strtotime($news->published_at)) ?>">
-                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
+                    <?= date('d/m/Y', strtotime($news->published_at)) ?>
                   </time>
-                </div>
-                <div>
-                  <i class="fa-regular fa-clock" aria-hidden="true"></i>
-                  <span><?= htmlspecialchars($news->read_time ?? '') ?> phút đọc</span>
                 </div>
                 <div>
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>
@@ -183,19 +169,13 @@
                 <i class="fa-solid fa-arrow-right"></i>
               </a>
             </div>
-            </article>
-          <?php endforeach; ?>
+          </article>
+        <?php endforeach; ?>
       </div>
 
       <div class="news-actions">
-        <button 
-          type="button" 
-          id="load-more-btn"
-          class="btn"
-          data-variant="outline"
-          data-size="lg"
-          aria-controls="news-list"
-          aria-expanded="false">
+        <button type="button" id="load-more-btn" class="btn" data-variant="outline" data-size="lg"
+          aria-controls="news-list" aria-expanded="false">
           Xem Thêm
         </button>
       </div>

@@ -9,142 +9,194 @@ use App\Editor\Blocks\ParagraphRenderer;
 use App\Editor\Blocks\QuoteRenderer;
 use App\Editor\Blocks\TableRenderer;
 
+/**
+ * Entry point duy nhất cho việc biên dịch content_json → HTML + ToC.
+ *
+ * ─── Hai mode sử dụng ─────────────────────────────────────────────────────
+ *
+ *   // Mode 1: Chỉ cần HTML (backward compatible)
+ *   {!! BlockRenderer::fromJson($post->content_json) !!}
+ *
+ *   // Mode 2: Cần cả HTML lẫn ToC — một lần pass duy nhất
+ *   $result = BlockRenderer::compile($post->content_json);
+ *   // $result->html        → string, safe to echo
+ *   // $result->entries()   → TocEntry[]
+ *   // $result->hasToc()    → bool
+ *   // $result->baseLevel() → int, để tính indent
+ *
+ * ─── Luồng xử lý (compile) ────────────────────────────────────────────────
+ *
+ *   JSON string
+ *      ↓ json_decode
+ *      ↓ BlockValidator::validatePayload()
+ *      ↓ foreach block:
+ *           renderer->render($block)          → cộng dồn vào $html
+ *           renderer->extractTocEntry($block) → collect vào $tocEntries[]
+ *      ↓ RenderResult($html, $tocEntries)
+ *
+ * Loop chỉ chạy một lần — không parse lại để lấy ToC.
+ */
 final class BlockRenderer
 {
-    /**
-     * Registry: block type → renderer instance.
-     * Lazy-init lần đầu gọi, sau đó reuse.
-     *
-     * @var array<string, AbstractBlockRenderer>|null
-     */
-    private static ?array $registry = null;
+  /** @var array<string, AbstractBlockRenderer>|null */
+  private static ?array $registry = null;
 
-    // ─── Public API ───────────────────────────────────────────────────────────
+  // ─── Public API ───────────────────────────────────────────────────────────
 
-    /**
-     * Render từ JSON string (raw từ DB).
-     *
-     * @param  string|null  $json          — Giá trị json từ DB (Phải có blocks, meta)
-     * @param  array        $options       — Tùy chọn render (xem renderBlocks())
-     * @return string                      — HTML string, safe to echo
-     */
-    public static function fromJson(?string $contentJson, array $options = []): string
-    {
-        if ($contentJson === null || $contentJson === '') {
-          return '';
-        }
-
-        $payload = json_decode($contentJson, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return '';
-        }
-
-        return self::fromArray($payload, $options);
+  /**
+   * Compile content_json → RenderResult (HTML + ToC).
+   * Đây là method chính — fromJson/fromArray là shortcut trên nó.
+   *
+   * @param  string|null  $json
+   * @param  array        $options  Xem processBlocks()
+   */
+  public static function compile(?string $json, array $options = []): RenderResult
+  {
+    if ($json === null || $json === '') {
+      return new RenderResult('', []);
     }
 
-    /**
-     * Render từ array đã decode (dùng khi đã json_decode trước đó).
-     *
-     * @param  array|null  $payload
-     * @param  array       $options
-     * @return string
-     */
-    public static function fromArray(?array $payload, array $options = []): string
-    {
-      if (empty($payload)) {
-        return '';
+    $payload = json_decode($json, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+      return new RenderResult('', []);
+    }
+
+    return self::compileArray($payload, $options);
+  }
+
+  /**
+   * Compile từ array đã decode.
+   *
+   * @param  array|null  $payload
+   * @param  array       $options
+   */
+  public static function compileArray(?array $payload, array $options = []): RenderResult
+  {
+    if (empty($payload)) {
+      return new RenderResult('', []);
+    }
+
+    try {
+      $normalized = BlockValidator::validatePayload($payload);
+    } catch (BlockValidationException $e) {
+      // logger()->warning('[BlockRenderer] Validation failed: ' . $e->getMessage());
+      return new RenderResult('', []);
+    }
+
+    return self::processBlocks($normalized['blocks'], $options);
+  }
+
+  /**
+   * Shortcut trả về chỉ HTML string — backward compatible với code cũ.
+   *
+   * @param  string|null  $json
+   * @param  array        $options
+   */
+  public static function fromJson(?string $json, array $options = []): string
+  {
+    return self::compile($json, $options)->html;
+  }
+
+  /**
+   * Shortcut trả về chỉ HTML string từ array.
+   *
+   * @param  array|null  $payload
+   * @param  array       $options
+   */
+  public static function fromArray(?array $payload, array $options = []): string
+  {
+    return self::compileArray($payload, $options)->html;
+  }
+
+  // ─── Core pipeline ────────────────────────────────────────────────────────
+
+  /**
+   * Loop duy nhất: render HTML + collect ToC entries cùng lúc.
+   *
+   * Options:
+   *   'wrapper' => string|false  — CSS class của wrapper div (false = không wrap)
+   *
+   * @param  array  $blocks   Normalized blocks từ BlockValidator
+   * @param  array  $options
+   */
+  private static function processBlocks(array $blocks, array $options = []): RenderResult
+  {
+    $registry = self::getRegistry();
+    $html = '';
+    $tocEntries = [];
+
+    foreach ($blocks as $block) {
+      $type = $block['type'];
+      $renderer = $registry[$type] ?? null;
+
+      if ($renderer === null) {
+        continue;
       }
 
       try {
-        $normalized = BlockValidator::validatePayload($payload);
-      } catch (BlockValidationException $e) {
-        return '';
-      }
+        // Render HTML
+        $blockHtml = $renderer->render($block);
 
-      return self::renderBlocks($normalized['blocks'], $options);
-    }
-
-    // ─── Core render pipeline ─────────────────────────────────────────────────
-
-    /**
-     * Render mảng blocks đã normalized thành HTML.
-     *
-     * Options:
-     *   'wrapper'       => string|false   — CSS class của wrapper div (false = không wrap)
-     *   'eager_first'   => bool           — Render ảnh đầu tiên với loading="eager" (LCP)
-     *
-     * @param  array  $blocks    Normalized blocks từ BlockValidator
-     * @param  array  $options
-     */
-    private static function renderBlocks(array $blocks, array $options = []): string
-    {
-      $registry = self::getRegistry();
-      $html     = '';
-
-      foreach ($blocks as $block) {
-        $type     = $block['type'];
-        $renderer = $registry[$type] ?? null;
-
-        if ($renderer === null) {
-          // Type không có renderer → bỏ qua (forward compatible)
+        if ($blockHtml === '') {
           continue;
         }
 
-        try {
-          $html .= $renderer->render($block);
-        } catch (\Throwable $e) {
-          // Một block lỗi không được phá cả trang
-          continue;
+        $id = htmlspecialchars($block['id'] ?? '', ENT_QUOTES, 'UTF-8');
+        $typeAttr = htmlspecialchars($type, ENT_QUOTES, 'UTF-8');
+
+        $html .= "<div class=\"be-block\" data-be-block-id=\"{$id}\" data-be-block-type=\"{$typeAttr}\">"
+          . $blockHtml
+          . '</div>';
+
+        // Collect ToC entry nếu block này có (chỉ Heading trả về non-null)
+        $tocEntry = $renderer->extractTocEntry($block);
+        if ($tocEntry !== null) {
+          $tocEntries[] = $tocEntry;
         }
+      } catch (\Throwable $e) {
+        // logger()->error("[BlockRenderer] block type={$type}: " . $e->getMessage());
+        continue;
       }
-
-      // Wrap nếu cần
-      $wrapperClass = $options['wrapper'] ?? 'be-content';
-      if ($wrapperClass !== false && $wrapperClass !== '') {
-        $safeClass = htmlspecialchars((string) $wrapperClass, ENT_QUOTES, 'UTF-8');
-        $html = "<div class=\"{$safeClass}\">{$html}</div>";
-      }
-
-      return $html;
     }
 
-    // ─── Registry ─────────────────────────────────────────────────────────────
+    $wrapperClass = $options['wrapper'] ?? 'be-content';
+    if ($wrapperClass !== false && $wrapperClass !== '') {
+      $safeClass = htmlspecialchars((string) $wrapperClass, ENT_QUOTES, 'UTF-8');
+      $html = "<div class=\"{$safeClass}\">{$html}</div>";
+    }
 
-    /**
-     * Build registry lần đầu, reuse từ lần sau.
-     * Không dùng DI container để giữ class này zero-dependency.
-     *
-     * @return array<string, AbstractBlockRenderer>
-     */
-    private static function getRegistry(): array
-    {
-      if (self::$registry !== null) {
-        return self::$registry;
-      }
+    return new RenderResult($html, $tocEntries);
+  }
 
-      self::$registry = [
-        'blocks/heading'   => new HeadingRenderer(),
-        'blocks/paragraph' => new ParagraphRenderer(),
-        'blocks/quote'     => new QuoteRenderer(),
-        'blocks/list'      => new ListRenderer(),
-        'blocks/image'     => new ImageRenderer(),
-        'blocks/table'     => new TableRenderer(),
-      ];
+  // ─── Registry ─────────────────────────────────────────────────────────────
 
+  /** @return array<string, AbstractBlockRenderer> */
+  private static function getRegistry(): array
+  {
+    if (self::$registry !== null) {
       return self::$registry;
     }
 
-    /**
-     * Đăng ký thêm renderer tùy chỉnh (dùng cho extension/plugin).
-     * Gọi trước lần render đầu tiên (ví dụ trong AppServiceProvider).
-     *
-     * @param  string                 $type      Ví dụ 'blocks/video'
-     * @param  AbstractBlockRenderer  $renderer
-     */
-    public static function register(string $type, AbstractBlockRenderer $renderer): void
-    {
-      self::getRegistry(); // Đảm bảo registry đã init
-      self::$registry[$type] = $renderer;
-    }
+    self::$registry = [
+      'blocks/heading' => new HeadingRenderer(),
+      'blocks/paragraph' => new ParagraphRenderer(),
+      'blocks/quote' => new QuoteRenderer(),
+      'blocks/list' => new ListRenderer(),
+      'blocks/image' => new ImageRenderer(),
+      'blocks/table' => new TableRenderer(),
+    ];
+
+    return self::$registry;
+  }
+
+  /**
+   * Đăng ký thêm renderer tùy chỉnh.
+   * Gọi trong AppServiceProvider::boot().
+   */
+  public static function register(string $type, AbstractBlockRenderer $renderer): void
+  {
+    self::getRegistry();
+    self::$registry[$type] = $renderer;
+  }
 }

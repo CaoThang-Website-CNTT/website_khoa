@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\{PostService, CarouselService, MenuService, WebSettingsService};
+use App\Editor\BlockRenderer;
 
 class SiteController extends Controller
 {
@@ -75,14 +76,18 @@ class SiteController extends Controller
     ], "site_layout");
   }
 
-  public function news_show($slug) {
+  public function news_show($slug)
+  {
     $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
     $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
-    $news = $this->_postService->getPostBySlug($slug);
+    $news = $this->_postService->getPostBySlug($slug, with_author: true);
+    $result = BlockRenderer::compile($news->content_json);
 
     return $this->render('site/news/detail', [
       'headerMenu' => $headerMenuItems,
       'news' => $news,
+      'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'],
+      'detail' => $result,
       'settings' => $this->_settings,
     ], "site_layout");
   }

@@ -576,7 +576,6 @@ class EditorCanvas {
    * Tính các thông số của page
    * @returns {{
    * blockCount: number,
-   * readTime: number
    * }}
    */
   computeStats() {
@@ -743,11 +742,9 @@ class EditorCanvasMetadata {
     settings: {
       show_author: false,
       show_date: true,
-      show_read_time: false,
       show_view_count: false,
       is_featured: false,
     },
-    read_time: 0, // minute
     init_view_count: 0
   };
 
