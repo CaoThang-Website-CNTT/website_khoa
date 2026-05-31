@@ -1,6 +1,15 @@
 import { TableManager } from "../table/index.js";
+import LayoutCollapsible from "../layout-collapsible.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Init Collapsible Sidebar (Default to expanded for admin management)
+  new LayoutCollapsible({
+    containerSelector: ".detail-layout--collapsible",
+    toggleSelector: ".js-sidebar-toggle",
+    storageKey: "admin-batch-students-sidebar-collapsed",
+    defaultCollapsed: false,
+  });
+
   const batchId = window.BATCH_ID;
   const batchStatus = window.BATCH_STATUS;
   const apiBase = window.API_BASE_URL;

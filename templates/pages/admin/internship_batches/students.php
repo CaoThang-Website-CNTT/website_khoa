@@ -43,11 +43,15 @@ $batch = $batch ?? null;
           <i class="fa-solid fa-scale-balanced"></i> Chia đều
         </button>
       <?php endif; ?>
+
+      <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
+        <i class="fa-solid fa-bars"></i>
+      </button>
     </div>
   </div>
 </div>
 
-<div class="detail-layout">
+<div class="detail-layout detail-layout--collapsible">
   <!-- CỘT CHÍNH (2/3): Thống kê tổng và Danh sách sinh viên -->
   <div class="detail-layout__main">
 

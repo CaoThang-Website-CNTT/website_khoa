@@ -282,12 +282,56 @@ body {
   gap: 1rem;
 }
 
+/* ==========================================================================
+   LAYOUT: DETAIL-LAYOUT (Collapsible Sidebar)
+   ========================================================================== */
+.detail-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .detail-layout {
+    flex-direction: column;
+  }
+}
+
+.detail-layout__main {
+  flex: 1.6;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 .detail-layout__sidebar {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  transition:
+    flex 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s ease,
+    padding 0.4s ease,
+    margin 0.4s ease;
+}
+
+/* Collapsible State */
+.detail-layout--collapsible.is-collapsed .detail-layout__sidebar {
+  flex: 0;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.detail-layout--collapsible.is-collapsed {
+  gap: 0;
 }
 
 .detail-layout--reverse .detail-layout__main {
