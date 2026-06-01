@@ -77,6 +77,7 @@ INSERT INTO `specializations` (`id`, `major_id`, `full_name`, `short_name`) VALU
 -- ============================================================================
 -- 4. BẢNG ACCOUNTS
 -- ============================================================================
+-- Mật khẩu mặc định cho tất cả tài khoản là "password" (đã được hash bằng bcrypt)
 INSERT INTO `accounts` (`id`, `email`, `password_hash`, `role`) VALUES
 (1, 'admin@caothang.edu.vn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
 
@@ -271,6 +272,7 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 (6, 1, 4, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 2),
 (7, 1, NULL, 'Tin tức', '/tin-tuc', 5),
 (8, 1, NULL, 'Liên hệ', '/lien-he', 6),
+(25, 1, NULL, 'Portal', '/login', 7),
 
 -- Footer Menu
 (9, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),

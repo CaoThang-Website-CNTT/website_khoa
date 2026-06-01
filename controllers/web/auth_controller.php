@@ -53,10 +53,10 @@ class AuthController extends Controller
   }
   public function show(Request $request)
   {
-    $loginUrl = $this->_oauthService->getAuthUrl($request->session());
+    $authLoginUrl = $this->_oauthService->getAuthUrl($request->session());
 
     return $this->render('auth/login', [
-      'loginUrl' => $loginUrl,
+      'authLoginUrl' => $authLoginUrl,
       'settings' => $this->_settings,
     ], "auth_layout");
   }
@@ -124,6 +124,46 @@ class AuthController extends Controller
     $request->session()->forget(self::SESSION_OAUTH_PENDING);
     $request->session()->flashNotify('error', 'Không thể hoàn tất đăng ký.');
     return $this->redirect('login');
+  }
+
+  public function login(Request $request)
+  {
+    $data = $request->all();
+
+    $validator = new RequestValidator();
+    $rules = [
+      'email' => ['required', 'email', 'max:255'],
+      //'password' => ['required', 'password', 'max:255'],
+      'password' => ['required', 'max:255'],
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $request->session()->flashOldInputs($data);
+      $request->session()->flashErrors($validator->getErrors());
+      $request->session()->flashNotify('error', 'Dữ liệu không hợp lệ', 'Hãy kiểm tra lại form');
+      return $this->redirect('login');
+    }
+
+    try {
+      $account = $this->_accountService->authenticate($data['email'], $data['password']);
+      if (!$account) {
+        throw new \Exception('Thông tin đăng nhập không chính xác.');
+      }
+      $request->session()->loginUser($account->id, $account->email, $account->role);
+
+      $redirectTo = match ($account->role) {
+        'student' => '/student',
+        'teacher' => '/teacher',
+        'admin', 'editor', 'super_admin' => '/admin',
+        default => '/',
+      };
+      $request->session()->flashNotify('success', 'Đăng nhập thành công.');
+      return $this->redirect($redirectTo);
+    } catch (\Throwable $e) {
+      $request->session()->flashOldInputs(['email' => $email]);
+      $request->session()->flashNotify('error', 'Đăng nhập thất bại.', $e->getMessage());
+      return $this->redirect('login');
+    }
   }
 
   public function googleOAuthCallback(Request $request)

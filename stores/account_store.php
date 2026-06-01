@@ -101,19 +101,20 @@ class AccountStore extends Store implements IAccountStore
 
   public function findByEmail(string $email): ?Account
   {
-    $sql = "
-      SELECT *
-      FROM `accounts`
-      WHERE email = :email AND deleted_at IS NULL
-      LIMIT 1
-    ";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':email' => $email]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $builder = new QueryBuilder(new MySQLCompiler());
 
+    $query = $builder->from('accounts')
+      ->select('*')
+      ->eq('email', $email)
+      ->is('deleted_at', null)
+      ->limit(1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? Account::fromArray($row) : null;
   }
-
   public function updatePassword(int $id, string $newHash): bool
   {
     return $this->db->prepare("

@@ -10,6 +10,7 @@ use Exception;
 
 interface IAccountService
 {
+  public function authenticate(string $email, string $rawPassword): ?Account;
   public function authenticateOAuthUser(array $oauthData): array;
   public function createAccount(string $email, string $rawPassword, string $role): int;
   /** @return Account[] */
@@ -27,6 +28,20 @@ class AccountService implements IAccountService
   public function __construct(AccountStore $accountStore)
   {
     $this->_accountStore = $accountStore;
+  }
+  public function authenticate(string $email, string $rawPassword): ?Account
+  {
+    $account = $this->_accountStore->findByEmail($email);
+
+    if (!$account) {
+      return null;
+    }
+
+    if (!password_verify($rawPassword, $account->password_hash)) {
+      return null;
+    }
+
+    return $account;
   }
   public function authenticateOAuthUser(array $oauthData): array
   {
