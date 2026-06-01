@@ -80,8 +80,22 @@ class Router
 
   public function prefix(string $prefix): self
   {
-    $prefix = '/' . trim($prefix, '/');
-    $this->groupStack[] = $prefix;
+    $this->groupStack[] = [
+      'prefix' => '/' . trim($prefix, '/'),
+      'middleware' => [],
+    ];
+    return $this;
+  }
+
+  public function middleware(array $middleware): self
+  {
+    $last = count($this->groupStack) - 1;
+    if ($last >= 0) {
+      $this->groupStack[$last]['middleware'] = array_merge(
+        $this->groupStack[$last]['middleware'],
+        $middleware
+      );
+    }
     return $this;
   }
 
@@ -101,15 +115,18 @@ class Router
    * @param array $action Mảng [ControllerClass, 'methodName']
    * @return void
    */
-  private function addRoute(string $method, string $path, array $action): void
+  private function addRoute(string $method, string $path, array $action, array $routeMiddleware = []): void
   {
-    $fullPrefix = implode('', $this->groupStack);
+    $fullPrefix = implode('', array_column($this->groupStack, 'prefix'));
 
     $path = $fullPrefix . '/' . ltrim($path, '/');
     $path = ($path === '/') ? '/' : rtrim($path, '/');
 
-    $paramNames = [];
+    $inheritedMiddleware = array_merge(...array_column($this->groupStack, 'middleware') ?: [[]]);
 
+    $allMiddleware = array_merge($inheritedMiddleware, $routeMiddleware);
+
+    $paramNames = [];
     // Thay thế các tham số động bằng biểu thức chính quy
     $regex = preg_replace_callback(
       '/\{([a-zA-Z0-9_]+)\}/',
@@ -126,6 +143,7 @@ class Router
       'controller' => $action[0],
       'action' => $action[1],
       'paramNames' => $paramNames,
+      'middleware' => $allMiddleware
     ];
   }
 
@@ -175,15 +193,22 @@ class Router
         ? array_combine($route['paramNames'], $matches)
         : [];
 
-      $controller = $this->resolveController($route['controller']);
-      $args = $this->resolveArgs(
-        $route['controller'],
-        $route['action'],
-        $request,
-        $routeParams
-      );
+      $destination = function (Request $req) use ($route, $routeParams) {
+        $controller = $this->resolveController($route['controller']);
+        $args = $this->resolveArgs(
+          $route['controller'],
+          $route['action'],
+          $req,
+          $routeParams
+        );
+        return call_user_func_array([$controller, $route['action']], $args);
+      };
 
-      $response = call_user_func_array([$controller, $route['action']], $args);
+      $response = (new Pipeline())
+        ->send($request)
+        ->through($route['middleware'])
+        ->then($destination);
+
       if ($response instanceof Response) {
         $response->send();
       } elseif (is_array($response) || is_object($response)) {

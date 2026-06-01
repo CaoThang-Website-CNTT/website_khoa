@@ -17,6 +17,11 @@ interface IMiddleware
 }
 abstract class BaseMiddleware implements IMiddleware
 {
+  protected function redirect(string $url)
+  {
+    header('Location: ' . url($url), true, 302);
+    exit();
+  }
   protected function reject(int $statusCode = 403, string $message = "Forbidden")
   {
     http_response_code($statusCode);

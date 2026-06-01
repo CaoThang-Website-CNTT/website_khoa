@@ -31,9 +31,10 @@ class Pipeline
   }
   protected function getSlice(): Closure
   {
-    return function ($nextLayer, $middlewareClass) {
-      return function ($request) use ($nextLayer, $middlewareClass) {
-        return (new $middlewareClass)->handle($request, $nextLayer);
+    return function ($nextLayer, $middleware) {
+      return function ($request) use ($nextLayer, $middleware) {
+        $instance = is_string($middleware) ? new $middleware() : $middleware;
+        return $instance->handle($request, $nextLayer);
       };
     };
   }

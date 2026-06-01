@@ -25,11 +25,15 @@ require_once BASE_PATH . '/includes/core/layout.php';
 
 // Session
 require_once BASE_PATH . '/includes/core/session/session.php';
-// Middelware
+// Middleware
 require_once BASE_PATH . '/includes/core/middleware/pipeline.php';
 require_once BASE_PATH . '/includes/core/middleware/base_middleware.php';
 require_once BASE_PATH . '/includes/core/middleware/start_session.php';
 require_once BASE_PATH . '/includes/core/middleware/verify_csrf_token.php';
+// Custom Middlewares
+require_once BASE_PATH . '/middlewares/verify_auth.php';
+require_once BASE_PATH . '/middlewares/verify_role.php';
+
 require_once BASE_PATH . '/includes/core/router.php';
 // Request
 require_once BASE_PATH . '/includes/core/request/request.php';

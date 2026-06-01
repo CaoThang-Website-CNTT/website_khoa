@@ -1,6 +1,7 @@
 <?php
 
 use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
+use App\Middlewares\{VerifyAuth, VerifyRole};
 use App\Core\Router;
 
 // Site
@@ -21,8 +22,7 @@ $router->post('/onboarding', [AuthController::class, 'completeOnboarding']);
 $router->get('/logout', [AuthController::class, 'logout']);
 
 // Admin
-$router->get('/admin', [DashboardController::class, 'index']);
-$router->prefix('admin')->group(function (Router $router) {
+$router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])->group(function (Router $router) {
   $router->get('/', [DashboardController::class, 'index']);
 
   // Media
@@ -182,7 +182,7 @@ $router->prefix('admin')->group(function (Router $router) {
 });
 
 // Student Dashboard
-$router->prefix('student')->group(function (Router $router) {
+$router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('student')])->group(function (Router $router) {
   // Thông tin tổng quan, tài khoản.
   $router->get('/', [StudentDashboardController::class, 'index']);
   // Thông tin thực tập.
@@ -209,7 +209,7 @@ $router->prefix('student')->group(function (Router $router) {
 });
 
 // Teacher Dashboard
-$router->prefix('teacher')->group(function (Router $router) {
+$router->prefix('teacher')->middleware([VerifyAuth::class, new VerifyRole('teacher')])->group(function (Router $router) {
   // Thông tin tổng quan, tài khoản.
   $router->get('/', [TeacherDashboardController::class, 'index']);
   // Cập nhật thông tin cá nhân
