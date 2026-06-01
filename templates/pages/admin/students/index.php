@@ -1,14 +1,5 @@
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
@@ -54,17 +45,17 @@
 
     <!-- Cột Lớp -->
     <?php
-      $classOptions = [['label' => 'Tất cả', 'value' => '']];
-      foreach ($classrooms as $c) {
-        $classOptions[] = ['label' => $c->short_name, 'value' => $c->short_name];
-      }
+    $classOptions = [['label' => 'Tất cả', 'value' => '']];
+    foreach ($classrooms as $c) {
+      $classOptions[] = ['label' => $c->short_name, 'value' => $c->short_name];
+    }
     ?>
-    <template data-tm-col="class_name" data-tm-label="Lớp" 
-      data-tm-filter-type="select" 
+    <template data-tm-col="class_name" data-tm-label="Lớp" data-tm-filter-type="select"
       data-tm-filter-options='<?= json_encode($classOptions, JSON_UNESCAPED_UNICODE) ?>'></template>
 
     <!-- Cột Gender -->
-    <template data-tm-col="gender" data-tm-label="Giới tính" data-tm-filter-type="select" data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Nam","value":"male"},{"label":"Nữ","value":"female"}]'>
+    <template data-tm-col="gender" data-tm-label="Giới tính" data-tm-filter-type="select"
+      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Nam","value":"male"},{"label":"Nữ","value":"female"}]'>
       {{ value === 'male' ? 'Nam' : (value === 'female' ? 'Nữ' : value) }}
     </template>
 
@@ -82,17 +73,17 @@
 <!-- JSON Data Source cho TableManager -->
 <script type="application/json" data-tm-data="students_table">
   <?= json_encode([
-    'rows' => array_map(function($student) {
-      return [
-        'id' => $student->id,
-        'full_name' => $student->full_name ?? 'N/A',
-        'student_id' => $student->student_id ?? 'N/A',
-        'gender' => $student->gender ?? 'N/A',
-        'dob' => $student->dob ?? 'N/A',
-        'phone' => $student->phone ?? 'N/A',
-        'class_name' => $student->classroom->short_name ?? 'N/A'
-      ];
-    }, $data->getItems()),
+    'rows' => array_map(function ($student) {
+    return [
+      'id' => $student->id,
+      'full_name' => $student->full_name ?? 'N/A',
+      'student_id' => $student->student_id ?? 'N/A',
+      'gender' => $student->gender ?? 'N/A',
+      'dob' => $student->dob ?? 'N/A',
+      'phone' => $student->phone ?? 'N/A',
+      'class_name' => $student->classroom->short_name ?? 'N/A'
+    ];
+  }, $data->getItems()),
     'total' => $data->getTotal(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

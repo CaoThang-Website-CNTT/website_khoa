@@ -10,17 +10,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Modal select media -->
 <?php require_once(BASE_PATH . '/templates/components/media_selector_modal.php'); ?>
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
-
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">

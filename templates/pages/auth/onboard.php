@@ -14,16 +14,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
 <div data-tabs data-tabs-id="onboard-step" data-tabs-panel-active="0" data-tabs-sync="false">
   <div class="onboard-progress" aria-live="polite">
     <div class="onboard-progress__dots" role="tablist" aria-label="Tiến trình đăng ký">

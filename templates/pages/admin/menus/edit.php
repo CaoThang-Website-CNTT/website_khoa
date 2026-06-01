@@ -53,17 +53,6 @@ function renderMenuItems(array $items, object $menu): void
 }
 ?>
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
-
 <?php if (!$menu->isEditable()): ?>
   <section class="banner" data-variant="info" role="region" aria-label="Thông báo trạng thái">
     <i class="fa-solid fa-lock"></i> Nhóm menu hệ thống. Bạn chỉ có quyền xem dữ liệu này.

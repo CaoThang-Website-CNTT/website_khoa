@@ -14,6 +14,7 @@ $router->get('/lien-he', [SiteController::class, 'contact']);
 
 // Auth
 $router->get('/login', [AuthController::class, 'show']);
+$router->post('/login', [AuthController::class, 'login']);
 $router->get('/login/oauth/callback', [AuthController::class, 'googleOAuthCallback']);
 $router->get('/onboarding', [AuthController::class, 'onboard']);
 $router->post('/onboarding', [AuthController::class, 'completeOnboarding']);

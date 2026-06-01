@@ -1,14 +1,5 @@
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
@@ -71,13 +62,13 @@
 <script type="application/json" data-tm-data="classrooms_table">
   <?= json_encode([
     'rows' => array_map(function ($classroom) {
-      return [
-        'id' => $classroom->id,
-        'short_name' => $classroom->short_name ?? 'N/A',
-        'major_name' => $classroom->major->full_name ?? 'N/A',
-        'specialization_name' => $classroom->specialization->full_name ?? 'N/A'
-      ];
-    }, $data->getItems()),
+    return [
+      'id' => $classroom->id,
+      'short_name' => $classroom->short_name ?? 'N/A',
+      'major_name' => $classroom->major->full_name ?? 'N/A',
+      'specialization_name' => $classroom->specialization->full_name ?? 'N/A'
+    ];
+  }, $data->getItems()),
     'total' => $data->count(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

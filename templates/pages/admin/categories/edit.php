@@ -8,16 +8,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </script>
 
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 
 <?php if (!$category->isEditable()): ?>
   <section class="banner" data-variant="info" role="region" aria-label="Thông báo trạng thái">

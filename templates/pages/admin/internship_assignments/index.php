@@ -1,16 +1,7 @@
 <link rel="stylesheet" href="<?= url('public/css/internship_assignments.css') ?>">
 
 <!-- Toast notifications -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">

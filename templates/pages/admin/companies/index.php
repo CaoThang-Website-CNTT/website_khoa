@@ -1,14 +1,5 @@
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
@@ -65,15 +56,15 @@
 <script type="application/json" data-tm-data="companies_table">
   <?= json_encode([
     'rows' => array_map(function ($company) {
-      return [
-        'id' => $company->id,
-        'name' => $company->name ?? 'N/A',
-        'tax_code' => $company->tax_code ?? 'N/A',
-        'address' => $company->address ?? 'N/A',
-        'phone' => $company->phone ?? 'N/A',
-        'website' => $company->website ?? 'N/A'
-      ];
-    }, $data->getItems()),
+        return [
+          'id' => $company->id,
+          'name' => $company->name ?? 'N/A',
+          'tax_code' => $company->tax_code ?? 'N/A',
+          'address' => $company->address ?? 'N/A',
+          'phone' => $company->phone ?? 'N/A',
+          'website' => $company->website ?? 'N/A'
+        ];
+      }, $data->getItems()),
     'total' => $data->count(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

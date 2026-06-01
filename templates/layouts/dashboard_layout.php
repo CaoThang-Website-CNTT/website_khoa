@@ -5,6 +5,17 @@
   <?php include_once BASE_PATH . '/templates/partials/dashboard_head.php'; ?>
 </head>
 
+<?php if ($flash = request()->session()->getFlash("notification")): ?>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      toast.<?= $flash['type'] ?> (
+        "<?= htmlspecialchars($flash['title']) ?>",
+        "<?= htmlspecialchars($flash['desc']) ?>"
+      );
+    });
+  </script>
+<?php endif; ?>
+
 <body>
   <!-- ======== Preloader =========== -->
   <?php include_once BASE_PATH . '/templates/components/preloader.php'; ?>

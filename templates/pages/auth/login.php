@@ -1,14 +1,45 @@
+<?php
+$errors = request()->session()->getErrors() ?? [];
+$old_input = request()->session()->getOldInputs() ?? [];
+?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
+
 <div class="card shadow auth-form-card">
   <div class="card__header">
     <div class="card__title">Đăng nhập</div>
     <div class="card__description">
-      Hãy sử dụng tài khoản Google do trường cung cấp để đăng nhập vào các trang web của
+      Hãy sử dụng tài khoản do trường cung cấp để đăng nhập vào các trang web của
       Khoa CNTT
     </div>
   </div>
   <hr class="separator">
+  <div class="card__content">
+    <form id="login-form" action="<?= url('login') ?>" method="POST">
+      <?= csrf_field() ?>
+
+      <div class="field-group">
+        <div class="field" data-field-required>
+          <label class="field__label" for="email">Email</label>
+          <input id="email" class="field__input" type="email" name="email" placeholder="VD: example@university.edu"
+            value="<?= htmlspecialchars($old_input['email'] ?? '') ?>" autocomplete="username">
+        </div>
+
+        <div class="field" data-field-required>
+          <label class="field__label" for="password">Mật khẩu</label>
+          <input id="password" class="field__input" type="password" name="password" placeholder="Nhập mật khẩu"
+            autocomplete="current-password">
+        </div>
+      </div>
+    </form>
+  </div>
   <div class="card__footer">
-    <a href="<?= $loginUrl ?>" class="btn" data-variant="outline" data-size="lg">
+    <button id="login-submit-form-btn" type="button" class="btn" data-variant="primary" data-size="lg">
+      Đăng nhập
+    </button>
+    <a href="<?= $authLoginUrl ?>" class="btn" data-variant="outline" data-size="lg">
       <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"
         xmlns:xlink="http://www.w3.org/1999/xlink" style="display: block;">
         <path fill="#EA4335"
@@ -29,3 +60,13 @@
     </a>
   </div>
 </div>
+
+<?php $layout->start('scripts'); ?>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelector("#login-submit-form-btn").addEventListener("click", () => {
+      document.querySelector("#login-form").submit();
+    })
+  })
+</script>
+<?php $layout->end(); ?>

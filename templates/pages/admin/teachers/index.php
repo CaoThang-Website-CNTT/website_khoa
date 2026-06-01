@@ -1,14 +1,5 @@
 <!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
   <div class="flex justify-between items-center">
@@ -66,7 +57,8 @@
     <template data-tm-col="contract_type" data-tm-label="Hợp đồng" data-tm-filter-type="select"
       data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Toàn thời gian","value":"full_time"},{"label":"Bán thời gian","value":"part_time"},{"label":"Thỉnh giảng","value":"visiting"},{"label":"Hợp đồng","value":"contract"}]'>
       <span class="badge" data-variant="primary">
-        {{ value === 'full_time' ? 'Toàn thời gian' : (value === 'part_time' ? 'Bán thời gian' : (value === 'visiting' ? 'Thỉnh giảng' : 'Hợp đồng')) }}
+        {{ value === 'full_time' ? 'Toàn thời gian' : (value === 'part_time' ? 'Bán thời gian' : (value === 'visiting' ?
+        'Thỉnh giảng' : 'Hợp đồng')) }}
       </span>
     </template>
 
@@ -78,17 +70,17 @@
 <script type="application/json" data-tm-data="teachers_table">
   <?= json_encode([
     'rows' => array_map(function ($teacher) {
-      return [
-        'id' => $teacher->id,
-        'full_name' => $teacher->full_name ?? 'N/A',
-        'staff_code' => $teacher->staff_code ?? 'N/A',
-        'gender' => $teacher->gender ?? 'N/A',
-        'dob' => $teacher->dob ?? 'N/A',
-        'position' => $teacher->position ?? 'N/A',
-        'department' => $teacher->department ?? 'N/A',
-        'contract_type' => $teacher->contract_type ?? 'N/A'
-      ];
-    }, $data->getItems()),
+        return [
+          'id' => $teacher->id,
+          'full_name' => $teacher->full_name ?? 'N/A',
+          'staff_code' => $teacher->staff_code ?? 'N/A',
+          'gender' => $teacher->gender ?? 'N/A',
+          'dob' => $teacher->dob ?? 'N/A',
+          'position' => $teacher->position ?? 'N/A',
+          'department' => $teacher->department ?? 'N/A',
+          'contract_type' => $teacher->contract_type ?? 'N/A'
+        ];
+      }, $data->getItems()),
     'total' => $data->getTotal(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

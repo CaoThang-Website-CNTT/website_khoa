@@ -1,16 +1,7 @@
 <link rel="stylesheet" href="<?= url('public/css/internship_batches.css') ?>">
 
 <!-- Toast khi redirect về đây có set flash -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
@@ -62,7 +53,8 @@
     <!-- Cột Trạng thái -->
     <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
       data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đang chờ","value":"draft"},{"label":"Đã công bố","value":"published"},{"label":"Đã kết thúc","value":"closed"}]'>
-      <span class="badge" data-variant="{{ value === 'published' ? 'primary' : (value === 'closed' ? 'destructive' : 'secondary') }}">
+      <span class="badge"
+        data-variant="{{ value === 'published' ? 'primary' : (value === 'closed' ? 'destructive' : 'secondary') }}">
         {{ value === 'published' ? 'Đã công bố' : (value === 'closed' ? 'Đã kết thúc' : 'Đang chờ') }}
       </span>
     </template>
@@ -75,17 +67,17 @@
 <script type="application/json" data-tm-data="batches_table">
   <?= json_encode([
     'rows' => array_map(function ($batch) {
-      $b = (object)$batch;
-      return [
-        'id' => $b->id,
-        'title' => $b->title ?? 'N/A',
-        'class_of' => $b->class_of ?? 'N/A',
-        'level' => $b->level ?? 'N/A',
-        'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
-        'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
-        'status' => $b->status ?? 'draft'
-      ];
-    }, $data->getItems()),
+        $b = (object) $batch;
+        return [
+          'id' => $b->id,
+          'title' => $b->title ?? 'N/A',
+          'class_of' => $b->class_of ?? 'N/A',
+          'level' => $b->level ?? 'N/A',
+          'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
+          'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
+          'status' => $b->status ?? 'draft'
+        ];
+      }, $data->getItems()),
     'total' => $data->getTotal(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

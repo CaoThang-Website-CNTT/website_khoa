@@ -1,5 +1,5 @@
 <?php
-$batchObj = (object)$batch;
+$batchObj = (object) $batch;
 $stats = $batchObj->stats;
 $assignedPercent = $stats['total_students'] > 0 ? round(($stats['assigned_students'] / $stats['total_students']) * 100) : 0;
 
@@ -18,16 +18,7 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
   window.API_BASE_URL = "<?= url('api/v1/internship/batches/' . $batchObj->id . '/management') ?>";
 </script>
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+
 
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
@@ -45,35 +36,38 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
         Quay lại
       </a>
 
-      <button type="button" id="edit-submit-btn" data-modal-trigger="#save-confirm-modal" data-variant="primary" data-size="md" class="btn">
+      <button type="button" id="edit-submit-btn" data-modal-trigger="#save-confirm-modal" data-variant="primary"
+        data-size="md" class="btn">
         <i class="fa-solid fa-floppy-disk"></i>
         Lưu thay đổi
       </button>
 
       <?php if ($batchObj->status === 'draft'): ?>
         <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal"
-          data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/publish') ?>"
-          data-variant="outline-alt" data-size="md" class="btn">
+          data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/publish') ?>" data-variant="outline-alt"
+          data-size="md" class="btn">
           <i class="fa-solid fa-paper-plane"></i>
           Công bố
         </button>
       <?php elseif ($batchObj->status === 'published'): ?>
         <button type="button" id="close-btn" data-modal-trigger="#close-confirm-modal"
-          data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/close') ?>"
-          data-variant="destructive" data-size="md" class="btn">
+          data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/close') ?>" data-variant="destructive"
+          data-size="md" class="btn">
           <i class="fa-solid fa-circle-stop"></i>
           Kết thúc đợt
         </button>
       <?php endif; ?>
 
       <?php if (!$stats['has_submissions'] && !$stats['has_grades']): ?>
-        <button type="button" id="delete-btn" data-modal-trigger="#delete-confirm-modal" data-variant="destructive" data-size="md" class="btn">
+        <button type="button" id="delete-btn" data-modal-trigger="#delete-confirm-modal" data-variant="destructive"
+          data-size="md" class="btn">
           <i class="fa-solid fa-trash"></i>
           Xóa
         </button>
       <?php endif; ?>
 
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/assignments') ?>" data-variant="primary" data-size="md" class="btn">
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/assignments') ?>" data-variant="primary"
+        data-size="md" class="btn">
         <i class="fa-solid fa-users-gear"></i>
         Phân công hướng dẫn
       </a>
@@ -89,7 +83,8 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
     <!-- Stats Grid -->
     <div class="stats-grid">
       <!-- Sinh viên Card -->
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>" class="stat-card stat-card--interactive shadow-sm">
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>"
+        class="stat-card stat-card--interactive shadow-sm">
         <div class="flex justify-between items-start">
           <span class="stat-card__label">Sinh viên</span>
           <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
@@ -104,7 +99,8 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
       </a>
 
       <!-- Giảng viên Card -->
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/teachers') ?>" class="stat-card stat-card--interactive shadow-sm">
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/teachers') ?>"
+        class="stat-card stat-card--interactive shadow-sm">
         <div class="flex justify-between items-start">
           <span class="stat-card__label">Giảng viên</span>
           <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
@@ -116,7 +112,8 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
       </a>
 
       <!-- Giấy giới thiệu Card -->
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/referral_letters') ?>" class="stat-card stat-card--interactive shadow-sm">
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/referral_letters') ?>"
+        class="stat-card stat-card--interactive shadow-sm">
         <div class="flex justify-between items-start">
           <span class="stat-card__label">Giấy giới thiệu</span>
           <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
@@ -151,22 +148,26 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
           <div class="field-group">
             <div class="field" data-field-required>
               <label class="field__label" for="title">Tên đợt thực tập</label>
-              <input type="text" id="title" name="title" class="field__input" value="<?= htmlspecialchars($batchObj->title) ?>" required>
+              <input type="text" id="title" name="title" class="field__input"
+                value="<?= htmlspecialchars($batchObj->title) ?>" required>
             </div>
 
             <div class="field">
               <label class="field__label" for="description">Mô tả</label>
-              <textarea id="description" name="description" class="field__input" rows="6"><?= htmlspecialchars($batchObj->description ?? '') ?></textarea>
+              <textarea id="description" name="description" class="field__input"
+                rows="6"><?= htmlspecialchars($batchObj->description ?? '') ?></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="field" data-field-required>
                 <label class="field__label" for="start_at">Ngày bắt đầu</label>
-                <input type="date" id="start_at" name="start_at" class="field__input" value="<?= date('Y-m-d', strtotime($batchObj->start_at)) ?>" required>
+                <input type="date" id="start_at" name="start_at" class="field__input"
+                  value="<?= date('Y-m-d', strtotime($batchObj->start_at)) ?>" required>
               </div>
               <div class="field" data-field-required>
                 <label class="field__label" for="end_at">Ngày kết thúc</label>
-                <input type="date" id="end_at" name="end_at" class="field__input" value="<?= date('Y-m-d', strtotime($batchObj->end_at)) ?>" required>
+                <input type="date" id="end_at" name="end_at" class="field__input"
+                  value="<?= date('Y-m-d', strtotime($batchObj->end_at)) ?>" required>
               </div>
             </div>
           </div>
@@ -209,7 +210,8 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
         </div>
         <div class="flex justify-between">
           <span>Cập nhật cuối:</span>
-          <span class="font-medium"><?= $batchObj->updated_at ? date('d/m/Y H:i', strtotime($batchObj->updated_at)) : 'N/A' ?></span>
+          <span
+            class="font-medium"><?= $batchObj->updated_at ? date('d/m/Y H:i', strtotime($batchObj->updated_at)) : 'N/A' ?></span>
         </div>
       </div>
     </div>
@@ -234,7 +236,8 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
 <div class="modal" id="delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h2 class="modal__title">Xóa đợt thực tập?</h2>
-    <p class="modal__description">Hành động này không thể hoàn tác. Mọi dữ liệu về sinh viên tham gia và phân công sẽ bị xóa bỏ.</p>
+    <p class="modal__description">Hành động này không thể hoàn tác. Mọi dữ liệu về sinh viên tham gia và phân công sẽ bị
+      xóa bỏ.</p>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
@@ -244,7 +247,8 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
 </div>
 
 <!-- Form ẩn cho hành động Xóa -->
-<form action="<?= url('admin/internship_batches/delete/' . $batchObj->id) ?>" method="POST" id="delete-form" class="hidden">
+<form action="<?= url('admin/internship_batches/delete/' . $batchObj->id) ?>" method="POST" id="delete-form"
+  class="hidden">
   <?= csrf_field() ?>
 </form>
 

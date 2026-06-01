@@ -1,15 +1,3 @@
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
-
-
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper mb-4">
   <div class="flex justify-between items-center">
