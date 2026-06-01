@@ -3,6 +3,8 @@ namespace App\Core\Schema\Compiler;
 
 use App\Core\Schema\ColumnDefinition;
 use App\Core\Schema\ForeignDefinition;
+use App\Core\Schema\AlterBuilder;
+use App\Core\Schema\AlterOperation;
 
 class MySQLCompiler extends BaseSQLCompiler
 {
@@ -28,7 +30,7 @@ class MySQLCompiler extends BaseSQLCompiler
       $parts = explode('->>', $value);
       $column = $this->wrap(trim($parts[0])); // Đệ quy wrap tên cột
       $path = "$." . ltrim(trim($parts[1]), '$.'); // Đảm bảo luôn bắt đầu bằng $.
-      
+
       return "JSON_UNQUOTE(JSON_EXTRACT({$column}, '{$path}'))";
     }
 
@@ -37,7 +39,7 @@ class MySQLCompiler extends BaseSQLCompiler
       $parts = explode('->', $value);
       $column = $this->wrap(trim($parts[0]));
       $path = "$." . ltrim(trim($parts[1]), '$.');
-      
+
       return "JSON_EXTRACT({$column}, '{$path}')";
     }
 
@@ -142,5 +144,171 @@ class MySQLCompiler extends BaseSQLCompiler
     }
 
     return null;
+  }
+
+  public function compileAlter(AlterBuilder $builder): string
+  {
+    $table = $builder->getTable();
+    $operations = $builder->getOperations();
+
+    if (empty($operations)) {
+      return ''; // Không có operation nào
+    }
+
+    // Kiểm tra nếu có RENAME_TABLE - phải là operation duy nhất
+    foreach ($operations as $op) {
+      if ($op->type === AlterOperation::RENAME_TABLE) {
+        return sprintf(
+          "ALTER TABLE %s RENAME TO %s;",
+          $this->wrap($table),
+          $this->wrap($op->payload)
+        );
+      }
+    }
+
+    // Compile các operation thành clauses
+    $clauses = [];
+    foreach ($operations as $op) {
+      $clause = $this->compileAlterOperation($op, $table);
+      if ($clause) {
+        $clauses[] = $clause;
+      }
+    }
+
+    if (empty($clauses)) {
+      return '';
+    }
+
+    return sprintf(
+      "ALTER TABLE %s %s;",
+      $this->wrap($table),
+      implode(", ", $clauses)
+    );
+  }
+
+  public function compileAlterOperation(AlterOperation $op, string $table): string
+  {
+    $type = $op->type;
+    $payload = $op->payload;
+
+    return match ($type) {
+      AlterOperation::ADD_COLUMN => $this->compileAddColumn($payload),
+      AlterOperation::MODIFY_COLUMN => $this->compileModifyColumn($payload),
+      AlterOperation::RENAME_COLUMN => $this->compileRenameColumn($payload),
+      AlterOperation::DROP_COLUMN => $this->compileDropColumn($payload),
+      AlterOperation::ADD_INDEX => $this->compileAddIndex($payload),
+      AlterOperation::DROP_INDEX => $this->compileDropIndex($payload),
+      AlterOperation::ADD_UNIQUE => $this->compileAddUnique($payload),
+      AlterOperation::ADD_FOREIGN => $this->compileAddForeignKey($payload, $table),
+      AlterOperation::DROP_FOREIGN => $this->compileDropForeignKey($payload),
+      default => ''
+    };
+  }
+
+  protected function compileAddColumn(ColumnDefinition $column): string
+  {
+    return sprintf(
+      "ADD COLUMN %s",
+      $this->compileColumn($column)
+    );
+  }
+
+  protected function compileModifyColumn(ColumnDefinition $column): string
+  {
+    return sprintf(
+      "MODIFY COLUMN %s",
+      $this->compileColumn($column)
+    );
+  }
+
+  protected function compileRenameColumn(array $payload): string
+  {
+    $from = $payload['from'];
+    $to = $payload['to'];
+    $definition = $payload['definition'];
+
+    // MySQL: CHANGE COLUMN `old` `new` <type>
+    return sprintf(
+      "CHANGE COLUMN %s %s",
+      $this->wrap($from),
+      $this->compileColumn($definition)
+    );
+  }
+
+  protected function compileDropColumn(string $column): string
+  {
+    return sprintf(
+      "DROP COLUMN %s",
+      $this->wrap($column)
+    );
+  }
+
+  protected function compileAddIndex(array $payload): string
+  {
+    $columns = $payload['columns'];
+    $name = $payload['name'];
+
+    $cols = implode(', ', array_map([$this, 'wrap'], $columns));
+
+    // Generate name nếu không cung cấp
+    if (!$name) {
+      $name = 'idx_' . implode('_', $columns);
+    }
+
+    return sprintf(
+      "ADD INDEX %s (%s)",
+      $this->wrap($name),
+      $cols
+    );
+  }
+
+  protected function compileDropIndex(string $name): string
+  {
+    return sprintf(
+      "DROP INDEX %s",
+      $this->wrap($name)
+    );
+  }
+
+  protected function compileAddUnique(array $payload): string
+  {
+    $columns = $payload['columns'];
+    $name = $payload['name'];
+
+    $cols = implode(', ', array_map([$this, 'wrap'], $columns));
+
+    // Generate name nếu không cung cấp
+    if (!$name) {
+      $name = 'uniq_' . implode('_', $columns);
+    }
+
+    return sprintf(
+      "ADD UNIQUE INDEX %s (%s)",
+      $this->wrap($name),
+      $cols
+    );
+  }
+
+  protected function compileAddForeignKey(ForeignDefinition $fk, string $table): string
+  {
+    $constraintName = "fk_" . $table . "_" . $fk->getColumn();
+
+    return sprintf(
+      "ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s",
+      $this->wrap($constraintName),
+      $this->wrap($fk->getColumn()),
+      $this->wrap($fk->getOnTable()),
+      $this->wrap($fk->getReferences()),
+      $fk->getOnDelete(),
+      $fk->getOnUpdate()
+    );
+  }
+
+  protected function compileDropForeignKey(string $constraintName): string
+  {
+    return sprintf(
+      "DROP FOREIGN KEY %s",
+      $this->wrap($constraintName)
+    );
   }
 }

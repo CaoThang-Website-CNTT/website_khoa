@@ -8,8 +8,11 @@ App\EnvLoader::load(BASE_PATH . '/.env.local');
 // Database
 require_once BASE_PATH . '/includes/core/database.php';
 // Schema
+require_once BASE_PATH . '/includes/core/schema/column_type_trait.php';
 require_once BASE_PATH . '/includes/core/schema/column_definition.php';
 require_once BASE_PATH . '/includes/core/schema/foreign_definition.php';
+require_once BASE_PATH . '/includes/core/schema/alter_operation.php';
+require_once BASE_PATH . '/includes/core/schema/alter_builder.php';
 require_once BASE_PATH . '/includes/core/schema/table_builder.php';
 require_once BASE_PATH . '/includes/core/schema/query_builder.php';
 // Schema Compiler

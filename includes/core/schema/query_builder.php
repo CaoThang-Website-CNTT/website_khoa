@@ -17,7 +17,7 @@ interface IQueryBuilder
 
   /**
    * Cho phép DELETE không có WHERE (xóa toàn bộ bảng).
-   * Bắt buộc phải gọi tường minh — tránh xóa nhầm do quên điều kiện.
+   * Bắt buộc phải gọi tường minh - tránh xóa nhầm do quên điều kiện.
    */
   public function all(): static;
   /** * Xác định bảng chính để truy vấn dữ liệu.
@@ -260,7 +260,7 @@ class QueryBuilder implements IQueryBuilder
       return array_values($this->insertData);
     }
     if (!empty($this->updateData)) {
-      // SET values trước, WHERE values sau — đúng thứ tự prepared statement
+      // SET values trước, WHERE values sau - đúng thứ tự prepared statement
       return array_merge(array_values($this->updateData), $this->whereBindings);
     }
     if ($this->deleteMode) {

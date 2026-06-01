@@ -4,50 +4,10 @@ namespace App\Core\Schema;
 interface ITableBuilder
 {
   /**
-   * Primary Key & Identity
+   * DDL - Tạo / chỉnh sửa bảng
    */
-  public function id(string $name = 'id'): ColumnDefinition;
-  public function primary(string|array $columns): static;
-
-  /**
-   * Numeric Types
-   */
-  public function tinyInt(string $name): ColumnDefinition;
-  public function smallInt(string $name): ColumnDefinition;
-  public function mediumInt(string $name): ColumnDefinition;
-  public function int(string $name): ColumnDefinition;
-  public function bigInt(string $name): ColumnDefinition;
-  public function decimal(string $name, int $precision = 8, int $scale = 2): ColumnDefinition;
-  public function float(string $name): ColumnDefinition;
-  public function double(string $name): ColumnDefinition;
-
-  /**
-   * String & Character Types
-   */
-  public function char(string $name, int $length): ColumnDefinition;
-  public function varchar(string $name, int $length = 255): ColumnDefinition;
-  public function text(string $name): ColumnDefinition;
-  public function mediumText(string $name): ColumnDefinition;
-  public function longText(string $name): ColumnDefinition;
-  public function blob(string $name): ColumnDefinition;
-
-  /**
-   * Date & Time Types
-   */
-  public function date(string $name): ColumnDefinition;
-  public function dateTime(string $name): ColumnDefinition;
-  public function timestamp(string $name): ColumnDefinition;
-  public function time(string $name): ColumnDefinition;
-  public function year(string $name): ColumnDefinition;
-  public function timestamps(): static;
-
-  /**
-   * Specialized Types
-   */
-  public function boolean(string $name): ColumnDefinition;
-  public function json(string $name): ColumnDefinition;
-  public function enum(string $name, array $allowed): ColumnDefinition;
-  public function softDeletes(string $name = "deleted_at"): ColumnDefinition;
+  public function create(string $tableName, callable $callback): void;
+  public function alter(string $tableName, callable $callback): void;
 
   /**
    * Constraints & Indexes
@@ -55,6 +15,7 @@ interface ITableBuilder
    * @example
    * $table->index(['mime_type', 'created_at'], 'idx_media_mime_type_created_at');
    */
+  public function primary(string|array $columns): static;
   public function index(string|array $columns, ?string $name = null): static;
   public function unique(string|array $columns, ?string $name = null): static;
   public function foreign(string $column): ForeignDefinition;
@@ -65,18 +26,22 @@ interface ITableBuilder
   public function disableForeignKeys(): static;
   public function enableForeignKeys(): static;
   public function drop(string $name): static;
+
   public function getColumns(): array;
+  public function getCommands(): array;
   public function getTable(): string;
   public function getTablesToCreate(): array;
+  public function getTablesToAlter(): array;
 }
 
 class TableBuilder implements ITableBuilder
 {
-  /**
-   * Lưu các TableBuilder con
-   * @var TableBuilder[]
-   */
+  use ColumnTypeTrait;
+
+  /** *@var TableBuilder[] - Lưu các TableBuilder con */
   protected array $tablesToCreate = [];
+  /** @var AlterBuilder[] — các ALTER TABLE builder con */
+  protected array $tablesToAlter = [];
   protected string $tableName;
   protected array $columns = [];
   protected array $commands = []; // Hậu xử lý sau khi tạo bảng như tạo constraint, etc
@@ -86,13 +51,6 @@ class TableBuilder implements ITableBuilder
     $this->tableName = $tableName;
   }
 
-  public function create(string $tableName, callable $callback): void
-  {
-    $childBuilder = new self($tableName);
-    $callback($childBuilder);
-    $this->tablesToCreate[] = $childBuilder;
-  }
-
   protected function addColumn(string $type, string $name, array $params = []): ColumnDefinition
   {
     $col = new ColumnDefinition($name, $type, $params);
@@ -100,140 +58,27 @@ class TableBuilder implements ITableBuilder
     return $col;
   }
 
-  /**
-   * Primary Key & Identity
-   */
-  public function id(string $name = 'id'): ColumnDefinition
+  public function create(string $tableName, callable $callback): void
   {
-    return $this->addColumn('bigint', $name, [
-      'unsigned' => true,
-      'auto_increment' => true,
-      'primary' => true
-    ]);
+    $childBuilder = new self($tableName);
+    $callback($childBuilder);
+    $this->tablesToCreate[] = $childBuilder;
   }
 
-  /**
-   * Numeric Types
-   */
-  public function tinyInt(string $name): ColumnDefinition
+  public function alter(string $tableName, callable $callback): void
   {
-    return $this->addColumn('tinyint', $name);
-  }
-  public function smallInt(string $name): ColumnDefinition
-  {
-    return $this->addColumn('smallint', $name);
-  }
-  public function mediumInt(string $name): ColumnDefinition
-  {
-    return $this->addColumn('mediumint', $name);
-  }
-  public function int(string $name): ColumnDefinition
-  {
-    return $this->addColumn('int', $name);
-  }
-  public function bigInt(string $name): ColumnDefinition
-  {
-    return $this->addColumn('bigint', $name);
-  }
-
-  public function decimal(string $name, int $precision = 8, int $scale = 2): ColumnDefinition
-  {
-    return $this->addColumn('decimal', $name, [
-      'precision' => $precision,
-      'scale' => $scale
-    ]);
-  }
-
-  public function float(string $name): ColumnDefinition
-  {
-    return $this->addColumn('float', $name);
-  }
-  public function double(string $name): ColumnDefinition
-  {
-    return $this->addColumn('double', $name);
-  }
-
-  /**
-   * String & Character Types
-   */
-  public function char(string $name, int $length): ColumnDefinition
-  {
-    return $this->addColumn('char', $name, ['length' => $length]);
-  }
-
-  public function varchar(string $name, int $length = 255): ColumnDefinition
-  {
-    return $this->addColumn('varchar', $name, ['length' => $length]);
-  }
-
-  public function text(string $name): ColumnDefinition
-  {
-    return $this->addColumn('text', $name);
-  }
-  public function mediumText(string $name): ColumnDefinition
-  {
-    return $this->addColumn('mediumtext', $name);
-  }
-  public function longText(string $name): ColumnDefinition
-  {
-    return $this->addColumn('longtext', $name);
-  }
-  public function blob(string $name): ColumnDefinition
-  {
-    return $this->addColumn('blob', $name);
-  }
-  /**
-   * Date & Time Types
-   */
-  public function date(string $name): ColumnDefinition
-  {
-    return $this->addColumn('date', $name);
-  }
-  public function dateTime(string $name): ColumnDefinition
-  {
-    return $this->addColumn('datetime', $name);
-  }
-  public function timestamp(string $name): ColumnDefinition
-  {
-    return $this->addColumn('timestamp', $name);
-  }
-  public function time(string $name): ColumnDefinition
-  {
-    return $this->addColumn('time', $name);
-  }
-  public function year(string $name): ColumnDefinition
-  {
-    return $this->addColumn('year', $name);
+    $childBuilder = new AlterBuilder($tableName);
+    $callback($childBuilder);
+    $this->tablesToAlter[] = $childBuilder;
   }
 
   public function timestamps(): static
   {
     $this->timestamp('created_at')->default('CURRENT_TIMESTAMP');
-    $this->timestamp('updated_at')->default('CURRENT_TIMESTAMP')->onUpdate('CURRENT_TIMESTAMP');
-    ;
+    $this->timestamp('updated_at')
+      ->default('CURRENT_TIMESTAMP')
+      ->onUpdate('CURRENT_TIMESTAMP');
     return $this;
-  }
-
-  /**
-   * Specialized Types
-   */
-  public function boolean(string $name): ColumnDefinition
-  {
-    return $this->addColumn('tinyint', $name, ['length' => 1]);
-  }
-
-  public function json(string $name): ColumnDefinition
-  {
-    return $this->addColumn('json', $name);
-  }
-
-  public function enum(string $name, array $allowed): ColumnDefinition
-  {
-    return $this->addColumn('enum', $name, ['allowed' => $allowed]);
-  }
-  public function softDeletes(string $name = 'deleted_at'): ColumnDefinition
-  {
-    return $this->dateTime($name)->nullable();
   }
 
   /**
@@ -282,21 +127,30 @@ class TableBuilder implements ITableBuilder
     return $this;
   }
 
+  public function getColumns(): array
+  {
+    return $this->columns;
+  }
+
   public function getCommands(): array
   {
     return $this->commands;
   }
 
-  public function getColumns(): array
+  public function getTable(): string
   {
-    return $this->columns;
+    return $this->tableName;
   }
+
+  /** @return TableBuilder[] */
   public function getTablesToCreate(): array
   {
     return $this->tablesToCreate;
   }
-  public function getTable(): string
+
+  /** @return AlterBuilder[] */
+  public function getTablesToAlter(): array
   {
-    return $this->tableName;
+    return $this->tablesToAlter;
   }
 }

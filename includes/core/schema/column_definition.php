@@ -19,6 +19,8 @@ class ColumnDefinition
     'allowed' => [] // Cho ENUMs
   ];
   protected ?string $onUpdate = null;
+  protected ?string $afterColumn = null;
+  protected bool $positionFirst = false;
 
   public function __construct(string $name, string $type, array $params = [])
   {
@@ -64,5 +66,30 @@ class ColumnDefinition
   public function getOnUpdate(): ?string
   {
     return $this->onUpdate;
+  }
+
+  // ALTER
+  public function after(string $column): self
+  {
+    $this->afterColumn = $column;
+    $this->positionFirst = false;
+    return $this;
+  }
+
+  public function first(): self
+  {
+    $this->positionFirst = true;
+    $this->afterColumn = null;
+    return $this;
+  }
+
+  public function getAfterColumn(): ?string
+  {
+    return $this->afterColumn;
+  }
+
+  public function isFirst(): bool
+  {
+    return $this->positionFirst;
   }
 }

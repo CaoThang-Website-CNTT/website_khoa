@@ -1,7 +1,7 @@
 <?php
 namespace App\Core\Schema\Compiler;
 
-use App\Core\Schema\{TableBuilder, ColumnDefinition, ForeignDefinition};
+use App\Core\Schema\{TableBuilder, AlterBuilder, ColumnDefinition, ForeignDefinition, AlterOperation};
 
 interface ISQLCompiler
 {
@@ -9,6 +9,8 @@ interface ISQLCompiler
   public function compile(TableBuilder $builder): string;
   public function compileColumn(ColumnDefinition $column): string;
   public function compileCommand(array|ForeignDefinition $command, string $fromTable): ?string;
+  public function compileAlter(AlterBuilder $builder): string;
+  public function compileAlterOperation(AlterOperation $op, string $table): string;
 
   // Query (DML) methods
   public function compileSelect(string $table, array $columns, array $wheres, array $joins, array $orders, ?int $limit, ?int $offset): string;

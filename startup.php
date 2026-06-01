@@ -9,8 +9,10 @@ require_once BASE_PATH . '/includes/env_loader.php';
 // Database
 require_once BASE_PATH . '/includes/core/database.php';
 // Schema
+require_once BASE_PATH . '/includes/core/schema/column_type_trait.php';
 require_once BASE_PATH . '/includes/core/schema/column_definition.php';
 require_once BASE_PATH . '/includes/core/schema/foreign_definition.php';
+require_once BASE_PATH . '/includes/core/schema/alter_builder.php';
 require_once BASE_PATH . '/includes/core/schema/table_builder.php';
 require_once BASE_PATH . '/includes/core/schema/query_builder.php';
 require_once BASE_PATH . '/includes/core/schema/model.php';
