@@ -1,4 +1,28 @@
 export class TemplateEngine {
+  /** @type {Record<string, Function>} */
+  static #helpers = {};
+
+  /**
+   * Đăng ký helper function để dùng trong template expression.
+   * Helper được inject vào scope của mọi template được compile SAU lời gọi này.
+   * Template compile TRƯỚC khi đăng ký sẽ không có helper.
+   *
+   * @param {string} name - Tên gọi trong template, VD: 'formatDate'
+   * @param {Function} fn
+   *
+   * @example
+   * TemplateEngine.registerHelper('formatDate', val => dayjs(val).format('DD/MM/YYYY'));
+   * TemplateEngine.registerHelper('currency', val => new Intl.NumberFormat('vi-VN').format(val));
+   *
+   * // Trong template:
+   * // {{ formatDate(row.created_at) }}
+   * // {{ currency(value) }}
+   */
+  static registerHelper(name, fn) {
+    if (typeof fn !== 'function') throw new Error(`[TemplateEngine] Helper "${name}" phải là function`);
+    TemplateEngine.#helpers[name] = fn;
+  }
+
   /**
    * Biên dịch innerHTML của phần tử <template> thành hàm render.
    * Hỗ trợ: {{value}}, {{row.field}}, {{row.field || 'fallback'}}.
@@ -7,17 +31,19 @@ export class TemplateEngine {
    */
   static compile(tpl) {
     const html = tpl.innerHTML;
-    // Chuyển đổi {{expr}} → placeholder của template literal ES6
     const body = html.replace(/{{([\s\S]+?)}}/g, (_, expr) => `\${__esc(__val(ctx, ${JSON.stringify(expr.trim())}))}`);
 
+    const helperNames = Object.keys(TemplateEngine.#helpers);
+    const helperVals = helperNames.map(k => TemplateEngine.#helpers[k]);
+
     const fn = new Function(
-      '__esc', '__val', 'ctx',
+      '__esc', '__val', 'ctx', ...helperNames,
       `return \`${body}\`;`
     );
 
     return (row, value) => {
       const ctx = { ...row, value, row };
-      const rendered = fn(TemplateEngine.#esc, TemplateEngine.#val, ctx);
+      const rendered = fn(TemplateEngine.#esc, TemplateEngine.#val, ctx, ...helperVals);
       const div = document.createElement('div');
       div.innerHTML = rendered;
       const frag = document.createDocumentFragment();

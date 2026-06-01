@@ -34,40 +34,39 @@
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="tm-container" id="posts_table" data-tm="posts_table" data-tm-mode="client" data-tm-selectable data-tm-searchable 
-  data-tm-toolbar-target="#posts-table-header">
+<div class="tm-container" id="posts_table" data-tm="posts_table" data-tm-mode="client" data-tm-selectable
+  data-tm-searchable data-tm-toolbar-target="#posts-table-header">
 
   <!-- Khai báo phân trang -->
-    <template data-tm-pagination></template>
+  <template data-tm-pagination></template>
 
-    <!-- Cột ID -->
-    <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
+  <!-- Cột ID -->
+  <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px"></template>
 
-    <!-- Cột Tiêu đề với Link edit -->
-    <template data-tm-col="title" data-tm-label="Tiêu đề" data-tm-sortable>
-      <div class="flex flex-col">
-        <a href="<?= url('admin/posts/') ?>{{ row.id }}">{{ value }}</a>
-        <span>{{ row.slug }}</span>
-      </div>
-    </template>
+  <!-- Cột Tiêu đề với Link edit -->
+  <template data-tm-col="title" data-tm-label="Tiêu đề" data-tm-sortable>
+    <div class="flex flex-col">
+      <a href="<?= url('admin/posts/') ?>{{ row.id }}">{{ value }}</a>
+      <span>{{ row.slug }}</span>
+    </div>
+  </template>
 
-    <!-- Cột Tác giả -->
-    <template data-tm-col="author_name" data-tm-label="Tác giả" data-tm-filter-type="text"></template>
+  <!-- Cột Tác giả -->
+  <template data-tm-col="author_name" data-tm-label="Tác giả" data-tm-filter-type="text"></template>
 
-    <!-- Cột Trạng thái với Badge -->
-    <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-align="center" 
-      data-tm-filter-type="select" 
-      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đã đăng","value":"published"},{"label":"Bản nháp","value":"draft"}]'>
-      <span class="badge" data-variant="{{ value === 'published' ? 'primary' : 'secondary' }}">
-        {{ value === 'published' ? 'Đã đăng' : 'Bản nháp' }}
-      </span>
-    </template>
+  <!-- Cột Trạng thái với Badge -->
+  <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-align="center" data-tm-filter-type="select"
+    data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đã đăng","value":"published"},{"label":"Bản nháp","value":"draft"}]'>
+    <span class="badge" data-variant="{{ value === 'published' ? 'primary' : 'secondary' }}">
+      {{ value === 'published' ? 'Đã đăng' : 'Bản nháp' }}
+    </span>
+  </template>
 
-    <!-- Cột Lượt xem -->
-    <template data-tm-col="view_count" data-tm-label="Lượt xem" data-tm-align="center" data-tm-sortable></template>
+  <!-- Cột Lượt xem -->
+  <template data-tm-col="view_count" data-tm-label="Lượt xem" data-tm-align="center" data-tm-sortable></template>
 
-    <!-- Cột Ngày tạo -->
-    <template data-tm-col="created_at" data-tm-label="Ngày tạo" data-tm-sortable></template>
+  <!-- Cột Ngày tạo -->
+  <template data-tm-col="created_at" data-tm-label="Ngày tạo" data-tm-sortable></template>
 </div>
 
 <!-- Bootstrap Data Source -->
@@ -93,6 +92,7 @@
     console.log(TableManager.get("posts_table"));
   })
 
-  document.querySelector("#posts_table").addEventListener("tm:selection-change", (e)=>{
+  document.querySelector("#posts_table").addEventListener("tm:selection-change", (e) => {
+    console.log(e);
   })
 </script>

@@ -90,7 +90,7 @@ export class TableRenderer {
       if (externalSel) {
         const ext = document.querySelector(externalSel);
         if (ext) {
-          ext.addEventListener('input', e => inst.filter.setSearch(e.target.value));
+          ext.addEventListener('input', e => inst.setSearch(e.target.value));
         }
       } else {
         const wrap = document.createElement('div');
@@ -103,7 +103,13 @@ export class TableRenderer {
            </span>
            <input class="tm-search__input" type="text" placeholder="Tìm kiếm...">
         `;
-        search.querySelector('input').addEventListener('input', e => inst.filter.setSearch(e.target.value));
+        const searchInput = search.querySelector('input');
+        searchInput.addEventListener('input', e => {
+          inst.setSearch(e.target.value);
+          this.#root.dispatchEvent(new CustomEvent('tm:search:change', {
+            detail: { search: e.target.value }
+          }));
+        });
         wrap.appendChild(search);
         topRow.appendChild(wrap);
       }
@@ -194,7 +200,11 @@ export class TableRenderer {
       const op = opSelect._currentValue;
 
       if (!val && col.filterType !== 'select') return;
-      inst.filter.setRule(col.key, op, val);
+      inst.setFilter(col.key, op, val);
+
+      this.#root.dispatchEvent(new CustomEvent('tm:filter:apply', {
+        detail: { column: col.key, operator: op, value: val }
+      }));
 
       if (window.DropdownHandler?.instance) {
         window.DropdownHandler.instance.close(wrap.dataset.dropdownId);
@@ -238,7 +248,11 @@ export class TableRenderer {
         </button>
       `;
       pill.querySelector('.tm-filter-pill__remove').addEventListener('click', () => {
-        this.#inst.filter.clearRule(rule.col);
+        this.#inst.clearFilter(rule.col);
+
+        this.#root.dispatchEvent(new CustomEvent('tm:filter:clear', {
+          detail: { column: rule.col }
+        }));
 
         // Đồng bộ hóa: Reset UI của Dropdown tương ứng
         const dropdown = this.#root.querySelector(`.tm-filter-dropdown[data-tm-col="${rule.col}"]`);
@@ -322,14 +336,10 @@ export class TableRenderer {
           visibleCheckboxes.forEach(cb => {
             cb.checked = checked;
             const id = String(cb.value);
-            if (checked) {
-              this.#inst.selectedIds.add(id);
-            } else {
-              this.#inst.selectedIds.delete(id);
-            }
+            this.#inst.toggleRowSelection(id, checked);
           });
           this.#root.dispatchEvent(new CustomEvent('tm:selection-change', {
-            detail: { selectedIds: Array.from(this.#inst.selectedIds) }
+            detail: { rowSelection: this.#inst.getRowSelection() }
           }));
         });
       } else if (col.sortable) {
@@ -343,7 +353,7 @@ export class TableRenderer {
            </span>
          `;
         th.addEventListener('click', () => {
-          this.#inst.sort.toggle(col.key);
+          this.#inst.setSort(col.key);
         });
       } else {
         th.textContent = col.label;
@@ -425,17 +435,12 @@ export class TableRenderer {
     const rawId = row?.[this.#inst.idKey];
     const id = rawId == null ? '' : String(rawId);
     input.value = id;
-    input.checked = this.#inst.selectedIds?.has(id) ?? false;
+    input.checked = this.#inst.hasRowSelection(id);
     input.addEventListener('change', (e) => {
-      if (!this.#inst.selectedIds) return;
-      if (e.target.checked) {
-        this.#inst.selectedIds.add(id);
-      } else {
-        this.#inst.selectedIds.delete(id);
-      }
+      this.#inst.toggleRowSelection(id, e.target.checked);
       this.#inst.updateHeaderCheckbox();
       this.#root.dispatchEvent(new CustomEvent('tm:selection-change', {
-        detail: { selectedIds: Array.from(this.#inst.selectedIds) }
+        detail: { rowSelection: this.#inst.getRowSelection() }
       }));
     });
     return wrap;
@@ -494,7 +499,12 @@ export class TableRenderer {
       } else {
         el.type = 'button';
         if (!disabled && !active) {
-          el.addEventListener('click', () => this.#inst.setPageIndex(targetPage - 1));
+          el.addEventListener('click', () => {
+            this.#inst.setPageIndex(targetPage - 1);
+            this.#root.dispatchEvent(new CustomEvent('tm:pagination:change', {
+              detail: { page: targetPage, totalPages: totalPages }
+            }));
+          });
         }
       }
       el.dataset.tmPage = targetPage;
