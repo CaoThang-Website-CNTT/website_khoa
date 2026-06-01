@@ -938,7 +938,9 @@
 
   .field[aria-invalid] .field__input,
   .radio-group[aria-invalid] .field__label {
-    border-color: var(--destructive);
+    border-color: var(--destructive) !important;
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--destructive) 20%, transparent);
   }
 
   .radio-group[aria-invalid] .field__label {
@@ -1103,7 +1105,7 @@
     color: var(--card-foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 1rem 0;
+    padding: 1rem 0 0;
     gap: 1rem;
   }
 

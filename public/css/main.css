@@ -625,6 +625,12 @@
 .auth-form-card {
   margin: 0 auto;
   max-width: var(--container-md);
+  border-radius: var(--radius-3xl);
+}
+
+.auth-form-card .card__footer {
+  border-top: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted) 50%, transparent);
 }
 
 .onboard-form-card,
