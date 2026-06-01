@@ -66,7 +66,7 @@
       'file_path' => url('public/media/' . $media->file_path) ?? 'N/A',
       'mime_type' => $media->mime_type ?? 'custom',
       'file_size' => $media->file_size ?? 'N/A',
-      'alt_text' => $media->alt_text ?? '—',
+      'alt_text' => $media->alt_text ?? '-',
       'created_at' => $media->created_at ?? 'N/A',
       'updated_at' => $media->updated_at ?? 'N/A',
     ], $data->getItems()),

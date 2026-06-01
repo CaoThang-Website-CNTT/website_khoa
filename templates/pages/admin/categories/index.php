@@ -65,7 +65,7 @@
       'slug' => $category->slug ?? 'N/A',
       'type' => $category->type ?? 'custom',
       'parent_type' => empty($category->parent_id) ? 'parent' : 'child',
-      'description' => $category->description ?? '—'
+      'description' => $category->description ?? '-'
     ], $data->getItems()),
     'total' => $data->getTotal(),
     'page' => $data->getCurrentPage(),

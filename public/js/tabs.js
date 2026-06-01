@@ -44,7 +44,7 @@ class TabHandler {
     return this.config.syncParams && tabs.dataset.tabsSync !== "false";
   }
   /**
-   * Xác định key khởi tạo — ưu tiên query param, fallback về data-active.
+   * Xác định key khởi tạo - ưu tiên query param, fallback về data-active.
    * URL format: ?users=students&reports=monthly
    *
    * @param {HTMLElement} tabs
@@ -112,7 +112,7 @@ class TabHandler {
   }
 
   /**
-   * Đồng bộ URL query params — cập nhật key của tab hiện tại,
+   * Đồng bộ URL query params - cập nhật key của tab hiện tại,
    * giữ nguyên tất cả các tab khác đang có trong URL.
    * 
    * Ví dụ: 

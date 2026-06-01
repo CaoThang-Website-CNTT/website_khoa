@@ -141,7 +141,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 value="" readonly>
               <p class="field__description">
                 Mã lớp được tự động tạo theo định dạng:
-                <strong>{Hệ}{Ngành}{Khóa}{Ký tự}</strong> — VD: CĐ CNTT 23A
+                <strong>{Hệ}{Ngành}{Khóa}{Ký tự}</strong> - VD: CĐ CNTT 23A
               </p>
             </div>
 
@@ -342,7 +342,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         filteredTeachers.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.textContent = `${t.full_name} (${t.staff_code}) — ${t.department}`;
+          opt.textContent = `${t.full_name} (${t.staff_code}) - ${t.department}`;
 
           // Pre-select dữ liệu cũ nếu đang ở lần load đầu tiên
           if (isInit && t.id == initialTeacherId) {

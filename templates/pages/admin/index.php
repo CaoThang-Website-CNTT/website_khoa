@@ -1,4 +1,4 @@
-<h2>Single select — static HTML options</h2>
+<h2>Single select - static HTML options</h2>
 <div class="demo-row">
   <div class="demo-col">
     <div class="select" data-select-id="sel-single" data-select-multiple data-select-searchable
@@ -13,11 +13,11 @@
       </div>
     </div>
     <span class="log-label">onChange value:</span>
-    <pre id="out-single">—</pre>
+    <pre id="out-single">-</pre>
   </div>
 </div>
 
-<h2>Single select — flattened options (no groups/search)</h2>
+<h2>Single select - flattened options (no groups/search)</h2>
 <div class="demo-row">
   <div class="demo-col" style="min-width:280px">
     <div class="select" data-select-id="sel-flat" data-select-placeholder="Chọn ngôn ngữ...">
@@ -35,18 +35,18 @@
       </div>
     </div>
     <span class="log-label">onChange value:</span>
-    <pre id="out-flat">—</pre>
+    <pre id="out-flat">-</pre>
   </div>
 </div>
 
-<h2>JS API — dynamic registration</h2>
+<h2>JS API - dynamic registration</h2>
 <div class="demo-row">
   <div class="demo-col">
     <div class="select" data-select-id="sel-dynamic" data-select-placeholder="Chọn tỉnh/thành...">
       <div class="select__content" id="dynamic-options"></div>
     </div>
     <span class="log-label">onChange value:</span>
-    <pre id="out-dynamic">—</pre>
+    <pre id="out-dynamic">-</pre>
   </div>
 </div>
 

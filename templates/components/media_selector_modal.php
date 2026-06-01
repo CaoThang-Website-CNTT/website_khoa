@@ -285,7 +285,7 @@
       _searchTimeout = setTimeout(() => loadLibrary(1), 400);
     });
 
-    // ── File upload — delegated to MediaUploader module ──────────────────────
+    // ── File upload - delegated to MediaUploader module ──────────────────────
     uploadZone.addEventListener('mu:file-selected', (e) => {
       const { file } = e.detail;
       _pendingFile = file;

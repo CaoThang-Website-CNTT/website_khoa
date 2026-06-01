@@ -17,7 +17,7 @@ use App\Editor\Blocks\TableRenderer;
  *   // Mode 1: Chỉ cần HTML (backward compatible)
  *   {!! BlockRenderer::fromJson($post->content_json) !!}
  *
- *   // Mode 2: Cần cả HTML lẫn ToC — một lần pass duy nhất
+ *   // Mode 2: Cần cả HTML lẫn ToC - một lần pass duy nhất
  *   $result = BlockRenderer::compile($post->content_json);
  *   // $result->html        → string, safe to echo
  *   // $result->entries()   → TocEntry[]
@@ -34,7 +34,7 @@ use App\Editor\Blocks\TableRenderer;
  *           renderer->extractTocEntry($block) → collect vào $tocEntries[]
  *      ↓ RenderResult($html, $tocEntries)
  *
- * Loop chỉ chạy một lần — không parse lại để lấy ToC.
+ * Loop chỉ chạy một lần - không parse lại để lấy ToC.
  */
 final class BlockRenderer
 {
@@ -45,7 +45,7 @@ final class BlockRenderer
 
   /**
    * Compile content_json → RenderResult (HTML + ToC).
-   * Đây là method chính — fromJson/fromArray là shortcut trên nó.
+   * Đây là method chính - fromJson/fromArray là shortcut trên nó.
    *
    * @param  string|null  $json
    * @param  array        $options  Xem processBlocks()
@@ -88,7 +88,7 @@ final class BlockRenderer
   }
 
   /**
-   * Shortcut trả về chỉ HTML string — backward compatible với code cũ.
+   * Shortcut trả về chỉ HTML string - backward compatible với code cũ.
    *
    * @param  string|null  $json
    * @param  array        $options
@@ -115,7 +115,7 @@ final class BlockRenderer
    * Loop duy nhất: render HTML + collect ToC entries cùng lúc.
    *
    * Options:
-   *   'wrapper' => string|false  — CSS class của wrapper div (false = không wrap)
+   *   'wrapper' => string|false  - CSS class của wrapper div (false = không wrap)
    *
    * @param  array  $blocks   Normalized blocks từ BlockValidator
    * @param  array  $options

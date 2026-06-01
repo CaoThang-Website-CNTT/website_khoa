@@ -17,9 +17,10 @@
 </head>
 
 <body>
-  <h1>419 — Phiên đã hết hạn</h1>
+  <h1>419 - Phiên đã hết hạn</h1>
   <p>Token bảo mật không hợp lệ hoặc đã hết hạn. Vui lòng tải lại trang và thử lại.</p>
-  <p><a href="javascript:history.back()">Quay lại</a> · <a href="<?= htmlspecialchars(url(''), ENT_QUOTES, 'UTF-8') ?>">Trang chủ</a></p>
+  <p><a href="javascript:history.back()">Quay lại</a> · <a
+      href="<?= htmlspecialchars(url(''), ENT_QUOTES, 'UTF-8') ?>">Trang chủ</a></p>
 </body>
 
 </html>

@@ -17,7 +17,7 @@ interface IPostStore
 
 
   /**
-   * Chỉ cập nhật các field được truyền vào — partial update.
+   * Chỉ cập nhật các field được truyền vào - partial update.
    * Các field immutable (id, author_id, created_at) bị chặn tại store.
    */
   public function update(int $id, array $data): Post;
@@ -31,7 +31,7 @@ interface IPostStore
 
 class PostStore extends Store implements IPostStore
 {
-  // Các cột dùng cho listing — tách biệt với detail để kiểm soát payload
+  // Các cột dùng cho listing - tách biệt với detail để kiểm soát payload
   private const LISTING_COLUMNS = [
     'id',
     'title',
@@ -192,7 +192,7 @@ class PostStore extends Store implements IPostStore
 
     $now = (new \DateTime())->format('Y-m-d H:i:s');
 
-    // Ghi deleted_at — record vẫn tồn tại trong DB, chỉ bị ẩn khỏi mọi query thường
+    // Ghi deleted_at - record vẫn tồn tại trong DB, chỉ bị ẩn khỏi mọi query thường
     $query = $builder
       ->from('posts')
       ->update(['deleted_at' => $now, 'updated_at' => $now])

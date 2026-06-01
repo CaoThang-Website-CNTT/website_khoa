@@ -4,13 +4,13 @@ namespace App\Editor;
 use App\Models\PostMeta;
 
 /**
- * Chứa cả HTML đã render lẫn ToC — được tạo ra từ một lần
+ * Chứa cả HTML đã render lẫn ToC - được tạo ra từ một lần
  */
 final class RenderResult
 {
   /** @param TocEntry[] $tocEntries */
   public function __construct(
-    /** HTML đầy đủ của toàn bộ content — safe to {!! echo !!} */
+    /** HTML đầy đủ của toàn bộ content - safe to {!! echo !!} */
     public string $html,
 
     /** Danh sách heading entries, theo thứ tự xuất hiện trong document */
@@ -87,27 +87,27 @@ final class RenderResult
 final class TocEntry
 {
   public function __construct(
-    /** Level của heading (2, 3, 4...) — dùng để indent trong ToC */
+    /** Level của heading (2, 3, 4...) - dùng để indent trong ToC */
     public int $level,
 
-    /** Plain text của heading — không chứa HTML tag, dùng để hiển thị */
+    /** Plain text của heading - không chứa HTML tag, dùng để hiển thị */
     public string $plainText,
 
     /**
-     * anchor_id của block — fragment URL để scroll đến (#section-abc).
+     * anchor_id của block - fragment URL để scroll đến (#section-abc).
      * Rỗng nếu heading không có anchor_id trong data.meta.
      * Khi rỗng, entry vẫn được giữ lại trong ToC nhưng không có href.
      */
     public string $anchorId,
 
-    /** Block ID gốc — dùng khi cần reference ngược lại block */
+    /** Block ID gốc - dùng khi cần reference ngược lại block */
     public string $blockId,
   ) {
   }
 
   /**
    * Có thể tạo link đến heading này không.
-   * False khi anchor_id rỗng — renderer ToC nên render <span> thay vì <a>.
+   * False khi anchor_id rỗng - renderer ToC nên render <span> thay vì <a>.
    */
   public function hasAnchor(): bool
   {
@@ -115,7 +115,7 @@ final class TocEntry
   }
 
   /**
-   * Fragment URL (#anchor_id) — dùng trong href attribute.
+   * Fragment URL (#anchor_id) - dùng trong href attribute.
    * Trả về rỗng nếu không có anchor.
    */
   public function fragment(): string

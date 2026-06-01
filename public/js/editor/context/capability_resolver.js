@@ -37,7 +37,7 @@ export class CapabilityResolver {
    * Trả về Set để caller dễ kiểm tra `has()`.
    *
    * @param {'text'|'cursor'|'block'|'none'} contextType
-   * @param {object|null} blockSchema — schema.supports của block hiện tại
+   * @param {object|null} blockSchema - schema.supports của block hiện tại
    * @param {boolean} isTextSelection
    * @returns {Set<string>}
    */

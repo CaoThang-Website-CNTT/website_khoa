@@ -55,7 +55,7 @@ export class HeadingBlock extends EditorBlock {
     });
 
     el.addEventListener('keydown', (e) => {
-      // Heading là single-line — Enter không xuống dòng
+      // Heading là single-line - Enter không xuống dòng
       if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
     });
 

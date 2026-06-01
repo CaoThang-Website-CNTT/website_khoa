@@ -130,8 +130,10 @@ body {
   right: calc(-1 * var(--right-panel-width));
 }
 
-.be-panel__wrapper:has(#be-left[data-be-panel-state="collapsed"]) .be-panel__gap,
-.be-panel__wrapper:has(#be-right[data-be-panel-state="collapsed"]) .be-panel__gap {
+.be-panel__wrapper:has(#be-left[data-be-panel-state="collapsed"])
+  .be-panel__gap,
+.be-panel__wrapper:has(#be-right[data-be-panel-state="collapsed"])
+  .be-panel__gap {
   width: 0;
 }
 
@@ -183,7 +185,7 @@ body {
   gap: 0.5rem;
 }
 
-.be-block-group+.be-block-group {
+.be-block-group + .be-block-group {
   margin-top: 2rem;
 }
 
@@ -206,7 +208,7 @@ body {
 }
 
 /* =============================================================
-   CANVAS — center
+   CANVAS - center
    ============================================================= */
 #be-canvas-wrap {
   flex: 1;
@@ -223,7 +225,8 @@ body {
   position: relative;
 }
 
-.be-canvas__content-wrapper {}
+.be-canvas__content-wrapper {
+}
 
 .be-canvas__content {
   max-width: var(--container-2xl);
@@ -244,7 +247,7 @@ body {
 
 .be-canvas-meta__info span,
 .be-canvas-meta__info,
-.be-canvas-meta__info>i {
+.be-canvas-meta__info > i {
   font-size: var(--text-sm);
 }
 
@@ -260,7 +263,7 @@ body {
 }
 
 /* =============================================================
-   BLOCK CARD — trong canvas
+   BLOCK CARD - trong canvas
    ============================================================= */
 .be-block-card {
   position: relative;
@@ -276,7 +279,7 @@ body {
   background: color-mix(in oklab, var(--primary) 10%, transparent);
 }
 
-/* Drag handle — xuất hiện khi hover */
+/* Drag handle - xuất hiện khi hover */
 .be-drag-handle {
   position: absolute;
   left: -1.5rem;
@@ -296,7 +299,7 @@ body {
   opacity: 1;
 }
 
-/* Block action toolbar — xuất hiện trên block khi selected */
+/* Block action toolbar - xuất hiện trên block khi selected */
 .be-toolbar {
   min-width: 10rem;
 }
@@ -446,7 +449,7 @@ body {
 }
 
 /* =============================================================
-   BLOCK PREVIEWS — trong canvas, render như trang public thật
+   BLOCK PREVIEWS - trong canvas, render như trang public thật
    ============================================================= */
 .be-image-caption:empty::before {
   content: attr(data-placeholder);
@@ -544,8 +547,8 @@ body {
   opacity: 0.6;
 }
 
-.be-table-col-handle>*,
-.be-table-row-handle>* {
+.be-table-col-handle > *,
+.be-table-row-handle > * {
   font-size: inherit;
 }
 
@@ -569,8 +572,10 @@ body {
 
 .be-table td.be-cell-selected,
 .be-table th.be-cell-selected {
-  background-color: color-mix(in oklab,
-      var(--primary) 5%,
-      transparent) !important;
+  background-color: color-mix(
+    in oklab,
+    var(--primary) 5%,
+    transparent
+  ) !important;
   transition: background-color 0.15s ease;
 }

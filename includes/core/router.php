@@ -145,7 +145,7 @@ class Router
     $method = $request->method();
 
     // Cắt route thừa ở đầu khi để dự án trong XAMPP
-    // Như /website_khoa — cắt bỏ để giữ route gọn
+    // Như /website_khoa - cắt bỏ để giữ route gọn
     $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
     if ($basePath && str_starts_with($uri, $basePath)) {
       $uri = substr($uri, strlen($basePath)) ?: '/';
@@ -162,7 +162,7 @@ class Router
 
       $uriMatched = true;
 
-      // Lọc method — URI khớp nhưng method sai -> tiếp tục tìm
+      // Lọc method - URI khớp nhưng method sai -> tiếp tục tìm
       if ($route['method'] !== $method) {
         continue;
       }
@@ -231,7 +231,7 @@ class Router
       return new $class();
     }
 
-    // Tiêm phụ thuộc — gọi đệ quy để resolve dependency lồng nhau
+    // Tiêm phụ thuộc - gọi đệ quy để resolve dependency lồng nhau
     $args = [];
 
     foreach ($constructor->getParameters() as $param) {
@@ -288,7 +288,7 @@ class Router
         continue;
       }
 
-      // Xử lý tham số route động — kiểm tra bằng tên, không phụ thuộc vào vị trí
+      // Xử lý tham số route động - kiểm tra bằng tên, không phụ thuộc vào vị trí
       if (array_key_exists($param->getName(), $routeParams)) {
         $value = $routeParams[$param->getName()];
         $args[] = match ($type?->getName()) {

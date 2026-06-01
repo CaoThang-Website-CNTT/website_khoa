@@ -5,7 +5,7 @@ class Toast {
   /**
  * Danh sách các vị trí hợp lệ mà Toast hỗ trợ.
  * Được dùng để validate giá trị `position` trong constructor.
- * Đây là hằng số — không thay đổi theo instance.
+ * Đây là hằng số - không thay đổi theo instance.
  *
  * @static
  * @readonly
@@ -50,7 +50,7 @@ class Toast {
  *
  * @param {number}  [options.collapsedGap=8]          - Khoảng cách (px) giữa các toast
  *   khi stack đang ở trạng thái thu gọn (chưa hover).
- *   Dùng để tạo hiệu ứng chiều sâu — toast phía sau nhô ra một khoảng nhỏ.
+ *   Dùng để tạo hiệu ứng chiều sâu - toast phía sau nhô ra một khoảng nhỏ.
  *   Phải là số nguyên. Giá trị không hợp lệ fallback về `8`.
  *
  * @param {number}  [options.expandedGap=8]           - Khoảng cách (px) giữa các toast
@@ -58,21 +58,21 @@ class Toast {
  *   Phải là số nguyên. Giá trị không hợp lệ fallback về `8`.
  *
  * @param {number}  [options.duration=4000]           - Thời gian tồn tại (ms) của toast
- *   trước khi tự động biến mất. Không áp dụng cho toast loại `loading` —
+ *   trước khi tự động biến mất. Không áp dụng cho toast loại `loading` -
  *   loại này tồn tại vĩnh viễn cho đến khi bị dismiss thủ công hoặc qua `promise()`.
  *   Phải là số nguyên. Giá trị không hợp lệ fallback về `4000`.
  *
  * @example
- * // Dashboard — toast ở giữa trên cùng, tồn tại 5 giây
+ * // Dashboard - toast ở giữa trên cùng, tồn tại 5 giây
  * window.toast = new Toast({ position: 'top-center', duration: 5000 });
  *
  * @example
- * // Trang người dùng — toast góc trên trái, tối đa 2 cái
+ * // Trang người dùng - toast góc trên trái, tối đa 2 cái
  * window.toast = new Toast({ position: 'top-left', maxVisible: 2 });
  */
   constructor(options = {}) {
     /**
-     * Cấu hình instance — bất biến sau khi khởi tạo.
+     * Cấu hình instance - bất biến sau khi khởi tạo.
      * Được khóa bằng Object.freeze() để tránh bị thay đổi từ bên ngoài.
      *
      * @private
@@ -99,7 +99,7 @@ class Toast {
     this._stack = [];
 
     /**
-     * Trạng thái mở rộng của stack — true khi người dùng hover vào container.
+     * Trạng thái mở rộng của stack - true khi người dùng hover vào container.
      *
      * @private
      * @type {boolean}

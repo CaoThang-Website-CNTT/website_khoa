@@ -3,9 +3,9 @@ import { RichTextParser } from '../rich_text_parser.js';
 
 export class EditorBlock {
   /**
-   * @param {object} blockData  — dữ liệu từ DB
-   * @param {object} schema     — config của block
-   * @param {object} [bus]      — EditorEventBus
+   * @param {object} blockData  - dữ liệu từ DB
+   * @param {object} schema     - config của block
+   * @param {object} [bus]      - EditorEventBus
    */
   constructor(blockData = {}, schema, bus = null) {
     this.id = blockData.id || crypto.randomUUID();
@@ -53,7 +53,7 @@ export class EditorBlock {
     return parsed;
   }
 
-  // ─── Abstract — phải override ─────────────────────────────────────────────
+  // ─── Abstract - phải override ─────────────────────────────────────────────
 
   /**
    * Render block ra canvas.
@@ -74,7 +74,7 @@ export class EditorBlock {
   }
 
   /**
-   * Đóng gói data để gửi server — mỗi block tự biết cách đọc từ DOM.
+   * Đóng gói data để gửi server - mỗi block tự biết cách đọc từ DOM.
    * Base class xử lý trường hợp có field `content` đọc từ editableEl.
    * Block phức tạp (List, Table) override để đọc từ this.data trực tiếp.
    *
@@ -94,7 +94,7 @@ export class EditorBlock {
   // ─── Rich text helpers ────────────────────────────────────────────────────
 
   /**
-   * Extract plain text từ content — hỗ trợ cả string (legacy) lẫn RichSegment[].
+   * Extract plain text từ content - hỗ trợ cả string (legacy) lẫn RichSegment[].
    * @param {string|Array<{text:string}>|null|undefined} content
    * @returns {string}
    */
@@ -106,7 +106,7 @@ export class EditorBlock {
   }
 
   /**
-   * Deep clone this.data — tránh mutate khi serialize.
+   * Deep clone this.data - tránh mutate khi serialize.
    * @returns {object}
    */
   _cloneData() {

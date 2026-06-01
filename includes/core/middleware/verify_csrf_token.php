@@ -21,7 +21,7 @@ class VerifyCsrfToken extends BaseMiddleware
     }
 
     $path = $request->path();
-    // API JSON — không dùng form session token (có thể bổ sung Bearer/API key sau)
+    // API JSON - không dùng form session token (có thể bổ sung Bearer/API key sau)
     if ($path === '/api' || str_starts_with($path, '/api/')) {
       return $next($request);
     }

@@ -4,7 +4,7 @@ export class BlockToolbar extends EditorToolbar {
 
   static DROPDOWN_ID = 'be-block-toolbar';
 
-  /** @type {object|null} — context row/col khi block là table */
+  /** @type {object|null} - context row/col khi block là table */
   #currentSelection = null;
 
   /** @type {HTMLElement} */
@@ -78,7 +78,7 @@ export class BlockToolbar extends EditorToolbar {
       this.toggle(block, anchorEl, selection, hideDefault);
     });
 
-    // Xóa block — đóng dropdown ngay
+    // Xóa block - đóng dropdown ngay
     this.#deleteBtn.addEventListener('click', (e) => {
       e.preventDefault();
       if (!this.currentBlock) return;
@@ -103,7 +103,7 @@ export class BlockToolbar extends EditorToolbar {
       const action = item.dataset.action;
       if (!action || !this.currentBlock) return;
 
-      // Dispatch action chung — Manager hoặc block tự xử lý
+      // Dispatch action chung - Manager hoặc block tự xử lý
       this.bus.dispatch('block:action', {
         action,
         blockId: this.currentBlock.id,
@@ -113,7 +113,7 @@ export class BlockToolbar extends EditorToolbar {
       this.dynamicArea.innerHTML = '';
       this.dynamicArea.style.display = 'none';
 
-      // ĐÓNG NGAY sau khi chọn action — đây là điểm khác với InlineToolbar
+      // ĐÓNG NGAY sau khi chọn action - đây là điểm khác với InlineToolbar
       this.close(BlockToolbar.DROPDOWN_ID);
     }, { signal });
   }
@@ -125,9 +125,9 @@ export class BlockToolbar extends EditorToolbar {
    * Được gọi từ bus event 'toolbar:toggle'.
    *
    * @param {EditorBlock} block
-   * @param {HTMLElement} anchorEl       — drag handle element
-   * @param {object|null} [selection]    — context row/col (table block)
-   * @param {boolean}     [hideDefault]  — ẩn separator + delete button
+   * @param {HTMLElement} anchorEl       - drag handle element
+   * @param {object|null} [selection]    - context row/col (table block)
+   * @param {boolean}     [hideDefault]  - ẩn separator + delete button
    */
   toggle(block, anchorEl, selection = null, hideDefault = false) {
     this.currentBlock = block;

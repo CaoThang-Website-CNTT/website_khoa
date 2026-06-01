@@ -11,7 +11,7 @@ export const MarkType = Object.freeze({
 });
 
 /**
- * Thứ tự wrap khi serialize ra HTML — outer → inner.
+ * Thứ tự wrap khi serialize ra HTML - outer → inner.
  * link phải ngoài cùng để <a> bao toàn bộ nội dung được format.
  * @type {readonly string[]}
  */
@@ -23,7 +23,7 @@ export const SERIALIZE_ORDER = Object.freeze([
 ]);
 
 /**
- * Runtime token — tồn tại trong bộ nhớ khi editor đang chạy.
+ * Runtime token - tồn tại trong bộ nhớ khi editor đang chạy.
  * marks dùng Set để O(1) lookup trong applyMark / getActiveMarks.
  */
 export class RichToken {
@@ -31,7 +31,7 @@ export class RichToken {
   text;
   /** @type {Set<string>} */
   marks;
-  /** @type {string|undefined} — chỉ có khi marks.has('link') */
+  /** @type {string|undefined} - chỉ có khi marks.has('link') */
   href;
 
   /**
@@ -90,7 +90,7 @@ export class RichToken {
 }
 
 /**
- * Persistence segment — cấu trúc lưu DB / gửi server.
+ * Persistence segment - cấu trúc lưu DB / gửi server.
  * marks dùng Array để JSON.stringify được.
  * href flat trên object, không nest vào attrs{}.
  */
@@ -101,7 +101,7 @@ export class RichSegment {
   text;
   /** @type {string[]} */
   marks;
-  /** @type {string|undefined} — chỉ có khi type === 'link' */
+  /** @type {string|undefined} - chỉ có khi type === 'link' */
   href;
 
   /**
@@ -124,7 +124,7 @@ export class RichSegment {
 
   /**
    * Chuyển plain object từ DB → RichToken runtime.
-   * Xử lý cả v1 schema (attrs.href) lẫn v2 schema (flat href) — backward compat.
+   * Xử lý cả v1 schema (attrs.href) lẫn v2 schema (flat href) - backward compat.
    *
    * @param {object} raw
    * @returns {RichToken}

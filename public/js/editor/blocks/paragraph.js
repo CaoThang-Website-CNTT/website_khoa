@@ -34,7 +34,7 @@ export class ParagraphBlock extends EditorBlock {
       this.paste(this.esc(text));
     });
 
-    // input: không lưu HTML string — chỉ sync khi serialize (serializeData đọc từ DOM)
+    // input: không lưu HTML string - chỉ sync khi serialize (serializeData đọc từ DOM)
     // Giữ lại để các listener khác (word count, dirty flag) có thể subscribe nếu cần
     el.addEventListener('input', () => {
       this.bus?.dispatch('block:input', { blockId: this.id });

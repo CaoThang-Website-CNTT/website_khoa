@@ -59,12 +59,12 @@ export class RichTextParser {
   }
 
   /**
-   * DFS walker — thu thập text node kèm inherited marks.
+   * DFS walker - thu thập text node kèm inherited marks.
    *
    * @param {Node}        node
    * @param {Set<string>} inheritedMarks
    * @param {string|null} inheritedHref
-   * @param {RichToken[]} out — mutate in-place
+   * @param {RichToken[]} out - mutate in-place
    */
   static #walk(node, inheritedMarks, inheritedHref, out) {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -122,7 +122,7 @@ export class RichTextParser {
 
       let html = RichTextParser.#escapeHtml(token.text);
 
-      // Wrap từ trong ra ngoài — reversed SERIALIZE_ORDER:
+      // Wrap từ trong ra ngoài - reversed SERIALIZE_ORDER:
       // ['link','bold','italic','underline'] reversed → underline wrap trước, link wrap sau
       // Kết quả: <a><strong><em><u>text</u></em></strong></a>
       const order = [...SERIALIZE_ORDER].reverse();

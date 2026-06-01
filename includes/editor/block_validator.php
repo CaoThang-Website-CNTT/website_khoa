@@ -34,7 +34,7 @@ final class BlockValidator
   /**
    * Validate và normalize toàn bộ payload content_json.
    *
-   * @param  mixed  $payload  — output của json_decode(..., true)
+   * @param  mixed  $payload  - output của json_decode(..., true)
    * @return array{ meta: array, blocks: array }
    *
    * @throws BlockValidationException

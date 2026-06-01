@@ -39,7 +39,7 @@ export class QuoteBlock extends EditorBlock {
     authorEl.contentEditable = 'true';
     authorEl.className = 'be-quote-citation be-editable';
     authorEl.spellcheck = false;
-    authorEl.dataset.placeholder = '— Tác giả (không bắt buộc)';
+    authorEl.dataset.placeholder = '- Tác giả (không bắt buộc)';
     authorEl.textContent = this.data.meta.citation || '';
 
     this.#textEl = textEl;
@@ -53,7 +53,7 @@ export class QuoteBlock extends EditorBlock {
     });
 
     authorEl.addEventListener('input', () => {
-      // citation là plain text — sync ngay vì không qua RichTextParser
+      // citation là plain text - sync ngay vì không qua RichTextParser
       this.data.meta.citation = authorEl.textContent.trim();
     });
 
@@ -84,7 +84,7 @@ export class QuoteBlock extends EditorBlock {
    * Override: Quote có hai field cần serialize riêng.
    * content đọc từ #textEl (rich text), citation đọc từ this.data (plain text đã sync).
    *
-   * @param {HTMLElement|null} _editableEl — không dùng vì Quote tự quản lý DOM ref
+   * @param {HTMLElement|null} _editableEl - không dùng vì Quote tự quản lý DOM ref
    * @returns {object}
    */
   serializeData(_editableEl) {

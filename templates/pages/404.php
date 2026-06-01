@@ -17,9 +17,10 @@
 </head>
 
 <body>
-  <h1>404 — Trang không tồn tại</h1>
+  <h1>404 - Trang không tồn tại</h1>
   <p>Trang không tồn tại. Vui lòng tải lại trang và thử lại.</p>
-  <p><a href="javascript:history.back()">Quay lại</a> · <a href="<?= htmlspecialchars(url(''), ENT_QUOTES, 'UTF-8') ?>">Trang chủ</a></p>
+  <p><a href="javascript:history.back()">Quay lại</a> · <a
+      href="<?= htmlspecialchars(url(''), ENT_QUOTES, 'UTF-8') ?>">Trang chủ</a></p>
 </body>
 
 </html>

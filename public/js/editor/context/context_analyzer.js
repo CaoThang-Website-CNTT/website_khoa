@@ -14,11 +14,11 @@ export class ContextAnalyzer {
 
   /**
    * Phân tích ngữ cảnh từ DOM và trả về raw context object.
-   * Không mutate bất kỳ state nào — toàn bộ kết quả được ContextStore lưu.
+   * Không mutate bất kỳ state nào - toàn bộ kết quả được ContextStore lưu.
    *
-   * @param {HTMLElement}    canvas     — #be-block-list
-   * @param {Selection|null} selection  — window.getSelection()
-   * @param {HTMLElement|null} target   — element từ click event
+   * @param {HTMLElement}    canvas     - #be-block-list
+   * @param {Selection|null} selection  - window.getSelection()
+   * @param {HTMLElement|null} target   - element từ click event
    * @returns {RawContext}
    */
   static analyze(canvas, selection, target = null) {
@@ -45,7 +45,7 @@ export class ContextAnalyzer {
       type,
       blockId: blockEl.dataset.beBlockId,
       blockType: blockEl.dataset.beBlockType || 'unknown',
-      // Chỉ clone range khi thực sự có text selection — tránh giữ reference thừa
+      // Chỉ clone range khi thực sự có text selection - tránh giữ reference thừa
       range: isTextSelection ? range.cloneRange() : null,
       // Cursor position chỉ có ý nghĩa khi type === 'cursor'
       cursorOffset: isCollapsed ? this.#getCursorOffset(range, blockEl) : null,
@@ -129,11 +129,11 @@ export class ContextAnalyzer {
 
   /**
    * Ước tính số dòng dựa vào getBoundingClientRect().
-   * Đây là "best effort" — không parse DOM text. Đủ để label snapshot.
+   * Đây là "best effort" - không parse DOM text. Đủ để label snapshot.
    *
    * @param {Range}       range
    * @param {HTMLElement} blockEl
-   * @returns {number} — 1-indexed
+   * @returns {number} - 1-indexed
    */
   static #estimateLine(range, blockEl) {
     const editable = blockEl.querySelector('[contenteditable="true"]') ?? blockEl;

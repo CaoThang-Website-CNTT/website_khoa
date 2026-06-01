@@ -22,7 +22,7 @@ abstract class AbstractBlockRenderer
   /**
    * Trích xuất TocEntry.
    *
-   * Mặc định trả về null — chỉ HeadingRenderer override.
+   * Mặc định trả về null - chỉ HeadingRenderer override.
    * @param  array  $block  Normalized block từ BlockValidator
    */
   public function extractTocEntry(array $block): ?TocEntry
@@ -47,7 +47,7 @@ abstract class AbstractBlockRenderer
   }
 
   /**
-   * Tạo class string từ mảng — lọc falsy value, join bằng space.
+   * Tạo class string từ mảng - lọc falsy value, join bằng space.
    *
    * @param  string[]  $classes
    */

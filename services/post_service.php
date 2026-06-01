@@ -24,7 +24,7 @@ interface IPostService
   public function getFeaturedPosts(int $limit = 5): array;
   /**
    * Cập nhật nội dung và/hoặc trạng thái của bài viết.
-   * Chỉ các field được truyền mới bị ghi đè — các field còn lại giữ nguyên.
+   * Chỉ các field được truyền mới bị ghi đè - các field còn lại giữ nguyên.
    * Khi status chuyển sang 'published' lần đầu, published_at sẽ được ghi tự động.
    */
   public function update(int $id, array $payload): Post;

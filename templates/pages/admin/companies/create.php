@@ -125,7 +125,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 value="" readonly>
               <p class="field__description">
                 Mã lớp được tự động tạo theo định dạng:
-                <strong>{Hệ}{Ngành}{Khóa}{Ký tự}</strong> — VD: CĐ CNTT 23A
+                <strong>{Hệ}{Ngành}{Khóa}{Ký tự}</strong> - VD: CĐ CNTT 23A
               </p>
             </div>
 
@@ -150,7 +150,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
                   <option value="<?= htmlspecialchars($teacher->id) ?>">
                     <?= htmlspecialchars($teacher->full_name) ?>
                     (<?= htmlspecialchars($teacher->staff_code) ?>)
-                    — <?= htmlspecialchars($teacher->department) ?>
+                    - <?= htmlspecialchars($teacher->department) ?>
                   </option>
                 <?php endforeach; ?>
               </select>
@@ -251,7 +251,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         filteredTeachers.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.textContent = `${t.full_name} (${t.staff_code}) — ${t.department}`;
+          opt.textContent = `${t.full_name} (${t.staff_code}) - ${t.department}`;
           teacherSelect.appendChild(opt);
         });
         teacherSelect.disabled = false;

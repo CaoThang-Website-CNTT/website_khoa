@@ -46,7 +46,7 @@ class MediaApiController extends Controller
    * POST /api/v1/media
    * Upload file (multipart) hoặc tải từ URL.
    * Body params:
-   *   - file: file nhị phân (multipart) — hoặc —
+   *   - file: file nhị phân (multipart) - hoặc -
    *   - url: string URL ảnh từ Internet
    *   - alt_text: string (optional)
    *   - post_id: int (optional)

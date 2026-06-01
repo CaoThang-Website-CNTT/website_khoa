@@ -589,9 +589,9 @@ class EditorCanvas {
   // ===========================
   /**
    * Thêm block mới.
-   * @param {string}      type      — phải có trong BLOCK_REGISTRY
-   * @param {object}      data      — merge với defaultData
-   * @param {string|null} afterId   — chèn sau block có id này; null = cuối danh sách
+   * @param {string}      type      - phải có trong BLOCK_REGISTRY
+   * @param {object}      data      - merge với defaultData
+   * @param {string|null} afterId   - chèn sau block có id này; null = cuối danh sách
    * @returns {string} id của block mới
   */
   addBlock(

@@ -1,5 +1,5 @@
 /**
- * select.js — Simplified SelectHandler with Multi-Select & Search
+ * select.js - Simplified SelectHandler with Multi-Select & Search
  * Architecture: Single class, Map registry, portal on init, data-state driven.
  * Features: Single/Multi mode, live search, viewport flip, z-index stacking, event delegation.
  * 

@@ -1,10 +1,10 @@
 /**
  * ================================================
- * DnD.js — Drag & Drop Library, Vanilla JavaScript
+ * DnD.js - Drag & Drop Library, Vanilla JavaScript
  * ================================================
  *
  * Container-centric API, inspired by SortableJS.
- * Gọi new DnD(containerEl, options) — children tự động có thể kéo.
+ * Gọi new DnD(containerEl, options) - children tự động có thể kéo.
  *
  * Tính năng:
  *   - Same-list sort
@@ -19,15 +19,15 @@
  *   - Callbacks trên instance + DnDMonitor event bus
  *
  * Cấu trúc:
- *   1. EventBus          — global DnDMonitor
- *   2. Global state      — STATE, Ghost, Scroller
- *   3. flipSnapshot()    — FLIP animation helper
- *   4. PointerSensor     — mouse + touch input
- *   5. DnD               — container-centric orchestrator
+ *   1. EventBus          - global DnDMonitor
+ *   2. Global state      - STATE, Ghost, Scroller
+ *   3. flipSnapshot()    - FLIP animation helper
+ *   4. PointerSensor     - mouse + touch input
+ *   5. DnD               - container-centric orchestrator
  */
 
 /* ================================================================
-   1. EventBus — global monitor, dùng DnDMonitor.on / off / emit
+   1. EventBus - global monitor, dùng DnDMonitor.on / off / emit
    ================================================================ */
 class EventBus {
   #listeners = new Map();
@@ -54,7 +54,7 @@ const DnDMonitor = new EventBus();
    2. Global shared state + singletons
    ================================================================ */
 
-/** Trạng thái drag hiện tại — chia sẻ giữa tất cả DnD instances */
+/** Trạng thái drag hiện tại - chia sẻ giữa tất cả DnD instances */
 const STATE = {
   active: null,   // DnD instance đang drag
   dragEl: null,   // Element đang kéo
@@ -82,7 +82,7 @@ const Ghost = (() => {
       _el.id = 'dnd-ghost';
       document.body.appendChild(_el);
     }
-    // pointer-events:none là BẮT BUỘC — nếu không ghost chặn pointerup
+    // pointer-events:none là BẮT BUỘC - nếu không ghost chặn pointerup
     // và _endDrag không bao giờ được gọi (drop bị stuck)
     Object.assign(_el.style, {
       position: 'fixed',
@@ -160,7 +160,7 @@ const Scroller = (() => {
 })();
 
 /* ================================================================
-   3. flipSnapshot — FLIP animation helper
+   3. flipSnapshot - FLIP animation helper
    Snapshot positions BEFORE DOM move, play animation AFTER.
 
    Lý do phải tách 2 bước:
@@ -170,10 +170,10 @@ const Scroller = (() => {
 function flipSnapshot(container, excludeEl, duration) {
   const children = [...container.children].filter(c => c !== excludeEl);
 
-  // FIRST — đo vị trí trước khi DOM thay đổi
+  // FIRST - đo vị trí trước khi DOM thay đổi
   const tops = new Map(children.map(c => [c, c.getBoundingClientRect().top]));
 
-  // Trả về callback — gọi SAU khi DOM đã move
+  // Trả về callback - gọi SAU khi DOM đã move
   return function play() {
     for (const [child, first] of tops) {
       if (!child.isConnected) continue;
@@ -181,12 +181,12 @@ function flipSnapshot(container, excludeEl, duration) {
       const delta = first - last;
       if (Math.abs(delta) < 1) continue;
 
-      // INVERT — snap về vị trí cũ, không transition
+      // INVERT - snap về vị trí cũ, không transition
       child.style.transition = 'none';
       child.style.transform = `translateY(${delta}px)`;
       void child.offsetHeight;  // force reflow
 
-      // PLAY — bật transition, animate về 0
+      // PLAY - bật transition, animate về 0
       child.style.transition = `transform ${duration}ms ease`;
       child.style.transform = '';
 
@@ -201,7 +201,7 @@ function flipSnapshot(container, excludeEl, duration) {
 }
 
 /* ================================================================
-   4. PointerSensor — event delegation on container element.
+   4. PointerSensor - event delegation on container element.
    Một listener duy nhất trên container, xử lý tất cả children.
    Hỗ trợ mouse + touch (Pointer Events API).
    ================================================================ */
@@ -229,7 +229,7 @@ class PointerSensor {
     const opts = this.#dnd.options;
     if (opts.disabled) return;
 
-    // Event delegation — tìm item cha gần nhất trong container này
+    // Event delegation - tìm item cha gần nhất trong container này
     const itemEl = this.#findItem(e.target);
     if (!itemEl) return;
 
@@ -319,16 +319,16 @@ class PointerSensor {
 }
 
 /* ================================================================
-   5. DnD — container-centric orchestrator
+   5. DnD - container-centric orchestrator
 
    Static:
-     DnD.create(el, opts)  — factory
-     DnD.get(el)           — lấy instance từ element
+     DnD.create(el, opts)  - factory
+     DnD.get(el)           - lấy instance từ element
 
    Instance:
-     option(key, val)      — get/set option
-     toArray()             — lấy data-id của items theo thứ tự
-     destroy()             — huỷ instance
+     option(key, val)      - get/set option
+     toArray()             - lấy data-id của items theo thứ tự
+     destroy()             - huỷ instance
    ================================================================ */
 class DnD {
 
@@ -373,7 +373,7 @@ class DnD {
       .map(c => c.dataset.id ?? '');
   }
 
-  /** Huỷ hoàn toàn instance — remove listeners, xoá khỏi registry */
+  /** Huỷ hoàn toàn instance - remove listeners, xoá khỏi registry */
   destroy() {
     this.#sensor.detach();
     _instances.delete(this.#el);
@@ -423,7 +423,7 @@ class DnD {
     const srcInst = _instances.get(fromEl);
     const toInst = _instances.get(toEl);
 
-    // Xoá classes — dùng STATE vì source/dest có thể khác options
+    // Xoá classes - dùng STATE vì source/dest có thể khác options
     if (STATE.ghostClass) dragEl.classList.remove(STATE.ghostClass);
     if (STATE.chosenClass) dragEl.classList.remove(STATE.chosenClass);
 
@@ -539,7 +539,7 @@ class DnD {
     // Không cho phép chèn phần tử cha vào bên trong chính con cháu của nó
     if (dragEl.contains(overItem)) return;
 
-    // onMove callback — return false để cancel
+    // onMove callback - return false để cancel
     const moveResult = this.#opts.onMove?.({
       to: this.#el, from: STATE.fromEl,
       dragged: dragEl, related: overItem,
@@ -558,7 +558,7 @@ class DnD {
     if (before && overItem.previousSibling === dragEl) return;
     if (!before && overItem.nextSibling === dragEl) return;
 
-    // FLIP step 1 — snapshot trước DOM move
+    // FLIP step 1 - snapshot trước DOM move
     const parent = overItem.parentElement ?? this.#el;
     const playAnim = flipSnapshot(parent, dragEl, this.#opts.animation);
 
@@ -566,7 +566,7 @@ class DnD {
     if (before) parent.insertBefore(dragEl, overItem);
     else overItem.after(dragEl);
 
-    // FLIP step 2 — play animation sau DOM move
+    // FLIP step 2 - play animation sau DOM move
     playAnim();
   }
 
@@ -578,7 +578,7 @@ class DnD {
       STATE.swapEl = null;
       STATE.swapInst = null;
     }
-    // dragEl được truyền vào đúng — dùng param, không dùng STATE trực tiếp
+    // dragEl được truyền vào đúng - dùng param, không dùng STATE trực tiếp
     if (!overItem || overItem === dragEl) return;
 
     if (overItem !== STATE.swapEl) {

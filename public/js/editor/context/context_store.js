@@ -4,9 +4,9 @@ import { CapabilityResolver } from './capability_resolver.js';
 export class ContextStore {
   /** @type {EditorEventBus} */
   #bus;
-  /** @type {HTMLElement} — #be-block-list */
+  /** @type {HTMLElement} - #be-block-list */
   #canvas;
-  /** @type {AbortController} — dùng để unmount tất cả listener một lần */
+  /** @type {AbortController} - dùng để unmount tất cả listener một lần */
   #ac = new AbortController();
 
   /** @type {ContextType} */
@@ -38,7 +38,7 @@ export class ContextStore {
   #activeBlockId = null;
 
   /**
-   * Schema của block đang active — cần để CapabilityResolver tính đúng.
+   * Schema của block đang active - cần để CapabilityResolver tính đúng.
    * @type {object|null}
    */
   #activeBlockSchema = null;
@@ -122,7 +122,7 @@ export class ContextStore {
     */
 
     // selectionchange để cập nhật cursor state real-time (không debounce ở đây,
-    // vì chỉ update state — render/dispatch vẫn debounce ở InlineToolbar)
+    // vì chỉ update state - render/dispatch vẫn debounce ở InlineToolbar)
     document.addEventListener('selectionchange', () => {
       this.#onSelectionChange();
     }, { signal });
@@ -158,7 +158,7 @@ export class ContextStore {
   /** @returns {string|null} */
   get activeBlockId() { return this.#activeBlockId; }
 
-  /** @returns {Set<string>} — bản copy, không phải reference gốc */
+  /** @returns {Set<string>} - bản copy, không phải reference gốc */
   get capabilities() { return new Set(this.#capabilities); }
 
   /** @returns {boolean} */
@@ -298,7 +298,7 @@ export class ContextStore {
         line: null,
       };
       if (raw.blockId) this.#activeBlockId = raw.blockId;
-      // Ghi selection — dùng InlineFormatter.getRangeOffsets() từ Manager
+      // Ghi selection - dùng InlineFormatter.getRangeOffsets() từ Manager
       // ContextStore chỉ lưu range ref ở đây; offsets tính bởi Manager
       this.#selection = {
         blockId: raw.blockId,
@@ -370,7 +370,7 @@ export class ContextStore {
 
   /**
    * Sync khi InlineToolbar emit 'inline:selection_changed'.
-   * Tại điểm này Manager đã tính offsets — store nhận lại qua event này.
+   * Tại điểm này Manager đã tính offsets - store nhận lại qua event này.
    *
    * @param {string} blockId
    * @param {Range}  range
@@ -394,7 +394,7 @@ export class ContextStore {
   }
 
   /**
-   * Tính char offset — nhỏ gọn, tự chứa, không import InlineFormatter
+   * Tính char offset - nhỏ gọn, tự chứa, không import InlineFormatter
    * để tránh circular dependency.
    */
   #charOffsetAt(targetNode, targetOffset, container) {
@@ -447,7 +447,7 @@ export class ContextStore {
 
   /**
    * Tạo snapshot public để gắn vào event payload.
-   * Frozen object — caller không thể mutate.
+   * Frozen object - caller không thể mutate.
    * @returns {object}
    */
   #buildPublicSnapshot() {

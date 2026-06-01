@@ -3,10 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * DropdownHandler — quản lý tất cả Dropdown Menu trên trang.
+ * DropdownHandler - quản lý tất cả Dropdown Menu trên trang.
  *
- * Tất cả panel được portal vào <body> lúc init() — trước khi bất kỳ
- * hover event nào xảy ra — để e.relatedTarget luôn resolve đúng.
+ * Tất cả panel được portal vào <body> lúc init() - trước khi bất kỳ
+ * hover event nào xảy ra - để e.relatedTarget luôn resolve đúng.
  *
  * Cấu hình trigger mode: data-dropdown-trigger-mode="hover|click"
  * Đặt trên .dropdown__trigger. Mặc định: "hover".
@@ -24,7 +24,7 @@ class DropdownHandler {
   // Safe margin tối thiểu giữa panel và mép viewport (px)
   static VIEWPORT_MARGIN = 8;
 
-  // Z-index tối thiểu — panel mở sau luôn cao hơn panel mở trước
+  // Z-index tối thiểu - panel mở sau luôn cao hơn panel mở trước
   static BASE_Z_INDEX = 100;
   static _zCounter = 0;
 
@@ -209,7 +209,7 @@ class DropdownHandler {
 
   /**
    * Gắn sự kiện cho content panel và các item/sub bên trong.
-   * Chỉ bind item nằm trực tiếp trong content — item trong sub-content
+   * Chỉ bind item nằm trực tiếp trong content - item trong sub-content
    * được bind riêng trong _bindSub.
    * @private
    * @param {object} instance - Instance của dropdown root.
@@ -251,11 +251,11 @@ class DropdownHandler {
   _bindSub(instance, sub) {
     const { trigger: subTrigger, content: subContent } = sub;
 
-    // Sub-trigger cũng là một item thông thường — highlight khi hover
+    // Sub-trigger cũng là một item thông thường - highlight khi hover
     this._bindItem(instance, subTrigger);
 
     subTrigger.addEventListener('mouseenter', () => {
-      // Xóa state của tất cả sub-trigger trước — đảm bảo không còn sub cũ nào open
+      // Xóa state của tất cả sub-trigger trước - đảm bảo không còn sub cũ nào open
       instance.subs.forEach(s => {
         delete s.trigger.dataset.state;
         delete s.trigger.dataset.side;
@@ -288,7 +288,7 @@ class DropdownHandler {
       this._closeSub(instance, sub);
     });
 
-    // Bind item trong sub-content — tách biệt với item trong parent content
+    // Bind item trong sub-content - tách biệt với item trong parent content
     subContent.querySelectorAll('.dropdown__item')
       .forEach(item => this._bindItem(instance, item));
   }
@@ -336,7 +336,7 @@ class DropdownHandler {
 
   /** Định vị và mở root content panel. @private */
   _open(instance) {
-    // Đóng tất cả instance khác — xử lý trường hợp cursor đi từ sub-content
+    // Đóng tất cả instance khác - xử lý trường hợp cursor đi từ sub-content
     // của menu A thẳng sang trigger B mà không qua content A hay trigger A
     this._instances.forEach(other => {
       if (other !== instance) this._close(other);

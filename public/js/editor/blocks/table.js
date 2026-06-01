@@ -357,7 +357,7 @@ export class TableBlock extends EditorBlock {
   // ─── Overrides ────────────────────────────────────────────────────────────
 
   /**
-   * Table sync cell data vào this.data.rows khi input —
+   * Table sync cell data vào this.data.rows khi input -
    * serializeData chỉ cần clone, không đọc từ DOM.
    *
    * @param {HTMLElement|null} _editableEl

@@ -7,7 +7,7 @@ use App\Editor\TocEntry;
  * Render block type: blocks/heading
  *
  * Meta:
- *   level : int   (2–4, default 2) — JS map: display H1→level 2, H2→3, H3→4
+ *   level : int   (2–4, default 2) - JS map: display H1→level 2, H2→3, H3→4
  *   align : string ('left'|'center'|'right', default 'left')
  *
  * Output: <h{level} class="be-heading ...">...rich_text...</h{level}>
@@ -41,7 +41,7 @@ final class HeadingRenderer extends AbstractBlockRenderer
   /**
    * Override: Heading có TocEntry.
    *
-   * plainText được trích từ rich_text segments — strip toàn bộ marks,
+   * plainText được trích từ rich_text segments - strip toàn bộ marks,
    * chỉ lấy text thuần để hiển thị trong sidebar ToC (không có <strong> hay <a>).
    */
   public function extractTocEntry(array $block): ?TocEntry
@@ -68,7 +68,7 @@ final class HeadingRenderer extends AbstractBlockRenderer
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   /**
-   * Nối text của tất cả RichSegment[] — bỏ qua mọi marks/formatting.
+   * Nối text của tất cả RichSegment[] - bỏ qua mọi marks/formatting.
    * Kết quả dùng để hiển thị trong ToC sidebar, không phải trong content.
    *
    * @param  array<int, array<string, mixed>>  $segments

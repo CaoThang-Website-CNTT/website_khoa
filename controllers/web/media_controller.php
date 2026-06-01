@@ -16,8 +16,7 @@ class MediaController extends Controller
   public function __construct(
     MediaService $mediaService,
     UploadedFileHandler $fileHandler
-  )
-  {
+  ) {
     $this->_mediaService = $mediaService;
     $this->_fileHandler = $fileHandler;
   }
@@ -28,8 +27,8 @@ class MediaController extends Controller
    */
   public function index(Request $request)
   {
-    $currentPage = (int)$request->query('page', 1);
-    $limit = (int)$request->query('limit', 15);
+    $currentPage = (int) $request->query('page', 1);
+    $limit = (int) $request->query('limit', 15);
 
     $data = $this->_mediaService->getMedias($currentPage, $limit);
 
@@ -77,29 +76,29 @@ class MediaController extends Controller
     ];
 
     if (!$validator->validate($data, $rules)) {
-        $request->flashOldInputs();
-        $request->session()->flashErrors($validator->getErrors());
-        return $this->redirect('admin/media/create');
+      $request->flashOldInputs();
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect('admin/media/create');
     }
 
     // Validate file tồn tại trước khi đẩy xuống Service
     if (!$request->hasFile('file')) {
-        $request->session()->flashErrors(['file' => 'Vui lòng chọn file để tải lên.']);
-        return $this->redirect('admin/media/create');
+      $request->session()->flashErrors(['file' => 'Vui lòng chọn file để tải lên.']);
+      return $this->redirect('admin/media/create');
     }
 
     try {
-        $uploadedFile = $this->_fileHandler->processUpload($request->file('file'), $data['alt_text'] ?? '');
-        $media = $this->_mediaService->create($uploadedFile, $data, compressMode: 'standard');
+      $uploadedFile = $this->_fileHandler->processUpload($request->file('file'), $data['alt_text'] ?? '');
+      $media = $this->_mediaService->create($uploadedFile, $data, compressMode: 'standard');
 
-        $request->session()->flashNotify(
-            'success',
-            'Tạo media thành công!',
-            'Media ' . $media->file_name . ' đã được tạo.'
-        );
+      $request->session()->flashNotify(
+        'success',
+        'Tạo media thành công!',
+        'Media ' . $media->file_name . ' đã được tạo.'
+      );
     } catch (\RuntimeException $e) {
-        $request->session()->flashNotify('error', $e->getMessage());
-        return $this->redirect('admin/media/create');
+      $request->session()->flashNotify('error', $e->getMessage());
+      return $this->redirect('admin/media/create');
     }
 
     return $this->redirect('admin/media');
@@ -108,37 +107,37 @@ class MediaController extends Controller
   /**
    * PUT /admin/media/{media_id}
    * Chỉ cập nhật metadata (alt_text, file_name).
-   * file_path là immutable — không cho phép đổi file ở đây.
+   * file_path là immutable - không cho phép đổi file ở đây.
    */
   public function update(int $media_id, Request $request)
   {
-      $data = $request->all();
+    $data = $request->all();
 
-      $validator = new RequestValidator();
-      $rules = [
-          'title' => ['max:255'],
-          'alt_text'  => ['max:255'],
-      ];
+    $validator = new RequestValidator();
+    $rules = [
+      'title' => ['max:255'],
+      'alt_text' => ['max:255'],
+    ];
 
-      if (!$validator->validate($data, $rules)) {
-          $request->flashOldInputs();
-          $request->session()->flashErrors($validator->getErrors());
-          return $this->redirect('admin/media/' . $media_id . '/edit');
-      }
+    if (!$validator->validate($data, $rules)) {
+      $request->flashOldInputs();
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect('admin/media/' . $media_id . '/edit');
+    }
 
-      try {
-          $this->_mediaService->updateMetadata($media_id, [
-              'title' => $data['title'],
-              'alt_text'  => $data['alt_text'] ?? '',
-          ]);
+    try {
+      $this->_mediaService->updateMetadata($media_id, [
+        'title' => $data['title'],
+        'alt_text' => $data['alt_text'] ?? '',
+      ]);
 
-          $request->session()->flashNotify('success', 'Cập nhật media thành công!');
-      } catch (\RuntimeException $e) {
-          $request->session()->flashNotify('error', $e->getMessage());
-          return $this->redirect('admin/media/' . $media_id . '/edit');
-      }
+      $request->session()->flashNotify('success', 'Cập nhật media thành công!');
+    } catch (\RuntimeException $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+      return $this->redirect('admin/media/' . $media_id . '/edit');
+    }
 
-      return $this->redirect('admin/media');
+    return $this->redirect('admin/media');
   }
 
   /**
@@ -148,13 +147,13 @@ class MediaController extends Controller
    */
   public function destroy(Request $request, int $media_id)
   {
-      try {
-          $this->_mediaService->delete($media_id);
-          $request->session()->flashNotify('success', 'Đã xóa media.');
-      } catch (\RuntimeException $e) {
-          $request->session()->flashNotify('error', $e->getMessage());
-      }
+    try {
+      $this->_mediaService->delete($media_id);
+      $request->session()->flashNotify('success', 'Đã xóa media.');
+    } catch (\RuntimeException $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+    }
 
-      return $this->redirect('admin/media');
+    return $this->redirect('admin/media');
   }
 }

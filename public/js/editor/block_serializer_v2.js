@@ -22,7 +22,7 @@ export class BlockSerializer {
     return tokens
       .filter(t => typeof t.text === 'string' && t.text.length > 0)
       .map(token => {
-        // Sanitize marks — chỉ giữ marks trong whitelist
+        // Sanitize marks - chỉ giữ marks trong whitelist
         const safeMarks = [...token.marks].filter(m =>
           BlockSerializer.#ALLOWED_MARKS.includes(m)
         );
@@ -41,7 +41,7 @@ export class BlockSerializer {
    * RichSegment[] (plain object từ DB) → RichToken[] để dùng trong editor.
    * Xử lý cả v1 schema (attrs.href) lẫn v2 schema (flat href).
    *
-   * @param {object[]|RichSegment[]} segments — plain objects từ JSON.parse
+   * @param {object[]|RichSegment[]} segments - plain objects từ JSON.parse
    * @returns {import('./rich_text_token.js').RichToken[]}
    */
   static segmentsToTokens(segments) {
@@ -81,11 +81,11 @@ export class BlockSerializer {
 
   /**
    * Build payload hoàn chỉnh cho một block để gửi server.
-   * Delegate việc serialize data xuống block.serializeData() —
+   * Delegate việc serialize data xuống block.serializeData() -
    * mỗi block tự biết cách đọc từ DOM và đóng gói data của mình.
    *
    * @param {import('./editor_block.js').EditorBlock} block
-   * @param {HTMLElement|null} editableEl — DOM element chứa nội dung editable
+   * @param {HTMLElement|null} editableEl - DOM element chứa nội dung editable
    * @returns {{ id: string, type: string, version: number, data: object }}
    */
   static toPayload(block, editableEl) {
@@ -98,7 +98,7 @@ export class BlockSerializer {
   }
 
   /**
-   * Sanitize href — reject các URL không hợp lệ để tránh javascript: injection.
+   * Sanitize href - reject các URL không hợp lệ để tránh javascript: injection.
    * @param {string|null|undefined} href
    * @returns {string}
    */

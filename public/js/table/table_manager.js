@@ -143,7 +143,7 @@ class TableInstance {
    *
    * - **client mode**: gọi thẳng `render()`.
    * - **server mode**: dispatch `tm:state-change` kèm state snapshot rồi dừng.
-   *   TableManager không tự render — chờ dev gọi `loadData()` sau khi fetch xong.
+   *   TableManager không tự render - chờ dev gọi `loadData()` sau khi fetch xong.
    *
    * `loadData()` và `init()` gọi `render()` trực tiếp, không qua `#commit()`,
    * vì chúng là data-push chủ động, không phải state-change do user interaction.
@@ -155,7 +155,7 @@ class TableInstance {
       this.root.dispatchEvent(new CustomEvent('tm:state-change', {
         detail: { reason, state: this.#getStateSnapshot() }
       }));
-      return; // Dừng — không render, chờ dev gọi loadData()
+      return; // Dừng - không render, chờ dev gọi loadData()
     }
     this.render();
   }
@@ -208,7 +208,7 @@ class TableInstance {
 
   /**
    * Thêm hoặc xóa một row khỏi selection state.
-   * Không dispatch event — caller (TableRenderer) tự dispatch sau khi gọi.
+   * Không dispatch event - caller (TableRenderer) tự dispatch sau khi gọi.
    * @param {string} id
    * @param {boolean} selected
    */
@@ -265,7 +265,7 @@ class TableInstance {
 
   // Public API
   /**
-   * Trả về snapshot của toàn bộ state hiện tại — immutable copy.
+   * Trả về snapshot của toàn bộ state hiện tại - immutable copy.
    * Dùng để đọc state từ bên ngoài hoặc gửi kèm event.
    * @returns {{ sort: SortState, filters: FilterRule[], search: string, pagination: PaginationState, mode: TableMode, totalRows: number }}
    */

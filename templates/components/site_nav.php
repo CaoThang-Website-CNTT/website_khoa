@@ -3,7 +3,7 @@
 use App\Models\MenuItem;
 
 /**
- * Render một leaf item (.dropdown__item) — dùng cho cả depth 1 và depth 2+.
+ * Render một leaf item (.dropdown__item) - dùng cho cả depth 1 và depth 2+.
  * @param MenuItem $item
  */
 function renderLeafItem(MenuItem $item): void
@@ -41,8 +41,7 @@ function renderDropdownItem(
   string $triggerMode = 'hover',
   int $depth = 0,
   int $maxDepth = 2
-): void
-{
+): void {
   if ($depth > $maxDepth)
     return;
 
@@ -160,7 +159,7 @@ function renderNav(
           <?php renderDropdownItem($item, $triggerMode, 0, $maxDepth); ?>
         <?php else: ?>
           <?php $itemUrl = htmlspecialchars(url($item->url)); ?>
-          
+
           <div class="navbar__item <?= $item->isActive(request()->path()) ? 'navbar__item--active' : '' ?>">
             <a href="<?= $itemUrl ?>" class="navbar__link">
               <?= htmlspecialchars($item->label) ?>

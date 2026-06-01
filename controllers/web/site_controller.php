@@ -18,7 +18,7 @@ class SiteController extends Controller
    * Key là setting key, value là cast_value đã được service xử lý.
    *
    * Chỉ load các group cần thiết cho public site: general, contact, seo, social.
-   * Đây là substitute cho cache — khi có cache layer thật thì
+   * Đây là substitute cho cache - khi có cache layer thật thì
    * chỉ cần thay getByGroup() bằng getAutoloaded() ở service layer.
    *
    * @var array<string, mixed>

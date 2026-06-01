@@ -56,7 +56,7 @@ export class InlineFormatter {
    * @param {RichToken[]} tokens
    * @param {number}      selStart
    * @param {number}      selEnd
-   * @param {Function}    transformFn — (token) => token
+   * @param {Function}    transformFn - (token) => token
    * @returns {RichToken[]}
    */
   static #transformRange(tokens, selStart, selEnd, transformFn) {
@@ -137,10 +137,10 @@ export class InlineFormatter {
 
   /**
    * Tính character offsets [start, end) từ browser Range.
-   * Điểm DUY NHẤT InlineFormatter chạm Selection API — chỉ đọc, không write.
+   * Điểm DUY NHẤT InlineFormatter chạm Selection API - chỉ đọc, không write.
    *
    * @param {Range}       range
-   * @param {HTMLElement} container — contenteditable root
+   * @param {HTMLElement} container - contenteditable root
    * @returns {{ start: number, end: number }|null}
    */
   static getRangeOffsets(range, container) {

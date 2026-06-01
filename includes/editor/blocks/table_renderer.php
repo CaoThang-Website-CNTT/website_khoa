@@ -8,7 +8,7 @@ use App\Editor\RichTextRenderer;
  *
  * Meta:
  *   hasHeader : bool    (default true)
- *   rows      : array   Mảng 2 chiều — rows[rowIndex][colIndex] = RichSegment[]|string
+ *   rows      : array   Mảng 2 chiều - rows[rowIndex][colIndex] = RichSegment[]|string
  *
  * Output (mirror #buildTable() trong table.js):
  *   <div class="be-table-wrapper">
@@ -26,82 +26,82 @@ use App\Editor\RichTextRenderer;
  */
 final class TableRenderer extends AbstractBlockRenderer
 {
-    public function render(array $block): string
-    {
-        $rows      = $this->meta($block, 'rows', []);
-        $hasHeader = (bool) $this->meta($block, 'hasHeader', true);
+  public function render(array $block): string
+  {
+    $rows = $this->meta($block, 'rows', []);
+    $hasHeader = (bool) $this->meta($block, 'hasHeader', true);
 
-        if (!is_array($rows) || empty($rows)) {
-            return '';
-        }
+    if (!is_array($rows) || empty($rows)) {
+      return '';
+    }
 
-        $thead = '';
-        $tbody = '';
+    $thead = '';
+    $tbody = '';
 
-        if ($hasHeader && !empty($rows[0])) {
-            $thead = '<thead>' . $this->buildRow($rows[0], 'th') . '</thead>';
-            $bodyRows = array_slice($rows, 1);
-        } else {
-            $bodyRows = $rows;
-        }
+    if ($hasHeader && !empty($rows[0])) {
+      $thead = '<thead>' . $this->buildRow($rows[0], 'th') . '</thead>';
+      $bodyRows = array_slice($rows, 1);
+    } else {
+      $bodyRows = $rows;
+    }
 
-        foreach ($bodyRows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $tbody .= $this->buildRow($row, 'td');
-        }
+    foreach ($bodyRows as $row) {
+      if (!is_array($row)) {
+        continue;
+      }
+      $tbody .= $this->buildRow($row, 'td');
+    }
 
-        if ($tbody !== '') {
-            $tbody = "<tbody>{$tbody}</tbody>";
-        }
+    if ($tbody !== '') {
+      $tbody = "<tbody>{$tbody}</tbody>";
+    }
 
-        $tableHtml = "<table class=\"be-table\">{$thead}{$tbody}</table>";
+    $tableHtml = "<table class=\"be-table\">{$thead}{$tbody}</table>";
 
-        return <<<HTML
+    return <<<HTML
             <div class="be-table-wrapper">
                 <div class="be-table-scroll">
                     {$tableHtml}
                 </div>
             </div>
             HTML;
+  }
+
+  /**
+   * Build một <tr> từ mảng cell data.
+   *
+   * @param  array   $cellsData  Mảng các cell - mỗi cell là RichSegment[] hoặc string
+   * @param  string  $cellTag    'th' hoặc 'td'
+   */
+  private function buildRow(array $cellsData, string $cellTag): string
+  {
+    $cells = '';
+
+    foreach ($cellsData as $cellValue) {
+      $content = $this->renderCell($cellValue);
+      $scopeAttr = $cellTag === 'th' ? ' scope="col"' : '';
+      $cells .= "<{$cellTag}{$scopeAttr}>{$content}</{$cellTag}>";
     }
 
-    /**
-     * Build một <tr> từ mảng cell data.
-     *
-     * @param  array   $cellsData  Mảng các cell — mỗi cell là RichSegment[] hoặc string
-     * @param  string  $cellTag    'th' hoặc 'td'
-     */
-    private function buildRow(array $cellsData, string $cellTag): string
-    {
-        $cells = '';
+    return "<tr>{$cells}</tr>";
+  }
 
-        foreach ($cellsData as $cellValue) {
-            $content = $this->renderCell($cellValue);
-            $scopeAttr = $cellTag === 'th' ? ' scope="col"' : '';
-            $cells .= "<{$cellTag}{$scopeAttr}>{$content}</{$cellTag}>";
-        }
-
-        return "<tr>{$cells}</tr>";
+  /**
+   * Render cell content - hỗ trợ cả RichSegment[] (v2) lẫn string (legacy).
+   *
+   * @param  mixed  $cellValue
+   */
+  private function renderCell(mixed $cellValue): string
+  {
+    if (is_array($cellValue)) {
+      // RichSegment[] - render inline HTML
+      return RichTextRenderer::render($cellValue);
     }
 
-    /**
-     * Render cell content — hỗ trợ cả RichSegment[] (v2) lẫn string (legacy).
-     *
-     * @param  mixed  $cellValue
-     */
-    private function renderCell(mixed $cellValue): string
-    {
-        if (is_array($cellValue)) {
-            // RichSegment[] — render inline HTML
-            return RichTextRenderer::render($cellValue);
-        }
-
-        if (is_string($cellValue)) {
-            return $this->esc($cellValue);
-        }
-
-        return '';
+    if (is_string($cellValue)) {
+      return $this->esc($cellValue);
     }
+
+    return '';
+  }
 }

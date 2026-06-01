@@ -61,7 +61,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
           Chỉnh sửa danh mục
         </legend>
         <p class="card__description field__description">
-          Chỉnh sửa thông tin danh mục — #<?= htmlspecialchars($category->id) ?>
+          Chỉnh sửa thông tin danh mục - #<?= htmlspecialchars($category->id) ?>
         </p>
       </div>
       <hr class="separator">
@@ -90,7 +90,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
                   <?php if ($cat->id === $category->id)
                     continue; ?>
                   <option value="<?= htmlspecialchars($cat->id) ?>" <?= $cat->id === $category->parent_id ? 'selected' : '' ?>>
-                    <?= str_repeat('—', $cat->depth) . htmlspecialchars($cat->name) ?>
+                    <?= str_repeat('-', $cat->depth) . htmlspecialchars($cat->name) ?>
                   </option>
                 <?php endforeach; ?>
               </select>

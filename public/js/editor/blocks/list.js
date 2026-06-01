@@ -133,7 +133,7 @@ export class ListBlock extends EditorBlock {
 
   /**
    * Tạo <li> kèm <span contenteditable>.
-   * @param {object} node — { rich_text: RichSegment[], children: [] }
+   * @param {object} node - { rich_text: RichSegment[], children: [] }
    * @param {number[]} path
    * @returns {HTMLLIElement}
    */
@@ -308,7 +308,7 @@ export class ListBlock extends EditorBlock {
 
   /**
    * List tự sync content vào this.data.values khi input,
-   * nên serializeData chỉ cần clone data — không cần đọc từ DOM.
+   * nên serializeData chỉ cần clone data - không cần đọc từ DOM.
    *
    * @param {HTMLElement|null} _editableEl
    * @returns {object}

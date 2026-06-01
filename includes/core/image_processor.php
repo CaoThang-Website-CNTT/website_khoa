@@ -3,7 +3,7 @@ namespace App\Core\Image;
 
 /**
  * Đại diện cho một variant đã được xử lý.
- * Immutable value object — không extend Model vì không lưu riêng vào DB,
+ * Immutable value object - không extend Model vì không lưu riêng vào DB,
  * variants được embed vào media record qua một JSON column (nếu cần sau này).
  */
 class ImageVariant
@@ -20,12 +20,12 @@ class ImageVariant
 }
 
 /**
- * IImageProcessor — contract cho tầng xử lý ảnh.
+ * IImageProcessor - contract cho tầng xử lý ảnh.
  *
  * Implement bằng GD (built-in PHP) là lựa chọn zero-dependency.
  * Imagick cho chất lượng cao hơn nhưng cần extension.
  *
- * Không inject vào MediaService trực tiếp — MediaService gọi qua interface
+ * Không inject vào MediaService trực tiếp - MediaService gọi qua interface
  * để tránh coupling với implementation cụ thể.
  */
 interface IImageProcessor
@@ -72,7 +72,7 @@ interface IImageProcessor
  *
  * Dùng ext-gd (baked vào PHP mặc định) để:
  *   1. Decode ảnh gốc (JPEG, PNG, GIF, WebP)
- *   2. Resize về các kích thước target với imagescale() — giữ tỉ lệ
+ *   2. Resize về các kích thước target với imagescale() - giữ tỉ lệ
  *   3. Export sang WebP với chất lượng cấu hình được
  */
 class ImageProcessor implements IImageProcessor

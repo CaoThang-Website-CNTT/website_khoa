@@ -1,7 +1,7 @@
 export class EditorToolbar {
   /** @type {EditorEventBus} */
   bus;
-  /** @type {HTMLElement} — #be-block-list */
+  /** @type {HTMLElement} - #be-block-list */
   canvas;
   /** @type {AbortController} */
   abortController;
@@ -32,7 +32,7 @@ export class EditorToolbar {
 
   /**
    * @param {EditorEventBus} bus
-   * @param {HTMLElement}    canvas — #be-block-list element
+   * @param {HTMLElement}    canvas - #be-block-list element
    */
   constructor(bus = null, canvas = null) {
     this.bus = bus;
@@ -71,7 +71,7 @@ export class EditorToolbar {
    * Đặt virtual trigger vào sát anchor element.
    * BlockToolbar gọi trước open() để dropdown xuất hiện đúng vị trí.
    *
-   * @param {HTMLElement} anchorEl — element mà dropdown sẽ neo vào
+   * @param {HTMLElement} anchorEl - element mà dropdown sẽ neo vào
    */
   positionVirtualTrigger(anchorEl) {
     if (!this.virtualTrigger) return;

@@ -155,7 +155,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <div class="field" data-field-required>
                   <label class="field__label" for="classroom_id">Lớp học</label>
                   <select id="classroom_id" class="field__input" name="classroom_id" required>
-                    <option value="">— Chọn lớp học —</option>
+                    <option value="">- Chọn lớp học -</option>
                     <?php foreach ($classrooms as $classroom): ?>
                       <option value="<?= (int) $classroom->id ?>" <?= isset($old_input['classroom_id']) && (string) $old_input['classroom_id'] === (string) $classroom->id ? 'selected' : '' ?>>
                         <?= htmlspecialchars($classroom->short_name ?? '', ENT_QUOTES, 'UTF-8') ?>
@@ -275,7 +275,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('onboard-form');
     if (!form) return;
 
@@ -356,17 +356,17 @@ $old_input = request()->session()->getOldInputs() ?? [];
             const label = checkedBtn.closest('label') || checkedBtn.parentElement;
             span.textContent = label.textContent.trim();
           } else {
-            span.textContent = '—';
+            span.textContent = '-';
           }
           return;
         }
 
         if (input.tagName === 'SELECT') {
           const selectedOption = input.options[input.selectedIndex];
-          span.textContent = selectedOption ? selectedOption.textContent.trim() : '—';
+          span.textContent = selectedOption ? selectedOption.textContent.trim() : '-';
           return;
         }
-        span.textContent = input.value.trim() || '—';
+        span.textContent = input.value.trim() || '-';
       });
     }
 
@@ -381,7 +381,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       });
     });
 
-    btnNext.addEventListener('click', function() {
+    btnNext.addEventListener('click', function () {
       const currentIdx = getCurrentIndex();
       if (validateStep(panels[currentIdx])) {
         if (currentIdx < total - 1) {
@@ -391,7 +391,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       }
     });
 
-    btnBack.addEventListener('click', function() {
+    btnBack.addEventListener('click', function () {
       const currentIdx = getCurrentIndex();
       if (currentIdx > 0) {
         triggers[currentIdx - 1].click();

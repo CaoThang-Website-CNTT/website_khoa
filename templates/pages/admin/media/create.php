@@ -129,7 +129,7 @@ $max_mb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
 
     // Reset tiêu đề khi file bị xóa (chỉ nếu nó vẫn là tên file tự fill)
     zone.addEventListener('mu:file-removed', () => {
-      // Không reset — người dùng có thể đã chỉnh tay
+      // Không reset - người dùng có thể đã chỉnh tay
     });
 
     zone.addEventListener('mu:error', (e) => {

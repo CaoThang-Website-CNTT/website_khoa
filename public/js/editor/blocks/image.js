@@ -154,7 +154,7 @@ export class ImageBlock extends EditorBlock {
 
   /**
    * Override: Image có caption là rich text và các field media khác.
-   * @param {HTMLElement|null} _editableEl — không dùng, tự quản lý #captionEl
+   * @param {HTMLElement|null} _editableEl - không dùng, tự quản lý #captionEl
    * @returns {object}
    */
   serializeData(_editableEl) {

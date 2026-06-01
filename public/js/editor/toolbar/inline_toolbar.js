@@ -62,7 +62,7 @@ export class InlineToolbar extends EditorToolbar {
 
   /**
    * @param {EditorEventBus} bus
-   * @param {HTMLElement}    canvas   — #be-block-list
+   * @param {HTMLElement}    canvas   - #be-block-list
    * @param {{ offset?: number, debounceMs?: number }} [config]
    */
   constructor(bus, canvas, store, config = {}) {
@@ -141,7 +141,7 @@ export class InlineToolbar extends EditorToolbar {
           this.#openLinkInput();
           return;
         }
-        // Dispatch và GIỮ TOOLBAR MỞ — không gọi #hide()
+        // Dispatch và GIỮ TOOLBAR MỞ - không gọi #hide()
         this.#dispatchFormat(command, null);
       }, { signal });
 
@@ -460,7 +460,7 @@ export class InlineToolbar extends EditorToolbar {
    * Cập nhật visual trạng thái is-active / aria-pressed cho từng nút.
    * Được gọi khi bus emit 'inline:marks_updated'.
    *
-   * @param {Set<string>} activeMarks — từ InlineFormatter.getActiveMarks()
+   * @param {Set<string>} activeMarks - từ InlineFormatter.getActiveMarks()
    */
   #syncButtonStates(activeMarks) {
     this.#buttons.forEach((btn, command) => {

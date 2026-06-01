@@ -62,8 +62,8 @@ export class ColumnRegistry {
   #cols = [];
 
   /**
-   * @param {HTMLElement} root — Phần tử gốc [data-tm]
-   * @param {Record<string, string[]>} filterOpsMap — Bản đồ toán tử mặc định
+   * @param {HTMLElement} root - Phần tử gốc [data-tm]
+   * @param {Record<string, string[]>} filterOpsMap - Bản đồ toán tử mặc định
    */
   constructor(root, filterOpsMap = {}) {
     root.querySelectorAll(':scope > template[data-tm-col]').forEach(tpl => {

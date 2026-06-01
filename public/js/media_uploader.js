@@ -58,7 +58,7 @@ class MediaUploader {
   };
 
   /**
-   * @param {string|HTMLElement} zoneSelector — CSS selector or element with [data-mu-zone]
+   * @param {string|HTMLElement} zoneSelector - CSS selector or element with [data-mu-zone]
    * @param {{ accept?: RegExp, maxBytes?: number }} [opts]
    */
   constructor(zoneSelector, opts = {}) {
@@ -313,9 +313,9 @@ class MediaUploader {
 
   /**
    * Import media khởi tạo từ một URL có sẵn (Ví dụ: khi Sửa/Edit bài viết)
-   * @param {string} fileName — Tên file (e.g. photo.jpg)
-   * @param {string} url — Đường dẫn file từ server (e.g. /uploads/2026/05/photo.jpg)
-   * @param {string} mimeType — MIME Type tương ứng (e.g. image/jpeg)
+   * @param {string} fileName - Tên file (e.g. photo.jpg)
+   * @param {string} url - Đường dẫn file từ server (e.g. /uploads/2026/05/photo.jpg)
+   * @param {string} mimeType - MIME Type tương ứng (e.g. image/jpeg)
    */
   import({
     fileName,

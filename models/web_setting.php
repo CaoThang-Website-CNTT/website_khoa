@@ -5,7 +5,7 @@ namespace App\Models;
 /**
  * Đại diện cho một dòng trong bảng web_settings.
  *
- * $cast_value được service populate sau khi đọc từ DB —
+ * $cast_value được service populate sau khi đọc từ DB -
  * giá trị đã được ép kiểu theo $type, sẵn sàng dùng trong view/controller.
  */
 class WebSetting extends Model
@@ -37,7 +37,7 @@ class WebSetting extends Model
   public ?int $updated_by;
 
   /**
-   * Giá trị đã cast — do WebSettingsService populate.
+   * Giá trị đã cast - do WebSettingsService populate.
    * Kiểu thực tế phụ thuộc vào $type: int, float, bool, array, string, hoặc null.
    */
   public mixed $cast_value = null;
