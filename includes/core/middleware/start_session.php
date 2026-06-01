@@ -11,56 +11,9 @@ class StartSession extends BaseMiddleware
   {
     $session = new Session();
     $request->setSession($session);
-    
-    // Lưu vết lịch sử URL (chỉ áp dụng cho request GET thông thường, không phải AJAX, không phải file tĩnh/favicon, không phải API request)
-    if ($request->method() === 'GET' && !$request->isAjax() && !$this->isStaticResource($request) && !$this->isApiRequest($request)) {
-      $currentUrl = $this->getCurrentUrl($request);
-      
-      $prevUrlSession = $session->get('_url.current');
-      if ($prevUrlSession && $prevUrlSession !== $currentUrl) {
-        $session->put('_url.previous', $prevUrlSession);
-        }
-        $session->put('_url.current', $currentUrl);
-    }
 
     $response = $next($request);
 
     return $response;
-  }
-
-  private function isStaticResource(Request $request): bool
-  {
-    $uri = strtolower($request->uri());
-
-    // Loại trừ favicon
-    if (str_contains($uri, 'favicon') || str_ends_with($uri, '.ico')) {
-      return true;
-    }
-
-    // Loại trừ các tệp tài nguyên tĩnh phổ biến khác nếu bị bắt bởi front controller
-    $staticExtensions = ['.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.woff', '.woff2', '.ttf', '.map', '.json'];
-    foreach ($staticExtensions as $ext) {
-      if (str_ends_with($uri, $ext)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private function isApiRequest(Request $request): bool
-  {
-    $uri = strtolower($request->uri());
-    // Check if URI matches /api/v[1-9]+/ pattern
-    return preg_match('/^\/api\/v\d+\//', $uri) === 1;
-  }
-
-  private function getCurrentUrl(Request $request): string
-  {
-    $server = $_SERVER;
-    $protocol = (!empty($server['HTTPS']) && $server['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = $server['HTTP_HOST'] ?? 'localhost';
-    $uri = $server['REQUEST_URI'] ?? '/';
-    return $protocol . '://' . $host . $uri;
   }
 }

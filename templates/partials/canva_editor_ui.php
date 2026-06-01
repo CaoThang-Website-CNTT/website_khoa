@@ -24,8 +24,7 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 <!-- ======== Canva Main =========== -->
 <div id="be-topbar">
   <div id="be-topbar-left">
-    <a href="<?= request()->previous(fallback: url('admin/posts')) ?>" class="btn" data-size="md"
-      data-variant="outline">
+    <a href="<?= url('admin/posts') ?>" class="btn" data-size="md" data-variant="outline">
       <i class="fa-solid fa-chevron-left"></i> Quay lại
     </a>
     <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-left"

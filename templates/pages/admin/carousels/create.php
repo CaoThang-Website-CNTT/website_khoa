@@ -30,8 +30,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     </div>
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: url('admin/carousels')) ?>" data-variant="outline" data-size="lg"
-          class="btn">
+        <a href="<?= url("admin/carousels") ?>" data-variant="outline" data-size="lg" class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại
         </a>
@@ -50,7 +49,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <form id="carousel-add-form" action="<?= url('admin/carousels') ?>" method="POST">
   <?= csrf_field() ?>
-  
+
   <!-- Hidden inputs for slides will be dynamically injected here -->
   <div id="slides-inputs-container"></div>
 
@@ -97,20 +96,20 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <div class="field-group">
             <div class="field" data-field-required>
               <label class="field__label" for="name">Tên Carousel</label>
-              <input id="name" class="field__input" type="text" name="name"
-                placeholder="VD: Slider Trang chủ" value="<?= htmlspecialchars($old_input['name'] ?? '') ?>">
+              <input id="name" class="field__input" type="text" name="name" placeholder="VD: Slider Trang chủ"
+                value="<?= htmlspecialchars($old_input['name'] ?? '') ?>">
             </div>
 
             <div class="field">
               <label class="field__label" for="slug">Slug</label>
-              <input id="slug" class="field__input" type="text" name="slug"
-                placeholder="slider-trang-chu" value="<?= htmlspecialchars($old_input['slug'] ?? '') ?>">
+              <input id="slug" class="field__input" type="text" name="slug" placeholder="slider-trang-chu"
+                value="<?= htmlspecialchars($old_input['slug'] ?? '') ?>">
               <p class="field__description">Slug được tự động tạo từ tên carousel.</p>
             </div>
 
             <div class="field" data-orientation="horizontal">
               <label class="field__label" for="is_active">Kích hoạt</label>
-              <input id="is_active" class="field__input" type="checkbox" name="is_active" value="1" 
+              <input id="is_active" class="field__input" type="checkbox" name="is_active" value="1"
                 <?= !isset($old_input['is_active']) || $old_input['is_active'] ? 'checked' : '' ?>>
             </div>
           </div>
@@ -143,88 +142,94 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 
   <form class="detail-modal__form space-y-4" id="slide-form" onsubmit="event.preventDefault();">
-      <div class="field-group">
-        <!-- is_active -->
-        <div class="field" data-orientation="horizontal">
-          <label class="field__label" for="slide-is-active">Kích hoạt slide</label>
-          <input id="slide-is-active" class="field__input" type="checkbox" name="is_active" value="1" checked>
-        </div>
+    <div class="field-group">
+      <!-- is_active -->
+      <div class="field" data-orientation="horizontal">
+        <label class="field__label" for="slide-is-active">Kích hoạt slide</label>
+        <input id="slide-is-active" class="field__input" type="checkbox" name="is_active" value="1" checked>
+      </div>
 
-        <!-- title + title_highlight -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="field" data-field-required>
-            <label class="field__label" for="slide-title">Tiêu đề</label>
-            <input id="slide-title" class="field__input" type="text" name="title" placeholder="Tiêu đề chính của slide" required>
-          </div>
-          <div class="field">
-            <label class="field__label" for="slide-title-highlight">Tiêu đề nổi bật</label>
-            <input id="slide-title-highlight" class="field__input" type="text" name="title_highlight" placeholder="Phần in đậm / màu khác">
-          </div>
-        </div>
-
-        <!-- description -->
-        <div class="field">
-          <label class="field__label" for="slide-description">Mô tả</label>
-          <textarea id="slide-description" class="field__input" name="description" placeholder="Mô tả ngắn hiển thị trên slide" rows="2"></textarea>
-        </div>
-
-        <!-- media_id (hidden) -->
-        <input type="hidden" id="slide-media-id" name="media_id" value="">
-
-        <!-- Media preview + picker -->
+      <!-- title + title_highlight -->
+      <div class="grid grid-cols-2 gap-4">
         <div class="field" data-field-required>
-          <label class="field__label">Hình ảnh slide</label>
-          <div id="slide-media-preview" class="slide-media-preview">
-            <div class="slide-media-preview__empty" id="slide-media-empty">
-              <i class="fa-solid fa-image"></i>
-              <span>Chưa có ảnh</span>
-            </div>
-            <img id="slide-media-img" class="slide-media-preview__img" src="" alt="" hidden>
-          </div>
-          <button type="button" class="btn mt-2" data-variant="outline" data-size="sm"
-                  id="slide-change-media-btn" data-modal-trigger="#media-selector-modal">
-            <i class="fa-solid fa-image"></i> Thay đổi
-          </button>
-        </div>
-
-        <!-- CTA -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="field">
-            <label class="field__label" for="slide-cta-label">Nhãn nút CTA</label>
-            <input id="slide-cta-label" class="field__input" type="text" name="cta_label" placeholder="VD: Tìm hiểu thêm">
-          </div>
-          <div class="field">
-            <label class="field__label" for="slide-cta-variant">Kiểu nút CTA</label>
-            <select id="slide-cta-variant" class="field__input" name="cta_variant">
-              <option value="primary">Primary</option>
-              <option value="secondary">Secondary</option>
-              <option value="outline">Outline</option>
-            </select>
-          </div>
+          <label class="field__label" for="slide-title">Tiêu đề</label>
+          <input id="slide-title" class="field__input" type="text" name="title" placeholder="Tiêu đề chính của slide"
+            required>
         </div>
         <div class="field">
-          <label class="field__label" for="slide-cta-url">URL nút CTA</label>
-          <input id="slide-cta-url" class="field__input" type="text" name="cta_url" placeholder="https://... hoặc /duong-dan">
+          <label class="field__label" for="slide-title-highlight">Tiêu đề nổi bật</label>
+          <input id="slide-title-highlight" class="field__input" type="text" name="title_highlight"
+            placeholder="Phần in đậm / màu khác">
         </div>
+      </div>
 
-        <!-- use_custom_html toggle -->
-        <div class="field" data-orientation="horizontal">
-          <label class="field__label" for="slide-use-custom-html">Dùng HTML tuỳ chỉnh</label>
-          <input id="slide-use-custom-html" type="checkbox" class="field__input" name="use_custom_html" value="1">
-        </div>
+      <!-- description -->
+      <div class="field">
+        <label class="field__label" for="slide-description">Mô tả</label>
+        <textarea id="slide-description" class="field__input" name="description"
+          placeholder="Mô tả ngắn hiển thị trên slide" rows="2"></textarea>
+      </div>
 
-        <!-- custom_html (hidden by default) -->
-        <div class="field" id="slide-custom-html-field" style="display: none;">
-          <label class="field__label" for="slide-custom-html">Custom HTML</label>
-          <textarea id="slide-custom-html" class="field__input field__input--mono" name="custom_html" placeholder="<div>Nội dung HTML tuỳ chỉnh...</div>" rows="4" spellcheck="false"></textarea>
-          <p class="field__description">Khi bật, nội dung HTML này sẽ thay thế title/description mặc định.</p>
+      <!-- media_id (hidden) -->
+      <input type="hidden" id="slide-media-id" name="media_id" value="">
+
+      <!-- Media preview + picker -->
+      <div class="field" data-field-required>
+        <label class="field__label">Hình ảnh slide</label>
+        <div id="slide-media-preview" class="slide-media-preview">
+          <div class="slide-media-preview__empty" id="slide-media-empty">
+            <i class="fa-solid fa-image"></i>
+            <span>Chưa có ảnh</span>
+          </div>
+          <img id="slide-media-img" class="slide-media-preview__img" src="" alt="" hidden>
         </div>
+        <button type="button" class="btn mt-2" data-variant="outline" data-size="sm" id="slide-change-media-btn"
+          data-modal-trigger="#media-selector-modal">
+          <i class="fa-solid fa-image"></i> Thay đổi
+        </button>
+      </div>
+
+      <!-- CTA -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="field">
+          <label class="field__label" for="slide-cta-label">Nhãn nút CTA</label>
+          <input id="slide-cta-label" class="field__input" type="text" name="cta_label" placeholder="VD: Tìm hiểu thêm">
+        </div>
+        <div class="field">
+          <label class="field__label" for="slide-cta-variant">Kiểu nút CTA</label>
+          <select id="slide-cta-variant" class="field__input" name="cta_variant">
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="outline">Outline</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field__label" for="slide-cta-url">URL nút CTA</label>
+        <input id="slide-cta-url" class="field__input" type="text" name="cta_url"
+          placeholder="https://... hoặc /duong-dan">
+      </div>
+
+      <!-- use_custom_html toggle -->
+      <div class="field" data-orientation="horizontal">
+        <label class="field__label" for="slide-use-custom-html">Dùng HTML tuỳ chỉnh</label>
+        <input id="slide-use-custom-html" type="checkbox" class="field__input" name="use_custom_html" value="1">
+      </div>
+
+      <!-- custom_html (hidden by default) -->
+      <div class="field" id="slide-custom-html-field" style="display: none;">
+        <label class="field__label" for="slide-custom-html">Custom HTML</label>
+        <textarea id="slide-custom-html" class="field__input field__input--mono" name="custom_html"
+          placeholder="<div>Nội dung HTML tuỳ chỉnh...</div>" rows="4" spellcheck="false"></textarea>
+        <p class="field__description">Khi bật, nội dung HTML này sẽ thay thế title/description mặc định.</p>
+      </div>
     </div>
   </form>
 
   <div class="modal__footer flex justify-between items-center">
     <div>
-      <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg" class="btn hidden">Xóa</button>
+      <button id="slide-delete-btn" type="button" data-variant="destructive" data-size="lg"
+        class="btn hidden">Xóa</button>
     </div>
     <div class="flex gap-2 ml-auto">
       <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
@@ -245,7 +250,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-    <button id="slide-delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xác nhận xóa</button>
+    <button id="slide-delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xác nhận
+      xóa</button>
   </div>
   <button class="modal__close" type="button" data-modal-close>
     <i class="fa-solid fa-xmark"></i>
@@ -310,7 +316,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     }
 
     // Toggle Custom HTML field in modal
-    slideUseCustomHtml.addEventListener('change', function() {
+    slideUseCustomHtml.addEventListener('change', function () {
       slideCustomHtmlField.style.display = this.checked ? 'flex' : 'none';
     });
 
@@ -357,7 +363,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         card.dataset.tempId = slide.tempId;
         card.setAttribute('data-dnd-draggable', '');
 
-        const imgHtml = slide.media_url 
+        const imgHtml = slide.media_url
           ? `<img class="slide-item__img" src="${escapeHtml(slide.media_url)}" alt="">`
           : `<div class="slide-item__img"><div class="w-full h-full flex justify-center items-center gap-1"><i class="fa-solid fa-image"></i>N/A</div></div>`;
 
@@ -397,20 +403,20 @@ $old_input = request()->session()->getOldInputs() ?? [];
           slideForm.querySelector('#slide-cta-label').value = slide.cta_label || '';
           slideForm.querySelector('#slide-cta-variant').value = slide.cta_variant || 'primary';
           slideForm.querySelector('#slide-cta-url').value = slide.cta_url || '';
-          
-          const slideImg   = document.querySelector('#slide-media-img');
+
+          const slideImg = document.querySelector('#slide-media-img');
           const slideEmpty = document.querySelector('#slide-media-empty');
           if (slide.media_url) {
-            slideImg.src    = slide.media_url;
-            slideImg.alt    = slide.media_alt || '';
+            slideImg.src = slide.media_url;
+            slideImg.alt = slide.media_alt || '';
             slideImg.hidden = false;
             slideEmpty.hidden = true;
           } else {
-            slideImg.hidden   = true;
-            slideImg.src      = '';
+            slideImg.hidden = true;
+            slideImg.src = '';
             slideEmpty.hidden = false;
           }
-          
+
           const useCustom = Boolean(slide.use_custom_html);
           slideUseCustomHtml.checked = useCustom;
           slideCustomHtmlField.style.display = useCustom ? 'flex' : 'none';
@@ -515,13 +521,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
       slideForm.querySelector('#slide-media-id').value = media.id;
 
       // Cập nhật thumbnail preview
-      const slideImg   = document.querySelector('#slide-media-img');
+      const slideImg = document.querySelector('#slide-media-img');
       const slideEmpty = document.querySelector('#slide-media-empty');
-      const mediaUrl   = `<?= url('public/media/') ?>/${media.file_path}`;
+      const mediaUrl = `<?= url('public/media/') ?>/${media.file_path}`;
 
-      slideImg.src      = mediaUrl;
-      slideImg.alt      = media.alt_text || '';
-      slideImg.hidden   = false;
+      slideImg.src = mediaUrl;
+      slideImg.alt = media.alt_text || '';
+      slideImg.hidden = false;
       slideEmpty.hidden = true;
 
       close();
@@ -536,13 +542,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
         chosenClass: 'dnd-chosen',
         onEnd: () => {
           const reorderedTempIds = Array.from(slidesContainer.querySelectorAll('.slide-item')).map(el => el.dataset.tempId);
-          
+
           const sortedSlides = [];
           reorderedTempIds.forEach(tempId => {
             const found = localSlides.find(s => s.tempId === tempId);
             if (found) sortedSlides.push(found);
           });
-          
+
           localSlides = sortedSlides;
           renderSlides();
         }

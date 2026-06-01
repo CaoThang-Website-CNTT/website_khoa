@@ -28,11 +28,13 @@ $referralLetters = $referralLetters ?? [];
     </div>
 
     <div class="flex gap-2 items-center">
-      <a href="<?= request()->previous(fallback: url('student/internship/' . ($current['id'] ?? ''))) ?>" data-variant="outline" data-size="md" class="btn">
+      <a href="<?= url('student/internship/' . ($current['id'] ?? '')) ?>" data-variant="outline" data-size="md"
+        class="btn">
         <i class="fa-solid fa-chevron-left"></i>
         Quay lại
       </a>
-      <button type="button" id="btn-request" data-modal-trigger="#rl_requestModal" class="btn" data-variant="primary" data-size="md">
+      <button type="button" id="btn-request" data-modal-trigger="#rl_requestModal" class="btn" data-variant="primary"
+        data-size="md">
         <i class="fa-solid fa-plus mr-2"></i>
         Đăng ký mới
       </button>
@@ -91,20 +93,20 @@ $referralLetters = $referralLetters ?? [];
             <td>
               <div class="flex gap-2">
                 <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm"
-                  data-id="<?= $rl['id'] ?>"
-                  data-company-name="<?= htmlspecialchars($rl['company_name']) ?>"
+                  data-id="<?= $rl['id'] ?>" data-company-name="<?= htmlspecialchars($rl['company_name']) ?>"
                   data-company-tax-code="<?= htmlspecialchars($rl['company_tax_code']) ?: '--' ?>"
-                  data-company-address="<?= htmlspecialchars($rl['company_address']) ?>"
-                  data-status="<?= $rl['status'] ?>"
+                  data-company-address="<?= htmlspecialchars($rl['company_address']) ?>" data-status="<?= $rl['status'] ?>"
                   data-created-at="<?= date('d/m/Y H:i', strtotime($rl['created_at'])) ?>"
                   data-cancel-reason="<?= htmlspecialchars($rl['cancel_reason'] ?? '') ?>">
                   <i class="fa-solid fa-eye"></i> Chi tiết
                 </button>
                 <?php if ($rl['status'] === 'pending'): ?>
-                  <button type="button" class="btn btn-update" data-variant="outline" data-size="sm" data-id="<?= $rl['id'] ?>">
+                  <button type="button" class="btn btn-update" data-variant="outline" data-size="sm"
+                    data-id="<?= $rl['id'] ?>">
                     <i class="fa-solid fa-pen"></i> Đổi công ty
                   </button>
-                  <button type="button" class="btn btn-cancel" data-variant="destructive" data-size="sm" data-id="<?= $rl['id'] ?>">
+                  <button type="button" class="btn btn-cancel" data-variant="destructive" data-size="sm"
+                    data-id="<?= $rl['id'] ?>">
                     <i class="fa-solid fa-xmark"></i> Hủy
                   </button>
                 <?php endif; ?>
@@ -128,28 +130,33 @@ $referralLetters = $referralLetters ?? [];
       </button>
     </div>
     <div class="modal__body">
-      <form action="<?= url('student/internship/' . $current['id'] . '/referral_letters') ?>" method="POST" id="rl_requestForm">
+      <form action="<?= url('student/internship/' . $current['id'] . '/referral_letters') ?>" method="POST"
+        id="rl_requestForm">
         <?= csrf_field() ?>
 
         <div class="field mb-4" data-orientation="horizontal">
           <input type="checkbox" id="rl_is_manual" name="is_manual" value="1" class="field__input">
-          <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số thuế</label>
+          <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số
+            thuế</label>
         </div>
 
         <div class="field mb-4" data-field-required>
           <label class="field__label">Mã số thuế</label>
           <div class="field__input-group">
             <input type="text" name="tax_code" id="rl_tax_code" class="field__input" required>
-            <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm tra</button>
+            <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm
+              tra</button>
           </div>
-          <div id="rl_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin...</div>
+          <div id="rl_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải
+            thông tin...</div>
           <div id="rl_mstError" class="field__error hidden"></div>
         </div>
 
         <div class="field mb-4" data-field-required>
           <label class="field__label">Tên công ty</label>
           <div class="field__suggest-wrapper">
-            <input type="text" name="name" id="rl_company_name" class="field__input relative" required readonly autocomplete="off">
+            <input type="text" name="name" id="rl_company_name" class="field__input relative" required readonly
+              autocomplete="off">
             <div id="rl_companySuggestions" class="suggestions-list hidden"></div>
           </div>
         </div>
@@ -182,23 +189,27 @@ $referralLetters = $referralLetters ?? [];
 
         <div class="field mb-4" data-orientation="horizontal">
           <input type="checkbox" id="rl_upd_is_manual" name="is_manual" value="1" class="field__input">
-          <label for="rl_upd_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số thuế</label>
+          <label for="rl_upd_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số
+            thuế</label>
         </div>
 
         <div class="field mb-4" data-field-required>
           <label class="field__label">Mã số thuế</label>
           <div class="field__input-group">
             <input type="text" name="tax_code" id="rl_upd_tax_code" class="field__input" required>
-            <button type="button" id="rl_upd_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm tra</button>
+            <button type="button" id="rl_upd_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm
+              tra</button>
           </div>
-          <div id="rl_upd_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin...</div>
+          <div id="rl_upd_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang
+            tải thông tin...</div>
           <div id="rl_upd_mstError" class="field__error hidden"></div>
         </div>
 
         <div class="field mb-4" data-field-required>
           <label class="field__label">Tên công ty</label>
           <div class="field__suggest-wrapper">
-            <input type="text" name="name" id="rl_upd_company_name" class="field__input relative" required readonly autocomplete="off">
+            <input type="text" name="name" id="rl_upd_company_name" class="field__input relative" required readonly
+              autocomplete="off">
             <div id="rl_upd_companySuggestions" class="suggestions-list hidden"></div>
           </div>
         </div>
@@ -231,7 +242,8 @@ $referralLetters = $referralLetters ?? [];
         <p class="mb-4">Bạn có chắc chắn muốn hủy giấy giới thiệu này?</p>
         <div class="field" data-field-required>
           <label class="field__label">Lý do hủy</label>
-          <textarea name="cancel_reason" class="field__input" required rows="3" placeholder="Nhập lý do hủy..."></textarea>
+          <textarea name="cancel_reason" class="field__input" required rows="3"
+            placeholder="Nhập lý do hủy..."></textarea>
         </div>
       </form>
     </div>

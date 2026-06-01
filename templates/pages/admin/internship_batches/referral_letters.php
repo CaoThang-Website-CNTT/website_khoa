@@ -24,11 +24,12 @@ $letters = $letters ?? [];
   <div class="flex justify-between items-start">
     <div class="col-6 col-md-6">
       <h2 class="title text-2xl font-semibold">Giấy giới thiệu</h2>
-      <p>Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
+      <p>Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập #<?= htmlspecialchars($batch['id']) ?>
+      </p>
     </div>
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: url('admin/internship_batches/' . $batch['id'])) ?>" data-variant="outline" data-size="lg"
+        <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg"
           class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại
@@ -39,7 +40,8 @@ $letters = $letters ?? [];
 </div>
 
 <div class="card">
-  <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true" data-tm-selectable="true" data-tm-id-key="id">
+  <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true"
+    data-tm-selectable="true" data-tm-id-key="id">
 
     <!-- Checkbox column is auto prepended by table-manager -->
 
@@ -65,23 +67,21 @@ $letters = $letters ?? [];
       </div>
     </template>
 
-    <template data-tm-col="company_verified_label" data-tm-label="Trạng thái Công ty" data-tm-filter-type="select" data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Đã xác thực","label":"Đã xác thực"},{"value":"Chưa xác thực","label":"Chưa xác thực"}]'>
+    <template data-tm-col="company_verified_label" data-tm-label="Trạng thái Công ty" data-tm-filter-type="select"
+      data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Đã xác thực","label":"Đã xác thực"},{"value":"Chưa xác thực","label":"Chưa xác thực"}]'>
       <span class="badge" data-variant="{{ row.company_is_verified == 1 ? 'primary' : 'secondary' }}">{{ value }}</span>
     </template>
 
-    <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select" data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Chờ duyệt","label":"Chờ duyệt"},{"value":"Đã in","label":"Đã in"},{"value":"Đã hủy","label":"Đã hủy"}]'>
+    <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select"
+      data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Chờ duyệt","label":"Chờ duyệt"},{"value":"Đã in","label":"Đã in"},{"value":"Đã hủy","label":"Đã hủy"}]'>
       <span class="badge" data-variant="{{ row.status_variant }}">{{ value }}</span>
     </template>
 
     <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="100px" data-tm-align="right">
-      <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm"
-        data-id="{{ row.id }}"
-        data-student="{{ row.student_full_name }} - {{ row.student_code }}"
-        data-company-name="{{ row.company_name }}"
-        data-company-tax="{{ row.company_tax_code }}"
-        data-company-address="{{ row.company_address }}"
-        data-status-label="{{ row.status_label }}"
-        data-status-variant="{{ row.status_variant }}"
+      <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm" data-id="{{ row.id }}"
+        data-student="{{ row.student_full_name }} - {{ row.student_code }}" data-company-name="{{ row.company_name }}"
+        data-company-tax="{{ row.company_tax_code }}" data-company-address="{{ row.company_address }}"
+        data-status-label="{{ row.status_label }}" data-status-variant="{{ row.status_variant }}"
         data-reason="{{ row.cancel_reason }}">
         Chi tiết
       </button>
@@ -97,7 +97,8 @@ $letters = $letters ?? [];
       <span class="badge" data-variant="primary" id="selected-count">Đã chọn: 0</span>
     </div>
     <div class="flex gap-2">
-      <button type="button" class="btn" data-variant="outline" data-size="md" id="btn-cancel-selection">Hủy chọn</button>
+      <button type="button" class="btn" data-variant="outline" data-size="md" id="btn-cancel-selection">Hủy
+        chọn</button>
       <button type="button" class="btn" data-variant="destructive" data-size="md" id="btn-bulk-cancel">
         <i class="fa-solid fa-xmark"></i> Hủy giấy giới thiệu
       </button>
@@ -140,7 +141,8 @@ $letters = $letters ?? [];
       </div>
     </div>
     <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-variant="outline" data-size="md" data-modal-close="#rl_detailModal">Đóng</button>
+      <button type="button" class="btn" data-variant="outline" data-size="md"
+        data-modal-close="#rl_detailModal">Đóng</button>
     </div>
   </div>
 </div>
@@ -155,15 +157,19 @@ $letters = $letters ?? [];
       </button>
     </div>
     <div class="modal-body py-4">
-      <p class="mb-4">Vui lòng nhập lý do hủy cho <span id="cancel-count" class="font-bold">0</span> giấy giới thiệu đã chọn:</p>
+      <p class="mb-4">Vui lòng nhập lý do hủy cho <span id="cancel-count" class="font-bold">0</span> giấy giới thiệu đã
+        chọn:</p>
       <div class="field" data-field-required>
         <label class="field__label">Lý do hủy</label>
-        <textarea id="cancel_reason_input" class="field__input" required rows="3" placeholder="Nhập lý do hủy..."></textarea>
+        <textarea id="cancel_reason_input" class="field__input" required rows="3"
+          placeholder="Nhập lý do hủy..."></textarea>
       </div>
     </div>
     <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-size="md" data-variant="outline" data-modal-close="#cancel-reason-modal">Hủy bỏ</button>
-      <button type="button" id="btn-confirm-cancel" class="btn" data-size="md" data-variant="destructive">Xác nhận Hủy</button>
+      <button type="button" class="btn" data-size="md" data-variant="outline"
+        data-modal-close="#cancel-reason-modal">Hủy bỏ</button>
+      <button type="button" id="btn-confirm-cancel" class="btn" data-size="md" data-variant="destructive">Xác nhận
+        Hủy</button>
     </div>
   </div>
 </div>
@@ -178,12 +184,15 @@ $letters = $letters ?? [];
       </button>
     </div>
     <div class="modal-body py-4">
-      <p>Bạn có chắc chắn muốn duyệt và in <span id="approve-count" class="font-bold">0</span> giấy giới thiệu đã chọn?</p>
+      <p>Bạn có chắc chắn muốn duyệt và in <span id="approve-count" class="font-bold">0</span> giấy giới thiệu đã chọn?
+      </p>
       <p class="text-sm mt-2">Lưu ý: Các giấy không ở trạng thái "Chờ duyệt" sẽ bị từ chối/bỏ qua.</p>
     </div>
     <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-size="md" data-variant="outline" data-modal-close="#approve-confirm-modal">Hủy bỏ</button>
-      <button type="button" id="btn-confirm-approve" class="btn" data-size="md" data-variant="primary">Xác nhận Duyệt</button>
+      <button type="button" class="btn" data-size="md" data-variant="outline"
+        data-modal-close="#approve-confirm-modal">Hủy bỏ</button>
+      <button type="button" id="btn-confirm-approve" class="btn" data-size="md" data-variant="primary">Xác nhận
+        Duyệt</button>
     </div>
   </div>
 </div>

@@ -30,8 +30,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: url('admin/categories')) ?>" data-variant="outline" data-size="lg"
-          class="btn">
+        <a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại
         </a>
@@ -50,7 +49,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <form id="category-add-form" action="<?= url('admin/categories') ?>" method="POST">
   <?= csrf_field() ?>
-  
+
   <!-- ── Card 1: Thông tin danh mục ── -->
   <div class="card shadow w-full">
     <div class="card__header">

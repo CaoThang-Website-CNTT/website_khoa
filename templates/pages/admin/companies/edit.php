@@ -30,8 +30,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     </div>
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: url('admin/companies')) ?>" data-variant="outline" data-size="lg"
-          class="btn">
+        <a href="<?= url('admin/companies') ?>" data-variant="outline" data-size="lg" class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại
         </a>
@@ -54,8 +53,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
-<form class="detail-layout" id="company-edit-form" action="<?= url('admin/companies/' . $company->id) ?>"
-  method="POST">
+<form class="detail-layout" id="company-edit-form" action="<?= url('admin/companies/' . $company->id) ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
     <div class="card shadow">
@@ -72,12 +70,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field" data-field-required>
               <label class="field__label" for="company_name">Tên</label>
-              <input id="company_name" class="field__input" type="text" name="company_name" placeholder="VD: công ty ABC" value="<?= htmlspecialchars($company->name) ?? '' ?>">
+              <input id="company_name" class="field__input" type="text" name="company_name"
+                placeholder="VD: công ty ABC" value="<?= htmlspecialchars($company->name) ?? '' ?>">
             </div>
 
             <div class="field">
               <label class="field__label" for="phone">Số điện thoại</label>
-              <input id="phone" class="field__input" type="tel" name="phone" placeholder="" value="<?= htmlspecialchars($company->phone) ?? '' ?>">
+              <input id="phone" class="field__input" type="tel" name="phone" placeholder=""
+                value="<?= htmlspecialchars($company->phone) ?? '' ?>">
             </div>
 
             <div class="field">
@@ -88,12 +88,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field" data-field-required>
               <label class="field__label" for="address">Địa chỉ</label>
-              <textarea row="3" id="address" class="field__input" type="text" name="address" placeholder="" value="<?= htmlspecialchars($company->address) ?? '' ?>"><?= htmlspecialchars($company->address) ?? '' ?></textarea>
+              <textarea row="3" id="address" class="field__input" type="text" name="address" placeholder=""
+                value="<?= htmlspecialchars($company->address) ?? '' ?>"><?= htmlspecialchars($company->address) ?? '' ?></textarea>
             </div>
 
             <div class="field">
               <label class="field__label" for="email"></label>
-              <input id="email" class="field__input" type="email" name="email" placeholder="" value="<?= htmlspecialchars($company->email) ?? '' ?>">
+              <input id="email" class="field__input" type="email" name="email" placeholder=""
+                value="<?= htmlspecialchars($company->email) ?? '' ?>">
             </div>
 
             <div class="field">
@@ -104,7 +106,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field">
               <label class="field__label" for="note">Ghi chú</label>
-              <textarea row="3" id="note" class="field__input" type="text" name="note" placeholder="" value="<?= htmlspecialchars($company->note) ?? '' ?>"><?= htmlspecialchars($company->note) ?? '' ?></textarea>
+              <textarea row="3" id="note" class="field__input" type="text" name="note" placeholder=""
+                value="<?= htmlspecialchars($company->note) ?? '' ?>"><?= htmlspecialchars($company->note) ?? '' ?></textarea>
             </div>
 
           </div>

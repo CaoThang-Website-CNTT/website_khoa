@@ -23,8 +23,7 @@
     </div>
 
     <div class="flex gap-2 items-center">
-      <a href="<?= request()->previous(fallback: url('admin/intership_batches')) ?>" data-variant="outline" data-size="md"
-        class="btn">
+      <a href="<?= url('admin/intership_batches') ?>" data-variant="outline" data-size="md" class="btn">
         <i class="fa-solid fa-chevron-left"></i>
         Quay lại
       </a>
@@ -77,7 +76,8 @@
       <span class="badge" data-variant="primary" id="selected-count">Đã chọn: 0</span>
     </div>
     <div class="flex gap-2">
-      <button type="button" class="btn" data-variant="outline" data-size="md" id="btn-cancel-selection">Hủy chọn</button>
+      <button type="button" class="btn" data-variant="outline" data-size="md" id="btn-cancel-selection">Hủy
+        chọn</button>
       <button type="button" class="btn" data-variant="destructive" data-size="md" id="btn-bulk-unassign">
         <i class="fa-solid fa-user-minus"></i> Hủy phân công
       </button>
@@ -93,7 +93,8 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3 class="title text-xl font-semibold">Phân công Giảng viên</h3>
-      <p class="text-sm mt-1">Gán <span id="bulk-student-count" class="font-bold">0</span> sinh viên cho giảng viên được chọn dưới đây:</p>
+      <p class="text-sm mt-1">Gán <span id="bulk-student-count" class="font-bold">0</span> sinh viên cho giảng viên được
+        chọn dưới đây:</p>
     </div>
     <div class="modal-body py-4">
       <div class="field">
@@ -108,7 +109,8 @@
     </div>
     <div class="modal-footer flex justify-end gap-2 mt-4">
       <button type="button" id="btn-close-bulk-modal" class="btn" data-size="md" data-variant="outline">Hủy</button>
-      <button type="button" id="btn-confirm-bulk-assign" class="btn" data-size="md" data-variant="primary">Xác nhận phân công</button>
+      <button type="button" id="btn-confirm-bulk-assign" class="btn" data-size="md" data-variant="primary">Xác nhận phân
+        công</button>
     </div>
   </div>
 </div>
@@ -120,12 +122,15 @@
       <h3 class="title text-xl font-semibold text-destructive">Xác nhận Hủy phân công</h3>
     </div>
     <div class="modal-body py-4">
-      <p>Bạn có chắc chắn muốn hủy phân công cho <span id="bulk-unassign-count" class="font-bold">0</span> sinh viên đã chọn?</p>
+      <p>Bạn có chắc chắn muốn hủy phân công cho <span id="bulk-unassign-count" class="font-bold">0</span> sinh viên đã
+        chọn?</p>
       <p class="text-sm mt-2">Sau khi hủy, các sinh viên này sẽ không có Giảng viên hướng dẫn.</p>
     </div>
     <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" id="btn-close-unassign-modal" class="btn" data-size="md" data-variant="outline">Hủy bỏ</button>
-      <button type="button" id="btn-confirm-bulk-unassign" class="btn" data-size="md" data-variant="destructive">Xác nhận Hủy</button>
+      <button type="button" id="btn-close-unassign-modal" class="btn" data-size="md" data-variant="outline">Hủy
+        bỏ</button>
+      <button type="button" id="btn-confirm-bulk-unassign" class="btn" data-size="md" data-variant="destructive">Xác
+        nhận Hủy</button>
     </div>
   </div>
 </div>

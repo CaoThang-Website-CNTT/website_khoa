@@ -27,7 +27,7 @@ $supervisors = $supervisors ?? [];
       <p>Danh sách giảng viên tham gia đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
     </div>
     <div class="flex gap-2">
-      <a href="<?= request()->previous(fallback: url('admin/internship_batches/' . $batch['id'])) ?>" data-variant="outline" data-size="lg"
+      <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg"
         class="btn">
         <i class="fa-solid fa-chevron-left"></i>
         Quay lại
@@ -101,8 +101,8 @@ $supervisors = $supervisors ?? [];
       'department_name' => $sup['department_name'],
       'phone' => $sup['phone'],
       'email' => $sup['email'],
-      'assigned_count' => (int)$sup['assigned_count'],
-      'max_students' => (int)$sup['max_students'],
+      'assigned_count' => (int) $sup['assigned_count'],
+      'max_students' => (int) $sup['max_students'],
     ];
   }, $supervisors);
   echo json_encode([

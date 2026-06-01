@@ -29,8 +29,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: url('admin/students')) ?>" data-variant="outline" data-size="lg"
-          class="btn">
+        <a href="<?= url('admin/students') ?>" data-variant="outline" data-size="lg" class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại
         </a>
@@ -144,10 +143,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <option value="" selected>
                   -- Chọn lớp học--
                 </option>
-              <?php foreach ($classrooms as $classroom): ?>
+                <?php foreach ($classrooms as $classroom): ?>
                   <option value=<?= htmlspecialchars($classroom->id) ?>>
                     <?= htmlspecialchars($classroom->short_name); ?>
-                    </option>
+                  </option>
                 <?php endforeach; ?>
               </select>
             </div>

@@ -17,7 +17,7 @@ $max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
       <p>Chỉnh sửa thông tin media nếu cần</p>
     </div>
     <div class="flex gap-2">
-      <a href="<?= request()->previous(fallback: 'admin/media') ?>"
+      <a href="<?= url('admin/media') ?>"
          data-variant="outline" data-size="lg" class="btn">
         <i class="fa-solid fa-chevron-left"></i> Quay lại
       </a>

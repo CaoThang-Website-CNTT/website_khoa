@@ -31,8 +31,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: url('admin/students')) ?>" data-variant="outline" data-size="lg"
-          class="btn">
+        <a href="<?= url('admin/students') ?>" data-variant="outline" data-size="lg" class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại
         </a>
@@ -324,7 +323,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </div>
 
 <form action="<?= url('admin/students/delete/' . $student->student_id) ?>" method="POST" id="delete-form">
-  <?= csrf_field() ?></form>
+  <?= csrf_field() ?>
+</form>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {

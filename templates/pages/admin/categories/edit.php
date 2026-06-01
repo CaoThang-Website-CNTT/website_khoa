@@ -35,8 +35,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     </div>
     <div class="flex gap-2">
       <div>
-        <a href="<?= request()->previous(fallback: 'admin/categories') ?>" data-variant="outline" data-size="lg"
-          class="btn">
+        <a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
           <i class="fa-solid fa-chevron-left"></i>
           Quay lại
         </a>
@@ -73,7 +72,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field" <?= $category->isEditable() ? 'data-field-required' : '' ?> <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
               <label class="field__label" for="name">Tên danh mục</label>
-              <input id="name" class="field__input" type="text" name="name" value="<?= htmlspecialchars($category->name) ?>">
+              <input id="name" class="field__input" type="text" name="name"
+                value="<?= htmlspecialchars($category->name) ?>">
             </div>
 
             <div class="field" <?= $category->isEditable() ? 'data-field-required' : '' ?> <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
@@ -98,7 +98,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field" <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
               <label class="field__label" for="description">Mô tả</label>
-              <textarea id="description" class="field__input" name="description" rows="4"><?= htmlspecialchars($category->description ?? '') ?></textarea>
+              <textarea id="description" class="field__input" name="description"
+                rows="4"><?= htmlspecialchars($category->description ?? '') ?></textarea>
             </div>
           </div>
         </form>

@@ -27,7 +27,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       <p>Điền thông tin nhóm menu và các mục bên dưới</p>
     </div>
     <div class="flex gap-2">
-      <a href="<?= request()->previous(fallback: url('admin/menus')) ?>" data-variant="outline" data-size="lg" class="btn">
+      <a href="<?= url('admin/menus') ?>" data-variant="outline" data-size="lg" class="btn">
         <i class="fa-solid fa-chevron-left"></i>
         Quay lại
       </a>
@@ -59,7 +59,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
               Thêm item
             </button>
           </div>
-          
+
           <hr class="separator" />
 
           <div class="card__content">
@@ -96,15 +96,15 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <div class="field-group">
             <div class="field" data-field-required data-field-max="60">
               <label class="field__label" for="key">Key (định danh)</label>
-              <input id="key" class="field__input" type="text" name="key" 
-                placeholder="VD: header_menu" value="<?= htmlspecialchars($old_input['key'] ?? '') ?>">
+              <input id="key" class="field__input" type="text" name="key" placeholder="VD: header_menu"
+                value="<?= htmlspecialchars($old_input['key'] ?? '') ?>">
               <p class="field__description">Chỉ dùng chữ thường, số và dấu gạch dưới. Duy nhất trong hệ thống.</p>
             </div>
 
             <div class="field" data-field-required data-field-max="100">
               <label class="field__label" for="label">Tên hiển thị</label>
-              <input id="label" class="field__input" type="text" name="label" 
-                placeholder="VD: Menu Chính" value="<?= htmlspecialchars($old_input['label'] ?? '') ?>">
+              <input id="label" class="field__input" type="text" name="label" placeholder="VD: Menu Chính"
+                value="<?= htmlspecialchars($old_input['label'] ?? '') ?>">
             </div>
 
             <div class="field" data-field-max="255">
@@ -115,8 +115,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field">
               <label class="field__label" for="sort_order">Thứ tự hiển thị</label>
-              <input id="sort_order" class="field__input" type="number" name="sort_order" 
-                placeholder="0" min="0" value="<?= htmlspecialchars($old_input['sort_order'] ?? '0') ?>">
+              <input id="sort_order" class="field__input" type="number" name="sort_order" placeholder="0" min="0"
+                value="<?= htmlspecialchars($old_input['sort_order'] ?? '0') ?>">
               <p class="field__description">Số nhỏ hơn sẽ hiển thị trước.</p>
             </div>
           </div>
@@ -147,7 +147,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     <h2 class="modal__title" id="item-modal-title">Thêm mục mới</h2>
     <p class="modal__description" id="item-modal-description">Điền thông tin mục menu bên dưới.</p>
   </div>
-  
+
   <form id="item-form" onsubmit="event.preventDefault();">
     <div class="detail-modal__form space-y-4">
       <div class="field-group">
@@ -157,11 +157,12 @@ $old_input = request()->session()->getOldInputs() ?? [];
             <label class="field__label" for="item-label">Tên hiển thị (Nhãn)</label>
             <input id="item-label" class="field__input" type="text" name="label" required placeholder="VD: Trang chủ">
           </div>
-  
+
           <!-- url -->
           <div class="field" data-field-required>
             <label class="field__label" for="item-url">Đường dẫn (URL)</label>
-            <input id="item-url" class="field__input" type="text" name="url" required placeholder="/duong-dan hoặc https://...">
+            <input id="item-url" class="field__input" type="text" name="url" required
+              placeholder="/duong-dan hoặc https://...">
           </div>
         </div>
 
@@ -179,7 +180,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
   <div class="modal__footer flex justify-between items-center">
     <div>
-      <button class="btn hidden" id="item-delete-btn" type="button" data-variant="destructive" data-size="lg">Xóa</button>
+      <button class="btn hidden" id="item-delete-btn" type="button" data-variant="destructive"
+        data-size="lg">Xóa</button>
     </div>
     <div class="flex gap-2 ml-auto">
       <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
@@ -200,7 +202,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>
-    <button id="item-delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xác nhận xóa</button>
+    <button id="item-delete-confirm-btn" data-variant="destructive" data-size="lg" class="btn" type="button">Xác nhận
+      xóa</button>
   </div>
   <button class="modal__close" type="button" data-modal-close>
     <i class="fa-solid fa-xmark"></i>
@@ -305,7 +308,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     function serializeMenuTree(container, parentTempId = null) {
       const result = [];
       const childItems = container.querySelectorAll(':scope > .menu-item');
-      
+
       childItems.forEach((el, index) => {
         const tempId = el.dataset.tempId;
         result.push({
@@ -321,7 +324,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
           result.push(...serializeMenuTree(subContainer, tempId));
         }
       });
-      
+
       return result;
     }
 
@@ -369,7 +372,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       card.querySelector('.edit-item-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         resetItemForm();
-        
+
         const tempId = card.dataset.tempId;
         populateParentSelect(tempId);
 
