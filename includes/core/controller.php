@@ -4,6 +4,7 @@ namespace App\Core;
 
 abstract class Controller
 {
+  private static ?Layout $layout = null;
   public function __construct()
   {
   }
@@ -27,15 +28,26 @@ abstract class Controller
     exit;
   }
 
+  private static function layout(): Layout
+  {
+    return self::$layout ??= new Layout();
+  }
+
   protected function render(string $template, array $data = [], ?string $layout = null): void
   {
+    $layoutFile = $layout;
+
     extract($data);
 
-    if ($layout) {
+    $layout = self::layout();
+    $layout->reset();
+
+    if ($layoutFile) {
       ob_start();
       require BASE_PATH . "/templates/pages/{$template}.php";
       $content = ob_get_clean();
-      require BASE_PATH . "/templates/layouts/{$layout}.php";
+
+      require BASE_PATH . "/templates/layouts/{$layoutFile}.php";
     } else {
       require BASE_PATH . "/templates/pages/{$template}.php";
     }

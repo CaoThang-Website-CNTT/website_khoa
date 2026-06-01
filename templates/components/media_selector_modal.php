@@ -375,8 +375,8 @@
           media: _selectedMedia,
           pendingFile: _pendingFile,
           close: () => {
-            if (typeof modalHandler !== 'undefined' && modalHandler.close) {
-              modalHandler.close('#media-selector-modal');
+            if (typeof ModalHandler.instance !== 'undefined' && ModalHandler.instance.close) {
+              ModalHandler.instance.close();
             }
           }
         }
