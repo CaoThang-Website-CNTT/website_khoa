@@ -5,13 +5,13 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\Session;
 use App\Core\RequestValidator;
-use App\Services\{AccountService, GoogleOAuthService, StudentService, TeacherService, WebSettingsService};
+use App\Services\{AuthService, GoogleOAuthService, StudentService, TeacherService, WebSettingsService};
 
 class AuthController extends Controller
 {
   public const SESSION_OAUTH_PENDING = 'oauth_pending';
 
-  private AccountService $_accountService;
+  private AuthService $_authService;
   private GoogleOAuthService $_oauthService;
   private WebSettingsService $_settingService;
   private StudentService $_studentService;
@@ -36,13 +36,13 @@ class AuthController extends Controller
   private const PRELOAD_GROUPS = ['general', 'contact', 'social'];
 
   public function __construct(
-    AccountService $accountService,
+    AuthService $accountService,
     GoogleOAuthService $oauthService,
     WebSettingsService $settingService,
     StudentService $studentService,
     TeacherService $teacherService,
   ) {
-    $this->_accountService = $accountService;
+    $this->_authService = $accountService;
     $this->_oauthService = $oauthService;
     $this->_settingService = $settingService;
     $this->_studentService = $studentService;
@@ -145,7 +145,7 @@ class AuthController extends Controller
     }
 
     try {
-      $account = $this->_accountService->authenticate($data['email'], $data['password']);
+      $account = $this->_authService->authenticate($data['email'], $data['password']);
       if (!$account) {
         throw new \Exception('Thông tin đăng nhập không chính xác.');
       }
@@ -160,7 +160,7 @@ class AuthController extends Controller
       $request->session()->flashNotify('success', 'Đăng nhập thành công.');
       return $this->redirect($redirectTo);
     } catch (\Throwable $e) {
-      $request->session()->flashOldInputs(['email' => $email]);
+      $request->session()->flashOldInputs(['email' => $data['email']]);
       $request->session()->flashNotify('error', 'Đăng nhập thất bại.', $e->getMessage());
       return $this->redirect('login');
     }
@@ -197,7 +197,7 @@ class AuthController extends Controller
     }
 
     try {
-      $result = $this->_accountService->authenticateOAuthUser($googleUser);
+      $result = $this->_authService->authenticateOAuthUser($googleUser);
     } catch (\Throwable $e) {
       $request->session()->flashNotify('error', 'Không thể xác thực tài khoản.', $e->getMessage());
       return $this->redirect('login');

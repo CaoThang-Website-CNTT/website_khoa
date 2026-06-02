@@ -104,6 +104,7 @@ require_once BASE_PATH . '/stores/company_store.php';
 require_once BASE_PATH . '/stores/referral_letter_store.php';
 
 // Services
+require_once BASE_PATH . '/services/auth_service.php';
 require_once BASE_PATH . '/services/google_oauth_service.php';
 require_once BASE_PATH . '/services/student_service.php';
 require_once BASE_PATH . '/services/teacher_service.php';

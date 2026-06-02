@@ -10,8 +10,6 @@ use Exception;
 
 interface IAccountService
 {
-  public function authenticate(string $email, string $rawPassword): ?Account;
-  public function authenticateOAuthUser(array $oauthData): array;
   public function createAccount(string $email, string $rawPassword, string $role): int;
   /** @return Account[] */
   public function getAllAdmins(): array;
@@ -29,48 +27,6 @@ class AccountService implements IAccountService
   {
     $this->_accountStore = $accountStore;
   }
-  public function authenticate(string $email, string $rawPassword): ?Account
-  {
-    $account = $this->_accountStore->findByEmail($email);
-
-    if (!$account) {
-      return null;
-    }
-
-    if (!password_verify($rawPassword, $account->password_hash)) {
-      return null;
-    }
-
-    return $account;
-  }
-  public function authenticateOAuthUser(array $oauthData): array
-  {
-    // Check email hợp lệ
-    if (!$this->isEmailValid($oauthData["email"])) {
-      throw new Exception("Email không hợp lệ");
-    }
-
-    // Kiểm tra lần đầu đăng nhập
-    // Chưa có tài khoản trong CSDL
-    $user = $this->getByEmail($oauthData["email"]);
-
-    if (!$user) {
-      // Lấy ra role của user dựa trên email
-      $role = $this->determineRole($oauthData['email']);
-      return [
-        "user" => null,
-        "role" => $role,
-        "is_new" => true
-      ];
-    }
-
-    return [
-      "user" => $user,
-      "role" => $user->role,
-      "is_new" => false
-    ];
-  }
-
   public function createAccount(string $email, string $rawPassword, string $role): int
   {
     if (!$this->_accountStore->isEmailUnique($email)) {
