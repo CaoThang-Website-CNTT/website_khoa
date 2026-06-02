@@ -104,6 +104,7 @@ require_once BASE_PATH . '/stores/company_store.php';
 require_once BASE_PATH . '/stores/referral_letter_store.php';
 
 // Services
+require_once BASE_PATH . '/services/account_service.php';
 require_once BASE_PATH . '/services/auth_service.php';
 require_once BASE_PATH . '/services/google_oauth_service.php';
 require_once BASE_PATH . '/services/student_service.php';
@@ -124,6 +125,7 @@ require_once BASE_PATH . '/services/referral_letter_service.php';
 // Controllers
 // Web
 require_once BASE_PATH . '/controllers/web/auth_controller.php';
+require_once BASE_PATH . '/controllers/web/account_controller.php';
 require_once BASE_PATH . '/controllers/web/site_controller.php';
 require_once BASE_PATH . '/controllers/web/dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/student_controller.php';
@@ -143,6 +145,7 @@ require_once BASE_PATH . '/controllers/web/company_controller.php';
 require_once BASE_PATH . '/controllers/web/teacher_dashboard_controller.php';
 
 // Api
+require_once BASE_PATH . '/controllers/api/account_api_controller.php';
 require_once BASE_PATH . '/controllers/api/student_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_assignment_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_batch_api_controller.php';

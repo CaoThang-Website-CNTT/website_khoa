@@ -1,0 +1,106 @@
+[02-Jun-2026 15:02:08 Europe/Berlin] Lỗi lấy dữ liệu tài khoản: SQLSTATE[HY000]: General error: 2031 No data supplied for parameters in prepared statement
+[02-Jun-2026 15:02:09 Europe/Berlin] Lỗi lấy dữ liệu tài khoản: SQLSTATE[HY000]: General error: 2031 No data supplied for parameters in prepared statement[02-Jun-2026 15:03:21 Europe/Berlin] SELECT `id`, `email`, `role`, `created_at` FROM `accounts` WHERE `deleted_at` IS NULL AND `email` LIKE ? AND `role` LIKE ? ORDER BY `created_at` DESC LIMIT 0, 15
+[02-Jun-2026 15:03:21 Europe/Berlin] Lỗi lấy dữ liệu tài khoản: SQLSTATE[HY000]: General error: 2031 No data supplied for parameters in prepared statement
+[02-Jun-2026 15:03:26 Europe/Berlin] SELECT `id`, `email`, `role`, `created_at` FROM `accounts` WHERE `deleted_at` IS NULL ORDER BY `created_at` DESC LIMIT 0, 15
+[02-Jun-2026 15:23:37 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: App\Core\Schema\QueryBuilder::ilike(): Argument #2 ($pattern) must be of type string, null given, called in C:\xampp\htdocs\website_khoa\stores\account_store.php on line 86 and defined in C:\xampp\htdocs\website_khoa\includes\core\schema\query_builder.php:173
+Stack trace:
+#0 C:\xampp\htdocs\website_khoa\stores\account_store.php(86): App\Core\Schema\QueryBuilder->ilike('name', NULL)
+#1 C:\xampp\htdocs\website_khoa\services\account_service.php(50): App\Stores\AccountStore->getPaginated(1, 15, NULL)
+#2 C:\xampp\htdocs\website_khoa\controllers\web\account_controller.php(24): App\Services\AccountService->getAccounts(1, 15, NULL)
+#3 [internal function]: App\Controllers\AccountController->index(Object(App\Core\Request))
+#4 C:\xampp\htdocs\website_khoa\includes\core\router.php(204): call_user_func_array(Array, Array)
+#5 C:\xampp\htdocs\website_khoa\middlewares\verify_role.php(28): App\Core\Router->App\Core\{closure}(Object(App\Core\Request))
+#6 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyRole->handle(Object(App\Core\Request), Object(Closure))
+#7 C:\xampp\htdocs\website_khoa\middlewares\verify_auth.php(20): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#8 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyAuth->handle(Object(App\Core\Request), Object(Closure))
+#9 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#10 C:\xampp\htdocs\website_khoa\includes\core\router.php(210): App\Core\Pipeline->then(Object(Closure))
+#11 C:\xampp\htdocs\website_khoa\index.php(29): App\Core\Router->dispatch(Object(App\Core\Request))
+#12 C:\xampp\htdocs\website_khoa\includes\core\middleware\verify_csrf_token.php(20): {closure}(Object(App\Core\Request))
+#13 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\VerifyCsrfToken->handle(Object(App\Core\Request), Object(Closure))
+#14 C:\xampp\htdocs\website_khoa\includes\core\middleware\start_session.php(15): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#15 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\StartSession->handle(Object(App\Core\Request), Object(Closure))
+#16 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#17 C:\xampp\htdocs\website_khoa\index.php(36): App\Core\Pipeline->then(Object(Closure))
+#18 {main}
+  thrown in C:\xampp\htdocs\website_khoa\includes\core\schema\query_builder.php on line 173
+[02-Jun-2026 15:23:38 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: App\Core\Schema\QueryBuilder::ilike(): Argument #2 ($pattern) must be of type string, null given, called in C:\xampp\htdocs\website_khoa\stores\account_store.php on line 86 and defined in C:\xampp\htdocs\website_khoa\includes\core\schema\query_builder.php:173
+Stack trace:
+#0 C:\xampp\htdocs\website_khoa\stores\account_store.php(86): App\Core\Schema\QueryBuilder->ilike('name', NULL)
+#1 C:\xampp\htdocs\website_khoa\services\account_service.php(50): App\Stores\AccountStore->getPaginated(1, 15, NULL)
+#2 C:\xampp\htdocs\website_khoa\controllers\web\account_controller.php(24): App\Services\AccountService->getAccounts(1, 15, NULL)
+#3 [internal function]: App\Controllers\AccountController->index(Object(App\Core\Request))
+#4 C:\xampp\htdocs\website_khoa\includes\core\router.php(204): call_user_func_array(Array, Array)
+#5 C:\xampp\htdocs\website_khoa\middlewares\verify_role.php(28): App\Core\Router->App\Core\{closure}(Object(App\Core\Request))
+#6 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyRole->handle(Object(App\Core\Request), Object(Closure))
+#7 C:\xampp\htdocs\website_khoa\middlewares\verify_auth.php(20): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#8 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyAuth->handle(Object(App\Core\Request), Object(Closure))
+#9 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#10 C:\xampp\htdocs\website_khoa\includes\core\router.php(210): App\Core\Pipeline->then(Object(Closure))
+#11 C:\xampp\htdocs\website_khoa\index.php(29): App\Core\Router->dispatch(Object(App\Core\Request))
+#12 C:\xampp\htdocs\website_khoa\includes\core\middleware\verify_csrf_token.php(20): {closure}(Object(App\Core\Request))
+#13 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\VerifyCsrfToken->handle(Object(App\Core\Request), Object(Closure))
+#14 C:\xampp\htdocs\website_khoa\includes\core\middleware\start_session.php(15): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#15 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\StartSession->handle(Object(App\Core\Request), Object(Closure))
+#16 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#17 C:\xampp\htdocs\website_khoa\index.php(36): App\Core\Pipeline->then(Object(Closure))
+#18 {main}
+  thrown in C:\xampp\htdocs\website_khoa\includes\core\schema\query_builder.php on line 173
+[02-Jun-2026 15:23:52 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: App\Stores\AccountStore::getPaginated(): Argument #3 ($search) must be of type string, null given, called in C:\xampp\htdocs\website_khoa\services\account_service.php on line 50 and defined in C:\xampp\htdocs\website_khoa\stores\account_store.php:77
+Stack trace:
+#0 C:\xampp\htdocs\website_khoa\services\account_service.php(50): App\Stores\AccountStore->getPaginated(1, 15, NULL)
+#1 C:\xampp\htdocs\website_khoa\controllers\web\account_controller.php(24): App\Services\AccountService->getAccounts(1, 15, NULL)
+#2 [internal function]: App\Controllers\AccountController->index(Object(App\Core\Request))
+#3 C:\xampp\htdocs\website_khoa\includes\core\router.php(204): call_user_func_array(Array, Array)
+#4 C:\xampp\htdocs\website_khoa\middlewares\verify_role.php(28): App\Core\Router->App\Core\{closure}(Object(App\Core\Request))
+#5 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyRole->handle(Object(App\Core\Request), Object(Closure))
+#6 C:\xampp\htdocs\website_khoa\middlewares\verify_auth.php(20): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#7 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyAuth->handle(Object(App\Core\Request), Object(Closure))
+#8 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#9 C:\xampp\htdocs\website_khoa\includes\core\router.php(210): App\Core\Pipeline->then(Object(Closure))
+#10 C:\xampp\htdocs\website_khoa\index.php(29): App\Core\Router->dispatch(Object(App\Core\Request))
+#11 C:\xampp\htdocs\website_khoa\includes\core\middleware\verify_csrf_token.php(20): {closure}(Object(App\Core\Request))
+#12 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\VerifyCsrfToken->handle(Object(App\Core\Request), Object(Closure))
+#13 C:\xampp\htdocs\website_khoa\includes\core\middleware\start_session.php(15): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#14 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\StartSession->handle(Object(App\Core\Request), Object(Closure))
+#15 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#16 C:\xampp\htdocs\website_khoa\index.php(36): App\Core\Pipeline->then(Object(Closure))
+#17 {main}
+  thrown in C:\xampp\htdocs\website_khoa\stores\account_store.php on line 77
+[02-Jun-2026 15:23:52 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: App\Stores\AccountStore::getPaginated(): Argument #3 ($search) must be of type string, null given, called in C:\xampp\htdocs\website_khoa\services\account_service.php on line 50 and defined in C:\xampp\htdocs\website_khoa\stores\account_store.php:77
+Stack trace:
+#0 C:\xampp\htdocs\website_khoa\services\account_service.php(50): App\Stores\AccountStore->getPaginated(1, 15, NULL)
+#1 C:\xampp\htdocs\website_khoa\controllers\web\account_controller.php(24): App\Services\AccountService->getAccounts(1, 15, NULL)
+#2 [internal function]: App\Controllers\AccountController->index(Object(App\Core\Request))
+#3 C:\xampp\htdocs\website_khoa\includes\core\router.php(204): call_user_func_array(Array, Array)
+#4 C:\xampp\htdocs\website_khoa\middlewares\verify_role.php(28): App\Core\Router->App\Core\{closure}(Object(App\Core\Request))
+#5 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyRole->handle(Object(App\Core\Request), Object(Closure))
+#6 C:\xampp\htdocs\website_khoa\middlewares\verify_auth.php(20): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#7 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Middlewares\VerifyAuth->handle(Object(App\Core\Request), Object(Closure))
+#8 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#9 C:\xampp\htdocs\website_khoa\includes\core\router.php(210): App\Core\Pipeline->then(Object(Closure))
+#10 C:\xampp\htdocs\website_khoa\index.php(29): App\Core\Router->dispatch(Object(App\Core\Request))
+#11 C:\xampp\htdocs\website_khoa\includes\core\middleware\verify_csrf_token.php(20): {closure}(Object(App\Core\Request))
+#12 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\VerifyCsrfToken->handle(Object(App\Core\Request), Object(Closure))
+#13 C:\xampp\htdocs\website_khoa\includes\core\middleware\start_session.php(15): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#14 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\StartSession->handle(Object(App\Core\Request), Object(Closure))
+#15 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#16 C:\xampp\htdocs\website_khoa\index.php(36): App\Core\Pipeline->then(Object(Closure))
+#17 {main}
+  thrown in C:\xampp\htdocs\website_khoa\stores\account_store.php on line 77
+[02-Jun-2026 15:25:42 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: App\Services\AccountService::getAccounts(): Argument #3 ($search) must be of type string, null given, called in C:\xampp\htdocs\website_khoa\controllers\api\account_api_controller.php on line 25 and defined in C:\xampp\htdocs\website_khoa\services\account_service.php:48
+Stack trace:
+#0 C:\xampp\htdocs\website_khoa\controllers\api\account_api_controller.php(25): App\Services\AccountService->getAccounts(1, 15, NULL)
+#1 [internal function]: App\Controllers\Api\AccountApiController->index(Object(App\Core\Request))
+#2 C:\xampp\htdocs\website_khoa\includes\core\router.php(204): call_user_func_array(Array, Array)
+#3 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Router->App\Core\{closure}(Object(App\Core\Request))
+#4 C:\xampp\htdocs\website_khoa\includes\core\router.php(210): App\Core\Pipeline->then(Object(Closure))
+#5 C:\xampp\htdocs\website_khoa\index.php(29): App\Core\Router->dispatch(Object(App\Core\Request))
+#6 C:\xampp\htdocs\website_khoa\includes\core\middleware\verify_csrf_token.php(20): {closure}(Object(App\Core\Request))
+#7 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\VerifyCsrfToken->handle(Object(App\Core\Request), Object(Closure))
+#8 C:\xampp\htdocs\website_khoa\includes\core\middleware\start_session.php(15): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#9 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(37): App\Core\Middleware\StartSession->handle(Object(App\Core\Request), Object(Closure))
+#10 C:\xampp\htdocs\website_khoa\includes\core\middleware\pipeline.php(30): App\Core\Pipeline->App\Core\{closure}(Object(App\Core\Request))
+#11 C:\xampp\htdocs\website_khoa\index.php(36): App\Core\Pipeline->then(Object(Closure))
+#12 {main}
+  thrown in C:\xampp\htdocs\website_khoa\services\account_service.php on line 48

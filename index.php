@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/startup.php';
 
+// Bật chế độ ghi log lỗi
+ini_set('log_errors', '1');
+
+// Chỉ định đường dẫn tuyệt đối đến file log local
+ini_set('error_log', BASE_PATH . '/tests/debug.log');
+
 App\EnvLoader::load(BASE_PATH . '/.env.local');
 
 use App\Core\Request;

@@ -3,12 +3,13 @@
 
 <head>
   <?php include_once BASE_PATH . '/templates/partials/dashboard_head.php'; ?>
+  <?= $layout->yield("head"); ?>
 </head>
 
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?> (
+      toast.<?= $flash['type'] ?>(
         "<?= htmlspecialchars($flash['title']) ?>",
         "<?= htmlspecialchars($flash['desc']) ?>"
       );
@@ -17,33 +18,39 @@
 <?php endif; ?>
 
 <body>
-  <!-- ======== Preloader =========== -->
   <?php include_once BASE_PATH . '/templates/components/preloader.php'; ?>
-  <!-- ======== Preloader End =========== -->
-
   <div class="sidebar__wrapper">
     <div class="sidebar__portal">
-      <!-- ======== Dashboard Sidebar =========== -->
       <?php include_once BASE_PATH . '/templates/components/dashboard_sidebar.php'; ?>
-      <!-- ======== Dashboard Sidebar End =========== -->
     </div>
     <main class="sidebar__inset">
-      <!-- ========== Dashboard Header ========== -->
       <?php include_once BASE_PATH . '/templates/components/dashboard_header.php'; ?>
-      <!-- ========== Dashboard Header End ========== -->
-
-      <!-- ======== main-wrapper start =========== -->
       <div class="main-wrapper container container-fluid">
-        <?= $content; ?>
+
+        <?php if ($layout->hasContent("heading") || $layout->hasContent("actions")): ?>
+          <div class="title-wrapper mb-4">
+            <div class="flex justify-between items-center">
+              <div class="col-6 col-md-6">
+                <?= $layout->yield("heading") ?>
+              </div>
+
+              <div class="flex gap-4 items-center">
+                <?= $layout->yield("actions") ?>
+              </div>
+            </div>
+          </div>
+        <?php endif; ?>
+        <?php if ($layout->hasContent("content")): ?> <!-- Dùng ViewEngine mới -->
+          <?= $layout->yield("content") ?>
+        <?php else: ?> <!-- Giữ lại cho tương thích với ViewEngine cũ -->
+          <?= $content ?? '' ?>
+        <?php endif; ?>
       </div>
-      <!-- ======== main-wrapper end =========== -->
     </main>
   </div>
 
-  <!-- ========= Dashboard Scripts ======== -->
   <?php include_once BASE_PATH . '/templates/partials/dashboard_scripts.php'; ?>
-  <!-- ========= Dashboard Scripts End ======== -->
-
+  <?= $layout->yield("scripts"); ?>
 </body>
 
 </html>

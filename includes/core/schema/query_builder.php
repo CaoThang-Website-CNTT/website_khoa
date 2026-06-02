@@ -47,6 +47,9 @@ interface IQueryBuilder
   /** * Tìm kiếm theo mẫu (Sử dụng toán tử LIKE).
    */
   public function like(string $column, string $pattern): static;
+  /** * Tìm kiếm theo mẫu không phân biệt hoa thường (Sử dụng toán tử ILIKE).
+   */
+  public function ilike(string $column, string $pattern): static;
 
   /** * Thêm điều kiện kiểm tra giá trị (Ví dụ: IS NULL, IS NOT NULL).
    */
@@ -59,6 +62,9 @@ interface IQueryBuilder
   /** * Thực hiện liên kết (JOIN) với một bảng khác.
    */
   public function join(string $table, string $first, string $operator, string $second, string $type = 'inner'): static;
+  /** * Thực hiện liên kết TRÁI (LEFT JOIN) với một bảng khác.
+   */
+  public function leftJoin(string $table, string $first, string $operator, string $second): static;
 
   /** * Sắp xếp kết quả theo cột và hướng (tăng/giảm).
    */

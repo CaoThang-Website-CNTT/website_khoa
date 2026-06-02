@@ -24,6 +24,11 @@ class Layout
     return $this->sections[$name] ?? $default;
   }
 
+  public function hasContent(string $name): bool
+  {
+    return isset($this->sections[$name]) && trim($this->sections[$name]) !== '';
+  }
+
   public function reset(): void
   {
     $this->sections = [];

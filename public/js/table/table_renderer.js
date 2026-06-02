@@ -1,6 +1,7 @@
 export class TableRenderer {
   /** @type {TableInstance} */
   #inst;
+  #searchTimeout = null;
 
   constructor(inst) { this.#inst = inst; }
   get #root() { return this.#inst.root; }
@@ -90,7 +91,12 @@ export class TableRenderer {
       if (externalSel) {
         const ext = document.querySelector(externalSel);
         if (ext) {
-          ext.addEventListener('input', e => inst.setSearch(e.target.value));
+          ext.addEventListener('input', e => {
+            clearTimeout(this.#searchTimeout);
+            this.#searchTimeout = setTimeout(() => {
+              inst.setSearch(e.target.value);
+            }, 300);
+          });
         }
       } else {
         const wrap = document.createElement('div');
@@ -105,10 +111,13 @@ export class TableRenderer {
         `;
         const searchInput = search.querySelector('input');
         searchInput.addEventListener('input', e => {
-          inst.setSearch(e.target.value);
-          this.#root.dispatchEvent(new CustomEvent('tm:search:change', {
-            detail: { search: e.target.value }
-          }));
+          clearTimeout(this.#searchTimeout);
+          this.#searchTimeout = setTimeout(() => {
+            inst.setSearch(e.target.value);
+            this.#root.dispatchEvent(new CustomEvent('tm:search:change', {
+              detail: { search: e.target.value }
+            }));
+          }, 300);
         });
         wrap.appendChild(search);
         topRow.appendChild(wrap);
@@ -483,30 +492,27 @@ export class TableRenderer {
           : [1, '…', currentPage - 1, currentPage, currentPage + 1, '…', totalPages];
 
     const makeItem = (label, targetPage, disabled = false, active = false) => {
-      const el = !disabled && !active
-        ? document.createElement('a')
-        : document.createElement('button');
+      const el = document.createElement('button');
 
       el.className = 'tm-page-btn';
       if (active) el.classList.add('tm-page-btn--active');
       if (disabled) el.classList.add('tm-page-btn--disabled');
       el.innerHTML = label;
+      el.type = 'button';
 
-      if (el.tagName === 'A') {
-        const url = new URL(window.location.href);
-        url.searchParams.set(`${id}_page`, String(targetPage));
-        el.href = url.toString();
-      } else {
-        el.type = 'button';
-        if (!disabled && !active) {
-          el.addEventListener('click', () => {
-            this.#inst.setPageIndex(targetPage - 1);
-            this.#root.dispatchEvent(new CustomEvent('tm:pagination:change', {
-              detail: { page: targetPage, totalPages: totalPages }
-            }));
-          });
-        }
+      if (!disabled && !active) {
+        el.addEventListener('click', () => {
+          this.#inst.setPageIndex(targetPage - 1);
+          this.#root.dispatchEvent(new CustomEvent('tm:pagination:change', {
+            detail: {
+              page: targetPage,
+              limit: pageSize,
+              totalPages: totalPages
+            }
+          }));
+        });
       }
+
       el.dataset.tmPage = targetPage;
       return el;
     };

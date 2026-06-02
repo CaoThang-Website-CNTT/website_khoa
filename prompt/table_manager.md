@@ -1,730 +1,1063 @@
-# Hand-off Context: TableManager Administrative System
+# TableManager - Hệ Thống Quản Lý Bảng Dữ Liệu
 
-## 1. Overview
+## Tổng Quan
 
-The `TableManager` is a client-side and server-side capable data table system designed for the administrative dashboard. It follows a modular architecture to handle columns, sorting, filtering, and pagination independently.
+**TableManager** là một hệ thống quản lý bảng dữ liệu (Data Table) cho phép xử lý filter, sort, search, pagination và row selection. Hệ thống hỗ trợ hai chế độ hoạt động:
 
-- **Root Directory**: `public/js/table/`
-- **Entry Point**: `public/js/table/index.js`
-- **Files**:
-  - `index.js` - Exports `TableManager` to `window`
-  - `table_manager.js` - Core `TableManager` singleton and `TableInstance` class
-  - `table_renderer.js` - DOM rendering logic (`TableRenderer`)
-  - `column_registry.js` - Column definition parsing (`ColumnDef`, `ColumnRegistry`)
-  - `template_engine.js` - Template compilation and rendering (`TemplateEngine`)
+- **Client Mode**: TableManager tự xử lý filter/sort/paginate toàn bộ dữ liệu trong bộ nhớ (dùng cho dataset nhỏ, ≤ vài nghìn rows)
+- **Server Mode**: TableManager dispatch event khi state thay đổi, dev tự gọi API để fetch dữ liệu theo điều kiện
 
-## 2. Core Architecture
+---
 
-| Class            | File                 | Responsibility                                                                                                                        |
-| :--------------- | :------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
-| `TableManager`   | `table_manager.js`   | Singleton orchestrator. Auto-boots on DOMContentLoaded. Registers instances, provides static API.                                     |
-| `TableInstance`  | `table_manager.js`   | Orchestrates components, manages state (`sort`, `filters`, `search`, `pagination`). Handles lifecycle (`init`, `render`, `loadData`). |
-| `TableRenderer`  | `table_renderer.js`  | Handles all DOM generation, toolbar, table skeleton, row rendering, pagination UI.                                                    |
-| `ColumnRegistry` | `column_registry.js` | Parses `<template>` elements from HTML to define column behaviors (sortable, filterable, width, etc.).                                |
-| `ColumnDef`      | `column_registry.js` | Represents a single column with metadata (key, label, sortable, filterType, filterOps, custom render).                                |
-| `TemplateEngine` | `template_engine.js` | Compiles `<template>` HTML with `{{expr}}` syntax into render functions. Supports helpers.                                            |
+## 1. Kiến Trúc Hệ Thống
 
-## 3. Data Attributes & HTML Structure
+### 1.1 Cấu Trúc Module
 
-### Root Table Element
+```
+public/js/table/
+├── table_manager.js       # Lõi: quản lý state, API công khai
+├── table_renderer.js      # Render UI, điều khiển DOM
+├── column_registry.js     # Đăng ký và quản lý định nghĩa cột
+├── template_engine.js     # Biên dịch template với helper functions
+└── index.js               # Entry point, expose global window.TableManager
+```
+
+### 1.2 Luồng Dữ Liệu
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ HTML [data-tm] Element (định nghĩa bảng + cấu hình)          │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+         ┌────────────────────┐
+         │ TableManager.init()│ (Auto-trigger trên DOMContentLoaded)
+         └────────┬───────────┘
+                  │
+                  ▼
+      ┌───────────────────────────────┐
+      │ TableInstance (1 bảng = 1 inst)│
+      │ - quản lý state               │
+      │ - cung cấp public API          │
+      └────┬──────────────────────────┘
+           │
+           ├─────────────────┬─────────────────┐
+           ▼                 ▼                 ▼
+      TableRenderer    ColumnRegistry  TemplateEngine
+      (render UI)      (cột definitions) (compile templates)
+           │
+           ▼
+      [DOM] Table được render
+      - Search, Filter, Sort
+      - Pagination
+      - Row Selection
+      - Events dispatch
+```
+
+### 1.3 State Model
+
+Mỗi `TableInstance` duy trì một state nội bộ:
+
+```javascript
+{
+  // Sắp xếp
+  sort: {
+    col: string|null,      // Tên cột
+    dir: 'asc'|'desc'|null // Hướng sắp xếp
+  },
+
+  // Bộ lọc
+  filters: [
+    { col: string, op: string, value: string },  // VD: { col: 'status', op: '=', value: 'active' }
+    // ...
+  ],
+
+  // Tìm kiếm toàn cục
+  search: string,
+
+  // Phân trang
+  pagination: {
+    pageIndex: number,  // 0-based
+    pageSize: number    // Số dòng/trang
+  },
+
+  // Chọn hàng
+  rowSelection: Set<string>,  // Tập ID được chọn
+
+  // Cấu hình chế độ
+  mode: 'client'|'server',
+  totalRows: number           // Tổng số hàng (server mode)
+}
+```
+
+---
+
+## 2. Định Nghĩa Cột (Column Definition)
+
+### 2.1 Cấu Trúc Cột
+
+```javascript
+class ColumnDef {
+  key; // string - Khóa trường trong row data
+  label; // string - Tiêu đề hiển thị
+  sortable; // boolean - Cho phép sắp xếp?
+  width; // string|null - Độ rộng CSS (VD: '100px', '15%')
+  align; // 'left'|'center'|'right' - Căn lề (mặc định: 'left')
+  filterType; // string|null - Loại bộ lọc: 'text'|'number'|'date'|'select'
+  filterOps; // string[] - Danh sách toán tử lọc được phép
+  filterOptions; // array|null - Danh sách option cho select filter
+  render; // Function|null - Hàm render DOM tùy chỉnh
+}
+```
+
+### 2.2 Định Nghĩa Cột Trong HTML
+
+Sử dụng `<template data-tm-col>` bên trong element `[data-tm]`:
 
 ```html
-<div
-  data-tm="table_categories"
-  data-tm-mode="client"
-  data-tm-src="/api/categories"
-  data-tm-searchable
-  data-tm-selectable
-  data-tm-id-key="id"
-  data-tm-toolbar-target="#custom-toolbar"
-  data-tm-footer-target="#custom-footer"
-  data-tm-search-target=".custom-search-input"
->
-  <!-- Column templates -->
-  <template
-    data-tm-col="name"
-    data-tm-label="Tên"
-    data-tm-sortable
-    data-tm-width="200px"
-    data-tm-align="left"
-    data-tm-filter-type="text"
-    data-tm-filter-ops="contains,="
-  >
-    <b>{{ row.name }}</b>
-  </template>
+<div data-tm="customers" data-tm-mode="client">
+  <!-- Cột: ID (khóa chính, không hiển thị) -->
+  <template data-tm-col="id" data-tm-label="ID"></template>
 
+  <!-- Cột: Tên (sortable, searchable) -->
+  <template data-tm-col="name" data-tm-label="Tên" data-tm-sortable></template>
+
+  <!-- Cột: Email (sortable, có bộ lọc text) -->
+  <template
+    data-tm-col="email"
+    data-tm-label="Email"
+    data-tm-sortable
+    data-tm-filter-type="text"
+  ></template>
+
+  <!-- Cột: Tuổi (bộ lọc số) -->
+  <template
+    data-tm-col="age"
+    data-tm-label="Tuổi"
+    data-tm-sortable
+    data-tm-filter-type="number"
+    data-tm-filter-ops="=,!=,>,>=,<,<="
+  ></template>
+
+  <!-- Cột: Status (bộ lọc select) -->
   <template
     data-tm-col="status"
-    data-tm-label="Trạng thái"
+    data-tm-label="Trạng Thái"
+    data-tm-sortable
     data-tm-filter-type="select"
-    data-tm-filter-options='[{"value":"active","label":"Hoạt động"},{"value":"inactive","label":"Không hoạt động"}]'
+    data-tm-filter-options='[
+      {"value":"active","label":"Đang Hoạt Động"},
+      {"value":"inactive","label":"Không Hoạt Động"}
+    ]'
+  ></template>
+
+  <!-- Cột: Ngày Tạo (bộ lọc ngày) -->
+  <template
+    data-tm-col="created_at"
+    data-tm-label="Ngày Tạo"
+    data-tm-sortable
+    data-tm-filter-type="date"
+  ></template>
+
+  <!-- Cột: Action (render tùy chỉnh) -->
+  <template
+    data-tm-col="action"
+    data-tm-label="Thao Tác"
+    data-tm-align="center"
   >
-    <span class="badge" data-variant="primary">{{ row.status }}</span>
+    <button class="btn btn-sm" onclick="editRow({{ row.id }})">Sửa</button>
+    <button class="btn btn-sm" onclick="deleteRow({{ row.id }})">Xóa</button>
   </template>
-
-  <!-- Pagination -->
-  <template data-tm-pagination></template>
-</div>
-
-<!-- Inline data for client mode (optional) -->
-<script type="application/json" data-tm-data="table_categories">
-  [
-    { "id": 1, "name": "Category A", "status": "active" },
-    { "id": 2, "name": "Category B", "status": "inactive" }
-  ]
-</script>
-```
-
-### Data Attributes Reference
-
-| Attribute                | Target   | Values                                   | Purpose                                                 |
-| :----------------------- | :------- | :--------------------------------------- | :------------------------------------------------------ |
-| `data-tm`                | Root div | string (table ID)                        | Identifies the table instance. Required.                |
-| `data-tm-mode`           | Root div | `client` \| `server`                     | Determines data handling mode. Default: `client`.       |
-| `data-tm-src`            | Root div | URL string                               | API endpoint for server mode.                           |
-| `data-tm-searchable`     | Root div | presence flag                            | Enables global search input.                            |
-| `data-tm-selectable`     | Root div | presence flag                            | Enables row checkboxes.                                 |
-| `data-tm-id-key`         | Root div | string                                   | Row property key for selection. Default: `id`.          |
-| `data-tm-toolbar-target` | Root div | CSS selector                             | External element to inject toolbar.                     |
-| `data-tm-footer-target`  | Root div | CSS selector                             | External element to inject pagination.                  |
-| `data-tm-search-target`  | Root div | CSS selector                             | External input for search (if `tmSearchable` set).      |
-| `data-tm-col`            | template | string (key)                             | Row property key. Required per column.                  |
-| `data-tm-label`          | template | string                                   | Display label. Default: `data-tm-col` value.            |
-| `data-tm-sortable`       | template | presence flag                            | Enables sorting on this column.                         |
-| `data-tm-width`          | template | CSS value                                | Column width (e.g., `100px`, `15%`).                    |
-| `data-tm-align`          | template | `left` \| `center` \| `right`            | Cell text alignment. Default: `left`.                   |
-| `data-tm-filter-type`    | template | `text` \| `number` \| `date` \| `select` | Filter control type.                                    |
-| `data-tm-filter-ops`     | template | comma-separated                          | Operators: `contains`, `=`, `!=`, `>`, `>=`, `<`, `<=`. |
-| `data-tm-filter-options` | template | JSON array                               | Options for `select` filter type.                       |
-
-## 4. TableInstance API
-
-### Constructor & Initialization
-
-```javascript
-// Auto-created by TableManager on DOMContentLoaded
-const inst = new TableInstance(rootElement);
-inst.init(); // Builds DOM layout, triggers render()
-```
-
-### State Management
-
-```javascript
-// Get current state snapshot
-const state = inst.getState();
-// Returns:
-// {
-//   sort: { col: 'name', dir: 'asc' },
-//   filters: [{ col: 'status', op: '=', value: 'active' }],
-//   search: 'hello',
-//   pagination: { pageIndex: 0, pageSize: 20 },
-//   mode: 'client',
-//   totalRows: 100,
-//   rowSelection: ['1', '3', '5']
-// }
-```
-
-### Data Loading
-
-```javascript
-// Client mode: load full dataset (TableManager handles filter/sort/page)
-inst.setData(rows);
-inst.loadData(rows);
-
-// Server mode: load single page (server handles filter/sort/page)
-inst.loadData(
-  {
-    rows: pageData,
-    total: 500, // Total rows on server (for pagination)
-    page: 1, // Current page (1-indexed)
-    limit: 20, // Rows per page
-  },
-  { total: 500 }, // or use meta param
-);
-```
-
-### Sorting
-
-```javascript
-// Toggle sort on column: asc → desc → off
-inst.setSort("name"); // Cycle: off → asc → desc → off
-
-// Internal: sorts normalized Vietnamese strings
-const cmp = (a, b) => {
-  const va = String(a[col] ?? "");
-  const vb = String(b[col] ?? "");
-  return va.localeCompare(vb, "vi", { numeric: true, sensitivity: "accent" });
-};
-```
-
-### Filtering
-
-```javascript
-// Set or replace filter rule for column
-inst.setFilter("status", "=", "active");
-inst.setFilter("price", ">", "1000");
-
-// Clear specific column's filter
-inst.clearFilter("status");
-
-// Clear all filters and search
-inst.clearFilters();
-
-// Set global search query
-inst.setSearch("keyword");
-```
-
-### Pagination
-
-```javascript
-// Page navigation
-inst.canPrevPage(); // boolean
-inst.canNextPage(); // boolean
-inst.prevPage();
-inst.nextPage();
-inst.setPageIndex(2); // 0-indexed
-inst.setPageSize(50);
-inst.getPageCount(); // Total pages
-inst.getVisibleRows(); // Current page rows (with search/sort/filter applied)
-```
-
-### Row Selection (if `tmSelectable` enabled)
-
-```javascript
-// Get selected row IDs
-const ids = inst.getRowSelection(); // Returns: ['1', '3', '5']
-
-// Check selection status
-const isSelected = inst.hasRowSelection("1"); // boolean
-
-// Toggle row selection
-inst.toggleRowSelection("1", true); // Add to selection
-inst.toggleRowSelection("1", false); // Remove from selection
-
-// Clear all selections
-inst.clearSelection();
-
-// Update header checkbox UI
-inst.updateHeaderCheckbox();
-```
-
-### Rendering
-
-```javascript
-// Trigger full render (called automatically on state change)
-inst.render();
-
-// Access internal data
-inst.data; // Current rows array
-inst.columns.all; // All ColumnDef[] instances
-inst.id; // Table ID
-inst.root; // Root HTMLElement
-```
-
-## 5. TableRenderer Syntax
-
-### DOM Building
-
-```javascript
-const renderer = new TableRenderer(tableInstance);
-
-// Build layout (called once during init)
-const { table, hasPagination } = renderer.buildLayout();
-
-// Render rows to tbody
-renderer.renderRows(rows, table);
-
-// Update sort indicators
-renderer.updateSortUI(table, { col: "name", dir: "asc" });
-
-// Render pagination controls
-renderer.renderPagination({
-  pagState: { pageIndex: 0, pageSize: 20 },
-  totalRows: 100,
-});
-
-// Render active filter pills
-renderer.renderFilters([{ col: "status", op: "=", value: "active" }]);
-```
-
-### Custom Select Builder (Internal)
-
-```javascript
-// Creates styled <select> for filter dropdowns
-const select = renderer.#buildCustomSelect(
-  options, // [{ value, label }, ...]
-  placeholder, // string
-  defaultValue, // string
-);
-// select._currentValue stores the selected value
-```
-
-### DOM Classes & Structure
-
-```html
-<!-- Main wrapper -->
-<div class="tm-wrapper" data-tm-wrapper="table_id">
-  <!-- Toolbar (search + filter dropdowns) -->
-  <div class="tm-toolbar">
-    <div class="tm-toolbar__top">
-      <!-- Search -->
-      <div class="tm-search-wrapper">
-        <div class="tm-search">
-          <span class="tm-search__icon"
-            ><i class="fa-solid fa-magnifying-glass"></i
-          ></span>
-          <input
-            class="tm-search__input"
-            type="text"
-            placeholder="Tìm kiếm..."
-          />
-        </div>
-      </div>
-      <!-- Filter dropdowns -->
-      <div class="tm-filter-bar">
-        <div class="dropdown tm-filter-dropdown" data-tm-col="status">
-          <button class="dropdown__trigger tm-filter-btn">
-            <i class="fa-solid fa-filter"></i>Trạng thái
-          </button>
-          <div class="dropdown__content">
-            <div class="tm-filter-panel">
-              <div class="select tm-filter-panel__op">...</div>
-              <div class="select tm-filter-panel__value">...</div>
-              <button class="btn tm-filter-panel__action-btn">Áp dụng</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Active filter pills -->
-    <div class="tm-filter-pills" data-tm-filter-pills="table_id">
-      <div class="badge tm-filter-pill">
-        <span class="tm-filter-pill__text"><b>Status</b>: active</span>
-        <button class="tm-filter-pill__remove">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Data table -->
-  <div class="tm-data-wrapper">
-    <div class="tm-scroll">
-      <table class="tm-table" data-tm-table="table_id">
-        <colgroup>
-          <col style="width: 40px;" />
-          <col />
-          <col />
-        </colgroup>
-        <thead class="tm-thead">
-          <tr>
-            <th class="tm-th tm-th--sortable" data-tm-sort-col="name">
-              <span class="tm-th__label">Tên</span>
-              <span class="tm-sort-icon">
-                <i class="fa-solid fa-chevron-up tm-sort-icon__asc"></i>
-                <i class="fa-solid fa-chevron-down tm-sort-icon__desc"></i>
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody class="tm-tbody" data-tm-body="">
-          <tr class="tm-tr" data-tm-row-index="0">
-            <td class="tm-td">...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="tm-loading-overlay" data-tm-loading="">
-      <div class="tm-spinner"></div>
-    </div>
-  </div>
-
-  <!-- Pagination -->
-  <div class="tm-footer-controls">
-    <div class="tm-page-info" data-tm-page-info="table_id">
-      Showing 1-20 of 100
-    </div>
-    <div data-tm-pagination="table_id">
-      <a class="tm-page-btn" href="?table_id_page=1">1</a>
-      <a class="tm-page-btn tm-page-btn--active" href="?table_id_page=2">2</a>
-      ...
-    </div>
-  </div>
 </div>
 ```
 
-## 6. TemplateEngine Syntax
+### 2.3 Các Attribute HTML
 
-### Template Compilation
+| Attribute                | Giá Trị                    | Mô Tả                        |
+| ------------------------ | -------------------------- | ---------------------------- |
+| `data-tm-col`            | string                     | Khóa trường (bắt buộc)       |
+| `data-tm-label`          | string                     | Tiêu đề cột                  |
+| `data-tm-sortable`       | flag                       | Cho phép sắp xếp cột         |
+| `data-tm-width`          | CSS                        | Độ rộng (VD: '100px', '15%') |
+| `data-tm-align`          | left\|center\|right        | Căn lề                       |
+| `data-tm-filter-type`    | text\|number\|date\|select | Loại bộ lọc                  |
+| `data-tm-filter-ops`     | comma-separated            | Danh sách toán tử lọc        |
+| `data-tm-filter-options` | JSON                       | Option cho select filter     |
 
-```javascript
-// Register helper functions (before compile)
-TemplateEngine.registerHelper("formatDate", (val) =>
-  dayjs(val).format("DD/MM/YYYY"),
-);
-TemplateEngine.registerHelper("currency", (val) =>
-  new Intl.NumberFormat("vi-VN").format(val),
-);
+---
 
-// Compile template element
-const renderFn = TemplateEngine.compile(templateElement);
+## 3. Template Engine (Render Tùy Chỉnh)
 
-// Use render function in column
-const frag = renderFn(row, rowValue);
-```
+### 3.1 Cú Pháp Template
 
-### Template Syntax
+Dùng `{{expression}}` bên trong `<template data-tm-col>`:
 
 ```html
-<!-- Supported expressions in {{ }} -->
-<template data-tm-col="amount">
-  {{ value }}
-  <!-- Raw value -->
-  {{ row.amount }}
-  <!-- Dot-path access -->
-  {{ row.amount || 'N/A' }}
-  <!-- Fallback operator -->
-  {{ formatDate(row.created_at) }}
-  <!-- Helper function -->
-  {{ currency(row.price) }}
-  <!-- With args -->
-  {{ row.status == 'active' ? 'Yes' : 'No' }}
-  <!-- Ternary -->
+<!-- Hiển thị giá trị đơn giản -->
+<template data-tm-col="status"> {{ value }} </template>
+
+<!-- Truy cập thuộc tính row -->
+<template data-tm-col="name">
+  <strong>{{ row.name }}</strong>
+</template>
+
+<!-- Dùng helper function -->
+<template data-tm-col="created_at"> {{ formatDate(row.created_at) }} </template>
+
+<!-- Logic với fallback -->
+<template data-tm-col="phone"> {{ row.phone || 'Chưa có' }} </template>
+
+<!-- HTML động -->
+<template data-tm-col="status">
+  <span
+    class="badge"
+    data-variant="{{ row.status === 'active' ? 'success' : 'danger' }}"
+  >
+    {{ row.status === 'active' ? 'Hoạt Động' : 'Không Hoạt Động' }}
+  </span>
 </template>
 ```
 
-### Execution Context
+### 3.2 Đăng Ký Helper Functions
+
+Helper functions được dùng trong template:
 
 ```javascript
-// Inside a template expression, these are in scope:
-{
-  value,                  // The cell value (row[col.key])
-  row,                    // The entire row object
-  ...row,                 // Row properties spread (row.name === name)
-  // Plus all registered helpers:
-  formatDate,
-  currency,
-  // ...etc
-}
-```
-
-### Escaping
-
-- HTML is auto-escaped for safety (XSS prevention)
-- Use raw expressions if needed (not recommended)
-
-## 7. ColumnRegistry & ColumnDef
-
-### ColumnRegistry
-
-```javascript
-// Auto-created from <template> elements in root
-const registry = new ColumnRegistry(rootElement, DEFAULT_FILTER_OPS);
-
-// Access column definitions
-registry.all;  // Returns: ColumnDef[]
-
-// Insert column at start (used internally for checkboxes)
-registry.prepend(new ColumnDef({ key, label, ... }));
-```
-
-### ColumnDef
-
-```javascript
-const col = new ColumnDef({
-  key: "name", // Row property key
-  label: "Tên danh mục", // Display label
-  sortable: true, // Allow sorting
-  width: "200px", // Column width
-  align: "left", // left|center|right
-  filterType: "text", // text|number|date|select|null
-  filterOps: ["contains", "=", "!="], // Allowed operators
-  filterOptions: [
-    // For select filters
-    { value: "active", label: "Hoạt động" },
-    { value: "inactive", label: "Không hoạt động" },
-  ],
-  render: (row, value) => DocumentFragment, // Custom renderer
-});
-```
-
-## 8. TableManager Static API
-
-```javascript
-// Get or auto-create TableManager singleton
-TableManager.instance;
-
-// Initialize all [data-tm] tables on page
-TableManager.instance.init();
-
-// Get table instance by ID
-const inst = TableManager.get("table_categories");
-
-// Static shortcuts
-TableManager.setFilter(tableId, col, op, value);
-TableManager.setFilterOptions(tableId, col, options);
-TableManager.getRowSelection(tableId); // [ids]
-TableManager.clearSelection(tableId);
-TableManager.loadData(tableId, payload);
-TableManager.getSelectedIds(tableId); // @deprecated, use getRowSelection
-```
-
-## 9. Events
-
-### Dispatched by TableInstance
-
-```javascript
-// Fired when state changes (sort, filter, search, pagination)
-root.addEventListener("tm:state-change", (e) => {
-  const { reason, state } = e.detail;
-  // reason: 'sort' | 'filter' | 'search' | 'pagination'
-  // state: full state snapshot
+// Đăng ký trước khi compile template (trước init bảng)
+TemplateEngine.registerHelper("formatDate", (val) => {
+  return dayjs(val).format("DD/MM/YYYY");
 });
 
-// Fired after render completes
-root.addEventListener("tm:render", (e) => {
-  const { tableId, visibleRows, totalRows, state } = e.detail;
+TemplateEngine.registerHelper("currency", (val) => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(val);
 });
 
-// Fired when rows are selected/deselected
-root.addEventListener("tm:selection-change", (e) => {
-  const { rowSelection } = e.detail; // ['1', '3', '5']
+TemplateEngine.registerHelper("statusLabel", (status) => {
+  const labels = {
+    active: "Đang Hoạt Động",
+    inactive: "Không Hoạt Động",
+    pending: "Chờ Duyệt",
+  };
+  return labels[status] || status;
 });
 
-// Search input changed
-root.addEventListener("tm:search:change", (e) => {
-  const { search } = e.detail;
-});
-
-// Filter applied
-root.addEventListener("tm:filter:apply", (e) => {
-  const { column, operator, value } = e.detail;
-});
-
-// Filter removed
-root.addEventListener("tm:filter:clear", (e) => {
-  const { column } = e.detail;
-});
+// Dùng trong template:
+// {{ formatDate(row.created_at) }}
+// {{ currency(row.salary) }}
+// {{ statusLabel(row.status) }}
 ```
 
-## 10. Data Flow: Client Mode vs Server Mode
+### 3.3 Biên Dịch Thủ Công
 
-### Client Mode
-
-1. User loads page
-2. `<script data-tm-data="id">` contains full dataset (or `loadData([...])` called)
-3. TableManager loads all rows into memory (`inst.data`)
-4. User sorts/filters/searches → `TableInstance` filters in-memory
-5. Pagination slices filtered results
-6. Display on page
+Có thể compile template thủ công nếu cần:
 
 ```javascript
-// Usage
-inst.loadData(allRows); // Load all 10,000 rows
-inst.setFilter("status", "=", "active"); // Filters in memory
-inst.render(); // Display page 1 of filtered results
+const tpl = document.querySelector('template[data-tm-col="action"]');
+const renderFn = TemplateEngine.compile(tpl);
+
+// Sử dụng
+const row = { id: 1, name: "John" };
+const value = "some_value";
+const fragment = renderFn(row, value); // Returns DocumentFragment
+element.appendChild(fragment);
 ```
 
-### Server Mode
+---
 
-1. User loads page
-2. TableManager listens to `tm:state-change` events
-3. User sorts/filters/searches → dispatch event (no render)
-4. Dev's event handler: fetch API with current state
-5. Dev calls `inst.loadData(pageData, { total })` with response
-6. TableInstance renders received page
-7. Pagination reflects server's total
+## 4. Cấu Hình Bảng
 
-```javascript
-// Setup
-root.addEventListener("tm:state-change", async (e) => {
-  const { state } = e.detail;
-  const params = new URLSearchParams({
-    page: state.pagination.pageIndex + 1,
-    limit: state.pagination.pageSize,
-    sort_col: state.sort.col,
-    sort_dir: state.sort.dir,
-    filters: JSON.stringify(state.filters),
-    search: state.search,
-  });
-  const res = await fetch(`/api/categories?${params}`);
-  const { rows, total } = await res.json();
-  inst.loadData({
-    rows,
-    total,
-    page: state.pagination.pageIndex + 1,
-    limit: state.pagination.pageSize,
-  });
-});
+### 4.1 Attribute của Element [data-tm]
 
-// Initialize with server mode
-inst.loadData({ rows: firstPage, total: 1000 }, { total: 1000 });
-```
+| Attribute                | Giá Trị        | Mô Tả                                |
+| ------------------------ | -------------- | ------------------------------------ |
+| `data-tm`                | string         | ID bảng (bắt buộc)                   |
+| `data-tm-mode`           | client\|server | Chế độ hoạt động (mặc định: client)  |
+| `data-tm-selectable`     | flag           | Bật chọn hàng                        |
+| `data-tm-id-key`         | string         | Tên field ID hàng (mặc định: 'id')   |
+| `data-tm-searchable`     | flag           | Bật tìm kiếm toàn cục                |
+| `data-tm-search-target`  | selector       | Selector input tìm kiếm bên ngoài    |
+| `data-tm-toolbar-target` | selector       | Selector container toolbar bên ngoài |
+| `data-tm-footer-target`  | selector       | Selector container footer bên ngoài  |
 
-## 11. Vietnamese Normalization
-
-```javascript
-// Used in sorting and searching
-function normalizeStr(str) {
-  return String(str || '')
-    .toLowerCase()
-    .normalize('NFD')              // Decompose accents (á → a + ´)
-    .replace(/[\u0300-\u036f]/g, '')  // Remove diacritics
-    .replace(/đ/g, 'd');           // Special case: đ → d
-}
-
-// Example
-normalizeStr('Danh mục') → 'danh muc'
-normalizeStr('Từ Điển') → 'tu dien'
-
-// Comparison in sort
-const cmp = va.localeCompare(vb, 'vi', { numeric: true, sensitivity: 'accent' });
-```
-
-## 12. Filter Operators Reference
-
-```javascript
-const DEFAULT_FILTER_OPS = {
-  text: ["contains", "=", "!="],
-  number: ["=", "!=", ">", ">=", "<", "<="],
-  date: ["=", "!=", ">", ">=", "<", "<="],
-  select: ["=", "!="],
-};
-
-// Usage examples
-setFilter("name", "contains", "Việt");
-setFilter("age", ">=", "18");
-setFilter("created", ">", "2026-01-01");
-setFilter("status", "=", "active");
-```
-
-## 13. Integration with DropdownHandler & SelectHandler
-
-```javascript
-// TableRenderer registers filter dropdowns with DropdownHandler
-// (if window.DropdownHandler.instance exists)
-requestAnimationFrame(() =>
-  window.DropdownHandler.instance.register(filterDropdownElement),
-);
-
-// Custom select controls store current value in ._currentValue
-// and state in ._tmControls reference:
-{
-  (opSelect, // Operator <select>
-    valueEl); // Value <input> or <select>
-}
-
-// When filter pill is removed, state is reset via these references
-dropdown._tmControls.opSelect._currentValue = "=";
-dropdown._tmControls.valueEl.value = "";
-```
-
-## 14. Configuration & Setup Examples
-
-### Basic HTML Setup
+### 4.2 Ví Dụ Cấu Hình Client Mode
 
 ```html
-<div data-tm="products" data-tm-mode="client">
-  <template data-tm-col="name" data-tm-label="Tên SP" data-tm-sortable>
-    {{ row.name }}
-  </template>
+<div
+  data-tm="products"
+  data-tm-mode="client"
+  data-tm-selectable
+  data-tm-id-key="product_id"
+  data-tm-searchable
+>
+  <!-- Templates cột -->
+  <template
+    data-tm-col="name"
+    data-tm-label="Tên Sản Phẩm"
+    data-tm-sortable
+  ></template>
   <template
     data-tm-col="price"
     data-tm-label="Giá"
     data-tm-sortable
     data-tm-filter-type="number"
-  >
-    {{ currency(value) }}
-  </template>
-  <template data-tm-pagination></template>
+  ></template>
+  <template data-tm-col="category" data-tm-label="Danh Mục"></template>
+  <!-- ... -->
 </div>
 
+<!-- Dữ liệu inline (tùy chọn) -->
 <script type="application/json" data-tm-data="products">
   [
-    { "name": "Product A", "price": 100000 },
-    { "name": "Product B", "price": 250000 }
+    {
+      "product_id": 1,
+      "name": "Laptop",
+      "price": 15000000,
+      "category": "Electronics"
+    },
+    {
+      "product_id": 2,
+      "name": "Mouse",
+      "price": 250000,
+      "category": "Accessories"
+    }
   ]
 </script>
 
 <script>
-  // Initialize and configure
-  TemplateEngine.registerHelper("currency", (v) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(v),
-  );
-
-  TableManager.instance.init();
-  const inst = TableManager.get("products");
-  inst.setPageSize(50);
+  // Dữ liệu được tự load từ inline data, hoặc:
+  const tm = TableManager.get("products");
+  tm.loadData([
+    { product_id: 1, name: "Laptop", price: 15000000, category: "Electronics" },
+    { product_id: 2, name: "Mouse", price: 250000, category: "Accessories" },
+  ]);
 </script>
 ```
 
-### Server Mode Setup
+### 4.3 Ví Dụ Cấu Hình Server Mode
 
-```javascript
-const root = document.querySelector('[data-tm="users"]');
-root.dataset.tmMode = "server";
+```html
+<div
+  data-tm="users"
+  data-tm-mode="server"
+  data-tm-selectable
+  data-tm-searchable
+>
+  <template data-tm-col="id" data-tm-label="ID"></template>
+  <template data-tm-col="name" data-tm-label="Tên" data-tm-sortable></template>
+  <template
+    data-tm-col="email"
+    data-tm-label="Email"
+    data-tm-sortable
+  ></template>
+  <template
+    data-tm-col="role"
+    data-tm-label="Vai Trò"
+    data-tm-filter-type="select"
+    data-tm-filter-options='[{"value":"admin","label":"Admin"},{"value":"user","label":"User"}]'
+  ></template>
+  <!-- Pagination container -->
+  <template data-tm-pagination></template>
+</div>
 
-const inst = TableManager.get("users");
+<script>
+  const tm = TableManager.get("users");
 
-root.addEventListener("tm:state-change", async (e) => {
-  const { state } = e.detail;
+  // Lắng nghe state-change event để fetch API
+  tm.root.addEventListener("tm:state-change", async (e) => {
+    const { state } = e.detail;
 
-  const params = {
-    page: state.pagination.pageIndex + 1,
-    limit: state.pagination.pageSize,
-    sort: state.sort.col ? `${state.sort.col}:${state.sort.dir}` : null,
-    search: state.search,
-  };
+    // Gọi API với điều kiện từ state
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page: state.pagination.pageIndex + 1,
+        limit: state.pagination.pageSize,
+        search: state.search,
+        filters: state.filters,
+        sort: state.sort,
+      }),
+    });
 
-  // Add filter rules
-  state.filters.forEach((f) => {
-    params[`filter_${f.col}`] = `${f.op}:${f.value}`;
+    const data = await response.json();
+
+    // Load dữ liệu với tổng số từ server
+    tm.loadData({
+      rows: data.records,
+      total: data.total,
+      page: state.pagination.pageIndex + 1,
+      limit: state.pagination.pageSize,
+    });
   });
 
-  const query = new URLSearchParams(params);
-  const res = await fetch(`/api/users?${query}`);
-  const data = await res.json();
-
-  inst.loadData(
-    {
-      rows: data.items,
-      total: data.total,
-      page: data.current_page,
-      limit: data.per_page,
-    },
-    { total: data.total },
-  );
-});
-
-// Load first page
-inst.loadData(
-  {
-    rows: [],
-    total: 0,
-    page: 1,
-    limit: 20,
-  },
-  { total: 0 },
-);
+  // Trigger fetch lần đầu
+  tm.loadData({ rows: [], total: 0 });
+</script>
 ```
 
-## 15. Technical Debt & Future Work
+---
 
-- **Select Reset API**: Currently resetting by DOM manipulation. A formal `.reset()` method in `SelectHandler` would be cleaner.
-- **Multi-column Sort**: Single-column only currently.
-- **Export Feature**: No CSV/Excel export yet.
-- **Responsive Tables**: "Card-view" mode for mobile not implemented.
-- **Inline Sort Toggle**: UI doesn't cycle sort direction cleanly (asc → desc → off).
-- **Filter Pills State Sync**: Manual `_tmControls` refs could be abstracted into a formal state manager.
+## 5. Public API
 
-## 16. File Reference
+### 5.1 Lấy Instance
 
-- `public/js/table/index.js` - Entry point, exports `TableManager`
-- `public/js/table/table_manager.js` - `TableManager` singleton and `TableInstance` class
-- `public/js/table/table_renderer.js` - `TableRenderer` DOM building and rendering
-- `public/js/table/column_registry.js` - `ColumnRegistry` and `ColumnDef` column definitions
-- `public/js/table/template_engine.js` - `TemplateEngine` template compilation and helpers
-- `public/css/common.css` - Styles for `.tm-*` classes
+```javascript
+// Bằng Singleton Pattern
+const tm = TableManager.instance;
+
+// Hoặc bằng ID
+const tm = TableManager.get("table-id");
+
+// Truy cập từ root element
+const tm = TableManager.get(rootElement.dataset.tm);
+```
+
+### 5.2 Tải Dữ Liệu
+
+```javascript
+// Client mode: truyền toàn bộ dataset
+tm.loadData([
+  { id: 1, name: "John", email: "john@example.com" },
+  { id: 2, name: "Jane", email: "jane@example.com" },
+]);
+
+// Server mode: truyền một trang + tổng số hàng
+tm.loadData({
+  rows: [
+    { id: 1, name: "John", email: "john@example.com" },
+    { id: 2, name: "Jane", email: "jane@example.com" },
+  ],
+  total: 245, // Tổng số hàng trên server
+  page: 1, // Trang hiện tại (1-based)
+  limit: 20, // Số hàng/trang
+});
+
+// Shorthand: chỉ rows (hữu ích khi nạp lần đầu)
+tm.loadData([...rows]);
+```
+
+### 5.3 Filter / Search
+
+```javascript
+// Đặt bộ lọc cho một cột
+// setFilter(colName, operator, value)
+tm.setFilter("status", "=", "active");
+tm.setFilter("age", ">=", "18");
+tm.setFilter("created_at", ">", "2025-01-01");
+
+// Xóa bộ lọc của một cột
+tm.clearFilter("status");
+
+// Xóa toàn bộ bộ lọc và search
+tm.clearFilters();
+
+// Tìm kiếm toàn cục
+tm.setSearch("john");
+
+// Lấy danh sách hàng hiện tại (đã filter/sort)
+const rows = tm.getVisibleRows();
+
+// Lấy state hiện tại
+const state = tm.getState();
+console.log(state.filters);
+console.log(state.search);
+```
+
+### 5.4 Sắp Xếp
+
+```javascript
+// Toggle sort trên cột (asc → desc → off)
+tm.setSort("name");
+
+// Lấy state sort
+const state = tm.getState();
+console.log(state.sort); // { col: 'name', dir: 'asc' }
+```
+
+### 5.5 Phân Trang
+
+```javascript
+// Đến trang tiếp theo
+tm.nextPage();
+
+// Quay lại trang trước
+tm.prevPage();
+
+// Đến trang cụ thể (0-based index)
+tm.setPageIndex(2); // Trang 3
+
+// Đặt số hàng/trang (reset về trang 1)
+tm.setPageSize(50);
+
+// Kiểm tra có thể chuyển trang?
+if (tm.canNextPage()) tm.nextPage();
+if (tm.canPrevPage()) tm.prevPage();
+
+// Lấy tổng số trang
+const totalPages = tm.getPageCount();
+```
+
+### 5.6 Row Selection
+
+```javascript
+// Bật chọn hàng trong HTML (nếu chưa bật)
+// <div data-tm="..." data-tm-selectable>
+
+// Lấy danh sách ID hàng được chọn
+const selectedIds = tm.getRowSelection();
+console.log(selectedIds); // ['1', '3', '5']
+
+// Xóa toàn bộ lựa chọn
+tm.clearSelection();
+
+// Kiểm tra hàng có được chọn không?
+const isSelected = tm.hasRowSelection("3");
+
+// Toggle hàng (thêm/xóa từ selection)
+tm.toggleRowSelection("3", true);
+```
+
+### 5.7 Static Methods
+
+```javascript
+// Lấy instance theo ID
+TableManager.get("table-id");
+
+// Đặt bộ lọc (shorthand)
+TableManager.setFilter("table-id", "status", "=", "active");
+
+// Cập nhật filter options động
+TableManager.setFilterOptions("table-id", "status", [
+  { value: "new", label: "Mới" },
+  { value: "active", label: "Hoạt Động" },
+  { value: "archived", label: "Lưu Trữ" },
+]);
+
+// Lấy danh sách hàng được chọn
+const ids = TableManager.getRowSelection("table-id");
+
+// Xóa lựa chọn
+TableManager.clearSelection("table-id");
+
+// Tải dữ liệu
+TableManager.loadData("table-id", [...rows]);
+```
+
+---
+
+## 6. Events
+
+### 6.1 Các Event Được Dispatch
+
+Lắng nghe event trên element `[data-tm]`:
+
+```javascript
+const tm = TableManager.get("table-id");
+const root = tm.root;
+
+// State thay đổi (server mode: để fetch API)
+root.addEventListener("tm:state-change", (e) => {
+  const { reason, state } = e.detail;
+  console.log(`State thay đổi: ${reason}`, state);
+  // reason: 'sort' | 'filter' | 'search' | 'pagination'
+});
+
+// Render xong
+root.addEventListener("tm:render", (e) => {
+  const { tableId, visibleRows, totalRows, state } = e.detail;
+  console.log(`Render xong: ${totalRows} hàng hiển thị`);
+});
+
+// Selection thay đổi
+root.addEventListener("tm:selection-change", (e) => {
+  const { rowSelection } = e.detail;
+  console.log("Hàng được chọn:", rowSelection);
+});
+
+// Filter được áp dụng
+root.addEventListener("tm:filter:apply", (e) => {
+  const { column, operator, value } = e.detail;
+  console.log(`Filter: ${column} ${operator} ${value}`);
+});
+
+// Filter bị xóa
+root.addEventListener("tm:filter:clear", (e) => {
+  const { column } = e.detail;
+  console.log(`Xóa filter: ${column}`);
+});
+
+// Tìm kiếm thay đổi
+root.addEventListener("tm:search:change", (e) => {
+  const { search } = e.detail;
+  console.log(`Search: ${search}`);
+});
+
+// Pagination thay đổi
+root.addEventListener("tm:pagination:change", (e) => {
+  const { page, totalPages } = e.detail;
+  console.log(`Trang ${page}/${totalPages}`);
+});
+```
+
+### 6.2 Event Detail Structure
+
+| Event                  | Detail Properties                              | Mô Tả                                          |
+| ---------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| `tm:state-change`      | `reason`, `state`                              | State thay đổi (filter/sort/search/pagination) |
+| `tm:render`            | `tableId`, `visibleRows`, `totalRows`, `state` | Render xong                                    |
+| `tm:selection-change`  | `rowSelection`                                 | Selection thay đổi (hàng được chọn)            |
+| `tm:filter:apply`      | `column`, `operator`, `value`                  | Filter được áp dụng                            |
+| `tm:filter:clear`      | `column`                                       | Filter bị xóa                                  |
+| `tm:search:change`     | `search`                                       | Tìm kiếm thay đổi                              |
+| `tm:pagination:change` | `page`, `totalPages`                           | Phân trang thay đổi                            |
+
+---
+
+## 7. Filter Operators
+
+### 7.1 Danh Sách Toán Tử
+
+| Toán Tử    | Kiểu Dữ Liệu               | Mô Tả             |
+| ---------- | -------------------------- | ----------------- |
+| `contains` | text                       | Chứa chuỗi        |
+| `=`        | text, number, date, select | Bằng              |
+| `!=`       | text, number, date, select | Không bằng        |
+| `>`        | number, date               | Lớn hơn           |
+| `>=`       | number, date               | Lớn hơn hoặc bằng |
+| `<`        | number, date               | Nhỏ hơn           |
+| `<=`       | number, date               | Nhỏ hơn hoặc bằng |
+
+### 7.2 Toán Tử Mặc Định
+
+Ánh xạ tự động dựa trên `filterType`:
+
+```javascript
+DEFAULT_FILTER_OPS = {
+  text: ["contains", "=", "!="],
+  number: ["=", "!=", ">", ">=", "<", "<="],
+  date: ["=", "!=", ">", ">=", "<", "<="],
+  select: ["=", "!="],
+};
+```
+
+### 7.3 Override Toán Tử
+
+```html
+<!-- Chỉ định toán tử cho cột -->
+<template
+  data-tm-col="price"
+  data-tm-filter-type="number"
+  data-tm-filter-ops=">,>=,<,<="
+></template>
+```
+
+---
+
+## 8. Normalization & Search
+
+### 8.1 Chuẩn Hóa Chuỗi Tiếng Việt
+
+TableManager tự động chuẩn hóa chuỗi để tìm kiếm không dấu:
+
+```javascript
+// Input: "Việt Nam"
+// Normalized: "viet nam"
+
+// Input: "Đặc Biệt"
+// Normalized: "dac biet"
+
+// Search không dấu hoạt động tự động
+tm.setSearch("dac biet"); // Sẽ tìm thấy "Đặc Biệt"
+```
+
+### 8.2 Searchable Keys
+
+- Client mode: Tìm kiếm trên tất cả cột (có `key`) trừ `_checkbox`
+- Server mode: Dev tự xử lý tìm kiếm trên API
+
+---
+
+## 9. Ví Dụ Hoàn Chỉnh
+
+### 9.1 Client Mode - Bảng Sinh Viên
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="path/to/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Bảng sinh viên -->
+    <div
+      data-tm="students"
+      data-tm-mode="client"
+      data-tm-selectable
+      data-tm-id-key="mssv"
+      data-tm-searchable
+    >
+      <template
+        data-tm-col="mssv"
+        data-tm-label="MSSV"
+        data-tm-sortable
+      ></template>
+
+      <template
+        data-tm-col="name"
+        data-tm-label="Tên"
+        data-tm-sortable
+      ></template>
+
+      <template
+        data-tm-col="email"
+        data-tm-label="Email"
+        data-tm-sortable
+      ></template>
+
+      <template
+        data-tm-col="major"
+        data-tm-label="Chuyên Ngành"
+        data-tm-filter-type="select"
+        data-tm-filter-options='[
+        {"value":"IT","label":"Công Nghệ Thông Tin"},
+        {"value":"BIZ","label":"Kinh Doanh"},
+        {"value":"MKT","label":"Marketing"}
+      ]'
+      ></template>
+
+      <template
+        data-tm-col="status"
+        data-tm-label="Trạng Thái"
+        data-tm-filter-type="select"
+        data-tm-filter-options='[
+        {"value":"active","label":"Đang Học"},
+        {"value":"graduated","label":"Tốt Nghiệp"},
+        {"value":"dropped","label":"Bỏ Học"}
+      ]'
+      >
+        <span
+          class="badge"
+          data-variant="{{ row.status === 'active' ? 'success' : row.status === 'graduated' ? 'info' : 'danger' }}"
+        >
+          {{ row.status === 'active' ? 'Đang Học' : row.status === 'graduated' ?
+          'Tốt Nghiệp' : 'Bỏ Học' }}
+        </span>
+      </template>
+
+      <template
+        data-tm-col="action"
+        data-tm-label="Thao Tác"
+        data-tm-align="center"
+      >
+        <button class="btn btn-sm" onclick="editStudent('{{ row.mssv }}')">
+          Sửa
+        </button>
+        <button
+          class="btn btn-sm btn-danger"
+          onclick="deleteStudent('{{ row.mssv }}')"
+        >
+          Xóa
+        </button>
+      </template>
+
+      <!-- Pagination -->
+      <template data-tm-pagination></template>
+    </div>
+
+    <!-- Dữ liệu inline (hoặc fetch từ API) -->
+    <script type="application/json" data-tm-data="students">
+      [
+        {
+          "mssv": "2020001",
+          "name": "Nguyễn Văn A",
+          "email": "a@uni.edu.vn",
+          "major": "IT",
+          "status": "active"
+        },
+        {
+          "mssv": "2020002",
+          "name": "Trần Thị B",
+          "email": "b@uni.edu.vn",
+          "major": "BIZ",
+          "status": "graduated"
+        },
+        {
+          "mssv": "2020003",
+          "name": "Lê Văn C",
+          "email": "c@uni.edu.vn",
+          "major": "MKT",
+          "status": "active"
+        }
+      ]
+    </script>
+
+    <script src="path/to/table_manager.js"></script>
+    <script>
+      // Lắng nghe khi hàng được chọn
+      const root = document.querySelector('[data-tm="students"]');
+      root.addEventListener("tm:selection-change", (e) => {
+        const selectedIds = e.detail.rowSelection;
+        console.log("Sinh viên được chọn:", selectedIds);
+      });
+
+      // Function thao tác
+      function editStudent(mssv) {
+        alert(`Sửa sinh viên: ${mssv}`);
+      }
+      function deleteStudent(mssv) {
+        alert(`Xóa sinh viên: ${mssv}`);
+      }
+    </script>
+  </body>
+</html>
+```
+
+### 9.2 Server Mode - Bảng User Từ API
+
+```html
+<div
+  data-tm="users"
+  data-tm-mode="server"
+  data-tm-selectable
+  data-tm-searchable
+>
+  <template data-tm-col="id" data-tm-label="ID"></template>
+  <template
+    data-tm-col="username"
+    data-tm-label="Tên Đăng Nhập"
+    data-tm-sortable
+  ></template>
+  <template
+    data-tm-col="email"
+    data-tm-label="Email"
+    data-tm-sortable
+  ></template>
+  <template
+    data-tm-col="role"
+    data-tm-label="Vai Trò"
+    data-tm-filter-type="select"
+    data-tm-filter-options='[
+      {"value":"admin","label":"Admin"},
+      {"value":"moderator","label":"Moderator"},
+      {"value":"user","label":"Người Dùng"}
+    ]'
+  ></template>
+  <template data-tm-col="created_at" data-tm-label="Tạo Lúc"></template>
+  <template data-tm-pagination></template>
+</div>
+
+<script>
+  // Đăng ký helper để format ngày
+  TemplateEngine.registerHelper("formatDate", (val) => {
+    if (!val) return "N/A";
+    return new Date(val).toLocaleDateString("vi-VN");
+  });
+
+  const tm = TableManager.get("users");
+
+  // Hàm fetch API
+  async function fetchUsers() {
+    const state = tm.getState();
+
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page: state.pagination.pageIndex + 1,
+        limit: state.pagination.pageSize,
+        search: state.search,
+        filters: state.filters,
+        sort: state.sort,
+      }),
+    });
+
+    const data = await response.json();
+    return data;
+  }
+
+  // Lắng nghe state-change để fetch API
+  tm.root.addEventListener("tm:state-change", async (e) => {
+    try {
+      const data = await fetchUsers();
+      tm.loadData({
+        rows: data.users,
+        total: data.total,
+        page: data.page,
+        limit: data.limit,
+      });
+    } catch (err) {
+      console.error("Lỗi fetch API:", err);
+    }
+  });
+
+  // Fetch lần đầu
+  (async () => {
+    const data = await fetchUsers();
+    tm.loadData({ rows: data.users, total: data.total });
+  })();
+</script>
+```
+
+---
+
+## 10. Tips & Best Practices
+
+### 10.1 Performance
+
+- **Client Mode**: Dùng cho dataset ≤ 10,000 rows. Với dataset lớn hơn, dùng Server Mode
+- **Server Mode**: Chỉ render một trang dữ liệu, giảm tải DOM
+- **Virtual Scrolling**: Nếu cần hiển thị hàng nghìn rows, xem xét implement thêm
+
+### 10.2 Searchable Columns
+
+- Chỉ những cột có `data-tm-col` mới được tìm kiếm
+- Cột `_checkbox` tự động loại trừ khỏi tìm kiếm
+
+### 10.3 Filter Best Practices
+
+```javascript
+// ✓ Tốt: Xóa toàn bộ filter khi reset
+tm.clearFilters();
+
+// ✓ Tốt: Check filter trước apply
+const hasFilter = tm.getState().filters.length > 0;
+
+// ✗ Tránh: Spam setFilter nhiều lần liên tiếp
+// for (let i = 0; i < 100; i++) tm.setFilter(...);  // ✗ BAD
+
+// ✓ Tốt: Batch filter thay vào
+filters.forEach((f) => tm.setFilter(f.col, f.op, f.value));
+```
+
+### 10.4 Row Selection
+
+```javascript
+// ✓ Tốt: Dùng event để lắng nghe selection thay đổi
+tm.root.addEventListener("tm:selection-change", (e) => {
+  const selected = e.detail.rowSelection;
+  // Xử lý...
+});
+
+// ✓ Tốt: Clear selection trước bulk action
+TableManager.clearSelection("table-id");
+```
+
+### 10.5 Template Rendering
+
+```html
+<!-- ✓ Tốt: Escape HTML tự động -->
+<template data-tm-col="comment">
+  {{ row.comment }}
+  <!-- An toàn -->
+</template>
+
+<!-- ✓ Tốt: Dùng helper function -->
+<template data-tm-col="created_at"> {{ formatDate(row.created_at) }} </template>
+
+<!-- ✗ Tránh: Dùng innerHTML trực tiếp trong template -->
+<!-- Không cần, Template Engine tự escape -->
+```
+
+### 10.6 Debugging
+
+```javascript
+// Lấy state đầy đủ
+console.log(tm.getState());
+
+// Lấy dữ liệu hiện tại
+console.log(tm.getVisibleRows());
+
+// Kiểm tra instance
+console.log(TableManager.get("table-id"));
+
+// Monitor event
+document
+  .querySelector('[data-tm="table-id"]')
+  .addEventListener("tm:render", (e) => {
+    console.log("Render event:", e.detail);
+  });
+```
+
+---
+
+## 11. API Reference (Ringkasan)
+
+### Instance Methods
+
+| Method                             | Tham Số             | Trả Về   | Mô Tả                    |
+| ---------------------------------- | ------------------- | -------- | ------------------------ |
+| `loadData(payload)`                | rows\[], total?     | void     | Tải dữ liệu              |
+| `setData(rows)`                    | rows[]              | void     | Đặt dữ liệu              |
+| `render()`                         | -                   | void     | Re-render bảng           |
+| `setFilter(col, op, value)`        | string, string, any | void     | Áp dụng filter           |
+| `clearFilter(col)`                 | string              | void     | Xóa filter cột           |
+| `clearFilters()`                   | -                   | void     | Xóa tất cả filter        |
+| `setSearch(query)`                 | string              | void     | Tìm kiếm                 |
+| `setSort(col)`                     | string              | void     | Toggle sort              |
+| `setPageIndex(index)`              | number              | void     | Đến trang                |
+| `setPageSize(size)`                | number              | void     | Đặt size/trang           |
+| `nextPage()`                       | -                   | void     | Trang tiếp               |
+| `prevPage()`                       | -                   | void     | Trang trước              |
+| `getPageCount()`                   | -                   | number   | Tổng trang               |
+| `canNextPage()`                    | -                   | boolean  | Có trang tiếp?           |
+| `canPrevPage()`                    | -                   | boolean  | Có trang trước?          |
+| `getVisibleRows()`                 | -                   | object[] | Hàng hiện tại            |
+| `getState()`                       | -                   | object   | State snapshot           |
+| `getRowSelection()`                | -                   | string[] | Hàng được chọn           |
+| `toggleRowSelection(id, selected)` | string, boolean     | void     | Toggle selection         |
+| `hasRowSelection(id)`              | string              | boolean  | Hàng được chọn?          |
+| `clearSelection()`                 | -                   | void     | Xóa selection            |
+| `updateHeaderCheckbox()`           | -                   | void     | Cập nhật checkbox header |
+
+### Static Methods
+
+| Method                                                 | Tham Số     | Trả Về        |
+| ------------------------------------------------------ | ----------- | ------------- |
+| `TableManager.instance`                                | -           | TableInstance |
+| `TableManager.get(id)`                                 | string      | TableInstance |
+| `TableManager.setFilter(tableId, col, op, value)`      | ...         | void          |
+| `TableManager.setFilterOptions(tableId, col, options)` | ...         | void          |
+| `TableManager.getRowSelection(tableId)`                | string      | string[]      |
+| `TableManager.clearSelection(tableId)`                 | string      | void          |
+| `TableManager.loadData(tableId, payload)`              | string, any | void          |
+
+---
+
+## 12. Troubleshooting
+
+### Bảng không hiển thị
+
+- ✓ Kiểm tra `[data-tm]` element có trong DOM?
+- ✓ Kiểm tra `<template data-tm-col>` có định nghĩa cột?
+- ✓ Kiểm tra `table_manager.js` được load?
+- ✓ Kiểm tra browser console có lỗi?
+
+### Filter không hoạt động
+
+- ✓ Kiểm tra `data-tm-filter-type` được set?
+- ✓ Kiểm tra `DropdownHandler` được load (cho UI dropdown)?
+- ✓ Kiểm tra filter operator có hợp lệ?
+
+### Event không trigger
+
+- ✓ Kiểm tra listener được attach vào element `[data-tm]`?
+- ✓ Kiểm tra event name đúng (VD: `tm:render` không phải `tm-render`)?
+
+### Template render sai
+
+- ✓ Kiểm tra `{{}}` syntax đúng?
+- ✓ Kiểm tra helper function được đăng ký trước init?
+- ✓ Kiểm tra browser console có lỗi parse?
+
+### Row selection không hoạt động
+
+- ✓ Kiểm tra `data-tm-selectable` có được set?
+- ✓ Kiểm tra `data-tm-id-key` match với field ID trong data?
+- ✓ Kiểm tra row có field ID (mặc định: `id`)?

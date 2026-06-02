@@ -6,11 +6,16 @@ require_once BASE_PATH . '/stores/account_store.php';
 
 use App\Models\Account;
 use App\Stores\{AccountStore};
-use Exception;
+use App\Core\Pageable;
 
 interface IAccountService
 {
+  // C
   public function createAccount(string $email, string $rawPassword, string $role): int;
+
+  // R
+  public function getAccounts(int $page, int $limit = 15): Pageable;
+  public function getAccount(int $account_id): Account;
   /** @return Account[] */
   public function getAllAdmins(): array;
   public function getById(int $accountId): ?Account;
@@ -27,6 +32,7 @@ class AccountService implements IAccountService
   {
     $this->_accountStore = $accountStore;
   }
+  // C
   public function createAccount(string $email, string $rawPassword, string $role): int
   {
     if (!$this->_accountStore->isEmailUnique($email)) {
@@ -36,6 +42,23 @@ class AccountService implements IAccountService
     $hashedNewPassword = password_hash($rawPassword, PASSWORD_DEFAULT);
 
     return $this->_accountStore->create($email, $hashedNewPassword, $role);
+  }
+
+  // R
+  public function getAccounts(int $page, int $limit = 15, string $search = '%'): Pageable
+  {
+    $accounts = $this->_accountStore->getPaginated($page, $limit, $search);
+    $total = $this->_accountStore->getTotalCount();
+
+    return new Pageable($accounts, $total, $limit, $page);
+  }
+
+  public function getAccount(int $id): Account
+  {
+    $account = $this->_accountStore->getById($id)
+      ?? throw new \RuntimeException("Tài khoản #{$id} không tồn tại.");
+
+    return $account;
   }
   public function getAllAdmins(): array
   {

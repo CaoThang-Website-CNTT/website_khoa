@@ -9,11 +9,13 @@ use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
 use App\Models\Account;
-use PDO;
 
 interface IAccountStore
 {
   public function create(string $email, string $hash, string $role): int;
+  /** @return Account[] */
+  public function getPaginated(int $pageTo, int $limit = 15): array;
+
   public function getById(int $id): ?Account;
   /** @return Account[] */
   public function getByIds(array $ids): array;
@@ -25,10 +27,18 @@ interface IAccountStore
   public function softDelete(int $id): bool;
   public function isEmailUnique(string $email, ?int $excludeId = null): bool;
   public function existsWithRole(int $id, string $role): bool;
+  public function getTotalCount(): int;
 }
 
 class AccountStore extends Store implements IAccountStore
 {
+  // Các cột dùng cho listing - tách biệt với detail để kiểm soát payload
+  private const LISTING_COLUMNS = [
+    'id',
+    'email',
+    'role',
+    'created_at',
+  ];
   public function create(string $email, string $hash, string $role): int
   {
     $sql = "
@@ -61,21 +71,47 @@ class AccountStore extends Store implements IAccountStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute($bindings);
 
-    return array_map(fn($row) => Account::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return array_map(fn($row) => Account::fromArray($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
+  }
+
+  public function getPaginated(int $page, int $limit = 20, string $search = '%'): array
+  {
+    $offset = ($page - 1) * $limit;
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $builder
+      ->from('accounts')
+      ->select(self::LISTING_COLUMNS)
+      ->is('deleted_at', null)
+      ->like('email', $search)
+      ->order('created_at', ['ascending' => false])
+      ->limit($limit)
+      ->range($offset, $offset + $limit - 1);
+
+    $stmt = $this->db->prepare($builder->toSql());
+    $stmt->execute($builder->getBindings());
+
+    return array_map(
+      fn(array $row) => Account::fromArray($row),
+      $stmt->fetchAll(\PDO::FETCH_ASSOC),
+    );
   }
 
   public function getById(int $id): ?Account
   {
-    $sql = "
-      SELECT *
-      FROM `accounts`
-      WHERE id = :id AND deleted_at IS NULL
-      LIMIT 1
-    ";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':id' => $id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $builder = new QueryBuilder(new MySQLCompiler());
 
+    $query = $builder
+      ->from('accounts')
+      ->select('*')
+      ->eq('id', $id)
+      ->is('deleted_at', null)
+      ->limit(1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
     return $row ? Account::fromArray($row) : null;
   }
 
@@ -96,7 +132,7 @@ class AccountStore extends Store implements IAccountStore
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
 
-    return array_map(fn($row) => Account::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+    return array_map(fn($row) => Account::fromArray($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
   }
 
   public function findByEmail(string $email): ?Account
@@ -112,7 +148,7 @@ class AccountStore extends Store implements IAccountStore
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
     return $row ? Account::fromArray($row) : null;
   }
   public function updatePassword(int $id, string $newHash): bool
@@ -183,5 +219,18 @@ class AccountStore extends Store implements IAccountStore
     $stmt->execute($bindings);
 
     return (int) $stmt->fetchColumn() > 0;
+  }
+
+  public function getTotalCount(): int
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder->from('accounts')->select('COUNT(*) AS total')->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    return $row ? (int) $row['total'] : 0;
   }
 }

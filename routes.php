@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
 use App\Middlewares\{VerifyAuth, VerifyRole};
 use App\Core\Router;
 
@@ -24,6 +24,16 @@ $router->get('/logout', [AuthController::class, 'logout']);
 // Admin
 $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])->group(function (Router $router) {
   $router->get('/', [DashboardController::class, 'index']);
+
+  // Accounts
+  $router->prefix('accounts')->group(function ($router) {
+    $router->get('/', [AccountController::class, 'index']);
+    $router->get('/create', [AccountController::class, 'create']);
+    $router->post('/', [AccountController::class, 'store']);
+    $router->get('/{account_id}', [AccountController::class, 'edit']);
+    $router->post('/{account_id}', [AccountController::class, 'update']);
+    $router->delete('/{account_id}', [AccountController::class, 'destroy']);
+  });
 
   // Media
   $router->prefix('media')->group(function ($router) {

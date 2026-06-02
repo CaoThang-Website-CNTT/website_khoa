@@ -291,21 +291,19 @@ class TableInstance {
    * Nạp dữ liệu vào bảng và trigger render.
    *
    * - **client mode**: truyền toàn bộ dataset. TableManager tự filter/sort/paginate.
-   *   `meta` không cần thiết.
    *
    * - **server mode**: truyền đúng một trang dữ liệu đã được server xử lý.
-   *   Bắt buộc truyền `meta.total` để render pagination đúng.
-   *   `meta.page` và `meta.limit` nếu có sẽ sync lại pagination state.
+   *   Bắt buộc truyền `payload.total` để render pagination đúng.
+   *   `payload.page` và `payload.limit` nếu có sẽ sync lại pagination state.
    *
    * @param {object[]|{ rows: object[], total?: number, page?: number, limit?: number }} payload
-   * @param {{ total?: number }} [meta] - Chỉ dùng trong server mode
    */
-  loadData(payload, meta = {}) {
+  loadData(payload) {
     const rows = Array.isArray(payload) ? payload : (payload?.rows ?? []);
     this.data = rows;
 
-    if (this.#state.mode === 'server' && meta.total != null) {
-      this.#state.totalRows = meta.total;
+    if (this.#state.mode === 'server' && payload?.total != null) {
+      this.#state.totalRows = payload.total;
     }
 
     // Sync pagination từ server nếu có
@@ -368,6 +366,16 @@ class TableInstance {
    * @param {string} col
    */
   setSort(col) {
+    if (this.#state.sort.col === col) {
+      if (this.#state.sort.dir === 'asc') {
+        this.#state.sort.dir = 'desc';
+      } else if (this.#state.sort.dir === 'desc') {
+        this.#state.sort = { col: null, dir: null };
+      }
+    } else {
+      this.#state.sort = { col, dir: 'asc' };
+    }
+
     this.#state.pagination.pageIndex = 0;
     this.#commit('sort');
   }

@@ -1,9 +1,13 @@
 <?php
-use App\Controllers\Api\{MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController};
+use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
   $router->prefix('v1')->group(function ($router) {
+    $router->prefix('accounts')->group(function ($router) {
+      $router->get('/', [AccountApiController::class, 'index']);
+    });
+
     $router->prefix('students')->group(function ($router) {
       $router->get('/', [StudentApiController::class, 'index']);
       $router->post('/', [StudentApiController::class, 'store']);
@@ -30,7 +34,7 @@ $router->prefix('api')->group(function ($router) {
 
         $router->get('/search-eligible-students', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'searchStudents']);
         $router->get('/search-eligible-teachers', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'searchTeachers']);
-        
+
         $router->post('/referral-letters/bulk-action', [\App\Controllers\Api\InternshipBatchManagementApiController::class, 'bulkActionReferralLetters']);
       });
 
@@ -71,6 +75,6 @@ $router->prefix('api')->group(function ($router) {
     $router->prefix('companies')->group(function (Router $router) {
       $router->get('/suggest-by-name', [CompanyApiController::class, 'suggestByName']);
     });
-    
+
   });
 });
