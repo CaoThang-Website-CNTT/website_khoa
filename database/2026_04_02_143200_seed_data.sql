@@ -222,7 +222,12 @@ INSERT INTO `web_settings` (`key`, `group`, `group_label`, `type`, `value`, `lab
 ('theme_color_secondary', 'ui', 'UI', 'string', '#F59E0B', 'Màu phụ'),
 ('admission_status', 'system', 'System', 'bool', '1', 'Đang mở tuyển sinh'),
 ('notification_banner', 'ui', 'UI', 'text', 'Chào mừng năm học 2026 - 2027!', 'Banner thông báo'),
-('copyright_text', 'general', 'General', 'string', '© 2026 Trường Cao đẳng Kỹ thuật Cao Thắng', 'Bản quyền');
+('copyright_text', 'general', 'General', 'string', '© 2026 Trường Cao đẳng Kỹ thuật Cao Thắng', 'Bản quyền'),
+('internship_company_declaration_weeks', 'internship', 'Thực tập tốt nghiệp', 'int', '3', 'Thời gian khai báo công ty (tuần)'),
+('internship_report_max_size_mb', 'internship', 'Thực tập tốt nghiệp', 'int', '50', 'Dung lượng báo cáo tối đa (MB)'),
+('internship_report_submission_days', 'internship', 'Thực tập tốt nghiệp', 'int', '7', 'Hạn nộp báo cáo sau khi đợt kết thúc (ngày)'),
+('internship_company_warning_days', 'internship', 'Thực tập tốt nghiệp', 'int', '3', 'Thời gian cảnh báo khai báo công ty (ngày)'),
+('internship_report_warning_days', 'internship', 'Thực tập tốt nghiệp', 'int', '3', 'Thời gian cảnh báo nộp báo cáo (ngày)');
 
 
 -- ---------------------------------------------------------------------------- 

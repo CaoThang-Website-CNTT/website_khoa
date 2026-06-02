@@ -66,7 +66,7 @@ $effectiveMetadata = $effStatus ? [
           <?php else: ?>
             <?php foreach ($batches as $b): ?>
               <option value="<?= $b['id'] ?>" <?= $current && $current['id'] == $b['id'] ? 'selected' : '' ?>>
-                <?= htmlspecialchars($b['title']) ?>
+                <?= htmlspecialchars(mb_strimwidth($b['title'], 0, 25, "...")) ?>
               </option>
             <?php endforeach; ?>
           <?php endif; ?>
@@ -114,10 +114,26 @@ $effectiveMetadata = $effStatus ? [
             <i class="fa-solid fa-building mr-2"></i>
             Thông tin công ty
           </h3>
-          <!-- TODO: hiển thị động thời gian còn lại or hiển thị hạn chót khai báo thông tin? -->
-          <?php if ($can_edit_company): ?>
-            <p class="text-xs">Bạn cần khai báo thông tin công ty trong vòng 3 tuần kể từ khi đợt thực tập bắt đầu.</p>
-          <?php endif; ?>
+          <div class="card__header-meta">
+            <?php if ($company_deadline): ?>
+              <?php
+              $deadlineDt = new \DateTime($company_deadline);
+              $now = new \DateTime();
+              $isNear = $now >= (clone $deadlineDt)->modify("-{$company_warning_days} days") && $now <= $deadlineDt;
+              $isPassed = $now > $deadlineDt;
+              ?>
+              <?php if ($isPassed): ?>
+                <span class="badge" data-variant="destructive">
+                  <i class="fa-solid fa-lock mr-1"></i> Đã hết hạn
+                </span>
+              <?php elseif ($isNear): ?>
+                <span class="badge" data-variant="warning">
+                  <i class="fa-solid fa-triangle-exclamation mr-1"></i> Sắp hết hạn
+                </span>
+              <?php endif; ?>
+              <p class="text-xs">Hạn chót khai báo: <span class="font-semibold"><?= $deadlineDt->format('d/m/Y') ?></span></p>
+            <?php endif; ?>
+          </div>
         </div>
         <hr class="separator" />
         <div class="card__content">
@@ -175,17 +191,25 @@ $effectiveMetadata = $effStatus ? [
               </div>
             </form>
           <?php else: ?>
-            <div>
-              <?php if ($current['company_name']): ?>
-                <p><span class="font-bold">Tên công ty:</span> <?= htmlspecialchars($current['company_name']) ?></p>
-                <p><span class="font-bold">MST:</span> <?= htmlspecialchars($current['company_tax_code']) ?></p>
-                <p><span class="font-bold">Địa chỉ:</span> <?= htmlspecialchars($current['company_address']) ?></p>
-                <p><span class="font-bold">Vị trí:</span> <?= htmlspecialchars($current['position']) ?></p>
-                <p><span class="font-bold">Thời gian thực tập:</span> từ <time datetime="<?= date("d/m/Y", strtotime($current['internship_start_date'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_start_date']))) ?></time> đến <time datetime="<?= date("d/m/Y", strtotime($current['internship_end_date'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_end_date']))) ?></p>
-              <?php else: ?>
-                <p>Chưa có thông tin công ty và đã hết thời gian khai báo.</p>
-              <?php endif; ?>
-            </div>
+            <?php if ($current['company_name']): ?>
+              <div class="grid gap-2">
+                <p><span class="font-bold">Tên công ty:</span> <?= htmlspecialchars($current['company_name'] ?? 'Chưa có') ?></p>
+                <p><span class="font-bold">MST:</span> <?= htmlspecialchars($current['company_tax_code'] ?? 'Chưa có') ?></p>
+                <p><span class="font-bold">Địa chỉ:</span> <?= htmlspecialchars($current['company_address'] ?? 'Chưa có') ?></p>
+                <p><span class="font-bold">Vị trí:</span> <?= htmlspecialchars($current['position'] ?? 'Chưa có') ?></p>
+                <p><span class="font-bold">Thời gian thực tập:</span>
+                  <?php if ($current['internship_start_date'] && $current['internship_end_date']): ?>
+                    từ <?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_start_date']))) ?> đến <?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_end_date']))) ?>
+                  <?php else: ?>
+                    Chưa có
+                  <?php endif; ?>
+                </p>
+              </div>
+            <?php else: ?>
+              <div class="empty-state">
+                <p class="text-sm text-muted-foreground text-center">Chưa có thông tin công ty và đã hết thời gian khai báo.</p>
+              </div>
+            <?php endif; ?>
           <?php endif; ?>
         </div>
       </div>
@@ -222,11 +246,13 @@ $effectiveMetadata = $effStatus ? [
             </div>
           <?php endif; ?>
         </div>
-        <div class="card__footer">
-          <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>" class="btn w-full" data-variant="outline" data-size="sm">
-            Xem tất cả (<?= $total_referral_letters ?>)
-          </a>
-        </div>
+        <?php if (!empty($recent_referral_letters)): ?>
+          <div class="card__footer">
+            <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>" class="btn w-full" data-variant="outline" data-size="sm">
+              Xem tất cả (<?= $total_referral_letters ?>)
+            </a>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
 
@@ -253,6 +279,23 @@ $effectiveMetadata = $effStatus ? [
               <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
               Nộp tài liệu thực tập tốt nghiệp
             </h3>
+            <div class="card__header-meta">
+              <?php if ($report_deadline): ?>
+                <?php
+                $rdDt = new \DateTime($report_deadline);
+                $isRNear = $now >= (clone $rdDt)->modify("-{$report_warning_days} days") && $now <= $rdDt;
+                $isRPassed = $now > $rdDt;
+                ?>
+                <?php if ($isRPassed): ?>
+                  <span class="badge" data-variant="destructive">
+                    <i class="fa-solid fa-lock mr-1"></i>Hết hạn nộp</span>
+                <?php elseif ($isRNear): ?>
+                  <span class="badge" data-variant="warning">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hạn</span>
+                <?php endif; ?>
+                <p class="text-xs">Hạn chót nộp: <span class="font-semibold"><?= $rdDt->format('d/m/Y') ?></span></p>
+              <?php endif; ?>
+            </div>
             <p class="text-xs">Tài liệu được gửi cho giảng viên hướng dẫn để đánh giá kết quả thực tập.</p>
           </div>
           <hr class="separator" />
@@ -266,12 +309,16 @@ $effectiveMetadata = $effStatus ? [
                 </div>
                 <p class="upload-area__text">Nhấn để chọn file hoặc kéo thả vào đây</p>
                 <p class="upload-area__hint">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty, nhật ký thực tập, hình ảnh liên quan... thành một file nén.</p>
-                <p class="upload-area__hint">Định dạng hỗ trợ: ZIP, RAR. Dung lượng tối đa: 50MB</p>
+                <p class="upload-area__hint">Định dạng hỗ trợ: ZIP, RAR. Dung lượng tối đa: <?= $max_file_size_mb ?>MB</p>
                 <input type="file" name="report_file" class="hidden" id="report_file" accept=".zip,.rar">
               </div>
               <div id="filePreview" class="hidden mt-4 text-sm text-center"></div>
               <div class="mt-4 flex justify-end">
-                <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài liệu</button>
+                <?php if ($can_submit_report): ?>
+                  <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài liệu</button>
+                <?php else: ?>
+                  <button type="button" class="btn" data-variant="outline" data-size="lg" disabled>Đã hết hạn nộp</button>
+                <?php endif; ?>
               </div>
             </form>
           </div>

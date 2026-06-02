@@ -53,16 +53,6 @@
     <template data-tm-col="major_name" data-tm-label="Ngành" data-tm-filter-type="select"
       data-tm-filter-options='<?= json_encode($majorOptions, JSON_UNESCAPED_UNICODE) ?>'></template>
 
-    <!-- Cột Chuyên ngành -->
-    <?php
-    $specOptions = [['label' => 'Tất cả', 'value' => '']];
-    foreach ($specializations as $s) {
-      $specOptions[] = ['label' => $s->full_name, 'value' => $s->full_name];
-    }
-    ?>
-    <template data-tm-col="specialization_name" data-tm-label="Chuyên ngành" data-tm-filter-type="select"
-      data-tm-filter-options='<?= json_encode($specOptions, JSON_UNESCAPED_UNICODE) ?>'></template>
-
     <template data-tm-pagination></template>
   </div>
 </div>
