@@ -3,4 +3,4 @@
 /storage/**
 docs
 .cursorrules
-tests/debug.log
+/tests/**
