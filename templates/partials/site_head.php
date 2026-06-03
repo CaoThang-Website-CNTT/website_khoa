@@ -4,10 +4,9 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 ?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
 <title><?= $_metaTitle ?></title>
-<?php if ($_metaDesc): ?>
-  <meta name="description" content="<?= $_metaDesc ?>">
-<?php endif; ?>
+<meta name="description" content="<?= $_metaDesc ?>">
 
 <!-- ========== All CSS files linkup ========= -->
 <link rel="icon" type="image/png" sizes="32x32" href="<?= url('public/favicon-32x32.png') ?>">
@@ -24,7 +23,6 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
-<link rel="shortcut icon" href="<?= url('assets/images/favicon.svg') ?>" type="image/x-icon">
 
 <script src="<?= url('/public/js/utils.js') ?>"></script>
 <script src="<?= url('/public/js/toast.js') ?>"></script>

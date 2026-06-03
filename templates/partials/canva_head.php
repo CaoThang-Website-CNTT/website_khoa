@@ -27,7 +27,6 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_editor.css') ?>">
-<link rel="shortcut icon" href="<?= url('assets/images/favicon.svg') ?>" type="image/x-icon">
 
 <script src="<?= url('/public/js/utils.js') ?>"></script>
 <script src="<?= url('/public/js/toast.js') ?>"></script>
