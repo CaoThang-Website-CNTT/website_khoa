@@ -29,8 +29,14 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
         <div class="field" data-field-required>
           <label class="field__label" for="password">Mật khẩu</label>
-          <input id="password" class="field__input" type="password" name="password" placeholder="Nhập mật khẩu"
-            autocomplete="current-password">
+          <div class="password-field">
+            <input id="password" class="field__input" type="password" name="password" placeholder="Nhập mật khẩu"
+              autocomplete="current-password">
+            <button class="password-field__toggle" type="button" data-password-toggle="password"
+              aria-label="Show password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
         </div>
       </div>
     </form>

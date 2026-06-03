@@ -2,6 +2,7 @@
 namespace App\Core\Schema;
 
 use App\Core\Schema\Compiler\ISQLCompiler;
+use InvalidArgumentException;
 
 interface IQueryBuilder
 {
@@ -58,6 +59,20 @@ interface IQueryBuilder
   /** * Thêm điều kiện kiểm tra thuộc một danh sách giá trị (IN).
    */
   public function in(string $column, array $values): static;
+
+  public function orEq(string $column, mixed $value): static;
+  public function orNeq(string $column, mixed $value): static;
+  public function orGt(string $column, mixed $value): static;
+  public function orLt(string $column, mixed $value): static;
+  public function orLike(string $column, string $pattern): static;
+  public function orIlike(string $column, string $pattern): static;
+  public function orIs(string $column, mixed $value): static;
+  public function orIn(string $column, array $values): static;
+
+  /**
+   * Nhóm điều kiện WHERE trong ngoặc đơn, ví dụ: (email LIKE ? OR phone LIKE ?).
+   */
+  public function whereGroup(callable $callback, string $boolean = 'AND'): static;
 
   /** * Thực hiện liên kết (JOIN) với một bảng khác.
    */
@@ -177,15 +192,61 @@ class QueryBuilder implements IQueryBuilder
 
   public function is(string $column, mixed $value): static
   {
-    $this->wheres[] = ['type' => 'Null', 'column' => $column, 'operator' => $value === null ? 'IS NULL' : "IS $value", 'boolean' => 'AND'];
-    return $this;
+    return $this->addNullWhere($column, $value);
   }
 
   public function in(string $column, array $values): static
   {
-    $this->wheres[] = ['type' => 'In', 'column' => $column, 'values' => $values, 'boolean' => 'AND'];
-    $this->whereBindings = array_merge($this->whereBindings, $values);
-    return $this;
+    return $this->addInWhere($column, $values);
+  }
+
+  public function orEq(string $column, mixed $value): static
+  {
+    return $this->addWhere($column, '=', $value, 'OR');
+  }
+  public function orNeq(string $column, mixed $value): static
+  {
+    return $this->addWhere($column, '<>', $value, 'OR');
+  }
+  public function orGt(string $column, mixed $value): static
+  {
+    return $this->addWhere($column, '>', $value, 'OR');
+  }
+  public function orLt(string $column, mixed $value): static
+  {
+    return $this->addWhere($column, '<', $value, 'OR');
+  }
+  public function orLike(string $column, string $pattern): static
+  {
+    return $this->addWhere($column, 'LIKE', $pattern, 'OR');
+  }
+  public function orIlike(string $column, string $pattern): static
+  {
+    return $this->addWhere($column, 'ILIKE', $pattern, 'OR');
+  }
+  public function orIs(string $column, mixed $value): static
+  {
+    return $this->addNullWhere($column, $value, 'OR');
+  }
+  public function orIn(string $column, array $values): static
+  {
+    return $this->addInWhere($column, $values, 'OR');
+  }
+
+  public function whereGroup(callable $callback, string $boolean = 'AND'): static
+  {
+    $nested = new static($this->compiler);
+    $callback($nested);
+
+    if (empty($nested->wheres)) {
+      throw new InvalidArgumentException('whereGroup requires at least one condition.');
+    }
+
+    return $this->pushWhere([
+      'type' => 'Nested',
+      'boolean' => $boolean,
+      'wheres' => $nested->wheres,
+    ], $nested->whereBindings);
   }
 
   public function join(string $table, string $first, string $operator, string $second, string $type = 'inner'): static
@@ -199,12 +260,45 @@ class QueryBuilder implements IQueryBuilder
     return $this->join($table, $first, $operator, $second, 'left');
   }
 
-  protected function addWhere(string $column, string $operator, mixed $value, string $boolean = 'AND'): static
+  protected function pushWhere(array $clause, array $bindings = []): static
   {
-    $this->wheres[] = ['type' => 'Basic', 'column' => $column, 'operator' => $operator, 'boolean' => $boolean];
-    $this->whereBindings[] = $value; // tách riêng
+    $this->wheres[] = $clause;
+    if ($bindings !== []) {
+      $this->whereBindings = array_merge($this->whereBindings, $bindings);
+    }
     return $this;
   }
+
+  protected function addWhere(string $column, string $operator, mixed $value, string $boolean = 'AND'): static
+  {
+    return $this->pushWhere([
+      'type' => 'Basic',
+      'column' => $column,
+      'operator' => $operator,
+      'boolean' => $boolean,
+    ], [$value]);
+  }
+
+  protected function addNullWhere(string $column, mixed $value, string $boolean = 'AND'): static
+  {
+    return $this->pushWhere([
+      'type' => 'Null',
+      'column' => $column,
+      'operator' => $value === null ? 'IS NULL' : "IS $value",
+      'boolean' => $boolean,
+    ]);
+  }
+
+  protected function addInWhere(string $column, array $values, string $boolean = 'AND'): static
+  {
+    return $this->pushWhere([
+      'type' => 'In',
+      'column' => $column,
+      'values' => $values,
+      'boolean' => $boolean,
+    ], $values);
+  }
+
   public function order(string $column, array $options = ['ascending' => true]): static
   {
     $this->orders[] = ['column' => $column, 'direction' => ($options['ascending'] ?? true) ? 'ASC' : 'DESC'];

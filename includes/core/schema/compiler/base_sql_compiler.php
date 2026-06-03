@@ -75,7 +75,10 @@ abstract class BaseSQLCompiler implements ISQLCompiler
     foreach ($wheres as $i => $w) {
       $lead = ($i === 0) ? '' : ($w['boolean'] ?? 'AND') . ' ';
 
-      if (($w['type'] ?? 'Basic') === 'Null') {
+      if (($w['type'] ?? 'Basic') === 'Nested') {
+        $inner = $this->compileWheres($w['wheres'] ?? []);
+        $sql[] = $lead . '(' . $inner . ')';
+      } elseif (($w['type'] ?? 'Basic') === 'Null') {
         $sql[] = $lead . $this->wrap($w['column']) . " " . $w['operator'];
       } elseif (($w['type'] ?? 'Basic') === 'In') {
         $placeholders = implode(', ', array_fill(0, count($w['values']), '?'));

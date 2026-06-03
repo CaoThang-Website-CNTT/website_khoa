@@ -39,23 +39,37 @@ class AccountController extends Controller
 
     $validator = new RequestValidator();
     $rules = [
+      'email' => ['required', 'email', 'max:255'],
+      'password' => ['required', 'max:255'],
+      'password_confirmation' => ['required', 'max:255', 'same:password'],
+      'role' => ['required', 'in:admin,editor,student,teacher']
     ];
 
-    if (!$validator->validate($data, $rules)) {
+    if ($validator->validate($data, $rules)) {
+      if (!$this->_accountService->isEmailUnique($data['email'])) {
+        $validator->addError('email', 'Email này đã được sử dụng.');
+      }
+    }
+
+    if ($validator->hasErrors()) {
       $request->flashOldInputs();
       $request->session()->flashErrors($validator->getErrors());
       return $this->redirect('admin/accounts/create');
     }
 
     try {
-      $newAccount = "";
+      $newAccount = $this->_accountService->createAccount($data['email'], $data['password'], $data['role']);
 
-      $request->session()->flashNotify(
-        'success',
-        'Tạo account thành công!',
-        "Account \"{$newAccount->email}\" đã được tạo."
-      );
-      return $this->redirect('admin/accounts');
+      if ($newAccount) {
+        $request->session()->flashNotify(
+          'success',
+          'Tạo account thành công!',
+          "Account \"{$data['email']}\" đã được tạo."
+        );
+        return $this->redirect('admin/accounts');
+      } else {
+        throw new \RuntimeException("Không thể tạo account.");
+      }
     } catch (\Exception $e) {
       $request->session()->flashNotify(
         'error',
@@ -66,9 +80,9 @@ class AccountController extends Controller
     }
   }
 
-  public function edit($id)
+  public function edit($account_id)
   {
-    $account = $this->_accountService->getAccount($id);
+    $account = $this->_accountService->getAccount($account_id);
 
     if (!$account) {
       $this->abort(404);
@@ -79,9 +93,9 @@ class AccountController extends Controller
     ], layout: 'dashboard_layout');
   }
 
-  public function update($id, Request $request)
+  public function update($account_id, Request $request)
   {
-    $account = $this->_accountService->getAccount($id);
+    $account = $this->_accountService->getAccount($account_id);
 
     if (!$account) {
       $this->abort(404);
@@ -91,10 +105,34 @@ class AccountController extends Controller
 
     $validator = new RequestValidator();
     $rules = [
+      'email' => ['required', 'email', 'max:255'],
+      'password' => ['nullable', 'max:255'],
+      'password_confirmation' => ['nullable', 'max:255'],
+      'role' => ['required', 'in:admin,editor,student,teacher']
     ];
 
+    if (trim((string) ($data['password'] ?? '')) !== '') {
+      $rules['password_confirmation'] = ['required', 'max:255', 'same:password'];
+    }
+
+    if ($validator->validate($data, $rules)) {
+      if (!$this->_accountService->isEmailUnique($data['email'], $account->id)) {
+        $validator->addError('email', 'Email này đã được sử dụng.');
+      }
+    }
+
+    if ($validator->hasErrors()) {
+      $request->flashOldInputs();
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect('admin/accounts/' . $account_id);
+    }
+
     try {
-      $request->session()->flashNotify('success', 'Cập nhật account #' . $id . 'thành công!');
+      $this->_accountService->updateAccount($account_id, $data['email'], $data['password'] ?? null, $data['role']);
+      $request->session()->flashNotify(
+        'success',
+        "Cập nhật account #" . $account_id . " thành công!"
+      );
       return $this->redirect('admin/accounts');
     } catch (\Exception $e) {
       $request->session()->flashNotify(
@@ -102,20 +140,21 @@ class AccountController extends Controller
         'Có lỗi xảy ra, vui lòng thử lại.',
         $e->getMessage()
       );
-      return $this->redirect('admin/accounts/' . $id);
+      return $this->redirect('admin/accounts/' . $account_id);
     }
   }
 
-  public function destroy($id, Request $request)
+  public function destroy($account_id, Request $request)
   {
-    $account = $this->_accountService->getAccount($id);
+    $account = $this->_accountService->getAccount($account_id);
 
     if (!$account) {
       $this->abort(404);
     }
 
     try {
-      $request->session()->flashNotify('success', 'Xóa account #' . $id . ' thành công!');
+      $this->_accountService->deactivateAccount($account_id);
+      $request->session()->flashNotify('success', 'Xóa account #' . $account_id . ' thành công!');
       return $this->redirect('admin/accounts');
     } catch (\Exception $e) {
       $request->session()->flashNotify(
@@ -123,7 +162,7 @@ class AccountController extends Controller
         'Có lỗi xảy ra, vui lòng thử lại.',
         $e->getMessage()
       );
-      return $this->redirect('admin/accounts/' . $id);
+      return $this->redirect('admin/accounts/' . $account_id);
     }
   }
 }

@@ -846,6 +846,31 @@
     outline: none;
   }
 
+  .password-field {
+    position: relative;
+  }
+
+  .password-field .field__input {
+    padding-right: 2.5rem !important;
+  }
+
+  .password-field__toggle {
+    position: absolute;
+    top: 0;
+    right: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    color: var(--muted-foreground);
+    border-radius: var(--radius-md);
+  }
+
+  .password-field__toggle :is(.fa-solid, .fa-regular) {
+    font-size: var(--text-sm);
+  }
+
   textarea.field__input {
     min-height: 4rem;
     field-sizing: content;
@@ -1105,8 +1130,12 @@
     color: var(--card-foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: 1rem 0 0;
+    padding: 1rem 0;
     gap: 1rem;
+  }
+
+  .card:has(.card__footer) {
+    padding: 1rem 0 0;
   }
 
   .card__header {

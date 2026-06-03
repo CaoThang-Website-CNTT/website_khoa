@@ -29,7 +29,8 @@
   </template>
 
   <!-- Cột Role -->
-  <template data-tm-col="role" data-tm-label="Vai trò" data-tm-sortable></template>
+  <template data-tm-col="role" data-tm-label="Vai trò" data-tm-sortable data-tm-filter-type="select"
+    data-tm-filter-options='[{"label":"Admin","value":"admin"},{"label":"Editor","value":"editor"},{"label":"Student","value":"student"},{"label":"Teacher","value":"teacher"}]'></template>
 
   <!-- Cột Created At-->
   <template data-tm-col="created_at" data-tm-label="Ngày tạo"></template>

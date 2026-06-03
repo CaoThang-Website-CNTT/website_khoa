@@ -12,7 +12,7 @@ use App\Models\Account;
 
 interface IAccountStore
 {
-  public function create(string $email, string $hash, string $role): int;
+  public function create(string $email, string $hash, string $role): Account;
   /** @return Account[] */
   public function getPaginated(int $pageTo, int $limit = 15): array;
 
@@ -24,6 +24,7 @@ interface IAccountStore
   public function findByEmail(string $email): ?Account;
   public function updatePassword(int $id, string $newHash): bool;
   public function updateRole(int $id, string $role): bool;
+  public function updateAccount(int $id, string $email, ?string $passwordHash, string $role): bool;
   public function softDelete(int $id): bool;
   public function isEmailUnique(string $email, ?int $excludeId = null): bool;
   public function existsWithRole(int $id, string $role): bool;
@@ -39,20 +40,20 @@ class AccountStore extends Store implements IAccountStore
     'role',
     'created_at',
   ];
-  public function create(string $email, string $hash, string $role): int
+  public function create(string $email, string $hash, string $role): Account
   {
-    $sql = "
-      INSERT INTO `accounts` (email, password_hash, role) 
-      VALUES (:email, :hash, :role)
-    ";
-
-    $this->db->prepare($sql)->execute([
-      ':email' => $email,
-      ':hash' => $hash,
-      ':role' => $role
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('accounts')->insert([
+      'email' => $email,
+      'password_hash' => $hash,
+      'role' => $role,
+      'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+      'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
     ]);
-
-    return (int) $this->db->lastInsertId();
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    $id = (int) $this->db->lastInsertId();
+    return $this->getById($id) ?? throw new \RuntimeException("Không thể lấy Account sau khi tạo.");
   }
 
   public function getAllByRole(string $role): array
@@ -153,52 +154,66 @@ class AccountStore extends Store implements IAccountStore
   }
   public function updatePassword(int $id, string $newHash): bool
   {
-    return $this->db->prepare("
-      UPDATE `accounts` SET
-      password_hash = :hash
-      WHERE id = :id
-    ")->execute([
-          ':hash' => $newHash,
-          ':id' => $id
-        ]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('accounts')->update([
+      'password_hash' => $newHash,
+      'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function updateRole(int $id, string $role): bool
   {
-    return $this->db->prepare("
-      UPDATE `accounts` SET
-      role = :role
-      WHERE id = :id"
-    )->execute([
-          ':role' => $role,
-          ':id' => $id
-        ]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('accounts')->update([
+      'role' => $role,
+      'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
+  }
+
+  public function updateAccount(int $id, string $email, ?string $passwordHash, string $role): bool
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $data = [
+      'email' => $email,
+      'role' => $role,
+      'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
+    ];
+    if ($passwordHash) {
+      $data['password_hash'] = $passwordHash;
+    }
+    $query = $builder->from('accounts')->update($data)->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function softDelete(int $id): bool
   {
-    return $this->db->prepare("
-      UPDATE `accounts` SET
-      deleted_at = NOW()
-      WHERE id = :id
-    ")->execute([':id' => $id]);
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('accounts')->update([
+      'deleted_at' => (new \DateTime())->format('Y-m-d H:i:s')
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function isEmailUnique(string $email, ?int $excludeId = null): bool
   {
-    $sql = "
-      SELECT COUNT(*)
-      FROM `accounts`
-      WHERE email = :email AND deleted_at IS NULL";
-    $params = [':email' => $email];
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $builder->from('accounts')
+      ->select('COUNT(*)')
+      ->eq('email', $email)
+      ->is('deleted_at', null);
 
     if ($excludeId !== null) {
-      $sql .= " AND id != :exclude_id";
-      $params[':exclude_id'] = $excludeId;
+      $builder->neq('id', $excludeId);
     }
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($params);
+    $stmt = $this->db->prepare($builder->toSql());
+    $stmt->execute($builder->getBindings());
     return (int) $stmt->fetchColumn() === 0;
   }
   public function existsWithRole(int $id, string $role): bool

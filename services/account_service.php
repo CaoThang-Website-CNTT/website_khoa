@@ -11,7 +11,7 @@ use App\Core\Pageable;
 interface IAccountService
 {
   // C
-  public function createAccount(string $email, string $rawPassword, string $role): int;
+  public function createAccount(string $email, string $rawPassword, string $role): ?Account;
 
   // R
   public function getAccounts(int $page, int $limit = 15): Pageable;
@@ -23,6 +23,7 @@ interface IAccountService
   public function isEmailUnique(string $email, ?int $excludeAccountId = null): bool;
   public function deactivateAccount(int $accountId): bool;
   public function isAdminExists(int $accountId): bool;
+  public function updateAccount(int $id, string $email, ?string $rawPassword, string $role): bool;
 }
 
 class AccountService implements IAccountService
@@ -33,10 +34,10 @@ class AccountService implements IAccountService
     $this->_accountStore = $accountStore;
   }
   // C
-  public function createAccount(string $email, string $rawPassword, string $role): int
+  public function createAccount(string $email, string $rawPassword, string $role): ?Account
   {
     if (!$this->_accountStore->isEmailUnique($email)) {
-      return 0;
+      return null;
     }
 
     $hashedNewPassword = password_hash($rawPassword, PASSWORD_DEFAULT);
@@ -88,6 +89,14 @@ class AccountService implements IAccountService
     }
 
     return $this->_accountStore->existsWithRole($accountId, 'admin');
+  }
+  public function updateAccount(int $id, string $email, ?string $rawPassword, string $role): bool
+  {
+    $hash = null;
+    if ($rawPassword && trim($rawPassword) !== '') {
+      $hash = password_hash($rawPassword, PASSWORD_DEFAULT);
+    }
+    return $this->_accountStore->updateAccount($id, $email, $hash, $role);
   }
   /**
    * Xác định Role dựa trên định dạng email của trường.

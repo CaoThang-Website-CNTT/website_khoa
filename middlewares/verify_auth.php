@@ -10,10 +10,7 @@ class VerifyAuth extends BaseMiddleware
 {
   public function handle(Request $request, Closure $next)
   {
-    $session = new Session();
-    $request->setSession($session);
-
-    if (!$session->isAuthenticated()) {
+    if (!$request->session()->isAuthenticated()) {
       $this->redirect('/login');
     }
 

@@ -16,7 +16,26 @@ class FormHandler {
   init() {
     // Xử lý các loại field chuyên biệt
     this._initFields();
+    this._initPasswordFields();
     this._initRadioGroups();
+  }
+  _initPasswordFields() {
+    const passwordToggleButtons = document.querySelectorAll('[data-password-toggle]');
+
+    passwordToggleButtons.forEach((button) => {
+      const input = document.getElementById(button.dataset.passwordToggle);
+      const icon = button.querySelector('i');
+
+      if (!input || !icon) return;
+
+      button.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        icon.classList.toggle('fa-eye', !isPassword);
+        icon.classList.toggle('fa-eye-slash', isPassword);
+        button.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+      });
+    });
   }
   _initFields() {
     // Lọc lấy các field <input /> thông thường

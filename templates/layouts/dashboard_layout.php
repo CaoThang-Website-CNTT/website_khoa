@@ -34,17 +34,20 @@
                 <?= $layout->yield("heading") ?>
               </div>
 
-              <div class="flex gap-4 items-center">
+              <div class="flex gap-2 items-center">
                 <?= $layout->yield("actions") ?>
               </div>
             </div>
           </div>
         <?php endif; ?>
+
+        <!-- Main: Start -->
         <?php if ($layout->hasContent("content")): ?> <!-- Dùng ViewEngine mới -->
           <?= $layout->yield("content") ?>
         <?php else: ?> <!-- Giữ lại cho tương thích với ViewEngine cũ -->
           <?= $content ?? '' ?>
         <?php endif; ?>
+        <!-- Main: End -->
       </div>
     </main>
   </div>
