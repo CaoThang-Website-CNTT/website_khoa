@@ -25,11 +25,9 @@
       $showAuthor = $newsSettings['show_author'] ?? false;
       $showDate = $newsSettings['show_date'] ?? true;
       $showViewCount = $newsSettings['show_view_count'] ?? false;
-
-      print_r($newsSettings);
       ?>
 
-      <div class="relative grid grid-cols-3 gap-8">
+      <div class="relative grid <?= $detail->hasToc() ? 'grid-cols-3' : 'grid-cols-1' ?> gap-8">
         <!-- LEFT: MAIN -->
         <div class="news-detail col-span-2">
           <!-- News Header -->
@@ -117,38 +115,39 @@
 
           <!-- News Author -->
         </div>
-
-        <!-- RIGHT: SIDEBAR -->
-        <div class="news-sidebar col-span-1">
-          <div class="news-sidebar-wrapper">
-            <!-- News TOC -->
-            <div class="news-toc card">
-              <div class="card__header">
-                <h3 class="card__title">Nội dung bài viết</h3>
-                <hr class="separator">
-              </div>
-              <div class="card__content">
-                <?php if ($detail->hasToc()): ?>
-                  <ul class="news-toc-list">
-                    <?php foreach ($detail->entries() as $entry): ?>
-                      <li class="new-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
-                        <?php if ($entry->anchorId !== ''): ?>
-                          <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
-                            <?= htmlspecialchars($entry->plainText) ?>
-                          </a>
-                        <?php else: ?>
-                          <span>
-                            <?= htmlspecialchars($entry->plainText) ?>
-                          </span>
-                        <?php endif; ?>
-                      </li>
-                    <?php endforeach; ?>
-                  </ul>
-                <?php endif; ?>
+        <?php if ($detail->hasToc()): ?>
+          <!-- RIGHT: SIDEBAR -->
+          <div class="news-sidebar col-span-1">
+            <div class="news-sidebar-wrapper">
+              <!-- News TOC -->
+              <div class="news-toc card">
+                <div class="card__header">
+                  <h3 class="card__title">Nội dung bài viết</h3>
+                  <hr class="separator">
+                </div>
+                <div class="card__content">
+                  <?php if ($detail->hasToc()): ?>
+                    <ul class="news-toc-list">
+                      <?php foreach ($detail->entries() as $entry): ?>
+                        <li class="new-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
+                          <?php if ($entry->anchorId !== ''): ?>
+                            <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
+                              <?= htmlspecialchars($entry->plainText) ?>
+                            </a>
+                          <?php else: ?>
+                            <span>
+                              <?= htmlspecialchars($entry->plainText) ?>
+                            </span>
+                          <?php endif; ?>
+                        </li>
+                      <?php endforeach; ?>
+                    </ul>
+                  <?php endif; ?>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>

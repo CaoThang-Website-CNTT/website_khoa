@@ -299,10 +299,14 @@ class EditorMetaBinder {
       }
       // Contenteditable element
       else if (el.isContentEditable) {
-        el.innerText = value;
+        if (el !== document.activeElement) {
+          el.innerText = value;
+        }
       }
       else {
-        el.value = value ?? '';
+        if (el !== document.activeElement) {
+          el.value = value ?? '';
+        }
       }
     });
   }

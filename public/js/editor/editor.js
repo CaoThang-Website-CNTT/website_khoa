@@ -313,7 +313,7 @@ export class EditorManager {
     const block = this.#canvas.getBlock(blockId);
     if (!block) return;
 
-    const editable = this.#getEditableEl(blockId);
+    const editable = this.#getEditableEl(blockId, range);
     if (!editable) return;
 
     const tokens = InlineFormatter.parse(editable.innerHTML);
@@ -339,7 +339,7 @@ export class EditorManager {
     if (range.collapsed) return;
 
     const block = this.#canvas.getBlock(blockId);
-    const editable = this.#getEditableEl(blockId);
+    const editable = this.#getEditableEl(blockId, range);
     if (!block || !editable) return;
 
     const prevContent = block._cloneData().content;
@@ -352,7 +352,15 @@ export class EditorManager {
     const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, command);
 
     const nextContent = BlockSerializer.tokensToSegments(newTokens);
-    this.#recordAndApply(blockId, 'content', prevContent, nextContent, `Format: ${command}`);
+    this.#recordAndApply(
+      blockId,
+      "rich_text",
+      prevContent,
+      nextContent,
+      `Format: ${command}`,
+      "UPDATE",
+      editable
+    );
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
@@ -367,7 +375,7 @@ export class EditorManager {
    */
   #onInlineLinkRequest({ href, blockId, range }) {
     const block = this.#canvas.getBlock(blockId);
-    const editable = this.#getEditableEl(blockId);
+    const editable = this.#getEditableEl(blockId, range);
     if (!block || !editable) return;
 
     const prevContent = block._cloneData().content;
@@ -380,7 +388,15 @@ export class EditorManager {
     const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, 'link', href);
 
     const nextContent = BlockSerializer.tokensToSegments(newTokens);
-    this.#recordAndApply(blockId, 'content', prevContent, nextContent, 'Add Link');
+    this.#recordAndApply(
+      blockId,
+      "rich_text",
+      prevContent,
+      nextContent,
+      "Add Link",
+      "UPDATE",
+      editable
+    );
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
@@ -395,7 +411,7 @@ export class EditorManager {
    */
   #onInlineUnlinkRequest({ blockId, range }) {
     const block = this.#canvas.getBlock(blockId);
-    const editable = this.#getEditableEl(blockId);
+    const editable = this.#getEditableEl(blockId, range);
     if (!block || !editable) return;
 
     const prevContent = block._cloneData().content;
@@ -408,7 +424,15 @@ export class EditorManager {
     const newTokens = InlineFormatter.removeLink(tokens, offsets.start, offsets.end);
 
     const nextContent = BlockSerializer.tokensToSegments(newTokens);
-    this.#recordAndApply(blockId, 'content', prevContent, nextContent, 'Unlink');
+    this.#recordAndApply(
+      blockId,
+      "rich_text",
+      prevContent,
+      nextContent,
+      "Unlink",
+      "UPDATE",
+      editable
+    );
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
@@ -418,19 +442,23 @@ export class EditorManager {
   /**
    * Unified Action Performer - Đã được đơn giản hóa, chỉ xử lý cập nhật data.
    */
-  #recordAndApply(blockId, attr, prev, next, label, action = 'UPDATE') {
+  #recordAndApply(blockId, attr, prev, next, label, action = 'UPDATE', editableEl = null) {
     const block = this.#canvas.getBlock(blockId);
     if (!block) return;
 
     // Cập nhật thẻ data trong Canvas
     this.#canvas.updateBlock(blockId, { [attr]: next }, { silent: true });
 
-    // Cập nhật DOM nếu là thay đổi content (từ Toolbar/Format)
-    if (attr === 'content') {
-      const editable = this.#getEditableEl(blockId);
+    // Chỉ đồng bộ DOM nếu là cập nhật nội dung văn bản
+    if (attr === 'rich_text') {
+      const editable = editableEl || this.#getEditableEl(blockId);
+
       if (editable) {
         const tokens = Array.isArray(next) ? BlockSerializer.segmentsToTokens(next) : next;
         editable.innerHTML = InlineFormatter.serialize(tokens);
+
+        // Kích hoạt sự kiện input để các block phức tạp tự đồng bộ dữ liệu
+        editable.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }
   }
@@ -467,11 +495,25 @@ export class EditorManager {
     }
   }
 
-  #getEditableEl(blockId) {
+  #getEditableEl(blockId, range = null) {
     const card = this.#blockList.querySelector(`[data-be-block-id="${blockId}"]`);
     if (!card) return null;
 
-    // Ưu tiên element được đánh dấu rõ ràng
+    // Nếu có range, tìm element editable chứa range đó
+    if (range) {
+      let node = range.commonAncestorContainer;
+      while (node && node !== card) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = /** @type {HTMLElement} */ (node);
+          if (el.isContentEditable || el.dataset.beEditable !== undefined) {
+            return el;
+          }
+        }
+        node = node.parentNode;
+      }
+    }
+
+    // Mặc định: Lấy element editable chính của card
     return (
       card.querySelector('[data-be-editable]') ??
       card.querySelector('[contenteditable="true"]') ??
@@ -544,17 +586,32 @@ export class EditorManager {
   }
 
   getPayload() {
+    const allBlocks = this.#canvas.getBlocks().map(block =>
+      BlockSerializer.toPayload(
+        block,
+        this.#getEditableEl(block.id)
+      )
+    );
+
+    // Trim đầu cuối bài viết để dọn dẹp các block trống
+    let start = 0;
+    while (start < allBlocks.length && BlockSerializer.isBlockEmpty(allBlocks[start])) {
+      start++;
+    }
+
+    let end = allBlocks.length - 1;
+    while (end >= start && BlockSerializer.isBlockEmpty(allBlocks[end])) {
+      end--;
+    }
+
+    const trimmedBlocks = start <= end ? allBlocks.slice(start, end + 1) : [];
+
     return {
       meta: {
         version: 1,
         ...this.#metadata.getData(),
       },
-      blocks: this.#canvas.getBlocks().map(block =>
-        BlockSerializer.toPayload(
-          block,
-          this.#getEditableEl(block.id)
-        )
-      ),
+      blocks: trimmedBlocks,
     };
   }
 }

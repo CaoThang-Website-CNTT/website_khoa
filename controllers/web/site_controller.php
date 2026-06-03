@@ -86,7 +86,7 @@ class SiteController extends Controller
     return $this->render('site/news/detail', [
       'headerMenu' => $headerMenuItems,
       'news' => $news,
-      'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'],
+      'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'] ?? [],
       'detail' => $result,
       'settings' => $this->_settings,
     ], "site_layout");

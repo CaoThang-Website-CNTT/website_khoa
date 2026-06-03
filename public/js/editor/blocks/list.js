@@ -61,10 +61,22 @@ export class ListBlock extends EditorBlock {
   }
 
   /** @param {HTMLElement} liEl @param {'start'|'end'} position */
-  #focusLi(liEl) {
-    const span = liEl.querySelector(':scope > span.be-list-item-text');
+  #focusLi(liEl, position = "end") {
+    const span = liEl.querySelector(":scope > span.be-list-item-text");
     if (!span) return;
+
     span.focus();
+
+    try {
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(span);
+      range.collapse(position === "start");
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {
+      console.warn("Failed to set cursor position in ListBlock:", e);
+    }
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -161,13 +173,7 @@ export class ListBlock extends EditorBlock {
       if (!span) return;
 
       const liEl = span.closest('li[data-path]');
-      const path = this.#pathOf(liEl);
-
-      const { node: n } = this.#nodeAt(path);
-      if (!n) return;
-
-      const html = span.innerHTML?.trim() ?? '';
-      n.rich_text = html ? BlockSerializer.tokensToSegments(RichTextParser.parse(html)) : [];
+      this.#syncItem(liEl);
     });
 
     el.addEventListener('keydown', (e) => {
@@ -190,9 +196,24 @@ export class ListBlock extends EditorBlock {
     });
   }
 
+  #syncItem(liEl) {
+    const span = liEl.querySelector(':scope > span.be-list-item-text');
+    if (!span) return;
+
+    const path = this.#pathOf(liEl);
+    const { node: n } = this.#nodeAt(path);
+    if (!n) return;
+
+    const html = span.innerHTML?.trim() ?? '';
+    n.rich_text = html ? BlockSerializer.tokensToSegments(RichTextParser.parse(html)) : [];
+  }
+
   // ─── Keyboard ─────────────────────────────────────────────────────────────
 
   #handleKeydown(e, liEl, path) {
+    // Luôn sync data của item hiện tại trước khi xử lý phím điều hướng để tránh mất data khi rerender
+    this.#syncItem(liEl);
+
     // New item
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -221,7 +242,7 @@ export class ListBlock extends EditorBlock {
     const depth = this.#depth(path);
 
     if (isEmpty) {
-      depth > 0 ? this.#handleOutdent(liEl, path) : this.#exitBlock(liEl, path);
+      if (depth > 0) this.#handleOutdent(liEl, path);
       return;
     }
 
@@ -278,8 +299,12 @@ export class ListBlock extends EditorBlock {
   #handleBackspaceEmpty(liEl, path) {
     const localIdx = path[path.length - 1];
 
-    if (this.#depth(path) === 0 && localIdx === 0 && this.data.meta.items.length === 1) {
-      this.#exitBlock(liEl, path);
+    // Nếu đây là item cuối cùng của block, không thực hiện xóa để tránh tạo ra block List rỗng (không có thẻ li) -> gây lỗi giao diện và mất chiều cao khối.
+    if (
+      this.#depth(path) === 0 &&
+      localIdx === 0 &&
+      this.data.meta.items.length === 1
+    ) {
       return;
     }
 

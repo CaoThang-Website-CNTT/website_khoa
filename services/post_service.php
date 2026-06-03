@@ -122,7 +122,7 @@ class PostService implements IPostService
     }
 
     $contentJson = json_encode($blocks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    $settingsJson = isset($meta['settings']) ? json_encode($meta['settings'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+    $settingsJson = isset($meta) ? json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
 
     if ($contentJson === false) {
       throw new \InvalidArgumentException('Blocks không hợp lệ, không thể encode JSON.');
@@ -151,7 +151,7 @@ class PostService implements IPostService
       view_count: (int) ($meta['init_view_count'] ?? 0),
       seo_description: $meta['excerpt'] ?? null,
       seo_image_url: $this->resolveSeoImage($meta['featured_image'] ?? null),
-      is_featured: $meta['is_featured'] ?? false,
+      is_featured: $meta['settings']['is_featured'] ?? false,
       published_at: $publishedAt,
     );
 

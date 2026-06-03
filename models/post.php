@@ -49,6 +49,7 @@ final class Post extends Model
       'view_count' => $this->view_count,
       'seo_description' => $this->seo_description,
       'seo_image_url' => $this->seo_image_url,
+      'is_featured' => $this->is_featured ? 1 : 0,
       'published_at' => $this->published_at,
       'created_at' => $this->created_at,
       'updated_at' => $this->updated_at,

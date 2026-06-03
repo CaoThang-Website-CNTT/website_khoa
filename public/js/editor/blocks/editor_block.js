@@ -48,7 +48,14 @@ export class EditorBlock {
   #parseMeta(currentMeta, metaSchema) {
     const parsed = {};
     for (const [key, config] of Object.entries(metaSchema)) {
-      parsed[key] = currentMeta[key] !== undefined ? currentMeta[key] : config.default;
+      if (currentMeta[key] !== undefined) {
+        parsed[key] = currentMeta[key];
+      } else {
+        // Deep clone default value to avoid shared state between instances
+        parsed[key] = (config.default && typeof config.default === 'object')
+          ? JSON.parse(JSON.stringify(config.default))
+          : config.default;
+      }
     }
     return parsed;
   }

@@ -65,6 +65,7 @@ class PostStore extends Store implements IPostStore
       'view_count' => $post->view_count,
       'seo_description' => $post->seo_description,
       'seo_image_url' => $post->seo_image_url,
+      'is_featured' => $post->is_featured ? 1 : 0,
       'published_at' => $post->published_at,
       'created_at' => $now,
       'updated_at' => $now,

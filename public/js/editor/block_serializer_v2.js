@@ -89,12 +89,106 @@ export class BlockSerializer {
    * @returns {{ id: string, type: string, version: number, data: object }}
    */
   static toPayload(block, editableEl) {
+    const data = block.serializeData(editableEl);
+    const cleanedData = BlockSerializer.cleanBlockData(data, block.type);
+
     return {
       id: block.id,
       type: block.type,
       version: block.schema?.version ?? 1,
-      data: block.serializeData(editableEl),
+      data: cleanedData,
     };
+  }
+
+  /**
+   * Làm sạch dữ liệu của các block phức tạp (VD: List) bằng cách
+   * loại bỏ các mục (items) rỗng ở đầu và cuối danh sách.
+   *
+   * @param {object} data - data của block từ serializeData()
+   * @param {string} type - type của block
+   * @returns {object} data đã được làm sạch
+   */
+  static cleanBlockData(data, type) {
+    if (type === "blocks/list" && Array.isArray(data.meta?.items)) {
+      // Vì serializeData trả về tham chiếu, ta clone để tránh side effect
+      const items = JSON.parse(JSON.stringify(data.meta.items));
+      data.meta.items = BlockSerializer.#trimListItems(items);
+    }
+    return data;
+  }
+
+  /**
+   * Đệ quy làm sạch mảng items của danh sách (trim đầu cuối).
+   * Dùng cơ chế đệ quy để dọn dẹp các dòng con trống trước.
+   */
+  static #trimListItems(items) {
+    if (!Array.isArray(items)) return [];
+
+    // 1. Làm sạch các dòng con rỗng trước (Bottom-up)
+    items.forEach((item) => {
+      if (Array.isArray(item.children) && item.children.length > 0) {
+        item.children = BlockSerializer.#trimListItems(item.children);
+      }
+    });
+
+    // 2. Cắt bỏ các dòng trống ở đầu và cuối mảng hiện tại
+    let start = 0;
+    while (start < items.length && BlockSerializer.#isItemEmpty(items[start])) {
+      start++;
+    }
+
+    let end = items.length - 1;
+    while (end >= start && BlockSerializer.#isItemEmpty(items[end])) {
+      end--;
+    }
+
+    return start <= end ? items.slice(start, end + 1) : [];
+  }
+
+  /** Kiểm tra 1 item danh sách có rỗng hay không */
+  static #isItemEmpty(item) {
+    const hasText = Array.isArray(item.rich_text) && item.rich_text.length > 0;
+    const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+    return !hasText && !hasChildren;
+  }
+
+  /**
+   * Kiểm tra xem một block payload có được coi là "trống" hay không.
+   * Dùng để trim các block thừa ở đầu/cuối bài viết.
+   *
+   * @param {object} payload - kết quả từ toPayload()
+   * @returns {boolean}
+   */
+  static isBlockEmpty(payload) {
+    const { type, data } = payload;
+
+    // Kiểm tra văn bản (Paragraph, Heading, Quote...)
+    if (Array.isArray(data.rich_text)) {
+      if (data.rich_text.length > 0) return false;
+
+      // Nếu là List, kiểm tra sâu vào meta.items
+      if (type === 'blocks/list') {
+        const items = data.meta?.items || [];
+        const checkItems = (list) => {
+          return list.every(item => {
+            const hasText = Array.isArray(item.rich_text) && item.rich_text.length > 0;
+            const hasChildren = Array.isArray(item.children) && item.children.length > 0 && !checkItems(item.children);
+            return !hasText && !hasChildren;
+          });
+        };
+        return items.length === 0 || checkItems(items);
+      }
+
+      return true;
+    }
+
+    // Kiểm tra Image
+    if (type === 'blocks/image') {
+      return !data.meta?.url;
+    }
+
+    // Mặc định các block khác (Table, v.v.) không tự động xóa để tránh mất data ngoài ý muốn
+    return false;
   }
 
   /**

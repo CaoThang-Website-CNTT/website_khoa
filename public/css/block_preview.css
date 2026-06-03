@@ -1,20 +1,26 @@
 .be-editable strong,
-.be-editable b {
+.be-editable b,
+.news-detail-content strong,
+.news-detail-content b {
   font-size: inherit;
   font-weight: bold;
 }
 .be-editable i,
-.be-editable em {
+.be-editable em,
+.news-detail-content i,
+.news-detail-content em {
   font-size: inherit;
   font-weight: inherit;
   font-style: italic;
 }
-.be-editable u {
+.be-editable u,
+.news-detail-content u {
   font-size: inherit;
   font-weight: inherit;
   text-decoration: underline;
 }
-.be-editable a {
+.be-editable a,
+.news-detail-content a {
   color: var(--primary);
   text-decoration: underline;
   cursor: pointer;
