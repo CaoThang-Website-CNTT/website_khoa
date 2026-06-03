@@ -31,7 +31,7 @@
 
     <!-- Cột Tên -->
     <template data-tm-col="name" data-tm-label="Tên công ty" data-tm-sortable data-tm-filter-type="text">
-      <a href="<?= url('admin/companies/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+      <a href="<?= url('admin/companies/') ?>{{ row.id }}" class="font-medium">{{ value }}</a>
     </template>
 
     <!-- Cột Mã số thuế -->
@@ -45,7 +45,7 @@
 
     <!-- Cột Website -->
     <template data-tm-col="website" data-tm-label="Website">
-      <a href="{{ value }}" target="_blank" class="text-primary hover:underline">{{ value }}</a>
+      <a href="{{ value }}" target="_blank">{{ value }}</a>
     </template>
 
     <template data-tm-pagination></template>

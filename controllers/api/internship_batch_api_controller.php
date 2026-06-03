@@ -6,6 +6,8 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
 use App\Services\InternshipBatchService;
+use App\Core\Files\UploadedFileHandler;
+use App\Core\Files\BatchStudentImporter;
 use Exception;
 
 class InternshipBatchApiController extends Controller
@@ -63,6 +65,24 @@ class InternshipBatchApiController extends Controller
     }
   }
 
+  public function parseImport(Request $request)
+  {
+    try {
+      $fileHandler = new UploadedFileHandler();
+      $uploadedFile = $fileHandler->fromGlobals('file_import');
+
+      if ($uploadedFile->extension !== 'xlsx') {
+        return $this->json(['message' => 'Chỉ hỗ trợ file định dạng .xlsx'], 400);
+      }
+
+      $students = BatchStudentImporter::import($uploadedFile->tmpPath);
+
+      return $this->json($students, 200);
+    } catch (Exception $e) {
+      return $this->json(['message' => $e->getMessage()], 400);
+    }
+  }
+
   public function getActiveTeachers()
   {
     try {
@@ -82,12 +102,9 @@ class InternshipBatchApiController extends Controller
 
       $rules = [
         'title' => ['required', 'max:255'],
-        'class_of' => ['required'],
-        'level' => ['required', 'in:CĐ,CĐN'],
         'start_at' => ['required', 'date'],
         'end_at' => ['required', 'date'],
-        'student_ids' => ['required'],
-        'classroom_ids' => ['required'],
+        'students' => ['required'],
         'supervisors' => ['required']
       ];
 
@@ -108,14 +125,11 @@ class InternshipBatchApiController extends Controller
         [
           'title' => $data['title'],
           'description' => $data['description'] ?? null,
-          'class_of' => $data['class_of'],
-          'level' => $data['level'],
           'start_at' => $data['start_at'],
           'end_at' => $data['end_at']
         ],
-        $data['student_ids'],
-        $data['supervisors'],
-        $data['classroom_ids'],
+        is_array($data['students']) ? $data['students'] : json_decode((string)$data['students'], true),
+        is_array($data['supervisors']) ? $data['supervisors'] : json_decode((string)$data['supervisors'], true),
         $adminId
       );
 

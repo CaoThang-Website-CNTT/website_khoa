@@ -1,3 +1,9 @@
+<?php
+
+use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
+?>
+
 <link rel="stylesheet" href="<?= url('public/css/internship_batches.css') ?>">
 
 <!-- Toast khi redirect về đây có set flash -->
@@ -35,15 +41,8 @@
 
     <!-- Cột Tên đợt -->
     <template data-tm-col="title" data-tm-label="Tên đợt" data-tm-sortable data-tm-filter-type="text">
-      <a href="<?= url('teacher/internship_batches/') ?>{{ row.id }}" class="font-medium text-primary">{{ value }}</a>
+      <a href="<?= url('teacher/internship_batches/') ?>{{ row.id }}" class="font-medium">{{ value }}</a>
     </template>
-
-    <!-- Cột Khóa -->
-    <template data-tm-col="class_of" data-tm-label="Khóa" data-tm-sortable data-tm-filter-type="text"></template>
-
-    <!-- Cột Bậc học -->
-    <template data-tm-col="level" data-tm-label="Bậc học" data-tm-filter-type="select"
-      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Cao đẳng ngành","value":"CĐ"},{"label":"Cao đẳng nghề","value":"CĐN"}]'></template>
 
     <!-- Cột Ngày bắt đầu -->
     <template data-tm-col="start_at" data-tm-label="Bắt đầu" data-tm-sortable></template>
@@ -52,11 +51,10 @@
     <template data-tm-col="end_at" data-tm-label="Kết thúc" data-tm-sortable></template>
 
     <!-- Cột Trạng thái -->
-    <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
-      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đang chờ","value":"draft"},{"label":"Đã công bố","value":"published"},{"label":"Đã kết thúc","value":"closed"}]'>
-      <span class="badge"
-        data-variant="{{ value === 'published' ? 'primary' : (value === 'closed' ? 'destructive' : 'secondary') }}">
-        {{ value === 'published' ? 'Đã công bố' : (value === 'closed' ? 'Đã kết thúc' : 'Đang chờ') }}
+    <template data-tm-col="effective_status" data-tm-label="Trạng thái" data-tm-filter-type="select"
+      data-tm-filter-options='<?= json_encode(BatchStatus::getEffectiveOptions()) ?>'>
+      <span class="badge" data-variant="{{ row.effective_status_variant }}">
+        {{ row.effective_status_label }}
       </span>
     </template>
 
@@ -76,7 +74,28 @@
           'level' => $b->level ?? 'N/A',
           'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
           'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
-          'status' => $b->status ?? 'draft'
+          'status' => $b->status ?? 'draft',
+          'effective_status' => (function () use ($b) {
+          $batchModel = new InternshipBatch();
+          $batchModel->status = $b->status ?? 'draft';
+          $batchModel->start_at = $b->start_at ?? null;
+          $batchModel->end_at = $b->end_at ?? null;
+          return $batchModel->getEffectiveStatus();
+        })(),
+          'effective_status_label' => (function () use ($b) {
+          $batchModel = new InternshipBatch();
+          $batchModel->status = $b->status ?? 'draft';
+          $batchModel->start_at = $b->start_at ?? null;
+          $batchModel->end_at = $b->end_at ?? null;
+          return BatchStatus::getLabel($batchModel->getEffectiveStatus());
+        })(),
+          'effective_status_variant' => (function () use ($b) {
+          $batchModel = new InternshipBatch();
+          $batchModel->status = $b->status ?? 'draft';
+          $batchModel->start_at = $b->start_at ?? null;
+          $batchModel->end_at = $b->end_at ?? null;
+          return BatchStatus::getVariant($batchModel->getEffectiveStatus());
+        })()
         ];
       }, $data->getItems()),
     'total' => $data->getTotal(),

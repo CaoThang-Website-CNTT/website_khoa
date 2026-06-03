@@ -2,13 +2,15 @@
 
 namespace App\Services;
 
-use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore};
+use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore};
+use App\Models\{Student, Classroom};
 use App\Core\Pageable;
+use App\Enums\BatchStatus;
 use Database;
 
 interface IInternshipBatchService
 {
-  public function createFullBatch(array $batchData, array $studentIds, array $supervisors, array $classroomIds, int $adminId): int;
+  public function createFullBatch(array $batchData, array $studentsInput, array $supervisors, int $adminId): int;
   public function getEligibleStudentsByClassroom(int $classroomId): array;
   public function getEligibleStudentsByClassrooms(array $classroomIds): array;
   public function validateStudentsBulk(array $studentIds): array;
@@ -44,6 +46,8 @@ class InternshipBatchService implements IInternshipBatchService
   private AccountStore $_accountStore;
   private InternshipSubmissionStore $_submissionStore;
   private ReferralLetterStore $_referralLetterStore;
+  private StudentStore $_studentStore;
+  private ClassroomStore $_classroomStore;
 
   public function __construct(
     InternshipBatchStore $store,
@@ -51,7 +55,9 @@ class InternshipBatchService implements IInternshipBatchService
     TeacherStore $teacherStore,
     AccountStore $accountStore,
     InternshipSubmissionStore $submissionStore,
-    ReferralLetterStore $referralLetterStore
+    ReferralLetterStore $referralLetterStore,
+    StudentStore $studentStore,
+    ClassroomStore $classroomStore
   ) {
     $this->_store = $store;
     $this->_assignmentStore = $assignmentStore;
@@ -59,14 +65,16 @@ class InternshipBatchService implements IInternshipBatchService
     $this->_accountStore = $accountStore;
     $this->_submissionStore = $submissionStore;
     $this->_referralLetterStore = $referralLetterStore;
+    $this->_studentStore = $studentStore;
+    $this->_classroomStore = $classroomStore;
   }
 
   /**
    * Tạo toàn bộ đợt thực tập trong 1 transaction (Batch, Classrooms, Students, Supervisors)
    */
-  public function createFullBatch(array $batchData, array $studentIds, array $supervisors, array $classroomIds, int $adminId): int
+  public function createFullBatch(array $batchData, array $studentsInput, array $supervisors, int $adminId): int
   {
-    return Database::getInstance()->transaction(function () use ($batchData, $studentIds, $supervisors, $classroomIds, $adminId) {
+    return Database::getInstance()->transaction(function () use ($batchData, $studentsInput, $supervisors, $adminId) {
 
       $batchData['created_by'] = $adminId;
       $batchId = $this->_store->createBatch($batchData);
@@ -74,6 +82,125 @@ class InternshipBatchService implements IInternshipBatchService
       if (!$batchId) {
         throw new \Exception('Không thể tạo thông tin đợt thực tập.');
       }
+
+      $studentIds = [];
+      $classroomIds = [];
+
+      // Phân tích danh sách sinh viên
+      foreach ($studentsInput as $sv) {
+        // --- 1. XỬ LÝ CLASSROOM ---
+        $classroomShortName = trim($sv['classroom_name'] ?? '');
+        $classroom = $this->_classroomStore->getByShortName($classroomShortName);
+
+        if (!$classroom) {
+          // Level: CĐ / CĐN
+          // Major: Text between Level and Number
+          // ClassOf: 2-3 digits
+          // Spec: Optional text after number
+          // Letter: Last single character
+          $regex = '/^(CĐN|CĐ)\s*([A-ZĐ\s]+?)\s*(\d{2,3})\s*([A-Z]*?)([A-Z])?$/u';
+
+          if (preg_match($regex, $classroomShortName, $matches)) {
+            $level = $matches[1];
+            $majorKey = trim($matches[2]);
+            $classOf = (int)$matches[3];
+            $specKey = $matches[4] ?? '';
+            $letter = $matches[5] ?? '';
+
+            // Map Major
+            $major = $this->_classroomStore->getMajorByShortNameAndLevel($majorKey, $level);
+            $majorId = $major ? $major->id : 1; // Fallback to 1 (CNTT) if not found
+
+            // Map Specialization
+            $specId = null;
+            if ($specKey) {
+              $spec = $this->_classroomStore->getSpecializationByShortNameAndMajorId($specKey, $majorId);
+              $specId = $spec ? $spec->id : null;
+            }
+
+            $newClassroom = new Classroom(
+              id: 0,
+              short_name: $classroomShortName,
+              major_id: $majorId,
+              specialization_id: $specId,
+              class_of: $classOf,
+              letter: $letter ?: null
+            );
+
+            $newClassroomId = $this->_classroomStore->create($newClassroom);
+            if (!$newClassroomId || !$newClassroomId->id) {
+              throw new \Exception("Không thể tự động tạo lớp $classroomShortName.");
+            }
+            $assignedClassroomId = $newClassroomId->id;
+          } else {
+            // dự phòng: Nếu không khớp regex thì dùng logic đơn giản
+            $classOf = 26;
+            if (preg_match('/([0-9]{2,3})/u', $classroomShortName, $m)) {
+              $classOf = (int)$m[1];
+            }
+
+            $newClassroom = new Classroom(
+              id: 0,
+              short_name: $classroomShortName,
+              major_id: 1,
+              class_of: $classOf,
+              letter: substr($classroomShortName, -1)
+            );
+
+            $newClassroomId = $this->_classroomStore->create($newClassroom);
+            if (!$newClassroomId || !$newClassroomId->id) {
+              throw new \Exception("Không thể tự động tạo lớp $classroomShortName.");
+            }
+            $assignedClassroomId = $newClassroomId->id;
+          }
+          $classroomIds[] = $assignedClassroomId;
+        } else {
+          $classroomIds[] = $classroom->id;
+          $assignedClassroomId = $classroom->id;
+        }
+
+        // --- 2. XỬ LÝ ACCOUNT & STUDENT ---
+        $studentCode = trim($sv['student_code']);
+        $existingStudent = $this->_studentStore->getByStudentId($studentCode);
+
+        if ($existingStudent) {
+          $studentIds[] = $existingStudent->id;
+        } else {
+          // Chưa có student => tạo Account, rồi tạo Student
+          $email = $studentCode . '@caothang.edu.vn';
+          // Pwd mặc định là MSSV
+          $accountId = $this->_accountStore->create($email, $studentCode, 'student');
+
+          if (!$accountId) {
+            throw new \Exception("Tạo tài khoản thất bại cho sinh viên $studentCode.");
+          }
+
+          $newStudent = new Student(
+            account_id: $accountId,
+            student_id: $studentCode,
+            full_name: $sv['full_name'],
+            gender: 'male',
+            dob: str_replace('/', '-', $sv['dob']),
+            national_id: $studentCode, // Dùng tạm MSSV làm CCCD để tránh lỗi NOT NULL
+            phone: '',
+            address: '',
+            classroom_id: $assignedClassroomId,
+            birth_place: '',
+            status: 'Đang học',
+            major: 'Công nghệ thông tin' // Tạm hardcode ngành CNTT
+          );
+
+          $newStudent = $this->_studentStore->create($newStudent);
+          if (!$newStudent || !$newStudent->id) {
+            throw new \Exception("Tạo dữ liệu sinh viên thất bại cho $studentCode.");
+          }
+          $studentIds[] = $newStudent->id;
+        }
+      }
+
+      // Xóa các ID trùng lặp trước khi thêm vào đợt thực tập
+      $studentIds = array_unique($studentIds);
+      $classroomIds = array_unique($classroomIds);
 
       $this->_store->addClassroomsToBatch($batchId, $classroomIds);
       $this->_store->addStudentsToBatch($batchId, $studentIds);
@@ -190,14 +317,14 @@ class InternshipBatchService implements IInternshipBatchService
 
   public function publishBatch(int $id): bool
   {
-    return $this->_store->updateStatus($id, 'published', [
+    return $this->_store->updateStatus($id, BatchStatus::PUBLISHED, [
       'published_at' => date('Y-m-d H:i:s')
     ]);
   }
 
   public function closeBatch(int $id): bool
   {
-    return $this->_store->updateStatus($id, 'closed', [
+    return $this->_store->updateStatus($id, BatchStatus::CLOSED, [
       'closed_at' => date('Y-m-d H:i:s')
     ]);
   }

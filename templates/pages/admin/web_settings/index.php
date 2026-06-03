@@ -52,7 +52,6 @@ if (!empty($data)) {
                       <?php if (!empty($setting['description'])): ?>
                         <p class="field__description"><?= htmlspecialchars($setting['description']) ?></p>
                       <?php endif; ?>
-                      <p class="field__description">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
                     </div>
 
                     <?php switch ($setting['type']):

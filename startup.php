@@ -22,6 +22,8 @@ require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 
 // View
 require_once BASE_PATH . '/includes/core/layout.php';
+// Enums
+require_once BASE_PATH . '/includes/core/enums/batch_status.php';
 
 // Session
 require_once BASE_PATH . '/includes/core/session/session.php';
@@ -45,6 +47,7 @@ require_once BASE_PATH . "/includes/core/controller.php";
 require_once BASE_PATH . '/includes/core/pageable.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
 require_once BASE_PATH . '/includes/core/image_processor.php';
+require_once BASE_PATH . '/includes/files/batch_student_importer.php';
 
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';

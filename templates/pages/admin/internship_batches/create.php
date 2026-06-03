@@ -65,22 +65,6 @@
                   placeholder="Ví dụ: Đợt thực tập hè 2026" required>
               </div>
 
-              <div class="grid grid-cols-2 gap-4">
-                <div class="field" data-field-required>
-                  <label class="field__label" for="class_of">Niên khóa</label>
-                  <input type="number" id="class_of" class="field__input" name="class_of" placeholder="Ví dụ: 23"
-                    required>
-                </div>
-
-                <div class="field" data-field-required>
-                  <label class="field__label" for="level">Bậc học</label>
-                  <select id="level" class="field__input" name="level" required>
-                    <option value="CĐ">Cao đẳng (CĐ)</option>
-                    <option value="CĐN">Cao đẳng nghề (CĐN)</option>
-                  </select>
-                </div>
-              </div>
-
               <div class="field">
                 <label class="field__label" for="description">Mô tả chung (Tùy chọn)</label>
                 <textarea id="description" class="field__input" name="description"
@@ -122,62 +106,46 @@
           <div class="card__content p-6">
 
             <div class="field mb-6">
-              <div class="flex justify-between items-center w-full mb-2">
-                <label class="field__label mb-0">Chọn nhanh theo Lớp học:</label>
-                <div class="search-bar flex items-center px-4 gap-2 rounded-xl text-sm">
-                  <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="text" id="search-classrooms" class="search-bar__input" placeholder="Tìm lớp/ngành..."
-                    autocomplete="off" autocorrect="off">
+              <label class="field__label mb-2">Tải lên danh sách sinh viên (.xlsx)</label>
+              <div class="flex gap-4 items-center">
+                <input type="file" id="file-upload-students" class="field__input" accept=".xlsx"
+                  style="max-width: 400px;">
+                <span class="text-sm" id="upload-status-text">Chưa chọn file.</span>
+              </div>
+              <p class="text-sm mt-2 text-hint">
+                Lưu ý: Mẫu file yêu cầu cột theo thứ tự (A: STT, B: MSSV, C: Họ đệm, D: Tên, E: Ngày sinh, F: Lớp). File
+                chứa tối đa 1000 sinh viên. Dữ liệu từ dòng số 2.
+              </p>
+            </div>
+
+            <!-- TableManager Component Container -->
+            <div id="wrapper-table-students-import" class="mt-6" data-state="closed">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="font-semibold text-lg">Danh sách xem trước:</h4>
+                <div class="flex items-center gap-3">
+                  <span class="badge" data-variant="primary" id="selected-students-count">Đã chọn: 0 SV</span>
                 </div>
               </div>
-              <div class="flex flex-wrap gap-2 p-3 rounded-md border" id="classrooms-container">
-                <!-- Rendered by JS -->
-                <span class="text-sm">Đang tải danh sách lớp...</span>
-              </div>
-            </div>
 
-            <div class="flex justify-between items-center mb-4 gap-4">
-              <div class="search-bar search-bar--students flex items-center px-4 gap-2 rounded-xl text-sm mb-2">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="search-students" class="search-bar__input"
-                  placeholder="Tìm SV trong bảng (theo MSSV hoặc Tên)..." autocomplete="off" autocorrect="off">
-              </div>
-              <div>
-                <span class="badge" data-variant="primary" id="selected-students-count">Đã chọn: 0 SV</span>
-                <button type="button" class="btn" data-size="lg" data-variant="outline" id="btn-open-import-modal"
-                  data-modal-trigger="#import-student-ids-modal">
-                  <i class="fa-solid fa-file-import"></i> Nhập danh sách MSSV
-                </button>
-              </div>
-            </div>
+              <div class="tm-container" data-tm="table-students-import" data-tm-mode="client" data-tm-selectable="true"
+                data-tm-searchable="true" data-tm-filterable="false" data-tm-limit="20" data-tm-strategy="ajax"
+                data-tm-id-key="_id">
 
-            <div class="table-wrapper border rounded-md">
-              <table class="data-table mb-0">
-                <thead>
-                  <tr>
-                    <th>
-                      <input type="checkbox" id="check-all-students">
-                    </th>
-                    <th>
-                      <h6>MSSV</h6>
-                    </th>
-                    <th>
-                      <h6>Họ và Tên</h6>
-                    </th>
-                    <th>
-                      <h6>Số điện thoại</h6>
-                    </th>
-                    <th>
-                      <h6>Lớp</h6>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody id="students-tbody">
-                  <tr>
-                    <td colspan="5" class="text-center py-4">Vui lòng chọn lớp ở trên để tải danh sách sinh viên.</td>
-                  </tr>
-                </tbody>
-              </table>
+                <template data-tm-col="stt" data-tm-label="STT" data-tm-sortable data-tm-width="60px"></template>
+                <template data-tm-col="student_code" data-tm-label="MSSV" data-tm-sortable data-tm-width="120px">
+                  <span class="font-medium font-mono">{{ value }}</span>
+                </template>
+                <template data-tm-col="full_name" data-tm-label="Họ và tên" data-tm-sortable>
+                  <span class="font-medium">{{ value }}</span>
+                </template>
+                <template data-tm-col="dob" data-tm-label="Ngày sinh" data-tm-width="120px"></template>
+                <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-sortable data-tm-width="150px">
+                  <span class="badge" data-variant="secondary">{{ value }}</span>
+                </template>
+                <template data-tm-pagination></template>
+              </div>
+
+
             </div>
           </div>
           <hr class="separator" />
@@ -251,43 +219,9 @@
   </form>
 </div>
 
-<!-- Modal Bulk Import MSSV -->
-<div class="modal" id="import-student-ids-modal" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h2 class="modal__title">Nhập danh sách MSSV</h2>
-    <p class="modal__description">Lưu ý: mỗi MSSV phải nằm trên một dòng.</p>
-  </div>
-  <div class="modal__content">
-    <div class="field">
-      <textarea id="import-student-ids-textarea" class="field__input textarea--import"
-        placeholder="Ví dụ:&#10;2100123&#10;2100456&#10;2100789"></textarea>
-    </div>
-    <div id="import-results-container" class="mt-4 hidden">
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-green-50 p-3 rounded border border-green-200">
-          <h4 class="text-sm font-semibold text-green-800 mb-2">Hợp lệ (<span id="import-valid-count">0</span>)</h4>
-          <ul id="import-valid-list" class="text-xs text-green-700 max-h-32 overflow-y-auto pl-4 list-disc"></ul>
-        </div>
-        <div class="bg-red-50 p-3 rounded border border-red-200">
-          <h4 class="text-sm font-semibold text-red-800 mb-2">Không hợp lệ (<span id="import-invalid-count">0</span>)
-          </h4>
-          <ul id="import-invalid-list" class="text-xs text-red-700 max-h-32 overflow-y-auto pl-4 list-disc"></ul>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal__footer">
-    <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Đóng</button>
-    <button id="btn-process-import" data-variant="primary" data-size="lg" class="btn" type="button">Kiểm tra &
-      Thêm</button>
-  </div>
-  <button class="modal__close" type="button" data-modal-close>
-    <i class="fa-solid fa-xmark"></i>
-  </button>
-</div>
-
 <script>
   window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
   window.REDIRECT_URL = '<?= url('admin/internship_batches/{id}/assignments') ?>';
 </script>
-<script src="<?= url('public/js/pages/internship_batch_create.js') ?>"></script>
+<script src="<?= url('public/js/table/table_manager.js') ?>" type="module"></script>
+<script src="<?= url('public/js/pages/internship_batch_create.js') ?>" type="module"></script>

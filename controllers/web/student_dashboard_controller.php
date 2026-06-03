@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
-use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService};
+use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, WebSettingsService};
 use App\Core\Files\UploadedFileHandler;
 use Exception;
 
@@ -18,6 +18,7 @@ class StudentDashboardController extends Controller
   private CompanyService $_companyService;
   private InternshipSubmissionService $_submissionService;
   private ReferralLetterService $_referralLetterService;
+  private WebSettingsService $_webSettingsService;
 
   public function __construct(
     StudentService $studentService,
@@ -26,7 +27,8 @@ class StudentDashboardController extends Controller
     InternshipAssignmentService $internshipAssignmentService,
     CompanyService $companyService,
     InternshipSubmissionService $submissionService,
-    ReferralLetterService $referralLetterService
+    ReferralLetterService $referralLetterService,
+    WebSettingsService $webSettingsService
   ) {
     $this->_studentService = $studentService;
     $this->_classroomService = $classroomService;
@@ -35,6 +37,7 @@ class StudentDashboardController extends Controller
     $this->_companyService = $companyService;
     $this->_submissionService = $submissionService;
     $this->_referralLetterService = $referralLetterService;
+    $this->_webSettingsService = $webSettingsService;
   }
 
   /**
@@ -161,26 +164,30 @@ class StudentDashboardController extends Controller
       return $this->redirect('/student/internship');
     }
 
-    // Tính toán can_edit_company
+    // Tính toán hạn chót khai báo công ty
+    $allowedWeeks = (int)$this->_webSettingsService->getValue('internship_company_declaration_weeks', 3);
+    $companyDeadline = null;
     $canEditCompany = false;
+
     if ($dashboardData['current'] && $dashboardData['current']['start_at']) {
       $startAt = new \DateTime($dashboardData['current']['start_at']);
+      $companyDeadlineDt = (clone $startAt)->modify("+{$allowedWeeks} weeks");
+      $companyDeadline = $companyDeadlineDt->format('Y-m-d');
       $now = new \DateTime();
+      $canEditCompany = ($now <= $companyDeadlineDt);
+    }
 
-      // TECHDEBT - TODO: Sử dụng web_settings để lấy cấu hình thời gian cho phép khai báo (vd: 21 ngày = 3 tuần)
-      $allowedDays = 21;
+    // Tính toán hạn nộp báo cáo
+    $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
+    $reportDeadline = null;
+    $canSubmitReport = true;
 
-      $canEditCompany = true; // Mặc định cho phép sửa
-
-      if (!empty($dashboardData['current']['start_at'])) {
-        $startAt = new \DateTime($dashboardData['current']['start_at']);
-        $now = new \DateTime();
-
-        if ($now > $startAt) {
-          $daysPassed = $now->diff($startAt)->days;
-          $canEditCompany = ($daysPassed <= $allowedDays);
-        }
-      }
+    if ($dashboardData['current'] && $dashboardData['current']['end_at']) {
+      $endAtDt = new \DateTime($dashboardData['current']['end_at']);
+      $reportDeadlineDt = (clone $endAtDt)->modify("+{$allowedDays} days");
+      $reportDeadline = $reportDeadlineDt->format('Y-m-d');
+      $now = new \DateTime();
+      $canSubmitReport = ($now <= $reportDeadlineDt);
     }
 
     // Lấy 2 giấy giới thiệu mới nhất
@@ -191,6 +198,12 @@ class StudentDashboardController extends Controller
       'student' => $student,
       'title' => 'Thông tin thực tập',
       'can_edit_company' => $canEditCompany,
+      'company_deadline' => $companyDeadline,
+      'report_deadline' => $reportDeadline,
+      'can_submit_report' => $canSubmitReport,
+      'max_file_size_mb' => (int)$this->_webSettingsService->getValue('internship_report_max_size_mb', 50),
+      'company_warning_days' => (int)$this->_webSettingsService->getValue('internship_company_warning_days', 3),
+      'report_warning_days' => (int)$this->_webSettingsService->getValue('internship_report_warning_days', 3),
       'recent_referral_letters' => $recentReferralLetters,
       'total_referral_letters' => count($allLetters)
     ]), layout: 'dashboard_layout');
@@ -206,6 +219,17 @@ class StudentDashboardController extends Controller
     if (!$batchStudentId) {
       $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
       return $this->redirect('/student/internship');
+    }
+
+    // Kiểm tra hạn chót khai báo/chỉnh sửa công ty
+    $batch = $this->_internshipBatchService->getBatchById($batch_id);
+    if ($batch && $batch['start_at']) {
+      $allowedWeeks = (int)$this->_webSettingsService->getValue('internship_company_declaration_weeks', 3);
+      $deadlineDt = (new \DateTime($batch['start_at']))->modify("+{$allowedWeeks} weeks");
+      if (new \DateTime() > $deadlineDt) {
+        $request->session()->flashNotify('error', 'Đã hết thời hạn khai báo thông tin công ty.');
+        return $this->redirect("/student/internship/{$batch_id}");
+      }
     }
 
     $data = $request->all();
@@ -276,6 +300,27 @@ class StudentDashboardController extends Controller
     try {
       $fileHandler = new UploadedFileHandler();
       $uploadedFile = $fileHandler->fromGlobals('report_file');
+
+      if (!$uploadedFile) {
+        throw new Exception('Vui lòng chọn file báo cáo.');
+      }
+
+      // Server-side validation: Kiểm tra hạn chót nộp báo cáo
+      $batch = $this->_internshipBatchService->getBatchById($batch_id);
+      if ($batch && $batch['end_at']) {
+        $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
+        $deadlineDt = (new \DateTime($batch['end_at']))->modify("+{$allowedDays} days");
+        if (new \DateTime() > $deadlineDt) {
+          throw new Exception('Đã hết thời hạn nộp báo cáo thực tập.');
+        }
+      }
+
+      // Server-side validation: Kiểm tra dung lượng file
+      $maxSizeMb = (int)$this->_webSettingsService->getValue('internship_report_max_size_mb', 50);
+      $maxSizeBytes = $maxSizeMb * 1024 * 1024;
+      if ($uploadedFile->fileSize > $maxSizeBytes) {
+        throw new Exception("Dung lượng file vượt quá giới hạn cho phép ({$maxSizeMb}MB).");
+      }
       $subDir = 'internship_reports/' . date('Y/m/d'); // Chia nhỏ, quản lý file theo ngày
       $uploadDir = BASE_PATH . '/public/uploads/' . $subDir . '/';
       if (!is_dir($uploadDir)) {
@@ -480,9 +525,9 @@ class StudentDashboardController extends Controller
           'company_id' => $companyId
         ]);
         if ($createSuccess) {
-           $request->session()->flashNotify('success', 'Đã cập nhật công ty mới (Hủy giấy cũ, tạo giấy mới)!');
+          $request->session()->flashNotify('success', 'Đã cập nhật công ty mới (Hủy giấy cũ, tạo giấy mới)!');
         } else {
-           $request->session()->flashNotify('error', 'Đã hủy giấy cũ nhưng không tạo được giấy mới.');
+          $request->session()->flashNotify('error', 'Đã hủy giấy cũ nhưng không tạo được giấy mới.');
         }
       } else {
         $request->session()->flashNotify('error', 'Có lỗi khi hủy giấy giới thiệu cũ.');

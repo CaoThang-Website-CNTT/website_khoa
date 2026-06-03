@@ -147,7 +147,9 @@ $currentGroups = $menuConfig[$role] ?? [];
 
         <?php foreach ($currentGroups as $group): ?>
           <div class="sidebar__group">
-            <div class="sidebar__group-label"><?= htmlspecialchars($group['group_label']) ?></div>
+            <div class="sidebar__group-label">
+              <?= htmlspecialchars($group['group_label']) ?>
+            </div>
             <ul class="sidebar__menu">
 
               <?php foreach ($group['items'] as $item): ?>
@@ -175,8 +177,9 @@ $currentGroups = $menuConfig[$role] ?? [];
                         <ul class="sidebar__menu-sub">
                           <?php foreach ($item['children'] as $child): ?>
                             <li class="sidebar__menu-sub-item">
-                              <a href="<?= url($child['url']) ?>"
-                                class="sidebar__menu-sub-item-btn"><?= htmlspecialchars($child['label']) ?></a>
+                              <a href="<?= url($child['url']) ?>" class="sidebar__menu-sub-item-btn">
+                                <?= htmlspecialchars($child['label']) ?>
+                              </a>
                             </li>
                           <?php endforeach; ?>
                         </ul>

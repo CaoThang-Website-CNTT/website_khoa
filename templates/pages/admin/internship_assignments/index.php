@@ -110,7 +110,7 @@
 <div id="modal-bulk-unassign" class="modal-overlay hidden">
   <div class="modal-content">
     <div class="modal-header">
-      <h3 class="title text-xl font-semibold text-destructive">Xác nhận Hủy phân công</h3>
+      <h3 class="title text-xl font-semibold">Xác nhận Hủy phân công</h3>
     </div>
     <div class="modal-body py-4">
       <p>Bạn có chắc chắn muốn hủy phân công cho <span id="bulk-unassign-count" class="font-bold">0</span> sinh viên đã

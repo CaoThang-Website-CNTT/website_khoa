@@ -1701,6 +1701,18 @@
     border-color: transparent;
   }
 
+  .badge[data-variant="warning"] {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+  }
+
+  .badge[data-variant="outline"] {
+    border-color: var(--border);
+    color: var(--foreground);
+    background: transparent;
+  }
+
   /* ==========================================================================
    DROPDOWN
    ========================================================================== */

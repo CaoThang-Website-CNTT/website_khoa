@@ -84,7 +84,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
             </div>
 
             <div class="field">
-              <label class="field__label" for="email"></label>
+              <label class="field__label" for="email">Email</label>
               <input id="email" class="field__input" type="email" name="email" placeholder=""
                 value="<?= htmlspecialchars($company->email) ?? '' ?>">
             </div>

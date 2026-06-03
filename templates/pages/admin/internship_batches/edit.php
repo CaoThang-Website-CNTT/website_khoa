@@ -1,14 +1,26 @@
 <?php
+
+use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
+
 $batchObj = (object) $batch;
 $stats = $batchObj->stats;
 $assignedPercent = $stats['total_students'] > 0 ? round(($stats['assigned_students'] / $stats['total_students']) * 100) : 0;
 
-$statusMap = [
-  'draft' => ['label' => 'Nháp', 'class' => 'text-muted-foreground'],
-  'published' => ['label' => 'Đang mở', 'class' => 'text-primary'],
-  'closed' => ['label' => 'Kết thúc', 'class' => 'text-destructive'],
+$batchModel = new InternshipBatch();
+$batchModel->status = $batchObj->status ?? 'draft';
+$batchModel->start_at = $batchObj->start_at ?? null;
+$batchModel->end_at = $batchObj->end_at ?? null;
+
+$effStatus = $batchModel->getEffectiveStatus();
+
+$effStatus = $batchModel->getEffectiveStatus();
+
+$currentStatus = [
+  'label' => BatchStatus::getLabel($effStatus),
+  'variant' => BatchStatus::getVariant($effStatus),
+  'class' => 'badge'
 ];
-$currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
 ?>
 
 <link rel="stylesheet" href="<?= url('public/css/internship_batch_detail.css') ?>">
@@ -42,14 +54,14 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
         Lưu thay đổi
       </button>
 
-      <?php if ($batchObj->status === 'draft'): ?>
+      <?php if ($batchObj->status === BatchStatus::DRAFT): ?>
         <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal"
           data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/publish') ?>" data-variant="outline-alt"
           data-size="md" class="btn">
           <i class="fa-solid fa-paper-plane"></i>
           Công bố
         </button>
-      <?php elseif ($batchObj->status === 'published'): ?>
+      <?php elseif ($batchObj->status === BatchStatus::PUBLISHED): ?>
         <button type="button" id="close-btn" data-modal-trigger="#close-confirm-modal"
           data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/close') ?>" data-variant="destructive"
           data-size="md" class="btn">
@@ -66,7 +78,7 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
         </button>
       <?php endif; ?>
 
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/assignments') ?>" data-variant="primary"
+      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>" data-variant="primary"
         data-size="md" class="btn">
         <i class="fa-solid fa-users-gear"></i>
         Phân công hướng dẫn
@@ -76,7 +88,7 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
 </div>
 <!-- ========== title-wrapper end ========== -->
 
-<div class="detail-layout mt-6">
+<div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
 
@@ -128,11 +140,9 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
       <div class="stat-card shadow-sm">
         <span class="stat-card__label">Trạng thái</span>
         <span class="stat-card__value">
-          <span class="<?= $currentStatus['class'] ?>"><?= $currentStatus['label'] ?></span>
+          <span class="<?= $currentStatus['class'] ?>"
+            data-variant="<?= $currentStatus['variant'] ?>"><?= $currentStatus['label'] ?></span>
         </span>
-        <div class="stat-card__footer">
-          Trạng thái hoạt động đợt thực tập
-        </div>
       </div>
     </div>
 
@@ -179,21 +189,6 @@ $currentStatus = $statusMap[$batchObj->status] ?? $statusMap['draft'];
 
   <!-- SIDEBAR -->
   <div class="detail-layout__sidebar">
-    <!-- Card: Đối tượng áp dụng -->
-    <div class="card shadow-sm">
-      <div class="card__header text-sm font-semibold">Đối tượng áp dụng</div>
-      <hr class="separator">
-      <div class="card__content p-4 space-y-1">
-        <div class="readonly-info">
-          <span class="readonly-info__label">Niên khóa:</span>
-          <span class="readonly-info__value">Khóa <?= htmlspecialchars($batchObj->class_of) ?></span>
-        </div>
-        <div class="readonly-info">
-          <span class="readonly-info__label">Bậc học:</span>
-          <span class="readonly-info__value"><?= htmlspecialchars($batchObj->level) ?></span>
-        </div>
-      </div>
-    </div>
 
     <!-- Card: Thông tin khác -->
     <div class="card shadow-sm">
