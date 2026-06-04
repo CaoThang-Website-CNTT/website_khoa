@@ -3,8 +3,8 @@
   font-size: inherit;
   font-weight: bold;
 }
-.be-editable :is(i, em),
-.be-block-card :is(i, em) {
+.be-editable :is(i:not(.fa-solid, .fa-regular), em),
+.be-block-card :is(i:not(.fa-solid, .fa-regular), em) {
   font-size: inherit;
   font-weight: inherit;
   font-style: italic;
