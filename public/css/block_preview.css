@@ -62,18 +62,29 @@ h4.be-heading {
 
 .be-image-wrapper {
   width: 100%;
-  border-radius: var(--radius-3xl);
   object-fit: cover;
   overflow: hidden;
-}
-
-.be-image-wrapper img {
-  display: block;
 }
 
 .be-image-align--center {
   align-items: center;
   text-align: center;
+}
+
+.be-image-wrapper img {
+  display: block;
+  border-radius: var(--radius-3xl);
+  margin: 0 auto;
+}
+
+.be-image-wrapper img[data-width="75%"] {
+  border-radius: var(--radius-2xl);
+}
+.be-image-wrapper img[data-width="50%"] {
+  border-radius: var(--radius-xl);
+}
+.be-image-wrapper img[data-width="25%"] {
+  border-radius: var(--radius-lg);
 }
 
 .be-image-caption {
