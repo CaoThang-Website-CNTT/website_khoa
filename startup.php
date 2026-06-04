@@ -74,6 +74,7 @@ require_once BASE_PATH . '/models/media.php';
 require_once BASE_PATH . '/models/post.php';
 require_once BASE_PATH . '/models/company.php';
 require_once BASE_PATH . '/models/referral_letter.php';
+require_once BASE_PATH . '/models/ticket.php';
 
 // Editor (Post)
 require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
@@ -87,7 +88,6 @@ require_once BASE_PATH . '/includes/editor/blocks/image_renderer.php';
 require_once BASE_PATH . '/includes/editor/blocks/table_renderer.php';
 require_once BASE_PATH . '/includes/editor/block_validator.php';
 require_once BASE_PATH . '/includes/editor/block_renderer.php';
-
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
@@ -105,6 +105,7 @@ require_once BASE_PATH . '/stores/media_store.php';
 require_once BASE_PATH . '/stores/post_store.php';
 require_once BASE_PATH . '/stores/company_store.php';
 require_once BASE_PATH . '/stores/referral_letter_store.php';
+require_once BASE_PATH . '/stores/ticket_store.php';
 
 // Services
 require_once BASE_PATH . '/services/account_service.php';
@@ -124,6 +125,7 @@ require_once BASE_PATH . '/services/post_service.php';
 require_once BASE_PATH . '/services/company_service.php';
 require_once BASE_PATH . '/services/internship_submission_service.php';
 require_once BASE_PATH . '/services/referral_letter_service.php';
+require_once BASE_PATH . '/services/ticket_service.php';
 
 // Controllers
 // Web
@@ -146,6 +148,7 @@ require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
 require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/company_controller.php';
 require_once BASE_PATH . '/controllers/web/teacher_dashboard_controller.php';
+require_once BASE_PATH . '/controllers/web/ticket_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/account_api_controller.php';
