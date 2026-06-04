@@ -31,7 +31,8 @@ class TicketStore extends Store implements ITicketStore
       ->select("*")
       ->from("tickets")
       ->like("title", $search)
-      ->order("id")
+      ->orderByField('status', ['pending', 'processing', 'resolved', 'rejected'])
+      ->order('created_at', ['ascending' => false])
       ->range($offset, $offset + $limit - 1);
 
     $stmt = $this->db->prepare($query->toSql());
