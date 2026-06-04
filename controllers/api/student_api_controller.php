@@ -195,12 +195,12 @@ class StudentApiController extends Controller
     }
 
     try {
-      $uploadedFile = $this->_fileHandler->fromGlobals('file');
+      $uploadedFile = $this->_fileHandler->processUpload($request->file('file'));
       if (!$uploadedFile) {
         throw new Exception("Không tìm thấy file tải lên.");
       }
 
-      $media = $this->_mediaService->upload($uploadedFile, $authUser['account_id']);
+      $media = $this->_mediaService->create($uploadedFile, ['title' => $uploadedFile->originalName]);
 
       $this->_submissionService->createSubmission((int)$batchStudentId, [
         'type' => $type,

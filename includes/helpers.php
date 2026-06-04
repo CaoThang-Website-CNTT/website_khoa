@@ -153,3 +153,32 @@ function generateSlug(string $str): string
   $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
   return trim($slug, '-');
 }
+
+/**
+ * Lấy URL của media với cơ chế fallback tự động.
+ * Kiểm tra cả việc rỗng trong DB và việc có tồn tại file vật lý trên ổ đĩa hay không.
+ *
+ * @param string|null $path Đường dẫn media lưu trong DB (VD: 'media/2026/05/abc.webp')
+ * @param string $default Đường dẫn file mặc định
+ * @return string URL tuyệt đối dẫn tới file
+ */
+function get_media_url(?string $path, ?string $default = 'public/img/default-post-thumb.jpg'): ?string
+{
+  if (empty($path)) {
+    return $default ? url($default) : null;
+  }
+
+  if (preg_match('/^https?:\/\//i', $path)) {
+    return $path;
+  }
+
+  // Kiểm tra file vật lý trên server 
+  $absolutePath = BASE_PATH . '/storage/' . ltrim($path, '/');
+
+  if (file_exists($absolutePath)) {
+    return url('public/media/' . ltrim($path, '/'));
+  }
+
+  // Nếu không thấy file trên ổ đĩa -> dùng file mặc định (nếu có)
+  return $default ? url($default) : null;
+}

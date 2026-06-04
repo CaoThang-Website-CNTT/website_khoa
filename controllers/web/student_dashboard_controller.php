@@ -299,7 +299,7 @@ class StudentDashboardController extends Controller
 
     try {
       $fileHandler = new UploadedFileHandler();
-      $uploadedFile = $fileHandler->fromGlobals('report_file');
+      $uploadedFile = $fileHandler->processUpload($request->file('report_file'));
 
       if (!$uploadedFile) {
         throw new Exception('Vui lòng chọn file báo cáo.');
@@ -322,7 +322,7 @@ class StudentDashboardController extends Controller
         throw new Exception("Dung lượng file vượt quá giới hạn cho phép ({$maxSizeMb}MB).");
       }
       $subDir = 'internship_reports/' . date('Y/m/d'); // Chia nhỏ, quản lý file theo ngày
-      $uploadDir = BASE_PATH . '/public/uploads/' . $subDir . '/';
+      $uploadDir = BASE_PATH . '/storage/' . $subDir . '/';
       if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
       }

@@ -18,6 +18,7 @@ $studentsData = array_map(function ($sv) {
     'classroom_name' => $sv['classroom_name'],
     'company_name' => $sv['company_name'],
     'submission_name' => $sv['submission_name'],
+    'submission_url' => get_media_url($sv['submission_path'], null),
     'submission_count' => (int)$sv['submission_count'],
     'grade' => $sv['grade'] !== null ? (float)$sv['grade'] : null,
     'batch_student_id' => $sv['batch_student_id'],
@@ -168,8 +169,11 @@ foreach ($classrooms as $c) {
             <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa nộp</span>
             <div style="{{ value === '1' ? 'display:inline-flex' : 'display:none' }}" class="student-table__submission">
               <span class="student-table__filename text-sm" title="{{ row.submission_name }}" style="color: var(--primary)">
-                {{ row.submission_name && row.submission_name.length > 25 ? row.submission_name.substring(0, 22) + '...' : row.submission_name }}
+                {{ row.submission_name && row.submission_name.length > 20 ? row.submission_name.substring(0, 17) + '...' : row.submission_name }}
               </span>
+              <a href="{{ row.submission_url }}" target="_blank" class="btn" data-variant="primary" data-size="sm" title="Tải xuống" style="{{ row.submission_url ? '' : 'display:none' }}">
+                <i class="fa-solid fa-download"></i>
+              </a>
               <span class="badge ml-1" data-variant="primary" style="{{ row.submission_count > 1 ? '' : 'display:none' }}; font-size: 10px; height: 16px; padding: 0 4px;">
                 +{{ row.submission_count - 1 }}
               </span>

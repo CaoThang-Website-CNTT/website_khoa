@@ -341,7 +341,21 @@ $effectiveMetadata = $effStatus ? [
                   <article class="timeline-item">
                     <div class="timeline-item__indicator"></div>
                     <time class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
-                    <div class="timeline-item__action font-medium"><?= $submission['original_file_name'] ?? '--' ?></div>
+                    <div class="timeline-item__action font-medium">
+                      <?= $submission['original_file_name'] ?? '--' ?>
+                    </div>
+                    <?php
+                    $downloadUrl = get_media_url($submission['file_path'], null);
+                    if (!$downloadUrl):
+                    ?>
+                      <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="primary" data-size="sm" title="Tải xuống tài liệu">
+                        <i class="fa-solid fa-download"></i> Tải xuống
+                      </a>
+                    <?php else: ?>
+                      <span class="text-xs ml-2" title="File không tồn tại trên hệ thống">
+                        <i class="fa-solid fa-circle-exclamation"></i> Lỗi file
+                      </span>
+                    <?php endif; ?>
                   </article>
                 <?php endforeach; ?>
               <?php endif; ?>

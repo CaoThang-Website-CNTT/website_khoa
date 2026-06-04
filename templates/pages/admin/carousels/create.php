@@ -364,7 +364,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
             ${imgHtml}
             <span class="flex-1 w-full font-medium text-sm">
               ${escapeHtml(slide.title || '')} 
-              <span class="text-primary font-bold">${escapeHtml(slide.title_highlight || '')}</span>
+              <span class="font-bold">${escapeHtml(slide.title_highlight || '')}</span>
             </span>
             <div>
               <span class="badge" data-variant="${slide.is_active ? 'primary' : 'secondary'}">

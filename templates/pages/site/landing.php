@@ -48,7 +48,7 @@ function renderCarousel(array $carouselSlides): void
             </div>
 
             <div class="image-wrapper carousel__image-wrapper rounded-3xl">
-              <img src="<?= htmlspecialchars(url('public/media/' . $slide->media->file_path)) ?>"
+              <img src="<?= htmlspecialchars(get_media_url($slide->media->file_path)) ?>"
                 alt="<?= htmlspecialchars($slide->media->alt_text ?: $slide->title) ?>" class="image carousel__image">
             </div>
 
