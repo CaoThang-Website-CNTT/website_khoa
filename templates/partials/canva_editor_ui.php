@@ -19,6 +19,13 @@ if ($oldEditorData) {
 $oldTitle = $initialPayload['meta']['title'] ?? '';
 $isEdit = isset($post); // Biến cờ xác định chế độ
 $current_user = request()->session()->authUser() ?? ['account_id' => null];
+$editorAuthors = array_map(
+  fn($author) => [
+    'id' => (int) $author->id,
+    'email' => $author->email,
+  ],
+  $authors ?? []
+);
 ?>
 
 <!-- ======== Canva Main =========== -->
@@ -90,7 +97,8 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
           <div class="be-canvas-meta">
             <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_author"
               data-be-preview-action="toggle">
-              <i class="fa-regular fa-user"></i> <span id="be-author-name-preview" class="be-canvas-meta__text"></span>
+              <i class="fa-regular fa-user"></i> <span id="be-author-name-preview" class="be-canvas-meta__text"
+                data-be-meta-preview="author_id" data-be-preview-action="author-label"></span>
             </div>
             <div class="be-canvas-meta__info" data-be-meta-preview="settings.show_date" data-be-preview-action="toggle">
               <i class="fa-regular fa-calendar"></i> <span class="be-canvas-meta__text">
@@ -306,20 +314,13 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
 
 <?php $layout->start('scripts'); ?>
 <script>
+  window.BeEditorAuthors = <?= json_encode($editorAuthors) ?>;
+
   document.addEventListener('DOMContentLoaded', () => {
-    const authors = <?= json_encode($authors ?? []) ?> ?? [];
-    const authorSelect = document.querySelector("[name='author_id']");
-
-    authorSelect.addEventListener('select:change', (e) => {
-      const { value } = e.detail;
-      const author = authors.find(a => Number(a.id) === Number(value));
-      document.getElementById('be-author-name-preview').textContent = author?.email ?? '';
-    });
-
     const form = document.querySelector('#be-post-form');
     const initialPayload = <?= json_encode($initialPayload) ?>;
 
-    if (initialPayload && initialPayload.blocks && initialPayload.blocks.length > 0) {
+    if (initialPayload && (initialPayload.meta || (initialPayload.blocks && initialPayload.blocks.length > 0))) {
       window.BeEditor.importPayload(initialPayload);
     }
 
