@@ -9,6 +9,11 @@ use ReflectionNamedType;
 class Router
 {
   /**
+   * Danh sách các route đã được đăng ký toàn cục để truy cập từ static method
+   * @var array
+   */
+  private static array $globalRoutes = [];
+  /**
    * Danh sách các route đã được đăng ký
    * @var array
    */
@@ -137,7 +142,7 @@ class Router
       $path
     );
 
-    $this->routes[] = [
+    $routeData = [
       'method' => strtoupper($method),
       'regex' => '#^' . $regex . '$#',
       'controller' => $action[0],
@@ -145,6 +150,9 @@ class Router
       'paramNames' => $paramNames,
       'middleware' => $allMiddleware
     ];
+
+    $this->routes[] = $routeData;
+    self::$globalRoutes[] = $routeData;
   }
 
   // =========================================================================
@@ -334,5 +342,42 @@ class Router
     }
 
     return $args;
+  }
+
+  /**
+   * Xuất danh sách toàn bộ các route đã được đăng ký trong hệ thống dưới dạng bảng text sạch
+   * @return void
+   */
+  public static function dump(): void
+  {
+    if (empty(self::$globalRoutes)) {
+      error_log("Không có routes nào được đăng ký");
+    }
+
+    $mask = "| %-7s | %-45s | %-55s | %-25s |";
+    $line = "+" . str_repeat('-', 9) . "+" . str_repeat('-', 47) . "+" . str_repeat('-', 57) . "+" . str_repeat('-', 27) . "+";
+
+    $output = [];
+    $output[] = $line;
+    $output[] = sprintf($mask, 'METHOD', 'URI PATTERN / REGEX', 'CONTROLLER ACTION', 'MIDDLEWARES');
+    $output[] = $line;
+
+    foreach (self::$globalRoutes as $route) {
+      $method = $route['method'];
+      $regex = $route['regex'];
+      $handler = substr($route['controller'], strrpos($route['controller'], '\\') + 1) . '@' . $route['action'];
+      $middleware = !empty($route['middleware']) ? implode(', ', array_map(fn($m) => substr($m, strrpos($m, '\\') + 1), $route['middleware'])) : 'none';
+
+      if (strlen($regex) > 43)
+        $regex = substr($regex, 0, 40) . '...';
+      if (strlen($handler) > 53)
+        $handler = substr($handler, 0, 50) . '...';
+      if (strlen($middleware) > 23)
+        $middleware = substr($middleware, 0, 20) . '...';
+
+      $output[] = sprintf($mask, $method, $regex, $handler, $middleware);
+    }
+
+    error_log($line);
   }
 }
