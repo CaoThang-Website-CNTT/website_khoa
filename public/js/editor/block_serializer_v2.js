@@ -162,29 +162,27 @@ export class BlockSerializer {
   static isBlockEmpty(payload) {
     const { type, data } = payload;
 
-    // Kiểm tra văn bản (Paragraph, Heading, Quote...)
-    if (Array.isArray(data.rich_text)) {
-      if (data.rich_text.length > 0) return false;
-
-      // Nếu là List, kiểm tra sâu vào meta.items
-      if (type === 'blocks/list') {
-        const items = data.meta?.items || [];
-        const checkItems = (list) => {
-          return list.every(item => {
-            const hasText = Array.isArray(item.rich_text) && item.rich_text.length > 0;
-            const hasChildren = Array.isArray(item.children) && item.children.length > 0 && !checkItems(item.children);
-            return !hasText && !hasChildren;
-          });
-        };
-        return items.length === 0 || checkItems(items);
-      }
-
-      return true;
-    }
-
     // Kiểm tra Image
     if (type === 'blocks/image') {
       return !data.meta?.url;
+    }
+
+    // Nếu là List, kiểm tra sâu vào meta.items
+    if (type === 'blocks/list') {
+      const items = data.meta?.items || [];
+      const checkItems = (list) => {
+        return list.every(item => {
+          const hasText = Array.isArray(item.rich_text) && item.rich_text.length > 0;
+          const hasChildren = Array.isArray(item.children) && item.children.length > 0 && !checkItems(item.children);
+          return !hasText && !hasChildren;
+        });
+      };
+      return items.length === 0 || checkItems(items);
+    }
+
+    const textBasedTypes = ['blocks/paragraph', 'blocks/heading', 'blocks/quote'];
+    if (textBasedTypes.includes(type)) {
+      return !Array.isArray(data.rich_text) || data.rich_text.length === 0;
     }
 
     // Mặc định các block khác (Table, v.v.) không tự động xóa để tránh mất data ngoài ý muốn

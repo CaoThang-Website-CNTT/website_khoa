@@ -201,15 +201,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (inst && !inst.root.dataset.selectionListenerBound) {
       // Lắng nghe sự kiện thay đổi checkbox từ TableManager
       inst.root.addEventListener("tm:selection-change", (e) => {
-        state.selectedStudents = new Set(e.detail.selectedIds.map(String));
+        state.selectedStudents = new Set(e.detail.rowSelection.map(String));
         updateCounter();
       });
       inst.root.dataset.selectionListenerBound = "true";
     }
 
     if (inst) {
-      // Cập nhật dữ liệu vào adapter (mode client)
-      inst.adapter.updateInlineRows([...state.importedStudents]);
+      // Cập nhật dữ liệu vào bảng (mode client)
+      inst.setData([...state.importedStudents]);
 
       // Mặc định chọn tất cả khi mới import
       if (
@@ -222,9 +222,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Đồng bộ vào instance của TableManager
-      inst.selectedIds = new Set(state.selectedStudents);
+      inst.setRowSelection(state.selectedStudents);
 
-      inst.reload(); // Render lại bảng
       updateCounter(); // Cập nhật badge
     }
   };

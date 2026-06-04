@@ -69,7 +69,13 @@ class InternshipBatchApiController extends Controller
   {
     try {
       $fileHandler = new UploadedFileHandler();
-      $uploadedFile = $fileHandler->fromGlobals('file_import');
+      $rawFile = $request->file('file_import');
+
+      if (!$rawFile) {
+        return $this->json(['message' => 'Vui lòng chọn file để upload.'], 400);
+      }
+
+      $uploadedFile = $fileHandler->processUpload($rawFile);
 
       if ($uploadedFile->extension !== 'xlsx') {
         return $this->json(['message' => 'Chỉ hỗ trợ file định dạng .xlsx'], 400);

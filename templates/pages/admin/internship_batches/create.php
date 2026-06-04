@@ -177,7 +177,7 @@
               <div class="flex justify-between items-center w-full mb-4">
                 <label class="field__label mb-0">Chọn các giảng viên hướng dẫn đợt này:</label>
                 <div class="flex gap-2">
-                  <button type="button" class="btn" data-variant="outline" data-size="lg" id="btn-equalize-quotas"
+                  <button type="button" class="btn" data-variant="primary" data-size="lg" id="btn-equalize-quotas"
                     title="Chia đều số lượng SV cho các GV đã chọn">
                     <i class="fa-solid fa-scale-balanced mr-1"></i> Chia đều
                   </button>

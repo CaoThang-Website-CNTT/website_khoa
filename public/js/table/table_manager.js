@@ -207,16 +207,26 @@ class TableInstance {
   }
 
   /**
+   * Cập nhật toàn bộ danh sách ID được chọn.
+   * @param {string[]|Set<string>} ids
+   */
+  setRowSelection(ids) {
+    this.#state.rowSelection = new Set(Array.from(ids).map(String));
+    this.render();
+  }
+
+  /**
    * Thêm hoặc xóa một row khỏi selection state.
    * Không dispatch event - caller (TableRenderer) tự dispatch sau khi gọi.
    * @param {string} id
    * @param {boolean} selected
    */
   toggleRowSelection(id, selected) {
+    const idStr = String(id);
     if (selected) {
-      this.#state.rowSelection.add(id);
+      this.#state.rowSelection.add(idStr);
     } else {
-      this.#state.rowSelection.delete(id);
+      this.#state.rowSelection.delete(idStr);
     }
   }
 
@@ -443,6 +453,10 @@ export class TableManager {
 
   static get instance() {
     return TableManager.#instance || new TableManager();
+  }
+
+  static init() {
+    TableManager.instance.init();
   }
 
   #bootstrap() {
