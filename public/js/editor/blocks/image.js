@@ -118,6 +118,7 @@ export class ImageBlock extends EditorBlock {
     img.style.width = this.data.meta.width.includes('%') || this.data.meta.width.includes('px')
       ? this.data.meta.width
       : `${this.data.meta.width}px`;
+    img.dataset.width = img.style.width;
 
     const caption = document.createElement('figcaption');
     caption.contentEditable = 'true';
