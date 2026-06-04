@@ -293,17 +293,6 @@ $current_user = request()->session()->authUser() ?? ['account_id' => null];
   </button>
 </div>
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>(
-        "<?= htmlspecialchars($flash['title']) ?>",
-        "<?= htmlspecialchars($flash['desc']) ?>"
-      );
-    });
-  </script>
-<?php endif; ?>
-
 <?php $layout->start('scripts'); ?>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
