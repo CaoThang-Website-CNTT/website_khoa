@@ -327,6 +327,12 @@ class EditorMetaBinder {
           el.dataset.variant = value === 'published' ? 'primary' : 'secondary';
           break;
         }
+        case 'author-label': {
+          const authors = Array.isArray(window.BeEditorAuthors) ? window.BeEditorAuthors : [];
+          const author = authors.find(item => Number(item.id) === Number(value));
+          el.textContent = author?.email ?? el.dataset.previewDefault ?? '';
+          break;
+        }
       }
 
       if (key === 'settings.show_view_count' || key === 'show_view_count') {

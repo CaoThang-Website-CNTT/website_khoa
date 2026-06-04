@@ -11,7 +11,7 @@ return new class extends BaseMigration {
   {
     $schema->alter('accounts', function (AlterBuilder $table) {
       $table->modifyColumn(function ($t) {
-        $t->enum('role', ['user', 'admin', 'teacher', 'editor', 'super_admin']);
+        $t->enum('role', ['student', 'admin', 'teacher', 'editor', 'super_admin']);
       });
     });
   }
@@ -21,7 +21,7 @@ return new class extends BaseMigration {
 
     $schema->alter('accounts', function (AlterBuilder $table) {
       $table->modifyColumn(function ($t) {
-        $t->enum('role', ['user', 'admin', 'teacher']);
+        $t->enum('role', ['student', 'admin', 'teacher']);
       });
     });
 

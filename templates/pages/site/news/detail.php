@@ -126,23 +126,21 @@
                   <hr class="separator">
                 </div>
                 <div class="card__content">
-                  <?php if ($detail->hasToc()): ?>
-                    <ul class="news-toc-list">
-                      <?php foreach ($detail->entries() as $entry): ?>
-                        <li class="new-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
-                          <?php if ($entry->anchorId !== ''): ?>
-                            <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
-                              <?= htmlspecialchars($entry->plainText) ?>
-                            </a>
-                          <?php else: ?>
-                            <span>
-                              <?= htmlspecialchars($entry->plainText) ?>
-                            </span>
-                          <?php endif; ?>
-                        </li>
-                      <?php endforeach; ?>
-                    </ul>
-                  <?php endif; ?>
+                  <ul class="news-toc-list">
+                    <?php foreach ($detail->entries() as $entry): ?>
+                      <li class="new-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
+                        <?php if ($entry->anchorId !== ''): ?>
+                          <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
+                            <?= htmlspecialchars($entry->plainText) ?>
+                          </a>
+                        <?php else: ?>
+                          <span>
+                            <?= htmlspecialchars($entry->plainText) ?>
+                          </span>
+                        <?php endif; ?>
+                      </li>
+                    <?php endforeach; ?>
+                  </ul>
                 </div>
               </div>
             </div>

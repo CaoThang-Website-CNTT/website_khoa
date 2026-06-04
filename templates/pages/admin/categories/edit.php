@@ -7,9 +7,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-
-
 <?php if (!$category->isEditable()): ?>
   <section class="banner" data-variant="info" role="region" aria-label="Thông báo trạng thái">
     <i class="fa-solid fa-lock"></i> Danh mục hệ thống. Bạn chỉ có quyền xem dữ liệu này.
@@ -75,16 +72,19 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field" <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>
               <label class="field__label" for="parent_id">Danh mục cha</label>
-              <select id="parent_id" class="field__input" name="parent_id">
-                <option value="">-- Không có (danh mục gốc) --</option>
-                <?php foreach ($categories as $cat): ?>
-                  <?php if ($cat->id === $category->id)
-                    continue; ?>
-                  <option value="<?= htmlspecialchars($cat->id) ?>" <?= $cat->id === $category->parent_id ? 'selected' : '' ?>>
-                    <?= str_repeat('-', $cat->depth) . htmlspecialchars($cat->name) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
+              <button type="button" class="select" data-select-id="parent_id" data-select-searchable
+                data-select-placeholder="Chọn danh mục cha" name="parent_id" data-be-meta-key="parent_id" role="listbox"
+                data-select-default-value="<?= $category->parent_id ?>">
+                <div class="select__content">
+                  <?php foreach (($categories ?? []) as $cat): ?>
+                    <?php if ($cat->id === $category->id)
+                      continue; ?>
+                    <div class="select__item" data-select-value="<?= $cat->id ?>">
+                      <?= htmlspecialchars($cat->name) ?>
+                    </div>
+                  <?php endforeach; ?>
+                </div>
+              </button>
             </div>
 
             <div class="field" <?= !$category->isEditable() ? ' data-field-readonly' : '' ?>>

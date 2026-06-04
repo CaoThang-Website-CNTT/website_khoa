@@ -1,26 +1,22 @@
-.be-editable strong,
-.be-editable b,
-.news-detail-content strong,
-.news-detail-content b {
+.be-editable :is(strong, b),
+.be-block-card :is(strong, b) {
   font-size: inherit;
   font-weight: bold;
 }
-.be-editable i,
-.be-editable em,
-.news-detail-content i,
-.news-detail-content em {
+.be-editable :is(i:not(.fa-solid, .fa-regular), em),
+.be-block-card :is(i:not(.fa-solid, .fa-regular), em) {
   font-size: inherit;
   font-weight: inherit;
   font-style: italic;
 }
 .be-editable u,
-.news-detail-content u {
+.be-block-card u {
   font-size: inherit;
   font-weight: inherit;
   text-decoration: underline;
 }
 .be-editable a,
-.news-detail-content a {
+.be-block-card a {
   color: var(--primary);
   text-decoration: underline;
   cursor: pointer;
