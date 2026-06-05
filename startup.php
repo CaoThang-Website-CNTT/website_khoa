@@ -101,6 +101,7 @@ require_once BASE_PATH . '/stores/internship_assignment_store.php';
 require_once BASE_PATH . '/stores/internship_submission_store.php';
 require_once BASE_PATH . '/stores/media_store.php';
 require_once BASE_PATH . '/stores/post_store.php';
+require_once BASE_PATH . '/stores/category_post_store.php';
 require_once BASE_PATH . '/stores/company_store.php';
 require_once BASE_PATH . '/stores/referral_letter_store.php';
 
@@ -155,3 +156,4 @@ require_once BASE_PATH . '/controllers/api/media_api_controller.php';
 require_once BASE_PATH . '/controllers/api/carousel_api_controller.php';
 require_once BASE_PATH . '/controllers/api/menu_api_controller.php';
 require_once BASE_PATH . '/controllers/api/company_api_controller.php';
+require_once BASE_PATH . '/controllers/api/post_api_controller.php';
