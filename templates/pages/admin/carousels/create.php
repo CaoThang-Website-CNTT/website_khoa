@@ -293,17 +293,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const slideDeleteConfirmModal = document.querySelector('#slide-delete-confirm-modal');
     const confirmDeleteBtn = slideDeleteConfirmModal.querySelector('#slide-delete-confirm-btn');
 
-    // Utility: HTML escape
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
     // Toggle Custom HTML field in modal
     slideUseCustomHtml.addEventListener('change', function () {
       slideCustomHtmlField.style.display = this.checked ? 'flex' : 'none';
@@ -353,7 +342,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         card.setAttribute('data-dnd-draggable', '');
 
         const imgHtml = slide.media_url
-          ? `<img class="slide-item__img" src="${escapeHtml(slide.media_url)}" alt="">`
+          ? `<img class="slide-item__img" src="${AppUtils.escapeHtml(slide.media_url)}" alt="">`
           : `<div class="slide-item__img"><div class="w-full h-full flex justify-center items-center gap-1"><i class="fa-solid fa-image"></i>N/A</div></div>`;
 
         card.innerHTML = `
@@ -363,8 +352,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <div class="flex-1 flex gap-2 items-center">
             ${imgHtml}
             <span class="flex-1 w-full font-medium text-sm">
-              ${escapeHtml(slide.title || '')} 
-              <span class="font-bold">${escapeHtml(slide.title_highlight || '')}</span>
+              ${AppUtils.escapeHtml(slide.title || '')} 
+              <span class="font-bold">${AppUtils.escapeHtml(slide.title_highlight || '')}</span>
             </span>
             <div>
               <span class="badge" data-variant="${slide.is_active ? 'primary' : 'secondary'}">

@@ -88,8 +88,8 @@
 
   tm.root.addEventListener("tm:pagination:change", (e) => {
     const { page, limit } = e.detail;
-    const searchParams = new URLSearchParams(window.location.search);
-    const search = searchParams.get('filter[search]') || '';
+    const queryState = ApiResultState.fromLocation();
+    const search = queryState.getParam('filter[search]', '');
     const searchQuery = search ? `&filter[search]=${encodeURIComponent(search)}` : '';
     window.location.href = `<?= url("admin/accounts") ?>?page=${page}&limit=${limit}${searchQuery}`;
   });

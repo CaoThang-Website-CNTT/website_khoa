@@ -28,7 +28,6 @@ $_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_editor.css') ?>">
 
-<script src="<?= url('/public/js/utils.js') ?>"></script>
 <script src="<?= url('/public/js/toast.js') ?>"></script>
 <script src="<?= url('/public/js/dnd.js') ?>"></script>
 
