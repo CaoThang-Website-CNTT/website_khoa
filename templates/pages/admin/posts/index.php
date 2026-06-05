@@ -52,7 +52,7 @@
   </template>
 
   <!-- Cột Tác giả -->
-  <template data-tm-col="author_name" data-tm-label="Tác giả" data-tm-filter-type="text"></template>
+  <template data-tm-col="author_email" data-tm-label="Tác giả" data-tm-filter-type="text"></template>
 
   <!-- Cột Trạng thái với Badge -->
   <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-align="center" data-tm-filter-type="select"
@@ -76,7 +76,7 @@
       'id' => $post->id,
       'title' => $post->title,
       'slug' => $post->slug,
-      'author_name' => $post->author->full_name ?? 'N/A',
+      'author_email' => $post->author->email ?? 'N/A',
       'status' => $post->status,
       'view_count' => $post->view_count,
       'created_at' => $post->created_at ? date('d/m/Y H:i', strtotime($post->created_at)) : 'N/A'
