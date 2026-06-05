@@ -273,6 +273,8 @@
     const searchBtn = document.querySelector('.news-searchbar__btn');
     const filterBtns = document.querySelectorAll('.news-filters__tag');
     const sortSelect = document.getElementById('all-news-sort-select');
+    const loadMoreIdleHtml = loadMoreBtn?.innerHTML || 'Xem Thêm';
+    const spinnerHtml = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>';
 
     // Quản lý trạng thái phân trang, tìm kiếm và bộ lọc
     const state = new ApiResultState({
@@ -321,6 +323,23 @@
       if (!loadMoreBtn) return;
 
       loadMoreBtn.disabled = isLoading;
+      searchBtn && (searchBtn.disabled = isLoading);
+      if (sortSelect) {
+        sortSelect.disabled = isLoading;
+        if (isLoading) {
+          sortSelect.setAttribute('data-select-disabled', '');
+        } else {
+          sortSelect.removeAttribute('data-select-disabled');
+        }
+      }
+      filterBtns.forEach(function (button) {
+        button.disabled = isLoading;
+      });
+      queueMicrotask(function () {
+        loadMoreBtn.innerHTML = isLoading
+          ? `${spinnerHtml} Đang tải...`
+          : loadMoreIdleHtml;
+      });
       loadMoreBtn.textContent = isLoading ? 'Đang tải...' : 'Xem Thêm';
     }
 
@@ -360,8 +379,7 @@
       setLoading(true);
 
       const targetPage = reset ? 1 : state.nextPage();
-      const sortParams = getSortParams();
-      state.setParams(sortParams);
+      state.setParams(getSortParams());
       state.setParam('search', state.search);
       state.setParam('filter', state.category !== 'all' ? state.category : null);
 
@@ -370,16 +388,14 @@
         const posts = Array.isArray(payload.data) ? payload.data : [];
 
         if (reset) {
-          list.innerHTML = '';
+          list.innerHTML = posts.length
+            ? posts.map(renderPost).join('')
+            : '<p class="news-list__empty">Không có tin tức phù hợp.</p>';
+        } else {
+          list.insertAdjacentHTML('beforeend', posts.map(renderPost).join(''));
         }
 
-        list.insertAdjacentHTML('beforeend', posts.map(renderPost).join(''));
         state.setMeta(payload.meta || { current_page: targetPage });
-
-        if (reset && posts.length === 0) {
-          list.innerHTML = '<p class="news-list__empty">Không có tin tức phù hợp.</p>';
-        }
-
         syncLoadMore();
       } catch (error) {
         console.error('Không thể truy vấn bài viết', error);
