@@ -211,12 +211,14 @@
   height: 20rem;
 }
 
-.news-card[data-landing="featured"] .news-card__content {
+.news-card[data-landing-featured="true"] {
   height: 30rem;
+  border-radius: 38px;
 }
 
-.news-card[data-landing="featured"] .news-card__content {
+.news-card[data-landing-featured="true"] .news-card__content {
   background: var(--blue-from-left-gradient);
+  padding: 2rem;
 }
 
 .news-card__tag {
@@ -233,7 +235,11 @@
   background: var(--black-gradient);
 }
 
-.news-card__description {
+.news-card[data-landing] .news-card__title {
+  color: white;
+}
+
+.news-card[data-landing] .news-card__description {
   color: var(--accent);
 }
 
@@ -245,31 +251,34 @@
 #featured-news > .news-card .news-card__title,
 #featured-news > .news-card .news-card__description {
   max-width: 60%;
+  font-size: var(--text-4xl);
 }
 
-#featured-news a.news-card:nth-child(1) .news-card__content {
+#featured-news article.news-card:nth-child(1) .news-card__content {
   background: var(--blue-gradient);
 }
 
-#featured-news a.news-card:nth-child(1) .news-card__tag {
+#featured-news
+  article.news-card:nth-child(1):not([data-landing-featured="true"])
+  .news-card__tag {
   background: var(--primary);
   color: var(--primary-foreground);
 }
 
-#featured-news a.news-card:nth-child(2) .news-card__content {
+#featured-news article.news-card:nth-child(2) .news-card__content {
   background: var(--purple-gradient);
 }
 
-#featured-news a.news-card:nth-child(2) .news-card__tag {
+#featured-news article.news-card:nth-child(2) .news-card__tag {
   background: var(--chart-2);
   color: var(--background);
 }
 
-#featured-news a.news-card:nth-child(3) .news-card__content {
+#featured-news article.news-card:nth-child(3) .news-card__content {
   background: var(--green-gradient);
 }
 
-#featured-news a.news-card:nth-child(3) .news-card__tag {
+#featured-news article.news-card:nth-child(3) .news-card__tag {
   background: var(--chart-3);
   color: var(--background);
 }
@@ -383,7 +392,7 @@
 .news-card__image-wrapper {
   position: relative;
   width: 100%;
-  height: 16rem;
+  height: 100%;
   overflow: hidden;
 }
 

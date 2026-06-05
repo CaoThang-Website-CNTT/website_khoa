@@ -59,6 +59,7 @@ interface IQueryBuilder
   /** * Thêm điều kiện kiểm tra thuộc một danh sách giá trị (IN).
    */
   public function in(string $column, array $values): static;
+  public function notIn(string $column, array $values): static;
 
   public function orEq(string $column, mixed $value): static;
   public function orNeq(string $column, mixed $value): static;
@@ -68,6 +69,7 @@ interface IQueryBuilder
   public function orIlike(string $column, string $pattern): static;
   public function orIs(string $column, mixed $value): static;
   public function orIn(string $column, array $values): static;
+  public function orNotIn(string $column, array $values): static;
 
   /**
    * Nhóm điều kiện WHERE trong ngoặc đơn, ví dụ: (email LIKE ? OR phone LIKE ?).
@@ -200,6 +202,11 @@ class QueryBuilder implements IQueryBuilder
     return $this->addInWhere($column, $values);
   }
 
+  public function notIn(string $column, array $values): static
+  {
+    return $this->addNotInWhere($column, $values);
+  }
+
   public function orEq(string $column, mixed $value): static
   {
     return $this->addWhere($column, '=', $value, 'OR');
@@ -231,6 +238,11 @@ class QueryBuilder implements IQueryBuilder
   public function orIn(string $column, array $values): static
   {
     return $this->addInWhere($column, $values, 'OR');
+  }
+
+  public function orNotIn(string $column, array $values): static
+  {
+    return $this->addNotInWhere($column, $values, 'OR');
   }
 
   public function whereGroup(callable $callback, string $boolean = 'AND'): static
@@ -293,6 +305,16 @@ class QueryBuilder implements IQueryBuilder
   {
     return $this->pushWhere([
       'type' => 'In',
+      'column' => $column,
+      'values' => $values,
+      'boolean' => $boolean,
+    ], $values);
+  }
+
+  protected function addNotInWhere(string $column, array $values, string $boolean = 'AND'): static
+  {
+    return $this->pushWhere([
+      'type' => 'NotIn',
       'column' => $column,
       'values' => $values,
       'boolean' => $boolean,

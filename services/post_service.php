@@ -13,7 +13,7 @@ interface IPostService
 {
   public function create(array $payload): Post;
 
-  public function getPosts(int $page, int $limit = 15): Pageable;
+  public function getPosts(int $page, int $limit = 15, bool $with_categories = false, array $filters = []): Pageable;
   public function getPost(int $post_id): Post;
   public function getPostBySlug(string $slug, bool $with_author = false): Post;
   /**
@@ -21,7 +21,7 @@ interface IPostService
    * 
    * @return Post[]
    */
-  public function getFeaturedPosts(int $limit = 5): array;
+  public function getFeaturedPosts(int $limit = 5, bool $with_categories = false, array $filters = []): array;
   /**
    * Cập nhật nội dung và/hoặc trạng thái của bài viết.
    * Chỉ các field được truyền mới bị ghi đè - các field còn lại giữ nguyên.
@@ -47,10 +47,10 @@ class PostService implements IPostService
     $this->_categoryStore = $categoryStore;
   }
 
-  public function getPosts(int $page, int $limit = 15): Pageable
+  public function getPosts(int $page, int $limit = 15, bool $with_categories = false, array $filters = []): Pageable
   {
-    $posts = $this->_postStore->getPaginated($page, $limit);
-    $total = $this->_postStore->getTotalCount();
+    $posts = $this->_postStore->getPaginated($page, $limit, $filters);
+    $total = $this->_postStore->getTotalCount($filters);
 
     // Tối ưu: Load bulk thông tin tác giả để tránh N+1
     $authorIds = array_unique(array_filter(array_map(fn($p) => $p->author_id, $posts)));
@@ -65,6 +65,13 @@ class PostService implements IPostService
         if ($post->author_id && isset($authorMap[$post->author_id])) {
           $post->author = $authorMap[$post->author_id];
         }
+      }
+    }
+
+    if ($with_categories && !empty($posts)) {
+      foreach ($posts as $post) {
+        $categoryIds = $this->_postStore->getCategoryIds($post->id);
+        $post->categories = $this->_categoryStore->getByIds($categoryIds);
       }
     }
 
@@ -98,9 +105,16 @@ class PostService implements IPostService
   }
 
   /** @return Post[] */
-  public function getFeaturedPosts(int $limit = 5): array
+  public function getFeaturedPosts(int $limit = 5, bool $with_categories = false, array $filters = []): array
   {
-    return $this->_postStore->getFeatured($limit);
+    $posts = $this->_postStore->getFeatured($limit, $filters);
+    if ($with_categories && !empty($posts)) {
+      foreach ($posts as $post) {
+        $categoryIds = $this->_postStore->getCategoryIds($post->id);
+        $post->categories = $this->_categoryStore->getByIds($categoryIds);
+      }
+    }
+    return $posts;
   }
 
   public function create(array $payload): Post

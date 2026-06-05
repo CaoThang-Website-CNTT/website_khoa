@@ -1,4 +1,4 @@
-import { TableManager } from "../table/index.js";
+import { TableManager } from "../table/table_manager.js";
 import LayoutCollapsible from "../layout-collapsible.js";
 
 document.addEventListener("DOMContentLoaded", () => {

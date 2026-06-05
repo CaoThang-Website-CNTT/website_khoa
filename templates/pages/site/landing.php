@@ -4,7 +4,7 @@ function renderCarousel(array $carouselSlides): void
   if (empty($carouselSlides)) {
     return;
   }
-  ?>
+?>
   <div class="carousel py-8" id="landingCarousel">
     <div class="carousel__inner" id="carouselInner">
 
@@ -68,7 +68,7 @@ function renderCarousel(array $carouselSlides): void
     <div class="carousel__indicators">
     </div>
   </div>
-  <?php
+<?php
 }
 ?>
 <!-- HERO-SECTION: START -->
@@ -522,118 +522,71 @@ function renderCarousel(array $carouselSlides): void
 
       <div id="featured-news" class="newsfeed__featured-group flex flex-col gap-6">
 
-        <article class="news-card news-card--featured relative overflow-hidden rounded-3xl">
-          <div class="news-card__image-wrapper image-wrapper">
-            <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
-              alt="This is an image of a student won a tournament"
-              class="news-card__image absolute w-full h-full object-cover image">
-            <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-8">
-              <div class="news-card__meta mb-2 flex items-center gap-2">
-                <span class="news-card__tag badge text-sm px-3">
-                  Nổi bật
-                </span>
-                <span class="news-card__date flex items-center gap-1 text-base">
-                  <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                  15/01/2025
-                </span>
+        <?php if (!empty($featuredNews)): $featured = $featuredNews[0]; ?>
+          <article class="news-card news-card--featured relative overflow-hidden rounded-3xl" data-landing="true" data-landing-featured="true">
+            <div class="news-card__image-wrapper image-wrapper">
+              <img src="<?= htmlspecialchars(url('public/media/' . $featured->seo_image_url)) ?>"
+                onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
+                alt="<?= htmlspecialchars($featured->title) ?>"
+                class="news-card__image absolute w-full h-full object-cover image">
+              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-8">
+                <div class="news-card__meta mb-2 flex items-center gap-2">
+                  <span class="news-card__tag badge text-sm px-3" data-variant="destructive">
+                    Nổi bật
+                  </span>
+                  <span class="news-card__date flex items-center gap-1 text-base">
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
+                    <?= date('d/m/Y', strtotime($featured->published_at)) ?>
+                  </span>
+                </div>
+                <h3 class="news-card__title text-4xl mb-2">
+                  <a class="font-semibold" href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>"><?= htmlspecialchars($featured->title ?: '') ?></a>
+                </h3>
+                <p class="news-card__description font-light text-xl mb-6">
+                  <?= htmlspecialchars($featured->seo_description ?: '') ?>
+                </p>
+                <a href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>" data-variant="outline-alt"
+                  class="news-card__link flex items-center gap-2 text-base px-4 py-2 btn bouncy-btn rounded-full">
+                  Đọc thêm
+                </a>
               </div>
-              <h3 class="news-card__title text-4xl font-medium mb-2">
-                Sinh viên khoa giành giải Nhất cuộc thi Olympic Tin Học 2025
-              </h3>
-              <p class="news-card__description font-light text-xl mb-6">
-                Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết để
-                đạt được danh hiệu cao quý
-              </p>
-              <a href="#" data-variant="outline-alt"
-                class="news-card__link flex items-center gap-2 text-base px-4 py-2 btn bouncy-btn rounded-full">
-                Đọc thêm
-              </a>
             </div>
-          </div>
-        </article>
+          </article>
+        <?php endif; ?>
 
         <div class="newsfeed__secondary-grid flex gap-6 justify-center items-stretch self-stretch">
-
-          <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
-                alt="This is an image of a student won a tournament"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta mb-2 flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    Thành tích
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    15/01/2025
-                  </span>
+          <?php
+          $featuredCount = count($featuredNews);
+          for ($i = 1; $i < 4 && $i < $featuredCount; $i++):
+            $news = $featuredNews[$i];
+            $catName = !empty($news->categories) ? $news->categories[0]->name : 'Tin tức';
+          ?>
+            <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl" data-landing="true">
+              <div class="news-card__image-wrapper image-wrapper">
+                <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
+                  onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
+                  alt="<?= htmlspecialchars($news->title) ?>"
+                  class="news-card__image absolute w-full h-full object-cover image">
+                <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
+                  <div class="news-card__meta mb-2 flex items-center gap-2">
+                    <span class="news-card__tag badge text-xs">
+                      <?= htmlspecialchars($catName) ?>
+                    </span>
+                    <span class="news-card__date flex items-center gap-1 text-sm">
+                      <i class="fa-regular fa-calendar news-card__date-icon"></i>
+                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
+                    </span>
+                  </div>
+                  <h3 class="news-card__title text-xl font-semibold mb-2">
+                    <a class="font-semibold" href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
+                  </h3>
+                  <p class="news-card__description font-light text-sm">
+                    <?= htmlspecialchars($news->seo_description ?: '') ?>
+                  </p>
                 </div>
-                <h3 class="news-card__title text-xl font-semibold mb-2">
-                  Sinh viên khoa giành giải Nhất cuộc thi Olympic Tin Học
-                  2025
-                </h3>
-                <p class="news-card__description font-light text-sm">
-                  Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết
-                  để đạt được danh hiệu cao quý
-                </p>
               </div>
-            </div>
-          </a>
-
-          <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
-                alt="This is an image of a student won a tournament"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta mb-2 flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    Thành tích
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    15/01/2025
-                  </span>
-                </div>
-                <h3 class="news-card__title text-xl font-semibold mb-2">
-                  Sinh viên khoa giành giải Nhất cuộc thi Olympic Tin Học
-                  2025
-                </h3>
-                <p class="news-card__description font-light text-sm">
-                  Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết
-                  để đạt được danh hiệu cao quý
-                </p>
-              </div>
-            </div>
-          </a>
-
-          <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
-                alt="This is an image of a student won a tournament"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta mb-2 flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    Thành tích
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    15/01/2025
-                  </span>
-                </div>
-                <h3 class="news-card__title text-white text-xl font-semibold mb-2">
-                  Sinh viên khoa giành giải Nhất cuộc thi Olympic Tin Học
-                  2025
-                </h3>
-                <p class="news-card__description font-light text-sm">
-                  Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết
-                  để đạt được danh hiệu cao quý
-                </p>
-              </div>
-            </div>
-          </a>
+            </article>
+          <?php endfor; ?>
         </div>
       </div>
 
@@ -642,7 +595,7 @@ function renderCarousel(array $carouselSlides): void
           <h2 class="newsfeed__other-title text-4xl font-medium flex-1">
             Tin tức khác
           </h2>
-          <a href="#"
+          <a href="<?= htmlspecialchars(url('tin-tuc')) ?>"
             class="newsfeed__view-all-link flex items-center gap-1 text-base font-medium link-hover--underline">
             Xem thêm
             <svg class="newsfeed__view-all-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"
@@ -656,84 +609,39 @@ function renderCarousel(array $carouselSlides): void
         </div>
 
         <div class="newsfeed__other-grid flex gap-6 justify-center items-stretch self-stretch">
-
-          <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
-                alt="This is an image of a student won a tournament"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta mb-2 flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    Thành tích
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    15/01/2025
-                  </span>
+          <?php
+          $latestNews = $latestNewsItems ?? [];
+          $latestCount = count($latestNews);
+          for ($i = 0; $i < 3 && $i < $latestCount; $i++):
+            $news = $latestNews[$i];
+            $catName = !empty($news->categories) ? $news->categories[0]->name : 'Tin tức';
+          ?>
+            <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl" data-landing="true">
+              <div class="news-card__image-wrapper image-wrapper">
+                <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
+                  onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
+                  alt="<?= htmlspecialchars($news->title) ?>"
+                  class="news-card__image absolute w-full h-full object-cover image">
+                <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
+                  <div class="news-card__meta mb-2 flex items-center gap-2">
+                    <span class="news-card__tag badge text-xs">
+                      <?= htmlspecialchars($catName) ?>
+                    </span>
+                    <span class="news-card__date flex items-center gap-1 text-sm">
+                      <i class="fa-regular fa-calendar news-card__date-icon"></i>
+                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
+                    </span>
+                  </div>
+                  <h3 class="news-card__title text-xl font-semibold mb-2">
+                    <a class="font-semibold" href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
+                  </h3>
+                  <p class="news-card__description font-light text-sm">
+                    <?= htmlspecialchars($news->seo_description ?: '') ?>
+                  </p>
                 </div>
-                <h3 class="news-card__title text-xl font-semibold mb-2">
-                  Sinh viên khoa giành giải Nhất cuộc thi Olympic Tin Học 2025
-                </h3>
-                <p class="news-card__description font-light text-sm">
-                  Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết để
-                  đạt được danh hiệu cao quý
-                </p>
               </div>
-            </div>
-          </a>
-
-          <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
-                alt="This is an image of a student won a tournament"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta mb-2 flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    Thành tích
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    15/01/2025
-                  </span>
-                </div>
-                <h3 class="news-card__title news__item--title text-xl font-semibold mb-2">
-                  Sinh viên khoa giành giải Nhất cuộc thi Olympic Tin Học 2024
-                </h3>
-                <p class="news-card__description font-light news__item--sub_title text-sm font-normal">
-                  Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết để
-                  đạt được danh hiệu
-                </p>
-              </div>
-            </div>
-          </a>
-
-          <a href="#" class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..."
-                alt="This is an image of a student won a tournament"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta mb-2 flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    Thành tích
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    15/01/2025
-                  </span>
-                </div>
-                <h3 class="news-card__title text-xl font-semibold mb-2">
-                  Sinh viên khoa giành giải Nhất cuộc thi Olympic Tin Học 2025
-                </h3>
-                <p class="news-card__description font-light text-sm">
-                  Cuộc thi giữa 60 thí sinh cuối cùng trong trận chung kết để
-                  đạt được danh hiệu cao quý
-                </p>
-              </div>
-            </div>
-          </a>
+            </article>
+          <?php endfor; ?>
         </div>
       </div>
 

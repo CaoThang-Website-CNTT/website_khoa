@@ -294,11 +294,3 @@ $batch = $batch ?? null;
   window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
 </script>
 <script type="module" src="<?= url('public/js/pages/batch_students_manager.js') ?>"></script>
-
-
-<script>
-  window.BATCH_ID = <?= $batch['id'] ?>;
-  window.BATCH_STATUS = '<?= $batch['status'] ?>';
-  window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
-</script>
-<script type="module" src="<?= url('public/js/pages/batch_students_manager.js') ?>"></script>

@@ -12,9 +12,9 @@ interface IPostStore
   public function create(Post $post): Post;
 
   /** @return Post[] */
-  public function getPaginated(int $pageTo, int $limit = 15): array;
+  public function getPaginated(int $pageTo, int $limit = 15, array $filters = []): array;
   public function getById(int $id): ?Post;
-
+  public function getFeatured(int $limit = 5, array $filters = []): array;
 
   /**
    * Chỉ cập nhật các field được truyền vào - partial update.
@@ -26,7 +26,7 @@ interface IPostStore
   public function findBySlug(string $slug): ?Post;
   public function syncCategories(int $postId, array $categoryIds): bool;
   public function getCategoryIds(int $postId): array;
-  public function getTotalCount(): int;
+  public function getTotalCount(array $filters = []): int;
 }
 
 class PostStore extends Store implements IPostStore
@@ -82,7 +82,7 @@ class PostStore extends Store implements IPostStore
     return $post;
   }
 
-  public function getPaginated(int $page, int $limit = 20): array
+  public function getPaginated(int $page, int $limit = 20, array $filters = []): array
   {
     $offset = ($page - 1) * $limit;
     $builder = new QueryBuilder(new MySQLCompiler());
@@ -95,8 +95,16 @@ class PostStore extends Store implements IPostStore
       ->limit($limit)
       ->range($offset, $offset + $limit - 1);
 
+    if (isset($filters['status'])) {
+      $query->eq('status', $filters['status']);
+    }
+
+    if (isset($filters['is_featured'])) {
+      $query->eq('is_featured', $filters['is_featured']);
+    }
+
     $stmt = $this->db->prepare($query->toSql());
-    $stmt->execute();
+    $stmt->execute($query->getBindings());
 
     return array_map(
       fn(array $row) => Post::fromArray($row),
@@ -122,7 +130,7 @@ class PostStore extends Store implements IPostStore
     return $row ? Post::fromArray($row) : null;
   }
 
-  public function getFeatured(int $limit = 5): array
+  public function getFeatured(int $limit = 5, array $filters = []): array
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
@@ -133,6 +141,10 @@ class PostStore extends Store implements IPostStore
       ->eq('is_featured', "1")
       ->order('created_at', ['ascending' => false])
       ->limit($limit);
+
+    if (isset($filters['status'])) {
+      $query->eq('status', $filters['status']);
+    }
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -204,11 +216,19 @@ class PostStore extends Store implements IPostStore
   }
 
 
-  public function getTotalCount(): int
+  public function getTotalCount(array $filters = []): int
   {
     $builder = new QueryBuilder(new MySQLCompiler());
 
     $query = $builder->from('posts')->select('COUNT(*) AS total')->is('deleted_at', null);
+
+    if (isset($filters['status'])) {
+      $query->eq('status', $filters['status']);
+    }
+
+    if (isset($filters['is_featured'])) {
+      $query->eq('is_featured', $filters['is_featured']);
+    }
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());

@@ -54,9 +54,20 @@ class SiteController extends Controller
     $carousel = $this->_carouselService->getBySlugWithSlides("landing-page", with_media: true);
     $carouselSlides = $carousel !== null ? $carousel->slides : [];
 
+    $featuredNews = $this->_postService->getFeaturedPosts(4, true, ['status' => 'published']);
+    
+    // Lấy 3 bài viết mới nhất không phải bài nổi bật
+    $allNewsPageable = $this->_postService->getPosts(1, 3, true, [
+      'status' => 'published',
+      'is_featured' => "0"
+    ]);
+    $latestNewsItems = $allNewsPageable->getItems();
+
     return $this->render('site/landing', [
       'headerMenu' => $headerMenuItems,
       'carouselSlides' => $carouselSlides,
+      'featuredNews' => $featuredNews,
+      'latestNewsItems' => $latestNewsItems,
       'settings' => $this->_settings,
     ], "site_layout");
   }
@@ -65,8 +76,13 @@ class SiteController extends Controller
   {
     $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
     $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
-    $featuredNews = $this->_postService->getFeaturedPosts(2);
-    $allNews = $this->_postService->getPosts(page: 1, limit: 6);
+    
+    $featuredNews = $this->_postService->getFeaturedPosts(2, true, ['status' => 'published']);
+    
+    $allNews = $this->_postService->getPosts(1, 6, true, [
+      'status' => 'published',
+      'is_featured' => "0"
+    ]);
 
     return $this->render('site/news/index', [
       'headerMenu' => $headerMenuItems,

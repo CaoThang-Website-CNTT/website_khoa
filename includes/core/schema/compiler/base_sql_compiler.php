@@ -83,6 +83,9 @@ abstract class BaseSQLCompiler implements ISQLCompiler
       } elseif (($w['type'] ?? 'Basic') === 'In') {
         $placeholders = implode(', ', array_fill(0, count($w['values']), '?'));
         $sql[] = $lead . $this->wrap($w['column']) . " IN ($placeholders)";
+      } elseif (($w['type'] ?? 'Basic') === 'NotIn') {
+        $placeholders = implode(', ', array_fill(0, count($w['values']), '?'));
+        $sql[] = $lead . $this->wrap($w['column']) . " NOT IN ($placeholders)";
       } else {
         $sql[] = $lead . $this->wrap($w['column']) . " " . $w['operator'] . " ?";
       }
