@@ -1,9 +1,5 @@
 <?php
 // Kết nối các Dependency cần thiết cho App
-define('BASE_PATH', __DIR__);
-
-// App
-require_once BASE_PATH . '/includes/env_loader.php';
 
 // Core
 // Database

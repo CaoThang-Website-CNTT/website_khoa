@@ -40,7 +40,6 @@ function url(string $path = '', bool $strict = false): string
     }
     return $path;
   }
-
   return APP_URL . ltrim($path, '/');
 }
 

@@ -1,5 +1,9 @@
 <?php
-require_once __DIR__ . '/startup.php';
+define('BASE_PATH', __DIR__);
+
+// App
+require_once BASE_PATH . '/includes/env_loader.php';
+App\EnvLoader::load(BASE_PATH . '/.env.local');
 
 // Bật chế độ ghi log lỗi
 ini_set('log_errors', '1');
@@ -7,7 +11,7 @@ ini_set('log_errors', '1');
 // Chỉ định đường dẫn tuyệt đối đến file log local
 ini_set('error_log', BASE_PATH . '/tests/debug.log');
 
-App\EnvLoader::load(BASE_PATH . '/.env.local');
+require_once __DIR__ . '/startup.php';
 
 use App\Core\Request;
 use App\Core\Router;
