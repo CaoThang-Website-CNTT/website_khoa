@@ -3,8 +3,13 @@
 use App\Core\Request;
 
 if (!defined('APP_URL')) {
-  $projectDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', str_replace('\\', '/', __DIR__ . '/../'));
-  $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . rtrim($projectDir, '/') . '/';
+  if (isset($_ENV['APP_URL']) && !empty($_ENV['APP_URL'])) {
+    $baseUrl = rtrim($_ENV['APP_URL'], '/') . '/';
+  } else {
+    $projectDir = str_replace($_SERVER['DOCUMENT_ROOT'], '', str_replace('\\', '/', __DIR__ . '/../'));
+    $baseUrl = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . rtrim($projectDir, '/') . '/';
+  }
+
   define('APP_URL', $baseUrl);
 }
 
@@ -19,25 +24,20 @@ function url(string $path = '', bool $strict = false): string
     return APP_URL;
   }
 
-  // Kiểm tra nếu là URL tuyệt đối (bắt đầu bằng http:// hoặc https://)
   if (preg_match('/^https?:\/\//i', $path)) {
     $appHost = parse_url(APP_URL, PHP_URL_HOST);
     $pathHost = parse_url($path, PHP_URL_HOST);
 
-    // Nếu khác domain dự án
     if ($pathHost !== $appHost) {
       if ($strict) {
-        // Chế độ strict: Gỡ bỏ domain lạ, giữ lại path/query/fragment và gắn vào APP_URL
         $parsed = parse_url($path);
-        $relative = ($parsed['path'] ?? '') . 
-                    (isset($parsed['query']) ? '?' . $parsed['query'] : '') . 
-                    (isset($parsed['fragment']) ? '#' . $parsed['fragment'] : '');
+        $relative = ($parsed['path'] ?? '') .
+          (isset($parsed['query']) ? '?' . $parsed['query'] : '') .
+          (isset($parsed['fragment']) ? '#' . $parsed['fragment'] : '');
         return APP_URL . ltrim($relative, '/');
       }
-      // Chế độ loose: Giữ nguyên link ngoại
       return $path;
     }
-    // Cùng domain thì trả về luôn
     return $path;
   }
 
@@ -152,33 +152,4 @@ function generateSlug(string $str): string
   // Ký tự không phải chữ-số → dấu gạch ngang
   $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
   return trim($slug, '-');
-}
-
-/**
- * Lấy URL của media với cơ chế fallback tự động.
- * Kiểm tra cả việc rỗng trong DB và việc có tồn tại file vật lý trên ổ đĩa hay không.
- *
- * @param string|null $path Đường dẫn media lưu trong DB (VD: 'media/2026/05/abc.webp')
- * @param string $default Đường dẫn file mặc định
- * @return string URL tuyệt đối dẫn tới file
- */
-function get_media_url(?string $path, ?string $default = 'public/img/default-post-thumb.jpg'): ?string
-{
-  if (empty($path)) {
-    return $default ? url($default) : null;
-  }
-
-  if (preg_match('/^https?:\/\//i', $path)) {
-    return $path;
-  }
-
-  // Kiểm tra file vật lý trên server 
-  $absolutePath = BASE_PATH . '/storage/' . ltrim($path, '/');
-
-  if (file_exists($absolutePath)) {
-    return url('public/media/' . ltrim($path, '/'));
-  }
-
-  // Nếu không thấy file trên ổ đĩa -> dùng file mặc định (nếu có)
-  return $default ? url($default) : null;
 }

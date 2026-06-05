@@ -55,7 +55,7 @@ $max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
                  data-mu-zone
                  data-mu-max-bytes="<?= $max_mb * 1024 * 1024 ?>"
                  <?php if (!empty($media->file_path)): ?>
-                   data-mu-import-url="<?= htmlspecialchars(get_media_url($media->file_path)) ?>"
+                   data-mu-import-url="<?= htmlspecialchars(url('public/media/'.$media->file_path)) ?>"
                    data-mu-import-name="<?= htmlspecialchars($media->file_name ?? basename($media->file_path)) ?>"
                    data-mu-import-mime="<?= htmlspecialchars($media->mime_type ?? '') ?>"
                    data-mu-import-size="<?= (int) ($media->file_size ?? 0) ?>"

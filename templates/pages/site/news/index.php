@@ -82,8 +82,9 @@
             <article class="card news-card hover-lift" role="listitem" data-id="<?= $news->id ?>">
               <div class="card__header news-card__header">
                 <a class="news-card__image-wrapper" href="<?= url('tin-tuc/' . $news->slug) ?>">
-                  <img src="<?= get_media_url($news->seo_image_url) ?>" alt="<?= htmlspecialchars($news->title) ?>"
-                    class="news-card__image">
+                  <img src="<?= url('public/media/' . $news->seo_image_url) ?>"
+                    onerror="this.onerror=null; this.src='<?= url('public/img/default-post-thumb.jpg') ?>?>'"
+                    alt="<?= htmlspecialchars($news->title) ?>" class="news-card__image">
                 </a>
                 <span class="badge news-card__badge"
                   data-variant="primary"><?= htmlspecialchars($news->categories[0]->name ?? 'Tin tức') ?></span>
@@ -139,8 +140,9 @@
           <article class="card news-card news-card--horizontal hover-lift" role="listitem" data-id="<?= $news->id ?>">
             <div class="card__header news-card__header">
               <a class="news-card__image-wrapper" href="<?= url('tin-tuc/' . $news->slug) ?>">
-                <img src="<?= get_media_url($news->seo_image_url) ?>" alt="<?= htmlspecialchars($news->title) ?>"
-                  class="news-card__image">
+                <img src="<?= url('public/media/' . $news->seo_image_url) ?>"
+                  onerror="this.onerror=null; this.src='<?= url('public/img/default-post-thumb.jpg') ?>?>'"
+                  alt="<?= htmlspecialchars($news->title) ?>" class="news-card__image">
               </a>
             </div>
             <div class="card__content news-card__content">

@@ -54,7 +54,7 @@
       'id' => $media->id,
       'title' => $media->title ?? 'N/A',
       'file_name' => $media->file_name ?? 'N/A',
-      'file_path' => get_media_url($media->file_path) ?? 'N/A',
+      'file_path' => url($media->file_path) ?? 'N/A',
       'mime_type' => $media->mime_type ?? 'custom',
       'file_size' => $media->file_size ?? 'N/A',
       'alt_text' => $media->alt_text ?? '-',

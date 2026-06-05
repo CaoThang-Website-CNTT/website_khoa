@@ -18,9 +18,9 @@ $studentsData = array_map(function ($sv) {
     'classroom_name' => $sv['classroom_name'],
     'company_name' => $sv['company_name'],
     'submission_name' => $sv['submission_name'],
-    'submission_url' => get_media_url($sv['submission_path'], null),
-    'submission_count' => (int)$sv['submission_count'],
-    'grade' => $sv['grade'] !== null ? (float)$sv['grade'] : null,
+    'submission_url' => url('public/media/' . $sv['submission_path'], null),
+    'submission_count' => (int) $sv['submission_count'],
+    'grade' => $sv['grade'] !== null ? (float) $sv['grade'] : null,
     'batch_student_id' => $sv['batch_student_id'],
     // Các trường hỗ trợ filter (0/1)
     'has_submission' => $sv['submission_name'] ? '1' : '0',
@@ -46,10 +46,10 @@ foreach ($classrooms as $c) {
   <div class="flex justify-between items-center">
     <div class="col-6">
       <h2 class="title text-2xl font-semibold">
-        Chi tiết đợt thực tập #<?= htmlspecialchars((string)$batch['id']) ?>
+        Chi tiết đợt thực tập #<?= htmlspecialchars((string) $batch['id']) ?>
       </h2>
       <div class="text-sm mt-1 flex items-center" style="color: var(--muted-foreground)">
-        <?= htmlspecialchars((string)$batch['title']) ?>
+        <?= htmlspecialchars((string) $batch['title']) ?>
         <?php
         $batchModel = new InternshipBatch();
         $batchModel->status = $batch['status'] ?? 'draft';
@@ -100,7 +100,8 @@ foreach ($classrooms as $c) {
         <div class="stat-card__info">
           <div class="stat-card__label">Tài liệu đã nộp</div>
           <div class="stat-card__value">
-            <?= number_format($stats['has_submission']) ?> <span class="text-sm font-normal" style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
+            <?= number_format($stats['has_submission']) ?> <span class="text-sm font-normal"
+              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
           </div>
         </div>
       </div>
@@ -112,7 +113,8 @@ foreach ($classrooms as $c) {
         <div class="stat-card__info">
           <div class="stat-card__label">Đã có công ty</div>
           <div class="stat-card__value">
-            <?= number_format($stats['has_company']) ?> <span class="text-sm font-normal" style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
+            <?= number_format($stats['has_company']) ?> <span class="text-sm font-normal"
+              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
           </div>
         </div>
       </div>
@@ -124,7 +126,8 @@ foreach ($classrooms as $c) {
         <div class="stat-card__info">
           <div class="stat-card__label">Đã nhập điểm</div>
           <div class="stat-card__value">
-            <?= number_format($stats['has_grade']) ?> <span class="text-sm font-normal" style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
+            <?= number_format($stats['has_grade']) ?> <span class="text-sm font-normal"
+              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
           </div>
         </div>
       </div>
@@ -140,7 +143,8 @@ foreach ($classrooms as $c) {
       <div class="card__content p-4">
         <div class="tm-container" data-tm="students_table" data-tm-mode="client" data-tm-searchable>
           <!-- Cột MSSV -->
-          <template data-tm-col="student_code" data-tm-label="MSSV" data-tm-width="120px" data-tm-sortable data-tm-filter-type="text">
+          <template data-tm-col="student_code" data-tm-label="MSSV" data-tm-width="120px" data-tm-sortable
+            data-tm-filter-type="text">
             <span class="font-medium text-md">{{ value }}</span>
           </template>
 
@@ -150,8 +154,8 @@ foreach ($classrooms as $c) {
           </template>
 
           <!-- Cột Lớp -->
-          <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-width="120px" data-tm-sortable data-tm-filter-type="select"
-            data-tm-filter-options='<?= json_encode($classOptions) ?>'>
+          <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-width="120px" data-tm-sortable
+            data-tm-filter-type="select" data-tm-filter-options='<?= json_encode($classOptions) ?>'>
             {{ value || '-' }}
           </template>
 
@@ -166,25 +170,33 @@ foreach ($classrooms as $c) {
           <!-- Cột Tài liệu -->
           <template data-tm-col="has_submission" data-tm-label="Tài liệu TT" data-tm-filter-type="select"
             data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đã nộp","value":"1"},{"label":"Chưa nộp","value":"0"}]'>
-            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa nộp</span>
+            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
+              nộp</span>
             <div style="{{ value === '1' ? 'display:inline-flex' : 'display:none' }}" class="student-table__submission">
-              <span class="student-table__filename text-sm" title="{{ row.submission_name }}" style="color: var(--primary)">
-                {{ row.submission_name && row.submission_name.length > 20 ? row.submission_name.substring(0, 17) + '...' : row.submission_name }}
+              <span class="student-table__filename text-sm" title="{{ row.submission_name }}"
+                style="color: var(--primary)">
+                {{ row.submission_name && row.submission_name.length > 20 ? row.submission_name.substring(0, 17) + '...'
+                : row.submission_name }}
               </span>
-              <a href="{{ row.submission_url }}" target="_blank" class="btn" data-variant="primary" data-size="sm" title="Tải xuống" style="{{ row.submission_url ? '' : 'display:none' }}">
+              <a href="{{ row.submission_url }}" target="_blank" class="btn" data-variant="primary" data-size="sm"
+                title="Tải xuống" style="{{ row.submission_url ? '' : 'display:none' }}">
                 <i class="fa-solid fa-download"></i>
               </a>
-              <span class="badge ml-1" data-variant="primary" style="{{ row.submission_count > 1 ? '' : 'display:none' }}; font-size: 10px; height: 16px; padding: 0 4px;">
+              <span class="badge ml-1" data-variant="primary"
+                style="{{ row.submission_count > 1 ? '' : 'display:none' }}; font-size: 10px; height: 16px; padding: 0 4px;">
                 +{{ row.submission_count - 1 }}
               </span>
             </div>
           </template>
 
           <!-- Cột Điểm -->
-          <template data-tm-col="has_grade" data-tm-label="Điểm" data-tm-width="100px" data-tm-sortable data-tm-align="center" data-tm-filter-type="select"
+          <template data-tm-col="has_grade" data-tm-label="Điểm" data-tm-width="100px" data-tm-sortable
+            data-tm-align="center" data-tm-filter-type="select"
             data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đã nhập","value":"1"},{"label":"Chưa nhập","value":"0"}]'>
-            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa nhập</span>
-            <span class="font-bold {{ row.grade >= 5 ? 'text-success' : 'text-danger' }}" style="{{ value === '1' ? '' : 'display:none' }}">
+            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
+              nhập</span>
+            <span class="font-bold {{ row.grade >= 5 ? 'text-success' : 'text-danger' }}"
+              style="{{ value === '1' ? '' : 'display:none' }}">
               {{ row.grade }}
             </span>
           </template>
@@ -192,10 +204,12 @@ foreach ($classrooms as $c) {
           <!-- Cột Thao tác -->
           <template data-tm-col="actions" data-tm-label="Thao tác" data-tm-width="100px" data-tm-align="center">
             <div class="flex gap-2 justify-center">
-              <button class="btn btn-icon" data-variant="outline" data-size="sm" title="Xem chi tiết" data-action="view" data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
+              <button class="btn btn-icon" data-variant="outline" data-size="sm" title="Xem chi tiết" data-action="view"
+                data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
                 <i class="fa-solid fa-eye"></i>
               </button>
-              <button class="btn btn-icon" data-variant="outline-alt" data-size="sm" title="Nhập điểm" data-action="grade" data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
+              <button class="btn btn-icon" data-variant="outline-alt" data-size="sm" title="Nhập điểm"
+                data-action="grade" data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
             </div>
@@ -222,22 +236,26 @@ foreach ($classrooms as $c) {
         <div class="field-group">
           <div class="field" data-field-readonly>
             <label class="field__label" for="title">Tên đợt thực tập</label>
-            <input type="text" id="title" name="title" class="field__input" value="<?= htmlspecialchars($batch['title']) ?>" required>
+            <input type="text" id="title" name="title" class="field__input"
+              value="<?= htmlspecialchars($batch['title']) ?>" required>
           </div>
 
           <div class="field" data-field-readonly>
             <label class="field__label" for="description">Mô tả</label>
-            <textarea id="description" name="description" class="field__input" rows="6"><?= htmlspecialchars($batch['description'] ?? '') ?></textarea>
+            <textarea id="description" name="description" class="field__input"
+              rows="6"><?= htmlspecialchars($batch['description'] ?? '') ?></textarea>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div class="field" data-field-readonly>
               <label class="field__label" for="start_at">Ngày bắt đầu</label>
-              <input type="date" id="start_at" name="start_at" class="field__input" value="<?= date('Y-m-d', strtotime($batch['start_at'])) ?>" required>
+              <input type="date" id="start_at" name="start_at" class="field__input"
+                value="<?= date('Y-m-d', strtotime($batch['start_at'])) ?>" required>
             </div>
             <div class="field" data-field-readonly>
               <label class="field__label" for="end_at">Ngày kết thúc</label>
-              <input type="date" id="end_at" name="end_at" class="field__input" value="<?= date('Y-m-d', strtotime($batch['end_at'])) ?>" required>
+              <input type="date" id="end_at" name="end_at" class="field__input"
+                value="<?= date('Y-m-d', strtotime($batch['end_at'])) ?>" required>
             </div>
           </div>
         </div>
@@ -268,7 +286,8 @@ foreach ($classrooms as $c) {
         <?php if ($batch['closed_at']): ?>
           <div class="flex justify-between">
             <span>Ngày kết thúc:</span>
-            <span class="text-danger"><?= $batch['closed_at'] ? date('d/m/Y H:i', strtotime($batch['closed_at'])) : 'N/A' ?></span>
+            <span
+              class="text-danger"><?= $batch['closed_at'] ? date('d/m/Y H:i', strtotime($batch['closed_at'])) : 'N/A' ?></span>
           </div>
         <?php endif; ?>
       </div>

@@ -44,7 +44,8 @@ $effectiveMetadata = $effStatus ? [
       <div class="flex items-center gap-2">
         <h1 class="title text-2xl font-semibold">Thông tin thực tập</h1>
         <?php if ($effectiveMetadata): ?>
-          <span class="badge" data-variant="<?= $effectiveMetadata['variant'] ?>"><?= $effectiveMetadata['label'] ?></span>
+          <span class="badge"
+            data-variant="<?= $effectiveMetadata['variant'] ?>"><?= $effectiveMetadata['label'] ?></span>
         <?php endif; ?>
       </div>
       <p>Xem chi tiết đợt thực tập và kết quả đánh giá.</p>
@@ -92,7 +93,11 @@ $effectiveMetadata = $effStatus ? [
         <div class="card__content">
           <div>
             <p><span class="font-bold">Đợt thực tập:</span> <?= htmlspecialchars($current['title'] ?? '') ?></p>
-            <p><span class="font-bold">Thời gian mở đợt:</span> từ <time datetime="<?= date("d/m/Y", strtotime($current['start_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['start_at']))) ?></time> đến <time datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?></p>
+            <p><span class="font-bold">Thời gian mở đợt:</span> từ <time
+                datetime="<?= date("d/m/Y", strtotime($current['start_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['start_at']))) ?></time>
+              đến <time
+                datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?>
+            </p>
 
 
             <?php if ($supervisor): ?>
@@ -131,7 +136,8 @@ $effectiveMetadata = $effStatus ? [
                   <i class="fa-solid fa-triangle-exclamation mr-1"></i> Sắp hết hạn
                 </span>
               <?php endif; ?>
-              <p class="text-xs">Hạn chót khai báo: <span class="font-semibold"><?= $deadlineDt->format('d/m/Y') ?></span></p>
+              <p class="text-xs">Hạn chót khai báo: <span class="font-semibold"><?= $deadlineDt->format('d/m/Y') ?></span>
+              </p>
             <?php endif; ?>
           </div>
         </div>
@@ -144,45 +150,53 @@ $effectiveMetadata = $effStatus ? [
 
               <div class="field mb-3" data-orientation="horizontal">
                 <input type="checkbox" id="is_manual" name="is_manual" value="1" class="field__input">
-                <label for="is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số thuế</label>
+                <label for="is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số
+                  thuế</label>
               </div>
 
               <div class="field mb-3" data-field-required>
                 <label class="field__label">Mã số thuế</label>
                 <div class="field__input-group">
-                  <input type="text" name="tax_code" id="tax_code" class="field__input" required value="<?= htmlspecialchars($current['company_tax_code'] ?? '') ?>">
+                  <input type="text" name="tax_code" id="tax_code" class="field__input" required
+                    value="<?= htmlspecialchars($current['company_tax_code'] ?? '') ?>">
                   <button type="button" id="btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm tra</button>
                 </div>
-                <div id="mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin...</div>
+                <div id="mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải
+                  thông tin...</div>
                 <div id="mstError" class="field__error hidden"></div>
               </div>
 
               <div class="field mb-3" data-field-required>
                 <label class="field__label">Tên công ty</label>
                 <div class="field__suggest-wrapper">
-                  <input type="text" name="name" id="company_name" class="field__input relative" required value="<?= htmlspecialchars($current['company_name'] ?? '') ?>" readonly autocomplete="off">
+                  <input type="text" name="name" id="company_name" class="field__input relative" required
+                    value="<?= htmlspecialchars($current['company_name'] ?? '') ?>" readonly autocomplete="off">
                   <div id="companySuggestions" class="suggestions-list hidden"></div>
                 </div>
               </div>
 
               <div class="field mb-3" data-field-required>
                 <label class="field__label">Địa chỉ</label>
-                <textarea name="address" id="company_address" class="field__input" required readonly><?= htmlspecialchars($current['company_address'] ?? '') ?></textarea>
+                <textarea name="address" id="company_address" class="field__input" required
+                  readonly><?= htmlspecialchars($current['company_address'] ?? '') ?></textarea>
               </div>
 
               <div class="field mb-3" data-field-required>
                 <label class="field__label">Vị trí thực tập</label>
-                <input type="text" name="position" class="field__input" required value="<?= htmlspecialchars($current['position'] ?? '') ?>" placeholder="VD: Thực tập sinh Frontend">
+                <input type="text" name="position" class="field__input" required
+                  value="<?= htmlspecialchars($current['position'] ?? '') ?>" placeholder="VD: Thực tập sinh Frontend">
               </div>
 
               <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="field" data-field-required>
                   <label class="field__label">Từ ngày</label>
-                  <input type="date" name="internship_start_date" class="field__input" required value="<?= htmlspecialchars($current['internship_start_date'] ?? '') ?>">
+                  <input type="date" name="internship_start_date" class="field__input" required
+                    value="<?= htmlspecialchars($current['internship_start_date'] ?? '') ?>">
                 </div>
                 <div class="field" data-field-required>
                   <label class="field__label">Đến ngày</label>
-                  <input type="date" name="internship_end_date" class="field__input" required value="<?= htmlspecialchars($current['internship_end_date'] ?? '') ?>">
+                  <input type="date" name="internship_end_date" class="field__input" required
+                    value="<?= htmlspecialchars($current['internship_end_date'] ?? '') ?>">
                 </div>
               </div>
 
@@ -193,13 +207,16 @@ $effectiveMetadata = $effStatus ? [
           <?php else: ?>
             <?php if ($current['company_name']): ?>
               <div class="grid gap-2">
-                <p><span class="font-bold">Tên công ty:</span> <?= htmlspecialchars($current['company_name'] ?? 'Chưa có') ?></p>
+                <p><span class="font-bold">Tên công ty:</span> <?= htmlspecialchars($current['company_name'] ?? 'Chưa có') ?>
+                </p>
                 <p><span class="font-bold">MST:</span> <?= htmlspecialchars($current['company_tax_code'] ?? 'Chưa có') ?></p>
-                <p><span class="font-bold">Địa chỉ:</span> <?= htmlspecialchars($current['company_address'] ?? 'Chưa có') ?></p>
+                <p><span class="font-bold">Địa chỉ:</span> <?= htmlspecialchars($current['company_address'] ?? 'Chưa có') ?>
+                </p>
                 <p><span class="font-bold">Vị trí:</span> <?= htmlspecialchars($current['position'] ?? 'Chưa có') ?></p>
                 <p><span class="font-bold">Thời gian thực tập:</span>
                   <?php if ($current['internship_start_date'] && $current['internship_end_date']): ?>
-                    từ <?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_start_date']))) ?> đến <?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_end_date']))) ?>
+                    từ <?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_start_date']))) ?> đến
+                    <?= htmlspecialchars(date("d/m/Y", strtotime($current['internship_end_date']))) ?>
                   <?php else: ?>
                     Chưa có
                   <?php endif; ?>
@@ -207,7 +224,8 @@ $effectiveMetadata = $effStatus ? [
               </div>
             <?php else: ?>
               <div class="empty-state">
-                <p class="text-sm text-muted-foreground text-center">Chưa có thông tin công ty và đã hết thời gian khai báo.</p>
+                <p class="text-sm text-muted-foreground text-center">Chưa có thông tin công ty và đã hết thời gian khai báo.
+                </p>
               </div>
             <?php endif; ?>
           <?php endif; ?>
@@ -230,7 +248,8 @@ $effectiveMetadata = $effStatus ? [
             <div class="space-y-3">
               <?php foreach ($recent_referral_letters as $rl): ?>
                 <div class="border rounded p-3 text-sm">
-                  <div class="font-bold mb-1" title="<?= htmlspecialchars($rl['company_name']) ?>"><?= htmlspecialchars($rl['company_name']) ?></div>
+                  <div class="font-bold mb-1" title="<?= htmlspecialchars($rl['company_name']) ?>">
+                    <?= htmlspecialchars($rl['company_name']) ?></div>
                   <div class="flex justify-between items-center mt-2">
                     <span class="text-xs"><?= date('d/m/Y', strtotime($rl['created_at'])) ?></span>
                     <?php if ($rl['status'] === 'pending'): ?>
@@ -248,7 +267,8 @@ $effectiveMetadata = $effStatus ? [
         </div>
         <?php if (!empty($recent_referral_letters)): ?>
           <div class="card__footer">
-            <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>" class="btn w-full" data-variant="outline" data-size="sm">
+            <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>" class="btn w-full"
+              data-variant="outline" data-size="sm">
               Xem tất cả (<?= $total_referral_letters ?>)
             </a>
           </div>
@@ -300,7 +320,8 @@ $effectiveMetadata = $effStatus ? [
           </div>
           <hr class="separator" />
           <div class="card__content">
-            <form action="<?= url("student/internship/{$current['id']}/upload") ?>" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <form action="<?= url("student/internship/{$current['id']}/upload") ?>" method="POST"
+              enctype="multipart/form-data" id="uploadForm">
               <?= csrf_field() ?>
               <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
               <div class="upload-area" id="uploadArea">
@@ -308,14 +329,16 @@ $effectiveMetadata = $effStatus ? [
                   <i class="fa-solid fa-file-arrow-up"></i>
                 </div>
                 <p class="upload-area__text">Nhấn để chọn file hoặc kéo thả vào đây</p>
-                <p class="upload-area__hint">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty, nhật ký thực tập, hình ảnh liên quan... thành một file nén.</p>
+                <p class="upload-area__hint">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty, nhật ký thực tập,
+                  hình ảnh liên quan... thành một file nén.</p>
                 <p class="upload-area__hint">Định dạng hỗ trợ: ZIP, RAR. Dung lượng tối đa: <?= $max_file_size_mb ?>MB</p>
                 <input type="file" name="report_file" class="hidden" id="report_file" accept=".zip,.rar">
               </div>
               <div id="filePreview" class="hidden mt-4 text-sm text-center"></div>
               <div class="mt-4 flex justify-end">
                 <?php if ($can_submit_report): ?>
-                  <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài liệu</button>
+                  <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài
+                    liệu</button>
                 <?php else: ?>
                   <button type="button" class="btn" data-variant="outline" data-size="lg" disabled>Đã hết hạn nộp</button>
                 <?php endif; ?>
@@ -340,15 +363,17 @@ $effectiveMetadata = $effStatus ? [
                 <?php foreach ($submissions as $submission): ?>
                   <article class="timeline-item">
                     <div class="timeline-item__indicator"></div>
-                    <time class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
+                    <time
+                      class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
                     <div class="timeline-item__action font-medium">
                       <?= $submission['original_file_name'] ?? '--' ?>
                     </div>
                     <?php
-                    $downloadUrl = get_media_url($submission['file_path'], null);
+                    $downloadUrl = url($submission['file_path'], null);
                     if (!$downloadUrl):
-                    ?>
-                      <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="primary" data-size="sm" title="Tải xuống tài liệu">
+                      ?>
+                      <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="primary" data-size="sm"
+                        title="Tải xuống tài liệu">
                         <i class="fa-solid fa-download"></i> Tải xuống
                       </a>
                     <?php else: ?>
@@ -424,28 +449,33 @@ $effectiveMetadata = $effStatus ? [
         </button>
       </div>
       <div class="modal__body">
-        <form action="<?= url("student/internship/{$current['id']}/referral_letters") ?>" method="POST" id="rl_requestForm">
+        <form action="<?= url("student/internship/{$current['id']}/referral_letters") ?>" method="POST"
+          id="rl_requestForm">
           <?= csrf_field() ?>
 
           <div class="field mb-4" data-orientation="horizontal">
             <input type="checkbox" id="rl_is_manual" name="is_manual" value="1" class="field__input">
-            <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số thuế</label>
+            <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số
+              thuế</label>
           </div>
 
           <div class="field mb-4" data-field-required>
             <label class="field__label">Mã số thuế</label>
             <div class="field__input-group">
               <input type="text" name="tax_code" id="rl_tax_code" class="field__input" required>
-              <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm tra</button>
+              <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm
+                tra</button>
             </div>
-            <div id="rl_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin...</div>
+            <div id="rl_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải
+              thông tin...</div>
             <div id="rl_mstError" class="field__error hidden"></div>
           </div>
 
           <div class="field mb-4" data-field-required>
             <label class="field__label">Tên công ty</label>
             <div class="field__suggest-wrapper">
-              <input type="text" name="name" id="rl_company_name" class="field__input relative" required readonly autocomplete="off">
+              <input type="text" name="name" id="rl_company_name" class="field__input relative" required readonly
+                autocomplete="off">
               <div id="rl_companySuggestions" class="suggestions-list hidden"></div>
             </div>
           </div>
