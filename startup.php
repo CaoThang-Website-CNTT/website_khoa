@@ -33,6 +33,8 @@ require_once BASE_PATH . '/includes/core/middleware/base_middleware.php';
 require_once BASE_PATH . '/includes/core/middleware/start_session.php';
 require_once BASE_PATH . '/includes/core/middleware/verify_csrf_token.php';
 // Custom Middlewares
+require_once BASE_PATH . '/middlewares/has_dashboard_routing_trait.php';
+require_once BASE_PATH . '/middlewares/guest_middleware.php';
 require_once BASE_PATH . '/middlewares/verify_auth.php';
 require_once BASE_PATH . '/middlewares/verify_role.php';
 

@@ -1,7 +1,7 @@
 <?php
 
 use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
-use App\Middlewares\{VerifyAuth, VerifyRole};
+use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
 // Site
@@ -14,7 +14,7 @@ $router->get('/gioi-thieu', [SiteController::class, 'about']);
 $router->get('/lien-he', [SiteController::class, 'contact']);
 
 // Auth
-$router->get('/login', [AuthController::class, 'show']);
+$router->get('/login', [AuthController::class, 'show'])->middleware([GuestMiddleware::class]);
 $router->post('/login', [AuthController::class, 'login']);
 $router->get('/login/oauth/callback', [AuthController::class, 'googleOAuthCallback']);
 $router->get('/onboarding', [AuthController::class, 'onboard']);

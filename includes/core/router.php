@@ -27,55 +27,60 @@ class Router
    * Đăng ký một route với HTTP method GET
    * @param string $path Đường dẫn URI. VD: '/students/{id}'
    * @param array $action Mảng [ControllerClass, 'methodName']
-   * @return void
+   * @return self
    */
-  public function get(string $path, array $action): void
+  public function get(string $path, array $action): self
   {
     $this->addRoute('GET', $path, $action);
+    return $this;
   }
 
   /**
    * Đăng ký một route với HTTP method POST
    * @param string $path Đường dẫn URI. VD: '/students'
    * @param array $action Mảng [ControllerClass, 'methodName']
-   * @return void
+   * @return self
    */
-  public function post(string $path, array $action): void
+  public function post(string $path, array $action): self
   {
     $this->addRoute('POST', $path, $action);
+    return $this;
   }
 
   /**
    * Đăng ký một route với HTTP method PUT
    * @param string $path Đường dẫn URI. VD: '/students/{id}'
    * @param array $action Mảng [ControllerClass, 'methodName']
-   * @return void
+   * @return self
    */
-  public function put(string $path, array $action): void
+  public function put(string $path, array $action): self
   {
     $this->addRoute('PUT', $path, $action);
+    return $this;
   }
 
   /**
    * Đăng ký một route với HTTP method PATCH
    * @param string $path Đường dẫn URI. VD: '/students/{id}'
    * @param array $action Mảng [ControllerClass, 'methodName']
-   * @return void
+   * @return self
    */
-  public function patch(string $path, array $action): void
+  public function patch(string $path, array $action): self
   {
     $this->addRoute('PATCH', $path, $action);
+    return $this;
   }
 
   /**
    * Đăng ký một route với HTTP method DELETE
    * @param string $path Đường dẫn URI. VD: '/students/{id}'
    * @param array $action Mảng [ControllerClass, 'methodName']
-   * @return void
+   * @return self
    */
-  public function delete(string $path, array $action): void
+  public function delete(string $path, array $action): self
   {
     $this->addRoute('DELETE', $path, $action);
+    return $this;
   }
 
   public function prefix(string $prefix): self
@@ -95,12 +100,27 @@ class Router
         $this->groupStack[$last]['middleware'],
         $middleware
       );
+    } else {
+      $lastRoute = count($this->routes) - 1;
+      if ($lastRoute >= 0) {
+        $this->routes[$lastRoute]['middleware'] = array_merge(
+          $this->routes[$lastRoute]['middleware'],
+          $middleware
+        );
+      }
     }
     return $this;
   }
 
   public function group(callable $callback): void
   {
+    if (empty($this->groupStack)) {
+      $this->groupStack[] = [
+        'prefix' => '',
+        'middleware' => [],
+      ];
+    }
+
     $callback($this);
 
     array_pop($this->groupStack);

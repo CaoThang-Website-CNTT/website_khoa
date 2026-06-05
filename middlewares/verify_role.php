@@ -3,10 +3,13 @@ namespace App\Middlewares;
 
 use App\Core\Middleware\BaseMiddleware;
 use App\Core\Request;
+use App\Middlewares\Traits\HasDashboardRouting;
 use Closure;
 
 class VerifyRole extends BaseMiddleware
 {
+  use HasDashboardRouting;
+
   private array $allowedRoles;
 
   public function __construct(string ...$roles)
@@ -26,15 +29,5 @@ class VerifyRole extends BaseMiddleware
     }
 
     return $next($request);
-  }
-
-  private function dashboardFor(string $role): string
-  {
-    return match ($role) {
-      'admin', 'editor', 'super_admin' => '/admin',
-      'student' => '/student',
-      'teacher' => '/teacher',
-      default => '/',
-    };
   }
 }

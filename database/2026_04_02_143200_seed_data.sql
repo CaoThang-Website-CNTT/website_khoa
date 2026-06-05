@@ -277,7 +277,7 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 (6, 1, 4, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 2),
 (7, 1, NULL, 'Tin tức', '/tin-tuc', 5),
 (8, 1, NULL, 'Liên hệ', '/lien-he', 6),
-(25, 1, NULL, 'Portal', '/login', 7),
+(25, 1, NULL, 'Portal', '/portal', 7),
 
 -- Footer Menu
 (9, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
