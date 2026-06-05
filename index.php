@@ -38,6 +38,24 @@ try {
   echo $response;
 
 } catch (\Exception $e) {
+  error_log($e->getMessage() . "\nStack trace:\n" . $e->getTraceAsString());
+
   http_response_code(500);
-  echo $e->getMessage();
+
+  $appEnv = $_ENV['APP_ENV'] ?: 'production';
+
+  if ($appEnv === 'local') {
+    echo "<h1>An error occurred (Environment: local)</h1>";
+    echo "<p><strong>Message:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
+    echo "<p><strong>File:</strong> " . htmlspecialchars($e->getFile()) . " on line " . $e->getLine() . "</p>";
+    echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+  } else {
+    $custom500Path = BASE_PATH . '/templates/pages/500.php';
+    if (file_exists($custom500Path)) {
+      require $custom500Path;
+    } else {
+      echo "<h1>500 Internal Server Error</h1>";
+      echo "<p>Something went wrong on our servers. Please try again later.</p>";
+    }
+  }
 }

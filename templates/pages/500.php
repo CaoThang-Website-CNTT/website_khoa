@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phương thức không tồn tại (405)</title>
+  <title>Trang không tồn tại (404)</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -17,8 +17,8 @@
 </head>
 
 <body>
-  <h1>405 - Phương thức không tồn tại</h1>
-  <p>Phương thức không tồn tại. Vui lòng tải lại trang và thử lại.</p>
+  <h1>500 - Internal Server Error</h1>
+  <p>Internal Server Error. Vui lòng tải lại trang và thử lại.</p>
   <p><a href="javascript:history.back()">Quay lại</a> · <a
       href="<?= htmlspecialchars(url(''), ENT_QUOTES, 'UTF-8') ?>">Trang chủ</a></p>
 </body>
