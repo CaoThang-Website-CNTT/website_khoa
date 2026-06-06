@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Stores\PostStore;
 use App\Stores\AccountStore;
 use App\Stores\CategoryStore;
+use App\Stores\CategoryPostStore;
 use App\Core\Pageable;
 use Database;
 
@@ -36,44 +37,47 @@ class PostService implements IPostService
   private PostStore $_postStore;
   private AccountStore $_accountStore;
   private CategoryStore $_categoryStore;
+  private CategoryPostStore $_categoryPostStore;
 
   public function __construct(
     PostStore $postStore,
     AccountStore $accountStore,
-    CategoryStore $categoryStore
+    CategoryStore $categoryStore,
+    CategoryPostStore $categoryPostStore
   ) {
     $this->_postStore = $postStore;
     $this->_accountStore = $accountStore;
     $this->_categoryStore = $categoryStore;
+    $this->_categoryPostStore = $categoryPostStore;
   }
 
   public function getPosts(int $page, int $limit = 15, bool $with_categories = false, array $filters = []): Pageable
   {
-    $posts = $this->_postStore->getPaginated($page, $limit, $filters);
-    $total = $this->_postStore->getTotalCount($filters);
+    $filters['page'] = max(1, $page);
+    $filters['limit'] = max(1, $limit);
 
-    // Tối ưu: Load bulk thông tin tác giả để tránh N+1
-    $authorIds = array_unique(array_filter(array_map(fn($p) => $p->author_id, $posts)));
-    if (!empty($authorIds)) {
-      $authors = $this->_accountStore->getByIds($authorIds);
-      $authorMap = [];
-      foreach ($authors as $author) {
-        $authorMap[$author->id] = $author;
-      }
+    if (isset($filters['category']) && trim((string)$filters['category']) !== '') {
+      $category = trim((string)$filters['category']);
+      $categoryModel = ctype_digit($category)
+        ? $this->_categoryStore->getById((int) $category)
+        : $this->_categoryStore->getBySlug($category);
 
-      foreach ($posts as $post) {
-        if ($post->author_id && isset($authorMap[$post->author_id])) {
-          $post->author = $authorMap[$post->author_id];
-        }
-      }
+      $filters['post_ids'] = $categoryModel
+        ? $this->_categoryPostStore->getPostIdsByCategoryId((int) $categoryModel->id)
+        : [];
     }
+
+    $posts = $this->_postStore->getPaginated($filters);
+    $total = $this->_postStore->getTotalCount($filters);
 
     if ($with_categories && !empty($posts)) {
       foreach ($posts as $post) {
-        $categoryIds = $this->_postStore->getCategoryIds($post->id);
+        $categoryIds = $this->_categoryPostStore->getCategoryIdsByPostId($post->id);
         $post->categories = $this->_categoryStore->getByIds($categoryIds);
       }
     }
+
+    $this->eagerLoadListingRelations($posts);
 
     return new Pageable($posts, $total, $limit, $page);
   }
@@ -83,7 +87,7 @@ class PostService implements IPostService
     $post = $this->_postStore->getById($id)
       ?? throw new \RuntimeException("Bài viết #{$id} không tồn tại.");
 
-    $categoryIds = $this->_postStore->getCategoryIds($id);
+    $categoryIds = $this->_categoryPostStore->getCategoryIdsByPostId($id);
     $post->categories = $this->_categoryStore->getByIds($categoryIds);
 
     return $post;
@@ -94,7 +98,7 @@ class PostService implements IPostService
     $post = $this->_postStore->findBySlug($slug)
       ?? throw new \RuntimeException("Bài viết với slug '{$slug}' không tồn tại.");
 
-    $categoryIds = $this->_postStore->getCategoryIds($post->id);
+    $categoryIds = $this->_categoryPostStore->getCategoryIdsByPostId($post->id);
     $post->categories = $this->_categoryStore->getByIds($categoryIds);
 
     if ($with_author && $post->author_id) {
@@ -110,7 +114,7 @@ class PostService implements IPostService
     $posts = $this->_postStore->getFeatured($limit, $filters);
     if ($with_categories && !empty($posts)) {
       foreach ($posts as $post) {
-        $categoryIds = $this->_postStore->getCategoryIds($post->id);
+        $categoryIds = $this->_categoryPostStore->getCategoryIdsByPostId($post->id);
         $post->categories = $this->_categoryStore->getByIds($categoryIds);
       }
     }
@@ -176,7 +180,7 @@ class PostService implements IPostService
       // Kiểm tra xem client có gửi category_ids lên không
       if (isset($meta['category_ids'])) {
         $categoryIds = is_array($meta['category_ids']) ? $meta['category_ids'] : [$meta['category_ids']];
-        $this->_postStore->syncCategories($post->id, $categoryIds);
+        $this->_categoryPostStore->syncPostCategories($post->id, $categoryIds);
       }
 
       return $post;
@@ -236,7 +240,7 @@ class PostService implements IPostService
       // Đồng bộ danh mục nếu có gửi lên
       if (isset($meta['category_ids'])) {
         $categoryIds = is_array($meta['category_ids']) ? $meta['category_ids'] : [$meta['category_ids']];
-        $this->_postStore->syncCategories($id, $categoryIds);
+        $this->_categoryPostStore->syncPostCategories($id, $categoryIds);
       }
 
       return $post;
@@ -288,5 +292,53 @@ class PostService implements IPostService
     }
 
     return null;
+  }
+
+  /** @param Post[] $posts */
+  private function eagerLoadListingRelations(array $posts): void
+  {
+    if (empty($posts)) {
+      return;
+    }
+
+    $authorIds = array_values(array_unique(array_filter(array_map(
+      fn(Post $post) => $post->author_id,
+      $posts
+    ))));
+    $authors = $this->_accountStore->getByIds($authorIds);
+    $authorMap = [];
+    foreach ($authors as $author) {
+      $authorMap[$author->id] = $author;
+    }
+
+    $postIds = array_values(array_filter(array_map(
+      fn(Post $post) => $post->id,
+      $posts
+    )));
+    $postCategoryMap = $this->_categoryPostStore->getCategoryIdsByPostIds($postIds);
+
+    $categoryIds = [];
+    foreach ($postCategoryMap as $ids) {
+      $categoryIds = array_merge($categoryIds, $ids);
+    }
+
+    $categories = $this->_categoryStore->getByIds(array_values(array_unique($categoryIds)));
+    $categoryMap = [];
+    foreach ($categories as $category) {
+      $categoryMap[$category->id] = $category;
+    }
+
+    foreach ($posts as $post) {
+      if ($post->author_id !== null && isset($authorMap[$post->author_id])) {
+        $post->author = $authorMap[$post->author_id];
+      }
+
+      $post->categories = [];
+      foreach ($postCategoryMap[$post->id] ?? [] as $categoryId) {
+        if (isset($categoryMap[$categoryId])) {
+          $post->categories[] = $categoryMap[$categoryId];
+        }
+      }
+    }
   }
 }

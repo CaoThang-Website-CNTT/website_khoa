@@ -1,5 +1,5 @@
 <?php
-use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController};
+use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
@@ -54,6 +54,11 @@ $router->prefix('api')->group(function ($router) {
       $router->post('/attach', [MediaApiController::class, 'attachToPost']);
       $router->delete('/{media_id}', [MediaApiController::class, 'delete']);
       $router->delete('/orphans', [MediaApiController::class, 'deleteOrphans']);
+    });
+
+    // Posts
+    $router->prefix('posts')->group(function (Router $router) {
+      $router->get('/', [PostApiController::class, 'index']);
     });
 
     // Carousels

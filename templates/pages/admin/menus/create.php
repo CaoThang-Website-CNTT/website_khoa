@@ -284,17 +284,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
       modalHandler.open('#item-modal');
     });
 
-    // Helper: Escape HTML string
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
     // Recursive DOM tree serialization to flat index arrays
     function serializeMenuTree(container, parentTempId = null) {
       const result = [];
@@ -435,10 +424,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
               <i class="fa-solid fa-grip-vertical"></i>
             </div>
             <span class="flex-1 font-medium text-sm item-label">
-              ${escapeHtml(label)}
+              ${AppUtils.escapeHtml(label)}
             </span>
             <span class="font-mono text-xs px-2 py-1 rounded-sm border item-url">
-              ${escapeHtml(url)}
+              ${AppUtils.escapeHtml(url)}
             </span>
             <div>
               <button type="button" class="btn edit-item-btn" data-variant="outline" data-size="md">
