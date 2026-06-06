@@ -50,7 +50,7 @@ final class ListRenderer extends AbstractBlockRenderer
     $class = 'be-list' . ($depth > 0 ? " be-list--depth-{$depth}" : '');
     $items = '';
 
-    foreach ($nodes as $node) {
+    foreach ($nodes as $index => $node) {
       if (!is_array($node)) {
         continue;
       }
@@ -67,7 +67,10 @@ final class ListRenderer extends AbstractBlockRenderer
         $childrenHtml = $this->renderTree($children, $tag, $depth + 1);
       }
 
-      $items .= "<li>{$text}{$childrenHtml}</li>";
+      $marker = $this->markerText($tag, $depth, (int) $index);
+      $markerStyle = '--pseudoBefore--content: &quot;' . $this->esc($marker) . '&quot;;';
+
+      $items .= "<li><span class=\"pseudoBefore\" style=\"{$markerStyle}\" aria-hidden=\"true\"></span><span class=\"be-list-item-content\">{$text}</span>{$childrenHtml}</li>";
     }
 
     if ($items === '') {
@@ -75,5 +78,15 @@ final class ListRenderer extends AbstractBlockRenderer
     }
 
     return "<{$tag} class=\"{$class}\">{$items}</{$tag}>";
+  }
+
+  private function markerText(string $tag, int $depth, int $index): string
+  {
+    if ($tag === 'ol') {
+      return ($index + 1) . '.';
+    }
+
+    $bullets = ['•', '○', '▪', '•'];
+    return $bullets[$depth] ?? $bullets[0];
   }
 }

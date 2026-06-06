@@ -106,7 +106,7 @@ export class ListBlock extends EditorBlock {
   #renderTree(nodes, listEl, basePath) {
     nodes.forEach((node, idx) => {
       const path = [...basePath, idx];
-      const li = this.#createLi(node, path);
+      const li = this.#createLi(node, path, idx);
       listEl.appendChild(li);
 
       // Đệ quy render list con nếu có
@@ -149,9 +149,15 @@ export class ListBlock extends EditorBlock {
    * @param {number[]} path
    * @returns {HTMLLIElement}
    */
-  #createLi(node, path) {
+  #createLi(node, path, idx) {
     const li = document.createElement('li');
     li.dataset.path = path.join('.');
+
+    const marker = document.createElement('span');
+    marker.className = 'pseudoBefore';
+    marker.setAttribute('aria-hidden', 'true');
+    marker.style.setProperty('--pseudoBefore--content', `"${this.#markerText(path, idx)}"`);
+    li.appendChild(marker);
 
     const span = document.createElement('span');
     span.className = 'be-list-item-text be-editable';
@@ -165,6 +171,15 @@ export class ListBlock extends EditorBlock {
     li.appendChild(span);
 
     return li;
+  }
+
+  #markerText(path, idx) {
+    if (this.data.meta.style === 'ordered') {
+      return `${idx + 1}.`;
+    }
+
+    const bullets = ['•', '○', '▪', '•'];
+    return bullets[this.#depth(path)] || bullets[0];
   }
 
   #attachEvents(el) {

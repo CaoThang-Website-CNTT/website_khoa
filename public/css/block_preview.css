@@ -97,23 +97,32 @@ h4.be-heading {
 .be-list {
   padding-left: 1rem;
   outline: none;
-  list-style-position: outside;
-}
-ul.be-list {
-  list-style-type: disc;
-}
-ol.be-list {
-  list-style-type: decimal;
+  list-style: none;
 }
 .be-list li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: 0.25rem;
+  align-items: start;
   margin: 0.15rem 0;
   position: relative;
 }
-ul.be-list .be-list {
-  list-style-type: circle;
+.be-list .be-list {
+  grid-column: 2;
+  padding-left: 0;
 }
-ul.be-list .be-list .be-list {
-  list-style-type: square;
+.pseudoBefore {
+  display: inline-block;
+  width: 24px;
+  text-align: center;
+  white-space: nowrap;
+}
+.pseudoBefore::before {
+  content: var(--pseudoBefore--content, "");
+}
+.be-list-item-content,
+.be-list-item-text {
+  min-width: 0;
 }
 
 /* Quote Block */
