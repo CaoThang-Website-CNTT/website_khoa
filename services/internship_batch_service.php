@@ -169,14 +169,14 @@ class InternshipBatchService implements IInternshipBatchService
           // Chưa có student => tạo Account, rồi tạo Student
           $email = $studentCode . '@caothang.edu.vn';
           // Pwd mặc định là MSSV
-          $accountId = $this->_accountStore->create($email, $studentCode, 'student');
+          $account = $this->_accountStore->create($email, $studentCode, 'student');
 
-          if (!$accountId) {
+          if (!$account) {
             throw new \Exception("Tạo tài khoản thất bại cho sinh viên $studentCode.");
           }
 
           $newStudent = new Student(
-            account_id: $accountId,
+            account_id: $account->id,
             student_id: $studentCode,
             full_name: $sv['full_name'],
             gender: 'male',

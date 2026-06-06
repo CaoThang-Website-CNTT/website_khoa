@@ -78,8 +78,8 @@ class TeacherService implements ITeacherService
       }
 
       // Create account
-      $accountId = $this->_accountStore->create($data['email'], $data['national_id'], 'teacher');
-      if (!$accountId) {
+      $account = $this->_accountStore->create($data['email'], $data['national_id'], 'teacher');
+      if (!$account) {
         throw new \Exception('Tạo tài khoản thất bại');
       }
 
@@ -103,7 +103,7 @@ class TeacherService implements ITeacherService
       //   'notes' => ['nullable'],
       // ];
       $teacher = new Teacher(
-        account_id: $accountId,
+        account_id: $account->id,
         full_name: $data['full_name'],
         dob: $data['dob'],
         national_id: $data['national_id'],

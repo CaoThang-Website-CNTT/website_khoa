@@ -94,8 +94,8 @@ class StudentService implements IStudentService
       }
 
       // Create account
-      $accountId = $this->_accountStore->create($data['email'], $data['national_id'], 'student');
-      if (!$accountId) {
+      $account = $this->_accountStore->create($data['email'], $data['national_id'], 'student');
+      if (!$account) {
         throw new \Exception('Tạo tài khoản thất bại');
       }
 
@@ -117,7 +117,7 @@ class StudentService implements IStudentService
       //   'notes' => ['nullable'],
       //   'status' => ['required', 'in:Đang học,Đã tốt nghiệp,Tạm ngưng,Thôi học']
       $student = new Student(
-        account_id: $accountId,
+        account_id: $account->id,
         student_id: $data['student_id'],
         full_name: $data['full_name'],
         gender: $data['gender'],
