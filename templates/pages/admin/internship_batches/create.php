@@ -221,7 +221,7 @@
 
 <script>
   window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
-  window.REDIRECT_URL = '<?= url('admin/internship_batches/{id}/assignments') ?>';
+  window.REDIRECT_URL = '<?= url('admin/internship_batches/{id}/students') ?>';
 </script>
 <script src="<?= url('public/js/table/table_manager.js') ?>" type="module"></script>
 <script src="<?= url('public/js/pages/internship_batch_create.js') ?>" type="module"></script>
