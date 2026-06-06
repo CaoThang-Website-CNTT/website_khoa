@@ -116,7 +116,14 @@
             </article>
           <?php endforeach; ?>
         <?php else: ?>
-          <p class="news-list__empty">KhÃ´ng cÃ³ tin ná»•i báº­t phÃ¹ há»£p.</p>
+          <div class="empty news-list__empty">
+            <div class="empty__header">
+              <div class="empty__media">
+                <i class="fa-solid fa-newspaper"></i>
+              </div>
+              <div class="empty__title">Không có tin tức nào nổi bật</div>
+            </div>
+          </div>
         <?php endif; ?>
       </div>
     </section>
