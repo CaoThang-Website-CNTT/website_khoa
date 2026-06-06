@@ -134,6 +134,10 @@ export class ImageBlock extends EditorBlock {
     this.dom.appendChild(wrapper);
     this.dom.appendChild(caption);
 
+    this.#attachCaptionEvents(caption);
+  }
+
+  #attachCaptionEvents(caption) {
     caption.addEventListener('input', () => {
       this.bus?.dispatch('block:input', { blockId: this.id });
     });
@@ -142,15 +146,40 @@ export class ImageBlock extends EditorBlock {
       this.bus?.dispatch('block:updated', { block: this });
     });
 
-    caption.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-      this.paste(text);
-    });
+    caption.addEventListener('paste', (e) => this.#handleCaptionPaste(e));
 
     caption.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); caption.blur(); }
     });
+  }
+
+  #handleCaptionPaste(e) {
+    e.preventDefault();
+
+    const clipboard = (e.originalEvent || e).clipboardData;
+    const text = clipboard?.getData('text/plain') ?? '';
+    if (!text) return;
+
+    this.#ensureCaptionSelection();
+    this.paste(text.replace(/\s*\r?\n\s*/g, ' '));
+    this.bus?.dispatch('block:input', { blockId: this.id });
+    this.bus?.dispatch('block:updated', { block: this });
+  }
+
+  #ensureCaptionSelection() {
+    if (!this.#captionEl) return;
+
+    const sel = window.getSelection();
+    if (sel?.rangeCount && this.#captionEl.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+      return;
+    }
+
+    this.#captionEl.focus();
+    const range = document.createRange();
+    range.selectNodeContents(this.#captionEl);
+    range.collapse(false);
+    sel?.removeAllRanges();
+    sel?.addRange(range);
   }
 
   /**

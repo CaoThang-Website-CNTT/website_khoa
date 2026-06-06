@@ -38,6 +38,11 @@
 1. **Package Source:** Compress the local application source code (excluding the `public` folder if separation is required, or full project depending on framework architecture) into a `.zip` archive.
 2. **Upload Core Files:** Open cPanel **File Manager**, navigate to the root directory `/home/[user]/`, upload the `.zip` archive, and extract it here.
 3. **Expose Public Assets:** Move the complete contents of the application's `public` folder into the `/home/[user]/public_html/` directory.
+4. **Symlink Generation** Execute the following PHP command via terminal to link the target storage directory with the public-facing directory:
+
+```bash
+php ctsdk.php storage-link storage-path public-path
+```
 
 ### Step 3: Environment Configuration & Entrypoint Alignment
 
