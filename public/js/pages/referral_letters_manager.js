@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Table Manager Selection Change
   if (tableContainer) {
     tableContainer.addEventListener('tm:selection-change', (e) => {
-      currentSelectedIds = e.detail.selectedIds;
+      currentSelectedIds = e.detail.rowSelection || e.detail.selectedIds || [];
       const count = currentSelectedIds.length;
 
       if (count > 0) {

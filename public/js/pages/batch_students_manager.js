@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .querySelector('[data-tm="batch_students_table"]')
     .addEventListener("tm:selection-change", (e) => {
-      const selectedIds = e.detail.selectedIds;
+      const selectedIds = e.detail.rowSelection || e.detail.selectedIds || [];
       const count = selectedIds.length;
 
       if (count > 0) {
