@@ -87,6 +87,9 @@ interface IQueryBuilder
    */
   public function order(string $column, array $options = ['ascending' => true]): static;
 
+  /** Sắp xếp kết quả theo FIELD(colA, colB, colC, etc) tự định nghĩa */
+  public function orderByField(string $column, array $values): static;
+
   /** * Giới hạn số lượng bản ghi trả về.
    */
   public function limit(int $count): static;
@@ -324,6 +327,18 @@ class QueryBuilder implements IQueryBuilder
   public function order(string $column, array $options = ['ascending' => true]): static
   {
     $this->orders[] = ['column' => $column, 'direction' => ($options['ascending'] ?? true) ? 'ASC' : 'DESC'];
+    return $this;
+  }
+
+  public function orderByField(string $column, array $values): static
+  {
+    $formattedValues = array_map(function ($val) {
+      return "'" . addslashes($val) . "'";
+    }, $values);
+
+    $rawField = "FIELD({$column}, " . implode(', ', $formattedValues) . ")";
+
+    $this->orders[] = ['column' => $rawField, 'direction' => 'ASC'];
     return $this;
   }
 

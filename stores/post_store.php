@@ -126,6 +126,7 @@ class PostStore extends Store implements IPostStore
       ->select(self::LISTING_COLUMNS)
       ->is('deleted_at', null)
       ->eq('is_featured', "1")
+      ->orderByField('status', ['draft', 'publish', 'deleted'])
       ->order('created_at', ['ascending' => false])
       ->limit($limit);
 
