@@ -61,7 +61,14 @@ $menuConfig = [
           'icon' => 'fa-solid fa-gear',
           'children' => [
             ['label' => 'Web Settings', 'url' => 'admin/web_settings'],
+            ['label' => 'Tickets', 'url' => 'admin/tickets'],
           ]
+        ],
+        [
+          'type' => 'link',
+          'label' => 'Phản hồi',
+          'icon' => 'fa-solid fa-circle-question',
+          'url' => 'admin/tickets/create'
         ]
       ]
     ]

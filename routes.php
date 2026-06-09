@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController};
 use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
@@ -188,6 +188,16 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/{id}', [CompanyController::class, 'edit']);
     $router->post('/{id}', [CompanyController::class, 'update']);
     $router->post('/delete/{id}', [CompanyController::class, 'destroy']);
+  });
+
+  // Tickets
+  $router->prefix('tickets')->group(function ($router) {
+    $router->get('/', [TicketController::class, 'index']);
+    $router->get('/create', [TicketController::class, 'create']);
+    $router->post('/', [TicketController::class, 'store']);
+    $router->get('/{ticket_id}', [TicketController::class, 'show']);
+    $router->get('/{ticket_id}/edit', [TicketController::class, 'edit']);
+    $router->post('/{ticket_id}', [TicketController::class, 'update']);
   });
 });
 
