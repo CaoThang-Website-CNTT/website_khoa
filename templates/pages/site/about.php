@@ -6,9 +6,11 @@ $historySections = [
     'img' => 'public/img/about.jpg',
     'imgAlt' => 'Lecture hall with students',
     'year' => '1998',
-    'imageCaption' => 'Khoa CNTT được thành lập',
-    'icon' => 'fa-solid fa-graduation-cap',
-    'badge' => 'Khoa Công Nghệ Thông Tin',
+    'imgCaption' => 'Khoa CNTT được thành lập',
+    'badge' => "
+      <i class='fa-solid fa-graduation-cap'></i>
+      <span class='text-sm'>Khoa Công Nghệ Thông Tin</span>
+    ",
     'title' => '27 năm đổi mới & phát triển',
     'timeline' => [
       [
@@ -25,9 +27,11 @@ $historySections = [
     'img' => 'public/img/about.jpg',
     'imgAlt' => 'Lecture hall with students',
     'year' => '1906',
-    'imageCaption' => 'Trường được thành lập',
-    'icon' => 'fa-solid fa-building-columns',
-    'badge' => 'Trường Cao Đẳng Kỹ Thuật Cao Thắng',
+    'imgCaption' => 'Trường được thành lập',
+    'badge' => "
+      <i class='fa-solid fa-building-columns'></i>
+      <span class='text-sm'>Trường Cao Đẳng Kỹ Thuật Cao Thắng</span>
+    ",
     'title' => '100+ năm truyền thống',
     'timeline' => [
       [
@@ -157,12 +161,11 @@ $bentoGridItems = [
             </div>
             <div class="history-image-wrapper__content absolute inset-0 flex flex-col justify-end gap-1">
               <div class="text-6xl"><?= $section['year'] ?></div>
-              <div class="text-xl"><?= $section['imageCaption'] ?></div>
+              <div class="text-xl"><?= $section['imgCaption'] ?></div>
             </div>
           </div>
           <div class="flex-1 history-content flex flex-col justify-center gap-8">
             <span class="badge" data-variant="primary">
-              <i class="<?= $section['icon'] ?>"></i>
               <?= $section['badge'] ?>
             </span>
             <p class="text-4xl">
