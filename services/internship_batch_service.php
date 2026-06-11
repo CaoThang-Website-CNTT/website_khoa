@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore};
+use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore, InternshipGradeStore};
 use App\Models\{Student, Classroom};
 use App\Core\Pageable;
 use App\Enums\BatchStatus;
@@ -48,6 +48,7 @@ class InternshipBatchService implements IInternshipBatchService
   private ReferralLetterStore $_referralLetterStore;
   private StudentStore $_studentStore;
   private ClassroomStore $_classroomStore;
+  private InternshipGradeStore $_gradeStore;
 
   public function __construct(
     InternshipBatchStore $store,
@@ -57,7 +58,8 @@ class InternshipBatchService implements IInternshipBatchService
     InternshipSubmissionStore $submissionStore,
     ReferralLetterStore $referralLetterStore,
     StudentStore $studentStore,
-    ClassroomStore $classroomStore
+    ClassroomStore $classroomStore,
+    InternshipGradeStore $gradeStore
   ) {
     $this->_store = $store;
     $this->_assignmentStore = $assignmentStore;
@@ -67,6 +69,7 @@ class InternshipBatchService implements IInternshipBatchService
     $this->_referralLetterStore = $referralLetterStore;
     $this->_studentStore = $studentStore;
     $this->_classroomStore = $classroomStore;
+    $this->_gradeStore = $gradeStore;
   }
 
   /**
@@ -418,6 +421,8 @@ class InternshipBatchService implements IInternshipBatchService
     $logs = [];
     $submissions = [];
     $referralLetters = [];
+    $grade = null;
+
     if ($assignment) {
       $supervisor = $this->_teacherStore->getById($assignment->teacher_id);
       if ($supervisor->account_id) {
@@ -426,6 +431,7 @@ class InternshipBatchService implements IInternshipBatchService
       $logs = $this->_assignmentStore->getLogsByBatchStudent($currentBatch['batch_student_id']);
       $submissions = $this->_submissionStore->getAllByBatchStudentId($currentBatch['batch_student_id']);
       $referralLetters = $this->_referralLetterStore->getLettersWithCompanyByBatchStudentId($currentBatch['batch_student_id']);
+      $grade = $this->_gradeStore->getByBatchStudentId($currentBatch['batch_student_id']);
     }
 
     return [
@@ -435,7 +441,8 @@ class InternshipBatchService implements IInternshipBatchService
       'supervisor' => $supervisor,
       'submissions' => $submissions,
       'logs' => $logs,
-      'referralLetters' => $referralLetters
+      'referralLetters' => $referralLetters,
+      'grade' => $grade
     ];
   }
 

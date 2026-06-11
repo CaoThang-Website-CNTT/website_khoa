@@ -14,6 +14,7 @@ $batches = $batches ?? [];
 $supervisor = $supervisor ?? null;
 $submissions = $submissions ?? [];
 $logs = $logs ?? [];
+$grade = $grade ?? null;
 
 $batchModel = new InternshipBatch();
 if ($current) {
@@ -27,14 +28,6 @@ $effectiveMetadata = $effStatus ? [
   'variant' => BatchStatus::getVariant($effStatus)
 ] : null;
 ?>
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      window.toast?.<?= ($flash['type']) ?>('<?= $flash['title'] ?>', '<?= $flash['desc'] ?>');
-    });
-  </script>
-<?php endif; ?>
-
 
 <!-- ========== title-wrapper start ========== -->
 <link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
@@ -224,7 +217,7 @@ $effectiveMetadata = $effStatus ? [
               </div>
             <?php else: ?>
               <div class="empty-state">
-                <p class="text-sm text-muted-foreground text-center">Chưa có thông tin công ty và đã hết thời gian khai báo.
+                <p class="text-sm" style="color: var(--muted-foreground);">Chưa có thông tin công ty và đã hết thời gian khai báo.
                 </p>
               </div>
             <?php endif; ?>
@@ -278,16 +271,42 @@ $effectiveMetadata = $effStatus ? [
 
     <div class="detail-layout__sidebar">
       <!-- Kết quả -->
-      <div class="card shadow result-card text-center py-8">
-        <div class="card__header flex-col items-center gap-2">
-          <h3 class="card__title text-sm">
-            <i class="fa-solid fa-star text-warning mr-1"></i>
-            Kết quả
+      <div class="card shadow result-card">
+        <div class="card__header">
+          <h3 class="card__title">
+            <i class="fa-solid fa-star mr-2"></i>
+            Kết quả thực tập
           </h3>
         </div>
+        <hr class="separator" />
         <div class="card__content">
-          <div class="text-4xl font-bold mb-1">--</div>
-          <span class="text-xs">Chưa có điểm</span>
+          <div>
+
+            <?php if ($grade && isset($grade['final_score'])): ?>
+              <div class="font-bold text-4xl text-center">
+                <?= $grade['final_score'] ?>
+              </div>
+
+              <?php if (!empty($grade['score_reason'])): ?>
+                <hr class="separator" />
+                <p class="text-sm">
+                  <span class="font-medium" style="color: var(--muted-foreground);">Chi tiết điểm:</span>
+                  <?= nl2br(htmlspecialchars($grade['score_reason'])) ?>
+                </p>
+              <?php endif; ?>
+
+              <?php if (!empty($grade['feedback'])): ?>
+                <hr class="separator" />
+                <div class="text-sm">
+                  <span class="font-medium" style="color: var(--muted-foreground);">Nhận xét của GV:</span>
+                  <?= nl2br(htmlspecialchars($grade['feedback'])) ?>
+                </div>
+              <?php endif; ?>
+
+            <?php else: ?>
+              <span style="color: var(--muted-foreground);">Chưa có điểm</span>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
 
@@ -324,15 +343,26 @@ $effectiveMetadata = $effStatus ? [
               enctype="multipart/form-data" id="uploadForm">
               <?= csrf_field() ?>
               <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
+
+              <div class="field mb-3" data-field-required>
+                <label class="field__label">Loại tài liệu</label>
+                <select name="doc_type" id="doc_type" class="field__input" required>
+                  <option value="" disabled selected>-- Chọn loại tài liệu --</option>
+                  <option value="internship_report">Báo cáo thực tập tốt nghiệp (Bắt buộc)</option>
+                  <option value="evaluation_form">Phiếu đánh giá thực tập (Bắt buộc)</option>
+                  <option value="company_survey">Phiếu khảo sát doanh nghiệp</option>
+                  <option value="related_photo">Hình ảnh liên quan khác</option>
+                </select>
+              </div>
+
               <div class="upload-area" id="uploadArea">
                 <div class="upload-area__icon">
                   <i class="fa-solid fa-file-arrow-up"></i>
                 </div>
                 <p class="upload-area__text">Nhấn để chọn file hoặc kéo thả vào đây</p>
-                <p class="upload-area__hint">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty, nhật ký thực tập,
-                  hình ảnh liên quan... thành một file nén.</p>
-                <p class="upload-area__hint">Định dạng hỗ trợ: ZIP, RAR. Dung lượng tối đa: <?= $max_file_size_mb ?>MB</p>
-                <input type="file" name="report_file" class="hidden" id="report_file" accept=".zip,.rar">
+                <p class="upload-area__hint">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty, hình ảnh liên quan.</p>
+                <p class="upload-area__hint">Định dạng hỗ trợ: PDF (cho Báo cáo, phiếu đánh giá, khảo sát), Hình ảnh (JPG, PNG, WEBP cho Hình ảnh liên quan). Dung lượng tối đa: <?= $max_file_size_mb ?>MB</p>
+                <input type="file" name="report_file" class="hidden" id="report_file" accept=".pdf,image/jpeg,image/png,image/webp">
               </div>
               <div id="filePreview" class="hidden mt-4 text-sm text-center"></div>
               <div class="mt-4 flex justify-end">
@@ -365,22 +395,33 @@ $effectiveMetadata = $effStatus ? [
                     <div class="timeline-item__indicator"></div>
                     <time
                       class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
-                    <div class="timeline-item__action font-medium">
-                      <?= $submission['original_file_name'] ?? '--' ?>
-                    </div>
-                    <?php
-                    $downloadUrl = url($submission['file_path'], null);
-                    if (!$downloadUrl):
+                    <div class="timeline-item__title" title="<?= htmlspecialchars($submission['original_file_name'] ?? '') ?>">
+                      <?php
+                      $typeLabels = [
+                        'internship_report' => 'Báo cáo TT',
+                        'evaluation_form' => 'Phiếu đánh giá',
+                        'company_survey' => 'Khảo sát DN',
+                        'related_photo' => 'Hình ảnh khác'
+                      ];
+                      $docType = $submission['type'] ?? 'internship_report';
+                      echo '[' . ($typeLabels[$docType] ?? 'Tài liệu') . '] ' . htmlspecialchars($submission['original_file_name'] ?? '--');
                       ?>
-                      <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="primary" data-size="sm"
-                        title="Tải xuống tài liệu">
-                        <i class="fa-solid fa-download"></i> Tải xuống
-                      </a>
-                    <?php else: ?>
-                      <span class="text-xs ml-2" title="File không tồn tại trên hệ thống">
-                        <i class="fa-solid fa-circle-exclamation"></i> Lỗi file
-                      </span>
-                    <?php endif; ?>
+                    </div>
+                    <div class="mt-2">
+                      <?php
+                      $downloadUrl = url('/public/media/' . $submission['file_path']);
+                      if ($downloadUrl):
+                      ?>
+                        <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="outline" data-size="sm"
+                          title="Xem tài liệu">
+                          <i class="fa-solid fa-eye mr-1"></i>Xem
+                        </a>
+                      <?php else: ?>
+                        <span class="text-xs ml-2" title="File không tồn tại trên hệ thống">
+                          <i class="fa-solid fa-circle-exclamation"></i> Lỗi file
+                        </span>
+                      <?php endif; ?>
+                    </div>
                   </article>
                 <?php endforeach; ?>
               <?php endif; ?>
@@ -409,7 +450,7 @@ $effectiveMetadata = $effStatus ? [
                 <article class="timeline-item">
                   <div class="timeline-item__indicator"></div>
                   <time class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></time>
-                  <div class="timeline-item__action font-medium"><?= htmlspecialchars($log['action']) ?></div>
+                  <div class="timeline-item__title"><?= htmlspecialchars($log['action']) ?></div>
                   <?php if ($log['reason']): ?>
                     <p class="timeline-item__reason text-sm mt-1"><?= htmlspecialchars($log['reason']) ?></p>
                   <?php endif; ?>

@@ -1,5 +1,6 @@
 <?php
-use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController};
+
+use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
@@ -77,10 +78,14 @@ $router->prefix('api')->group(function ($router) {
       $router->post('/profile/upload-document', [StudentApiController::class, 'uploadDocument']);
     });
 
+    // Teacher
+    $router->prefix('teacher')->group(function (Router $router) {
+      $router->get('/submissions/{submissionId}/preview', [TeacherDashboardApiController::class, 'previewSubmission']);
+    });
+
     // Companies
     $router->prefix('companies')->group(function (Router $router) {
       $router->get('/suggest-by-name', [CompanyApiController::class, 'suggestByName']);
     });
-
   });
 });

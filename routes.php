@@ -238,5 +238,7 @@ $router->prefix('teacher')->middleware([VerifyAuth::class, new VerifyRole('teach
   $router->prefix('internship_batches')->group(function ($router) {
     $router->get('/', [TeacherDashboardController::class, 'internshipIndex']);
     $router->get('/{id}', [TeacherDashboardController::class, 'internshipShow']);
+    $router->get('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'internshipGrade']);
+    $router->post('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'submitGrade']);
   });
 });

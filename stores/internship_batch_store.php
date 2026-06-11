@@ -33,6 +33,7 @@ interface IInternshipBatchStore
   public function searchEligibleTeachers(int $batchId, string $query = ''): array;
   public function getBatchesByStudentId(int $studentId): array;
   public function getTeacherStudentsInBatch(int $batchId, int $teacherId): array;
+  public function getStudentGradingDetail(int $batchStudentId): ?array;
   public function getTeacherBatchStats(int $batchId, int $teacherId): array;
   public function isSupervisorOfBatch(int $batchId, int $teacherId): bool;
 }
@@ -510,7 +511,12 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               sub_latest.original_file_name AS submission_name,
               sub_latest.file_path AS submission_path,
               sub_count.total_submissions AS submission_count,
+              COALESCE(sub_required.required_count, 0) AS required_docs_submitted,
+              g.id AS grade_id,
               g.final_score AS grade,
+              g.score_reason,
+              g.feedback,
+              g.graded_at,
               bs.id AS batch_student_id
             FROM internship_assignments a
             JOIN internship_batch_students bs ON a.batch_student_id = bs.id
@@ -518,15 +524,26 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
             LEFT JOIN classrooms c ON s.classroom_id = c.id
             LEFT JOIN companies co ON bs.company_id = co.id
             LEFT JOIN (
-              SELECT batch_student_id, original_file_name, file_path
-              FROM internship_submissions
-              WHERE is_latest = 1
+              SELECT s1.batch_student_id, s1.original_file_name, s1.file_path
+              FROM internship_submissions s1
+              JOIN (
+                SELECT batch_student_id, MAX(id) as max_id
+                FROM internship_submissions
+                WHERE is_latest = 1 AND type != 'related_photo'
+                GROUP BY batch_student_id
+              ) s2 ON s1.id = s2.max_id
             ) sub_latest ON sub_latest.batch_student_id = bs.id
             LEFT JOIN (
               SELECT batch_student_id, COUNT(*) AS total_submissions
               FROM internship_submissions
               GROUP BY batch_student_id
             ) sub_count ON sub_count.batch_student_id = bs.id
+            LEFT JOIN (
+              SELECT batch_student_id, COUNT(DISTINCT type) AS required_count
+              FROM internship_submissions
+              WHERE is_latest = 1 AND type IN ('internship_report', 'evaluation_form')
+              GROUP BY batch_student_id
+            ) sub_required ON sub_required.batch_student_id = bs.id
             LEFT JOIN internship_grades g ON g.batch_student_id = bs.id
             WHERE bs.batch_id = :batch_id AND a.teacher_id = :teacher_id
             ORDER BY s.full_name ASC";
@@ -536,6 +553,31 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
       ':teacher_id' => $teacherId
     ]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStudentGradingDetail(int $batchStudentId): ?array
+  {
+    $sql = "SELECT
+              bs.id AS batch_student_id,
+              bs.batch_id,
+              s.student_id AS student_code,
+              s.full_name,
+              s.phone,
+              c.short_name AS classroom_name,
+              co.name AS company_name,
+              co.address AS company_address,
+              bs.position,
+              bs.internship_start_date,
+              bs.internship_end_date
+            FROM internship_batch_students bs
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN companies co ON bs.company_id = co.id
+            WHERE bs.id = :batch_student_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result ?: null;
   }
 
   public function getTeacherBatchStats(int $batchId, int $teacherId): array
