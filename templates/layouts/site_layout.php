@@ -9,7 +9,7 @@
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?> (
+      toast.<?= $flash['type'] ?>(
         "<?= htmlspecialchars($flash['title']) ?>",
         "<?= htmlspecialchars($flash['desc']) ?>"
       );
@@ -27,7 +27,11 @@
   <!-- HEADER: END -->
 
   <main>
-    <?= $content; ?>
+    <?php if ($layout->hasContent("content")): ?> <!-- Dùng ViewEngine mới -->
+      <?= $layout->yield("content") ?>
+    <?php else: ?> <!-- Giữ lại cho tương thích với ViewEngine cũ -->
+      <?= $content ?? '' ?>
+    <?php endif; ?>
   </main>
 
   <!-- FOOTER: START -->

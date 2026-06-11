@@ -1,3 +1,4 @@
+/* LANDING PAGE */
 #hero-section {
   background: linear-gradient(90deg, #1c398e 0%, #1447e6 100%);
 }
@@ -34,44 +35,40 @@
   color: var(--muted);
 }
 
-#about-section .about-container {
+#landing-about-section .landing-about-container {
   gap: 6rem;
 }
 
-.about-item > * {
-  flex: 1;
-}
-
-.about-item__sub-title {
-  color: #155dfc;
+.landing-about-item__sub-title {
+  color: var(--primary);
   letter-spacing: 0.0375rem;
 }
 
-.about-item__content {
-  color: #4a5565;
+.landing-about-item__content {
+  color: var(--muted-foreground);
 }
 
-.about-item__card {
+.landing-about-item__card {
   bottom: 0;
   right: 0;
   transform: translate(15%, 20%);
   max-width: 12rem;
   background: var(--background);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-2xl);
 }
 
-.about-item__card-main-content {
+.landing-about-item__card-main-content {
   color: var(--primary);
 }
 
-.about-item__card-sub-content {
+.landing-about-item__card-sub-content {
   color: var(--muted-foreground);
 }
 
 /* WHY CHOOSE US SECTION */
 .wcu__feature-card-content {
   color: var(--primary-foreground);
-  background: var(--black-gradient);
+  background: var(--black-gradient-overlay);
 }
 
 .wcu__feature-card-link {
@@ -121,11 +118,11 @@
 }
 
 .wcu__highlight-item-content--blue {
-  background: var(--blue-gradient);
+  background: var(--blue-gradient-overlay);
 }
 
 .wcu__highlight-item-content--green {
-  background: var(--green-gradient);
+  background: var(--green-gradient-overlay);
 }
 
 .wcu__highlight-item-description {
@@ -202,7 +199,7 @@
   border-width: 2px;
 }
 
-/* NEWS */
+/* NEWS PAGES */
 .site-breadcrumbs {
   background: var(--muted);
 }
@@ -217,7 +214,6 @@
 }
 
 .news-card[data-landing-featured="true"] .news-card__content {
-  background: var(--blue-from-left-gradient);
   padding: 2rem;
 }
 
@@ -232,7 +228,7 @@
 
 .news-card[data-landing] .news-card__content {
   color: var(--primary-foreground);
-  background: var(--black-gradient);
+  background: var(--black-gradient-overlay);
 }
 
 .news-card[data-landing] .news-card__title {
@@ -255,7 +251,7 @@
 }
 
 #featured-news article.news-card:nth-child(1) .news-card__content {
-  background: var(--blue-gradient);
+  background: var(--blue-gradient-overlay);
 }
 
 #featured-news
@@ -266,7 +262,7 @@
 }
 
 #featured-news article.news-card:nth-child(2) .news-card__content {
-  background: var(--purple-gradient);
+  background: var(--purple-gradient-overlay);
 }
 
 #featured-news article.news-card:nth-child(2) .news-card__tag {
@@ -275,7 +271,7 @@
 }
 
 #featured-news article.news-card:nth-child(3) .news-card__content {
-  background: var(--green-gradient);
+  background: var(--green-gradient-overlay);
 }
 
 #featured-news article.news-card:nth-child(3) .news-card__tag {
@@ -633,7 +629,160 @@
   font-size: var(--text-sm);
 }
 
-/* AUTH & ONBOARDING */
+/* ABOUT PAGE */
+.about-thumbnail__wrapper {
+  height: var(--container-md);
+}
+
+.about-thumbnail-content__wrapper {
+  color: var(--primary-foreground);
+  background: color-mix(in oklab, oklch(0.18 0 0) 60%, transparent);
+}
+
+.about-thumbnail-content {
+  max-width: var(--container-4xl);
+  text-shadow: var(--shadow);
+}
+
+.about-thumbnail-content__title {
+  font-size: var(--text-6xl);
+}
+
+.about-thumbnail-content__sub-title {
+  font-size: var(--text-xl);
+  font-weight: var(--fw-normal);
+}
+
+.history-image-wrapper__content {
+  padding: 2rem;
+  background: var(--black-gradient-overlay);
+  color: var(--primary-foreground);
+}
+
+.history-content-timeline__item-year {
+  color: var(--primary);
+  font-weight: var(--fw-bold);
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.bento-grid-item {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 20rem;
+  height: 100%;
+  --bento-item-background: var(--background);
+  background: var(--bento-item-background);
+  border-radius: var(--radius-3xl);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--primary-foreground);
+}
+
+.bento-grid-item .image-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.bento-grid-item--has-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--bento-item-background);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.bento-grid-item__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bento-grid-item > :not(.bento-grid-item__image) {
+  position: relative;
+  z-index: 2;
+}
+
+.bento-grid-item:nth-child(1) {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.bento-grid-item:nth-child(6) {
+  grid-row: span 2;
+}
+
+.bento-grid-item:nth-child(8n + 1) {
+  --bento-item-background: var(--blue-gradient);
+}
+.bento-grid-item:nth-child(8n + 2) {
+  --bento-item-background: var(--green-gradient);
+}
+.bento-grid-item:nth-child(8n + 3) {
+  --bento-item-background: var(--pink-gradient);
+}
+.bento-grid-item:nth-child(8n + 4) {
+  color: var(--foreground);
+}
+.bento-grid-item:nth-child(8n + 4) .card__header .badge {
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 10%, white);
+}
+.bento-grid-item:nth-child(8n + 5) {
+  --bento-item-background: var(--orange-gradient);
+}
+.bento-grid-item:nth-child(8n + 6) {
+  --bento-item-background: var(--black-gradient-overlay);
+}
+.bento-grid-item:nth-child(8n + 7) {
+  --bento-item-background: var(--black-gradient);
+}
+.bento-grid-item:nth-child(8n + 0) {
+  --bento-item-background: var(--light-blue-gradient);
+}
+
+.bento-grid-item {
+  justify-content: flex-end;
+  gap: 0;
+}
+
+.bento-grid-item .card__header {
+  flex: 1;
+}
+
+.bento-grid-item .card__header .badge {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.bento-grid-item
+  .card__header
+  .badge:has(> :only-child:is(svg, .fa-solid, .fa-brand)) {
+  min-height: 3rem;
+  min-width: 3rem;
+}
+
+.bento-grid-item .card__header .badge > :is(svg, .fa-solid, .fa-brand) {
+  width: var(--text-lg);
+  height: var(--text-lg);
+  font-size: var(--text-lg);
+}
+
+.bento-grid-item .card__content {
+  font-size: var(--text-6xl);
+}
+
+/* AUTH & ONBOARDING PAGES */
 .auth-form-card {
   margin: 0 auto;
   max-width: var(--container-md);

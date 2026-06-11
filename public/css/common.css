@@ -1675,8 +1675,13 @@
   .badge > :is(svg, .fa-solid, .fa-brand) {
     pointer-events: none;
     flex-shrink: 0;
-    width: 12px;
-    height: 12px;
+    width: var(--text-xs);
+    height: var(--text-xs);
+    font-size: var(--text-xs);
+  }
+
+  .badge:has(> :only-child:is(svg, .fa-solid, .fa-brand)) {
+    padding: 0.5rem;
   }
 
   .badge[data-variant="primary"] {
@@ -1702,15 +1707,21 @@
   }
 
   .badge[data-variant="warning"] {
-    background-color: #fef3c7;
-    color: #92400e;
-    border-color: #fde68a;
+    background: var(--toast-warning-bg);
+    border-color: var(--toast-warning-border);
+    color: var(--toast-warning-color);
   }
 
   .badge[data-variant="outline"] {
     border-color: var(--border);
     color: var(--foreground);
     background: transparent;
+  }
+
+  .badge[data-variant="glass"] {
+    border-color: transparent;
+    color: var(--background);
+    background: color-mix(in oklab, var(--background) 20%, transparent);
   }
 
   /* ==========================================================================

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\{PostService, CarouselService, MenuService, WebSettingsService};
 use App\Editor\BlockRenderer;
+use App\Models\Menu;
 
 class SiteController extends Controller
 {
@@ -12,6 +13,11 @@ class SiteController extends Controller
   private PostService $_postService;
   private CarouselService $_carouselService;
   private WebSettingsService $_settingService;
+
+  /**
+   * Header Menu
+   */
+  private ?Menu $_headerMenu = null;
 
   /**
    * Settings được load một lần tại constructor và tái sử dụng cho mọi method.
@@ -42,20 +48,19 @@ class SiteController extends Controller
     $this->_postService = $postService;
     $this->_settingService = $settingService;
 
+    $this->_loadHeaderMenu();
     $this->_loadSettings();
   }
 
   public function index()
   {
-    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
-    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
 
     // Lấy slide carousel (Kèm fallback an toàn nếu chưa có dữ liệu)
     $carousel = $this->_carouselService->getBySlugWithSlides("landing-page", with_media: true);
     $carouselSlides = $carousel !== null ? $carousel->slides : [];
 
     $featuredNews = $this->_postService->getFeaturedPosts(4, true, ['status' => 'published']);
-    
+
     // Lấy 3 bài viết mới nhất không phải bài nổi bật
     $allNewsPageable = $this->_postService->getPosts(1, 3, true, [
       'status' => 'published',
@@ -64,7 +69,7 @@ class SiteController extends Controller
     $latestNewsItems = $allNewsPageable->getItems();
 
     return $this->render('site/landing', [
-      'headerMenu' => $headerMenuItems,
+      'headerMenu' => $this->_headerMenu->items,
       'carouselSlides' => $carouselSlides,
       'featuredNews' => $featuredNews,
       'latestNewsItems' => $latestNewsItems,
@@ -74,18 +79,16 @@ class SiteController extends Controller
 
   public function news_index()
   {
-    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
-    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
-    
+
     $featuredNews = $this->_postService->getFeaturedPosts(2, true, ['status' => 'published']);
-    
+
     $allNews = $this->_postService->getPosts(1, 6, true, [
       'status' => 'published',
       'is_featured' => "0"
     ]);
 
     return $this->render('site/news/index', [
-      'headerMenu' => $headerMenuItems,
+      'headerMenu' => $this->_headerMenu->items,
       'featuredNews' => $featuredNews,
       'allNews' => $allNews,
       'settings' => $this->_settings,
@@ -94,13 +97,11 @@ class SiteController extends Controller
 
   public function news_show($slug)
   {
-    $headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
-    $headerMenuItems = $headerMenu !== null ? $headerMenu->items : [];
     $news = $this->_postService->getPostBySlug($slug, with_author: true);
     $result = BlockRenderer::compile($news->content_json);
 
     return $this->render('site/news/detail', [
-      'headerMenu' => $headerMenuItems,
+      'headerMenu' => $this->_headerMenu->items,
       'news' => $news,
       'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'] ?? [],
       'detail' => $result,
@@ -108,9 +109,24 @@ class SiteController extends Controller
     ], "site_layout");
   }
 
+  public function about()
+  {
+    return $this->render('site/about', [
+      'headerMenu' => $this->_headerMenu->items,
+    ], "site_layout");
+  }
+
   // ============================================================================
   // Private helpers
   // ============================================================================
+
+  /**
+   * Load Header Menu
+   */
+  private function _loadHeaderMenu(): void
+  {
+    $this->_headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+  }
 
   /**
    * Load tất cả settings thuộc PRELOAD_GROUPS vào $_settings.

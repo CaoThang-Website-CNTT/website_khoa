@@ -4,7 +4,7 @@ function renderCarousel(array $carouselSlides): void
   if (empty($carouselSlides)) {
     return;
   }
-?>
+  ?>
   <div class="carousel py-8" id="landingCarousel">
     <div class="carousel__inner" id="carouselInner">
 
@@ -68,7 +68,7 @@ function renderCarousel(array $carouselSlides): void
     <div class="carousel__indicators">
     </div>
   </div>
-<?php
+  <?php
 }
 ?>
 <!-- HERO-SECTION: START -->
@@ -88,34 +88,34 @@ function renderCarousel(array $carouselSlides): void
 <!-- HERO-SECTION: END -->
 
 <!-- ABOUT-SECTION: START -->
-<section class="relative container py-16" id="about-section">
+<section class="relative container py-16" id="landing-about-section">
   <h2 class="sr-only">About Us</h2>
   <div class="container-wrapper">
     <div class="flex flex-col justify-center items-center gap-4 mb-12"></div>
-    <div class="about-container flex flex-col">
-      <div class="about-item flex gap-12 flex-row">
+    <div class="landing-about-container flex flex-col">
+      <div class="flex flex-row flex-1 gap-12">
         <div class="relative">
           <div class="about-item__image-container overflow-hidden rounded-3xl">
             <div class="image-wrapper">
-              <img class="image w-full h-full object-fit" src="./public/img/about.jpg" alt="Lecture hall with students">
+              <img class="image w-full h-full" src="./public/img/about.jpg" alt="Lecture hall with students">
             </div>
           </div>
-          <div class="about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
-            <div class="about-item__card-main-content text-5xl">Top 1</div>
-            <div class="about-item__card-sub-content text-sm">
+          <div class="landing-about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
+            <div class="landing-about-item__card-main-content text-5xl">Top 1</div>
+            <div class="landing-about-item__card-sub-content text-sm">
               Khoa CNTT tại Miền Nam (So với các Cao Đẳng khác)
             </div>
           </div>
         </div>
-        <div class="about-item__content-container flex flex-col justify-center gap-4">
+        <div class="flex flex-col justify-center gap-4">
           <p class="number-of-text text-7xl">01</p>
-          <p class="about-item__sub-title text-xs uppercase font-medium">
+          <p class="landing-about-item__sub-title text-xs uppercase font-medium">
             LOREM ISPUM GÌ ĐÓ Ở ĐÂY
           </p>
           <p class="about-item__title text-4xl">
             Đảm bảo chất lượng đào tạo
           </p>
-          <p class="about-item__content">
+          <p class="landing-about-item__content">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris
             sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum
             dolor sit amet, consectetur adipiscing elit. Mauris sed leo et
@@ -130,23 +130,23 @@ function renderCarousel(array $carouselSlides): void
         <div class="relative">
           <div class="about-item__image-container overflow-hidden rounded-3xl">
             <div class="image-wrapper">
-              <img class="image w-full h-full object-fit" src="./public/img/about.jpg" alt="Lecture hall with students">
+              <img class="image w-full h-full" src="./public/img/about.jpg" alt="Lecture hall with students">
             </div>
           </div>
-          <div class="about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
-            <div class="about-item__card-main-content text-5xl">98%</div>
-            <div class="about-item__card-sub-content text-sm">
+          <div class="landing-about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
+            <div class="landing-about-item__card-main-content text-5xl">98%</div>
+            <div class="landing-about-item__card-sub-content text-sm">
               Tỷ lệ có việc làm
             </div>
           </div>
         </div>
-        <div class="about-item__content-container flex flex-col justify-center gap-4">
+        <div class="flex flex-col justify-center gap-4">
           <p class="number-of-text text-7xl">02</p>
-          <p class="about-item__sub-title text-xs uppercase font-medium">
+          <p class="landing-about-item__sub-title text-xs uppercase font-medium">
             LOREM ISPUM GÌ ĐÓ Ở ĐÂY
           </p>
           <p class="about-item__title text-4xl">Cơ hội Nghề nghiệp</p>
-          <p class="about-item__content">
+          <p class="landing-about-item__content">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris
             sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum
             dolor sit amet, consectetur adipiscing elit. Mauris sed leo et
@@ -161,23 +161,23 @@ function renderCarousel(array $carouselSlides): void
         <div class="relative">
           <div class="about-item__image-container overflow-hidden rounded-3xl">
             <div class="image-wrapper">
-              <img class="image w-full h-full object-fit" src="./public/img/about.jpg" alt="Lecture hall with students">
+              <img class="image w-full h-full" src="./public/img/about.jpg" alt="Lecture hall with students">
             </div>
           </div>
-          <div class="about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
-            <div class="about-item__card-main-content text-5xl">50+</div>
-            <div class="about-item__card-sub-content text-sm">
+          <div class="landing-about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
+            <div class="landing-about-item__card-main-content text-5xl">50+</div>
+            <div class="landing-about-item__card-sub-content text-sm">
               Doanh nghiệp
             </div>
           </div>
         </div>
-        <div class="about-item__content-container flex flex-col justify-center gap-4">
+        <div class="flex flex-col justify-center gap-4">
           <p class="number-of-text text-7xl">03</p>
-          <p class="about-item__sub-title text-xs uppercase font-medium">
+          <p class="landing-about-item__sub-title text-xs uppercase font-medium">
             LOREM ISPUM GÌ ĐÓ Ở ĐÂY
           </p>
           <p class="about-item__title text-4xl">Nghiên cứu Đột phá</p>
-          <p class="about-item__content">
+          <p class="landing-about-item__content">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris
             sed leo et neque vehicula lacinia vel at lorem. Lorem ipsum
             dolor sit amet, consectetur adipiscing elit. Mauris sed leo et
@@ -314,7 +314,7 @@ function renderCarousel(array $carouselSlides): void
       <div class="wcu__highlights-list flex justify-center items-stretch self-stretch gap-6">
 
         <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white">
-          <img class="wcu__highlight-item-image image object-fit"
+          <img class="wcu__highlight-item-image image"
             src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Trường Cao Thắng">
           <div
             class="wcu__highlight-item-content wcu__highlight-item-content--blue absolute inset-0 flex flex-col justify-end items-start p-6">
@@ -328,7 +328,7 @@ function renderCarousel(array $carouselSlides): void
         </div>
 
         <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white">
-          <img class="wcu__highlight-item-image image object-fit"
+          <img class="wcu__highlight-item-image image"
             src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?..." alt="Trường Cao Thắng">
           <div
             class="wcu__highlight-item-content wcu__highlight-item-content--green absolute inset-0 flex flex-col justify-end items-start p-6">
@@ -522,38 +522,39 @@ function renderCarousel(array $carouselSlides): void
 
       <div id="featured-news" class="newsfeed__featured-group flex flex-col gap-6">
 
-        <?php if (!empty($featuredNews)): $featured = $featuredNews[0]; ?>
-        <article class="news-card news-card--featured relative overflow-hidden rounded-3xl" data-landing="true"
-          data-landing-featured="true">
-          <div class="news-card__image-wrapper image-wrapper">
-            <img src="<?= htmlspecialchars(url('public/media/' . $featured->seo_image_url)) ?>"
-              onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
-              alt="<?= htmlspecialchars($featured->title) ?>"
-              class="news-card__image absolute w-full h-full object-cover image">
-            <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-8">
-              <div class="news-card__meta flex items-center gap-2">
-                <span class="news-card__tag badge text-sm px-3" data-variant="destructive">
-                  Nổi bật
-                </span>
-                <span class="news-card__date flex items-center gap-1 text-base">
-                  <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                  <?= date('d/m/Y', strtotime($featured->published_at)) ?>
-                </span>
+        <?php if (!empty($featuredNews)):
+          $featured = $featuredNews[0]; ?>
+          <article class="news-card news-card--featured relative overflow-hidden rounded-3xl" data-landing="true"
+            data-landing-featured="true">
+            <div class="news-card__image-wrapper image-wrapper">
+              <img src="<?= htmlspecialchars(url('public/media/' . $featured->seo_image_url)) ?>"
+                onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
+                alt="<?= htmlspecialchars($featured->title) ?>"
+                class="news-card__image absolute w-full h-full object-cover image">
+              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-8">
+                <div class="news-card__meta flex items-center gap-2">
+                  <span class="news-card__tag badge text-sm px-3" data-variant="destructive">
+                    Nổi bật
+                  </span>
+                  <span class="news-card__date flex items-center gap-1 text-base">
+                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
+                    <?= date('d/m/Y', strtotime($featured->published_at)) ?>
+                  </span>
+                </div>
+                <h3 class="news-card__title text-4xl mb-2">
+                  <a class="font-semibold"
+                    href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>"><?= htmlspecialchars($featured->title ?: '') ?></a>
+                </h3>
+                <p class="news-card__description font-light text-xl mb-6">
+                  <?= htmlspecialchars($featured->seo_description ?: '') ?>
+                </p>
+                <a href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>" data-variant="outline-alt"
+                  class="news-card__link flex items-center gap-2 text-base px-4 py-2 btn bouncy-btn rounded-full">
+                  Đọc thêm
+                </a>
               </div>
-              <h3 class="news-card__title text-4xl mb-2">
-                <a class="font-semibold"
-                  href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>"><?= htmlspecialchars($featured->title ?: '') ?></a>
-              </h3>
-              <p class="news-card__description font-light text-xl mb-6">
-                <?= htmlspecialchars($featured->seo_description ?: '') ?>
-              </p>
-              <a href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>" data-variant="outline-alt"
-                class="news-card__link flex items-center gap-2 text-base px-4 py-2 btn bouncy-btn rounded-full">
-                Đọc thêm
-              </a>
             </div>
-          </div>
-        </article>
+          </article>
         <?php endif; ?>
 
         <div class="newsfeed__secondary-grid flex gap-6 justify-center items-stretch self-stretch">
@@ -562,34 +563,34 @@ function renderCarousel(array $carouselSlides): void
           for ($i = 1; $i < 4 && $i < $featuredCount; $i++):
             $news = $featuredNews[$i];
             $catName = !empty($news->categories) ? $news->categories[0]->name : 'Tin tức';
-          ?>
-          <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl"
-            data-landing="true">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
-                onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
-                alt="<?= htmlspecialchars($news->title) ?>"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    <?= htmlspecialchars($catName) ?>
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    <?= date('d/m/Y', strtotime($news->published_at)) ?>
-                  </span>
+            ?>
+            <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl"
+              data-landing="true">
+              <div class="news-card__image-wrapper image-wrapper">
+                <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
+                  onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
+                  alt="<?= htmlspecialchars($news->title) ?>"
+                  class="news-card__image absolute w-full h-full object-cover image">
+                <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
+                  <div class="news-card__meta flex items-center gap-2">
+                    <span class="news-card__tag badge text-xs">
+                      <?= htmlspecialchars($catName) ?>
+                    </span>
+                    <span class="news-card__date flex items-center gap-1 text-sm">
+                      <i class="fa-regular fa-calendar news-card__date-icon"></i>
+                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
+                    </span>
+                  </div>
+                  <h3 class="news-card__title text-xl font-semibold">
+                    <a class="font-semibold"
+                      href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
+                  </h3>
+                  <p class="news-card__description font-light text-sm">
+                    <?= htmlspecialchars($news->seo_description ?: '') ?>
+                  </p>
                 </div>
-                <h3 class="news-card__title text-xl font-semibold">
-                  <a class="font-semibold"
-                    href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
-                </h3>
-                <p class="news-card__description font-light text-sm">
-                  <?= htmlspecialchars($news->seo_description ?: '') ?>
-                </p>
               </div>
-            </div>
-          </article>
+            </article>
           <?php endfor; ?>
         </div>
       </div>
@@ -619,34 +620,34 @@ function renderCarousel(array $carouselSlides): void
           for ($i = 0; $i < 3 && $i < $latestCount; $i++):
             $news = $latestNews[$i];
             $catName = !empty($news->categories) ? $news->categories[0]->name : 'Tin tức';
-          ?>
-          <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl"
-            data-landing="true">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
-                onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
-                alt="<?= htmlspecialchars($news->title) ?>"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                <div class="news-card__meta flex items-center gap-2">
-                  <span class="news-card__tag badge text-xs">
-                    <?= htmlspecialchars($catName) ?>
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-sm">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    <?= date('d/m/Y', strtotime($news->published_at)) ?>
-                  </span>
+            ?>
+            <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl"
+              data-landing="true">
+              <div class="news-card__image-wrapper image-wrapper">
+                <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
+                  onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
+                  alt="<?= htmlspecialchars($news->title) ?>"
+                  class="news-card__image absolute w-full h-full object-cover image">
+                <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
+                  <div class="news-card__meta flex items-center gap-2">
+                    <span class="news-card__tag badge text-xs">
+                      <?= htmlspecialchars($catName) ?>
+                    </span>
+                    <span class="news-card__date flex items-center gap-1 text-sm">
+                      <i class="fa-regular fa-calendar news-card__date-icon"></i>
+                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
+                    </span>
+                  </div>
+                  <h3 class="news-card__title text-xl font-semibold">
+                    <a class="font-semibold"
+                      href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
+                  </h3>
+                  <p class="news-card__description font-light text-sm">
+                    <?= htmlspecialchars($news->seo_description ?: '') ?>
+                  </p>
                 </div>
-                <h3 class="news-card__title text-xl font-semibold">
-                  <a class="font-semibold"
-                    href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
-                </h3>
-                <p class="news-card__description font-light text-sm">
-                  <?= htmlspecialchars($news->seo_description ?: '') ?>
-                </p>
               </div>
-            </div>
-          </article>
+            </article>
           <?php endfor; ?>
         </div>
       </div>
