@@ -554,8 +554,8 @@
   #toast-portal {
     position: fixed;
     z-index: 99999;
-    width: 20rem;
-    max-width: 20rem;
+    width: min(calc(100vw - 2rem), 20rem);
+    max-width: calc(100vw - 2rem);
     height: var(--front-toast-height, 0px);
   }
 
@@ -840,6 +840,7 @@
     width: 100%;
     min-width: 0;
     padding: 0.25rem 0.625rem;
+    font-size: var(--text-sm);
     line-height: 1.5;
     border: 1px solid var(--input);
     border-radius: var(--radius-md);
@@ -999,7 +1000,8 @@
     top: 50%;
     left: 50%;
     z-index: 100;
-    min-width: var(--container-xs);
+    width: min(calc(100vw - 2rem), var(--container-sm));
+    max-width: var(--container-sm);
     transform: translate(-50%, -50%);
     background: var(--background);
     border-radius: var(--radius-lg);
@@ -1011,12 +1013,6 @@
     margin: -1rem;
     padding: 1rem;
     clip-path: inset(0 -20px 0 -20px);
-  }
-
-  @media (min-width: 40rem) {
-    .modal {
-      max-width: var(--container-sm);
-    }
   }
 
   @keyframes enter {
@@ -1893,14 +1889,20 @@
 
   .carousel__item {
     min-width: 100%;
-    padding: 2rem 6rem;
+    padding: 2rem 3rem;
   }
 
-  @media (max-width: 992px) {
+  @media (max-width: 64rem) {
     .carousel__item {
       flex-direction: column;
       text-align: center;
       gap: 2rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .carousel__item {
+      padding-inline: 6rem;
     }
   }
 
@@ -1929,9 +1931,16 @@
 
   .carousel__image-wrapper {
     flex: 1;
-    max-width: 50%;
+    width: 100%;
+    max-width: 100%;
     overflow: hidden;
     box-shadow: var(--shadow-2xl);
+  }
+
+  @media (min-width: 64rem) {
+    .carousel__image-wrapper {
+      max-width: 50%;
+    }
   }
 
   .carousel__control {
@@ -1965,7 +1974,7 @@
     right: 0.5rem;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 48rem) {
     .carousel__control--prev {
       left: 1rem;
     }
@@ -2026,6 +2035,7 @@
 
   .tm-data-wrapper {
     position: relative;
+    overflow-x: auto;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border);
@@ -2049,6 +2059,7 @@
 
   .tm-toolbar__top {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
@@ -2059,8 +2070,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex: 0 0 40%;
-    min-width: 15rem;
+    flex: 1 1 15rem;
+    min-width: min(100%, 15rem);
   }
 
   .tm-search {
@@ -2091,7 +2102,7 @@
     font-size: var(--text-sm);
     outline: none;
     color: var(--foreground);
-    min-width: 200px;
+    min-width: 0;
     width: 100%;
   }
 
@@ -2560,10 +2571,6 @@
     color: var(--banner-icon-color);
   }
 
-  /* ==========================================================================
-   Style của các trang site (Cân nhấc đưa vào main.css hoặc viết lại css cho reuseable hơn)
-   ========================================================================== */
-
   .main-header {
     background: var(--background);
   }
@@ -2614,7 +2621,7 @@
   }
 
   .navbar {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid var(--border);
   }
 
   .navbar__item {
@@ -2625,7 +2632,7 @@
 
   .navbar__item--active {
     color: var(--secondary-foreground-alt);
-    border-bottom: 2px var(--secondary-foreground-alt) solid;
+    border-bottom: 2px solid var(--secondary-foreground-alt);
   }
 
   .navbar__item:hover .navbar-item__icon {
@@ -2665,111 +2672,6 @@
   .navbar__item-content .dropdown__item:hover {
     color: var(--primary-foreground);
     background: var(--primary);
-  }
-
-  /* ==========================================================================
-   USER MENU (Cần tinh chỉnh lại dùng dropdown hoặc đưa phần style này vào main.css)
-   ========================================================================== */
-  .user-menu {
-    position: relative;
-  }
-
-  .user-menu__trigger {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem;
-    border-radius: 9999px;
-    transition: background-color 150ms ease;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-  }
-
-  .user-menu__trigger:hover {
-    background-color: var(--secondary);
-  }
-
-  .user-menu__avatar {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    background-color: var(--primary);
-    color: var(--primary-foreground);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-
-  .user-menu__name {
-    font-size: var(--text-sm);
-    font-weight: var(--fw-medium);
-    display: none;
-  }
-
-  @media (min-width: 768px) {
-    .user-menu__name {
-      display: inline;
-    }
-  }
-
-  .user-menu__icon {
-    font-size: var(--text-xs);
-    opacity: 0.5;
-  }
-
-  .user-menu__dropdown {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    margin-top: 0.5rem;
-    width: 12rem;
-    background-color: var(--popover);
-    box-shadow: var(--shadow-xl);
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--border);
-    padding: 0.5rem 0;
-    z-index: 100;
-    display: none;
-  }
-
-  .user-menu__dropdown[data-state="open"] {
-    display: block;
-  }
-
-  .user-menu__item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    font-size: var(--text-sm);
-    color: var(--foreground);
-    transition: background-color 150ms ease;
-    text-decoration: none;
-  }
-
-  .user-menu__item:hover {
-    background-color: var(--secondary);
-  }
-
-  .user-menu__item i {
-    width: 1rem;
-    text-align: center;
-  }
-
-  .user-menu__item--destructive {
-    color: var(--destructive);
-  }
-
-  .user-menu__item--destructive:hover {
-    background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
-  }
-
-  .user-menu__separator {
-    height: 1px;
-    background-color: var(--border);
-    margin: 0.25rem 0;
   }
 
   footer {

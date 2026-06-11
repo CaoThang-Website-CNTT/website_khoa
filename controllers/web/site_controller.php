@@ -113,6 +113,7 @@ class SiteController extends Controller
   {
     return $this->render('site/about', [
       'headerMenu' => $this->_headerMenu->items,
+      'settings' => $this->_settings,
     ], "site_layout");
   }
 

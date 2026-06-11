@@ -10,7 +10,7 @@ $youtube = htmlspecialchars($settings['social_youtube'] ?? '');
 $instagram = htmlspecialchars($settings['social_instagram'] ?? '');
 ?>
 <footer class="footer">
-  <div class="footer__main-content container flex gap-16 py-12 px-4">
+  <div class="footer__main-content container flex flex-col lg:flex-row gap-16 py-12 px-4">
 
     <!-- Brand & Description -->
     <div class="footer__info">

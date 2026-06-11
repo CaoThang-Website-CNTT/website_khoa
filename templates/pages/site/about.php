@@ -58,10 +58,10 @@ $bentoGridItems = [
   [
     'badge' => '<i class="fa-solid fa-award"></i> <span>Chứng nhận Quốc Tế</span>',
     'img' => 'public/img/about.jpg',
-    'content' => 'Thành tựu đặc biệt/tiêu điểm',
+    'content' => 'Thành tựu',
     'footer' => "
-      <span class='badge p-4 text-md' data-variant='glass'>30+ Quốc gia công nhận</span>
-      <span class='badge p-4 text-md' data-variant='glass'>Top 5 Khoa CNTT VN</span>",
+      <span class='badge px-3 py-2 text-sm md:text-md' data-variant='glass'>30+ Quốc gia công nhận</span>
+      <span class='badge px-3 py-2 text-sm md:text-md' data-variant='glass'>Top 5 Khoa CNTT VN</span>",
   ],
   [
     'badge' => '<i class="fa-solid fa-user-group"></i>',
@@ -134,9 +134,9 @@ $bentoGridItems = [
   <div class="about-thumbnail__wrapper">
     <img class="w-full h-full object-cover" src="<?= url("public/img/about.jpg") ?>">
   </div>
-  <div class="container">
-    <div class="container-wrapper">
-      <div class="about-thumbnail-content__wrapper absolute inset-0 flex justify-center items-center">
+  <div class="about-thumbnail-content__wrapper absolute inset-0 flex justify-center items-center">
+    <div class="container">
+      <div class="container-wrapper">
         <div class="about-thumbnail-content flex flex-col justify-center items-center gap-6 text-center">
           <span class="badge" data-variant="primary">Về Chúng Tôi</span>
           <div class="about-thumbnail-content__title">Câu chuyện của Cao Thắng</div>
@@ -154,8 +154,9 @@ $bentoGridItems = [
     <div class="container-wrapper flex flex-col gap-16">
       <?php foreach ($historySections as $index => $section): ?>
         <!-- History Section -->
-        <div class="flex <?= ($index % 2 !== 0) ? 'flex-row-reverse' : 'flex-row' ?> flex-1 gap-12">
-          <div class="flex-1 relative overflow-hidden rounded-3xl">
+        <div
+          class="flex flex-col md:<?= ($index % 2 !== 0) ? 'flex-row-reverse' : 'flex-row' ?> flex-1 items-center gap-12">
+          <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl">
             <div class="history-image-wrapper image-wrapper">
               <img class="image w-full h-full" src="<?= url($section['img']) ?>" alt="<?= $section['imgAlt'] ?>">
             </div>
@@ -196,14 +197,14 @@ $bentoGridItems = [
               </span>
             </div>
             <div class="card__content">
-              <div class="text-6xl">
+              <div class="text-4xl md:text-6xl">
                 <?= $item['content'] ?? "" ?>
               </div>
               <div class="text-xl">
                 <?= $item['subContent'] ?? "" ?>
               </div>
             </div>
-            <div class="card__footer flex flex-row">
+            <div class="card__footer flex flex-row flex-wrap">
               <?= $item['footer'] ?? "" ?>
             </div>
           </div>

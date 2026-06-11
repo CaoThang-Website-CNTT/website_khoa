@@ -7,7 +7,7 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
 <header class="z-50 shadow">
 
   <!-- BANNER: START -->
-  <div class="banner py-2">
+  <div class="banner hidden md:flex py-2">
     <div class="container flex gap-4 px-4 font-light">
 
       <?php if ($email): ?>
@@ -36,7 +36,7 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
           <div class="web-logo object-contain">
             <img src="<?= url('/public/img/faculty_logo.jpg') ?>" alt="Logo <?= $siteName ?>">
           </div>
-          <div class="flex flex-col justify-center">
+          <div class="hidden md:flex flex-col justify-center">
             <div class="text-xl uppercase"><?= $siteName ?></div>
             <div class="uni-name uppercase">TRƯỜNG CAO ĐẲNG KỸ THUẬT CAO THẮNG</div>
           </div>

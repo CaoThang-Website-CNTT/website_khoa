@@ -152,7 +152,7 @@ function renderNav(
     $navItems = [...array_slice($menu, 0, $maxVisible), $khac];
   }
   ?>
-  <nav class="navbar">
+  <nav class="navbar hidden md:block">
     <div class="container flex py-2 px-4 gap-4">
       <?php foreach ($navItems as $item): ?>
         <?php if ($item->hasChildren()): ?>

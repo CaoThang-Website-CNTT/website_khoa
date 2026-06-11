@@ -310,9 +310,11 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
+  width: 100%;
   gap: 1rem;
   padding: 1rem 1rem 10rem 1rem;
-  max-width: calc(100vw - var(--sidebar-width));
+  max-width: 100%;
 }
 
 /* ==========================================================================
@@ -349,7 +351,7 @@ body {
   width: 100%;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 64rem) {
   .detail-layout {
     flex-direction: column;
   }
@@ -466,12 +468,12 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  max-height: 20rem;
+  max-height: min(20rem, 60vh);
 }
 
 .mu-preview__img {
   max-width: 100%;
-  max-height: 20rem;
+  max-height: min(20rem, 60vh);
   border-radius: var(--radius-md);
   object-fit: contain;
   display: block;
@@ -479,7 +481,7 @@ body {
 
 .mu-preview__video {
   max-width: 100%;
-  max-height: 20rem;
+  max-height: min(20rem, 60vh);
   border-radius: var(--radius-md);
   display: block;
   background: #000;
@@ -488,7 +490,7 @@ body {
 
 .mu-preview__pdf {
   max-width: 100%;
-  max-height: 20rem;
+  max-height: min(20rem, 60vh);
   border: none;
   border-radius: var(--radius-md);
   display: block;
@@ -643,4 +645,82 @@ body {
 #menu-items-root > .menu-item::before,
 #dnd-ghost .menu-item::before {
   display: none !important;
+}
+
+@media (max-width: 64rem) {
+  :root {
+    --dash-header-height: 4rem;
+  }
+
+  .header {
+    height: var(--dash-header-height);
+  }
+
+  .sidebar__wrapper,
+  .sidebar__inset {
+    min-width: 0;
+  }
+
+  .sidebar__gap {
+    width: 0;
+  }
+
+  .sidebar__container {
+    box-shadow: var(--shadow-xl);
+  }
+
+  .sidebar__container[data-state="collapsed"] {
+    left: calc(-1 * var(--sidebar-width));
+    box-shadow: none;
+  }
+
+  .main-wrapper {
+    padding: 1rem 1rem 6rem;
+  }
+
+  .detail-layout,
+  .detail-layout--reverse {
+    align-items: stretch;
+  }
+
+  .detail-layout__main,
+  .detail-layout__sidebar {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .detail-layout--reverse .detail-layout__main,
+  .detail-layout--reverse .detail-layout__sidebar {
+    order: initial;
+  }
+}
+
+@media (max-width: 48rem) {
+  .banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .main-wrapper {
+    padding-inline: 0.75rem;
+  }
+
+  .title-wrapper .title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .detail-modal {
+    width: calc(100% - 1rem);
+  }
+
+  .mu-zone {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  .main-wrapper {
+    max-width: calc(100vw - var(--sidebar-width));
+  }
 }
