@@ -11,6 +11,7 @@ $batch = $batch ?? null;
 
 <link rel="stylesheet" href="<?= url('public/css/batch_students.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/batch_students_assignment.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/export.css') ?>">
 
 <?php if ($flash = request()->session()->getFlash("notification")): ?>
   <script>

@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController};
+use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
@@ -87,5 +87,8 @@ $router->prefix('api')->group(function ($router) {
     $router->prefix('companies')->group(function (Router $router) {
       $router->get('/suggest-by-name', [CompanyApiController::class, 'suggestByName']);
     });
+
+    // Export
+    $router->post('/export', [ExportApiController::class, 'export']);
   });
 });

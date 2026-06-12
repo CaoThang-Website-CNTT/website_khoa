@@ -1,4 +1,5 @@
 import { TableManager } from "../table/table_manager.js";
+import { ExportManager } from "../export/export_manager.js";
 import LayoutCollapsible from "../layout-collapsible.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -143,6 +144,28 @@ document.addEventListener("DOMContentLoaded", () => {
         if (tm) {
           tm.loadData(tableData);
           attachTableEvents();
+          
+          // Đăng ký Export Excel
+          ExportManager.register(tm, {
+            source: 'batch_students',
+            source_id: batchId,
+            endpoint: window.API_BASE_URL.replace('/internship/batches', '/export'),
+            filename: `Danh-sach-sinh-vien-dot-${batchId}`,
+            columnsMap: {
+              student_code: "MSSV",
+              student_name: "Họ và tên",
+              classroom_name: "Lớp",
+              student_phone: "SĐT",
+              student_email: "Email",
+              company_name: "Tên Công ty",
+              company_tax_code: "Mã số thuế",
+              company_address: "Địa chỉ",
+              teacher_name: "Giảng viên hướng dẫn",
+              grade_score: "Điểm số",
+              grade_reason: "Diễn giải điểm",
+              grade_feedback: "Nhận xét"
+            }
+          });
         }
       }
       retries++;

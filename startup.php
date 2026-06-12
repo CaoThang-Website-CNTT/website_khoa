@@ -46,6 +46,7 @@ require_once BASE_PATH . '/includes/core/pageable.php';
 require_once BASE_PATH . '/includes/files/uploaded_file_handler.php';
 require_once BASE_PATH . '/includes/core/image_processor.php';
 require_once BASE_PATH . '/includes/files/batch_student_importer.php';
+require_once BASE_PATH . '/includes/files/xlsx_writer.php';
 
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';
@@ -163,3 +164,4 @@ require_once BASE_PATH . '/controllers/api/menu_api_controller.php';
 require_once BASE_PATH . '/controllers/api/company_api_controller.php';
 require_once BASE_PATH . '/controllers/api/post_api_controller.php';
 require_once BASE_PATH . '/controllers/api/teacher_dashboard_api_controller.php';
+require_once BASE_PATH . '/controllers/api/export_api_controller.php';

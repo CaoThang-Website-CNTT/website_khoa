@@ -603,7 +603,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     }
 
     $stats['total_students'] = count($batchStudentIds);
-    $inClause = implode(',', array_map(function($id) { return (int)$id; }, $batchStudentIds));
+    $inClause = implode(',', array_map(function ($id) {
+      return (int)$id;
+    }, $batchStudentIds));
 
     // Đếm có tài liệu
     $sqlSub = "SELECT COUNT(DISTINCT batch_student_id) FROM internship_submissions WHERE batch_student_id IN ($inClause)";
@@ -627,5 +629,88 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
     return (bool)$stmt->fetchColumn();
+  }
+
+  public function getExportBatchStudents(int $batchId, array $filters = [], ?array $sort = null, array $selectedIds = []): array
+  {
+    $params = [':batch_id' => $batchId];
+    $where = ["bs.batch_id = :batch_id"];
+
+    if (!empty($selectedIds)) {
+      $inClause = implode(',', array_map('intval', $selectedIds));
+      $where[] = "bs.id IN ($inClause)";
+    }
+
+    foreach ($filters as $index => $filter) {
+      if (empty($filter['value'])) continue;
+      $paramKey = ":f_val_$index";
+      $params[$paramKey] = '%' . $filter['value'] . '%';
+
+      switch ($filter['col']) {
+        case 'student_code':
+          $where[] = "s.student_id LIKE $paramKey";
+          break;
+        case 'student_name':
+          $where[] = "s.full_name LIKE $paramKey";
+          break;
+        case 'classroom_name':
+          $where[] = "c.short_name LIKE $paramKey";
+          break;
+        case 'company_name':
+          $where[] = "co.name LIKE $paramKey";
+          break;
+      }
+    }
+
+    $orderBy = "s.full_name ASC";
+    if ($sort && isset($sort['col']) && isset($sort['dir'])) {
+      $dir = strtoupper($sort['dir']) === 'DESC' ? 'DESC' : 'ASC';
+      switch ($sort['col']) {
+        case 'student_code':
+          $orderBy = "s.student_id $dir";
+          break;
+        case 'student_name':
+          $orderBy = "s.full_name $dir";
+          break;
+        case 'classroom_name':
+          $orderBy = "c.short_name $dir";
+          break;
+        case 'company_name':
+          $orderBy = "co.name $dir";
+          break;
+        case 'grade':
+          $orderBy = "ig.final_score $dir";
+          break;
+      }
+    }
+
+    $sql = "SELECT 
+              bs.id AS batch_student_id,
+              s.student_id AS student_code,
+              s.full_name AS student_name,
+              c.short_name AS classroom_name,
+              s.phone AS student_phone,
+              acc.email AS student_email,
+              co.name AS company_name,
+              co.tax_code AS company_tax_code,
+              co.address AS company_address,
+              t.full_name AS teacher_name,
+              ig.final_score AS grade_score,
+              ig.score_reason AS grade_reason,
+              ig.feedback AS grade_feedback
+            FROM internship_batch_students bs
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN accounts acc ON s.account_id = acc.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN companies co ON bs.company_id = co.id
+            LEFT JOIN internship_assignments ia ON ia.batch_student_id = bs.id
+            LEFT JOIN teachers t ON ia.teacher_id = t.id
+            LEFT JOIN internship_grades ig ON ig.batch_student_id = bs.id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY $orderBy";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 }
