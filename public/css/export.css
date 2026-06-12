@@ -1,3 +1,7 @@
+/* ==========================================================================
+   EXPORT MANAGER — Dropdown Menu
+   ========================================================================== */
+
 .tm-export-wrapper {
   position: relative;
   display: inline-block;
@@ -57,12 +61,107 @@
   pointer-events: none;
 }
 
-.tm-export-loading i.ph-export {
-  animation: spin 1s linear infinite;
+/* ==========================================================================
+   EXPORT COLUMN SELECTION MODAL
+   ========================================================================== */
+
+.export-column-modal {
+  max-width: 480px;
+  width: 90vw;
 }
 
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
+.export-modal__body {
+  margin: 0 -1rem;
+  padding: 0 1rem;
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.export-modal__body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.export-modal__body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+/* "Chọn tất cả" row */
+.export-col-select-all {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  color: var(--foreground);
+}
+
+.export-col-select-all:hover {
+  color: var(--primary);
+}
+
+/* Grid layout cho các checkbox cột */
+.export-col-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .export-col-grid {
+    grid-template-columns: 1fr;
   }
+}
+
+/* Từng checkbox item */
+.export-col-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  transition: background-color 0.15s ease;
+}
+
+.export-col-checkbox:hover {
+  background-color: var(--accent);
+}
+
+.export-col-checkbox input[type="checkbox"] {
+  flex-shrink: 0;
+}
+
+.export-col-checkbox span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Export modal overlay */
+.export-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in oklab, black 10%, transparent);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+}
+
+.export-modal-overlay[data-state="closed"] {
+  display: none;
+}
+
+.export-modal-overlay[data-state="open"] {
+  display: block;
+}
+
+/* Mode info badge */
+.export-modal__mode-info {
+  color: var(--primary);
 }

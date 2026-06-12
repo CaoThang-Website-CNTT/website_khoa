@@ -292,6 +292,9 @@ $batch = $batch ?? null;
 <script>
   window.BATCH_ID = <?= $batch['id'] ?>;
   window.BATCH_STATUS = '<?= $batch['status'] ?>';
+  window.BATCH_TITLE = '<?= addslashes($batch['title'] ?? '') ?>';
+  window.BATCH_START = '<?= $batch['start_at'] ? date('d/m/Y', strtotime($batch['start_at'])) : '' ?>';
+  window.BATCH_END = '<?= $batch['end_at'] ? date('d/m/Y', strtotime($batch['end_at'])) : '' ?>';
   window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
 </script>
 <script type="module" src="<?= url('public/js/pages/batch_students_manager.js') ?>"></script>

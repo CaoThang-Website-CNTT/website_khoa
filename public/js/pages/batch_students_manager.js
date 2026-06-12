@@ -146,11 +146,16 @@ document.addEventListener("DOMContentLoaded", () => {
           attachTableEvents();
           
           // Đăng ký Export Excel
+          const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
           ExportManager.register(tm, {
             source: 'batch_students',
             source_id: batchId,
             endpoint: window.API_BASE_URL.replace('/internship/batches', '/export'),
-            filename: `Danh-sach-sinh-vien-dot-${batchId}`,
+            filename: `Danh-sach-sinh-vien-${batchTitle}`,
+            metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
+            metadataDateRange: window.BATCH_START && window.BATCH_END
+              ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
+              : null,
             columnsMap: {
               student_code: "MSSV",
               student_name: "Họ và tên",
