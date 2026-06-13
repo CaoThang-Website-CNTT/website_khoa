@@ -38,6 +38,7 @@ class UploadedFileHandler
     'application/x-zip-compressed',
     'application/x-rar',
     'application/x-rar-compressed',
+    'application/pdf',
   ];
 
   /** Extensions được phép */
@@ -52,6 +53,7 @@ class UploadedFileHandler
     'xlsx',
     'zip',
     'rar',
+    'pdf',
   ];
 
   private const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB

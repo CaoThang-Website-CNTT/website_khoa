@@ -156,11 +156,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Khởi tạo cho Modal đăng ký giấy giới thiệu (prefix = 'rl_')
   window.initCompanyFormLogic("rl_");
   const uploadArea = document.getElementById("uploadArea");
+  const docTypeSelect = document.getElementById("doc_type");
   const fileInput = document.getElementById("report_file");
   const filePreview = document.getElementById("filePreview");
   const uploadBtn = document.getElementById("uploadBtn");
 
   if (uploadArea && fileInput) {
+    if (docTypeSelect) {
+      docTypeSelect.addEventListener("change", () => {
+        const type = docTypeSelect.value;
+        if (type === 'related_photo') {
+          fileInput.accept = ".jpg,.jpeg,.png,.webp,image/*";
+        } else {
+          fileInput.accept = ".pdf,application/pdf";
+        }
+        updateFilePreview();
+      });
+    }
     uploadArea.addEventListener("dragover", (e) => {
       e.preventDefault();
       uploadArea.classList.add("border-primary");
@@ -192,16 +204,38 @@ document.addEventListener("DOMContentLoaded", () => {
         const file = fileInput.files[0];
         const maxSize = 50 * 1024 * 1024; // 50MB
         if (file.size > maxSize) {
-          window.toast.error("Lỗi", "Dung lượng file không được vượt quá 50MB");
+          window.toast?.error("Lỗi", "Dung lượng file không được vượt quá 50MB");
           fileInput.value = "";
           filePreview.classList.add("hidden");
           if (uploadBtn) uploadBtn.disabled = true;
           return;
         }
 
+        if (docTypeSelect && docTypeSelect.value) {
+          const type = docTypeSelect.value;
+          const isImage = file.type.startsWith('image/') || file.name.match(/\.(jpg|jpeg|png|webp)$/i);
+          const isPdf = file.type === 'application/pdf' || file.name.match(/\.pdf$/i);
+
+          if (type === 'related_photo' && !isImage) {
+            window.toast?.error("Lỗi", "Hình ảnh liên quan phải là định dạng JPG, PNG, WEBP");
+            fileInput.value = "";
+            filePreview.classList.add("hidden");
+            if (uploadBtn) uploadBtn.disabled = true;
+            return;
+          } else if (type !== 'related_photo' && type !== '' && !isPdf) {
+            window.toast?.error("Lỗi", "Tài liệu này yêu cầu định dạng PDF");
+            fileInput.value = "";
+            filePreview.classList.add("hidden");
+            if (uploadBtn) uploadBtn.disabled = true;
+            return;
+          }
+        }
+
         filePreview.textContent = `Đã chọn: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
         filePreview.classList.remove("hidden");
-        if (uploadBtn) uploadBtn.disabled = false;
+        if (uploadBtn) {
+          uploadBtn.disabled = docTypeSelect ? !docTypeSelect.value : false;
+        }
       } else {
         filePreview.classList.add("hidden");
         if (uploadBtn) uploadBtn.disabled = true;

@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(`Xem chi tiết sinh viên: ${studentName} (ID: ${id})`);
         // TODO: Chuyển hướng hoặc mở modal chi tiết SV
       } else if (action === "grade") {
-        alert(`Mở form nhập điểm cho: ${studentName}`);
-        // TODO: Mở modal nhập điểm
+        const currentUrl = window.location.pathname.replace(/\/$/, '');
+        window.location.href = `${currentUrl}/grade/${id}`;
       }
     });
 

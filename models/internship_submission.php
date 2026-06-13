@@ -8,6 +8,8 @@ class InternshipSubmission
     public ?int $id = null,
     public ?int $batch_student_id = null,
     public string $type = '',
+    public ?string $original_file_name = null,
+    public ?string $mime_type = null,
     public string $storage_mode = 'file',
     public ?string $file_path = null,
     public ?string $external_url = null,

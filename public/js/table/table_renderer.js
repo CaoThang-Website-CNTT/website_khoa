@@ -279,9 +279,14 @@ export class TableRenderer {
 
           // Reset Value
           if (valueEl.classList.contains('select')) {
-            valueEl._currentValue = '';
-            const vContainer = valueEl.querySelector('.select__value');
-            if (vContainer) vContainer.innerHTML = `<span class="select__value" data-select-placeholder="">${valueEl.dataset.selectPlaceholder}</span>`;
+            const selectId = valueEl.dataset.selectId;
+            if (selectId && window.SelectHandler && window.SelectHandler.instance) {
+              window.SelectHandler.instance.clearSelection(selectId);
+            } else {
+              valueEl._currentValue = '';
+              const vContainer = valueEl.querySelector('.select__value');
+              if (vContainer) vContainer.innerHTML = `<span class="select__value" data-select-placeholder="">${valueEl.dataset.selectPlaceholder}</span>`;
+            }
           } else {
             valueEl.value = '';
           }

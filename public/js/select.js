@@ -39,6 +39,15 @@ class SelectHandler {
     return SelectHandler.#instance || new SelectHandler();
   }
 
+  /* ── Public API ─────────────────────────────────────────────── */
+  clearSelection(id) {
+    const inst = this._instances.get(id);
+    if (!inst) return;
+    inst.selected.clear();
+    this._syncSelection(inst);
+    this._renderTriggerState(inst);
+  }
+
   /* ── Lifecycle & Registry ───────────────────────────────────── */
   init() {
     document.querySelectorAll('.select:not([data-select-initialized])').forEach(el => this._initRoot(el));

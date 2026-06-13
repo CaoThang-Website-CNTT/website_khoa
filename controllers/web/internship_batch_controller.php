@@ -86,8 +86,37 @@ class InternshipBatchController extends Controller
       return $this->redirect('admin/internship_batches');
     }
 
+    // Lấy dữ liệu để build các dropdown filter
+    $students = $this->_internshipBatchService->getBatchStudents((int)$id);
+
+    // filter lớp
+    $classrooms = array_unique(array_filter(array_column($students, 'classroom_name')));
+    sort($classrooms);
+    $classOptions = [];
+    foreach ($classrooms as $c) {
+      $classOptions[] = ['label' => $c, 'value' => $c];
+    }
+
+    // filter công ty thực tập
+    $companies = array_unique(array_filter(array_column($students, 'company_name')));
+    sort($companies);
+    $companyOptions = [];
+    foreach ($companies as $c) {
+      $companyOptions[] = ['label' => $c, 'value' => $c];
+    }
+
+    // filter giảng viên HD
+    $supervisors = $this->_internshipBatchService->getBatchSupervisors((int)$id);
+    $teacherOptions = [];
+    foreach ($supervisors as $s) {
+      $teacherOptions[] = ['label' => $s['full_name'], 'value' => $s['full_name']];
+    }
+
     $this->render("admin/internship_batches/students", [
-      'batch' => $batch
+      'batch' => $batch,
+      'classOptions' => $classOptions,
+      'companyOptions' => $companyOptions,
+      'teacherOptions' => $teacherOptions
     ], layout: "dashboard_layout");
   }
 

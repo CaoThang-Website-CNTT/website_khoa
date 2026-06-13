@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
-use App\Services\{TeacherService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService};
+use App\Services\{TeacherService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, InternshipGradeService};
 use App\Core\Files\UploadedFileHandler;
 use Exception;
 
@@ -18,6 +18,7 @@ class TeacherDashboardController extends Controller
   private CompanyService $_companyService;
   private InternshipSubmissionService $_submissionService;
   private ReferralLetterService $_referralLetterService;
+  private InternshipGradeService $_gradeInternshipService;
 
   public function __construct(
     TeacherService $teacherService,
@@ -26,7 +27,8 @@ class TeacherDashboardController extends Controller
     InternshipAssignmentService $internshipAssignmentService,
     CompanyService $companyService,
     InternshipSubmissionService $submissionService,
-    ReferralLetterService $referralLetterService
+    ReferralLetterService $referralLetterService,
+    InternshipGradeService $gradeInternshipService
   ) {
     $this->_teacherService = $teacherService;
     $this->_classroomService = $classroomService;
@@ -35,6 +37,7 @@ class TeacherDashboardController extends Controller
     $this->_companyService = $companyService;
     $this->_submissionService = $submissionService;
     $this->_referralLetterService = $referralLetterService;
+    $this->_gradeInternshipService = $gradeInternshipService;
   }
 
   /**
@@ -174,5 +177,97 @@ class TeacherDashboardController extends Controller
       'students' => $detail['students'],
       'title' => 'Chi tiết đợt thực tập #' . $detail['batch']['id']
     ], layout: 'dashboard_layout');
+  }
+
+  public function internshipGrade(Request $request, int $batchId, int $batchStudentId)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) return $this->redirect('/');
+
+    $canGrade = $this->_gradeInternshipService->canTeacherGrade($batchId, $teacher->id, $batchStudentId);
+    if (!$canGrade) {
+      $request->session()->flashNotify('error', 'Không thể chấm điểm đợt thực tập này.');
+      return $this->redirect("/teacher/internship_batches/{$batchId}");
+    }
+
+    $data = $this->_gradeInternshipService->getStudentGradingData($batchStudentId, $teacher->id);
+    if (!$data) {
+      $request->session()->flashNotify('error', 'Không tìm thấy dữ liệu sinh viên.');
+      return $this->redirect("/teacher/internship_batches/{$batchId}");
+    }
+
+    $batchDetail = $this->_internshipBatchService->getTeacherBatchDetail($batchId, $teacher->id);
+    $students = $batchDetail ? $batchDetail['students'] : [];
+
+    // Find index to navigate prev/next
+    $currentIndex = -1;
+    foreach ($students as $index => $s) {
+      if ($s['batch_student_id'] == $batchStudentId) {
+        $currentIndex = $index;
+        break;
+      }
+    }
+
+    $prevStudentId = $currentIndex > 0 ? $students[$currentIndex - 1]['batch_student_id'] : null;
+    $nextStudentId = $currentIndex < count($students) - 1 ? $students[$currentIndex + 1]['batch_student_id'] : null;
+
+    return $this->render('teacher/internship_batches/grade', [
+      'teacher' => $teacher,
+      'batchId' => $batchId,
+      'batchStudentId' => $batchStudentId,
+      'data' => $data,
+      'canGrade' => $canGrade,
+      'prevStudentId' => $prevStudentId,
+      'nextStudentId' => $nextStudentId,
+      'title' => 'Chấm điểm sinh viên: ' . $data['student']['full_name']
+    ], layout: 'dashboard_layout');
+  }
+
+  public function submitGrade(Request $request, int $batchId, int $batchStudentId)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) return $this->redirect('/');
+
+    $canGrade = $this->_gradeInternshipService->canTeacherGrade($batchId, $teacher->id, $batchStudentId);
+    if (!$canGrade['allowed']) {
+      $request->session()->flashNotify('error', $canGrade['reason']);
+      return $this->redirect("/teacher/internship_batches/{$batchId}/grade/{$batchStudentId}");
+    }
+
+    $data = $request->all();
+    $validator = new RequestValidator();
+    $rules = [
+      'score' => ['required', 'numeric'],
+      'score_reason' => ['nullable'],
+      'feedback' => ['nullable']
+    ];
+
+    if (!$validator->validate($data, $rules)) {
+      $request->flashOldInputs();
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect("/teacher/internship_batches/{$batchId}/grade/{$batchStudentId}");
+    }
+
+    $result = $this->_gradeInternshipService->saveGrade(
+      $batchStudentId,
+      (float)$data['score'],
+      $data['score_reason'] ?? null,
+      $data['feedback'] ?? null,
+      $teacher->id
+    );
+
+    if ($result['success']) {
+      $request->session()->flashNotify('success', $result['message']);
+    } else {
+      $request->session()->flashNotify('error', $result['message']);
+    }
+
+    return $this->redirect("/teacher/internship_batches/{$batchId}/grade/{$batchStudentId}");
   }
 }

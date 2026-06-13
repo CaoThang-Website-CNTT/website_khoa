@@ -298,6 +298,12 @@ class StudentDashboardController extends Controller
     }
 
     try {
+      $docType = $request->input('doc_type');
+      $allowedTypes = ['internship_report', 'evaluation_form', 'company_survey', 'related_photo'];
+      if (!in_array($docType, $allowedTypes)) {
+        throw new Exception('Loại tài liệu không hợp lệ.');
+      }
+
       $fileHandler = new UploadedFileHandler();
       $uploadedFile = $fileHandler->processUpload($request->file('report_file'));
 
@@ -321,7 +327,7 @@ class StudentDashboardController extends Controller
       if ($uploadedFile->fileSize > $maxSizeBytes) {
         throw new Exception("Dung lượng file vượt quá giới hạn cho phép ({$maxSizeMb}MB).");
       }
-      $subDir = 'internship_reports/' . date('Y/m/d'); // Chia nhỏ, quản lý file theo ngày
+      $subDir = 'internship_submissions/' . date('Y/m'); // Chia nhỏ, quản lý file theo tháng
       $uploadDir = BASE_PATH . '/storage/' . $subDir . '/';
       if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
@@ -334,9 +340,12 @@ class StudentDashboardController extends Controller
         throw new Exception('Không thể lưu file vào máy chủ.');
       }
 
-      $this->_submissionService->createSubmission($batchStudentId, [
+      $mimeType = mime_content_type($destPath) ?: 'application/octet-stream';
+
+      $this->_submissionService->createTypedSubmission($batchStudentId, $docType, [
         'storage_mode' => 'file',
         'original_file_name' => $uploadedFile->originalName,
+        'mime_type' => $mimeType,
         'file_path' => $subDir . '/' . $fileName,
       ]);
 

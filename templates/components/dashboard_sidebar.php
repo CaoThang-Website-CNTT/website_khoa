@@ -106,13 +106,11 @@ $menuConfig = [
           'active' => str_contains($currentPath, 'student') && !str_contains($currentPath, 'student/internship') && !str_contains($currentPath, 'student/graduation')
         ],
         [
-          'type' => 'collapsible',
+          'type' => 'link',
           'label' => 'Thực tập tốt nghiệp',
           'icon' => 'fa-solid fa-briefcase',
-          'children' => [
-            ['label' => 'Đợt thực tập', 'url' => 'student/internship'],
-            ['label' => 'Giấy giới thiệu', 'url' => 'student/referral_letter'],
-          ]
+          'url' => 'student/internship',
+          'active' => str_contains($currentPath, 'student/internship')
         ],
         [
           'type' => 'link',

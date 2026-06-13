@@ -88,7 +88,7 @@
           <!-- Featured Image -->
 
           <!-- News Body -->
-          <article class="news-detail-content">
+          <article class="news-detail-content be-content">
             <?= $detail->html; ?>
           </article>
 
