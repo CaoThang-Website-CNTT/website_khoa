@@ -3,10 +3,12 @@ $layout->start("content");
 
 $historySections = [
   [
-    'img' => 'public/img/about.jpg',
-    'imgAlt' => 'Lecture hall with students',
+    'image' => [
+      'src' => 'public/img/about.jpg',
+      'alt' => 'Lecture hall with students',
+      'caption' => 'Khoa CNTT được thành lập',
+    ],
     'year' => '1998',
-    'imgCaption' => 'Khoa CNTT được thành lập',
     'badge' => "
       <i class='fa-solid fa-graduation-cap'></i>
       <span class='text-sm'>Khoa Công Nghệ Thông Tin</span>
@@ -24,10 +26,12 @@ $historySections = [
     ],
   ],
   [
-    'img' => 'public/img/about.jpg',
-    'imgAlt' => 'Lecture hall with students',
+    'image' => [
+      'src' => 'public/img/about.jpg',
+      'alt' => 'Lecture hall with students',
+      'caption' => 'Trường được thành lập',
+    ],
     'year' => '1906',
-    'imgCaption' => 'Trường được thành lập',
     'badge' => "
       <i class='fa-solid fa-building-columns'></i>
       <span class='text-sm'>Trường Cao Đẳng Kỹ Thuật Cao Thắng</span>
@@ -57,7 +61,10 @@ $historySections = [
 $bentoGridItems = [
   [
     'badge' => '<i class="fa-solid fa-award"></i> <span>Chứng nhận Quốc Tế</span>',
-    'img' => 'public/img/about.jpg',
+    'image' => [
+      'src' => 'public/img/about.jpg',
+      'alt' => '',
+    ],
     'content' => 'Thành tựu',
     'footer' => "
       <span class='badge px-3 py-2 text-sm md:text-md' data-variant='glass'>30+ Quốc gia công nhận</span>
@@ -65,49 +72,70 @@ $bentoGridItems = [
   ],
   [
     'badge' => '<i class="fa-solid fa-user-group"></i>',
-    'img' => '',
+    'image' => [
+      'src' => '',
+      'alt' => '',
+    ],
     'content' => '25+',
     'subContent' => 'Giảng Viên',
     'footer' => 'Có hơn 15 năm kinh nghiệm trong việc giảng dạy',
   ],
   [
     'badge' => '<i class="fa-solid fa-award"></i>',
-    'img' => '',
+    'image' => [
+      'src' => '',
+      'alt' => '',
+    ],
     'content' => '50+',
     'subContent' => 'Giải Thưởng',
     'footer' => 'Từ chính phủ và các tổ chức kiểm định quốc tế',
   ],
   [
     'badge' => '<i class="fa-solid fa-rocket"></i>',
-    'img' => '',
+    'image' => [
+      'src' => '',
+      'alt' => '',
+    ],
     'content' => '10+',
     'subContent' => 'Phòng Lab hiện đại',
     'footer' => 'Trang bị công nghệ tiên tiến phục vụ học tập và nghiên cứu',
   ],
   [
     'badge' => '<i class="fa-solid fa-graduation-cap"></i>',
-    'img' => '',
+    'image' => [
+      'src' => '',
+      'alt' => '',
+    ],
     'content' => '100+',
     'subContent' => 'Học bổng hàng năm',
     'footer' => 'Từ học bổng toàn phần đến các suất trao đổi quốc tế',
   ],
   [
     'badge' => '<i class="fa-solid fa-user-group"></i> <span>Cộng đồng học tập</span>',
-    'img' => 'public/img/about.jpg',
+    'image' => [
+      'src' => 'public/img/about.jpg',
+      'alt' => '',
+    ],
     'content' => 'Môi trường',
     'subContent' => 'Năng động & sáng tạo',
     'footer' => 'Nhiều hoạt động, sự kiện nhằm thúc đẩy tinh thần năng nổ của Sinh Viên',
   ],
   [
     'badge' => '<i class="fa-solid fa-building"></i>',
-    'img' => '',
+    'image' => [
+      'src' => '',
+      'alt' => '',
+    ],
     'content' => '100+',
     'subContent' => 'Doanh nghiệp đối tác',
     'footer' => 'FPT, Viettel, Samsung, Google và nhiều công ty hàng đầu',
   ],
   [
     'badge' => '<i class="fa-solid fa-arrow-trend-up"></i>',
-    'img' => '',
+    'image' => [
+      'src' => '',
+      'alt' => '',
+    ],
     'content' => '1,000+',
     'subContent' => 'Cựu sinh viên',
     'footer' => 'Làm việc tại các công ty công nghệ hàng đầu toàn cầu',
@@ -158,11 +186,12 @@ $bentoGridItems = [
           class="flex flex-col md:<?= ($index % 2 !== 0) ? 'flex-row-reverse' : 'flex-row' ?> flex-1 items-center gap-12">
           <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl">
             <div class="history-image-wrapper image-wrapper">
-              <img class="image w-full h-full" src="<?= url($section['img']) ?>" alt="<?= $section['imgAlt'] ?>">
+              <img class="image w-full h-full" src="<?= url($section['image']['src']) ?>"
+                alt="<?= $section['image']['alt'] ?>">
             </div>
             <div class="history-image-wrapper__content absolute inset-0 flex flex-col justify-end gap-1">
               <div class="text-6xl"><?= $section['year'] ?></div>
-              <div class="text-xl"><?= $section['imgCaption'] ?></div>
+              <div class="text-xl"><?= $section['image']['caption'] ?></div>
             </div>
           </div>
           <div class="flex-1 history-content flex flex-col justify-center gap-8">
@@ -186,10 +215,11 @@ $bentoGridItems = [
 
       <div class="bento-grid">
         <?php foreach ($bentoGridItems as $item): ?>
-          <?php $hasImage = !empty($item['img']); ?>
+          <?php $hasImage = !empty($item['image']['src']); ?>
           <div class="card bento-grid-item <?= $hasImage ? 'bento-grid-item--has-image' : '' ?>">
             <?php if ($hasImage): ?>
-              <img class="bento-grid-item__image" src="<?= url($item['img']) ?>" alt="">
+              <img class="bento-grid-item__image" src="<?= url($item['image']['src']) ?>"
+                alt="<?= $item['image']['alt'] ?>">
             <?php endif; ?>
             <div class="card__header">
               <span class="badge" data-variant="glass">

@@ -1,4 +1,6 @@
 <?php
+include_once BASE_PATH . '/templates/components/news_card.php';
+
 function renderCarousel(array $carouselSlides): void
 {
   if (empty($carouselSlides)) {
@@ -80,7 +82,7 @@ $aboutItems = [
     ],
     'card' => [
       'value' => 'Top 1',
-      'label' => 'Khoa CNTT tại Miền Nam (So với các Cao Đẳng khác)',
+      'label' => 'Khoa CNTT tại Miền Nam',
     ],
     'eyebrow' => 'LOREM ISPUM GÌ ĐÓ Ở ĐÂY',
     'title' => 'Đảm bảo chất lượng đào tạo',
@@ -230,29 +232,28 @@ $statsSection = [
 <section class="relative container py-16" id="landing-about-section">
   <h2 class="sr-only">About Us</h2>
   <div class="container-wrapper">
-    <div class="flex flex-col justify-center items-center gap-4 mb-12"></div>
-    <div class="landing-about-container flex flex-col">
+    <div class="flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12"></div>
+    <div class="landing-about-container flex flex-col gap-12 md:gap-0">
       <?php foreach ($aboutItems as $index => $item): ?>
-        <?php $directionClass = $index % 2 === 0 ? 'flex-row-reverse' : 'flex-row'; ?>
-        <div class="about-item flex gap-12 <?= $directionClass ?>">
-          <div class="relative">
-            <div class="about-item__image-container overflow-hidden rounded-3xl">
+        <div class="flex gap-4 md:gap-12 flex-col md:<?= $index % 2 === 0 ? 'flex-row-reverse' : 'flex-row' ?>">
+          <div class="flex-1 relative">
+            <div class="overflow-hidden rounded-3xl">
               <div class="image-wrapper">
                 <img class="image w-full h-full" src="<?= htmlspecialchars($item['image']['src']) ?>"
                   alt="<?= htmlspecialchars($item['image']['alt']) ?>">
               </div>
             </div>
-            <div class="landing-about-item__card absolute z-10 rounded-3xl p-6 flex flex-col gap-1">
-              <div class="landing-about-item__card-main-content text-5xl">
+            <div class="landing-about-item__card absolute z-10 rounded-3xl p-3 md:p-6 flex flex-col gap-1">
+              <div class="landing-about-item__card-main-content text-lg md:text-5xl">
                 <?= htmlspecialchars($item['card']['value']) ?>
               </div>
-              <div class="landing-about-item__card-sub-content text-sm">
+              <div class="landing-about-item__card-sub-content md:text-sm">
                 <?= htmlspecialchars($item['card']['label']) ?>
               </div>
             </div>
           </div>
-          <div class="flex flex-col justify-center gap-4">
-            <p class="number-of-text text-7xl"><?= htmlspecialchars($item['number']) ?></p>
+          <div class="flex-1 flex flex-col justify-center gap-4">
+            <p class="number-of-text text-7xl hidden md:block"><?= htmlspecialchars($item['number']) ?></p>
             <p class="landing-about-item__sub-title text-xs uppercase font-medium">
               <?= htmlspecialchars($item['eyebrow']) ?>
             </p>
@@ -273,38 +274,39 @@ $statsSection = [
 <!-- WHY-CHOOSE-US-SECTION: START -->
 <section class="wcu relative container py-16" id="why-choose-us-section">
   <div class="wcu__container container-wrapper">
-    <div class="wcu__header flex flex-col justify-center items-center gap-4 mb-12">
-      <div class="wcu__badge section__badge px-4 py-2 rounded-3xl text-sm mb-4">
+    <div class="wcu__header flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
+      <div class="wcu__badge section__badge px-4 py-2 rounded-3xl text-sm mb-2 md:mb-4">
         <?= htmlspecialchars($whyChooseUs['badge']) ?>
       </div>
 
-      <h2 class="wcu__title section__title text-4xl font-semibold">
+      <h2 class="wcu__title section__title">
         <?= htmlspecialchars($whyChooseUs['title']) ?>
       </h2>
 
-      <p class="wcu__subtitle section__sub-title font-normal text-base">
+      <p class="wcu__subtitle section__sub-title">
         <?= htmlspecialchars($whyChooseUs['subtitle']) ?>
       </p>
     </div>
 
     <div class="wcu__content flex flex-col items-center justify-center">
-      <div class="wcu__features-grid grid grid-cols-3 grid-rows-2 gap-6 mb-6 self-stretch">
+      <div class="wcu__features-grid grid grid-cols-2 md:grid-cols-3 grid-rows-2 gap-3 md:gap-6 mb-6 self-stretch">
         <div
-          class="wcu__feature-card wcu__feature-card--large wcu-feature-container overflow-hidden relative col-span-2 row-span-2 rounded-3xl image-wrapper">
-          <img class="wcu__feature-card-image image"
-            src="<?= htmlspecialchars($whyChooseUs['feature']['image']) ?>"
+          class="wcu__feature-card wcu__feature-card--large wcu-feature-container overflow-hidden relative row-start-1 col-span-2 row-span-1 md:row-span-2 rounded-3xl image-wrapper">
+          <img class="wcu__feature-card-image image" src="<?= htmlspecialchars($whyChooseUs['feature']['image']) ?>"
             alt="<?= htmlspecialchars($whyChooseUs['feature']['alt']) ?>">
-          <div class="wcu__feature-card-content absolute inset-0 flex flex-col justify-end items-start p-8">
-            <span class="wcu__feature-card-badge badge mb-3" data-variant="primary">
+          <div
+            class="wcu__feature-card-content absolute inset-0 flex flex-col justify-end items-start gap-2 md:gap-4 p-3 md:p-6 ">
+            <span class="wcu__feature-card-badge badge" data-variant="primary">
               <?= htmlspecialchars($whyChooseUs['feature']['badge']) ?>
             </span>
-            <h3 class="wcu__feature-card-title text-3xl font-semibold mb-4">
+            <h3 class="wcu__feature-card-title text-md md:text-3xl font-semibold">
               <?= htmlspecialchars($whyChooseUs['feature']['title']) ?>
             </h3>
-            <p class="wcu__feature-card-description text-base font-normal mb-4">
+            <p class="wcu__feature-card-description text-xs md:text-md font-normal">
               <?= htmlspecialchars($whyChooseUs['feature']['description']) ?>
             </p>
-            <a href="<?= htmlspecialchars($whyChooseUs['feature']['cta_url']) ?>" class="wcu__feature-card-link text-base font-normal">
+            <a href="<?= htmlspecialchars($whyChooseUs['feature']['cta_url']) ?>"
+              class="wcu__feature-card-link md:text-md font-normal">
               <?= htmlspecialchars($whyChooseUs['feature']['cta_label']) ?>
               <i class="fa-solid fa-arrow-up-right-from-square"></i>
             </a>
@@ -314,50 +316,55 @@ $statsSection = [
         <?php foreach ($whyChooseUs['stats'] as $index => $stat): ?>
           <?php
           $statCardClass = $index === 0
-            ? 'wcu__stat-card--primary col-start-3 row-start-1'
-            : 'wcu__stat-card--gradient col-start-3 row-start-2';
+            ? 'wcu__stat-card--primary col-start-1 md:col-start-3 row-start-2 md:row-start-1'
+            : 'wcu__stat-card--gradient col-start-2 md:col-start-3 row-start-2 md:row-start-2';
           ?>
-          <div
-            class="wcu__stat-card <?= $statCardClass ?> rounded-3xl p-8 flex flex-col gap-2 justify-center">
-            <h2 class="wcu__stat-card-number text-7xl font-bold"><?= htmlspecialchars($stat['number']) ?></h2>
-            <p class="wcu__stat-card-title text-xl font-semibold">
-              <?= htmlspecialchars($stat['title']) ?>
-            </p>
-            <p class="wcu__stat-card-description text-base font-normal">
-              <?= htmlspecialchars($stat['description']) ?>
-            </p>
+          <div class="wcu__stat-card <?= $statCardClass ?> rounded-3xl p-3 md:p-6 flex flex-col gap-2 justify-center">
+            <h2
+              class="wcu__stat-card-number flex-1 md:flex-none flex justify-center items-center md:block text-6xl md:text-7xl font-bold">
+              <?= htmlspecialchars($stat['number']) ?>
+            </h2>
+            <div class="wcu__stat-card-content flex flex-col gap-2">
+              <p class="wcu__stat-card-title md:text-xl font-semibold">
+                <?= htmlspecialchars($stat['title']) ?>
+              </p>
+              <p class="wcu__stat-card-description text-xs md:text-md font-normal">
+                <?= htmlspecialchars($stat['description']) ?>
+              </p>
+            </div>
           </div>
         <?php endforeach; ?>
       </div>
 
-      <div class="wcu__perks-list flex justify-center items-stretch self-stretch gap-6 mb-6">
+      <div
+        class="wcu__perks-list grid grid-cols-2 grid-rows-2 md:flex justify-center items-stretch self-stretch gap-3 md:gap-6 mb-6">
         <?php foreach ($whyChooseUs['perks'] as $perk): ?>
-          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-6">
+          <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-3 md:p-6">
             <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3">
               <i class="<?= htmlspecialchars($perk['icon']) ?> wcu__perk-item-icon"></i>
             </div>
-            <h4 class="wcu__perk-item-title text-base font-semibold mb-2">
+            <h4 class="wcu__perk-item-title md:text-md font-semibold mb-2">
               <?= htmlspecialchars($perk['title']) ?>
             </h4>
-            <p class="wcu__perk-item-description text-sm font-normal">
+            <p class="wcu__perk-item-description text-xs md:text-sm font-normal">
               <?= htmlspecialchars($perk['description']) ?>
             </p>
           </div>
         <?php endforeach; ?>
       </div>
 
-      <div class="wcu__highlights-list flex justify-center items-stretch self-stretch gap-6">
+      <div class="wcu__highlights-list self-stretch grid grid-rows-2 md:grid-rows-1 md:grid-cols-2 gap-3 md:gap-6">
         <?php foreach ($whyChooseUs['highlights'] as $index => $highlight): ?>
           <?php $highlightContentClass = $index === 0 ? 'wcu__highlight-item-content--blue' : 'wcu__highlight-item-content--green'; ?>
           <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white">
             <img class="wcu__highlight-item-image image" src="<?= htmlspecialchars($highlight['image']) ?>"
               alt="<?= htmlspecialchars($highlight['alt']) ?>">
             <div
-              class="wcu__highlight-item-content <?= $highlightContentClass ?> absolute inset-0 flex flex-col justify-end items-start p-6">
-              <h3 class="wcu__highlight-item-title text-2xl font-semibold mb-2">
+              class="wcu__highlight-item-content <?= $highlightContentClass ?> absolute inset-0 flex flex-col justify-end items-start p-3 md:p-6">
+              <h3 class="wcu__highlight-item-title text-md md:text-2xl font-semibold mb-2">
                 <?= htmlspecialchars($highlight['title']) ?>
               </h3>
-              <p class="wcu__highlight-item-description text-sm font-normal">
+              <p class="wcu__highlight-item-description text-xs md:text-sm font-normal">
                 <?= htmlspecialchars($highlight['description']) ?>
               </p>
             </div>
@@ -372,44 +379,46 @@ $statsSection = [
 <!-- STATS-SECTION: START -->
 <section class="relative container py-16" id="stats-section">
   <div class="container-wrapper">
-    <div class="flex flex-col justify-center items-center gap-4 mb-12">
-      <h2 class="section__title text-4xl font-semibold">
+    <div class="flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
+      <h2 class="section__title">
         <?= htmlspecialchars($statsSection['title']) ?>
       </h2>
 
-      <p class="section__sub-title font-normal text-base">
+      <p class="section__sub-title">
         <?= htmlspecialchars($statsSection['subtitle']) ?>
       </p>
     </div>
-    <div class="flex flex-col items-stretch justify-center gap-6">
-      <div class="stats__grid flex gap-6">
+    <div class="flex flex-col items-stretch justify-center gap-3 md:gap-6">
+      <div class="stats__grid grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 gap-3 md:gap-6">
         <?php foreach ($statsSection['stats'] as $stat): ?>
-          <div class="stats__stat-card flex flex-1 flex-col items-center gap-6 rounded-3xl p-8">
+          <div class="stats__stat-card flex flex-1 flex-col items-center gap-3 md:gap-6 rounded-3xl p-3 md:p-6">
             <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full">
               <i class="<?= htmlspecialchars($stat['icon']) ?> stats__stat-card-icon"></i>
             </div>
             <div class="flex flex-col gap-1 items-center">
-              <h3 class="stats__stat-card-number text-5xl font-bold"><?= htmlspecialchars($stat['number']) ?></h3>
+              <h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold"><?= htmlspecialchars($stat['number']) ?>
+              </h3>
               <h4 class="stats__stat-card-label font-semibold"><?= htmlspecialchars($stat['label']) ?></h4>
-              <p class="stats__stat-card-description text-sm">
+              <p class="stats__stat-card-description text-xs md:text-sm text-center">
                 <?= htmlspecialchars($stat['description']) ?>
               </p>
             </div>
           </div>
         <?php endforeach; ?>
       </div>
-      <div class="stats__benefits-grid flex gap-6 items-stretch">
+      <div
+        class="stats__benefits-grid grid grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1 gap-3 md:gap-6 items-stretch">
         <?php foreach ($statsSection['benefits'] as $benefit): ?>
-          <div class="stats__benefit-card flex-1 flex flex-col gap-6 p-8 rounded-3xl">
-            <div class="stats__benefit-card-header flex gap-4 items-center">
+          <div class="stats__benefit-card flex-1 flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+            <div class="stats__benefit-card-header flex gap-2 md:gap-4 items-center">
               <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full">
                 <i class="<?= htmlspecialchars($benefit['icon']) ?> stats__benefit-card-icon"></i>
               </div>
-              <h3 class="stats__benefit-card-title text-2xl font-semibold">
+              <h3 class="stats__benefit-card-title text-lg md:text-2xl font-semibold">
                 <?= htmlspecialchars($benefit['title']) ?>
               </h3>
             </div>
-            <ul class="stats__benefit-card-list flex flex-col gap-4">
+            <ul class="stats__benefit-card-list flex flex-col gap-2 md:gap-4">
               <?php foreach ($benefit['items'] as $item): ?>
                 <li class="stats__benefit-card-item flex items-center gap-2">
                   <span class="stats__benefit-card-item-icon rounded-full"></span>
@@ -422,14 +431,14 @@ $statsSection = [
           </div>
         <?php endforeach; ?>
       </div>
-      <div class="stats__cta flex flex-col items-center p-12 rounded-3xl">
-        <h3 class="stats__cta-title text-center text-3xl font-semibold mb-2">
+      <div class="stats__cta flex flex-col items-center p-3 md:p-12 rounded-3xl">
+        <h3 class="stats__cta-title text-center text-xl md:text-3xl font-semibold mb-2">
           <?= htmlspecialchars($statsSection['cta']['title']) ?>
         </h3>
-        <p class="stats__cta-description text-center text-xl font-light mb-6">
+        <p class="stats__cta-description text-center text-sm md:text-xl font-light mb-6">
           <?= htmlspecialchars($statsSection['cta']['description']) ?>
         </p>
-        <div class="stats__cta-buttons flex gap-4">
+        <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
           <?php foreach ($statsSection['cta']['buttons'] as $button): ?>
             <a href="<?= htmlspecialchars($button['url']) ?>" data-variant="<?= htmlspecialchars($button['variant']) ?>"
               class="<?= htmlspecialchars($button['class']) ?>">
@@ -444,115 +453,62 @@ $statsSection = [
 <!-- STATS-SECTION: END -->
 
 <!-- NEWSFEED-SECTION: START -->
-<section class="newsfeed relative container py-16" id="newsfeed-section">
-  <div class="newsfeed__container container-wrapper">
+<section class="relative container py-16" id="newsfeed-section">
+  <div class="container-wrapper">
 
-    <div class="newsfeed__header flex flex-col justify-center items-center gap-4 mb-12">
-      <h2 class="newsfeed__title section__title text-4xl font-semibold text-center">
+    <div class="flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
+      <h2 class="section__title">
         Tin tức &amp; Sự kiện
       </h2>
-      <p class="newsfeed__subtitle section__sub-title font-normal text-base text-center">
+      <p class="section__sub-title">
         Cập nhật những tin tức mới nhất về hoạt động của khoa, thành tích
         sinh viên và các sự kiện sắp tới
       </p>
     </div>
 
-    <div class="newsfeed__content-wrapper container-wrapper flex flex-col gap-16">
-
-      <div id="featured-news" class="newsfeed__featured-group flex flex-col gap-6">
-
+    <div class="newsfeed__content-wrapper flex flex-col gap-16">
+      <div class="flex flex-col gap-3 md:gap-6">
         <?php if (!empty($featuredNews)):
           $featured = $featuredNews[0]; ?>
-          <article class="news-card news-card--featured relative overflow-hidden rounded-3xl" data-landing="true"
-            data-landing-featured="true">
-            <div class="news-card__image-wrapper image-wrapper">
-              <img src="<?= htmlspecialchars(url('public/media/' . $featured->seo_image_url)) ?>"
-                onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
-                alt="<?= htmlspecialchars($featured->title) ?>"
-                class="news-card__image absolute w-full h-full object-cover image">
-              <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-8">
-                <div class="news-card__meta flex items-center gap-2">
-                  <span class="news-card__tag badge text-sm px-3" data-variant="destructive">
-                    Nổi bật
-                  </span>
-                  <span class="news-card__date flex items-center gap-1 text-base">
-                    <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                    <?= date('d/m/Y', strtotime($featured->published_at)) ?>
-                  </span>
-                </div>
-                <h3 class="news-card__title text-4xl mb-2">
-                  <a class="font-semibold"
-                    href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>"><?= htmlspecialchars($featured->title ?: '') ?></a>
-                </h3>
-                <p class="news-card__description font-light text-xl mb-6">
-                  <?= htmlspecialchars($featured->seo_description ?: '') ?>
-                </p>
-                <a href="<?= htmlspecialchars(url('tin-tuc/' . $featured->slug)) ?>" data-variant="outline-alt"
-                  class="news-card__link flex items-center gap-2 text-base px-4 py-2 btn bouncy-btn rounded-full">
-                  Đọc thêm
-                </a>
-              </div>
-            </div>
-          </article>
+          <!-- Main Featured News -->
+          <?php renderLandingNewsCard($featured, [
+            'variant' => 'featured',
+            'category_label' => 'Nổi bật',
+            'show_read_more' => true,
+            'class' => 'landing-featured-news relative overflow-hidden rounded-3xl',
+          ]); ?>
         <?php endif; ?>
 
-        <div class="newsfeed__secondary-grid flex gap-6 justify-center items-stretch self-stretch">
+        <!-- Sub Featured News Grid -->
+        <div class="flex gap-3 md:gap-6 justify-center items-stretch self-stretch">
           <?php
           $featuredCount = count($featuredNews);
           for ($i = 1; $i < 4 && $i < $featuredCount; $i++):
             $news = $featuredNews[$i];
             $catName = !empty($news->categories) ? $news->categories[0]->name : 'Tin tức';
             ?>
-            <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl"
-              data-landing="true">
-              <div class="news-card__image-wrapper image-wrapper">
-                <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
-                  onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
-                  alt="<?= htmlspecialchars($news->title) ?>"
-                  class="news-card__image absolute w-full h-full object-cover image">
-                <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                  <div class="news-card__meta flex items-center gap-2">
-                    <span class="news-card__tag badge text-xs">
-                      <?= htmlspecialchars($catName) ?>
-                    </span>
-                    <span class="news-card__date flex items-center gap-1 text-sm">
-                      <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
-                    </span>
-                  </div>
-                  <h3 class="news-card__title text-xl font-semibold">
-                    <a class="font-semibold"
-                      href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
-                  </h3>
-                  <p class="news-card__description font-light text-sm">
-                    <?= htmlspecialchars($news->seo_description ?: '') ?>
-                  </p>
-                </div>
-              </div>
-            </article>
+            <?php renderLandingNewsCard($news, [
+              'variant' => 'secondary',
+              'category_label' => $catName,
+              'class' => 'landing-sub-featured-news flex-1',
+            ]); ?>
           <?php endfor; ?>
         </div>
       </div>
 
       <div id="newsfeed-other" class="flex flex-col gap-4">
         <div class="newsfeed__other-header flex">
-          <h2 class="newsfeed__other-title text-4xl font-medium flex-1">
+          <h2 class="newsfeed__other-title text-2xl md:text-4xl font-medium flex-1">
             Tin tức khác
           </h2>
           <a href="<?= htmlspecialchars(url('tin-tuc')) ?>"
-            class="newsfeed__view-all-link flex items-center gap-1 text-base font-medium link-hover--underline">
+            class="newsfeed__view-all-link md:text-md font-medium link-hover--underline">
             Xem thêm
-            <svg class="newsfeed__view-all-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 20 20"
-              fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5.83334 5.83325H14.1667V14.1666" stroke="currentColor" stroke-width="1.66667"
-                stroke-linecap="round" stroke-linejoin="round"></path>
-              <path d="M5.83334 14.1666L14.1667 5.83325" stroke="currentColor" stroke-width="1.66667"
-                stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
           </a>
         </div>
 
-        <div class="newsfeed__other-grid flex gap-6 justify-center items-stretch self-stretch">
+        <div class="flex flex-col md:flex-row gap-3 md:gap-6 justify-center items-stretch self-stretch">
           <?php
           $latestNews = $latestNewsItems ?? [];
           $latestCount = count($latestNews);
@@ -560,33 +516,10 @@ $statsSection = [
             $news = $latestNews[$i];
             $catName = !empty($news->categories) ? $news->categories[0]->name : 'Tin tức';
             ?>
-            <article class="news-card news-card--secondary flex-1 overflow-hidden relative rounded-3xl"
-              data-landing="true">
-              <div class="news-card__image-wrapper image-wrapper">
-                <img src="<?= htmlspecialchars(url('public/media/' . $news->seo_image_url)) ?>"
-                  onerror="this.onerror=null; this.src='<?= htmlspecialchars(url('public/img/default-post-thumb.jpg')) ?>'"
-                  alt="<?= htmlspecialchars($news->title) ?>"
-                  class="news-card__image absolute w-full h-full object-cover image">
-                <div class="news-card__content absolute inset-0 flex flex-col justify-end items-start p-4">
-                  <div class="news-card__meta flex items-center gap-2">
-                    <span class="news-card__tag badge text-xs">
-                      <?= htmlspecialchars($catName) ?>
-                    </span>
-                    <span class="news-card__date flex items-center gap-1 text-sm">
-                      <i class="fa-regular fa-calendar news-card__date-icon"></i>
-                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
-                    </span>
-                  </div>
-                  <h3 class="news-card__title text-xl font-semibold">
-                    <a class="font-semibold"
-                      href="<?= htmlspecialchars(url('tin-tuc/' . $news->slug)) ?>"><?= htmlspecialchars($news->title ?: '') ?></a>
-                  </h3>
-                  <p class="news-card__description font-light text-sm">
-                    <?= htmlspecialchars($news->seo_description ?: '') ?>
-                  </p>
-                </div>
-              </div>
-            </article>
+            <?php renderLandingNewsCard($news, [
+              'variant' => 'standard',
+              'category_label' => $catName,
+            ]); ?>
           <?php endfor; ?>
         </div>
       </div>

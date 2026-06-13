@@ -1,3 +1,5 @@
+<?php include_once BASE_PATH . '/templates/components/news_card.php'; ?>
+
 <!-- 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -79,41 +81,10 @@
       <div class="news-featured__grid" role="list" aria-live="polite">
         <?php if (!empty($featuredNews)): ?>
           <?php foreach ($featuredNews as $news): ?>
-            <article class="card news-card hover-lift" role="listitem" data-id="<?= $news->id ?>">
-              <div class="card__header news-card__header">
-                <a class="news-card__image-wrapper" href="<?= url('tin-tuc/' . $news->slug) ?>">
-                  <img src="<?= url('public/media/' . $news->seo_image_url) ?>"
-                    onerror="this.onerror=null; this.src='<?= url('public/img/default-post-thumb.jpg') ?>'"
-                    alt="<?= htmlspecialchars($news->title) ?>" class="news-card__image">
-                </a>
-                <span class="badge news-card__badge"
-                  data-variant="primary"><?= htmlspecialchars($news->categories[0]->name ?? 'Tin tức') ?></span>
-                <span class="badge news-card__views-badge" aria-label="<?= number_format($news->view_count) ?> lượt xem"
-                  data-variant="secondary">
-                  <i class="fa-solid fa-arrow-trend-up" role="img" aria-hidden="true"></i>
-                  <?= number_format($news->view_count) ?> lượt xem
-                </span>
-              </div>
-              <div class="card__content news-card__content">
-                <div class="news-card__meta">
-                  <div>
-                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                    <time datetime="<?= date('Y-m-d', strtotime($news->published_at)) ?>">
-                      <?= date('d/m/Y', strtotime($news->published_at)) ?>
-                    </time>
-                  </div>
-
-                </div>
-                <h3 class="news-card__title">
-                  <a href="<?= url('tin-tuc/' . $news->slug) ?>"><?= htmlspecialchars($news->title) ?></a>
-                </h3>
-                <p class="news-card__description"><?= htmlspecialchars($news->seo_description ?? '') ?></p>
-                <a href="<?= url('tin-tuc/' . $news->slug) ?>" class="link-hover--underline news-card__link">
-                  Xem chi tiết
-                  <i class="fa-solid fa-arrow-right"></i>
-                </a>
-              </div>
-            </article>
+            <?php renderNewsCard($news, [
+              'variant' => 'featured',
+              'show_views_badge' => true,
+            ]); ?>
           <?php endforeach; ?>
         <?php else: ?>
           <div class="empty news-list__empty">
@@ -145,41 +116,10 @@
 
       <div class="all-news__list" role="list" aria-live="polite">
         <?php foreach ($allNews->getItems() as $news): ?>
-          <article class="card news-card news-card--horizontal hover-lift" role="listitem" data-id="<?= $news->id ?>">
-            <div class="card__header news-card__header">
-              <a class="news-card__image-wrapper" href="<?= url('tin-tuc/' . $news->slug) ?>">
-                <img src="<?= url('public/media/' . $news->seo_image_url) ?>"
-                  onerror="this.onerror=null; this.src='<?= url('public/img/default-post-thumb.jpg') ?>'"
-                  alt="<?= htmlspecialchars($news->title) ?>" class="news-card__image">
-              </a>
-            </div>
-            <div class="card__content news-card__content">
-              <div class="news-card__meta">
-                <div>
-                  <span class="badge news-card__badge"
-                    data-variant="primary"><?= htmlspecialchars($news->categories[0]->name ?? 'Tin tức') ?></span>
-                </div>
-                <div>
-                  <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                  <time datetime="<?= date('Y-m-d', strtotime($news->published_at)) ?>">
-                    <?= date('d/m/Y', strtotime($news->published_at)) ?>
-                  </time>
-                </div>
-                <div>
-                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
-                  <span><?= number_format($news->view_count) ?> lượt xem</span>
-                </div>
-              </div>
-              <h3 class="news-card__title">
-                <a href="<?= url('tin-tuc/' . $news->slug) ?>"><?= htmlspecialchars($news->title) ?></a>
-              </h3>
-              <p class="news-card__description"><?= htmlspecialchars($news->seo_description ?? '') ?></p>
-              <a href="<?= url('tin-tuc/' . $news->slug) ?>" class="link-hover--underline news-card__link">
-                Xem chi tiết
-                <i class="fa-solid fa-arrow-right"></i>
-              </a>
-            </div>
-          </article>
+          <?php renderNewsCard($news, [
+            'variant' => 'horizontal',
+            'show_category_in_meta' => true,
+          ]); ?>
         <?php endforeach; ?>
       </div>
 
