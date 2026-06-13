@@ -28,7 +28,8 @@ $batch = $batch ?? null;
     <div>
       <h2 class="title text-2xl font-semibold">Sinh viên & Phân công</h2>
       <p class="text-sm">Quản lý sinh viên và phân công giảng viên hướng dẫn đợt thực tập
-        #<?= htmlspecialchars($batch['id']) ?></p>
+        <span class="font-bold">"<?= htmlspecialchars($batch['title']) ?>"</span>
+      </p>
     </div>
     <div class="flex gap-2">
       <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg"
@@ -106,17 +107,19 @@ $batch = $batch ?? null;
         </template>
 
         <!-- Cột Lớp -->
-        <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-filter-type="text" data-tm-sortable
+        <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-filter-type="select"
+          data-tm-filter-options='<?= json_encode($classOptions ?? []) ?>' data-tm-sortable
           data-tm-width="120px">
           <span class="text-sm font-semibold">{{ value || '--' }}</span>
         </template>
 
         <!-- Cột Công ty thực tập -->
-        <template data-tm-col="company_name" data-tm-label="Công ty thực tập" data-tm-filter-type="text"
+        <template data-tm-col="company_name" data-tm-label="Công ty thực tập" data-tm-filter-type="select"
+          data-tm-filter-options='<?= json_encode($companyOptions ?? []) ?>'
           data-tm-sortable data-tm-width="250px">
           <div class="company-cell flex flex-col">
-            <span class="font-semibold text-sm" title="{{ value || 'Chưa cập nhật' }}">
-              {{ value || 'Chưa cập nhật' }}
+            <span class="font-semibold text-sm" title="{{ value || 'Chưa có công ty' }}">
+              {{ value || 'Chưa có công ty' }}
             </span>
             <span class="text-xs">
               {{ row.company_tax_code ? 'MST: ' + row.company_tax_code : '' }}
@@ -128,7 +131,8 @@ $batch = $batch ?? null;
         </template>
 
         <!-- Cột Giảng viên hướng dẫn -->
-        <template data-tm-col="teacher_name" data-tm-label="Giảng viên HD" data-tm-sortable data-tm-width="280px">
+        <template data-tm-col="teacher_name" data-tm-label="Giảng viên HD" data-tm-filter-type="select" 
+          data-tm-filter-options='<?= json_encode($teacherOptions ?? []) ?>' data-tm-sortable data-tm-width="280px">
           <div class="teacher-cell" data-assignment-id="{{ row.assignment_id || '' }}"
             data-batch-student-id="{{ row.batch_student_id }}" data-teacher-id="{{ row.teacher_id || '' }}">
             <div class="teacher-cell__display">

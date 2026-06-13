@@ -643,21 +643,30 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
     foreach ($filters as $index => $filter) {
       if (empty($filter['value'])) continue;
+
       $paramKey = ":f_val_$index";
-      $params[$paramKey] = '%' . $filter['value'] . '%';
+      $val = $filter['value'];
 
       switch ($filter['col']) {
         case 'student_code':
           $where[] = "s.student_id LIKE $paramKey";
+          $params[$paramKey] = "%$val%";
           break;
         case 'student_name':
           $where[] = "s.full_name LIKE $paramKey";
+          $params[$paramKey] = "%$val%";
           break;
         case 'classroom_name':
-          $where[] = "c.short_name LIKE $paramKey";
+          $where[] = "c.short_name = $paramKey";
+          $params[$paramKey] = $val;
           break;
         case 'company_name':
-          $where[] = "co.name LIKE $paramKey";
+          $where[] = "co.name = $paramKey";
+          $params[$paramKey] = $val;
+          break;
+        case 'teacher_name':
+          $where[] = "t.full_name = $paramKey";
+          $params[$paramKey] = $val;
           break;
       }
     }
