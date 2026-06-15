@@ -11,24 +11,16 @@ use App\Models\InternshipBatch;
 
 <!-- ========== title-wrapper start ========== -->
 <div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6">
-      <h2 class="title text-2xl font-semibold">
-        Đợt Thực Tập
-        <span class="badge" data-variant="primary">
-          <?= $data->getTotal() ?>
-        </span>
-      </h2>
-      <p class="text-sm">Quản lý các đợt thực tập mà giảng viên tham gia hướng dẫn</p>
-    </div>
-
-    <!-- Các nút chức năng -->
-    <!-- <div class="flex gap-2">
-      <a href="" data-variant="primary" data-size="md" class="btn">
-        <i class="fa-solid fa-plus"></i>
-        Thêm đợt mới
-      </a>
-    </div> -->
+  <div class="title-wrapper__content">
+    <h2 class="title-wrapper__title">
+      Đợt Thực Tập
+      <span class="badge" data-variant="primary">
+        <?= $data->getTotal() ?>
+      </span>
+    </h2>
+    <p class="title-wrapper__description">Quản lý các đợt thực tập mà giảng viên tham gia hướng dẫn</p>
+  </div>
+  <div class="title-wrapper__actions">
   </div>
 </div>
 <!-- ========== title-wrapper end ========== -->
