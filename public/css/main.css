@@ -463,29 +463,19 @@ article.news-card[data-landing]:not(.landing-featured-news) .badge {
   color: var(--badge-foreground);
 }
 
-article.news-card[data-landing] {
-  --overlay: var(--black-gradient-overlay);
-  --badge-background: var(--background);
-  --badge-foreground: var(--foreground);
-}
-
-article[data-landing].landing-featured-news {
-  --overlay: var(--dark-blue-gradient);
-}
-
-article.news-card[data-landing].landing-sub-featured-news:nth-child(1) {
+article.news-card[data-landing]:nth-child(1) {
   --overlay: var(--blue-gradient-overlay);
   --badge-background: var(--primary);
   --badge-foreground: var(--primary-foreground);
 }
 
-article.news-card[data-landing].landing-sub-featured-news:nth-child(2) {
+article.news-card[data-landing]:nth-child(2) {
   --overlay: var(--purple-gradient-overlay);
   --badge-background: var(--chart-2);
   --badge-foreground: var(--background);
 }
 
-article.news-card[data-landing].landing-sub-featured-news:nth-child(3) {
+article.news-card[data-landing]:nth-child(3) {
   --overlay: var(--green-gradient-overlay);
   --badge-background: var(--chart-3);
   --badge-foreground: var(--background);
