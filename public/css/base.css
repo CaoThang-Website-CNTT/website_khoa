@@ -301,6 +301,12 @@
       rgba(0, 184, 219, 1) 0%,
       rgba(43, 127, 255, 1) 100%
     );
+    --dark-blue-gradient: linear-gradient(
+      90deg,
+      #1c398e 0%,
+      rgba(25, 60, 184, 0.7) 50%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
     --green-gradient: linear-gradient(
       135deg,
       rgba(0, 201, 80, 1) 0%,
