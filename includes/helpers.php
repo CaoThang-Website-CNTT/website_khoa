@@ -24,6 +24,10 @@ function url(string $path = '', bool $strict = false): string
     return APP_URL;
   }
 
+  if ($path === 'public/media' || $path === 'public/media/') {
+    $path = 'public/img/default-post-thumb.jpg';
+  }
+
   if (preg_match('/^https?:\/\//i', $path)) {
     $appHost = parse_url(APP_URL, PHP_URL_HOST);
     $pathHost = parse_url($path, PHP_URL_HOST);
