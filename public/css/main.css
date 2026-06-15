@@ -1025,6 +1025,11 @@ article.news-card[data-landing]:nth-child(3) {
     -webkit-line-clamp: 2;
   }
 
+  .news-card[data-landing].landing-sub-featured-news .news-card__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .news-section__header,
   .news-detail-header__meta,
   .news-detail-footer__tags {
