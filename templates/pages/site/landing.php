@@ -475,7 +475,7 @@ $statsSection = [
             'variant' => 'featured',
             'category_label' => 'Nổi bật',
             'show_read_more' => true,
-            'class' => 'landing-featured-news relative overflow-hidden rounded-3xl',
+            'class' => 'super-landing-featured-news landing-featured-news relative overflow-hidden rounded-3xl',
           ]); ?>
         <?php endif; ?>
 

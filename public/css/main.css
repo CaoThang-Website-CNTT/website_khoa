@@ -449,8 +449,10 @@
   color: var(--accent);
 }
 
-.news-card[data-landing] .news-card__title,
-.news-card[data-landing] .news-card__description {
+.super-landing-featured-news.news-card[data-landing]:nth-child(1)
+  .news-card__title,
+.super-landing-featured-news.news-card[data-landing]:nth-child(1)
+  .news-card__description {
   max-width: 60%;
 }
 
