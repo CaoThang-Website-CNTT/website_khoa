@@ -19,26 +19,21 @@ $referralLetters = $referralLetters ?? [];
 <link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
 
 <div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Giấy giới thiệu thực tập
-      </h2>
-      <p class="text-sm">Danh sách các giấy giới thiệu bạn đã đăng ký trong đợt "<?= $current['title'] ?? '' ?>".</p>
-    </div>
-
-    <div class="flex gap-2 items-center">
-      <a href="<?= url('student/internship/' . ($current['id'] ?? '')) ?>" data-variant="outline" data-size="md"
-        class="btn">
-        <i class="fa-solid fa-chevron-left"></i>
-        Quay lại
-      </a>
-      <button type="button" id="btn-request" data-modal-trigger="#rl_requestModal" class="btn" data-variant="primary"
-        data-size="md">
-        <i class="fa-solid fa-plus mr-2"></i>
-        Đăng ký mới
-      </button>
-    </div>
+  <div class="title-wrapper__content">
+    <h2 class="title-wrapper__title">
+      Giấy giới thiệu thực tập
+    </h2>
+    <p class="title-wrapper__description">Danh sách các giấy giới thiệu bạn đã đăng ký trong đợt "<?= $current['title'] ?? '' ?>".</p>
+  </div>
+  <div class="title-wrapper__actions">
+    <a href="<?= url('student/internship/' . ($current['id'] ?? '')) ?>" data-variant="outline" data-size="md" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <button type="button" id="btn-request" data-modal-trigger="#rl_requestModal" class="btn" data-variant="primary" data-size="md">
+      <i class="fa-solid fa-plus mr-2"></i>
+      Đăng ký mới
+    </button>
   </div>
 </div>
 
