@@ -31,7 +31,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     </div>
 
     <div class="flex gap-2">
-      <button id="save-profile-btn" type="button" data-variant="primary" data-size="lg" class="btn">
+      <button id="save-profile-btn" type="button" data-variant="primary" data-size="lg" class="btn" data-modal-trigger="#confirm-save-modal">
         <i class="fa-solid fa-floppy-disk"></i>
         <span>Lưu thay đổi</span>
       </button>
@@ -180,17 +180,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const saveBtn = document.getElementById('save-profile-btn');
     const form = document.getElementById('teacher-profile-form');
-
-    if (saveBtn && form) {
-      saveBtn.addEventListener('click', () => {
-        // Mở modal xác nhận
-        window.modal?.open('#confirm-save-modal');
-      });
-    }
-
     const confirmBtn = document.getElementById('confirm-save-btn');
+
     if (confirmBtn && form) {
       confirmBtn.addEventListener('click', () => {
         // Thêm loading state

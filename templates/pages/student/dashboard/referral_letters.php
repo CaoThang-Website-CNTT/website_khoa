@@ -97,16 +97,17 @@ $referralLetters = $referralLetters ?? [];
                   data-company-tax-code="<?= htmlspecialchars($rl['company_tax_code']) ?: '--' ?>"
                   data-company-address="<?= htmlspecialchars($rl['company_address']) ?>" data-status="<?= $rl['status'] ?>"
                   data-created-at="<?= date('d/m/Y H:i', strtotime($rl['created_at'])) ?>"
-                  data-cancel-reason="<?= htmlspecialchars($rl['cancel_reason'] ?? '') ?>">
+                  data-cancel-reason="<?= htmlspecialchars($rl['cancel_reason'] ?? '') ?>"
+                  data-modal-trigger="#rl_detailModal">
                   <i class="fa-solid fa-eye"></i> Chi tiết
                 </button>
                 <?php if ($rl['status'] === 'pending'): ?>
                   <button type="button" class="btn btn-update" data-variant="outline" data-size="sm"
-                    data-id="<?= $rl['id'] ?>">
+                    data-id="<?= $rl['id'] ?>" data-modal-trigger="#rl_updateModal">
                     <i class="fa-solid fa-pen"></i> Đổi công ty
                   </button>
                   <button type="button" class="btn btn-cancel" data-variant="destructive" data-size="sm"
-                    data-id="<?= $rl['id'] ?>">
+                    data-id="<?= $rl['id'] ?>" data-modal-trigger="#rl_cancelModal">
                     <i class="fa-solid fa-xmark"></i> Hủy
                   </button>
                 <?php endif; ?>
@@ -319,7 +320,6 @@ $referralLetters = $referralLetters ?? [];
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
         updateForm.action = `<?= url("student/internship/{$current['id']}/referral_letters") ?>/${id}/update-company`;
-        window.modal.open('#rl_updateModal');
       });
     });
 
@@ -331,7 +331,6 @@ $referralLetters = $referralLetters ?? [];
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
         cancelForm.action = `<?= url("student/internship/{$current['id']}/referral_letters") ?>/${id}/cancel`;
-        window.modal.open('#rl_cancelModal');
       });
     });
 
@@ -360,9 +359,9 @@ $referralLetters = $referralLetters ?? [];
           statusBadge.innerHTML = '<span class="badge" data-variant="secondary">Chờ xử lý</span>';
           dtBtnUpdate.classList.remove('hidden');
           dtBtnUpdate.onclick = () => {
-            window.modal.close();
+            ModalHandler.instance.close();
             updateForm.action = `<?= url("student/internship/{$current['id']}/referral_letters") ?>/${id}/update-company`;
-            window.modal.open('#rl_updateModal');
+            ModalHandler.instance.open('#rl_updateModal');
           };
         } else if (status === 'printed') {
           statusBadge.innerHTML = '<span class="badge" data-variant="primary">Đã in</span>';
@@ -379,8 +378,6 @@ $referralLetters = $referralLetters ?? [];
         } else {
           reasonWrapper.classList.add('hidden');
         }
-
-        window.modal.open('#rl_detailModal');
       });
     });
   });
