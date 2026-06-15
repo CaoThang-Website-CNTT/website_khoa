@@ -1,24 +1,16 @@
 <link rel="stylesheet" href="<?= url('public/css/internship_batch_create.css') ?>">
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">Thêm đợt thực tập mới</h2>
-      <p>Điền thông tin đợt thực tập mới vào các trường dưới đây</p>
-    </div>
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/internship_batches') ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Thêm đợt thực tập mới</h2>
+    <p class="title-wrapper__description">Điền thông tin đợt thực tập mới vào các trường dưới đây</p>
+<?php $layout->end() ?>
 
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/internship_batches') ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+<?php $layout->end() ?>
 <!-- Tiến trình các bước (Wizard Stepper) -->
 <div class="wizard-stepper mb-8 flex justify-between relative">
   <div class="stepper-line"></div>

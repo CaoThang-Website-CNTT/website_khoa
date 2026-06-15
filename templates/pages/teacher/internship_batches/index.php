@@ -6,25 +6,15 @@ use App\Models\InternshipBatch;
 
 <link rel="stylesheet" href="<?= url('public/css/internship_batches.css') ?>">
 
-<!-- Toast khi redirect về đây có set flash -->
-
-
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="title-wrapper__content">
-    <h2 class="title-wrapper__title">
-      Đợt Thực Tập
-      <span class="badge" data-variant="primary">
-        <?= $data->getTotal() ?>
-      </span>
-    </h2>
-    <p class="title-wrapper__description">Quản lý các đợt thực tập mà giảng viên tham gia hướng dẫn</p>
-  </div>
-  <div class="title-wrapper__actions">
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
-
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Đợt Thực Tập
+  <span class="badge" data-variant="primary">
+    <?= $data->getTotal() ?>
+  </span>
+</h2>
+<p class="title-wrapper__description">Quản lý các đợt thực tập mà giảng viên tham gia hướng dẫn</p>
+<?php $layout->end() ?>
 <div class="card">
   <div class="tm-container" data-tm="batches_table" data-tm-mode="client" data-tm-searchable>
 
@@ -58,38 +48,38 @@ use App\Models\InternshipBatch;
 <script type="application/json" data-tm-data="batches_table">
   <?= json_encode([
     'rows' => array_map(function ($batch) {
-        $b = (object) $batch;
-        return [
-          'id' => $b->id,
-          'title' => $b->title ?? 'N/A',
-          'class_of' => $b->class_of ?? 'N/A',
-          'level' => $b->level ?? 'N/A',
-          'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
-          'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
-          'status' => $b->status ?? 'draft',
-          'effective_status' => (function () use ($b) {
+      $b = (object) $batch;
+      return [
+        'id' => $b->id,
+        'title' => $b->title ?? 'N/A',
+        'class_of' => $b->class_of ?? 'N/A',
+        'level' => $b->level ?? 'N/A',
+        'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
+        'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
+        'status' => $b->status ?? 'draft',
+        'effective_status' => (function () use ($b) {
           $batchModel = new InternshipBatch();
           $batchModel->status = $b->status ?? 'draft';
           $batchModel->start_at = $b->start_at ?? null;
           $batchModel->end_at = $b->end_at ?? null;
           return $batchModel->getEffectiveStatus();
         })(),
-          'effective_status_label' => (function () use ($b) {
+        'effective_status_label' => (function () use ($b) {
           $batchModel = new InternshipBatch();
           $batchModel->status = $b->status ?? 'draft';
           $batchModel->start_at = $b->start_at ?? null;
           $batchModel->end_at = $b->end_at ?? null;
           return BatchStatus::getLabel($batchModel->getEffectiveStatus());
         })(),
-          'effective_status_variant' => (function () use ($b) {
+        'effective_status_variant' => (function () use ($b) {
           $batchModel = new InternshipBatch();
           $batchModel->status = $b->status ?? 'draft';
           $batchModel->start_at = $b->start_at ?? null;
           $batchModel->end_at = $b->end_at ?? null;
           return BatchStatus::getVariant($batchModel->getEffectiveStatus());
         })()
-        ];
-      }, $data->getItems()),
+      ];
+    }, $data->getItems()),
     'total' => $data->getTotal(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

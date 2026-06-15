@@ -1,39 +1,18 @@
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>(
-        <?= json_encode($flash['title']) ?>,
-        <?= json_encode($flash['desc']) ?>
-      );
-    });
-  </script>
-<?php endif; ?>
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Bài Viết
+  <span class="badge" data-variant="primary">
+    <?= $data->getTotal() ?>
+  </span>
+</h2>
+<?php $layout->end() ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper mb-4">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Bài Viết
-        <span class="badge" data-variant="primary">
-          <?= $data->getTotal() ?>
-        </span>
-      </h2>
-    </div>
-
-    <div class="flex gap-4 items-center">
-      <div>
-        <a href="<?= url('admin/posts/create') ?>" data-variant="primary" data-size="md" class="btn">
-          <i class="fa-solid fa-plus"></i>
-          Thêm mới
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
-
+<?php $layout->start("actions") ?>
+<a href="<?= url('admin/posts/create') ?>" data-variant="primary" data-size="md" class="btn">
+  <i class="fa-solid fa-plus"></i>
+  Thêm mới
+</a>
+<?php $layout->end() ?>
 <div class="tm-container" id="posts_table" data-tm="posts_table" data-tm-mode="client" data-tm-selectable
   data-tm-searchable data-tm-toolbar-target="#posts-table-header">
 

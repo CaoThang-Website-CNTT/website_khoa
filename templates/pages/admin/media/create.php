@@ -8,22 +8,19 @@ $max_mb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">Thêm mới media</h2>
-      <p>Upload & điền thông tin media mới vào các trường dưới đây</p>
-    </div>
-    <div class="flex gap-2">
-      <a href="<?= url('admin/media') ?>" data-variant="outline" data-size="lg" class="btn">
-        <i class="fa-solid fa-chevron-left"></i> Quay lại
-      </a>
-      <button data-modal-trigger="#confirm-modal" type="button" data-variant="primary" data-size="lg" class="btn">
-        Lưu
-      </button>
-    </div>
-  </div>
-</div>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Thêm mới media</h2>
+    <p class="title-wrapper__description">Upload & điền thông tin media mới vào các trường dưới đây</p>
+<?php $layout->end() ?>
+
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/media') ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i> Quay lại
+    </a>
+    <button data-modal-trigger="#confirm-modal" type="button" data-variant="primary" data-size="lg" class="btn">
+      Lưu
+    </button>
+<?php $layout->end() ?>
 
 <div class="detail-layout">
   <div class="detail-layout__main flex-1">

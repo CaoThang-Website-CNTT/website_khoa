@@ -29,28 +29,24 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
 ?>
 <link rel="stylesheet" href="<?= url('public/css/teacher_grading.css') ?>">
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="title-wrapper__content">
-    <h2 class="title-wrapper__title">
-      Chấm điểm: <?= htmlspecialchars($student['full_name'] ?? '') ?>
-    </h2>
-    <div class="title-wrapper__description flex items-center">
-      MSSV: <?= htmlspecialchars($student['student_code'] ?? '--') ?> - Công ty: <?= htmlspecialchars($companyName) ?>
-    </div>
-  </div>
-  <div class="title-wrapper__actions">
-    <a href="<?= url("teacher/internship_batches/{$batchId}") ?>" data-variant="outline" data-size="md" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-  </div>
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Chấm điểm: <?= htmlspecialchars($student['full_name'] ?? '') ?>
+</h2>
+<div class="title-wrapper__description flex items-center">
+  MSSV: <?= htmlspecialchars($student['student_code'] ?? '--') ?> - Công ty: <?= htmlspecialchars($companyName) ?>
 </div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->end() ?>
 
+<?php $layout->start("actions") ?>
+<a href="<?= url("teacher/internship_batches/{$batchId}") ?>" data-variant="outline" data-size="md" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
+  <i class="fa-solid fa-bars"></i>
+</button>
+<?php $layout->end() ?>
 <div class="detail-layout detail-layout--collapsible">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">

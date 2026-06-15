@@ -3,8 +3,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 ?>
 
 <?php $layout->start("heading") ?>
-<h2 class="title text-2xl font-semibold">Phản hồi</h2>
-<p>Gửi phản hồi tới đội ngũ phát triển</p>
+<h2 class="title-wrapper__title">Phản hồi</h2>
+<p class="title-wrapper__description">Gửi phản hồi tới đội ngũ phát triển</p>
 <?php $layout->end() ?>
 
 <?php $layout->start("actions") ?>

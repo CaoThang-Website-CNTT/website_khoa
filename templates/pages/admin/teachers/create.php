@@ -6,36 +6,24 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Thêm giảng viên mới
-      </h2>
-      <p>Điền thông tin giảng viên mới vào các trường dưới đây</p>
-    </div>
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Thêm giảng viên mới
+</h2>
+<p class="title-wrapper__description">Điền thông tin giảng viên mới vào các trường dưới đây</p>
+<?php $layout->end() ?>
 
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/teachers') ?>" data-variant=" outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary"
-          data-size="lg" class="w-full btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Thêm
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start("actions") ?>
+<a href="<?= url('admin/teachers') ?>" data-variant="outline" data-size="lg" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Lưu
+</button>
+<?php $layout->end() ?>
 <form class="detail-layout" id="teacher-add-form" action="<?= url('admin/teachers') ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
@@ -276,18 +264,18 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
 
-    teacherNameInput.addEventListener('input', function () {
+    teacherNameInput.addEventListener('input', function() {
       const teacherName = Utils.toCleanAscii(this.value).replace(/\s+/g, '');
       emailInput.value = teacherName ? `${teacherName}@caothang.edu.vn` : '';
     });
 
-    nationalIdInput.addEventListener('input', function () {
+    nationalIdInput.addEventListener('input', function() {
       const nationalId = this.value.trim();
       passwordInput.value = nationalId ? nationalId : '';
     });
 
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function () {
+    confirmBtn.addEventListener('click', function() {
       form.submit();
     });
   });

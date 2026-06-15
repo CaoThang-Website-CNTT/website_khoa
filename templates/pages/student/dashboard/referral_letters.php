@@ -8,34 +8,27 @@ $student = $student ?? null;
 $current = $current ?? null;
 $referralLetters = $referralLetters ?? [];
 ?>
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      window.toast?.<?= ($flash['type']) ?>('<?= $flash['title'] ?>', '<?= $flash['desc'] ?>');
-    });
-  </script>
-<?php endif; ?>
+
 
 <link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
 
-<div class="title-wrapper">
-  <div class="title-wrapper__content">
-    <h2 class="title-wrapper__title">
-      Giấy giới thiệu thực tập
-    </h2>
-    <p class="title-wrapper__description">Danh sách các giấy giới thiệu bạn đã đăng ký trong đợt "<?= $current['title'] ?? '' ?>".</p>
-  </div>
-  <div class="title-wrapper__actions">
-    <a href="<?= url('student/internship/' . ($current['id'] ?? '')) ?>" data-variant="outline" data-size="md" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button type="button" id="btn-request" data-modal-trigger="#rl_requestModal" class="btn" data-variant="primary" data-size="md">
-      <i class="fa-solid fa-plus mr-2"></i>
-      Đăng ký mới
-    </button>
-  </div>
-</div>
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Giấy giới thiệu thực tập
+</h2>
+<p class="title-wrapper__description">Danh sách các giấy giới thiệu bạn đã đăng ký trong đợt "<?= $current['title'] ?? '' ?>".</p>
+<?php $layout->end() ?>
+
+<?php $layout->start("actions") ?>
+<a href="<?= url('student/internship/' . ($current['id'] ?? '')) ?>" data-variant="outline" data-size="md" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button type="button" id="btn-request" data-modal-trigger="#rl_requestModal" class="btn" data-variant="primary" data-size="md">
+  <i class="fa-solid fa-plus mr-2"></i>
+  Đăng ký mới
+</button>
+<?php $layout->end() ?>
 
 <div class="table-wrapper shadow rounded-md">
   <table class="data-table">

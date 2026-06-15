@@ -1,5 +1,5 @@
 <?php $layout->start("heading") ?>
-<h2 class="title text-2xl font-semibold">Cập nhật ticket #<?= htmlspecialchars($ticket->id) ?></h2>
+<h2 class="title-wrapper__title">Cập nhật ticket #<?= htmlspecialchars($ticket->id) ?></h2>
 <?php $layout->end() ?>
 
 <?php $layout->start("actions") ?>

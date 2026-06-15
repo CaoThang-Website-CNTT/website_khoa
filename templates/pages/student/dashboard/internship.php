@@ -29,33 +29,29 @@ $effectiveMetadata = $effStatus ? [
 ] : null;
 ?>
 
-<!-- ========== title-wrapper start ========== -->
 <link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
-<div class="title-wrapper">
-  <div class="title-wrapper__content">
-    <h1 class="title-wrapper__title">
-      Thông tin thực tập
-    </h1>
-    <p class="title-wrapper__description">Xem chi tiết đợt thực tập và kết quả đánh giá .</p>
-  </div>
-  <div class="title-wrapper__actions">
-    <div class="batch-select">
-      <select class="field__input batch-select__input" onchange="window.location.href = '<?= url('student/internship') ?>/' + this.value">
-        <?php if (empty($batches)): ?>
-          <option disabled selected>Chưa tham gia đợt nào</option>
-        <?php else: ?>
-          <?php foreach ($batches as $b): ?>
-            <option value="<?= $b['id'] ?>" <?= $current && $current['id'] == $b['id'] ? 'selected' : '' ?>>
-              <?= htmlspecialchars(mb_strimwidth($b['title'], 0, 25, "...")) ?>
-            </option>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </select>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start("heading") ?>
+<h1 class="title-wrapper__title">
+  Thông tin thực tập
+</h1>
+<p class="title-wrapper__description">Xem chi tiết đợt thực tập và kết quả đánh giá .</p>
+<?php $layout->end() ?>
 
+<?php $layout->start("actions") ?>
+<div class="batch-select">
+  <select class="field__input batch-select__input" onchange="window.location.href = '<?= url('student/internship') ?>/' + this.value">
+    <?php if (empty($batches)): ?>
+      <option disabled selected>Chưa tham gia đợt nào</option>
+    <?php else: ?>
+      <?php foreach ($batches as $b): ?>
+        <option value="<?= $b['id'] ?>" <?= $current && $current['id'] == $b['id'] ? 'selected' : '' ?>>
+          <?= htmlspecialchars(mb_strimwidth($b['title'], 0, 25, "...")) ?>
+        </option>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </select>
+  <i class="fa-solid fa-chevron-down batch-select__icon"></i>
+</div>
 <?php if ($current): ?>
   <div class="detail-layout">
     <div class="detail-layout__main">

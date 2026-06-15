@@ -39,38 +39,34 @@ foreach ($classrooms as $c) {
 <link rel="stylesheet" href="<?= url('public/css/teacher_batch_detail.css') ?>">
 
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="title-wrapper__content">
-    <h2 class="title-wrapper__title">
-      Chi tiết đợt thực tập "<?= htmlspecialchars((string) $batch['title']) ?>"
-    </h2>
-    <div class="title-wrapper__description flex items-center">
-      <?= htmlspecialchars((string) $batch['description']) ?>
-      <?php
-      $batchModel = new InternshipBatch();
-      $batchModel->status = $batch['status'] ?? 'draft';
-      $batchModel->start_at = $batch['start_at'] ?? null;
-      $batchModel->end_at = $batch['end_at'] ?? null;
-      $effStatus = $batchModel->getEffectiveStatus();
-      ?>
-      <span class="badge ml-2" data-variant="<?= BatchStatus::getVariant($effStatus) ?>">
-        <?= BatchStatus::getLabel($effStatus) ?>
-      </span>
-    </div>
-  </div>
-  <div class="title-wrapper__actions">
-    <a href="<?= url('teacher/internship_batches') ?>" data-variant="outline" data-size="md" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-      <i class="fa-solid fa-bars"></i>
-    </button>
-  </div>
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Chi tiết đợt thực tập "<?= htmlspecialchars((string) $batch['title']) ?>"
+</h2>
+<div class="title-wrapper__description flex items-center">
+  <?= htmlspecialchars((string) $batch['description']) ?>
+  <?php
+  $batchModel = new InternshipBatch();
+  $batchModel->status = $batch['status'] ?? 'draft';
+  $batchModel->start_at = $batch['start_at'] ?? null;
+  $batchModel->end_at = $batch['end_at'] ?? null;
+  $effStatus = $batchModel->getEffectiveStatus();
+  ?>
+  <span class="badge ml-2" data-variant="<?= BatchStatus::getVariant($effStatus) ?>">
+    <?= BatchStatus::getLabel($effStatus) ?>
+  </span>
 </div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->end() ?>
 
+<?php $layout->start("actions") ?>
+<a href="<?= url('teacher/internship_batches') ?>" data-variant="outline" data-size="md" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
+  <i class="fa-solid fa-bars"></i>
+</button>
+<?php $layout->end() ?>
 <div class="detail-layout detail-layout--collapsible">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">

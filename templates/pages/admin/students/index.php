@@ -1,32 +1,22 @@
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Sinh Viên
+  <span class="badge" data-variant="primary">
+    <?= $data->getTotal() ?>
+  </span>
+</h2>
+<?php $layout->end() ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Sinh Viên
-        <span class="badge" data-variant="primary">
-          <?= $data->getTotal() ?>
-        </span>
-      </h2>
-    </div>
-
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/students/create') ?>" data-variant="primary" data-size="md" class="btn">
-          <i class="fa-solid fa-plus"></i>
-          Thêm
-        </a>
-        <a href="<?= url('admin/students/import') ?>" data-variant="outline" data-size="md" class="btn">
-          <i class="fa-solid fa-file-import"></i>
-          Nhập
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start("actions") ?>
+<a href="<?= url('admin/students/create') ?>" data-variant="primary" data-size="md" class="btn">
+  <i class="fa-solid fa-plus"></i>
+  Thêm
+</a>
+<a href="<?= url('admin/students/import') ?>" data-variant="outline" data-size="md" class="btn">
+  <i class="fa-solid fa-file-import"></i>
+  Nhập
+</a>
+<?php $layout->end() ?>
 <div class="card">
   <div class="tm-container" data-tm="students_table" data-tm-mode="client" data-tm-searchable>
 
@@ -74,16 +64,16 @@
 <script type="application/json" data-tm-data="students_table">
   <?= json_encode([
     'rows' => array_map(function ($student) {
-    return [
-      'id' => $student->id,
-      'full_name' => $student->full_name ?? 'N/A',
-      'student_id' => $student->student_id ?? 'N/A',
-      'gender' => $student->gender ?? 'N/A',
-      'dob' => $student->dob ?? 'N/A',
-      'phone' => $student->phone ?? 'N/A',
-      'class_name' => $student->classroom->short_name ?? 'N/A'
-    ];
-  }, $data->getItems()),
+      return [
+        'id' => $student->id,
+        'full_name' => $student->full_name ?? 'N/A',
+        'student_id' => $student->student_id ?? 'N/A',
+        'gender' => $student->gender ?? 'N/A',
+        'dob' => $student->dob ?? 'N/A',
+        'phone' => $student->phone ?? 'N/A',
+        'class_name' => $student->classroom->short_name ?? 'N/A'
+      ];
+    }, $data->getItems()),
     'total' => $data->getTotal(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

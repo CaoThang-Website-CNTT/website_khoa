@@ -9,35 +9,21 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Thêm danh mục mới
-      </h2>
-      <p>Điền thông tin danh mục mới vào các trường dưới đây</p>
-    </div>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Thêm danh mục mới</h2>
+    <p class="title-wrapper__description">Điền thông tin danh mục mới vào các trường dưới đây</p>
+<?php $layout->end() ?>
 
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary"
-          data-size="lg" class="w-full btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Thêm
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
-
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
+      <i class="fa-solid fa-floppy-disk"></i>
+      Thêm
+    </button>
+<?php $layout->end() ?>
 <form id="category-add-form" action="<?= url('admin/categories') ?>" method="POST">
   <?= csrf_field() ?>
 

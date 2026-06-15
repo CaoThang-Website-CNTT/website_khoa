@@ -10,33 +10,17 @@ $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
 
-<!-- Toast khi redirect về -->
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      window.toast?.<?= ($flash['type']) ?>(
-        '<?= $flash['title'] ?>',
-        '<?= $flash['desc'] ?>'
-      );
-    });
-  </script>
-<?php endif; ?>
+<?php $layout->start("heading") ?>
+<h1 class="title-wrapper__title">Thông tin cá nhân</h1>
+<p class="title-wrapper__description">Quản lý và cập nhật thông tin cá nhân của bạn.</p>
+<?php $layout->end() ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="title-wrapper__content">
-    <h1 class="title-wrapper__title">Thông tin cá nhân</h1>
-    <p class="title-wrapper__description">Quản lý và cập nhật thông tin cá nhân của bạn.</p>
-  </div>
-  <div class="title-wrapper__actions">
-    <button id="save-profile-btn" type="button" data-variant="primary" data-size="lg" class="btn" data-modal-trigger="#confirm-save-modal">
-      <i class="fa-solid fa-floppy-disk"></i>
-      <span>Lưu thay đổi</span>
-    </button>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
-
+<?php $layout->start("actions") ?>
+<button id="save-profile-btn" type="button" data-variant="primary" data-size="lg" class="btn" data-modal-trigger="#confirm-save-modal">
+  <i class="fa-solid fa-floppy-disk"></i>
+  <span>Lưu thay đổi</span>
+</button>
+<?php $layout->end() ?>
 <form class="detail-layout" id="teacher-profile-form" action="<?= url('teacher/profile/update') ?>" method="POST">
   <?= csrf_field() ?>
 

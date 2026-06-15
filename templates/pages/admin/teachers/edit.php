@@ -7,44 +7,28 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Thông tin giảng viên
+  <?= '#' . htmlspecialchars($teacher->staff_code) ?>
+</h2>
+<p class="title-wrapper__description">Cập nhật thông tin giảng viên tại trang này.</p>
+<?php $layout->end() ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Thông tin giảng viên
-        <?= '#' . htmlspecialchars($teacher->staff_code) ?>
-      </h2>
-      <p>Cập nhật thông tin giảng viên tại trang này.</p>
-    </div>
-
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/teachers') ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
-          data-size="lg" class="w-full btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Lưu thay đổi
-        </button>
-      </div>
-      <div>
-        <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
-          data-size="lg" class="btn">
-          <i class="fa-solid fa-trash"></i>
-          Xóa
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start("actions") ?>
+<a href="<?= url('admin/teachers') ?>" data-variant="outline" data-size="lg" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Lưu thay đổi
+</button>
+<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
+  <i class="fa-solid fa-trash"></i>
+  Xóa
+</button>
+<?php $layout->end() ?>
 <form class="detail-layout" id="teacher-edit-form" action="<?= url('admin/teachers/' . $teacher->id) ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
@@ -365,24 +349,24 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
 
-    teacherNameInput.addEventListener('input', function () {
+    teacherNameInput.addEventListener('input', function() {
       const teacherName = Utils.toCleanAscii(this.value).replace(/\s+/g, '');
       emailInput.value = teacherName ? `${teacherName}@caothang.edu.vn` : '';
     });
 
-    nationalIdInput.addEventListener('input', function () {
+    nationalIdInput.addEventListener('input', function() {
       const nationalId = this.value.trim();
       passwordInput.value = nationalId ? nationalId : '';
     });
 
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function () {
+    confirmBtn.addEventListener('click', function() {
       const form = document.querySelector('#teacher-edit-form');
       form.submit();
     });
 
     // Delete Confirm Btn Event Listener
-    deleteConfirmBtn.addEventListener('click', function () {
+    deleteConfirmBtn.addEventListener('click', function() {
       const deleteForm = document.querySelector('#delete-form');
       deleteForm.submit();
     });

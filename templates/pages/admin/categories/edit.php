@@ -13,32 +13,24 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </section>
 <?php endif; ?>
 
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Chỉnh sửa danh mục #<?= htmlspecialchars($category->id) ?>
-      </h2>
-      <p>Xem chi tiết và chỉnh sửa thông tin danh mục.</p>
-    </div>
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <?php if ($category->isEditable()): ?>
-        <div>
-          <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
-            data-size="lg" class="btn">
-            Lưu
-          </button>
-        </div>
-      <?php endif; ?>
-    </div>
-  </div>
-</div>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">
+      Chỉnh sửa danh mục #<?= htmlspecialchars($category->id) ?>
+    </h2>
+    <p class="title-wrapper__description">Xem chi tiết và chỉnh sửa thông tin danh mục.</p>
+<?php $layout->end() ?>
+
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <?php if ($category->isEditable()): ?>
+      <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="btn">
+        Lưu
+      </button>
+    <?php endif; ?>
+<?php $layout->end() ?>
 
 <div class="detail-layout">
   <!-- LEFT - CATEGORY INFO -->
