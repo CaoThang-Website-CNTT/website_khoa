@@ -31,9 +31,7 @@ $studentsData = array_map(function ($sv) {
 // Tạo danh sách lớp cho filter dropdown
 $classrooms = array_unique(array_filter(array_column($students, 'classroom_name')));
 sort($classrooms);
-$classOptions = [
-  ['label' => 'Tất cả lớp', 'value' => '']
-];
+$classOptions = [];
 foreach ($classrooms as $c) {
   $classOptions[] = ['label' => $c, 'value' => $c];
 }
@@ -41,42 +39,34 @@ foreach ($classrooms as $c) {
 <link rel="stylesheet" href="<?= url('public/css/teacher_batch_detail.css') ?>">
 
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6">
-      <h2 class="title text-2xl font-semibold">
-        Chi tiết đợt thực tập #<?= htmlspecialchars((string) $batch['id']) ?>
-      </h2>
-      <div class="text-sm mt-1 flex items-center" style="color: var(--muted-foreground)">
-        <?= htmlspecialchars((string) $batch['title']) ?>
-        <?php
-        $batchModel = new InternshipBatch();
-        $batchModel->status = $batch['status'] ?? 'draft';
-        $batchModel->start_at = $batch['start_at'] ?? null;
-        $batchModel->end_at = $batch['end_at'] ?? null;
-        $effStatus = $batchModel->getEffectiveStatus();
-        ?>
-        <span class="badge ml-2" data-variant="<?= BatchStatus::getVariant($effStatus) ?>">
-          <?= BatchStatus::getLabel($effStatus) ?>
-        </span>
-      </div>
-    </div>
-
-    <div class="flex gap-2">
-      <a href="<?= url('teacher/internship_batches') ?>" data-variant="outline" data-size="md" class="btn">
-        <i class="fa-solid fa-chevron-left"></i>
-        Quay lại
-      </a>
-
-      <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-        <i class="fa-solid fa-bars"></i>
-      </button>
-    </div>
-  </div>
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Chi tiết đợt thực tập "<?= htmlspecialchars((string) $batch['title']) ?>"
+</h2>
+<div class="title-wrapper__description flex items-center">
+  <?= htmlspecialchars((string) $batch['description']) ?>
+  <?php
+  $batchModel = new InternshipBatch();
+  $batchModel->status = $batch['status'] ?? 'draft';
+  $batchModel->start_at = $batch['start_at'] ?? null;
+  $batchModel->end_at = $batch['end_at'] ?? null;
+  $effStatus = $batchModel->getEffectiveStatus();
+  ?>
+  <span class="badge ml-2" data-variant="<?= BatchStatus::getVariant($effStatus) ?>">
+    <?= BatchStatus::getLabel($effStatus) ?>
+  </span>
 </div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->end() ?>
 
+<?php $layout->start("actions") ?>
+<a href="<?= url('teacher/internship_batches') ?>" data-variant="outline" data-size="md" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
+  <i class="fa-solid fa-bars"></i>
+</button>
+<?php $layout->end() ?>
 <div class="detail-layout detail-layout--collapsible">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
@@ -168,8 +158,7 @@ foreach ($classrooms as $c) {
           </template>
 
           <!-- Cột Tài liệu -->
-          <template data-tm-col="has_submission" data-tm-label="Tài liệu TT" data-tm-filter-type="select"
-            data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đã nộp","value":"1"},{"label":"Chưa nộp","value":"0"}]'>
+          <template data-tm-col="has_submission" data-tm-label="Tài liệu TT">
             <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
               nộp</span>
             <div style="{{ value === '1' ? 'display:inline-flex' : 'display:none' }}" class="student-table__submission">
@@ -191,8 +180,7 @@ foreach ($classrooms as $c) {
 
           <!-- Cột Điểm -->
           <template data-tm-col="has_grade" data-tm-label="Điểm" data-tm-width="100px" data-tm-sortable
-            data-tm-align="center" data-tm-filter-type="select"
-            data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Đã nhập","value":"1"},{"label":"Chưa nhập","value":"0"}]'>
+            data-tm-align="center">
             <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
               nhập</span>
             <span class="font-bold {{ row.grade >= 5 ? 'text-success' : 'text-danger' }}"

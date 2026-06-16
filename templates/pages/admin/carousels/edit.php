@@ -10,32 +10,23 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Modal select media -->
 <?php require_once(BASE_PATH . '/templates/components/media_selector_modal.php'); ?>
 
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Carousel
-        <?= ' #' . htmlspecialchars($carousel->id) ?>
-      </h2>
-      <p>Xem chi tiết và chỉnh sửa thông tin carousel.</p>
-    </div>
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/carousels') ?>" data-variant="outline" data-size="lg"
-          class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
-          data-size="lg" class="btn">
-          Lưu
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">
+      Carousel
+      <?= ' #' . htmlspecialchars($carousel->id) ?>
+    </h2>
+    <p class="title-wrapper__description">Xem chi tiết và chỉnh sửa thông tin carousel.</p>
+<?php $layout->end() ?>
+
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/carousels') ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="btn">
+      Lưu
+    </button>
+<?php $layout->end() ?>
 
 <div class="detail-layout">
   <div class="detail-layout__main flex-1">

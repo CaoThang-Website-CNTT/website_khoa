@@ -29,15 +29,14 @@
 
         <?php if ($layout->hasContent("heading") || $layout->hasContent("actions")): ?>
           <div class="title-wrapper mb-4">
-            <div class="flex justify-between items-center">
-              <div class="col-6 col-md-6">
-                <?= $layout->yield("heading") ?>
-              </div>
-
-              <div class="flex gap-2 items-center">
-                <?= $layout->yield("actions") ?>
-              </div>
+            <div class="title-wrapper__content">
+              <?= $layout->yield("heading") ?>
             </div>
+            <?php if ($layout->hasContent("actions")): ?>
+            <div class="title-wrapper__actions">
+              <?= $layout->yield("actions") ?>
+            </div>
+            <?php endif; ?>
           </div>
         <?php endif; ?>
 

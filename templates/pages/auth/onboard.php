@@ -179,22 +179,30 @@ $old_input = request()->session()->getOldInputs() ?? [];
                     value="<?= htmlspecialchars($old_input['position'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                 </div>
                 <div class="field" data-field-required>
-                  <label class="field__label" for="department">Đơn vị / bộ môn</label>
-                  <input id="department" class="field__input" type="text" name="department" required maxlength="255"
-                    value="<?= htmlspecialchars($old_input['department'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                  <label class="field__label" for="department_id">Đơn vị / bộ môn</label>
+                  <select id="department_id" class="field__input" name="department_id" required>
+                    <option value="">- Chọn đơn vị -</option>
+                    <?php foreach ($departments as $department): ?>
+                      <option value="<?= (int) $department->id ?>" <?= isset($old_input['department_id']) && (string) $old_input['department_id'] === (string) $department->id ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($department->full_name ?? '', ENT_QUOTES, 'UTF-8') ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
                 </div>
+                <!-- TẠM ẨN NGÀY BẮT ĐẦU VÀ NGÀY KẾT THÚC
                 <div class="grid grid-cols-1 gap-4" style="grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));">
                   <div class="field" data-field-required>
                     <label class="field__label" for="start_date">Ngày bắt đầu</label>
                     <input id="start_date" class="field__input" type="date" name="start_date" required
-                      value="<?= htmlspecialchars($old_input['start_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                      value="<htmlspecialchars($old_input['start_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                   </div>
                   <div class="field" data-field-required>
                     <label class="field__label" for="end_date">Ngày kết thúc</label>
                     <input id="end_date" class="field__input" type="date" name="end_date" required
-                      value="<?= htmlspecialchars($old_input['end_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                      value="<htmlspecialchars($old_input['end_date'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                   </div>
                 </div>
+                -->
                 <div class="field">
                   <label class="field__label" for="notes">Ghi chú</label>
                   <textarea id="notes" class="field__input" name="notes"
@@ -239,13 +247,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
               <dt>Chức vụ</dt>
               <dd data-review="position"></dd>
               <dt>Đơn vị</dt>
-              <dd data-review="department"></dd>
-              <dt>Loại hợp đồng</dt>
-              <dd data-review="contract_type"></dd>
+              <dd data-review="department_id"></dd>
+              <!-- TẠM ẨN NGÀY BẮT ĐẦU VÀ NGÀY KẾT THÚC
               <dt>Ngày bắt đầu</dt>
               <dd data-review="start_date"></dd>
               <dt>Ngày kết thúc</dt>
               <dd data-review="end_date"></dd>
+              -->
               <dt>Ghi chú</dt>
               <dd data-review="notes"></dd>
             <?php endif; ?>

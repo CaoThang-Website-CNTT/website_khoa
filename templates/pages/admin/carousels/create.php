@@ -10,32 +10,21 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Modal select media -->
 <?php require_once(BASE_PATH . '/templates/components/media_selector_modal.php'); ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">Thêm carousel mới</h2>
-      <p>Điền thông tin carousel và các slide bên dưới</p>
-    </div>
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url("admin/carousels") ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary"
-          data-size="lg" class="btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Thêm
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Thêm carousel mới</h2>
+    <p class="title-wrapper__description">Điền thông tin carousel và các slide bên dưới</p>
+<?php $layout->end() ?>
 
+<?php $layout->start('actions') ?>
+<a href="<?= url("admin/carousels") ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary" data-size="lg" class="btn">
+      <i class="fa-solid fa-floppy-disk"></i>
+      Thêm
+    </button>
+<?php $layout->end() ?>
 <form id="carousel-add-form" action="<?= url('admin/carousels') ?>" method="POST">
   <?= csrf_field() ?>
 

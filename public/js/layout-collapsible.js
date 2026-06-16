@@ -50,8 +50,9 @@ export default class LayoutCollapsible {
   _updateToggle(isCollapsed) {
     this.toggleBtns.forEach(btn => {
       // Toggle active state or icons if needed
-      btn.dataset.state = isCollapsed ? 'collapsed' : 'expanded';
-      
+      btn.dataset.state = isCollapsed ? "collapsed" : "expanded";
+      btn.setAttribute("data-variant", isCollapsed ? "outline" : "secondary");
+
       // If the button has a title or aria-label, update it
       const title = isCollapsed ? 'Mở rộng thông tin' : 'Thu gọn thông tin';
       btn.title = title;

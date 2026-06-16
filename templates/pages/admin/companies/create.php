@@ -24,7 +24,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
     array_map(fn($t) => [
       'id' => $t->id,
       'full_name' => $t->full_name,
-      'staff_code' => $t->staff_code,
       'department' => $t->department,
     ], $teachers)
   ) ?>;
@@ -32,31 +31,21 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">Thêm lớp học mới</h2>
-      <p>Điền thông tin lớp học mới vào các trường dưới đây</p>
-    </div>
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/classrooms') ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary"
-          data-size="lg" class="w-full btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Thêm
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Thêm công ty mới</h2>
+    <p class="title-wrapper__description">Điền thông tin công ty mới vào các trường dưới đây</p>
+<?php $layout->end() ?>
+
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/companies') ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary" data-size="lg" class="w-full btn">
+      <i class="fa-solid fa-floppy-disk"></i>
+      Thêm
+    </button>
+<?php $layout->end() ?>
 <form class="detail-layout" id="classroom-add-form" action="<?= url('admin/classrooms') ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
@@ -140,7 +129,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <?php foreach ($teachers as $teacher): ?>
                   <option value="<?= htmlspecialchars($teacher->id) ?>">
                     <?= htmlspecialchars($teacher->full_name) ?>
-                    (<?= htmlspecialchars($teacher->staff_code) ?>)
                     - <?= htmlspecialchars($teacher->department) ?>
                   </option>
                 <?php endforeach; ?>
@@ -242,7 +230,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         filteredTeachers.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.textContent = `${t.full_name} (${t.staff_code}) - ${t.department}`;
+          opt.textContent = `${t.full_name} - ${t.department}`;
           teacherSelect.appendChild(opt);
         });
         teacherSelect.disabled = false;

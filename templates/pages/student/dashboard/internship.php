@@ -29,49 +29,30 @@ $effectiveMetadata = $effStatus ? [
 ] : null;
 ?>
 
-<!-- ========== title-wrapper start ========== -->
 <link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div>
-      <div class="flex items-center gap-2">
-        <h1 class="title text-2xl font-semibold">Thông tin thực tập</h1>
-        <?php if ($effectiveMetadata): ?>
-          <span class="badge"
-            data-variant="<?= $effectiveMetadata['variant'] ?>"><?= $effectiveMetadata['label'] ?></span>
-        <?php endif; ?>
-      </div>
-      <p>Xem chi tiết đợt thực tập và kết quả đánh giá.</p>
-    </div>
+<?php $layout->start("heading") ?>
+<h1 class="title-wrapper__title">
+  Thông tin thực tập
+</h1>
+<p class="title-wrapper__description">Xem chi tiết đợt thực tập và kết quả đánh giá .</p>
+<?php $layout->end() ?>
 
-    <div class="flex items-center gap-4">
-      <?php if ($current): ?>
-        <button type="button" class="btn" data-variant="primary" data-size="lg" data-modal-trigger="#rl_requestModal">
-          <i class="fa-solid fa-file-contract mr-2"></i>
-          Đăng ký giấy giới thiệu
-        </button>
-        <div id="internship-data" data-batch-student-id="<?= $current['batch_student_id'] ?>" class="hidden"></div>
-      <?php endif; ?>
-
-      <div class="field">
-        <select class="field__input" onchange="window.location.href = '<?= url('student/internship') ?>/' + this.value">
-          <?php if (empty($batches)): ?>
-            <option disabled selected>Chưa tham gia đợt nào</option>
-          <?php else: ?>
-            <?php foreach ($batches as $b): ?>
-              <option value="<?= $b['id'] ?>" <?= $current && $current['id'] == $b['id'] ? 'selected' : '' ?>>
-                <?= htmlspecialchars(mb_strimwidth($b['title'], 0, 25, "...")) ?>
-              </option>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </select>
-      </div>
-    </div>
-  </div>
+<?php $layout->start("actions") ?>
+<div class="batch-select">
+  <select class="field__input batch-select__input" onchange="window.location.href = '<?= url('student/internship') ?>/' + this.value">
+    <?php if (empty($batches)): ?>
+      <option disabled selected>Chưa tham gia đợt nào</option>
+    <?php else: ?>
+      <?php foreach ($batches as $b): ?>
+        <option value="<?= $b['id'] ?>" <?= $current && $current['id'] == $b['id'] ? 'selected' : '' ?>>
+          <?= htmlspecialchars(mb_strimwidth($b['title'], 0, 25, "...")) ?>
+        </option>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </select>
+  <i class="fa-solid fa-chevron-down batch-select__icon"></i>
 </div>
-<!-- ========== title-wrapper end ========== -->
-
-<?php if ($current): ?>
+<?php if ($current && $current['status'] !== 'draft'): ?>
   <div class="detail-layout">
     <div class="detail-layout__main">
       <!-- Chi tiết phân công -->
@@ -100,6 +81,13 @@ $effectiveMetadata = $effStatus ? [
               <p><span class="font-bold">Số điện thoại GVHD:</span> <?= htmlspecialchars($supervisor->phone) ?></p>
             <?php else: ?>
               <p><span class="font-bold">Giảng viên hướng dẫn:</span> Chưa phân công</p>
+            <?php endif; ?>
+
+            <?php if ($effectiveMetadata): ?>
+              <p>
+                <span class="font-bold">Trạng thái: </span>
+                <span class="badge" data-variant="<?= $effectiveMetadata['variant'] ?>"><?= $effectiveMetadata['label'] ?></span>
+              </p>
             <?php endif; ?>
           </div>
         </div>
@@ -227,11 +215,18 @@ $effectiveMetadata = $effStatus ? [
 
       <!-- Giấy giới thiệu -->
       <div class="card shadow">
-        <div class="card__header">
+        <div class="card__header flex justify-between">
           <h3 class="card__title">
             <i class="fa-solid fa-file-contract mr-2"></i>
             Giấy giới thiệu
           </h3>
+          <?php if ($current): ?>
+            <button type="button" class="btn" data-variant="primary" data-size="lg" data-modal-trigger="#rl_requestModal">
+              <i class="fa-solid fa-plus mr-1"></i>
+              Đăng ký
+            </button>
+            <div id="internship-data" data-batch-student-id="<?= $current['batch_student_id'] ?>" class="hidden"></div>
+          <?php endif; ?>
         </div>
         <hr class="separator" />
         <div class="card__content">
@@ -531,6 +526,19 @@ $effectiveMetadata = $effStatus ? [
         <button type="button" class="btn" data-variant="outline" data-modal-close="rl_requestModal">Hủy</button>
         <button type="submit" form="rl_requestForm" class="btn" data-variant="primary">Gửi đăng ký</button>
       </div>
+    </div>
+  </div>
+<?php else: ?>
+  <div class="card shadow py-12 text-center">
+    <div class="card__content flex flex-col items-center">
+      <div class="text-5xl mb-6">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 class="text-xl font-semibold mb-2">Chưa có thông tin thực tập</h2>
+      <p class="max-w-sm mx-auto">
+        Bạn hiện chưa tham gia vào đợt thực tập nào.
+        Thông tin sẽ hiển thị khi bạn bắt đầu đợt mới.
+      </p>
     </div>
   </div>
 <?php endif; ?>

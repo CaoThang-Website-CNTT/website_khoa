@@ -1,3 +1,5 @@
+import LayoutCollapsible from "../layout-collapsible.js";
+
 document.addEventListener('DOMContentLoaded', () => {
   // Tab Switching
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -23,15 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Toggle Sidebar
-  const sidebarToggleBtn = document.querySelector('.js-sidebar-toggle');
-  const detailLayout = document.querySelector('.detail-layout');
-
-  if (sidebarToggleBtn && detailLayout) {
-    sidebarToggleBtn.addEventListener('click', () => {
-      detailLayout.classList.toggle('is-collapsed');
-    });
-  }
+  // Init Collapsible Sidebar
+  new LayoutCollapsible({
+    containerSelector: ".detail-layout--collapsible",
+    toggleSelector: ".js-sidebar-toggle",
+    storageKey: "teacher-grading-sidebar-collapsed",
+    defaultCollapsed: false,
+  });
 
   // Version Selector Logic
   const versionSelects = document.querySelectorAll('.js-version-select');

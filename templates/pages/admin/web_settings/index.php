@@ -1,12 +1,6 @@
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div>
-      <h2 class="title text-2xl font-semibold">
-        Cài đặt hệ thống
-      </h2>
-    </div>
-  </div>
-</div>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Cài đặt hệ thống</h2>
+<?php $layout->end() ?>
 
 <?php
 $initialTab = $_GET['tab'] ?? (!empty($data) ? $data[0]['name'] : '');

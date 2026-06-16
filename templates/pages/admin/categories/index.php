@@ -1,26 +1,18 @@
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">
+  Danh mục
+  <span class="badge" data-variant="primary">
+    <?= $data->getTotal(); ?>
+  </span>
+</h2>
+<?php $layout->end() ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Danh mục
-        <span class="badge" data-variant="primary">
-          <?= $data->getTotal(); ?>
-        </span>
-      </h2>
-    </div>
-    <div class="flex gap-2">
-      <a href="<?= url('admin/categories/create') ?>" data-variant="primary" data-size="md" class="btn">
-        <i class="fa-solid fa-plus"></i>
-        Thêm
-      </a>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
-
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/categories/create') ?>" data-variant="primary" data-size="md" class="btn">
+  <i class="fa-solid fa-plus"></i>
+  Thêm
+</a>
+<?php $layout->end() ?>
 <div class="tm-container" data-tm="categories_table" data-tm-mode="client" data-tm-searchable>
 
   <template data-tm-pagination></template>

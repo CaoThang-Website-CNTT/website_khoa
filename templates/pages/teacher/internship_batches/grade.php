@@ -29,32 +29,24 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
 ?>
 <link rel="stylesheet" href="<?= url('public/css/teacher_grading.css') ?>">
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6">
-      <h2 class="title text-2xl font-semibold">
-        Chấm điểm: <?= htmlspecialchars($student['full_name'] ?? '') ?>
-      </h2>
-      <div class="text-sm flex items-center" style="color: var(--muted-foreground)">
-        MSSV: <?= htmlspecialchars($student['student_code'] ?? '--') ?> - Công ty: <?= htmlspecialchars($companyName) ?>
-      </div>
-    </div>
-
-    <div class="flex gap-2">
-      <a href="<?= url("teacher/internship_batches/{$batchId}") ?>" data-variant="outline" data-size="md" class="btn">
-        <i class="fa-solid fa-chevron-left"></i>
-        Quay lại
-      </a>
-
-      <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-        <i class="fa-solid fa-bars"></i>
-      </button>
-    </div>
-  </div>
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Chấm điểm: <?= htmlspecialchars($student['full_name'] ?? '') ?>
+</h2>
+<div class="title-wrapper__description flex items-center">
+  MSSV: <?= htmlspecialchars($student['student_code'] ?? '--') ?> - Công ty: <?= htmlspecialchars($companyName) ?>
 </div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->end() ?>
 
+<?php $layout->start("actions") ?>
+<a href="<?= url("teacher/internship_batches/{$batchId}") ?>" data-variant="outline" data-size="md" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
+  <i class="fa-solid fa-bars"></i>
+</button>
+<?php $layout->end() ?>
 <div class="detail-layout detail-layout--collapsible">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
@@ -154,7 +146,7 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
           <?= csrf_field() ?>
 
           <div class="field mb-4" data-field-required>
-            <label class="field__label">Điểm tổng kết (0-10)</label>
+            <label class="field__label">Điểm tổng kết</label>
             <input type="number" name="score" class="field__input score-input" step="0.25" min="0" max="10" value="<?= $grade['final_score'] ?? '' ?>" <?= !$canGrade ? 'disabled' : 'required' ?>>
           </div>
 
@@ -188,4 +180,4 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
   <img id="lightbox-img" src="" alt="Phóng to">
 </div>
 
-<script src="<?= url('public/js/pages/teacher_grading.js') ?>"></script>
+<script src="<?= url('public/js/pages/teacher_grading.js') ?>" type="module"></script>

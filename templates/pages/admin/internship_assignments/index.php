@@ -3,29 +3,22 @@
 <!-- Toast notifications -->
 
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Phân công: <?= htmlspecialchars($batch->title) ?>
-      </h2>
-      <p class="text-sm">Quản lý phân công sinh viên cho giảng viên hướng dẫn</p>
-    </div>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">
+      Phân công: <?= htmlspecialchars($batch->title) ?>
+    </h2>
+    <p class="title-wrapper__description">Quản lý phân công sinh viên cho giảng viên hướng dẫn</p>
+<?php $layout->end() ?>
 
-    <div class="flex gap-2 items-center">
-      <a href="<?= url('admin/intership_batches') ?>" data-variant="outline" data-size="md" class="btn">
-        <i class="fa-solid fa-chevron-left"></i>
-        Quay lại
-      </a>
-      <button type="button" id="btn-auto-assign" class="btn" data-variant="outline" data-size="md">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Phân công tự động
-      </button>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
-
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/intership_batches') ?>" data-variant="outline" data-size="md" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <button type="button" id="btn-auto-assign" class="btn" data-variant="outline" data-size="md">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Phân công tự động
+    </button>
+<?php $layout->end() ?>
 <div class="table-wrapper shadow rounded-md mt-4 relative">
   <div id="table-loader" class="assignment-loader hidden">
     <i class="fa-solid fa-spinner fa-spin text-3xl"></i>

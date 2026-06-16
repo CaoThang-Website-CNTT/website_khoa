@@ -10,34 +10,16 @@ $letters = $letters ?? [];
 <link rel="stylesheet" href="<?= url('public/css/batch_students.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/referral_letters.css') ?>">
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.toast) {
-        window.toast.<?= ($flash['type']) ?>('<?= $flash['title'] ?>', '<?= $flash['desc'] ?? '' ?>');
-      }
-    });
-  </script>
-<?php endif; ?>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Giấy giới thiệu</h2>
+    <p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
+<?php $layout->end() ?>
 
-<div class="title-wrapper mb-6">
-  <div class="flex justify-between items-start">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">Giấy giới thiệu</h2>
-      <p>Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập #<?= htmlspecialchars($batch['id']) ?>
-      </p>
-    </div>
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg"
-          class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i> Quay lại
+    </a>
+<?php $layout->end() ?>
 
 <div class="card">
   <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true"

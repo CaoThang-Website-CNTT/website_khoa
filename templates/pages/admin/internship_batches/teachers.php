@@ -10,31 +10,16 @@ $supervisors = $supervisors ?? [];
 
 <link rel="stylesheet" href="<?= url('public/css/batch_teachers.css') ?>">
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.toast) {
-        window.toast.<?= ($flash['type']) ?>('<?= $flash['title'] ?>', '<?= $flash['desc'] ?? '' ?>');
-      }
-    });
-  </script>
-<?php endif; ?>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Giảng viên hướng dẫn</h2>
+    <p class="title-wrapper__description">Danh sách giảng viên tham gia đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
+<?php $layout->end() ?>
 
-<div class="title-wrapper mb-6">
-  <div class="flex justify-between items-start">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">Giảng viên hướng dẫn</h2>
-      <p>Danh sách giảng viên tham gia đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
-    </div>
-    <div class="flex gap-2">
-      <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg"
-        class="btn">
-        <i class="fa-solid fa-chevron-left"></i>
-        Quay lại
-      </a>
-    </div>
-  </div>
-</div>
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i> Quay lại
+    </a>
+<?php $layout->end() ?>
 
 <div class="card">
   <div class="tm-container" data-tm="batch_teachers_table" data-tm-mode="client" data-tm-searchable="true">

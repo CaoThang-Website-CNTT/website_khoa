@@ -1,21 +1,18 @@
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div>
-      <h2 class="title text-2xl font-semibold">
-        Carousel
-        <span class="badge" data-variant="primary">
-          <?= count($data ?? []); ?>
-        </span>
-      </h2>
-    </div>
-    <div class="flex gap-2">
-      <a href="<?= url('admin/carousels/create') ?>" data-variant="primary" data-size="md" class="btn">
-        <i class="fa-solid fa-plus"></i>
-        Thêm
-      </a>
-    </div>
-  </div>
-</div>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">
+      Carousel
+      <span class="badge" data-variant="primary">
+        <?= count($data ?? []); ?>
+      </span>
+    </h2>
+<?php $layout->end() ?>
+
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/carousels/create') ?>" data-variant="primary" data-size="md" class="btn">
+      <i class="fa-solid fa-plus"></i>
+      Thêm
+    </a>
+<?php $layout->end() ?>
 <div class="tm-container" data-tm="carousels_table" data-tm-mode="client" data-tm-searchable>
 
   <template data-tm-pagination></template>

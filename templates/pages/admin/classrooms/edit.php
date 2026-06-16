@@ -24,7 +24,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
     array_map(fn($t) => [
       'id' => $t->id,
       'full_name' => $t->full_name,
-      'staff_code' => $t->staff_code,
       'department' => $t->department,
     ], $teachers)
   ) ?>;
@@ -32,41 +31,28 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Thông tin lớp học
-        <?= "#" . htmlspecialchars($classroom->short_name) ?>
-      </h2>
-      <p>Cập nhật thông tin lớp học tại trang này.</p>
-    </div>
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/classrooms') ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
-          data-size="lg" class="w-full btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Lưu thay đổi
-        </button>
-      </div>
-      <div>
-        <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
-          data-size="lg" class="btn">
-          <i class="fa-solid fa-trash"></i>
-          Xóa
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">
+      Thông tin lớp học
+      <?= "#" . htmlspecialchars($classroom->short_name) ?>
+    </h2>
+    <p class="title-wrapper__description">Cập nhật thông tin lớp học tại trang này.</p>
+<?php $layout->end() ?>
+
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/classrooms') ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i>
+      Quay lại
+    </a>
+    <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
+      <i class="fa-solid fa-floppy-disk"></i>
+      Lưu thay đổi
+    </button>
+    <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
+      <i class="fa-solid fa-trash"></i>
+      Xóa
+    </button>
+<?php $layout->end() ?>
 <form class="detail-layout" id="classroom-edit-form" action="<?= url('admin/classrooms/' . $classroom->id) ?>"
   method="POST">
   <?= csrf_field() ?>
@@ -333,7 +319,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         filteredTeachers.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.textContent = `${t.full_name} (${t.staff_code}) - ${t.department}`;
+          opt.textContent = `${t.full_name} - ${t.department}`;
 
           // Pre-select dữ liệu cũ nếu đang ở lần load đầu tiên
           if (isInit && t.id == initialTeacherId) {

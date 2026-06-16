@@ -130,8 +130,12 @@ class StudentDashboardController extends Controller
       return $this->redirect('/student/internship/' . $dashboardData['current']['id']);
     }
 
-    $request->session()->flashNotify('warning', 'Bạn chưa tham gia đợt thực tập nào.');
-    return $this->redirect('/student');
+    return $this->render('student/dashboard/internship', [
+      'student' => $student,
+      'title' => 'Thông tin thực tập',
+      'batches' => [],
+      'current' => null
+    ], layout: 'dashboard_layout');
   }
 
   private function checkOwnershipAndGetBatchStudentId(int $studentId, int $batchId): ?int

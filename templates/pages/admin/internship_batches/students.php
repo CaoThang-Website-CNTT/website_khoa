@@ -13,46 +13,34 @@ $batch = $batch ?? null;
 <link rel="stylesheet" href="<?= url('public/css/batch_students_assignment.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/export.css') ?>">
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.toast) {
-        window.toast.<?= ($flash['type']) ?>('<?= $flash['title'] ?>', '<?= $flash['desc'] ?? '' ?>');
-      }
-    });
-  </script>
-<?php endif; ?>
 
-<div class="title-wrapper mb-6">
-  <div class="flex justify-between items-center">
-    <div>
-      <h2 class="title text-2xl font-semibold">Sinh viên & Phân công</h2>
-      <p class="text-sm">Quản lý sinh viên và phân công giảng viên hướng dẫn đợt thực tập
-        <span class="font-bold">"<?= htmlspecialchars($batch['title']) ?>"</span>
-      </p>
-    </div>
-    <div class="flex gap-2">
-      <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg"
-        class="btn">
-        <i class="fa-solid fa-chevron-left"></i> Quay lại
-      </a>
 
-      <!-- Toolbar: Phân công tự động -->
-      <?php if ($batch['status'] !== 'closed'): ?>
-        <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
-          <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
-        </button>
-        <button type="button" id="btn-auto-even" class="btn" data-variant="primary" data-size="lg">
-          <i class="fa-solid fa-scale-balanced"></i> Chia đều
-        </button>
-      <?php endif; ?>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Sinh viên & Phân công</h2>
+    <p class="title-wrapper__description">Quản lý sinh viên và phân công giảng viên hướng dẫn đợt thực tập
+      <span class="font-bold">"<?= htmlspecialchars($batch['title']) ?>"</span>
+    </p>
+<?php $layout->end() ?>
 
-      <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-        <i class="fa-solid fa-bars"></i>
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
+      <i class="fa-solid fa-chevron-left"></i> Quay lại
+    </a>
+
+    <!-- Toolbar: Phân công tự động -->
+    <?php if ($batch['status'] !== 'closed'): ?>
+      <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
+        <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
       </button>
-    </div>
-  </div>
-</div>
+      <button type="button" id="btn-auto-even" class="btn" data-variant="primary" data-size="lg">
+        <i class="fa-solid fa-scale-balanced"></i> Chia đều
+      </button>
+    <?php endif; ?>
+
+    <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+<?php $layout->end() ?>
 
 <div class="detail-layout detail-layout--collapsible">
   <!-- CỘT CHÍNH (2/3): Thống kê tổng và Danh sách sinh viên -->

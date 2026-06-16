@@ -8,17 +8,10 @@
 $student = $student ?? null;
 ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div>
-      <h1 class="title text-2xl font-semibold">Đồ án tốt nghiệp</h1>
-      <p>Theo dõi tiến độ và kết quả thực hiện đồ án tốt nghiệp.</p>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
-
+<?php $layout->start("heading") ?>
+<h1 class="title-wrapper__title">Đồ án tốt nghiệp</h1>
+<p class="title-wrapper__description">Theo dõi tiến độ và kết quả thực hiện đồ án tốt nghiệp.</p>
+<?php $layout->end() ?>
 <div class="card shadow py-12 text-center">
   <div class="card__content flex flex-col items-center">
     <div class="text-5xl mb-6">

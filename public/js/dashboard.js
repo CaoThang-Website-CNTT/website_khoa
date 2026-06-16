@@ -28,7 +28,16 @@ class SidebarHandler {
    */
   _setDefaultState() {
     if (!this._container.dataset.state) {
-      this._container.dataset.state = "expanded";
+      const isMobile = window.innerWidth < 1024;
+      const savedState = localStorage.getItem("sidebar_state");
+
+      if (isMobile) {
+        // Luôn thu gọn trên thiết bị di động
+        this._container.dataset.state = "collapsed";
+      } else {
+        // Trên PC, ưu tiên trạng thái đã lưu, nếu không có mặc định mở
+        this._container.dataset.state = savedState === "collapsed" ? "collapsed" : "expanded";
+      }
     }
 
     this._syncTriggers();
@@ -62,6 +71,7 @@ class SidebarHandler {
    */
   _open() {
     this._container.dataset.state = "expanded";
+    localStorage.setItem("sidebar_state", "expanded");
     this._syncTriggers();
   }
 
@@ -71,6 +81,7 @@ class SidebarHandler {
    */
   _close() {
     this._container.dataset.state = "collapsed";
+    localStorage.setItem("sidebar_state", "collapsed");
     this._syncTriggers();
   }
 

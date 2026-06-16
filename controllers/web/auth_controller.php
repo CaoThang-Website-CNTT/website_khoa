@@ -89,6 +89,7 @@ class AuthController extends Controller
     }
 
     $classrooms = $role === 'student' ? $this->_studentService->getAllClassrooms() : [];
+    $departments = $role === 'teacher' ? $this->_teacherService->getAllDepartments() : [];
 
     return $this->render('auth/onboard', [
       'settings' => $this->_settings,
@@ -97,6 +98,7 @@ class AuthController extends Controller
       'googleDisplayName' => (string) ($pending['name'] ?? ''),
       'studentIdFromEmail' => $studentIdFromEmail,
       'classrooms' => $classrooms,
+      'departments' => $departments,
     ], 'auth_layout');
   }
 
@@ -308,9 +310,6 @@ class AuthController extends Controller
   private function _completeTeacherOnboarding(Request $request, string $email, array $data)
   {
     $data['email'] = $email;
-    if (isset($data['staff_code'])) {
-      $data['staff_code'] = trim((string) $data['staff_code']);
-    }
 
     $validator = new RequestValidator();
     $rules = [
@@ -320,14 +319,12 @@ class AuthController extends Controller
       'gender' => ['required', 'in:male,female'],
       'phone' => ['required', 'phone', 'max:15'],
       'address' => ['required'],
-      'staff_code' => ['required', 'size:10'],
       'degree' => ['required', 'max:255'],
       'title' => ['nullable', 'max:150'],
       'position' => ['required', 'max:255'],
-      'department' => ['required', 'max:255'],
-      'contract_type' => ['required', 'in:full_time,part_time,visiting,contract'],
-      'start_date' => ['required', 'date'],
-      'end_date' => ['required', 'date'],
+      'department_id' => ['required', 'numeric'],
+      // 'start_date' => ['required', 'date'],
+      // 'end_date' => ['required', 'date'],
       'notes' => ['nullable'],
     ];
 

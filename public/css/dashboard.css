@@ -320,11 +320,31 @@ body {
 /* ==========================================================================
    DETAIL PAGE
    ========================================================================== */
-.title-wrapper .title {
+.title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.title-wrapper .title-wrapper__content {
+  min-width: 60%;
+}
+
+.title-wrapper .title-wrapper__title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   color: var(--foreground);
+  font-size: var(--text-2xl);
+  font-weight: var(--fw-semibold);
+}
+
+.title-wrapper .title-wrapper__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .detail-layout {
@@ -339,6 +359,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+@media (max-width: 64rem) {
+  .title-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ==========================================================================

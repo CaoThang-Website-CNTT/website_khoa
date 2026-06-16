@@ -1,28 +1,18 @@
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">
+  Công ty
+  <span class="badge" data-variant="primary">
+    <?= $data->count(); ?>
+  </span>
+</h2>
+<?php $layout->end() ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Công ty
-        <span class="badge" data-variant="primary">
-          <?= $data->count(); ?>
-        </span>
-      </h2>
-    </div>
-
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/companies/create') ?>" data-variant="primary" data-size="md" class="btn">
-          <i class="fa-solid fa-plus"></i>
-          Thêm
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start('actions') ?>
+<a href="<?= url('admin/companies/create') ?>" data-variant="primary" data-size="md" class="btn">
+  <i class="fa-solid fa-plus"></i>
+  Thêm
+</a>
+<?php $layout->end() ?>
 <div class="card">
   <div class="tm-container" data-tm="companies_table" data-tm-mode="client" data-tm-searchable>
 
@@ -56,15 +46,15 @@
 <script type="application/json" data-tm-data="companies_table">
   <?= json_encode([
     'rows' => array_map(function ($company) {
-        return [
-          'id' => $company->id,
-          'name' => $company->name ?? 'N/A',
-          'tax_code' => $company->tax_code ?? 'N/A',
-          'address' => $company->address ?? 'N/A',
-          'phone' => $company->phone ?? 'N/A',
-          'website' => $company->website ?? 'N/A'
-        ];
-      }, $data->getItems()),
+      return [
+        'id' => $company->id,
+        'name' => $company->name ?? 'N/A',
+        'tax_code' => $company->tax_code ?? 'N/A',
+        'address' => $company->address ?? 'N/A',
+        'phone' => $company->phone ?? 'N/A',
+        'website' => $company->website ?? 'N/A'
+      ];
+    }, $data->getItems()),
     'total' => $data->count(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()

@@ -8,7 +8,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </script>
 
 <?php $layout->start("heading") ?>
-<h2 class="title text-2xl font-semibold">
+<h2 class="title-wrapper__title">
   Thêm tài khoản mới
 </h2>
 <p>Điền thông tin tài khoản mới vào các trường dưới đây</p>

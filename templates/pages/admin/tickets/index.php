@@ -1,5 +1,5 @@
 <?php $layout->start("heading") ?>
-<h2 class="title text-2xl font-semibold">
+<h2 class="title-wrapper__title">
   Tickets
   <span class="badge" data-variant="primary"><?= $data->getTotal(); ?></span>
 </h2>

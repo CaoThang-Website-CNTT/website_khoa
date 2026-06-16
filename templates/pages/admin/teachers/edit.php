@@ -7,44 +7,28 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<!-- Toast khi redirect về đây có set flash (ví dụ: sau khi xóa thành công) -->
+<?php $layout->start("heading") ?>
+<h2 class="title-wrapper__title">
+  Thông tin giảng viên
+  <?= htmlspecialchars($teacher->full_name) ?>
+</h2>
+<p class="title-wrapper__description">Cập nhật thông tin giảng viên tại trang này.</p>
+<?php $layout->end() ?>
 
-<!-- ========== title-wrapper start ========== -->
-<div class="title-wrapper">
-  <div class="flex justify-between items-center">
-    <div class="col-6 col-md-6">
-      <h2 class="title text-2xl font-semibold">
-        Thông tin giảng viên
-        <?= '#' . htmlspecialchars($teacher->staff_code) ?>
-      </h2>
-      <p>Cập nhật thông tin giảng viên tại trang này.</p>
-    </div>
-
-    <div class="flex gap-2">
-      <div>
-        <a href="<?= url('admin/teachers') ?>" data-variant="outline" data-size="lg" class="btn">
-          <i class="fa-solid fa-chevron-left"></i>
-          Quay lại
-        </a>
-      </div>
-      <div>
-        <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary"
-          data-size="lg" class="w-full btn">
-          <i class="fa-solid fa-floppy-disk"></i>
-          Lưu thay đổi
-        </button>
-      </div>
-      <div>
-        <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
-          data-size="lg" class="btn">
-          <i class="fa-solid fa-trash"></i>
-          Xóa
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ========== title-wrapper end ========== -->
+<?php $layout->start("actions") ?>
+<a href="<?= url('admin/teachers') ?>" data-variant="outline" data-size="lg" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Lưu thay đổi
+</button>
+<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
+  <i class="fa-solid fa-trash"></i>
+  Xóa
+</button>
+<?php $layout->end() ?>
 <form class="detail-layout" id="teacher-edit-form" action="<?= url('admin/teachers/' . $teacher->id) ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
@@ -127,11 +111,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <hr class="separator" />
         <div class="card__content">
           <div class="field-group">
-            <div class="field" data-field-required data-field-max="10">
-              <label class="field__label" for="staff_code">Mã giảng viên</label>
-              <input id="staff_code" class="field__input" type="text" name="staff_code"
-                value="<?= htmlspecialchars($teacher->staff_code) ?>">
-            </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="field" data-field-required>
@@ -153,9 +132,15 @@ $old_input = request()->session()->getOldInputs() ?? [];
               </div>
 
               <div class="field" data-field-required>
-                <label class="field__label" for="department">Phòng ban / Khoa</label>
-                <input id="department" class="field__input" type="text" name="department"
-                  value="<?= htmlspecialchars($teacher->department) ?> ">
+                <label class="field__label" for="department_id">Phòng ban / Khoa</label>
+                <select id="department_id" class="field__input" name="department_id">
+                  <option value="">-- Chọn đơn vị --</option>
+                  <?php foreach ($departments as $dept): ?>
+                    <option value="<?= htmlspecialchars($dept->id) ?>" <?= $teacher->department_id === $dept->id ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($dept->full_name) ?> (<?= htmlspecialchars($dept->short_name) ?>)
+                    </option>
+                  <?php endforeach; ?>
+                </select>
               </div>
             </div>
           </div>
@@ -170,64 +155,21 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <hr class="separator" />
         <div class="card__content">
           <div class="field-group">
-            <fieldset class="field__set">
-              <legend class="field__label">Loại hợp đồng</legend>
-              <div class="radio-group" data-radio-name="contract_type"
-                data-radio-default-value="<?= htmlspecialchars($teacher->contract_type) ?>">
-                <div class="grid grid-cols-2 gap-4">
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-full-time" class="radio-group__item" type="button" role="radio"
-                        value="full_time"></button>
-                      <div class="field__title">
-                        Full-time
-                      </div>
-                    </div>
-                  </label>
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-part-time" class="radio-group__item" type="button" role="radio"
-                        value="part_time"></button>
-                      <div class="field__title">
-                        Part-time
-                      </div>
-                    </div>
-                  </label>
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-visiting" class="radio-group__item" type="button" role="radio"
-                        value="visiting"></button>
-                      <div class="field__title">
-                        Thỉnh giảng
-                      </div>
-                    </div>
-                  </label>
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-contract" class="radio-group__item" type="button" role="radio"
-                        value="contract"></button>
-                      <div class="field__title">
-                        Hợp đồng khác
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </fieldset>
 
-            <div class="grid grid-cols-2 gap-4">
+
+            <!-- <div class="grid grid-cols-2 gap-4">
               <div class="field" data-field-required>
                 <label class="field__label" for="start_date">Ngày bắt đầu</label>
                 <input id="start_date" class="field__input" type="date" name="start_date"
-                  value="<?= htmlspecialchars($teacher->start_date) ?>">
+                  value="<= htmlspecialchars($teacher->start_date) ?>">
               </div>
 
               <div class="field" data-field-required>
                 <label class="field__label" for="end_date">Ngày kết thúc</label>
                 <input id="end_date" class="field__input" type="date" name="end_date"
-                  value="<?= htmlspecialchars($teacher->end_date) ?>">
+                  value="<= htmlspecialchars($teacher->end_date) ?>">
               </div>
-            </div>
+            </div> -->
 
             <div class="field">
               <label class="field__label">Ghi chú</label>
@@ -365,24 +307,24 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
 
-    teacherNameInput.addEventListener('input', function () {
+    teacherNameInput.addEventListener('input', function() {
       const teacherName = Utils.toCleanAscii(this.value).replace(/\s+/g, '');
       emailInput.value = teacherName ? `${teacherName}@caothang.edu.vn` : '';
     });
 
-    nationalIdInput.addEventListener('input', function () {
+    nationalIdInput.addEventListener('input', function() {
       const nationalId = this.value.trim();
       passwordInput.value = nationalId ? nationalId : '';
     });
 
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function () {
+    confirmBtn.addEventListener('click', function() {
       const form = document.querySelector('#teacher-edit-form');
       form.submit();
     });
 
     // Delete Confirm Btn Event Listener
-    deleteConfirmBtn.addEventListener('click', function () {
+    deleteConfirmBtn.addEventListener('click', function() {
       const deleteForm = document.querySelector('#delete-form');
       deleteForm.submit();
     });
