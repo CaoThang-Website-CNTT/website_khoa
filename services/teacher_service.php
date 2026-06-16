@@ -10,7 +10,8 @@ require_once BASE_PATH . '/services/account_service.php';
 require_once BASE_PATH . '/includes/core/pageable.php';
 
 use App\Models\{Teacher};
-use App\Stores\{TeacherStore, AccountStore};
+use App\Stores\{TeacherStore, AccountStore, DepartmentStore};
+use App\Models\{Department};
 use App\Core\Pageable;
 use Database;
 
@@ -26,29 +27,56 @@ interface ITeacherService
   public function getTeacherById(int $id): ?Teacher;
   public function updateTeacher(int $id, array $data): bool;
   public function deleteTeacher(int $id): bool;
+  /** @return Department[] */
+  public function getAllDepartments(): array;
 }
 
 class TeacherService implements ITeacherService
 {
   private TeacherStore $_teacherStore;
   private AccountStore $_accountStore;
+  private DepartmentStore $_departmentStore;
 
   public function __construct(
     TeacherStore $teacherStore,
     AccountStore $accountStore,
+    DepartmentStore $departmentStore
   ) {
     $this->_teacherStore = $teacherStore;
     $this->_accountStore = $accountStore;
+    $this->_departmentStore = $departmentStore;
   }
   /** @return Teacher[] */
   public function getAllTeachers(): array
   {
-    return $this->_teacherStore->getAll();
+    $teachers = $this->_teacherStore->getAll();
+
+    $departmentIds = array_filter(array_column($teachers, 'department_id'));
+    $departments = $this->_departmentStore->getByIds($departmentIds);
+    $departmentMap = array_column($departments, null, 'id');
+
+    foreach ($teachers as $teacher) {
+      if ($teacher->department_id && isset($departmentMap[$teacher->department_id])) {
+        $teacher->department = $departmentMap[$teacher->department_id];
+      }
+    }
+
+    return $teachers;
   }
-  /** @return Pageable */
   public function getTeachers(int $page, int $limit = 15): Pageable
   {
     $teachers = $this->_teacherStore->getPaginated($page, $limit);
+
+    $departmentIds = array_filter(array_column($teachers, 'department_id'));
+    $departments = $this->_departmentStore->getByIds($departmentIds);
+    $departmentMap = array_column($departments, null, 'id');
+
+    foreach ($teachers as $teacher) {
+      if ($teacher->department_id && isset($departmentMap[$teacher->department_id])) {
+        $teacher->department = $departmentMap[$teacher->department_id];
+      }
+    }
+
     $total = $this->_teacherStore->getTotalCount();
     return new Pageable($teachers, $total, $limit, $page);
   }
@@ -56,6 +84,14 @@ class TeacherService implements ITeacherService
   public function getTotalTeachersCount(): int
   {
     return $this->_teacherStore->getTotalCount();
+  }
+
+  /**
+   * @return Department[]
+   */
+  public function getAllDepartments(): array
+  {
+    return $this->_departmentStore->getAll();
   }
 
   public function isEmailUnique(string $email): bool
@@ -91,13 +127,11 @@ class TeacherService implements ITeacherService
       //   'gender' => ['required', 'in:male,female'],
       //   'phone' => ['required', 'phone', 'max:15'],
       //   'address' => ['required'],
-
-      //   'staff_code' => ['required', 'size:10'],
+      //
       //   'degree' => ['required', 'max:255'],
       //   'title' => ['nullable', 'max:150'],
       //   'position' => ['required', 'max:255'],
-      //   'department' => ['required', 'max:255'],
-      //   'contract_type' => ['required', 'in:full-time,part-time,visiting,contract'],
+      //   'department_id' => ['required', 'numeric'],
       //   'start_date' => ['required', 'date'],
       //   'end_date' => ['required', 'date'],
       //   'notes' => ['nullable'],
@@ -111,14 +145,12 @@ class TeacherService implements ITeacherService
         phone: $data['phone'],
         address: $data['address'],
 
-        staff_code: $data['staff_code'],
         degree: $data['degree'],
         title: $data['title'] ?? null,
         position: $data['position'],
-        department: $data['department'],
-        contract_type: $data['contract_type'],
-        start_date: $data['start_date'],
-        end_date: $data['end_date'],
+        department_id: $data['department_id'],
+        // start_date: $data['start_date'] ?? null,
+        // end_date: $data['end_date'] ?? null,
         notes: $data['notes'] ?? null,
       );
 
@@ -129,12 +161,16 @@ class TeacherService implements ITeacherService
   public function getTeacherById(int $id): ?Teacher
   {
     $teacher = $this->_teacherStore->getById($id);
-    if (!$teacher || !$teacher->account_id) {
-      return $teacher;
+    if (!$teacher) {
+      return null;
     }
 
-    $account = $this->_accountStore->getById($teacher->account_id);
-    $teacher->account = $account;
+    if ($teacher->account_id) {
+      $teacher->account = $this->_accountStore->getById($teacher->account_id);
+    }
+    if ($teacher->department_id) {
+      $teacher->department = $this->_departmentStore->getById($teacher->department_id);
+    }
 
     return $teacher;
   }
@@ -148,6 +184,9 @@ class TeacherService implements ITeacherService
 
     if ($teacher->account_id) {
       $teacher->account = $this->_accountStore->getById($teacher->account_id);
+    }
+    if ($teacher->department_id) {
+      $teacher->department = $this->_departmentStore->getById($teacher->department_id);
     }
 
     return $teacher;
@@ -167,12 +206,10 @@ class TeacherService implements ITeacherService
     //   'phone' => ['required', 'phone', 'max:15'],
     //   'address' => ['required'],
 
-    //   'staff_code' => ['required', 'size:10'],
     //   'degree' => ['required', 'max:255'],
     //   'title' => ['nullable', 'max:150'],
     //   'position' => ['required', 'max:255'],
-    //   'department' => ['required', 'max:255'],
-    //   'contract_type' => ['required', 'in:full-time,part-time,visiting,contract'],
+    //   'department_id' => ['required', 'numeric'],
     //   'start_date' => ['required', 'date'],
     //   'end_date' => ['required', 'date'],
     //   'notes' => ['nullable'],
@@ -184,14 +221,12 @@ class TeacherService implements ITeacherService
     $teacher->phone = $data['phone'] ?? $teacher->phone;
     $teacher->address = $data['address'] ?? $teacher->address;
 
-    $teacher->staff_code = $data['staff_code'] ?? $teacher->staff_code;
     $teacher->degree = $data['degree'] ?? $teacher->degree;
     $teacher->title = $data['title'] ?? $teacher->title;
     $teacher->position = $data['position'] ?? $teacher->position;
-    $teacher->department = $data['department'] ?? $teacher->department;
-    $teacher->contract_type = $data['contract_type'] ?? $teacher->contract_type;
-    $teacher->start_date = $data['start_date'] ?? $teacher->start_date;
-    $teacher->end_date = $data['end_date'] ?? $teacher->end_date;
+    $teacher->department_id = $data['department_id'] ?? $teacher->department_id;
+    //$teacher->start_date = $data['start_date'] ?? $teacher->start_date;
+    //$teacher->end_date = $data['end_date'] ?? $teacher->end_date;
     $teacher->notes = $data['notes'] ?? $teacher->notes;
 
     return $this->_teacherStore->update($teacher);

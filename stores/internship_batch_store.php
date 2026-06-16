@@ -474,7 +474,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
             FROM internship_batches b
             JOIN internship_batch_students bs ON b.id = bs.batch_id
             LEFT JOIN companies c ON bs.company_id = c.id
-            WHERE bs.student_id = :student_id AND b.deleted_at IS NULL AND b.status IN ('published','closed')
+            WHERE bs.student_id = :student_id AND b.deleted_at IS NULL AND b.status IN ('draft','published','closed')
             ORDER BY b.start_at DESC";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':student_id' => $studentId]);

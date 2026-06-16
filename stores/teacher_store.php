@@ -18,7 +18,6 @@ interface ITeacherStore
   public function getById(int $id): ?Teacher;
   /** @return Teacher[] */
   public function getByIds(array $ids): array;
-  public function getByStaffCode(string $staffCode): ?Teacher;
   public function create(Teacher $teacher): Teacher;
   public function update(Teacher $teacher): bool;
   public function softDelete(int $id): bool;
@@ -110,33 +109,20 @@ class TeacherStore extends Store implements ITeacherStore
     return array_map(fn($row) => Teacher::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
-  public function getByStaffCode(string $staffCode): ?Teacher
-  {
-    $sql = "
-      SELECT * FROM `teachers` 
-      WHERE `staff_code` = :staff_code AND `deleted_at` IS NULL
-    ";
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute(['staff_code' => $staffCode]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    return $row ? Teacher::fromArray($row) : null;
-  }
 
   public function create(Teacher $teacher): Teacher
   {
     $sql = "
       INSERT INTO `teachers` (
-        `account_id`, `staff_code`, `full_name`, `gender`, `dob`, 
+        `account_id`, `full_name`, `gender`, `dob`, 
         `national_id`, `phone`, `address`, `degree`, `position`, 
-        `title`, `department`, `contract_type`, `start_date`, 
-        `end_date`, `notes`, `updated_at`
+        `title`, `department_id`, 
+        `notes`, `updated_at`
       ) VALUES (
-        :acc_id, :staff_code, :full_name, :gender, :dob, 
+        :acc_id, :full_name, :gender, :dob, 
         :national_id, :phone, :address, :degree, :position, 
-        :title, :dept, :contract, :start_date, 
-        :end_date, :notes, NOW()
+        :title, :dept_id, 
+        :notes, NOW()
       )
     ";
 
@@ -150,14 +136,12 @@ class TeacherStore extends Store implements ITeacherStore
       ':phone' => $teacher->phone,
       ':address' => $teacher->address,
 
-      ':staff_code' => $teacher->staff_code,
       ':degree' => $teacher->degree,
       ':position' => $teacher->position,
       ':title' => $teacher->title,
-      ':dept' => $teacher->department,
-      ':contract' => $teacher->contract_type,
-      ':start_date' => $teacher->start_date,
-      ':end_date' => $teacher->end_date,
+      ':dept_id' => $teacher->department_id,
+      //':start_date' => $teacher->start_date,
+      //':end_date' => $teacher->end_date,
       ':notes' => $teacher->notes,
     ]);
 
@@ -174,7 +158,6 @@ class TeacherStore extends Store implements ITeacherStore
   {
     $sql = "
       UPDATE `teachers` SET 
-        `staff_code`    = :staff_code,
         `full_name`     = :full_name,
         `gender`        = :gender,
         `dob`           = :dob,
@@ -184,10 +167,7 @@ class TeacherStore extends Store implements ITeacherStore
         `degree`        = :degree,
         `position`      = :position,
         `title`         = :title,
-        `department`    = :department,
-        `contract_type` = :contract_type,
-        `start_date`    = :start_date,
-        `end_date`      = :end_date,
+        `department_id` = :department_id,
         `notes`         = :notes,
         `updated_at`    = NOW()
       WHERE `id` = :id AND `deleted_at` IS NULL
@@ -195,7 +175,6 @@ class TeacherStore extends Store implements ITeacherStore
 
     $stmt = $this->db->prepare($sql);
     $success = $stmt->execute([
-      ':staff_code' => $teacher->staff_code,
       ':full_name' => $teacher->full_name,
       ':gender' => $teacher->gender,
       ':dob' => $teacher->dob,
@@ -205,10 +184,9 @@ class TeacherStore extends Store implements ITeacherStore
       ':degree' => $teacher->degree,
       ':position' => $teacher->position,
       ':title' => $teacher->title,
-      ':department' => $teacher->department,
-      ':contract_type' => $teacher->contract_type,
-      ':start_date' => $teacher->start_date,
-      ':end_date' => $teacher->end_date,
+      ':department_id' => $teacher->department_id,
+      //':start_date' => $teacher->start_date,
+      //':end_date' => $teacher->end_date,
       ':notes' => $teacher->notes,
       ':id' => $teacher->id,
     ]);

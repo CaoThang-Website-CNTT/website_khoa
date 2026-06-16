@@ -29,7 +29,10 @@ class TeacherController extends Controller
 
   public function create()
   {
-    $this->render("admin/teachers/create", layout: 'dashboard_layout');
+    $departments = $this->_teacherService->getAllDepartments();
+    $this->render("admin/teachers/create", [
+      'departments' => $departments,
+    ], layout: 'dashboard_layout');
   }
 
   public function store(Request $request)
@@ -45,14 +48,12 @@ class TeacherController extends Controller
       'phone' => ['required', 'phone', 'max:15'],
       'address' => ['required'],
 
-      'staff_code' => ['required', 'size:10'],
       'degree' => ['required', 'max:255'],
       'title' => ['nullable', 'max:150'],
       'position' => ['required', 'max:255'],
-      'department' => ['required', 'max:255'],
-      'contract_type' => ['required', 'in:full_time,part_time,visiting,contract'],
-      'start_date' => ['required', 'date'],
-      'end_date' => ['required', 'date'],
+      'department_id' => ['required', 'numeric'],
+      // 'start_date' => ['required', 'date'],
+      // 'end_date' => ['required', 'date'],
       'notes' => ['nullable'],
     ];
 
@@ -75,7 +76,7 @@ class TeacherController extends Controller
       $request->session()->flashNotify(
         'success',
         'Tạo mới giảng viên thành công!',
-        'Giảng viên có mã #' . $newTeacher->staff_code . ' đã được tạo.'
+        'Giảng viên ' . $newTeacher->full_name . ' đã được tạo.'
       );
     } else {
       $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
@@ -90,8 +91,10 @@ class TeacherController extends Controller
     if (!$teacher) {
       die("Không thấy giảng viên với id: $id");
     }
+    $departments = $this->_teacherService->getAllDepartments();
     $this->render("admin/teachers/edit", [
       "teacher" => $teacher,
+      "departments" => $departments,
     ], layout: 'dashboard_layout');
   }
 
@@ -108,14 +111,12 @@ class TeacherController extends Controller
       'phone' => ['required', 'phone', 'max:15'],
       'address' => ['required'],
 
-      'staff_code' => ['required', 'size:10'],
       'degree' => ['required', 'max:255'],
       'title' => ['nullable', 'max:150'],
       'position' => ['required', 'max:255'],
-      'department' => ['required', 'max:255'],
-      'contract_type' => ['required', 'in:full_time,part_time,visiting,contract'],
-      'start_date' => ['required', 'date'],
-      'end_date' => ['required', 'date'],
+      'department_id' => ['required', 'numeric'],
+      //'start_date' => ['required', 'date'],
+      //'end_date' => ['required', 'date'],
       'notes' => ['nullable'],
     ];
 

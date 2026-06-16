@@ -24,9 +24,6 @@
       <a href="<?= url('admin/teachers/') ?>{{ row.id }}" class="font-medium">{{ value }}</a>
     </template>
 
-    <!-- Cột Mã GV -->
-    <template data-tm-col="staff_code" data-tm-label="Mã GV" data-tm-sortable data-tm-filter-type="text"></template>
-
     <!-- Cột Giới tính -->
     <template data-tm-col="gender" data-tm-label="Giới tính" data-tm-filter-type="select"
       data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Nam","value":"male"},{"label":"Nữ","value":"female"}]'>
@@ -42,15 +39,6 @@
     <!-- Cột Bộ môn -->
     <template data-tm-col="department" data-tm-label="Bộ môn" data-tm-filter-type="text"></template>
 
-    <!-- Cột Hợp đồng -->
-    <template data-tm-col="contract_type" data-tm-label="Hợp đồng" data-tm-filter-type="select"
-      data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Toàn thời gian","value":"full_time"},{"label":"Bán thời gian","value":"part_time"},{"label":"Thỉnh giảng","value":"visiting"},{"label":"Hợp đồng","value":"contract"}]'>
-      <span class="badge" data-variant="primary">
-        {{ value === 'full_time' ? 'Toàn thời gian' : (value === 'part_time' ? 'Bán thời gian' : (value === 'visiting' ?
-        'Thỉnh giảng' : 'Hợp đồng')) }}
-      </span>
-    </template>
-
     <template data-tm-pagination></template>
   </div>
 </div>
@@ -62,12 +50,10 @@
       return [
         'id' => $teacher->id,
         'full_name' => $teacher->full_name ?? 'N/A',
-        'staff_code' => $teacher->staff_code ?? 'N/A',
         'gender' => $teacher->gender ?? 'N/A',
         'dob' => $teacher->dob ?? 'N/A',
         'position' => $teacher->position ?? 'N/A',
-        'department' => $teacher->department ?? 'N/A',
-        'contract_type' => $teacher->contract_type ?? 'N/A'
+        'department' => $teacher->department?->full_name ?? 'N/A',
       ];
     }, $data->getItems()),
     'total' => $data->getTotal(),

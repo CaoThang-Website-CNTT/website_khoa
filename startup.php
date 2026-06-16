@@ -74,6 +74,7 @@ require_once BASE_PATH . '/models/post.php';
 require_once BASE_PATH . '/models/company.php';
 require_once BASE_PATH . '/models/referral_letter.php';
 require_once BASE_PATH . '/models/ticket.php';
+require_once BASE_PATH . '/models/department.php';
 
 // Editor (Post)
 require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
@@ -107,6 +108,7 @@ require_once BASE_PATH . '/stores/category_post_store.php';
 require_once BASE_PATH . '/stores/company_store.php';
 require_once BASE_PATH . '/stores/referral_letter_store.php';
 require_once BASE_PATH . '/stores/ticket_store.php';
+require_once BASE_PATH . '/stores/department_store.php';
 
 // Services
 require_once BASE_PATH . '/services/account_service.php';

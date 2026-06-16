@@ -24,7 +24,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
     array_map(fn($t) => [
       'id' => $t->id,
       'full_name' => $t->full_name,
-      'staff_code' => $t->staff_code,
       'department' => $t->department,
     ], $teachers)
   ) ?>;
@@ -130,7 +129,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <?php foreach ($teachers as $teacher): ?>
                   <option value="<?= htmlspecialchars($teacher->id) ?>">
                     <?= htmlspecialchars($teacher->full_name) ?>
-                    (<?= htmlspecialchars($teacher->staff_code) ?>)
                     - <?= htmlspecialchars($teacher->department) ?>
                   </option>
                 <?php endforeach; ?>
@@ -232,7 +230,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         filteredTeachers.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.textContent = `${t.full_name} (${t.staff_code}) - ${t.department}`;
+          opt.textContent = `${t.full_name} - ${t.department}`;
           teacherSelect.appendChild(opt);
         });
         teacherSelect.disabled = false;

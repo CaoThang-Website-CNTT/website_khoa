@@ -105,8 +105,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
             </div>
 
             <div class="field" data-field-readonly>
-              <label class="field__label">Khoa</label>
-              <input class="field__input" type="text" readonly value="<?= htmlspecialchars($teacher->department->full_name ?? 'N/A') ?>">
+              <label class="field__label">Khoa / Bộ môn</label>
+              <input class="field__input" type="text" readonly value="<?= htmlspecialchars($teacher->department?->full_name ?? 'N/A') ?>">
             </div>
           </div>
         </div>

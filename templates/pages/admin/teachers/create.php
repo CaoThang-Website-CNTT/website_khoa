@@ -103,10 +103,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <hr class="separator" />
         <div class="card__content">
           <div class="field-group">
-            <div class="field" data-field-required data-field-max="10">
-              <label class="field__label" for="staff_code">Mã giảng viên</label>
-              <input id="staff_code" class="field__input" type="text" name="staff_code" value="">
-            </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="field" data-field-required>
@@ -125,8 +121,15 @@ $old_input = request()->session()->getOldInputs() ?? [];
               </div>
 
               <div class="field" data-field-required>
-                <label class="field__label" for="department">Phòng ban / Khoa</label>
-                <input id="department" class="field__input" type="text" name="department" value="">
+                <label class="field__label" for="department_id">Phòng ban / Khoa</label>
+                <select id="department_id" class="field__input" name="department_id">
+                  <option value="">-- Chọn đơn vị --</option>
+                  <?php foreach ($departments as $dept): ?>
+                    <option value="<?= htmlspecialchars($dept->id) ?>">
+                      <?= htmlspecialchars($dept->full_name) ?> (<?= htmlspecialchars($dept->short_name) ?>)
+                    </option>
+                  <?php endforeach; ?>
+                </select>
               </div>
             </div>
           </div>
@@ -141,51 +144,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <hr class="separator" />
         <div class="card__content">
           <div class="field-group">
-            <fieldset class="field__set">
-              <legend class="field__label">Loại hợp đồng</legend>
-              <div class="radio-group" data-radio-name="contract_type" data-radio-default-value="full_time">
-                <div class="grid grid-cols-2 gap-4">
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-full-time" class="radio-group__item" type="button" role="radio"
-                        value="full_time"></button>
-                      <div class="field__title">
-                        Full-time
-                      </div>
-                    </div>
-                  </label>
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-part-time" class="radio-group__item" type="button" role="radio"
-                        value="part_time"></button>
-                      <div class="field__title">
-                        Part-time
-                      </div>
-                    </div>
-                  </label>
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-visiting" class="radio-group__item" type="button" role="radio"
-                        value="visiting"></button>
-                      <div class="field__title">
-                        Thỉnh giảng
-                      </div>
-                    </div>
-                  </label>
-                  <label class="field__label">
-                    <div class="field" data-orientation="horizontal">
-                      <button id="contract-type-contract" class="radio-group__item" type="button" role="radio"
-                        value="contract"></button>
-                      <div class="field__title">
-                        Hợp đồng khác
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </fieldset>
-
-            <div class="grid grid-cols-2 gap-4">
+            <!-- <div class="grid grid-cols-2 gap-4">
               <div class="field" data-field-required>
                 <label class="field__label" for="start_date">Ngày bắt đầu</label>
                 <input id="start_date" class="field__input" type="date" name="start_date" value="">
@@ -195,7 +154,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <label class="field__label" for="end_date">Ngày kết thúc</label>
                 <input id="end_date" class="field__input" type="date" name="end_date" value="">
               </div>
-            </div>
+            </div> -->
 
             <div class="field">
               <label class="field__label">Ghi chú</label>

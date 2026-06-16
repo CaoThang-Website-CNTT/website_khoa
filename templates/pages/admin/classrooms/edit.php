@@ -24,7 +24,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
     array_map(fn($t) => [
       'id' => $t->id,
       'full_name' => $t->full_name,
-      'staff_code' => $t->staff_code,
       'department' => $t->department,
     ], $teachers)
   ) ?>;
@@ -320,7 +319,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         filteredTeachers.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.textContent = `${t.full_name} (${t.staff_code}) - ${t.department}`;
+          opt.textContent = `${t.full_name} - ${t.department}`;
 
           // Pre-select dữ liệu cũ nếu đang ở lần load đầu tiên
           if (isInit && t.id == initialTeacherId) {
