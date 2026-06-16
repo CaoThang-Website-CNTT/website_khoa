@@ -23,7 +23,24 @@ if (!function_exists('newsCardUrl')) {
 if (!function_exists('newsCardImageUrl')) {
   function newsCardImageUrl(object $news): string
   {
-    return url('public/media/' . ($news->seo_image_url ?? ''));
+    $imagePath = trim((string) ($news->seo_image_url ?? ''));
+
+    if ($imagePath === '') {
+      return newsCardFallbackImageUrl();
+    }
+
+    if (preg_match('/^https?:\/\//i', $imagePath)) {
+      return $imagePath;
+    }
+
+    $relativePath = ltrim($imagePath, '/\\');
+    $mediaFilePath = BASE_PATH . '/public/media/' . $relativePath;
+
+    if (!is_file($mediaFilePath)) {
+      return newsCardFallbackImageUrl();
+    }
+
+    return url('public/media/' . $relativePath);
   }
 }
 
@@ -80,7 +97,6 @@ if (!function_exists('renderLandingNewsCard')) {
         <div class="card__header news-card__header">
           <span class="news-card__image-wrapper image-wrapper">
             <img src="<?= newsCardEscape(newsCardImageUrl($news)) ?>"
-              onerror="this.onerror=null; this.src='<?= newsCardEscape(newsCardFallbackImageUrl()) ?>'"
               alt="<?= newsCardEscape($news->title ?? '') ?>"
               class="news-card__image absolute w-full h-full object-cover image">
           </span>
@@ -136,7 +152,6 @@ if (!function_exists('renderNewsCard')) {
       <div class="card__header news-card__header">
         <a class="news-card__image-wrapper" href="<?= newsCardEscape(newsCardUrl($news)) ?>">
           <img src="<?= newsCardEscape(newsCardImageUrl($news)) ?>"
-            onerror="this.onerror=null; this.src='<?= newsCardEscape(newsCardFallbackImageUrl()) ?>'"
             alt="<?= newsCardEscape($news->title ?? '') ?>" class="news-card__image">
         </a>
         <?php if (!$showCategoryInMeta): ?>

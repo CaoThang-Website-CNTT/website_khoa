@@ -137,8 +137,7 @@
   <article class="card news-card news-card--horizontal hover-lift" role="listitem" data-id="{{ id }}">
     <div class="card__header news-card__header">
       <a class="news-card__image-wrapper" href="{{ url }}">
-        <img src="{{ image_url }}"
-          onerror="this.onerror=null; this.src='<?= url('public/img/default-post-thumb.jpg') ?>'" alt="{{ title }}"
+        <img src="{{ image_url }}" alt="{{ title }}"
           class="news-card__image">
       </a>
     </div>
@@ -172,8 +171,7 @@
   <article class="card news-card hover-lift" role="listitem" data-id="{{ id }}">
     <div class="card__header news-card__header">
       <a class="news-card__image-wrapper" href="{{ url }}">
-        <img src="{{ image_url }}"
-          onerror="this.onerror=null; this.src='<?= url('public/img/default-post-thumb.jpg') ?>'" alt="{{ title }}"
+        <img src="{{ image_url }}" alt="{{ title }}"
           class="news-card__image">
       </a>
       <span class="badge news-card__badge" data-variant="primary">{{ category_name }}</span>
@@ -249,7 +247,7 @@
         published_datetime: AppUtils.formatDateTimeAttribute(post.published_at),
         published_date: AppUtils.formatDate(post.published_at),
         view_count: AppUtils.formatNumber(post.view_count),
-        image_url: AppUtils.resolveAssetUrl(post.seo_image_url, mediaBaseUrl, defaultImageUrl),
+        image_url: post.image_url || AppUtils.resolveAssetUrl(post.seo_image_url, mediaBaseUrl, defaultImageUrl),
         url: AppUtils.joinUrl(postDetailBaseUrl, encodeURIComponent(post.slug || '')),
       };
     }

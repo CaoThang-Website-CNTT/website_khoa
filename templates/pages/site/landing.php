@@ -7,7 +7,7 @@ function renderCarousel(array $carouselSlides): void
     return;
   }
   ?>
-  <div class="carousel py-8" id="landingCarousel">
+  <div class="carousel" id="landingCarousel">
     <div class="carousel__inner" id="carouselInner">
 
       <?php foreach ($carouselSlides as $slide): ?>
@@ -17,17 +17,18 @@ function renderCarousel(array $carouselSlides): void
           continue;
         ?>
 
-        <div class="carousel__item flex justify-between items-center gap-8">
+        <div
+          class="carousel__item <?= $slide->isCustom() ? 'carousel__item--custom' : 'carousel__item--standard' ?> flex justify-between items-center">
 
           <?php if ($slide->isCustom()): ?>
             <?= $slide->custom_html ?>
           <?php else: ?>
 
-            <div class="carousel__content flex flex-col gap-6">
-              <h2 class="carousel__title text-6xl font-normal">
+            <div class="carousel__content flex flex-col">
+              <h2 class="carousel__title font-normal">
                 <?= htmlspecialchars($slide->title) ?>
                 <?php if (!empty($slide->title_highlight)): ?>
-                  <span class="text-6xl">
+                  <span>
                     <?= htmlspecialchars($slide->title_highlight) ?>
                   </span>
                 <?php endif; ?>
@@ -40,7 +41,7 @@ function renderCarousel(array $carouselSlides): void
               <?php endif; ?>
 
               <?php if ($slide->hasCta()): ?>
-                <div>
+                <div class="carousel__cta">
                   <a href="<?= htmlspecialchars(url($slide->cta_url)) ?>"
                     data-variant="<?= htmlspecialchars($slide->cta_variant) ?>" class="btn px-8 py-2 rounded-3xl bouncy-btn">
                     <?= htmlspecialchars($slide->cta_label) ?>
@@ -480,7 +481,7 @@ $statsSection = [
         <?php endif; ?>
 
         <!-- Sub Featured News Grid -->
-        <div class="flex gap-3 md:gap-6 justify-center items-stretch self-stretch">
+        <div class="flex flex-col md:flex-ro gap-3 md:gap-6 justify-center items-stretch self-stretch">
           <?php
           $featuredCount = count($featuredNews);
           for ($i = 1; $i < 4 && $i < $featuredCount; $i++):

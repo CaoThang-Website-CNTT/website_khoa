@@ -49,10 +49,34 @@ final class Post extends Model
       'view_count' => $this->view_count,
       'seo_description' => $this->seo_description,
       'seo_image_url' => $this->seo_image_url,
+      'image_url' => $this->resolvedSeoImageUrl(),
       'is_featured' => $this->is_featured ? 1 : 0,
       'published_at' => $this->published_at,
       'created_at' => $this->created_at,
       'updated_at' => $this->updated_at,
     ];
+  }
+
+  private function resolvedSeoImageUrl(): string
+  {
+    $fallbackUrl = \url('public/img/default-post-thumb.jpg');
+    $imagePath = trim((string) $this->seo_image_url);
+
+    if ($imagePath === '') {
+      return $fallbackUrl;
+    }
+
+    if (preg_match('/^https?:\/\//i', $imagePath)) {
+      return $imagePath;
+    }
+
+    $relativePath = ltrim($imagePath, '/\\');
+    $mediaFilePath = BASE_PATH . '/public/media/' . $relativePath;
+
+    if (!is_file($mediaFilePath)) {
+      return $fallbackUrl;
+    }
+
+    return \url('public/media/' . $relativePath);
   }
 }
