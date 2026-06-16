@@ -52,7 +52,7 @@ $effectiveMetadata = $effStatus ? [
   </select>
   <i class="fa-solid fa-chevron-down batch-select__icon"></i>
 </div>
-<?php if ($current): ?>
+<?php if ($current && $current['status'] !== 'draft'): ?>
   <div class="detail-layout">
     <div class="detail-layout__main">
       <!-- Chi tiết phân công -->
@@ -526,6 +526,19 @@ $effectiveMetadata = $effStatus ? [
         <button type="button" class="btn" data-variant="outline" data-modal-close="rl_requestModal">Hủy</button>
         <button type="submit" form="rl_requestForm" class="btn" data-variant="primary">Gửi đăng ký</button>
       </div>
+    </div>
+  </div>
+<?php else: ?>
+  <div class="card shadow py-12 text-center">
+    <div class="card__content flex flex-col items-center">
+      <div class="text-5xl mb-6">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h2 class="text-xl font-semibold mb-2">Chưa có thông tin thực tập</h2>
+      <p class="max-w-sm mx-auto">
+        Bạn hiện chưa tham gia vào đợt thực tập nào.
+        Thông tin sẽ hiển thị khi bạn bắt đầu đợt mới.
+      </p>
     </div>
   </div>
 <?php endif; ?>
