@@ -42,10 +42,12 @@ class AccountStore extends Store implements IAccountStore
   ];
   public function create(string $email, string $hash, string $role): Account
   {
+    $passwordHash = $this->ensurePasswordHash($hash);
+
     $builder = new QueryBuilder(new MySQLCompiler());
     $query = $builder->from('accounts')->insert([
       'email' => $email,
-      'password_hash' => $hash,
+      'password_hash' => $passwordHash,
       'role' => $role,
       'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
       'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
@@ -54,6 +56,15 @@ class AccountStore extends Store implements IAccountStore
     $stmt->execute($query->getBindings());
     $id = (int) $this->db->lastInsertId();
     return $this->getById($id) ?? throw new \RuntimeException("Không thể lấy Account sau khi tạo.");
+  }
+
+  private function ensurePasswordHash(string $password): string
+  {
+    if (password_get_info($password)['algoName'] !== 'unknown') {
+      return $password;
+    }
+
+    return password_hash($password, PASSWORD_DEFAULT);
   }
 
   public function getAllByRole(string $role): array
@@ -154,9 +165,11 @@ class AccountStore extends Store implements IAccountStore
   }
   public function updatePassword(int $id, string $newHash): bool
   {
+    $passwordHash = $this->ensurePasswordHash($newHash);
+
     $builder = new QueryBuilder(new MySQLCompiler());
     $query = $builder->from('accounts')->update([
-      'password_hash' => $newHash,
+      'password_hash' => $passwordHash,
       'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
@@ -183,7 +196,7 @@ class AccountStore extends Store implements IAccountStore
       'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
     ];
     if ($passwordHash) {
-      $data['password_hash'] = $passwordHash;
+      $data['password_hash'] = $this->ensurePasswordHash($passwordHash);
     }
     $query = $builder->from('accounts')->update($data)->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
