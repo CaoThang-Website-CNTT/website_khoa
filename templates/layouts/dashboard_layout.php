@@ -21,6 +21,7 @@
   <?php include_once BASE_PATH . '/templates/components/preloader.php'; ?>
   <div class="sidebar__wrapper">
     <div class="sidebar__portal">
+      <div class="sidebar__overlay" data-state="closed" aria-hidden="true"></div>
       <?php include_once BASE_PATH . '/templates/components/dashboard_sidebar.php'; ?>
     </div>
     <main class="sidebar__inset">

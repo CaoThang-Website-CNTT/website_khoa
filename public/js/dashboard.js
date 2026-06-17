@@ -7,6 +7,7 @@ class SidebarHandler {
   constructor() {
     this._triggers = document.querySelectorAll(".sidebar__trigger");
     this._container = document.querySelector(".sidebar__container");
+    this._overlay = document.querySelector(".sidebar__overlay");
   }
 
   /**
@@ -53,6 +54,10 @@ class SidebarHandler {
         this._handleToggle()
       });
     });
+
+    this._overlay?.addEventListener("click", () => {
+      this._close();
+    });
   }
 
   /**
@@ -94,5 +99,9 @@ class SidebarHandler {
     this._triggers.forEach(trigger => {
       trigger.setAttribute("aria-expanded", isExpanded ? "true" : "false");
     });
+
+    if (this._overlay) {
+      this._overlay.dataset.state = isExpanded ? "open" : "closed";
+    }
   }
 }
