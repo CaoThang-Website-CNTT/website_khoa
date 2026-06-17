@@ -211,7 +211,11 @@ $currentGroups = $menuConfig[$role] ?? [];
             if (file_exists($avatarComp)) {
               include $avatarComp;
             } else {
-              echo '<a href="' . url('logout') . '" class="sidebar__menu-btn">
+              echo '<a href="' . url('') . '" class="sidebar__menu-btn">
+              <i class="fa-solid fa-house"></i>
+              Về trang chủ
+              </a>';
+              echo '<a href="' . url('logout') . '" class="sidebar__menu-btn text-destructive">
               <i class="fa-solid fa-right-from-bracket"></i>
               Đăng xuất
               </a>';

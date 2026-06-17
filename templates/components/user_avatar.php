@@ -18,11 +18,15 @@ $role = $authUser['role'] ?? 'Guest';
       <i class="fa-solid fa-ellipsis-vertical"></i>
     </div>
   </button>
-  
+
   <div class="dropdown__content avatar-dropdown__content">
-      <a class="dropdown__item avatar-dropdown__item--destructive" href="<?= url('logout') ?>">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        Đăng xuất
-      </a>
+    <a class="dropdown__item avatar-dropdown__item" href="<?= url('') ?>">
+      <i class="fa-solid fa-house"></i>
+      Về trang chủ
+    </a>
+    <a class="dropdown__item avatar-dropdown__item--destructive" href="<?= url('logout') ?>">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      Đăng xuất
+    </a>
   </div>
 </div>

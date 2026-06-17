@@ -315,6 +315,15 @@ body {
   padding: 0.25rem;
 }
 
+.avatar-dropdown__item {
+  color: var(--foreground);
+}
+
+.avatar-dropdown__item:hover {
+  color: var(--background);
+  background: var(--primary);
+}
+
 .avatar-dropdown__item--destructive {
   color: var(--destructive);
 }
