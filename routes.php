@@ -12,6 +12,8 @@ $router->prefix('tin-tuc')->group(function (Router $router) {
 });
 $router->get('/gioi-thieu', [SiteController::class, 'about']);
 $router->get('/lien-he', [SiteController::class, 'contact']);
+// Đăng ký route /portal để tự chuyển hướng theo role thay vì phải set cứng
+$router->get('/portal', [SiteController::class, 'portal'])->middleware([VerifyAuth::class]);
 
 // Auth
 $router->get('/login', [AuthController::class, 'show'])->middleware([GuestMiddleware::class]);

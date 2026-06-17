@@ -3,12 +3,16 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Request;
+use App\Middlewares\Traits\HasDashboardRouting;
 use App\Services\{PostService, CarouselService, MenuService, WebSettingsService};
 use App\Editor\BlockRenderer;
 use App\Models\Menu;
 
 class SiteController extends Controller
 {
+  use HasDashboardRouting;
+
   private MenuService $_menuService;
   private PostService $_postService;
   private CarouselService $_carouselService;
@@ -115,6 +119,13 @@ class SiteController extends Controller
       'headerMenu' => $this->_headerMenu->items,
       'settings' => $this->_settings,
     ], "site_layout");
+  }
+
+  public function portal(Request $request): void
+  {
+    $user = $request->session()->authUser();
+
+    $this->redirect($this->dashboardFor($user['role'] ?? null));
   }
 
   // ============================================================================

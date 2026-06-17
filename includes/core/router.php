@@ -189,6 +189,8 @@ class Router
       $uri = substr($uri, strlen($basePath)) ?: '/';
     }
 
+    $uri = ($uri === '/') ? '/' : rtrim($uri, '/');
+
     $uriMatched = false;
 
     foreach ($this->routes as $route) {
