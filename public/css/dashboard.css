@@ -127,11 +127,24 @@ body {
   left: 0;
   z-index: 85;
   border-right: 1px solid var(--border);
-  transition: left 200ms ease;
 }
 
 .sidebar__container[data-state="collapsed"] {
   left: calc(-1 * var(--sidebar-width));
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sidebar__wrapper[data-sidebar-ready] .sidebar__container {
+  transition:
+    left 200ms ease,
+    visibility 0s linear 200ms;
+}
+
+.sidebar__wrapper[data-sidebar-ready] .sidebar__container[data-state="expanded"] {
+  transition:
+    left 200ms ease,
+    visibility 0s;
 }
 
 .sidebar {
@@ -697,7 +710,16 @@ body {
   }
 
   .sidebar__container {
+    left: calc(-1 * var(--sidebar-width));
+    visibility: hidden;
+    pointer-events: none;
     box-shadow: var(--shadow-xl);
+  }
+
+  .sidebar__container[data-state="expanded"] {
+    left: 0;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .sidebar__overlay {

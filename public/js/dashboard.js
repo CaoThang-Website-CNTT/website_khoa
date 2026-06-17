@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 class SidebarHandler {
   constructor() {
     this._triggers = document.querySelectorAll(".sidebar__trigger");
+    this._wrapper = document.querySelector(".sidebar__wrapper");
     this._container = document.querySelector(".sidebar__container");
     this._overlay = document.querySelector(".sidebar__overlay");
   }
@@ -18,6 +19,7 @@ class SidebarHandler {
 
     this._setDefaultState();
     this._bindEvents();
+    this._wrapper?.setAttribute("data-sidebar-ready", "");
   }
 
   // ── private ────────────────────────────────────────────────────
@@ -30,14 +32,13 @@ class SidebarHandler {
   _setDefaultState() {
     if (!this._container.dataset.state) {
       const isMobile = window.innerWidth < 1024;
-      const savedState = localStorage.getItem("sidebar_state");
 
       if (isMobile) {
         // Luôn thu gọn trên thiết bị di động
         this._container.dataset.state = "collapsed";
       } else {
-        // Trên PC, ưu tiên trạng thái đã lưu, nếu không có mặc định mở
-        this._container.dataset.state = savedState === "collapsed" ? "collapsed" : "expanded";
+        // Trên PC, mặc định hiển thị sidebar
+        this._container.dataset.state = "expanded";
       }
     }
 
