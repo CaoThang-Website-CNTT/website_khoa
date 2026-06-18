@@ -1933,6 +1933,8 @@
   }
 
   .carousel__title span {
+    font-size: inherit;
+    line-height: inherit;
     color: var(--primary-alt);
   }
 
