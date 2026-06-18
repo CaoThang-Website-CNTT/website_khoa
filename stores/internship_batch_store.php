@@ -424,8 +424,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $where[] = "s.status = 'Đang học'";
 
     if ($query) {
-      $where[] = "(s.full_name LIKE :query OR s.student_id LIKE :query)";
-      $params[':query'] = "%$query%";
+      $where[] = "(s.full_name LIKE :query1 OR s.student_id LIKE :query2)";
+      $params[':query1'] = "%$query%";
+      $params[':query2'] = "%$query%";
     }
 
     if ($classroomId) {
@@ -451,8 +452,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $where[] = "t.deleted_at IS NULL";
 
     if ($query) {
-      $where[] = "(t.full_name LIKE :query OR t.phone LIKE :query)";
-      $params[':query'] = "%$query%";
+      $where[] = "(t.full_name LIKE :query1 OR t.phone LIKE :query2)";
+      $params[':query1'] = "%$query%";
+      $params[':query2'] = "%$query%";
     }
 
     $sql = "SELECT t.id, t.full_name, t.degree, d.short_name as department_name

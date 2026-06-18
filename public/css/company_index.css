@@ -1,0 +1,32 @@
+.company-action-bar {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  z-index: 50;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.company-action-bar__container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.company-action-bar__stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.company-action-bar__actions {
+  display: flex;
+  gap: 0.5rem;
+}

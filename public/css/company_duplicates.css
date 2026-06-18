@@ -1,0 +1,44 @@
+.company-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.company-duplicates-table__th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.company-duplicates-table__td--action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 64rem) {
+  .company-group-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .company-duplicates-table__td--action {
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .company-duplicates-table__td--action .btn {
+    height: auto;
+    padding: 0.25rem 0.5rem;
+  }
+}

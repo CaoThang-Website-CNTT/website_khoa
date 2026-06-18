@@ -1,0 +1,152 @@
+/* Layout */
+.company-merge-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.company-merge-layout__source {
+  padding: 0.5rem;
+  border-right: 1px solid var(--border);
+  background-color: var(--secondary);
+}
+
+.company-merge-layout__target {
+  padding: 0.5rem;
+}
+
+.company-merge-search__suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 0.25rem;
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  z-index: 10;
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--secondary);
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: var(--muted);
+}
+
+.company-merge-search__clear {
+  margin-left: 0.5rem;
+  color: #ef4444;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+.company-merge-search__clear:hover {
+  color: #b91c1c;
+}
+
+/* Warning */
+.company-merge-warning {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: var(--toast-warning-bg);
+  border: 1px solid var(--toast-warning-border);
+  color: var(--toast-warning-color);
+}
+
+/* Grid */
+.merge-grid {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr 1fr;
+  border-top: 1px solid var(--border);
+}
+
+.merge-row {
+  display: contents;
+}
+
+.merge-cell {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.merge-cell:last-child {
+  border-right: none;
+}
+
+.merge-row.header .merge-cell {
+  background-color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--secondary-foreground);
+}
+
+.merge-cell--center {
+  text-align: center;
+}
+
+.merge-choice-label {
+  display: block;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid transparent;
+  word-break: break-word;
+}
+
+.merge-choice-label--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.merge-choice-value--empty {
+  color: var(--muted-foreground);
+}
+
+/* Impact Section */
+.company-merge-impact {
+  padding: 1rem;
+  background-color: var(--secondary);
+  border-top: 1px solid var(--muted);
+}
+
+.company-merge-impact__title {
+  font-weight: var(--fw-bold);
+  color: var(--secondary-foreground-alt);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.company-merge-impact__list {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--primary);
+  list-style-type: disc;
+  list-style-position: inside;
+}
+
+.company-merge-impact__note {
+  margin-top: 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--primary);
+  font-style: italic;
+}
+
+/* Actions */
+.company-merge-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}

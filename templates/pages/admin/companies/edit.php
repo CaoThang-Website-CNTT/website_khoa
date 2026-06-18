@@ -11,25 +11,35 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">
-      Thông tin Công ty
-      <?= "#" . htmlspecialchars($company->id) ?>
-    </h2>
-    <p class="title-wrapper__description">Cập nhật thông tin công ty tại trang này.</p>
+  Thông tin Công ty
+  <?= "#" . htmlspecialchars($company->id) ?>
+</h2>
+<p class="title-wrapper__description">Cập nhật thông tin công ty tại trang này.</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/companies') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
-      <i class="fa-solid fa-floppy-disk"></i>
-      Lưu thay đổi
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<?php if (!$company->is_verified): ?>
+  <form action="<?= url('admin/companies/' . $company->id . '/approve') ?>" method="POST" class="inline-block">
+    <button type="submit" data-variant="primary" data-size="lg" class="btn">
+      <i class="fa-solid fa-check"></i> Xác thực
     </button>
-    <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
-      <i class="fa-solid fa-trash"></i>
-      Xóa
-    </button>
+  </form>
+  <a href="<?= url('admin/companies/' . $company->id . '/merge') ?>" data-variant="secondary" data-size="lg" class="btn">
+    <i class="fa-solid fa-code-merge"></i> Gộp công ty
+  </a>
+<?php endif; ?>
+<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="<?= $company->is_verified ? 'primary' : 'outline' ?>" data-size="lg" class="btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Lưu thay đổi
+</button>
+<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
+  <i class="fa-solid fa-trash"></i>
+  Xóa
+</button>
 <?php $layout->end() ?>
 <form class="detail-layout" id="company-edit-form" action="<?= url('admin/companies/' . $company->id) ?>" method="POST">
   <?= csrf_field() ?>
@@ -120,6 +130,23 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <dt>Lần cuối cập nhật</dt>
           <dd>
             <?= htmlspecialchars($company->updated_at ? $company->updated_at : "Không có") ?>
+          </dd>
+        </dl>
+        <hr class="separator">
+        <dt>Trạng thái xác thực</dt>
+        <dd>
+          <?php if ($company->is_verified): ?>
+            <span class="badge" data-variant="primary">Đã xác thực</span>
+          <?php else: ?>
+            <span class="badge" data-variant="warning">Chưa xác thực</span>
+          <?php endif; ?>
+        </dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Nguồn dữ liệu</dt>
+          <dd>
+            <span class="badge" data-variant="outline"><?= $company->source === 'api' ? 'API' : 'Nhập thủ công' ?></span>
           </dd>
         </dl>
         <hr class="separator">

@@ -86,6 +86,7 @@ $router->prefix('api')->group(function ($router) {
     // Companies
     $router->prefix('companies')->group(function (Router $router) {
       $router->get('/suggest-by-name', [CompanyApiController::class, 'suggestByName']);
+      $router->get('/search-merge', [CompanyApiController::class, 'searchForMerge']);
     });
 
     // Export

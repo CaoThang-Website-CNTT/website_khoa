@@ -12,13 +12,13 @@ $letters = $letters ?? [];
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Giấy giới thiệu</h2>
-    <p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
+<p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập <span class="font-semibold"><?= htmlspecialchars($batch['title']) ?></span></p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i> Quay lại
-    </a>
+  <i class="fa-solid fa-chevron-left"></i> Quay lại
+</a>
 <?php $layout->end() ?>
 
 <div class="card">
@@ -51,7 +51,7 @@ $letters = $letters ?? [];
 
     <template data-tm-col="company_verified_label" data-tm-label="Trạng thái Công ty" data-tm-filter-type="select"
       data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Đã xác thực","label":"Đã xác thực"},{"value":"Chưa xác thực","label":"Chưa xác thực"}]'>
-      <span class="badge" data-variant="{{ row.company_is_verified == 1 ? 'primary' : 'secondary' }}">{{ value }}</span>
+      <span class="badge" data-variant="{{ row.company_is_verified == 1 ? 'primary' : 'warning' }}">{{ value }}</span>
     </template>
 
     <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select"

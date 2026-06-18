@@ -187,9 +187,19 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/', [CompanyController::class, 'index']);
     $router->get('/create', [CompanyController::class, 'create']);
     $router->post('/', [CompanyController::class, 'store']);
+
+    $router->get('/duplicates', [CompanyController::class, 'duplicates']);
+    $router->post('/bulk-approve', [CompanyController::class, 'bulkApprove']);
+    $router->post('/quick-merge', [CompanyController::class, 'quickMerge']);
+    $router->post('/bulk-quick-merge', [CompanyController::class, 'bulkQuickMerge']);
+
     $router->get('/{id}', [CompanyController::class, 'edit']);
     $router->post('/{id}', [CompanyController::class, 'update']);
     $router->post('/delete/{id}', [CompanyController::class, 'destroy']);
+
+    $router->post('/{id}/approve', [CompanyController::class, 'approve']);
+    $router->get('/{id}/merge', [CompanyController::class, 'mergeForm']);
+    $router->post('/{id}/merge', [CompanyController::class, 'merge']);
   });
 
   // Tickets

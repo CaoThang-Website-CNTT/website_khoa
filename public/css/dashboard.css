@@ -700,6 +700,36 @@ body {
   display: none !important;
 }
 
+/* ==========================================================================
+   DASHBOARD TABS (Underline style)
+   ========================================================================== */
+.dashboard-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-tabs__item {
+  padding: 0.5rem 1rem;
+  color: var(--muted-foreground);
+  border-bottom: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.dashboard-tabs__item:hover {
+  color: var(--foreground);
+}
+
+.dashboard-tabs__item--active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: var(--fw-medium);
+}
+
 @media (max-width: 64rem) {
   :root {
     --dash-header-height: 4rem;
