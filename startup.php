@@ -147,7 +147,6 @@ require_once BASE_PATH . '/controllers/web/web_setting_controller.php';
 require_once BASE_PATH . '/controllers/web/carousel_controller.php';
 require_once BASE_PATH . '/controllers/web/media_controller.php';
 require_once BASE_PATH . '/controllers/web/post_controller.php';
-require_once BASE_PATH . '/controllers/web/internship_assignment_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
 require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/company_controller.php';

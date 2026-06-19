@@ -114,7 +114,7 @@ $max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
 <!-- ── Confirm modal ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận lưu</h2>
+    <h3 class="modal__title">Xác nhận lưu</h3>
     <p class="modal__description">Bạn có chắc muốn lưu thay đổi cho media này?</p>
   </div>
   <div class="modal__footer">

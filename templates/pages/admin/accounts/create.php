@@ -99,7 +99,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ── Confirm Create Modal ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận tạo Account</h2>
+    <h3 class="modal__title">Xác nhận tạo Account</h3>
     <p class="modal__description">Bạn có chắc chắn muốn tạo account này?</p>
   </div>
   <div class="modal__footer">

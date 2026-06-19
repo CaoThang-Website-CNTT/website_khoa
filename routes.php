@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipAssignmentController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController};
 use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
@@ -168,9 +168,6 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->post('/delete/{id}', [InternshipBatchController::class, 'destroy']);
     $router->post('/{id}/publish', [InternshipBatchController::class, 'publish']);
     $router->post('/{id}/close', [InternshipBatchController::class, 'close']);
-
-    // Internship Assignments
-    $router->get('/{batchId}/assignments', [InternshipAssignmentController::class, 'index']);
 
     // Referral Letters
     $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);

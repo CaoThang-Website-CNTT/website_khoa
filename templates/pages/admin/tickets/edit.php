@@ -35,7 +35,7 @@
 
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận</h2>
+    <h3 class="modal__title">Xác nhận</h3>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" data-size="lg" class="btn" type="button">Hủy</button>

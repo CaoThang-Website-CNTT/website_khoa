@@ -198,7 +198,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- 1. Confirm Update Modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
+    <h3 class="modal__title">Xác nhận chỉnh sửa</h3>
     <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
   </div>
   <div class="modal__footer">
@@ -213,7 +213,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- 2. Delete Carousel Modal -->
 <div class="modal" id="delete-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xóa Carousel</h2>
+    <h3 class="modal__title">Xóa Carousel</h3>
     <p class="modal__description">Bạn có chắc chắn muốn xóa Carousel này? Các Slides cũng sẽ bị xóa.</p>
   </div>
   <div class="modal__footer">
@@ -336,7 +336,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- 4. Confirm Delete Slide Modal (Stacked) -->
 <div class="modal" id="slide-delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận xóa Slide</h2>
+    <h3 class="modal__title">Xác nhận xóa Slide</h3>
     <p class="modal__description">Bạn có chắc chắn muốn xóa slide này? Hành động này không thể hoàn tác.</p>
   </div>
   <div class="modal__footer">

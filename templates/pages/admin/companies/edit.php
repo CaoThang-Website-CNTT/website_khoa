@@ -129,11 +129,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <dt>Trạng thái dữ liệu</dt>
           <dd>
             <?php if ($company->deleted_at): ?>
-                <span class="badge" data-variant="destructive">
-                  Đã xóa
-                </span>
+              <span class="badge" data-variant="destructive">
+                Đã xóa
+              </span>
             <?php else: ?>
-                <span class="badge" data-variant="primary">Hoạt động</span>
+              <span class="badge" data-variant="primary">Hoạt động</span>
             <?php endif; ?>
           </dd>
         </dl>
@@ -145,7 +145,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ── Confirm Modal ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Bạn có chắc</h2>
+    <h3 class="modal__title">Bạn có chắc</h3>
     <p class="modal__description">Những thao tác này sẽ không thể hoàn tác.</p>
   </div>
   <div class="modal__footer">
@@ -160,7 +160,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ── Delete Confirm Modal ── -->
 <div class="modal" id="delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Bạn có chắc</h2>
+    <h3 class="modal__title">Bạn có chắc</h3>
     <p class="modal__description">Những thao tác này sẽ không thể hoàn tác.</p>
   </div>
   <div class="modal__footer">

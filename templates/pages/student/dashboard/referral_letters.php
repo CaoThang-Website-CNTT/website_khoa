@@ -110,15 +110,14 @@ $referralLetters = $referralLetters ?? [];
 </div>
 
 <!-- Modal Đăng ký mới -->
-<div id="rl_requestModal" class="modal" data-state="closed">
-  <div class="modal__content modal--lg">
+<div id="rl_requestModal" class="modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
       <h3 class="modal__title">Đăng ký giấy giới thiệu thực tập</h3>
-      <button class="modal__close" data-modal-close="rl_requestModal">
+      <button class="modal__close" type="button" data-modal-close>
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="modal__body">
+    <div>
       <form action="<?= url('student/internship/' . $current['id'] . '/referral_letters') ?>" method="POST"
         id="rl_requestForm">
         <?= csrf_field() ?>
@@ -157,22 +156,20 @@ $referralLetters = $referralLetters ?? [];
       </form>
     </div>
     <div class="modal__footer">
-      <button type="button" class="btn" data-variant="outline" data-modal-close="rl_requestModal">Hủy</button>
+      <button type="button" class="btn" data-variant="outline" data-modal-close>Hủy</button>
       <button type="submit" form="rl_requestForm" class="btn" data-variant="primary">Gửi đăng ký</button>
     </div>
-  </div>
 </div>
 
 <!-- Modal Đổi công ty -->
-<div id="rl_updateModal" class="modal" data-state="closed">
-  <div class="modal__content modal--lg">
+<div id="rl_updateModal" class="modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
       <h3 class="modal__title">Thay đổi công ty (sẽ tạo giấy mới, hủy giấy cũ)</h3>
-      <button class="modal__close" data-modal-close="rl_updateModal">
+      <button class="modal__close" type="button" data-modal-close>
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="modal__body">
+    <div>
       <form method="POST" id="rl_updateForm">
         <?= csrf_field() ?>
 
@@ -210,22 +207,20 @@ $referralLetters = $referralLetters ?? [];
       </form>
     </div>
     <div class="modal__footer">
-      <button type="button" class="btn" data-variant="outline" data-modal-close="rl_updateModal">Hủy bỏ</button>
+      <button type="button" class="btn" data-variant="outline" data-modal-close>Hủy bỏ</button>
       <button type="submit" form="rl_updateForm" class="btn" data-variant="primary">Xác nhận cập nhật</button>
     </div>
-  </div>
 </div>
 
 <!-- Modal Hủy đăng ký -->
-<div id="rl_cancelModal" class="modal" data-state="closed">
-  <div class="modal__content">
+<div id="rl_cancelModal" class="modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
       <h3 class="modal__title">Hủy giấy giới thiệu</h3>
-      <button class="modal__close" data-modal-close="rl_cancelModal">
+      <button class="modal__close" type="button" data-modal-close>
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="modal__body">
+    <div>
       <form method="POST" id="rl_cancelForm">
         <?= csrf_field() ?>
         <p class="mb-4">Bạn có chắc chắn muốn hủy giấy giới thiệu này?</p>
@@ -237,21 +232,19 @@ $referralLetters = $referralLetters ?? [];
       </form>
     </div>
     <div class="modal__footer">
-      <button type="button" class="btn" data-variant="outline" data-modal-close="rl_cancelModal">Đóng</button>
+      <button type="button" class="btn" data-variant="outline" data-modal-close>Đóng</button>
       <button type="submit" form="rl_cancelForm" class="btn" data-variant="destructive">Hủy giấy giới thiệu</button>
     </div>
-  </div>
 </div>
 <!-- Modal Chi tiết -->
-<div id="rl_detailModal" class="modal" data-state="closed">
-  <div class="modal__content">
+<div id="rl_detailModal" class="modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
       <h3 class="modal__title">Chi tiết giấy giới thiệu</h3>
-      <button class="modal__close" data-modal-close="rl_detailModal">
+      <button class="modal__close" type="button" data-modal-close>
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="modal__body">
+    <div>
       <div class="grid gap-4">
         <div class="detail-item">
           <div class="text-xs font-semibold">Tên công ty</div>
@@ -282,10 +275,9 @@ $referralLetters = $referralLetters ?? [];
       </div>
     </div>
     <div class="modal__footer">
-      <button type="button" class="btn" data-variant="outline" data-modal-close="rl_detailModal">Đóng</button>
+      <button type="button" class="btn" data-variant="outline" data-modal-close>Đóng</button>
       <button type="button" id="dt_btnUpdate" class="btn" data-variant="primary">Đổi công ty</button>
     </div>
-  </div>
 </div>
 <script>
   window.API_BASE_URL = '<?= url('api/v1') ?>';

@@ -43,11 +43,8 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-  <i class="fa-solid fa-bars"></i>
-</button>
 <?php $layout->end() ?>
-<div class="detail-layout detail-layout--collapsible">
+<div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
     <div class="viewer-tabs">

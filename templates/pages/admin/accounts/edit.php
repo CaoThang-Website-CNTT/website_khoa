@@ -146,7 +146,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Confirm Update Modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
+    <h3 class="modal__title">Xác nhận chỉnh sửa</h3>
     <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
   </div>
   <div class="modal__footer">
@@ -161,7 +161,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Confirm Delete Modal -->
 <div class="modal" id="delete-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận xóa tài khoản</h2>
+    <h3 class="modal__title">Xác nhận xóa tài khoản</h3>
     <p class="modal__description">Tài khoản này sẽ bị khóa/xóa tạm thời. Bạn có chắc chắn?</p>
   </div>
   <div class="modal__footer">

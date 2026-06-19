@@ -114,7 +114,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ── Confirm Menu Create Modal ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận tạo Menu</h2>
+    <h3 class="modal__title">Xác nhận tạo Menu</h3>
     <p class="modal__description">Bạn có chắc chắn muốn lưu nhóm Menu này cùng toàn bộ cấu trúc hiện tại?</p>
   </div>
   <div class="modal__footer">
@@ -182,7 +182,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ── Confirm Delete Item Modal ── -->
 <div class="modal" id="item-delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận xóa Mục Menu</h2>
+    <h3 class="modal__title">Xác nhận xóa Mục Menu</h3>
     <p class="modal__description">Bạn có chắc chắn muốn xóa mục menu này và toàn bộ mục con bên dưới?</p>
   </div>
   <div class="modal__footer">

@@ -63,11 +63,8 @@ foreach ($classrooms as $c) {
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-  <i class="fa-solid fa-bars"></i>
-</button>
 <?php $layout->end() ?>
-<div class="detail-layout detail-layout--collapsible">
+<div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
 

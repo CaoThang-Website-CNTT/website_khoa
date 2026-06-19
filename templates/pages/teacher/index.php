@@ -40,7 +40,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
               <input id="full_name" class="field__input" type="text" name="full_name"
                 value="<?= htmlspecialchars($old_input['full_name'] ?? $teacher->full_name ?? '') ?>">
               <?php if (isset($errors['full_name'])): ?>
-                  <span class="field__error"><?= $errors['full_name'][0] ?></span>
+                <span class="field__error"><?= $errors['full_name'][0] ?></span>
               <?php endif; ?>
             </div>
 
@@ -149,7 +149,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Add confirm modal -->
 <div class="modal" id="confirm-save-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận cập nhật</h2>
+    <h3 class="modal__title">Xác nhận cập nhật</h3>
     <p class="modal__description">
       Bạn có chắc chắn muốn thay đổi thông tin cá nhân của mình?
     </p>

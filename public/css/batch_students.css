@@ -78,31 +78,8 @@
   display: none;
 }
 
-/* Modal Styles */
-.modal-overlay.hidden,
-.modal-overlay[data-state="closed"],
 .bulk-action-bar[data-state="closed"] {
   display: none !important;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.modal-content {
-  background-color: var(--card);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: var(--shadow-xl);
 }
 
 .radio-card {

@@ -48,16 +48,14 @@ $currentStatus = [
   Lưu
 </button>
 <?php if ($batchObj->status === BatchStatus::DRAFT): ?>
-  <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal"
-    data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/publish') ?>" data-variant="outline-alt"
+  <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal" data-variant="outline-alt"
     data-size="md" class="btn">
     <i class="fa-solid fa-paper-plane"></i>
     Công bố
   </button>
 <?php elseif ($batchObj->status === BatchStatus::PUBLISHED): ?>
-  <button type="button" id="close-btn" data-modal-trigger="#close-confirm-modal"
-    data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/close') ?>" data-variant="destructive"
-    data-size="md" class="btn">
+  <button type="button" id="close-btn" data-modal-trigger="#close-confirm-modal" data-variant="destructive" data-size="md"
+    class="btn">
     <i class="fa-solid fa-circle-stop"></i>
     Kết thúc đợt
   </button>
@@ -70,6 +68,7 @@ $currentStatus = [
   </button>
 <?php endif; ?>
 <?php $layout->end() ?>
+
 <!-- Stats Grid -->
 <div class="stats-grid">
   <!-- Sinh viên Card -->
@@ -125,6 +124,7 @@ $currentStatus = [
     </div>
   </div>
 </div>
+
 <div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
@@ -221,12 +221,12 @@ $currentStatus = [
 <!-- Modal: Xác nhận Lưu -->
 <div class="modal" id="save-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Lưu?</h2>
-    <p class="modal__description">Bạn có chắc chắn muốn cập nhật các thông tin cơ bản cho đợt thực tập này?</p>
+    <h3 class="modal__title">Xác nhận chỉnh sửa</h3>
+    <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
   </div>
   <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
-    <button id="save-confirm-modal-btn" data-variant="primary" class="btn" type="button">Xác nhận lưu</button>
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="save-confirm-modal-btn" data-variant="primary" class="btn" data-size="lg" type="button">Lưu</button>
   </div>
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
@@ -234,13 +234,14 @@ $currentStatus = [
 <!-- Modal: Xác nhận Xóa -->
 <div class="modal" id="delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xóa đợt thực tập?</h2>
-    <p class="modal__description">Hành động này không thể hoàn tác. Mọi dữ liệu về sinh viên tham gia và phân công sẽ bị
-      xóa bỏ.</p>
+    <h3 class="modal__title">Xác nhận xóa đợt thực tập</h3>
+    <p class="modal__description">Đợt thực tập <strong><?= htmlspecialchars($batchObj->title) ?></strong> sẽ bị xóa và
+      không thể khôi phục. Bạn có chắc chắn?</p>
   </div>
   <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
-    <button id="delete-confirm-modal-btn" data-variant="destructive" class="btn" type="button">Tôi muốn xóa</button>
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="delete-confirm-modal-btn" data-variant="destructive" class="btn" data-size="lg"
+      type="button">Xóa</button>
   </div>
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
@@ -251,15 +252,28 @@ $currentStatus = [
   <?= csrf_field() ?>
 </form>
 
+<?php if ($batchObj->status === BatchStatus::DRAFT): ?>
+  <form action="<?= url('admin/internship_batches/' . $batchObj->id . '/publish') ?>" method="POST" id="publish-form"
+    class="hidden">
+    <?= csrf_field() ?>
+  </form>
+<?php elseif ($batchObj->status === BatchStatus::PUBLISHED): ?>
+  <form action="<?= url('admin/internship_batches/' . $batchObj->id . '/close') ?>" method="POST" id="close-form"
+    class="hidden">
+    <?= csrf_field() ?>
+  </form>
+<?php endif; ?>
+
 <!-- Modal: Xác nhận Công bố đợt thực tập -->
 <div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Công bố đợt thực tập?</h2>
+    <h3 class="modal__title">Xác nhận công bố</h3>
     <p class="modal__description">Sinh viên và giảng viên sẽ nhìn thấy đợt thực tập này sau khi công bố.</p>
   </div>
   <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
-    <button id="publish-confirm-modal-btn" data-variant="primary" class="btn" type="button">Xác nhận công bố</button>
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="publish-confirm-modal-btn" data-variant="primary" class="btn" data-size="lg" type="button">Xác
+      nhận</button>
   </div>
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
@@ -267,12 +281,36 @@ $currentStatus = [
 <!-- Modal: Xác nhận Kết thúc -->
 <div class="modal" id="close-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Kết thúc đợt thực tập?</h2>
+    <h3 class="modal__title">Xác nhận kết thúc đợt thực tập</h3>
     <p class="modal__description">Hệ thống sẽ khóa mọi hoạt động nộp bài và chấm điểm cho đợt thực tập này.</p>
   </div>
   <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" type="button">Hủy</button>
-    <button id="close-confirm-modal-btn" data-variant="destructive" class="btn" type="button">Xác nhận kết thúc</button>
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="close-confirm-modal-btn" data-variant="destructive" class="btn" data-size="lg" type="button">Xác
+      nhận</button>
   </div>
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
+
+<?php $layout->start("script") ?>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const setupConfirmAction = (confirmBtnId, formId) => {
+      const confirmBtn = document.getElementById(confirmBtnId);
+      if (confirmBtn) {
+        confirmBtn.addEventListener("click", () => {
+          const form = document.getElementById(formId);
+          if (form) form.submit();
+        });
+      }
+    };
+
+    setupConfirmAction("save-confirm-modal-btn", "batch-edit-form");
+
+    setupConfirmAction("delete-confirm-modal-btn", "delete-form");
+
+    setupConfirmAction("publish-confirm-modal-btn", "publish-form");
+    setupConfirmAction("close-confirm-modal-btn", "close-form");
+  });
+</script>
+<?php $layout->end() ?>

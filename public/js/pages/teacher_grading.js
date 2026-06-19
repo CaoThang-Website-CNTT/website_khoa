@@ -1,5 +1,3 @@
-import LayoutCollapsible from "../layout-collapsible.js";
-
 document.addEventListener('DOMContentLoaded', () => {
   // Tab Switching
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -23,14 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
-  });
-
-  // Init Collapsible Sidebar
-  new LayoutCollapsible({
-    containerSelector: ".detail-layout--collapsible",
-    toggleSelector: ".js-sidebar-toggle",
-    storageKey: "teacher-grading-sidebar-collapsed",
-    defaultCollapsed: false,
   });
 
   // Version Selector Logic

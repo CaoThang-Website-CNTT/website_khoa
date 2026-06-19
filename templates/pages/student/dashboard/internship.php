@@ -475,15 +475,14 @@ $effectiveMetadata = $effStatus ? [
 
 <?php if ($current): ?>
   <!-- Modal Đăng ký Giấy giới thiệu -->
-  <div id="rl_requestModal" class="modal" data-state="closed">
-    <div class="modal__content modal--lg">
+  <div id="rl_requestModal" class="modal" tabindex="-1" data-state="closed">
       <div class="modal__header">
         <h3 class="modal__title">Đăng ký giấy giới thiệu thực tập</h3>
-        <button class="modal__close" data-modal-close="rl_requestModal">
+        <button class="modal__close" type="button" data-modal-close>
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <div class="modal__body">
+      <div>
         <form action="<?= url("student/internship/{$current['id']}/referral_letters") ?>" method="POST"
           id="rl_requestForm">
           <?= csrf_field() ?>
@@ -522,9 +521,8 @@ $effectiveMetadata = $effStatus ? [
         </form>
       </div>
       <div class="modal__footer">
-        <button type="button" class="btn" data-variant="outline" data-modal-close="rl_requestModal">Hủy</button>
+        <button type="button" class="btn" data-variant="outline" data-modal-close>Hủy</button>
         <button type="submit" form="rl_requestForm" class="btn" data-variant="primary">Gửi đăng ký</button>
       </div>
-    </div>
   </div>
 <?php endif; ?>

@@ -12,9 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const bulkActionBar = document.getElementById("bulk-action-bar");
   const selectedCountText = document.getElementById("selected-count");
 
-  const modalAutoAssign = document.getElementById("modal-auto-assign");
-  const modalBulkAssign = document.getElementById("modal-bulk-assign");
-  const modalBulkUnassign = document.getElementById("modal-bulk-unassign");
+  const modalHandler = ModalHandler.instance;
 
   // Helpers
   const showLoader = () => loader.classList.remove("hidden");
@@ -258,13 +256,13 @@ document.addEventListener("DOMContentLoaded", () => {
       </option>`;
     });
 
-    modalBulkAssign.classList.remove("hidden");
+    modalHandler.open("#modal-bulk-assign");
   });
 
   document
     .getElementById("btn-close-bulk-modal")
     .addEventListener("click", () => {
-      modalBulkAssign.classList.add("hidden");
+      modalHandler.close();
     });
 
   document
@@ -321,7 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (window.toast)
           toast.success("Thành công", "Đã phân công hàng loạt thành công.");
-        modalBulkAssign.classList.add("hidden");
+        modalHandler.close();
         await loadData();
       } catch (err) {
         if (window.toast) toast.error("Lỗi", err.message);
@@ -345,13 +343,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("bulk-unassign-count").textContent =
       studentsToUnassign.length;
-    modalBulkUnassign.classList.remove("hidden");
+    modalHandler.open("#modal-bulk-unassign");
   });
 
   document
     .getElementById("btn-close-unassign-modal")
     .addEventListener("click", () => {
-      modalBulkUnassign.classList.add("hidden");
+      modalHandler.close();
     });
 
   document
@@ -407,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.toast)
           toast.success("Thành công", "Đã hủy phân công hàng loạt thành công.");
 
-        modalBulkUnassign.classList.add("hidden");
+        modalHandler.close();
         await loadData();
       } catch (err) {
         if (window.toast) toast.error("Lỗi", err.message);
@@ -420,11 +418,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Auto Assign Logic
   document.getElementById("btn-auto-assign").addEventListener("click", () => {
-    modalAutoAssign.classList.remove("hidden");
+    modalHandler.open("#modal-auto-assign");
   });
 
   document.getElementById("btn-close-modal").addEventListener("click", () => {
-    modalAutoAssign.classList.add("hidden");
+    modalHandler.close();
   });
 
   document
@@ -450,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!res.ok)
           throw new Error(response.message || "Lỗi phân công tự động");
 
-        modalAutoAssign.classList.add("hidden");
+        modalHandler.close();
         if (window.toast) toast.success("Thành công", response.message);
         await loadData();
       } catch (err) {

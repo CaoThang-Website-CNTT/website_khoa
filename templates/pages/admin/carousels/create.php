@@ -101,7 +101,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ── Confirm Carousel Create Modal ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận tạo Carousel</h2>
+    <h3 class="modal__title">Xác nhận tạo Carousel</h3>
     <p class="modal__description">Bạn có chắc chắn muốn lưu Carousel này cùng toàn bộ slide hiện tại?</p>
   </div>
   <div class="modal__footer">
@@ -224,7 +224,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- ── Confirm Delete Slide Modal ── -->
 <div class="modal" id="slide-delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận xóa Slide</h2>
+    <h3 class="modal__title">Xác nhận xóa Slide</h3>
     <p class="modal__description">Bạn có chắc chắn muốn xóa slide này khỏi danh sách tạo?</p>
   </div>
   <div class="modal__footer">

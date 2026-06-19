@@ -37,48 +37,44 @@ $batch = $batch ?? null;
   </button>
 <?php endif; ?>
 
-<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-  <i class="fa-solid fa-bars"></i>
-</button>
 <?php $layout->end() ?>
 
-<div class="detail-layout detail-layout--collapsible">
+<!-- Overall Stats -->
+<div class="assignment-stats">
+  <div class="stat-box stat-box--primary shadow-sm">
+    <div class="stat-box__icon">
+      <i class="fa-solid fa-users"></i>
+    </div>
+    <div class="stat-box__content">
+      <span class="stat-box__label">Tổng sinh viên</span>
+      <div class="stat-box__value" id="stat-total-students">--</div>
+    </div>
+  </div>
+
+  <div class="stat-box stat-box--success shadow-sm">
+    <div class="stat-box__icon">
+      <i class="fa-solid fa-user-check"></i>
+    </div>
+    <div class="stat-box__content">
+      <span class="stat-box__label">Đã phân công</span>
+      <div class="stat-box__value" id="stat-assigned-students">--</div>
+    </div>
+  </div>
+
+  <div class="stat-box shadow-sm">
+    <div class="stat-box__icon stat-box__icon--muted">
+      <i class="fa-solid fa-user-clock"></i>
+    </div>
+    <div class="stat-box__content">
+      <span class="stat-box__label">Chưa phân công</span>
+      <div class="stat-box__value" id="stat-unassigned-students">--</div>
+    </div>
+  </div>
+</div>
+
+<div class="detail-layout">
   <!-- CỘT CHÍNH (2/3): Thống kê tổng và Danh sách sinh viên -->
   <div class="detail-layout__main">
-
-    <!-- Overall Stats -->
-    <div class="assignment-stats">
-      <div class="stat-box stat-box--primary shadow-sm">
-        <div class="stat-box__icon">
-          <i class="fa-solid fa-users"></i>
-        </div>
-        <div class="stat-box__content">
-          <span class="stat-box__label">Tổng sinh viên</span>
-          <div class="stat-box__value" id="stat-total-students">--</div>
-        </div>
-      </div>
-
-      <div class="stat-box stat-box--success shadow-sm">
-        <div class="stat-box__icon">
-          <i class="fa-solid fa-user-check"></i>
-        </div>
-        <div class="stat-box__content">
-          <span class="stat-box__label">Đã phân công</span>
-          <div class="stat-box__value" id="stat-assigned-students">--</div>
-        </div>
-      </div>
-
-      <div class="stat-box shadow-sm">
-        <div class="stat-box__icon stat-box__icon--muted">
-          <i class="fa-solid fa-user-clock"></i>
-        </div>
-        <div class="stat-box__content">
-          <span class="stat-box__label">Chưa phân công</span>
-          <div class="stat-box__value" id="stat-unassigned-students">--</div>
-        </div>
-      </div>
-    </div>
-
     <div class="card shadow-sm">
       <div class="tm-container" data-tm="batch_students_table" data-tm-mode="client" data-tm-searchable="true"
         data-tm-selectable="true" data-tm-id-key="batch_student_id">
@@ -179,104 +175,75 @@ $batch = $batch ?? null;
 </div>
 
 <!-- Modal: Phân công hàng loạt -->
-<div id="modal-bulk-assign" class="modal-overlay hidden" data-state="closed">
-  <div class="modal-content shadow-xl">
-    <div class="modal-header">
-      <h3 class="title text-xl font-semibold">Phân công Giảng viên</h3>
-      <p class="text-sm mt-1">Gán <span id="bulk-student-count" class="font-bold">0</span> sinh viên cho giảng viên được
-        chọn dưới đây:</p>
-    </div>
-    <div class="modal-body py-4">
-      <div class="field">
-        <label class="field__label">Chọn Giảng viên hướng dẫn:</label>
-        <select id="bulk-teacher-select" class="field__input">
-          <!-- Rendered via JS -->
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" id="btn-close-bulk-modal" class="btn" data-size="md" data-variant="outline">Hủy</button>
-      <button type="button" id="btn-confirm-bulk-assign" class="btn" data-size="md" data-variant="primary">Xác nhận phân
-        công</button>
+<div id="modal-bulk-assign" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="title text-xl font-semibold">Phân công Giảng viên</h3>
+    <p class="text-sm mt-1">Gán <span id="bulk-student-count" class="font-bold">0</span> sinh viên cho giảng viên được
+      chọn dưới đây:</p>
+  </div>
+  <div class="py-4">
+    <div class="field">
+      <label class="field__label">Chọn Giảng viên hướng dẫn:</label>
+      <select id="bulk-teacher-select" class="field__input">
+        <!-- Rendered via JS -->
+      </select>
     </div>
   </div>
+  <div class="modal__footer">
+    <button type="button" id="btn-close-bulk-modal" class="btn" data-size="lg" data-variant="outline"
+      data-modal-close>Hủy</button>
+    <button type="button" id="btn-confirm-bulk-assign" class="btn" data-size="lg" data-variant="primary">Xác nhận phân
+      công</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
 <!-- Modal: Xác nhận Hủy phân công -->
-<div id="modal-bulk-unassign" class="modal-overlay hidden" data-state="closed">
-  <div class="modal-content shadow-xl">
-    <div class="modal-header">
-      <h3 class="title text-xl font-semibold">Xác nhận Hủy phân công</h3>
-    </div>
-    <div class="modal-body py-4">
-      <p>Bạn có chắc chắn muốn hủy phân công cho <span id="bulk-unassign-count" class="font-bold">0</span> sinh viên đã
-        chọn?</p>
-      <p class="text-sm mt-2">Dữ liệu phân công sẽ bị xóa khỏi hệ thống.</p>
-    </div>
-    <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" id="btn-close-unassign-modal" class="btn" data-size="md" data-variant="outline">Hủy
-        bỏ</button>
-      <button type="button" id="btn-confirm-bulk-unassign" class="btn" data-size="md" data-variant="destructive">Xác
-        nhận Hủy</button>
-    </div>
+<div id="modal-bulk-unassign" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận Hủy phân công</h3>
+    <p class="modal__description">Bạn có chắc chắn muốn hủy phân công cho <span id="bulk-unassign-count"
+        class="font-bold">0</span> sinh viên đã
+      chọn</p>
   </div>
+  <div class="modal__footer">
+    <button type="button" id="btn-close-unassign-modal" class="btn" data-size="lg" data-variant="outline"
+      data-modal-close>Hủy
+      bỏ</button>
+    <button type="button" id="btn-confirm-bulk-unassign" class="btn" data-size="lg" data-variant="destructive">Xác
+      nhận Hủy</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
 <!-- Modal: Xác nhận Phân công Tự động (Chia đều) -->
-<div id="modal-auto-even" class="modal-overlay hidden" data-state="closed">
-  <div class="modal-content shadow-xl">
-    <div class="modal-header mb-4">
-      <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-        <i class="fa-solid fa-scale-balanced text-xl"></i>
-      </div>
-      <h3 class="title text-xl font-semibold">Thuật toán Chia đều</h3>
-    </div>
-    <div class="modal-body mb-6">
-      <p class="mb-3">Hệ thống sẽ thực hiện các bước sau:</p>
-      <ul class="flex flex-col gap-2 text-sm">
-        <li class="flex gap-2"><i class="fa-solid fa-check text-success mt-1"></i> Tìm tất cả sinh viên chưa có giảng
-          viên hướng dẫn.</li>
-        <li class="flex gap-2"><i class="fa-solid fa-check text-success mt-1"></i> Ưu tiên phân công cho giảng viên đang
-          hướng dẫn ÍT SINH VIÊN NHẤT.</li>
-        <li class="flex gap-2"><i class="fa-solid fa-check text-success mt-1"></i> Đảm bảo không vượt quá hạn mức của
-          từng giảng viên.</li>
-      </ul>
-    </div>
-    <div class="modal-footer flex justify-end gap-2">
-      <button type="button" id="btn-close-even-modal" class="btn" data-size="md" data-variant="outline">Để sau</button>
-      <button type="button" id="btn-confirm-auto-even" class="btn" data-size="md" data-variant="primary">Tiến hành
-        ngay</button>
-    </div>
+<div id="modal-auto-even" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Phân công đều</h3>
+    <p class="modal__description">Phân công đều số lương sinh viên cho giảng viên theo thứ tự từ trên xuống.</p>
   </div>
+  <div class="modal__footer">
+    <button type="button" id="btn-close-even-modal" class="btn" data-size="lg" data-variant="outline"
+      data-modal-close>Hủy</button>
+    <button type="button" id="btn-confirm-auto-even" class="btn" data-size="lg" data-variant="primary">Thực
+      hiện</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
 <!-- Modal: Xác nhận Phân công Tự động (Ngẫu nhiên) -->
-<div id="modal-auto-shuffle" class="modal-overlay hidden" data-state="closed">
-  <div class="modal-content shadow-xl">
-    <div class="modal-header mb-4">
-      <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-4">
-        <i class="fa-solid fa-shuffle text-orange-600 text-xl"></i>
-      </div>
-      <h3 class="title text-xl font-semibold">Thuật toán Ngẫu nhiên</h3>
-    </div>
-    <div class="modal-body mb-6">
-      <p class="mb-3">Hệ thống sẽ thực hiện các bước sau:</p>
-      <ul class="flex flex-col gap-2 text-sm">
-        <li class="flex gap-2"><i class="fa-solid fa-check text-success mt-1"></i> Tìm tất cả sinh viên chưa có giảng
-          viên hướng dẫn.</li>
-        <li class="flex gap-2"><i class="fa-solid fa-check text-success mt-1"></i> Phân công ngẫu nhiên cho các giảng
-          viên còn hạn mức trống.</li>
-        <li class="flex gap-2"><i class="fa-solid fa-check text-success mt-1"></i> Đảm bảo không vượt quá hạn mức của
-          từng giảng viên.</li>
-      </ul>
-    </div>
-    <div class="modal-footer flex justify-end gap-2">
-      <button type="button" id="btn-close-shuffle-modal" class="btn" data-size="md" data-variant="outline">Để
-        sau</button>
-      <button type="button" id="btn-confirm-auto-shuffle" class="btn" data-size="md" data-variant="primary">Tiến hành
-        ngay</button>
-    </div>
+<div id="modal-auto-shuffle" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Phân công ngẫu nhiên</h3>
+    <p class="modal__description">Phân công ngẫu nhiên sinh viên cho giảng viên.</p>
   </div>
+  <div class="modal__footer">
+    <button type="button" id="btn-close-shuffle-modal" class="btn" data-size="lg" data-variant="outline"
+      data-modal-close>Hủy</button>
+    <button type="button" id="btn-confirm-auto-shuffle" class="btn" data-size="lg" data-variant="primary">Thực
+      hiện</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
 <script>

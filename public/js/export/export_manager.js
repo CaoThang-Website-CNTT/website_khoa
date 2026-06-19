@@ -20,7 +20,7 @@ export class ExportManager {
     btnToggle.setAttribute("data-variant", "primary");
     btnToggle.setAttribute("data-size", "md");
     btnToggle.innerHTML =
-      '<i class="fa-solid fa-file-export mr-1"></i>Xuất Excel';
+      '<i class="fa-solid fa-download"></i>Xuất Excel';
     btnToggle.type = "button";
 
     // Tạo menu dropdown
@@ -280,7 +280,7 @@ export class ExportManager {
       } finally {
         btnToggle.classList.remove("tm-export-loading");
         btnToggle.innerHTML =
-          '<i class="fa-solid fa-file-export mr-1"></i>Xuất Excel';
+          '<i class="fa-solid fa-download"></i>Xuất Excel';
         btnToggle.disabled = false;
       }
     };
@@ -338,7 +338,7 @@ export class ExportManager {
           <i class="fa-solid fa-xmark mr-1"></i>Hủy
         </button>
         <button type="button" class="btn export-modal__btn-confirm" data-variant="primary" data-size="md">
-          <i class="fa-solid fa-file-export mr-1"></i>Xác nhận
+          <i class="fa-solid fa-download"></i>Xác nhận
         </button>
       </div>
     `;

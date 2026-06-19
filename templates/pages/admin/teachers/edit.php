@@ -138,9 +138,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <select id="department_id" class="field__input" name="department_id">
                   <option value="">-- Chọn đơn vị --</option>
                   <?php foreach ($departments as $dept): ?>
-                      <option value="<?= htmlspecialchars($dept->id) ?>" <?= $teacher->department_id === $dept->id ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($dept->full_name) ?> (<?= htmlspecialchars($dept->short_name) ?>)
-                      </option>
+                    <option value="<?= htmlspecialchars($dept->id) ?>" <?= $teacher->department_id === $dept->id ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($dept->full_name) ?> (<?= htmlspecialchars($dept->short_name) ?>)
+                    </option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -242,11 +242,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <dt>Trạng thái dữ liệu</dt>
           <dd>
             <?php if ($teacher->deleted_at): ?>
-                <span class="badge" data-variant="destructive">
-                  Đã xóa
-                </span>
+              <span class="badge" data-variant="destructive">
+                Đã xóa
+              </span>
             <?php else: ?>
-                <span class="badge" data-variant="primary">Hoạt động</span>
+              <span class="badge" data-variant="primary">Hoạt động</span>
             <?php endif; ?>
           </dd>
         </dl>
@@ -258,7 +258,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Add confirm modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Bạn có chắc</h2>
+    <h3 class="modal__title">Bạn có chắc</h3>
     <p class="modal__description">
       Những thao tác này sẽ không thể hoàn tác.
     </p>
@@ -278,7 +278,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Delete confirm modal -->
 <div class="modal" id="delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Bạn có chắc</h2>
+    <h3 class="modal__title">Bạn có chắc</h3>
     <p class="modal__description">
       Những thao tác này sẽ không thể hoàn tác.
     </p>

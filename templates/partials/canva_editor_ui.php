@@ -279,7 +279,7 @@ $editorAuthors = array_map(
 
 <div class="modal detail-modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Bạn có chắc</h2>
+    <h3 class="modal__title">Bạn có chắc</h3>
     <p class="modal__description">
       <?php if ($isEdit): ?>
         Những thay đổi sẽ được áp dụng vào bài viết `<span class="text-sm font-medium"

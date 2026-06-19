@@ -10,16 +10,16 @@ $max_mb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Thêm mới media</h2>
-    <p class="title-wrapper__description">Upload & điền thông tin media mới vào các trường dưới đây</p>
+<p class="title-wrapper__description">Upload & điền thông tin media mới vào các trường dưới đây</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/media') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i> Quay lại
-    </a>
-    <button data-modal-trigger="#confirm-modal" type="button" data-variant="primary" data-size="lg" class="btn">
-      Lưu
-    </button>
+  <i class="fa-solid fa-chevron-left"></i> Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" type="button" data-variant="primary" data-size="lg" class="btn">
+  Lưu
+</button>
 <?php $layout->end() ?>
 
 <div class="detail-layout">
@@ -97,7 +97,7 @@ $max_mb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
 <!-- ── Confirm modal ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Xác nhận lưu</h2>
+    <h3 class="modal__title">Xác nhận lưu</h3>
     <p class="modal__description">Bạn có chắc muốn thêm media này?</p>
   </div>
   <div class="modal__footer">

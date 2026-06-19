@@ -141,7 +141,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <!-- Confirm update modal -->
   <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
-      <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
+      <h3 class="modal__title">Xác nhận chỉnh sửa</h3>
       <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
     </div>
     <div class="modal__footer">
@@ -156,7 +156,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <!-- Confirm delete modal -->
   <div class="modal" id="delete-modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
-      <h2 class="modal__title">Xác nhận xóa</h2>
+      <h3 class="modal__title">Xác nhận xóa</h3>
       <p class="modal__description">
         Danh mục <strong><?= htmlspecialchars($category->name) ?></strong> sẽ bị xóa và không thể khôi phục.
       </p>

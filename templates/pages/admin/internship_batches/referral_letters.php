@@ -91,90 +91,81 @@ $letters = $letters ?? [];
 </div>
 
 <!-- Modal Chi tiết -->
-<div id="rl_detailModal" class="modal-overlay hidden" data-state="closed">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="title text-xl font-semibold">Chi tiết Giấy giới thiệu</h3>
-      <button class="modal-close" data-modal-close="#rl_detailModal">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="grid gap-4">
-        <div class="detail-item">
-          <div class="text-xs font-semibold mb-1">Sinh viên</div>
-          <div id="dt_student" class="font-medium"></div>
-        </div>
-        <div class="detail-item">
-          <div class="text-xs font-semibold mb-1">Công ty tiếp nhận</div>
-          <div id="dt_company_name" class="font-medium text-sm"></div>
-          <div id="dt_company_tax" class="text-xs mt-1"></div>
-          <div id="dt_company_address" class="text-xs mt-1"></div>
-        </div>
-        <div class="detail-item">
-          <div class="text-xs font-semibold mb-1">Trạng thái</div>
-          <div id="dt_status"></div>
-        </div>
-        <div id="dt_cancel_reason_wrapper" class="detail-item hidden">
-          <div class="text-xs font-semibold mb-1">Lý do hủy</div>
-          <div id="dt_cancel_reason" class="text-sm border-l-2 pl-2"></div>
-        </div>
+<div id="rl_detailModal" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Chi tiết Giấy giới thiệu</h3>
+    <button class="modal__close" type="button" data-modal-close>
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div>
+    <div class="grid gap-4">
+      <div class="detail-item">
+        <div class="text-xs font-semibold mb-1">Sinh viên</div>
+        <div id="dt_student" class="font-medium"></div>
+      </div>
+      <div class="detail-item">
+        <div class="text-xs font-semibold mb-1">Công ty tiếp nhận</div>
+        <div id="dt_company_name" class="font-medium text-sm"></div>
+        <div id="dt_company_tax" class="text-xs mt-1"></div>
+        <div id="dt_company_address" class="text-xs mt-1"></div>
+      </div>
+      <div class="detail-item">
+        <div class="text-xs font-semibold mb-1">Trạng thái</div>
+        <div id="dt_status"></div>
+      </div>
+      <div id="dt_cancel_reason_wrapper" class="detail-item hidden">
+        <div class="text-xs font-semibold mb-1">Lý do hủy</div>
+        <div id="dt_cancel_reason" class="text-sm border-l-2 pl-2"></div>
       </div>
     </div>
-    <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-variant="outline" data-size="md"
-        data-modal-close="#rl_detailModal">Đóng</button>
-    </div>
+  </div>
+  <div class="modal__footer">
+    <button type="button" class="btn" data-variant="outline" data-size="lg" data-modal-close>Đóng</button>
   </div>
 </div>
 
 <!-- Modal Nhập lý do hủy -->
-<div id="cancel-reason-modal" class="modal-overlay hidden" data-state="closed">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="title text-xl font-semibold">Hủy giấy giới thiệu</h3>
-      <button type="button" class="modal-close" data-modal-close="#cancel-reason-modal">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+<div id="cancel-reason-modal" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Hủy giấy giới thiệu</h3>
+    <button type="button" class="modal__close" data-modal-close>
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="py-4">
+    <p class="mb-4">Vui lòng nhập lý do hủy cho <span id="cancel-count" class="font-bold">0</span> giấy giới thiệu đã
+      chọn:</p>
+    <div class="field" data-field-required>
+      <label class="field__label">Lý do hủy</label>
+      <textarea id="cancel_reason_input" class="field__input" required rows="3"
+        placeholder="Nhập lý do hủy..."></textarea>
     </div>
-    <div class="modal-body py-4">
-      <p class="mb-4">Vui lòng nhập lý do hủy cho <span id="cancel-count" class="font-bold">0</span> giấy giới thiệu đã
-        chọn:</p>
-      <div class="field" data-field-required>
-        <label class="field__label">Lý do hủy</label>
-        <textarea id="cancel_reason_input" class="field__input" required rows="3"
-          placeholder="Nhập lý do hủy..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-size="md" data-variant="outline"
-        data-modal-close="#cancel-reason-modal">Hủy bỏ</button>
-      <button type="button" id="btn-confirm-cancel" class="btn" data-size="md" data-variant="destructive">Xác nhận
-        Hủy</button>
-    </div>
+  </div>
+  <div class="modal__footer">
+    <button type="button" class="btn" data-size="lg" data-variant="outline" data-modal-close>Hủy bỏ</button>
+    <button type="button" id="btn-confirm-cancel" class="btn" data-size="lg" data-variant="destructive">Xác nhận
+      Hủy</button>
   </div>
 </div>
 
 <!-- Modal Xác nhận Duyệt -->
-<div id="approve-confirm-modal" class="modal-overlay hidden" data-state="closed">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 class="title text-xl font-semibold">Xác nhận Duyệt</h3>
-      <button type="button" class="modal-close" data-modal-close="#approve-confirm-modal">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-    <div class="modal-body py-4">
-      <p>Bạn có chắc chắn muốn duyệt và in <span id="approve-count" class="font-bold">0</span> giấy giới thiệu đã chọn?
-      </p>
-      <p class="text-sm mt-2">Lưu ý: Các giấy không ở trạng thái "Chờ duyệt" sẽ bị từ chối/bỏ qua.</p>
-    </div>
-    <div class="modal-footer flex justify-end gap-2 mt-4">
-      <button type="button" class="btn" data-size="md" data-variant="outline"
-        data-modal-close="#approve-confirm-modal">Hủy bỏ</button>
-      <button type="button" id="btn-confirm-approve" class="btn" data-size="md" data-variant="primary">Xác nhận
-        Duyệt</button>
-    </div>
+<div id="approve-confirm-modal" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận Duyệt</h3>
+    <button type="button" class="modal__close" data-modal-close>
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="py-4">
+    <p>Bạn có chắc chắn muốn duyệt và in <span id="approve-count" class="font-bold">0</span> giấy giới thiệu đã chọn?
+    </p>
+    <p class="text-sm mt-2">Lưu ý: Các giấy không ở trạng thái "Chờ duyệt" sẽ bị từ chối/bỏ qua.</p>
+  </div>
+  <div class="modal__footer">
+    <button type="button" class="btn" data-size="lg" data-variant="outline" data-modal-close>Hủy bỏ</button>
+    <button type="button" id="btn-confirm-approve" class="btn" data-size="lg" data-variant="primary">Xác nhận
+      Duyệt</button>
   </div>
 </div>
 

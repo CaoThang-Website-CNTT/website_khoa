@@ -1,16 +1,7 @@
 import { TableManager } from "../table/table_manager.js";
 import { ExportManager } from "../export/export_manager.js";
-import LayoutCollapsible from "../layout-collapsible.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Init Collapsible Sidebar (Default to expanded for admin management)
-  new LayoutCollapsible({
-    containerSelector: ".detail-layout--collapsible",
-    toggleSelector: ".js-sidebar-toggle",
-    storageKey: "admin-batch-students-sidebar-collapsed",
-    defaultCollapsed: false,
-  });
-
   const batchId = window.BATCH_ID;
   const batchStatus = window.BATCH_STATUS;
   const apiBase = window.API_BASE_URL;
@@ -23,10 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const selectedCountText = document.querySelector("#selected-count");
 
   // Modals
-  const modalBulkAssign = document.querySelector("#modal-bulk-assign");
-  const modalBulkUnassign = document.querySelector("#modal-bulk-unassign");
-  const modalAutoEven = document.querySelector("#modal-auto-even");
-  const modalAutoShuffle = document.querySelector("#modal-auto-shuffle");
+  const modalHandler = ModalHandler.instance;
 
   // Stat Elements
   const statTotalStudents = document.querySelector("#stat-total-students");
@@ -345,8 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const select = document.querySelector("#bulk-teacher-select");
     renderTeacherOptions(select, null);
 
-    modalBulkAssign.classList.remove("hidden");
-    modalBulkAssign.setAttribute("data-state", "open");
+    modalHandler.open("#modal-bulk-assign");
   });
 
   document
@@ -368,8 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       });
 
-      modalBulkAssign.classList.add("hidden");
-      modalBulkAssign.setAttribute("data-state", "closed");
+      modalHandler.close();
       await saveAssignments(assignments, "Cập nhật phân công hàng loạt.");
       TableManager.clearSelection("batch_students_table");
     });
@@ -379,8 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedIds = TableManager.getSelectedIds("batch_students_table");
     document.querySelector("#bulk-unassign-count").textContent =
       selectedIds.length;
-    modalBulkUnassign.classList.remove("hidden");
-    modalBulkUnassign.setAttribute("data-state", "open");
+    modalHandler.open("#modal-bulk-unassign");
   });
 
   document
@@ -396,40 +381,37 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       });
 
-      modalBulkUnassign.classList.add("hidden");
-      modalBulkUnassign.setAttribute("data-state", "closed");
+      modalHandler.close();
       await saveAssignments(assignments, "Hủy phân công hàng loạt.");
       TableManager.clearSelection("batch_students_table");
     });
 
   // Auto Assign: Shuffle
   document.querySelector("#btn-auto-shuffle")?.addEventListener("click", () => {
-    modalAutoShuffle.classList.remove("hidden");
-    modalAutoShuffle.setAttribute("data-state", "open");
+    modalHandler.open("#modal-auto-shuffle");
   });
 
   document
     .querySelector("#btn-confirm-auto-shuffle")
     ?.addEventListener("click", async () => {
-      await performAutoAssign("auto_shuffle", modalAutoShuffle);
+      await performAutoAssign("auto_shuffle");
     });
 
   // Auto Assign: Even (Load Balancing)
   document.querySelector("#btn-auto-even")?.addEventListener("click", () => {
-    modalAutoEven.classList.remove("hidden");
-    modalAutoEven.setAttribute("data-state", "open");
+    modalHandler.open("#modal-auto-even");
   });
 
   document
     .querySelector("#btn-confirm-auto-even")
     ?.addEventListener("click", async () => {
-      await performAutoAssign("auto_even", modalAutoEven);
+      await performAutoAssign("auto_even");
     });
 
   /**
    * Helper thực hiện API phân công tự động
    */
-  const performAutoAssign = async (method, modal) => {
+  const performAutoAssign = async (method) => {
     try {
       const res = await fetch(`${apiBase}/${batchId}/auto-assign`, {
         method: "POST",
@@ -442,29 +424,12 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(data.message || "Lỗi khi phân công tự động.");
 
       toast.success("Thành công", data.message);
-      modal.classList.add("hidden");
-      modal.setAttribute("data-state", "closed");
+      modalHandler.close();
       await loadData();
     } catch (error) {
       toast.error("Lỗi", error.message);
     }
   };
-
-  // Close Modals logic
-  const closeModal = (modal) => {
-    if (!modal) return;
-    modal.classList.add("hidden");
-    modal.setAttribute("data-state", "closed");
-  };
-
-  document.querySelectorAll('.btn[id*="close"]').forEach((btn) => {
-    btn.addEventListener("click", () => {
-      closeModal(modalBulkAssign);
-      closeModal(modalBulkUnassign);
-      closeModal(modalAutoEven);
-      closeModal(modalAutoShuffle);
-    });
-  });
 
   // Khởi chạy
   loadData();

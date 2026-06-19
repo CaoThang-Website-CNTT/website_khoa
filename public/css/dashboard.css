@@ -480,21 +480,6 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
     margin 0.4s ease;
 }
 
-/* Collapsible State */
-.detail-layout--collapsible.is-collapsed .detail-layout__sidebar {
-  flex: 0;
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.detail-layout--collapsible.is-collapsed {
-  gap: 0;
-}
-
 .detail-layout--reverse .detail-layout__main {
   order: 2;
 }

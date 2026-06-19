@@ -224,7 +224,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <!-- Add confirm modal -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Bạn có chắc</h2>
+    <h3 class="modal__title">Bạn có chắc</h3>
     <p class="modal__description">
       Những thao tác này sẽ không thể hoàn tác.
     </p>

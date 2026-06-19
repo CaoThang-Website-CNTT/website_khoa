@@ -282,7 +282,7 @@ function renderMenuItems(array $items, object $menu): void
 <?php if ($isEditable): ?>
   <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
-      <h2 class="modal__title">Xác nhận chỉnh sửa</h2>
+      <h3 class="modal__title">Xác nhận chỉnh sửa</h3>
       <p class="modal__description">Bạn có chắc muốn lưu các thay đổi này?</p>
     </div>
     <div class="modal__footer">
@@ -297,7 +297,7 @@ function renderMenuItems(array $items, object $menu): void
   <!-- 3. Confirm Delete Modal (Stacked) -->
   <div class="modal" id="item-delete-confirm-modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
-      <h2 class="modal__title">Xác nhận xóa Mục Menu</h2>
+      <h3 class="modal__title">Xác nhận xóa Mục Menu</h3>
       <p class="modal__description">Bạn có chắc chắn muốn xóa mục menu này và toàn bộ mục con bên dưới? Hành động này
         không thể hoàn tác.</p>
     </div>

@@ -1,6 +1,6 @@
 <div class="modal msm" id="media-selector-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Thư viện Media</h2>
+    <h3 class="modal__title">Thư viện Media</h3>
     <p class="modal__description">Chọn ảnh từ thư viện hoặc tải lên ảnh mới.</p>
   </div>
   <div class="msm-content">

@@ -1,14 +1,4 @@
-import LayoutCollapsible from "../layout-collapsible.js";
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Init Collapsible Sidebar
-  new LayoutCollapsible({
-    containerSelector: ".detail-layout--collapsible",
-    toggleSelector: ".js-sidebar-toggle",
-    storageKey: "teacher-batch-sidebar-collapsed",
-    defaultCollapsed: true,
-  });
-
   const tableId = "students_table";
 
   // 1. Xử lý sự kiện Actions (Xem chi tiết, Nhập điểm) qua Event Delegation
