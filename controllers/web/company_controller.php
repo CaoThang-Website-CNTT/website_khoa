@@ -36,60 +36,66 @@ class CompanyController extends Controller
 
   public function create()
   {
-    // $classrooms = $this->_classroomService->getAllClassrooms();
-    // $this->render("admin/students/create", [
-    //   'classrooms' => $classrooms
-    // ], layout: "dashboard_layout");
+    $this->render("admin/companies/create", [], layout: "dashboard_layout");
   }
 
   public function store(Request $request)
   {
-    // $data = $request->all();
+    $data = $request->all();
 
-    // $validator = new RequestValidator();
-    // $rules = [
-    //   'full_name' => ['required', 'max:255'],
-    //   'dob' => ['required', 'date'],
-    //   'birth_place' => ['required', 'max:255'],
-    //   'national_id' => ['required', 'size:12'],
-    //   'gender' => ['required', 'in:male,female'],
-    //   'phone' => ['required', 'phone', 'max:15'],
-    //   'address' => ['required'],
+    $validator = new RequestValidator();
+    $rules = [
+      'company_name' => ['required', 'max:255'],
+      'tax_code' => ['required', 'max:50'],
+      'phone' => ['nullable', 'phone', 'max:15'],
+      'address' => ['required'],
+      'email' => ['nullable', 'email', 'max:255'],
+      'website' => ['nullable', 'max:255'],
+      'note' => ['nullable'],
+    ];
 
-    //   'student_id' => ['required', 'size:10'],
-    //   'classroom_id' => ['required'],
-    //   'notes' => ['nullable'],
+    if (!$validator->validate($data, $rules)) {
+      $request->flashOldInputs();
+      $request->session()->flashErrors($validator->getErrors());
+      return $this->redirect('admin/companies/create');
+    }
 
-    //   'status' => ['required', 'in:Đang học,Đã tốt nghiệp,Tạm ngưng,Thôi học']
-    // ];
+    // Kiểm tra MST unique
+    $taxCode = trim($data['tax_code'] ?? '');
+    if ($taxCode !== '') {
+      $existing = $this->_companyService->findByTaxCode($taxCode);
+      if ($existing) {
+        $validator->addError('tax_code', 'Mã số thuế này đã tồn tại trong hệ thống.');
+        $request->flashOldInputs();
+        $request->session()->flashErrors($validator->getErrors());
+        return $this->redirect('admin/companies/create');
+      }
+    }
 
-    // if (!$validator->validate($data, $rules)) {
-    //   $request->flashOldInputs();
-    //   $request->session()->flashErrors($validator->getErrors());
-    //   return $this->redirect('admin/students/create');
-    // }
+    try {
+      $newCompanyId = $this->_companyService->createManual([
+        'name' => $data['company_name'],
+        'tax_code' => $taxCode ?: null,
+        'phone' => $data['phone'] ?? null,
+        'address' => $data['address'],
+        'email' => $data['email'] ?? null,
+        'website' => $data['website'] ?? null,
+        'note' => $data['note'] ?? null,
+        'is_verified' => 1,
+      ]);
 
-    // if (!$this->_studentService->isStudentIdUnique($data['student_id'])) {
-    //   $validator->addError('student_id', 'Mã số sinh viên này đã tồn tại trong hệ thống.');
-    //   $request->flashOldInputs();
-    //   $request->session()->flashErrors($validator->getErrors());
-    //   return $this->redirect('admin/students/create');
-    // }
+      $request->session()->flashNotify(
+        'success',
+        'Tạo mới công ty thành công!',
+        'Công ty #' . $newCompanyId . ' đã được thêm vào hệ thống.'
+      );
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', 'Có lỗi xảy ra', $e->getMessage());
+      return $this->redirect('admin/companies/create');
+    }
 
-    // $newStudent = $this->_studentService->createStudent($data);
-
-    // if ($newStudent) {
-    //   $request->session()->flashNotify(
-    //     'success',
-    //     'Tạo mới sinh viên thành công!',
-    //     'Sinh viên có mã #' . $newStudent->student_id . ' đã được tạo.'
-    //   );
-    // } else {
-    //   $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
-    // }
-
-    // $this->redirect('admin/students/create');
-    // exit;
+    $this->redirect('admin/companies');
+    exit;
   }
 
   public function edit($id, Request $request)

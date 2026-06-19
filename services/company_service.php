@@ -60,6 +60,7 @@ class CompanyService implements ICompanyService
   public function createManual(array $data): int
   {
     $data['normalized_name'] = $this->normalizeName($data['name']);
+    $data['is_verified'] = $data['is_verified'] ?? 0;
     return $this->_store->createManual($data);
   }
 

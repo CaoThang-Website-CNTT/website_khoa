@@ -5,54 +5,30 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
-  window.__specializations__ = <?= json_encode(
-    array_map(fn($s) => [
-      'id' => $s->id,
-      'major_id' => $s->major_id,
-      'full_name' => $s->full_name,
-      'short_name' => $s->short_name,
-    ], $specializations)
-  ) ?>;
-  window.__majors__ = <?= json_encode(
-    array_map(fn($m) => [
-      'id' => $m->id,
-      'short_name' => $m->short_name,
-      'level' => $m->level,
-    ], $majors)
-  ) ?>;
-  window.__teachers__ = <?= json_encode(
-    array_map(fn($t) => [
-      'id' => $t->id,
-      'full_name' => $t->full_name,
-      'department' => $t->department,
-    ], $teachers)
-  ) ?>;
 </script>
-
-
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Thêm công ty mới</h2>
-    <p class="title-wrapper__description">Điền thông tin công ty mới vào các trường dưới đây</p>
+<p class="title-wrapper__description">Điền thông tin công ty mới vào các trường dưới đây</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/companies') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary" data-size="lg" class="w-full btn">
-      <i class="fa-solid fa-floppy-disk"></i>
-      Thêm
-    </button>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary" data-size="lg" class="btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Thêm
+</button>
 <?php $layout->end() ?>
-<form class="detail-layout" id="classroom-add-form" action="<?= url('admin/classrooms') ?>" method="POST">
+<form class="detail-layout" id="company-add-form" action="<?= url('admin/companies') ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
     <div class="card shadow">
       <fieldset class="field__set">
         <div class="card__header">
-          <legend class="field__legend">Thông tin lớp học</legend>
+          <legend class="field__legend">Thông tin công ty</legend>
           <p class="field__description">
             Vui lòng điền đầy đủ thông tin. Những trường có dấu * là bắt buộc.
           </p>
@@ -62,85 +38,54 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <div class="field-group">
 
             <div class="field" data-field-required>
-              <label class="field__label" for="major_id">Ngành học</label>
-              <select id="major_id" class="field__input" name="major_id">
-                <option value="">-- Chọn ngành học --</option>
-                <?php foreach ($majors as $major): ?>
-                  <option value="<?= htmlspecialchars($major->id) ?>"
-                    data-short="<?= htmlspecialchars($major->short_name) ?>"
-                    data-level="<?= htmlspecialchars($major->level) ?>">
-                    <?= htmlspecialchars($major->full_name) ?> (<?= htmlspecialchars($major->short_name) ?>)
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="specialization_id">Chuyên ngành</label>
-              <select id="specialization_id" class="field__input" name="specialization_id" disabled>
-                <option value="">-- Chọn ngành trước --</option>
-              </select>
-              <p class="field__description">Chọn ngành học trước để lọc chuyên ngành. Có thể bỏ trống.</p>
+              <label class="field__label" for="company_name">Tên công ty</label>
+              <input id="company_name" class="field__input" type="text" name="company_name"
+                placeholder="VD: Công ty TNHH ABC" maxlength="255" value="">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-              <div class="field" data-field-required data-field-max="2">
-                <label class="field__label" for="class_of">Khóa học</label>
-                <input id="class_of" class="field__input" type="number" name="class_of" placeholder="VD: 23" min="20"
-                  max="99" value="">
-                <p class="field__description">2 chữ số cuối của năm nhập học (VD: 23 → 2023).</p>
+              <div class="field" data-field-required>
+                <label class="field__label" for="tax_code">Mã số thuế</label>
+                <input id="tax_code" class="field__input" type="text" name="tax_code"
+                  placeholder="VD: 0123456789" maxlength="50" value="">
               </div>
 
-              <div class="field" data-field-required data-field-max="1">
-                <label class="field__label" for="letter">Ký tự lớp</label>
-                <input id="letter" class="field__input" type="text" name="letter" placeholder="VD: A" maxlength="1"
-                  value="" style="text-transform: uppercase;">
-                <p class="field__description">Một ký tự phân biệt lớp (A, B, C…).</p>
+              <div class="field">
+                <label class="field__label" for="phone">Số điện thoại</label>
+                <input id="phone" class="field__input" type="tel" name="phone"
+                  placeholder="0901234567" value="">
               </div>
             </div>
-
-            <div class="field" data-field-readonly>
-              <label class="field__label" for="short_name">Mã lớp</label>
-              <input id="short_name" class="field__input" type="text" name="short_name" placeholder="Tự động tạo"
-                value="" readonly>
-              <p class="field__description">
-                Mã lớp được tự động tạo theo định dạng:
-                <strong>{Hệ}{Ngành}{Khóa}{Ký tự}</strong> - VD: CĐ CNTT 23A
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </fieldset>
-    </div>
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Giáo viên chủ nhiệm</legend>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="field-group">
 
             <div class="field" data-field-required>
-              <label class="field__label" for="homeroom_teacher_id">Giáo viên chủ nhiệm</label>
-              <select id="homeroom_teacher_id" class="field__input" name="homeroom_teacher_id">
-                <option value="">-- Chưa phân công --</option>
-                <?php foreach ($teachers as $teacher): ?>
-                  <option value="<?= htmlspecialchars($teacher->id) ?>">
-                    <?= htmlspecialchars($teacher->full_name) ?>
-                    - <?= htmlspecialchars($teacher->department) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-              <p class="field__description">Có thể phân công sau khi tạo lớp.</p>
+              <label class="field__label" for="address">Địa chỉ</label>
+              <textarea id="address" class="field__input" name="address" rows="3"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
             </div>
 
+            <div class="grid grid-cols-2 gap-4">
+              <div class="field">
+                <label class="field__label" for="email">Email</label>
+                <input id="email" class="field__input" type="email" name="email"
+                  placeholder="info@abc.com" value="">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="website">Website</label>
+                <input id="website" class="field__input" type="url" name="website"
+                  placeholder="https://abc.com" value="">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="note">Ghi chú</label>
+              <textarea id="note" class="field__input" name="note" rows="3"
+                placeholder="Ghi chú về công ty này"></textarea>
+            </div>
           </div>
         </div>
       </fieldset>
     </div>
-
   </div>
 </form>
 
@@ -161,104 +106,45 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector('#classroom-add-form');
+    const form = document.querySelector('#company-add-form');
     const confirmBtn = document.querySelector('#confirm-modal-btn');
+    const errors = window.__errors__ ?? {};
+    const old = window.__old__ ?? {};
 
-    const majorSelect = document.querySelector('#major_id');
-    const specSelect = document.querySelector('#specialization_id');
-    const teacherSelect = document.querySelector('#homeroom_teacher_id');
-    const classOfInput = document.querySelector('#class_of');
-    const letterInput = document.querySelector('#letter');
-    const shortNameInput = document.querySelector('#short_name');
-
-    const allSpecs = window.__specializations__ ?? [];
-    const allMajors = window.__majors__ ?? [];
-    const allTeachers = window.__teachers__ ?? [];
-
-    function getSelectedMajor() {
-      const id = parseInt(majorSelect.value);
-      return allMajors.find(m => m.id === id) ?? null;
+    // Khôi phục old input sau validation fail
+    if (Object.keys(old).length > 0) {
+      Object.entries(old).forEach(([key, value]) => {
+        const el = form.querySelector(`[name="${key}"]`);
+        if (el) {
+          if (el.tagName === 'TEXTAREA') {
+            el.textContent = value;
+          } else {
+            el.value = value;
+          }
+        }
+      });
     }
 
-    function buildShortName() {
-      const major = getSelectedMajor();
-      const classOf = classOfInput.value.trim();
-      const letter = letterInput.value.trim().toUpperCase();
-
-      if (!major || !classOf || !letter) {
-        shortNameInput.value = '';
-        return;
-      }
-
-      shortNameInput.value = `${major.level}${major.short_name}${classOf}${letter}`;
+    // Hiển thị lỗi validation
+    if (Object.keys(errors).length > 0) {
+      Object.entries(errors).forEach(([field, messages]) => {
+        const fieldEl = form.querySelector(`[name="${field}"]`);
+        if (fieldEl) {
+          const wrapper = fieldEl.closest('.field');
+          if (wrapper) {
+            wrapper.setAttribute('data-field-error', '');
+            const errorMsg = document.createElement('p');
+            errorMsg.className = 'field__error';
+            errorMsg.textContent = messages[0];
+            wrapper.appendChild(errorMsg);
+          }
+        }
+      });
     }
 
-    function updateSpecsAndTeachers() {
-      const majorId = parseInt(majorSelect.value);
-
-      // Reset options
-      specSelect.innerHTML = '<option value="">-- Chưa có --</option>';
-
-      if (!majorId) {
-        specSelect.disabled = true;
-        buildShortName();
-        return;
-      }
-
-      const selectedMajor = getSelectedMajor();
-      const filteredSpecs = allSpecs.filter(s => s.major_id === majorId);
-      const filteredTeachers = allTeachers.filter(t => t.department === selectedMajor?.short_name);
-
-      if (filteredSpecs.length === 0) {
-        specSelect.disabled = true;
-        specSelect.innerHTML = '<option value="">-- Ngành này không có chuyên ngành --</option>';
-      } else {
-        filteredSpecs.forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.id;
-          opt.textContent = `${s.full_name} (${s.short_name})`;
-          specSelect.appendChild(opt);
-        });
-        specSelect.disabled = false;
-      }
-
-      if (filteredTeachers.length === 0) {
-        teacherSelect.innerHTML = '<option value="">-- Không có giáo viên phù hợp --</option>';
-        teacherSelect.disabled = true;
-      } else {
-        teacherSelect.innerHTML = '<option value="">-- Chưa phân công --</option>';
-        filteredTeachers.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.id;
-          opt.textContent = `${t.full_name} - ${t.department}`;
-          teacherSelect.appendChild(opt);
-        });
-        teacherSelect.disabled = false;
-      }
-
-      buildShortName();
-    }
-
-    majorSelect.addEventListener('change', updateSpecsAndTeachers);
-
-    classOfInput.addEventListener('input', buildShortName);
-
-    letterInput.addEventListener('input', function () {
-      this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1);
-      buildShortName();
-    });
-
-    teacherSelect.addEventListener('change', function () {
-      const teacherId = parseInt(this.value);
-      if (!teacherId) {
-        return;
-      }
-    });
-
+    // Confirm → Submit
     confirmBtn.addEventListener('click', () => {
       form.submit();
     });
-
-    updateSpecsAndTeachers();
   });
 </script>

@@ -87,14 +87,19 @@ class CompanyStore extends Store implements ICompanyStore
 
   public function createManual(array $data): int
   {
-    $sql = "INSERT INTO companies (tax_code, name, normalized_name, address, is_verified, source, created_at, updated_at) 
-            VALUES (:tax_code, :name, :normalized_name, :address, 0, 'manual', NOW(), NOW())";
+    $sql = "INSERT INTO companies (tax_code, name, normalized_name, phone, email, website, address, note, is_verified, source, created_at, updated_at) 
+            VALUES (:tax_code, :name, :normalized_name, :phone, :email, :website, :address, :note, :is_verified, 'manual', NOW(), NOW())";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([
       ':tax_code' => $data['tax_code'] ?? null,
       ':name' => $data['name'],
       ':normalized_name' => $data['normalized_name'] ?? null,
+      ':phone' => $data['phone'] ?? null,
+      ':email' => $data['email'] ?? null,
+      ':website' => $data['website'] ?? null,
       ':address' => $data['address'] ?? null,
+      ':note' => $data['note'] ?? null,
+      ':is_verified' => $data['is_verified'] ?? 0,
     ]);
     return (int)$this->db->lastInsertId();
   }
