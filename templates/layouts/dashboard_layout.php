@@ -27,6 +27,7 @@
     <main class="sidebar__inset">
       <?php include_once BASE_PATH . '/templates/components/dashboard_header.php'; ?>
       <div class="main-wrapper container container-fluid">
+        <?= $layout->yield("banner") ?>
 
         <?php if ($layout->hasContent("heading") || $layout->hasContent("actions")): ?>
           <div class="title-wrapper mb-4">
@@ -34,9 +35,9 @@
               <?= $layout->yield("heading") ?>
             </div>
             <?php if ($layout->hasContent("actions")): ?>
-            <div class="title-wrapper__actions">
-              <?= $layout->yield("actions") ?>
-            </div>
+              <div class="title-wrapper__actions">
+                <?= $layout->yield("actions") ?>
+              </div>
             <?php endif; ?>
           </div>
         <?php endif; ?>

@@ -34,41 +34,43 @@ $currentStatus = [
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">
-      Chi tiết đợt thực tập #<?= htmlspecialchars($batchObj->id) ?>
-    </h2>
-    <p class="title-wrapper__description">Quản lý và cập nhật thông tin đợt thực tập</p>
+  Chi tiết đợt thực tập #<?= htmlspecialchars($batchObj->id) ?>
+</h2>
+<p class="title-wrapper__description">Quản lý và cập nhật thông tin đợt thực tập</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/internship_batches') ?>" data-variant="outline" data-size="md" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button type="button" id="edit-submit-btn" data-modal-trigger="#save-confirm-modal" data-variant="primary" data-size="md" class="btn">
-      <i class="fa-solid fa-floppy-disk"></i>
-      Lưu thay đổi
-    </button>
-    <?php if ($batchObj->status === BatchStatus::DRAFT): ?>
-      <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal" data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/publish') ?>" data-variant="outline-alt" data-size="md" class="btn">
-        <i class="fa-solid fa-paper-plane"></i>
-        Công bố
-      </button>
-    <?php elseif ($batchObj->status === BatchStatus::PUBLISHED): ?>
-      <button type="button" id="close-btn" data-modal-trigger="#close-confirm-modal" data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/close') ?>" data-variant="destructive" data-size="md" class="btn">
-        <i class="fa-solid fa-circle-stop"></i>
-        Kết thúc đợt
-      </button>
-    <?php endif; ?>
-    <?php if (!$stats['has_submissions'] && !$stats['has_grades']): ?>
-      <button type="button" id="delete-btn" data-modal-trigger="#delete-confirm-modal" data-variant="destructive" data-size="md" class="btn">
-        <i class="fa-solid fa-trash"></i>
-        Xóa
-      </button>
-    <?php endif; ?>
-    <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>" data-variant="primary" data-size="md" class="btn">
-      <i class="fa-solid fa-users-gear"></i>
-      Phân công hướng dẫn
-    </a>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button type="button" id="edit-submit-btn" data-modal-trigger="#save-confirm-modal" data-variant="primary"
+  data-size="md" class="btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Lưu thay đổi
+</button>
+<?php if ($batchObj->status === BatchStatus::DRAFT): ?>
+  <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal"
+    data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/publish') ?>" data-variant="outline-alt"
+    data-size="md" class="btn">
+    <i class="fa-solid fa-paper-plane"></i>
+    Công bố
+  </button>
+<?php elseif ($batchObj->status === BatchStatus::PUBLISHED): ?>
+  <button type="button" id="close-btn" data-modal-trigger="#close-confirm-modal"
+    data-action="<?= url('admin/internship_batches/' . $batchObj->id . '/close') ?>" data-variant="destructive"
+    data-size="md" class="btn">
+    <i class="fa-solid fa-circle-stop"></i>
+    Kết thúc đợt
+  </button>
+<?php endif; ?>
+<?php if (!$stats['has_submissions'] && !$stats['has_grades']): ?>
+  <button type="button" id="delete-btn" data-modal-trigger="#delete-confirm-modal" data-variant="destructive"
+    data-size="md" class="btn">
+    <i class="fa-solid fa-trash"></i>
+    Xóa
+  </button>
+<?php endif; ?>
 <?php $layout->end() ?>
 <div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->

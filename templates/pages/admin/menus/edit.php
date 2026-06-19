@@ -53,30 +53,33 @@ function renderMenuItems(array $items, object $menu): void
 }
 ?>
 
+<?php $layout->start("banner") ?>
 <?php if (!$menu->isEditable()): ?>
   <section class="banner" data-variant="info" role="region" aria-label="Thông báo trạng thái">
     <i class="fa-solid fa-lock"></i> Nhóm menu hệ thống. Bạn chỉ có quyền xem dữ liệu này.
   </section>
 <?php endif; ?>
+<?php $layout->end() ?>
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">
-      Menu
-      <?= ' #' . htmlspecialchars($menu->id) ?>
-    </h2>
-    <p class="title-wrapper__description">Xem chi tiết và chỉnh sửa thông tin menu.</p>
+  Menu
+  <?= ' #' . htmlspecialchars($menu->id) ?>
+</h2>
+<p class="title-wrapper__description">Xem chi tiết và chỉnh sửa thông tin menu.</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/menus') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <?php if ($isEditable): ?>
-      <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="btn">
-        Lưu
-      </button>
-    <?php endif; ?>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<?php if ($isEditable): ?>
+  <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
+    class="btn">
+    Lưu
+  </button>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <div class="detail-layout">

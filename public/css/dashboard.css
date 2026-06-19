@@ -141,7 +141,8 @@ body {
     visibility 0s linear 200ms;
 }
 
-.sidebar__wrapper[data-sidebar-ready] .sidebar__container[data-state="expanded"] {
+.sidebar__wrapper[data-sidebar-ready]
+  .sidebar__container[data-state="expanded"] {
   transition:
     left 200ms ease,
     visibility 0s;
@@ -351,10 +352,6 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.5rem;
-}
-
-.title-wrapper .title-wrapper__content {
-  min-width: 60%;
 }
 
 .title-wrapper .title-wrapper__title {

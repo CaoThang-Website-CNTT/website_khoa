@@ -7,29 +7,32 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
+<?php $layout->start("banner") ?>
 <?php if (!$category->isEditable()): ?>
   <section class="banner" data-variant="info" role="region" aria-label="Thông báo trạng thái">
     <i class="fa-solid fa-lock"></i> Danh mục hệ thống. Bạn chỉ có quyền xem dữ liệu này.
   </section>
 <?php endif; ?>
+<?php $layout->end() ?>
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">
-      Chỉnh sửa danh mục #<?= htmlspecialchars($category->id) ?>
-    </h2>
-    <p class="title-wrapper__description">Xem chi tiết và chỉnh sửa thông tin danh mục.</p>
+  Chỉnh sửa danh mục #<?= htmlspecialchars($category->id) ?>
+</h2>
+<p class="title-wrapper__description">Xem chi tiết và chỉnh sửa thông tin danh mục.</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <?php if ($category->isEditable()): ?>
-      <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="btn">
-        Lưu
-      </button>
-    <?php endif; ?>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<?php if ($category->isEditable()): ?>
+  <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
+    class="btn">
+    Lưu
+  </button>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <div class="detail-layout">
