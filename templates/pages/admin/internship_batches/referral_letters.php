@@ -12,64 +12,63 @@ $letters = $letters ?? [];
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Giấy giới thiệu</h2>
-    <p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập #<?= htmlspecialchars($batch['id']) ?></p>
+<p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập
+  #<?= htmlspecialchars($batch['id']) ?></p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i> Quay lại
-    </a>
+  <i class="fa-solid fa-chevron-left"></i> Quay lại
+</a>
 <?php $layout->end() ?>
 
-<div class="card">
-  <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true"
-    data-tm-selectable="true" data-tm-id-key="id">
+<div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true"
+  data-tm-selectable="true" data-tm-id-key="id">
 
-    <!-- Checkbox column is auto prepended by table-manager -->
+  <!-- Checkbox column is auto prepended by table-manager -->
 
-    <template data-tm-col="created_at" data-tm-label="Thông tin đăng ký" data-tm-sortable>
-      <div class="flex flex-col gap-1">
-        <span class="font-medium text-sm">#{{ row.id }}</span>
-        <span class="text-xs">{{ row._formatted_date }}</span>
-      </div>
-    </template>
+  <template data-tm-col="created_at" data-tm-label="Thông tin đăng ký" data-tm-sortable>
+    <div class="flex flex-col gap-1">
+      <span class="font-medium text-sm">#{{ row.id }}</span>
+      <span class="text-xs">{{ row._formatted_date }}</span>
+    </div>
+  </template>
 
-    <template data-tm-col="student_search" data-tm-label="Sinh viên" data-tm-filter-type="text" data-tm-sortable>
-      <div class="flex flex-col gap-1">
-        <span class="font-medium text-sm">{{ row.student_full_name }}</span>
-        <span class="text-xs">{{ row.student_code }} - {{ row.classroom_name }}</span>
-      </div>
-    </template>
+  <template data-tm-col="student_search" data-tm-label="Sinh viên" data-tm-filter-type="text" data-tm-sortable>
+    <div class="flex flex-col gap-1">
+      <span class="font-medium text-sm">{{ row.student_full_name }}</span>
+      <span class="text-xs">{{ row.student_code }} - {{ row.classroom_name }}</span>
+    </div>
+  </template>
 
-    <template data-tm-col="company_search" data-tm-label="Công ty" data-tm-filter-type="text" data-tm-sortable>
-      <div class="flex flex-col gap-1 max-w-[250px]">
-        <span class="font-medium text-sm line-clamp-1" title="{{ row.company_name }}">{{ row.company_name }}</span>
-        <span class="text-xs">MST: {{ row.company_tax_code || '--' }}</span>
-        <span class="text-xs line-clamp-1" title="{{ row.company_address }}">{{ row.company_address }}</span>
-      </div>
-    </template>
+  <template data-tm-col="company_search" data-tm-label="Công ty" data-tm-filter-type="text" data-tm-sortable>
+    <div class="flex flex-col gap-1 max-w-[250px]">
+      <span class="font-medium text-sm line-clamp-1" title="{{ row.company_name }}">{{ row.company_name }}</span>
+      <span class="text-xs">MST: {{ row.company_tax_code || '--' }}</span>
+      <span class="text-xs line-clamp-1" title="{{ row.company_address }}">{{ row.company_address }}</span>
+    </div>
+  </template>
 
-    <template data-tm-col="company_verified_label" data-tm-label="Trạng thái Công ty" data-tm-filter-type="select"
-      data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Đã xác thực","label":"Đã xác thực"},{"value":"Chưa xác thực","label":"Chưa xác thực"}]'>
-      <span class="badge" data-variant="{{ row.company_is_verified == 1 ? 'primary' : 'secondary' }}">{{ value }}</span>
-    </template>
+  <template data-tm-col="company_verified_label" data-tm-label="Trạng thái Công ty" data-tm-filter-type="select"
+    data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Đã xác thực","label":"Đã xác thực"},{"value":"Chưa xác thực","label":"Chưa xác thực"}]'>
+    <span class="badge" data-variant="{{ row.company_is_verified == 1 ? 'primary' : 'secondary' }}">{{ value }}</span>
+  </template>
 
-    <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select"
-      data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Chờ duyệt","label":"Chờ duyệt"},{"value":"Đã in","label":"Đã in"},{"value":"Đã hủy","label":"Đã hủy"}]'>
-      <span class="badge" data-variant="{{ row.status_variant }}">{{ value }}</span>
-    </template>
+  <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select"
+    data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Chờ duyệt","label":"Chờ duyệt"},{"value":"Đã in","label":"Đã in"},{"value":"Đã hủy","label":"Đã hủy"}]'>
+    <span class="badge" data-variant="{{ row.status_variant }}">{{ value }}</span>
+  </template>
 
-    <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="100px" data-tm-align="right">
-      <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm" data-id="{{ row.id }}"
-        data-student="{{ row.student_full_name }} - {{ row.student_code }}" data-company-name="{{ row.company_name }}"
-        data-company-tax="{{ row.company_tax_code }}" data-company-address="{{ row.company_address }}"
-        data-status-label="{{ row.status_label }}" data-status-variant="{{ row.status_variant }}"
-        data-reason="{{ row.cancel_reason }}">
-        Chi tiết
-      </button>
-    </template>
+  <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="100px" data-tm-align="right">
+    <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm" data-id="{{ row.id }}"
+      data-student="{{ row.student_full_name }} - {{ row.student_code }}" data-company-name="{{ row.company_name }}"
+      data-company-tax="{{ row.company_tax_code }}" data-company-address="{{ row.company_address }}"
+      data-status-label="{{ row.status_label }}" data-status-variant="{{ row.status_variant }}"
+      data-reason="{{ row.cancel_reason }}">
+      Chi tiết
+    </button>
+  </template>
 
-  </div>
 </div>
 
 <!-- Bulk Action Bar -->

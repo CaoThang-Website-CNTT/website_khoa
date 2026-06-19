@@ -3,6 +3,31 @@
    ========================================================================== */
 @layer components {
   /* ==========================================================================
+     PROGRESS BAR
+     ========================================================================== */
+  .progress {
+    width: 100%;
+    height: 0.5rem;
+    background: var(--muted);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-top: 4px;
+    position: relative;
+  }
+
+  .progress::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    height: 100%;
+    width: clamp(0%, calc(attr(data-progress-value number, 0) * 1%), 100%);
+    color: var(--primary);
+    background: currentColor;
+    border-radius: inherit;
+    transition: width 0.3s ease;
+  }
+
+  /* ==========================================================================
      AVATAR
      ========================================================================== */
   .avatar {

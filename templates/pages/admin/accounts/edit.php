@@ -25,7 +25,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </button>
 <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="button" data-variant="primary" data-size="lg"
   class="btn">
-  <i class="fa-solid fa-floppy-disk"></i>
+
   Lưu
 </button>
 <?php $layout->end() ?>

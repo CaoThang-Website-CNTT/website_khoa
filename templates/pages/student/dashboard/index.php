@@ -16,9 +16,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <?php $layout->end() ?>
 
 <?php $layout->start("actions") ?>
-<button id="save-profile-btn" type="button" data-variant="primary" data-size="lg" class="btn" data-modal-trigger="#confirm-save-modal">
-  <i class="fa-solid fa-floppy-disk"></i>
-  <span>Lưu thay đổi</span>
+<button id="save-profile-btn" type="button" data-variant="primary" data-size="lg" class="btn"
+  data-modal-trigger="#confirm-save-modal">
+
+  <span>Lưu</span>
 </button>
 <?php $layout->end() ?>
 <form class="detail-layout" id="student-profile-form" action="<?= url('student/profile/update') ?>" method="POST">
@@ -39,7 +40,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
               <input id="full_name" class="field__input" type="text" name="full_name"
                 value="<?= htmlspecialchars($old_input['full_name'] ?? $student->full_name ?? '') ?>">
               <?php if (isset($errors['full_name'])): ?>
-                <span class="field__error"><?= $errors['full_name'][0] ?></span>
+                  <span class="field__error"><?= $errors['full_name'][0] ?></span>
               <?php endif; ?>
             </div>
 
@@ -82,7 +83,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
             <div class="field" data-field-required>
               <label class="field__label" for="address">Địa chỉ thường trú</label>
-              <textarea id="address" class="field__input" name="address" rows="2"><?= htmlspecialchars($old_input['address'] ?? $student->address ?? '') ?></textarea>
+              <textarea id="address" class="field__input" name="address"
+                rows="2"><?= htmlspecialchars($old_input['address'] ?? $student->address ?? '') ?></textarea>
             </div>
           </div>
         </div>
@@ -101,18 +103,21 @@ $old_input = request()->session()->getOldInputs() ?? [];
             <div class="grid grid-cols-2 gap-4">
               <div class="field" data-field-readonly>
                 <label class="field__label">Mã số sinh viên</label>
-                <input class="field__input" type="text" readonly value="<?= htmlspecialchars($student->student_id ?? '') ?>">
+                <input class="field__input" type="text" readonly
+                  value="<?= htmlspecialchars($student->student_id ?? '') ?>">
               </div>
 
               <div class="field" data-field-readonly>
                 <label class="field__label">Lớp học</label>
-                <input class="field__input" type="text" readonly value="<?= htmlspecialchars($student->classroom->short_name ?? 'N/A') ?>">
+                <input class="field__input" type="text" readonly
+                  value="<?= htmlspecialchars($student->classroom->short_name ?? 'N/A') ?>">
               </div>
             </div>
 
             <div class="field" data-field-readonly>
               <label class="field__label">Ngành học</label>
-              <input class="field__input" type="text" readonly value="<?= htmlspecialchars($student->major_name ?? 'Công nghệ thông tin') ?>">
+              <input class="field__input" type="text" readonly
+                value="<?= htmlspecialchars($student->major_name ?? 'Công nghệ thông tin') ?>">
             </div>
           </div>
         </div>
@@ -130,7 +135,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
       <div class="card__content">
         <div class="field" data-field-readonly>
           <label class="field__label">Email hệ thống</label>
-          <input class="field__input" type="text" readonly value="<?= htmlspecialchars($student->account->email ?? '') ?>">
+          <input class="field__input" type="text" readonly
+            value="<?= htmlspecialchars($student->account->email ?? '') ?>">
         </div>
       </div>
     </div>

@@ -20,7 +20,7 @@ $max_mb    = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
       <i class="fa-solid fa-chevron-left"></i> Quay lại
     </a>
     <button data-modal-trigger="#confirm-modal" type="button" data-variant="primary" data-size="lg" class="btn">
-      Lưu thay đổi
+      Lưu
     </button>
 <?php $layout->end() ?>
 

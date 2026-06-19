@@ -48,17 +48,3 @@ tr:hover .btn-quota-edit,
 .btn-quota-cancel:hover {
   background: color-mix(in oklab, var(--destructive) 10%, transparent);
 }
-
-/* btn-icon (tái sử dụng từ internship_batch_detail.css) */
-.quota-cell .btn-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  transition: background 0.15s ease;
-  cursor: pointer;
-  background: none;
-  border: none;
-}

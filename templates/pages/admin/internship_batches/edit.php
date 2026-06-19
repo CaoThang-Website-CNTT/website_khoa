@@ -23,8 +23,6 @@ $currentStatus = [
 ];
 ?>
 
-<link rel="stylesheet" href="<?= url('public/css/internship_batch_detail.css') ?>">
-
 <script>
   window.CURRENT_BATCH_ID = <?= $batchObj->id ?>;
   window.API_BASE_URL = "<?= url('api/v1/internship/batches/' . $batchObj->id . '/management') ?>";
@@ -46,8 +44,8 @@ $currentStatus = [
 </a>
 <button type="button" id="edit-submit-btn" data-modal-trigger="#save-confirm-modal" data-variant="primary"
   data-size="md" class="btn">
-  <i class="fa-solid fa-floppy-disk"></i>
-  Lưu thay đổi
+
+  Lưu
 </button>
 <?php if ($batchObj->status === BatchStatus::DRAFT): ?>
   <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal"
@@ -72,63 +70,64 @@ $currentStatus = [
   </button>
 <?php endif; ?>
 <?php $layout->end() ?>
+<!-- Stats Grid -->
+<div class="stats-grid">
+  <!-- Sinh viên Card -->
+  <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>" class="card stats-card">
+    <div class="card__header">
+      <div class="flex justify-between">
+        <span class="stats-card__label">Sinh viên</span>
+        <i class="fa-solid fa-up-right-from-square"></i>
+      </div>
+      <span class="stats-card__value"><?= $stats['total_students'] ?></span>
+    </div>
+    <div class="card__footer">
+      Đã phân công: <?= $stats['assigned_students'] ?>
+      <div class="progress" data-progress-value="<?= $assignedPercent ?>"></div>
+    </div>
+  </a>
+
+  <!-- Giảng viên Card -->
+  <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/teachers') ?>" class="card stats-card">
+    <div class="card__header">
+      <div class="flex justify-between">
+        <span class="stats-card__label">Giảng viên</span>
+        <i class="fa-solid fa-up-right-from-square"></i>
+      </div>
+      <span class="stats-card__value"><?= $stats['total_supervisors'] ?></span>
+    </div>
+    <div class="card__footer">
+      Đang phụ trách
+    </div>
+  </a>
+
+  <!-- Giấy giới thiệu Card -->
+  <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/referral_letters') ?>" class="card stats-card">
+    <div class="card__header">
+      <div class="flex justify-between">
+        <span class="stats-card__label">Giấy giới thiệu</span>
+        <i class="fa-solid fa-up-right-from-square"></i>
+      </div>
+      <span class="stats-card__value"><?= $stats['total_referrals'] ?></span>
+    </div>
+    <div class="card__footer">
+      Chờ duyệt: <span class="stats-card__badge-pending"><?= $stats['pending_referrals'] ?></span>
+    </div>
+  </a>
+
+  <!-- Trạng thái Card -->
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Trạng thái</span>
+      <span class="stats-card__value">
+        <?= $currentStatus['label'] ?>
+      </span>
+    </div>
+  </div>
+</div>
 <div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
-
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-      <!-- Sinh viên Card -->
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/students') ?>"
-        class="stat-card stat-card--interactive shadow-sm">
-        <div class="flex justify-between items-start">
-          <span class="stat-card__label">Sinh viên</span>
-          <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
-        </div>
-        <span class="stat-card__value"><?= $stats['total_students'] ?></span>
-        <div class="stat-card__footer">
-          Đã phân công: <?= $stats['assigned_students'] ?>
-          <div class="progress-container">
-            <div class="progress-bar" style="--progress: <?= $assignedPercent ?>%"></div>
-          </div>
-        </div>
-      </a>
-
-      <!-- Giảng viên Card -->
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/teachers') ?>"
-        class="stat-card stat-card--interactive shadow-sm">
-        <div class="flex justify-between items-start">
-          <span class="stat-card__label">Giảng viên</span>
-          <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
-        </div>
-        <span class="stat-card__value"><?= $stats['total_supervisors'] ?></span>
-        <div class="stat-card__footer">
-          Xem danh sách giảng viên
-        </div>
-      </a>
-
-      <!-- Giấy giới thiệu Card -->
-      <a href="<?= url('admin/internship_batches/' . $batchObj->id . '/referral_letters') ?>"
-        class="stat-card stat-card--interactive shadow-sm">
-        <div class="flex justify-between items-start">
-          <span class="stat-card__label">Giấy giới thiệu</span>
-          <i class="fa-solid fa-chevron-right stat-card__arrow text-xs"></i>
-        </div>
-        <span class="stat-card__value"><?= $stats['total_referrals'] ?></span>
-        <div class="stat-card__footer">
-          Chờ duyệt: <span class="stat-card__badge-pending"><?= $stats['pending_referrals'] ?></span>
-        </div>
-      </a>
-
-      <!-- Trạng thái Card -->
-      <div class="stat-card shadow-sm">
-        <span class="stat-card__label">Trạng thái</span>
-        <span class="stat-card__value">
-          <span class="<?= $currentStatus['class'] ?>"
-            data-variant="<?= $currentStatus['variant'] ?>"><?= $currentStatus['label'] ?></span>
-        </span>
-      </div>
-    </div>
 
     <!-- Thông tin cơ bản -->
     <div class="card shadow-sm">
@@ -173,25 +172,46 @@ $currentStatus = [
 
   <!-- SIDEBAR -->
   <div class="detail-layout__sidebar">
-
-    <!-- Card: Thông tin khác -->
-    <div class="card shadow-sm">
-      <div class="card__header text-sm font-semibold">Thông tin khác</div>
+    <!-- Metadata -->
+    <div class="metadata-card card shadow">
+      <div class="card__header">
+        Thông tin
+      </div>
       <hr class="separator">
-      <div class="card__content p-4 text-xs space-y-3">
-        <div class="flex justify-between">
-          <span>ID:</span>
-          <span class="font-medium">#<?= $batchObj->id ?></span>
-        </div>
-        <div class="flex justify-between">
-          <span>Ngày tạo:</span>
-          <span class="font-medium"><?= date('d/m/Y H:i', strtotime($batchObj->created_at)) ?></span>
-        </div>
-        <div class="flex justify-between">
-          <span>Cập nhật cuối:</span>
-          <span
-            class="font-medium"><?= $batchObj->updated_at ? date('d/m/Y H:i', strtotime($batchObj->updated_at)) : 'N/A' ?></span>
-        </div>
+      <div class="card__content space-y-4">
+        <dl class="flex justify-between">
+          <dt>ID</dt>
+          <dd>
+            <?= htmlspecialchars($batchObj->id) ?>
+          </dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Được tạo vào</dt>
+          <dd>
+            <?= htmlspecialchars($batchObj->created_at) ?>
+          </dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Lần cuối cập nhật</dt>
+          <dd>
+            <?= htmlspecialchars($batchObj->updated_at ? $batchObj->updated_at : "Không có") ?>
+          </dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Trạng thái dữ liệu</dt>
+          <dd>
+            <?php if ($batchObj->deleted_at): ?>
+              <span class="badge" data-variant="destructive">
+                Đã xóa
+              </span>
+            <?php else: ?>
+              <span class="badge" data-variant="primary">Hoạt động</span>
+            <?php endif; ?>
+          </dd>
+        </dl>
       </div>
     </div>
   </div>
@@ -201,7 +221,7 @@ $currentStatus = [
 <!-- Modal: Xác nhận Lưu -->
 <div class="modal" id="save-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h2 class="modal__title">Lưu thay đổi?</h2>
+    <h2 class="modal__title">Lưu?</h2>
     <p class="modal__description">Bạn có chắc chắn muốn cập nhật các thông tin cơ bản cho đợt thực tập này?</p>
   </div>
   <div class="modal__footer">
@@ -256,5 +276,3 @@ $currentStatus = [
   </div>
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
-
-<script src="<?= url('public/js/pages/internship_batch_detail.js') ?>"></script>

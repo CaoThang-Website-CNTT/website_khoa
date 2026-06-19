@@ -12,18 +12,19 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Thêm carousel mới</h2>
-    <p class="title-wrapper__description">Điền thông tin carousel và các slide bên dưới</p>
+<p class="title-wrapper__description">Điền thông tin carousel và các slide bên dưới</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url("admin/carousels") ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary" data-size="lg" class="btn">
-      <i class="fa-solid fa-floppy-disk"></i>
-      Thêm
-    </button>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary" data-size="lg"
+  class="btn">
+
+  Thêm
+</button>
 <?php $layout->end() ?>
 <form id="carousel-add-form" action="<?= url('admin/carousels') ?>" method="POST">
   <?= csrf_field() ?>

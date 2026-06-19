@@ -24,8 +24,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </a>
 <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
   class="btn">
-  <i class="fa-solid fa-floppy-disk"></i>
-  Lưu thay đổi
+
+  Lưu
 </button>
 <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
   data-size="lg" class="btn">
@@ -129,11 +129,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <dt>Trạng thái dữ liệu</dt>
           <dd>
             <?php if ($company->deleted_at): ?>
-              <span class="badge" data-variant="destructive">
-                Đã xóa
-              </span>
+                <span class="badge" data-variant="destructive">
+                  Đã xóa
+                </span>
             <?php else: ?>
-              <span class="badge" data-variant="primary">Hoạt động</span>
+                <span class="badge" data-variant="primary">Hoạt động</span>
             <?php endif; ?>
           </dd>
         </dl>

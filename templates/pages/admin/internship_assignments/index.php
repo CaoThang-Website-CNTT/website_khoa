@@ -1,23 +1,20 @@
 <link rel="stylesheet" href="<?= url('public/css/internship_assignments.css') ?>">
 
-<!-- Toast notifications -->
-
-
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">
-      Phân công: <?= htmlspecialchars($batch->title) ?>
-    </h2>
-    <p class="title-wrapper__description">Quản lý phân công sinh viên cho giảng viên hướng dẫn</p>
+  Phân công: <?= htmlspecialchars($batch->title) ?>
+</h2>
+<p class="title-wrapper__description">Quản lý phân công sinh viên cho giảng viên hướng dẫn</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/intership_batches') ?>" data-variant="outline" data-size="md" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button type="button" id="btn-auto-assign" class="btn" data-variant="outline" data-size="md">
-      <i class="fa-solid fa-wand-magic-sparkles"></i> Phân công tự động
-    </button>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button type="button" id="btn-auto-assign" class="btn" data-variant="outline" data-size="md">
+  <i class="fa-solid fa-wand-magic-sparkles"></i> Phân công tự động
+</button>
 <?php $layout->end() ?>
 <div class="table-wrapper shadow rounded-md mt-4 relative">
   <div id="table-loader" class="assignment-loader hidden">

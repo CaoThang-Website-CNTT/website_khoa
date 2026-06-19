@@ -28,7 +28,7 @@ class InternshipAssignmentApiController extends Controller
   public function getAssignments($id)
   {
     try {
-      $assignments = $this->_assignmentStore->getStudentsInBatchWithAssignment((int)$id);
+      $assignments = $this->_assignmentStore->getStudentsInBatchWithAssignment((int) $id);
       return $this->json($assignments, 200);
     } catch (Exception $e) {
       return $this->json(['message' => 'Lỗi khi tải danh sách phân công: ' . $e->getMessage()], 500);
@@ -41,7 +41,7 @@ class InternshipAssignmentApiController extends Controller
   public function getSupervisors($id)
   {
     try {
-      $supervisors = $this->_assignmentStore->getBatchSupervisorsWithStats((int)$id);
+      $supervisors = $this->_assignmentStore->getBatchSupervisorsWithStats((int) $id);
       return $this->json($supervisors, 200);
     } catch (Exception $e) {
       return $this->json(['message' => 'Lỗi khi tải danh sách giảng viên: ' . $e->getMessage()], 500);
@@ -68,7 +68,7 @@ class InternshipAssignmentApiController extends Controller
       // TODO: Get admin ID from Auth logic, using mock ID 1 for now
       $adminId = 1;
 
-      $assignedCount = $this->_assignmentService->autoAssign((int)$id, $data['method'], $adminId);
+      $assignedCount = $this->_assignmentService->autoAssign((int) $id, $data['method'], $adminId);
       return $this->json(['assigned_count' => $assignedCount], 200, 'Đã phân công tự động thành công ' . $assignedCount . ' sinh viên.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -76,7 +76,7 @@ class InternshipAssignmentApiController extends Controller
   }
 
   /**
-   * Lưu thay đổi và công bố
+   * Lưu và công bố
    */
   public function bulkSave($id, Request $request)
   {
@@ -101,7 +101,7 @@ class InternshipAssignmentApiController extends Controller
       $adminId = 1;
 
       $this->_assignmentService->bulkSave(
-        (int)$id,
+        (int) $id,
         $data['assignments'],
         $adminId,
         $data['reason']

@@ -46,8 +46,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </a>
 <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
   class="btn">
-  <i class="fa-solid fa-floppy-disk"></i>
-  Lưu thay đổi
+
+  Lưu
 </button>
 <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
   data-size="lg" class="btn">
@@ -76,10 +76,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
               <select id="major_id" class="field__input" name="major_id">
                 <option value="">-- Chọn ngành học --</option>
                 <?php foreach ($majors as $major): ?>
-                  <option value="<?= htmlspecialchars($major->id) ?>" <?= $classroom->major_id == $major->id ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($major->level) ?> -
-                    <?= htmlspecialchars($major->short_name) ?>
-                  </option>
+                    <option value="<?= htmlspecialchars($major->id) ?>" <?= $classroom->major_id == $major->id ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($major->level) ?> -
+                      <?= htmlspecialchars($major->short_name) ?>
+                    </option>
                 <?php endforeach; ?>
               </select>
             </div>
@@ -88,11 +88,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
               <label class="field__label" for="specialization_id">Chuyên ngành</label>
               <select id="specialization_id" class="field__input" name="specialization_id" disabled>
                 <?php if ($classroom->specialization): ?>
-                  <option value="<?= htmlspecialchars($classroom->specialization->full_name) ?>" selected>
-                    <?= htmlspecialchars($classroom->specialization->full_name) ?>
-                  </option>
+                    <option value="<?= htmlspecialchars($classroom->specialization->full_name) ?>" selected>
+                      <?= htmlspecialchars($classroom->specialization->full_name) ?>
+                    </option>
                 <?php else: ?>
-                  <option value="">-- Chưa có --</option>
+                    <option value="">-- Chưa có --</option>
                 <?php endif; ?>
               </select>
               <p class="field__description">Chọn ngành học trước để lọc chuyên ngành. Có thể bỏ trống.</p>
@@ -141,11 +141,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
               <label class="field__label" for="homeroom_teacher_id">Giáo viên chủ nhiệm</label>
               <select id="homeroom_teacher_id" class="field__input" name="homeroom_teacher_id">
                 <?php if ($classroom->homeroomTeacher): ?>
-                  <option value="<?= htmlspecialchars($classroom->homeroomTeacher->id) ?>" selected>
-                    <?= htmlspecialchars($classroom->homeroomTeacher->name) ?>
-                  </option>
+                    <option value="<?= htmlspecialchars($classroom->homeroomTeacher->id) ?>" selected>
+                      <?= htmlspecialchars($classroom->homeroomTeacher->name) ?>
+                    </option>
                 <?php else: ?>
-                  <option value="">-- Chưa có --</option>
+                    <option value="">-- Chưa có --</option>
                 <?php endif; ?>
               </select>
             </div>
@@ -189,11 +189,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <dt>Trạng thái dữ liệu</dt>
           <dd>
             <?php if ($classroom->deleted_at): ?>
-              <span class="badge" data-variant="destructive">
-                Đã xóa
-              </span>
+                <span class="badge" data-variant="destructive">
+                  Đã xóa
+                </span>
             <?php else: ?>
-              <span class="badge" data-variant="primary">Hoạt động</span>
+                <span class="badge" data-variant="primary">Hoạt động</span>
             <?php endif; ?>
           </dd>
         </dl>

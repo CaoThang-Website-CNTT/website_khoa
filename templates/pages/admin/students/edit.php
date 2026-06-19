@@ -20,11 +20,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="btn">
-  <i class="fa-solid fa-floppy-disk"></i>
-  Lưu thay đổi
+<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
+  class="btn">
+
+  Lưu
 </button>
-<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
+<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
+  data-size="lg" class="btn">
   <i class="fa-solid fa-trash"></i>
   Xóa
 </button>
@@ -130,9 +132,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
                   -- Chọn lớp học--
                 </option>
                 <?php foreach ($classrooms as $classroom): ?>
-                  <option value=<?= htmlspecialchars($classroom->id) ?> <?= $classroom->id === $student->classroom_id ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($classroom->short_name); ?>
-                  </option>
+                    <option value=<?= htmlspecialchars($classroom->id) ?>     <?= $classroom->id === $student->classroom_id ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($classroom->short_name); ?>
+                    </option>
                 <?php endforeach; ?>
               </select>
             </div>
@@ -245,11 +247,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <dt>Trạng thái dữ liệu</dt>
           <dd>
             <?php if ($student->deleted_at): ?>
-              <span class="badge" data-variant="destructive">
-                Đã xóa
-              </span>
+                <span class="badge" data-variant="destructive">
+                  Đã xóa
+                </span>
             <?php else: ?>
-              <span class="badge" data-variant="primary">Hoạt động</span>
+                <span class="badge" data-variant="primary">Hoạt động</span>
             <?php endif; ?>
           </dd>
         </dl>
@@ -312,24 +314,24 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
 
-    studentIdInput.addEventListener('input', function() {
+    studentIdInput.addEventListener('input', function () {
       const studentId = this.value.trim();
       emailInput.value = studentId ? `${studentId}@caothang.edu.vn` : '';
     });
 
-    nationalIdInput.addEventListener('input', function() {
+    nationalIdInput.addEventListener('input', function () {
       const nationalId = this.value.trim();
       passwordInput.value = nationalId ? nationalId : '';
     });
 
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function() {
+    confirmBtn.addEventListener('click', function () {
       const form = document.querySelector('#student-edit-form');
       form.submit();
     });
 
     // Delete Btn Event Listener
-    deleteConfirmBtn.addEventListener('click', function() {
+    deleteConfirmBtn.addEventListener('click', function () {
       const deleteForm = document.querySelector('#delete-form');
       deleteForm.submit();
     });

@@ -127,10 +127,6 @@ input[type="checkbox"],
   padding: 0;
 }
 
-textarea.field__input {
-  min-height: 100px;
-}
-
 /* --- STEP 3: TEACHER SELECTION --- */
 .teacher-selection-container {
   max-height: 400px;
