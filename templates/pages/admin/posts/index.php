@@ -49,6 +49,8 @@
 </div>
 
 <!-- Bootstrap Data Source -->
+
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="posts_table">
   <?= json_encode([
     'rows' => array_map(fn($post) => [
@@ -65,7 +67,6 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
-
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     console.log(TableManager.get("posts_table"));
@@ -75,3 +76,4 @@
     console.log(e);
   })
 </script>
+<?php $layout->end() ?>

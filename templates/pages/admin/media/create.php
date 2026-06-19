@@ -3,10 +3,7 @@ $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 $max_mb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
 ?>
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
-</script>
+
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Thêm mới media</h2>
@@ -109,4 +106,10 @@ $max_mb = (int) ($_ENV['MAX_UPLOAD_SIZE'] ?? 5);
   </button>
 </div>
 
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 <script src="<?= url('public/js/pages/admin/media/create.js') ?>" type="module"></script>
+<?php $layout->end() ?>

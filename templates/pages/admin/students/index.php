@@ -61,6 +61,8 @@
 </div>
 
 <!-- JSON Data Source cho TableManager -->
+
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="students_table">
   <?= json_encode([
     'rows' => array_map(function ($student) {
@@ -79,3 +81,4 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
+<?php $layout->end() ?>

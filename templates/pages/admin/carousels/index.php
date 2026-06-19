@@ -30,6 +30,7 @@
   </template>
 </div>
 
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="carousels_table">
   <?= json_encode([
     'rows' => array_map(fn($carousel) => [
@@ -45,3 +46,4 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
+<?php $layout->end() ?>

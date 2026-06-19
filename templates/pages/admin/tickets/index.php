@@ -34,6 +34,7 @@
 </div>
 <?php $layout->end() ?>
 
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="tickets_table">
   <?= json_encode([
     'rows' => array_map(fn($ticket) => [
@@ -49,3 +50,4 @@
     'limit' => $data->getPerPage(),
   ]) ?>
 </script>
+<?php $layout->end() ?>

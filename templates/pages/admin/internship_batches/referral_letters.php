@@ -169,7 +169,7 @@ $letters = $letters ?? [];
   </div>
 </div>
 
-
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="referral_letters_table">
   <?php
   $statusMap = [
@@ -207,9 +207,9 @@ $letters = $letters ?? [];
   ], JSON_UNESCAPED_UNICODE);
   ?>
 </script>
-
 <script>
   window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
   window.BATCH_ID = <?= json_encode($batch['id']) ?>;
 </script>
 <script type="module" src="<?= url('public/js/pages/referral_letters_manager.js') ?>"></script>
+<?php $layout->end() ?>

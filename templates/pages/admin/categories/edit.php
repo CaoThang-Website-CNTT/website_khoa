@@ -2,10 +2,7 @@
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
-</script>
+
 
 <?php $layout->start("banner") ?>
 <?php if (!$category->isEditable()): ?>
@@ -175,5 +172,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <?php endif; ?>
 
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 <script>window.__categoryEdit__ = { isEditable: <?= $category->isEditable() ? 'true' : 'false' ?> };</script>
 <script src="<?= url('public/js/pages/admin/categories/edit.js') ?>" type="module"></script>
+<?php $layout->end() ?>

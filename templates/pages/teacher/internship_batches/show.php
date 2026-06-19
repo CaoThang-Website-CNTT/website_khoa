@@ -281,8 +281,10 @@ foreach ($classrooms as $c) {
 </div>
 
 <!-- JSON Data Source cho TableManager -->
+
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="students_table">
   <?= json_encode(['rows' => $studentsData]) ?>
 </script>
-
 <script src="<?= url('public/js/pages/teacher_batch_detail.js') ?>" type="module"></script>
+<?php $layout->end() ?>

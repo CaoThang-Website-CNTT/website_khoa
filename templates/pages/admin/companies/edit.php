@@ -2,10 +2,7 @@
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
-</script>
+
 
 
 
@@ -176,4 +173,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <form action="<?= url("admin/companies/delete/{$company->id}") ?>" method="POST" id="delete-form"><?= csrf_field() ?>
 </form>
 
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 <script src="<?= url('public/js/pages/admin/companies/edit.js') ?>" type="module"></script>
+<?php $layout->end() ?>

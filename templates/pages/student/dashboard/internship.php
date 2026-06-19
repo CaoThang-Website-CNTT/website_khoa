@@ -468,8 +468,8 @@ $effectiveMetadata = $effStatus ? [
   </div>
 <?php endif; ?>
 
-<script>window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;</script>
-<script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
+
+
 
 <?php if ($current): ?>
   <!-- Modal Đăng ký Giấy giới thiệu -->
@@ -524,3 +524,8 @@ $effectiveMetadata = $effStatus ? [
       </div>
   </div>
 <?php endif; ?>
+
+<?php $layout->start("scripts") ?>
+<script>window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;</script>
+<script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
+<?php $layout->end() ?>

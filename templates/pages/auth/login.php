@@ -2,10 +2,7 @@
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
-</script>
+
 
 <div class="card shadow auth-form-card">
   <div class="card__header">
@@ -67,6 +64,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 </div>
 
-<?php $layout->start('scripts'); ?>
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 <script src="<?= url('public/js/pages/auth/login.js') ?>" type="module"></script>
-<?php $layout->end(); ?>
+<?php $layout->end() ?>

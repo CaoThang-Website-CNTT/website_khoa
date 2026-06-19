@@ -49,4 +49,7 @@
   <div class="card__footer">
   </div>
 </div>
+
+<?php $layout->start("scripts") ?>
 <script src="<?= url('public/js/pages/admin/students/import.js') ?>" type="module"></script>
+<?php $layout->end() ?>

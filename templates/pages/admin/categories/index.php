@@ -40,6 +40,7 @@
 
 </div>
 
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="categories_table">
   <?= json_encode([
     'rows' => array_map(fn($category) => [
@@ -55,3 +56,4 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
+<?php $layout->end() ?>

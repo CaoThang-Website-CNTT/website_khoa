@@ -177,4 +177,6 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
   <img id="lightbox-img" src="" alt="Phóng to">
 </div>
 
+<?php $layout->start("scripts") ?>
 <script src="<?= url('public/js/pages/teacher_grading.js') ?>" type="module"></script>
+<?php $layout->end() ?>

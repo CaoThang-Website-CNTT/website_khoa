@@ -23,10 +23,7 @@ $currentStatus = [
 ];
 ?>
 
-<script>
-  window.CURRENT_BATCH_ID = <?= $batchObj->id ?>;
-  window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches/' . $batchObj->id . '/management')) ?>;
-</script>
+
 
 
 
@@ -293,5 +290,9 @@ $currentStatus = [
 </div>
 
 <?php $layout->start("scripts") ?>
+<script>
+  window.CURRENT_BATCH_ID = <?= $batchObj->id ?>;
+  window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches/' . $batchObj->id . '/management')) ?>;
+</script>
 <script src="<?= url('public/js/pages/admin/internship_batches/edit.js') ?>" type="module"></script>
 <?php $layout->end() ?>

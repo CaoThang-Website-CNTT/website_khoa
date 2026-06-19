@@ -1,6 +1,5 @@
 <?php include_once BASE_PATH . '/templates/components/news_card.php'; ?>
-
-<!-- 
+<!--
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Tin tức và sự kiện mới nhất từ Khoa Công nghệ Thông tin. Cập nhật thông tin về sinh viên, nghiên cứu, tuyển dụng và các sự kiện đặc biệt.">
@@ -78,25 +77,25 @@
         Nổi bật
       </h2>
 
-      <div class="news-featured__grid" role="list" aria-live="polite">
-        <?php if (!empty($featuredNews)): ?>
+      <?php if (!empty($featuredNews)): ?>
+        <div class="news-featured__grid" role="list" aria-live="polite">
           <?php foreach ($featuredNews as $news): ?>
             <?php renderNewsCard($news, [
               'variant' => 'featured',
               'show_views_badge' => true,
             ]); ?>
           <?php endforeach; ?>
-        <?php else: ?>
-          <div class="empty news-list__empty">
-            <div class="empty__header">
-              <div class="empty__media">
-                <i class="fa-solid fa-newspaper"></i>
-              </div>
-              <div class="empty__title">Không có tin tức nào nổi bật</div>
+        </div>
+      <?php else: ?>
+        <div class="empty news-list__empty">
+          <div class="empty__header">
+            <div class="empty__media">
+              <i class="fa-solid fa-newspaper"></i>
             </div>
+            <div class="empty__title">Không có tin tức nào nổi bật</div>
           </div>
-        <?php endif; ?>
-      </div>
+        </div>
+      <?php endif; ?>
     </section>
 
     <section class="news-section" aria-labelledby="all-news-title">
@@ -137,8 +136,7 @@
   <article class="card news-card news-card--horizontal hover-lift" role="listitem" data-id="{{ id }}">
     <div class="card__header news-card__header">
       <a class="news-card__image-wrapper" href="{{ url }}">
-        <img src="{{ image_url }}" alt="{{ title }}"
-          class="news-card__image">
+        <img src="{{ image_url }}" alt="{{ title }}" class="news-card__image">
       </a>
     </div>
     <div class="card__content news-card__content">
@@ -171,8 +169,7 @@
   <article class="card news-card hover-lift" role="listitem" data-id="{{ id }}">
     <div class="card__header news-card__header">
       <a class="news-card__image-wrapper" href="{{ url }}">
-        <img src="{{ image_url }}" alt="{{ title }}"
-          class="news-card__image">
+        <img src="{{ image_url }}" alt="{{ title }}" class="news-card__image">
       </a>
       <span class="badge news-card__badge" data-variant="primary">{{ category_name }}</span>
       <span class="badge news-card__views-badge" data-variant="secondary">

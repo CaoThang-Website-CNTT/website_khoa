@@ -5,10 +5,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
 $isEditable = $menu->isEditable();
 ?>
 
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input ?? []) ?>;
-</script>
+
 
 <?php
 function renderMenuItems(array $items, object $menu): void
@@ -317,6 +314,11 @@ function renderMenuItems(array $items, object $menu): void
   </form>
 <?php endif; ?>
 
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input ?? []) ?>;
+</script>
 <script>
   window.__menuEdit__ = {
     isEditable: <?= $isEditable ? 'true' : 'false' ?>,
@@ -327,3 +329,4 @@ function renderMenuItems(array $items, object $menu): void
   };
 </script>
 <script src="<?= url('public/js/pages/admin/menus/edit.js') ?>" type="module"></script>
+<?php $layout->end() ?>

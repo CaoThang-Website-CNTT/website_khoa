@@ -3,7 +3,7 @@
 /**
  * View: Danh sách sinh viên & Phân công giảng viên
  * Route: /admin/internship_batches/{id}/students
- * 
+ *
  * @var array $batch
  */
 $batch = $batch ?? null;
@@ -246,6 +246,7 @@ $batch = $batch ?? null;
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
+<?php $layout->start("scripts") ?>
 <script>
   window.BATCH_ID = <?= json_encode($batch['id']) ?>;
   window.BATCH_STATUS = <?= json_encode($batch['status']) ?>;
@@ -255,3 +256,4 @@ $batch = $batch ?? null;
   window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches')) ?>;
 </script>
 <script type="module" src="<?= url('public/js/pages/batch_students_manager.js') ?>"></script>
+<?php $layout->end() ?>

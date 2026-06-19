@@ -2,10 +2,7 @@
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
-</script>
+
 
 <?php $layout->start("heading") ?>
 <h2 class="title-wrapper__title">
@@ -303,4 +300,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <?= csrf_field() ?>
 </form>
 
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 <script src="<?= url('public/js/pages/admin/students/edit.js') ?>" type="module"></script>
+<?php $layout->end() ?>

@@ -279,6 +279,8 @@ $referralLetters = $referralLetters ?? [];
       <button type="button" id="dt_btnUpdate" class="btn" data-variant="primary">Đổi công ty</button>
     </div>
 </div>
+
+<?php $layout->start("scripts") ?>
 <script>
   window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
   window.__studentReferralLetters__ = {
@@ -288,3 +290,4 @@ $referralLetters = $referralLetters ?? [];
 </script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
 <script src="<?= url('public/js/pages/student/dashboard/referral_letters.js') ?>" type="module"></script>
+<?php $layout->end() ?>

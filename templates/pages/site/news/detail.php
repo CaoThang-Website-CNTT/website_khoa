@@ -151,4 +151,6 @@
   </div>
 </section>
 
+<?php $layout->start("scripts") ?>
 <script src="<?= url('public/js/pages/site/news/detail.js') ?>" type="module"></script>
+<?php $layout->end() ?>

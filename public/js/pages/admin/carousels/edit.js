@@ -1,4 +1,5 @@
   document.addEventListener("DOMContentLoaded", () => {
+    const modalHandler = ModalHandler.instance;
     const editForm = document.querySelector('#carousel-edit-form');
     const confirmModal = document.querySelector('#confirm-modal');
     const confirmBtn = confirmModal?.querySelector('#confirm-modal-btn');

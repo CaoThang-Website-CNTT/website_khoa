@@ -14,10 +14,7 @@ $onboardSteps = [
   ['label' => 'Xác nhận'],
 ];
 ?>
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
-</script>
+
 
 <div class="onboard" data-onboard>
   <div id="onboard-step-wizard" class="step-wizard" data-step-wizard-label="Tiến trình đăng ký" aria-live="polite">
@@ -257,5 +254,12 @@ $onboardSteps = [
     </div>
   </div>
 </div>
+
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 <script>window.__onboardSteps__ = <?= json_encode($onboardSteps, JSON_UNESCAPED_UNICODE) ?>;</script>
 <script src="<?= url('public/js/pages/auth/onboard.js') ?>" type="module"></script>
+<?php $layout->end() ?>

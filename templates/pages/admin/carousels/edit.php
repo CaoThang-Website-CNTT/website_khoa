@@ -2,10 +2,7 @@
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
-<script>
-  window.__errors__ = <?= json_encode($errors) ?>;
-  window.__old__ = <?= json_encode($old_input) ?>;
-</script>
+
 
 <!-- Modal select media -->
 <?php require_once(BASE_PATH . '/templates/components/media_selector_modal.php'); ?>
@@ -307,7 +304,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <label class="field__label" for="slide-use-custom-html">Dùng HTML tuỳ chỉnh</label>
           <input id="slide-use-custom-html" type="checkbox" class="field__input" name="use_custom_html" value="1">
         </div>
-        
+
         <!-- custom_html (ẩn mặc định) -->
         <div class="field" id="slide-custom-html-field" style="display: none;">
           <label class="field__label">Custom HTML</label>
@@ -358,6 +355,11 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <?= csrf_field() ?>
 </form>
 
+<?php $layout->start("scripts") ?>
+<script>
+  window.__errors__ = <?= json_encode($errors) ?>;
+  window.__old__ = <?= json_encode($old_input) ?>;
+</script>
 <script>
   window.__carouselEdit__ = {
     slideCreateUrl: <?= json_encode(url('admin/carousels/' . $carousel->id . '/slides')) ?>,
@@ -366,3 +368,4 @@ $old_input = request()->session()->getOldInputs() ?? [];
   };
 </script>
 <script src="<?= url('public/js/pages/admin/carousels/edit.js') ?>" type="module"></script>
+<?php $layout->end() ?>

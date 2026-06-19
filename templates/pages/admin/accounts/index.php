@@ -38,7 +38,8 @@
 </div>
 
 <!-- Bootstrap Data Source -->
-<?php $layout->start("scripts"); ?>
+
+<?php $layout->start("scripts") ?>
 <script type="module">
   import { TableManager } from '<?= url("public/js/table/table_manager.js") ?>';
 
@@ -108,4 +109,4 @@
     ]) ?>
   );
 </script>
-<?php $layout->end(); ?>
+<?php $layout->end() ?>

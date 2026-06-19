@@ -46,6 +46,8 @@
 </div>
 
 <!-- Bootstrap Data Source -->
+
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="menus_table">
   <?= json_encode([
     'rows' => array_map(fn($menu) => [
@@ -61,3 +63,4 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
+<?php $layout->end() ?>

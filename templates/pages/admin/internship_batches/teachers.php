@@ -72,6 +72,8 @@ $supervisors = $supervisors ?? [];
 </div>
 
 <!-- JSON Data Source cho TableManager -->
+
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="batch_teachers_table">
   <?php
   $rows = array_map(function ($sup) {
@@ -97,9 +99,9 @@ $supervisors = $supervisors ?? [];
   ], JSON_UNESCAPED_UNICODE);
   ?>
 </script>
-
 <script>
   window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
   window.BATCH_ID = <?= json_encode($batch['id']) ?>;
 </script>
 <script src="<?= url('public/js/pages/batch_teachers_manager.js') ?>"></script>
+<?php $layout->end() ?>

@@ -43,6 +43,8 @@ use App\Models\InternshipBatch;
 </div>
 
 <!-- JSON Data Source cho TableManager -->
+
+<?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="batches_table">
   <?= json_encode([
     'rows' => array_map(function ($batch) {
@@ -83,3 +85,4 @@ use App\Models\InternshipBatch;
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
+<?php $layout->end() ?>

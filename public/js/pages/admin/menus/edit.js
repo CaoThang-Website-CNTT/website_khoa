@@ -1,4 +1,5 @@
   document.addEventListener("DOMContentLoaded", () => {
+    const modalHandler = ModalHandler.instance;
     // ── BIẾN DÙNG CHUNG CỦA MODAL ──────────────────────────────────────────
     const itemModal = document.querySelector('#item-modal');
     const itemModalTitle = itemModal?.querySelector('#item-modal-title');

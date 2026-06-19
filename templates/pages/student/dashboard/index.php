@@ -185,4 +185,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </button>
 </div>
 
+<?php $layout->start("scripts") ?>
 <script src="<?= url('public/js/pages/student/dashboard/index.js') ?>" type="module"></script>
+<?php $layout->end() ?>
