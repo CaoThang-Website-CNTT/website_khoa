@@ -20,11 +20,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
+<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
+  class="btn">
   <i class="fa-solid fa-floppy-disk"></i>
   Lưu thay đổi
 </button>
-<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
+<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
+  data-size="lg" class="btn">
   <i class="fa-solid fa-trash"></i>
   Xóa
 </button>
@@ -307,24 +309,24 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
 
-    teacherNameInput.addEventListener('input', function() {
+    teacherNameInput.addEventListener('input', function () {
       const teacherName = Utils.toCleanAscii(this.value).replace(/\s+/g, '');
       emailInput.value = teacherName ? `${teacherName}@caothang.edu.vn` : '';
     });
 
-    nationalIdInput.addEventListener('input', function() {
+    nationalIdInput.addEventListener('input', function () {
       const nationalId = this.value.trim();
       passwordInput.value = nationalId ? nationalId : '';
     });
 
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function() {
+    confirmBtn.addEventListener('click', function () {
       const form = document.querySelector('#teacher-edit-form');
       form.submit();
     });
 
     // Delete Confirm Btn Event Listener
-    deleteConfirmBtn.addEventListener('click', function() {
+    deleteConfirmBtn.addEventListener('click', function () {
       const deleteForm = document.querySelector('#delete-form');
       deleteForm.submit();
     });

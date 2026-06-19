@@ -33,25 +33,27 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">
-      Thông tin lớp học
-      <?= "#" . htmlspecialchars($classroom->short_name) ?>
-    </h2>
-    <p class="title-wrapper__description">Cập nhật thông tin lớp học tại trang này.</p>
+  Thông tin lớp học
+  <?= "#" . htmlspecialchars($classroom->short_name) ?>
+</h2>
+<p class="title-wrapper__description">Cập nhật thông tin lớp học tại trang này.</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/classrooms') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
-      <i class="fa-solid fa-floppy-disk"></i>
-      Lưu thay đổi
-    </button>
-    <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button" data-size="lg" class="btn">
-      <i class="fa-solid fa-trash"></i>
-      Xóa
-    </button>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
+  class="btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Lưu thay đổi
+</button>
+<button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
+  data-size="lg" class="btn">
+  <i class="fa-solid fa-trash"></i>
+  Xóa
+</button>
 <?php $layout->end() ?>
 <form class="detail-layout" id="classroom-edit-form" action="<?= url('admin/classrooms/' . $classroom->id) ?>"
   method="POST">

@@ -1,45 +1,35 @@
+<?php
+$wizardSteps = [
+  ['label' => 'Thông tin chung'],
+  ['label' => 'Chọn sinh viên'],
+  ['label' => 'Chỉ định Giảng viên'],
+];
+?>
+
+<?php $layout->start("head") ?>
 <link rel="stylesheet" href="<?= url('public/css/internship_batch_create.css') ?>">
+<?php $layout->end() ?>
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Thêm đợt thực tập mới</h2>
-    <p class="title-wrapper__description">Điền thông tin đợt thực tập mới vào các trường dưới đây</p>
+<!-- Đã có step wizard thì không cần description tại đủ UI Indicator rồi (cho vào không thêm được thông tin bổ ích) -->
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/internship_batches') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
 <?php $layout->end() ?>
-<!-- Tiến trình các bước (Wizard Stepper) -->
-<div class="wizard-stepper mb-8 flex justify-between relative">
-  <div class="stepper-line"></div>
-
-  <div class="step-item active" data-step="1">
-    <div class="step-circle">1</div>
-    <div class="step-label">Thông tin chung</div>
-  </div>
-
-  <div class="step-item" data-step="2">
-    <div class="step-circle">2</div>
-    <div class="step-label">Chọn sinh viên</div>
-  </div>
-
-  <div class="step-item" data-step="3">
-    <div class="step-circle">3</div>
-    <div class="step-label">Chỉ định Giảng viên</div>
-  </div>
-</div>
 
 <div class="w-full">
-
-  <div id="wizard-loader" class="assignment-loader hidden">
-    <i class="fa-solid fa-spinner fa-spin text-3xl"></i>
+  <div id="batch-create-step-wizard" class="step-wizard internship-batch-step-wizard"
+    data-step-wizard-label="Tiến trình tạo đợt thực tập" aria-live="polite">
   </div>
 
-  <form id="form-create-batch" class="detail-layout">
+  <form id="form-create-batch">
     <!-- BƯỚC 1: THÔNG TIN CHUNG -->
-    <div class="wizard-step" id="step-1">
+    <div class="wizard-step" id="step-1" data-step-wizard-panel="0">
       <div class="card shadow">
         <fieldset class="field__set">
           <div class="card__header">
@@ -49,7 +39,7 @@
             </p>
           </div>
           <hr class="separator" />
-          <div class="card__content p-6">
+          <div class="card__content ">
             <div class="field-group">
               <div class="field" data-field-required>
                 <label class="field__label" for="title">Tên đợt thực tập</label>
@@ -74,12 +64,13 @@
                   <input type="date" id="end_at" class="field__input" name="end_at" required>
                 </div>
               </div>
+              <div id="batch-date-suggestions" class="flex flex-wrap gap-2"></div>
             </div>
           </div>
           <hr class="separator" />
-          <div class="p-4 flex justify-end">
+          <div class="card__footer internship-form__footer">
             <button type="button" class="btn btn-next" data-variant="primary" data-size="lg">
-              Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
+              Tiếp tục <i class="fa-solid fa-chevron-right "></i>
             </button>
           </div>
         </fieldset>
@@ -87,7 +78,7 @@
     </div>
 
     <!-- BƯỚC 2: CHỌN SINH VIÊN -->
-    <div class="wizard-step hidden" id="step-2">
+    <div class="wizard-step" id="step-2" data-step-wizard-panel="1">
       <div class="card shadow">
         <fieldset class="field__set">
           <div class="card__header">
@@ -95,18 +86,17 @@
             <p class="field__description">Chọn các lớp học để tải danh sách sinh viên đủ điều kiện.</p>
           </div>
           <hr class="separator" />
-          <div class="card__content p-6">
+          <div class="card__content">
 
-            <div class="field mb-6">
-              <label class="field__label mb-2">Tải lên danh sách sinh viên (.xlsx)</label>
+            <div class="field">
+              <label class="field__label">Tải lên danh sách sinh viên (.xlsx)</label>
               <div class="flex gap-4 items-center">
-                <input type="file" id="file-upload-students" class="field__input" accept=".xlsx"
-                  style="max-width: 400px;">
-                <span class="text-sm" id="upload-status-text">Chưa chọn file.</span>
+                <input type="file" id="file-upload-students" class="field__input" accept=".xlsx">
+                <span class="text-sm" id="upload-status-text"></span>
               </div>
-              <p class="text-sm mt-2 text-hint">
-                Lưu ý: Mẫu file yêu cầu cột theo thứ tự (A: STT, B: MSSV, C: Họ đệm, D: Tên, E: Ngày sinh, F: Lớp). File
-                chứa tối đa 1000 sinh viên. Dữ liệu từ dòng số 2.
+              <p class="field__description">
+                Lưu ý: Mẫu file yêu cầu cột theo thứ tự (A: STT, B: MSSV, C: Họ đệm, D: Tên, E: Ngày sinh, F: Lớp).
+                File chứa tối đa 1000 sinh viên. Dữ liệu từ dòng số 2.
               </p>
             </div>
 
@@ -141,12 +131,12 @@
             </div>
           </div>
           <hr class="separator" />
-          <div class="p-4 flex justify-between items-center">
+          <div class="card__footer internship-form__footer">
             <button type="button" class="btn btn-prev" data-variant="outline" data-size="lg">
-              <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại
+              <i class="fa-solid fa-chevron-left "></i> Quay lại
             </button>
             <button type="button" class="btn btn-next" data-variant="primary" data-size="lg">
-              Tiếp tục <i class="fa-solid fa-arrow-right ml-2"></i>
+              Tiếp tục <i class="fa-solid fa-chevron-right "></i>
             </button>
           </div>
         </fieldset>
@@ -154,24 +144,22 @@
     </div>
 
     <!-- BƯỚC 3: CHỈ ĐỊNH GIẢNG VIÊN -->
-    <div class="wizard-step hidden" id="step-3">
-      <div class="card shadow mb-24">
+    <div class="wizard-step" id="step-3" data-step-wizard-panel="2">
+      <div class="card shadow">
         <fieldset class="field__set">
           <div class="card__header">
-            <legend class="field__legend">Chỉ định Giảng viên & Hạn mức</legend>
-            <p class="field__description">Hạn mức là số lượng sinh viên tối đa mà giảng viên có thể hướng dẫn.</p>
-            <p class="field__description">Hạn mức được tự động chia đều dựa trên số SV đã chọn. Hoặc có thể chỉnh
-              sửa thủ công.</p>
+            <legend class="field__legend">Chỉ định Giảng viên</legend>
+            <p class="field__description">Phân công giảng viên phụ trách sinh viên.</p>
           </div>
           <hr class="separator" />
-          <div class="card__content p-6">
+          <div class="card__content">
             <div class="field">
               <div class="flex justify-between items-center w-full mb-4">
                 <label class="field__label mb-0">Chọn các giảng viên hướng dẫn đợt này:</label>
                 <div class="flex gap-2">
                   <button type="button" class="btn" data-variant="primary" data-size="lg" id="btn-equalize-quotas"
                     title="Chia đều số lượng SV cho các GV đã chọn">
-                    <i class="fa-solid fa-scale-balanced mr-1"></i> Chia đều
+                    <i class="fa-solid fa-chart-pie"></i> Chia đều
                   </button>
                   <div class="search-bar flex items-center px-4 gap-2 rounded-3xl text-sm">
                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -183,7 +171,6 @@
               <div class="flex justify-center items-center mb-4">
                 <!-- Validation Quota UI -->
                 <div class="quota-summary flex items-center gap-4 px-4 py-2 rounded-md" id="quota-summary-box">
-                  <span class="font-medium">Tổng số SV / tổng hạn mức của giáo viên đã chọn:</span>
                   <span class="text-xl font-bold" id="total-capacity-text">0 / 0</span>
                   <i class="fa-solid fa-check-circle text-success hidden" id="quota-status-icon"></i>
                 </div>
@@ -195,25 +182,24 @@
             </div>
           </div>
           <hr class="separator" />
-          <div class="p-4 flex justify-between items-center">
+          <div class="card__footer internship-form__footer">
             <button type="button" class="btn btn-prev" data-variant="outline" data-size="lg">
-              <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại
+              <i class="fa-solid fa-chevron-left "></i> Quay lại
             </button>
             <button type="button" id="btn-submit-batch" class="btn" data-variant="primary" data-size="lg" disabled>
-              <i class="fa-solid fa-check mr-2"></i> Hoàn tất tạo đợt
+              <i class="fa-solid fa-check "></i> Hoàn tất tạo đợt
             </button>
           </div>
         </fieldset>
       </div>
-
     </div>
-
   </form>
 </div>
 
 <script>
   window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
   window.REDIRECT_URL = '<?= url('admin/internship_batches/{id}/students') ?>';
+  window.BATCH_CREATE_WIZARD_STEPS = <?= json_encode($wizardSteps, JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="<?= url('public/js/table/table_manager.js') ?>" type="module"></script>
 <script src="<?= url('public/js/pages/internship_batch_create.js') ?>" type="module"></script>

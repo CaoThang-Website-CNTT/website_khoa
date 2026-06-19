@@ -13,4 +13,5 @@
 <script src="<?= url('/public/js/popover.js') ?>"></script>
 <script src="<?= url('/public/js/dropdown.js') ?>"></script>
 <script src="<?= url('/public/js/media_uploader.js') ?>"></script>
+<script src="<?= url('/public/js/step_wizard.js') ?>"></script>
 <script type="module" src="<?= url('/public/js/table/index.js') ?>"></script>

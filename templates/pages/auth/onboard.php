@@ -8,33 +8,19 @@ $classrooms = $classrooms ?? [];
 $isStudent = ($role === 'student');
 $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
+$onboardSteps = [
+  ['label' => 'Thông tin cá nhân'],
+  ['label' => 'Học tập / Công tác'],
+  ['label' => 'Xác nhận'],
+];
 ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
 
-<div data-tabs data-tabs-id="onboard-step" data-tabs-panel-active="0" data-tabs-sync="false">
-  <div class="onboard-progress" aria-live="polite">
-    <div class="onboard-progress__dots" role="tablist" aria-label="Tiến trình đăng ký">
-      <div class="onboard-progress__step-wrapper">
-        <span class="onboard-progress__dot" data-tabs-trigger="0">1</span>
-        <span class="onboard-progress__step-label">Thông tin cá nhân</span>
-      </div>
-
-      <div class="onboard-progress__step-wrapper">
-        <span class="onboard-progress__dot" data-tabs-trigger="1">2</span>
-        <span class="onboard-progress__step-label">Học tập / Công tác</span>
-      </div>
-
-      <div class="onboard-progress__step-wrapper">
-        <span class="onboard-progress__dot" data-tabs-trigger="2">3</span>
-        <span class="onboard-progress__step-label">Xác nhận</span>
-      </div>
-      <div class="onboard-progress__line-placeholder separator">
-        <div class="onboard-progress__line"></div>
-      </div>
-    </div>
+<div class="onboard" data-onboard>
+  <div id="onboard-step-wizard" class="step-wizard" data-step-wizard-label="Tiến trình đăng ký" aria-live="polite">
   </div>
   <div class="card shadow onboard-form-card">
     <div class="card__header">
@@ -51,7 +37,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
       data-role="<?= htmlspecialchars($role, ENT_QUOTES, 'UTF-8') ?>" novalidate>
       <?= csrf_field() ?>
 
-      <div class="tabs__panel onboard-step" data-tabs-panel="0" role="tabpanel">
+      <div class="onboard-step" data-step-wizard-panel="0" role="tabpanel">
         <fieldset class="field__set">
           <div class="card__content">
             <div class="field-group">
@@ -130,7 +116,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         </fieldset>
       </div>
 
-      <div class="tabs__panel onboard-step" data-tabs-panel="1" role="tabpanel">
+      <div class="onboard-step" data-step-wizard-panel="1" role="tabpanel">
         <?php if ($isStudent): ?>
           <fieldset class="field__set">
             <div class="card__content">
@@ -214,7 +200,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <?php endif; ?>
       </div>
 
-      <div class="tabs__panel onboard-step" data-tabs-panel="2" role="tabpanel">
+      <div class="onboard-step" data-step-wizard-panel="2" role="tabpanel">
         <div class="card__content">
           <p class="field__description">Kiểm tra lại thông tin trước khi gửi.</p>
           <dl class="onboard-review">
@@ -260,16 +246,15 @@ $old_input = request()->session()->getOldInputs() ?? [];
           </dl>
         </div>
       </div>
-
-      <div class="card__footer onboard-actions">
-        <button type="button" class="btn" data-variant="outline" data-size="lg" id="onboard-back">Quay
-          lại</button>
-        <button type="button" class="btn" data-variant="primary" data-size="lg" id="onboard-next">Tiếp theo</button>
-        <button style="display:none;" type="submit" class="btn" data-variant="primary" data-size="lg"
-          id="onboard-submit" hidden>Hoàn tất đăng
-          ký</button>
-      </div>
     </form>
+    <div class="card__footer onboard-actions">
+      <button type="button" class="btn" data-variant="outline" data-size="lg" id="onboard-back">Quay
+        lại</button>
+      <button type="button" class="btn" data-variant="primary" data-size="lg" id="onboard-next">Tiếp theo</button>
+      <button style="display:none;" type="submit" form="onboard-form" class="btn" data-variant="primary" data-size="lg"
+        id="onboard-submit">Hoàn tất đăng
+        ký</button>
+    </div>
   </div>
 </div>
 <script>
@@ -277,51 +262,13 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const form = document.getElementById('onboard-form');
     if (!form) return;
 
-    const triggers = Array.from(document.querySelectorAll('[data-tabs-trigger]'))
-    const tabHandler = new TabHandler({
-      syncParams: false
-    });
-    tabHandler.init();
-
-    const progressDots = Array.from(document.querySelectorAll('.onboard-progress__dot'));
-    const panels = Array.from(document.querySelectorAll('[data-tabs-panel]'));
-    const stepLabels = Array.from(document.querySelectorAll('.onboard-progress__step-label'));
-    const progressLine = document.querySelector('.onboard-progress__line');
-
+    const progressRoot = document.getElementById('onboard-step-wizard');
+    const panels = Array.from(document.querySelectorAll('[data-step-wizard-panel]'));
     const btnBack = document.getElementById('onboard-back');
     const btnNext = document.getElementById('onboard-next');
     const btnSubmit = document.getElementById('onboard-submit');
-    const total = panels.length;
+    const steps = <?= json_encode($onboardSteps, JSON_UNESCAPED_UNICODE) ?>;
 
-    let maxUnlockedIdx = 0;
-
-    function syncUI(idx) {
-      progressDots.forEach((dot, i) => {
-        if (i < idx) {
-          dot.setAttribute('data-steps-state', 'passed');
-        } else if (i === idx) {
-          dot.setAttribute('data-steps-state', 'active');
-        } else {
-          dot.setAttribute('data-steps-state', 'idle');
-        }
-      });
-
-      // Tính % width progress line
-      if (progressLine && total > 1) {
-        const percentage = (100 / (total - 1)) * idx;
-        progressLine.style.width = percentage + '%';
-      }
-
-      btnBack.style.display = idx === 0 ? "none" : "block";
-      btnNext.style.display = idx === total - 1 ? "none" : "block";
-      btnSubmit.style.display = idx !== total - 1 ? "none" : "block";
-
-      if (idx === total - 1) {
-        fillReview();
-      }
-    }
-
-    // Lấy ra các input hiện hữu
     function visibleInputs(root) {
       return Array.from(root.querySelectorAll('input, select, textarea')).filter(el => {
         if (el.disabled || el.type === 'hidden' || el.hasAttribute('readonly')) return false;
@@ -329,7 +276,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
       });
     }
 
-    // Validate Step Panel
     function validateStep(stepEl) {
       const list = visibleInputs(stepEl);
       return list.every((input) => {
@@ -368,37 +314,38 @@ $old_input = request()->session()->getOldInputs() ?? [];
       });
     }
 
-    function getCurrentIndex() {
-      const activePanel = document.querySelector('[data-tabs-panel][data-tabs-panel-state="active"]');
-      return activePanel ? parseInt(activePanel.getAttribute('data-tabs-panel')) : 0;
-    }
+    // Khởi tạo StepWizard
+    const wizard = new StepWizard({
+      root: progressRoot,
+      panels,
+      initialIndex: 0,
+      beforeChange: (nextIndex, currentIndex) => {
+        if (nextIndex > currentIndex) {
+          return validateStep(panels[currentIndex]);
+        }
 
-    triggers.forEach((trigger, idx) => {
-      trigger.addEventListener('click', () => {
-        syncUI(idx);
-      });
+        return true;
+      }
+    });
+
+    wizard.onChange((idx, total) => {
+      btnBack.style.display = idx === 0 ? "none" : "block";
+      btnNext.style.display = idx === total - 1 ? "none" : "block";
+      btnSubmit.style.display = idx !== total - 1 ? "none" : "block";
+
+      if (idx === total - 1) {
+        fillReview();
+      }
     });
 
     btnNext.addEventListener('click', function () {
-      const currentIdx = getCurrentIndex();
-      if (validateStep(panels[currentIdx])) {
-        if (currentIdx < total - 1) {
-          triggers[currentIdx + 1].click();
-          syncUI(currentIdx + 1);
-        }
-      }
+      wizard.next();
     });
 
     btnBack.addEventListener('click', function () {
-      const currentIdx = getCurrentIndex();
-      if (currentIdx > 0) {
-        triggers[currentIdx - 1].click();
-        syncUI(currentIdx - 1);
-      }
+      wizard.back();
     });
 
-    setTimeout(() => {
-      syncUI(getCurrentIndex());
-    }, 50);
+    wizard.renderProgress(progressRoot, steps).init();
   });
 </script>

@@ -1,3 +1,16 @@
+.internship-form__footer {
+  flex-direction: row;
+  padding: 0 1rem 1rem;
+}
+
+.internship-form__footer:has(.btn:only-child) {
+  justify-content: flex-end;
+}
+
+.internship-form__footer:has(.btn:nth-child(2):last-child) {
+  justify-content: space-between;
+}
+
 input[type="checkbox"],
 .card-clickable-area {
   cursor: pointer;
@@ -5,102 +18,6 @@ input[type="checkbox"],
 .teacher-checkbox {
   width: 1.5rem;
   height: 1.5rem;
-}
-
-.wizard-stepper {
-  margin: 0 auto 2.5rem;
-  min-width: var(--container-md);
-  width: var(--container-4xl);
-}
-
-.stepper-line {
-  position: absolute;
-  top: 1.25rem;
-  left: 3rem;
-  right: 3rem;
-  height: 2px;
-  background-color: var(--border);
-  z-index: 0;
-}
-
-.step-item {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100px;
-}
-
-.step-circle {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background-color: var(--card);
-  border: 2px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--fw-semibold);
-  color: var(--muted-foreground);
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
-}
-
-.step-label {
-  font-size: var(--text-sm);
-  font-weight: var(--fw-medium);
-  color: var(--muted-foreground);
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* Active State */
-.step-item.active .step-circle {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 15%, transparent);
-}
-
-.step-item.active .step-label {
-  color: var(--primary);
-  font-weight: var(--fw-bold);
-}
-
-/* Completed State */
-.step-item.completed .step-circle {
-  background-color: var(--toast-success-icon);
-  border-color: var(--toast-success-icon);
-  color: var(--primary-foreground);
-  cursor: pointer;
-}
-
-.step-item.completed:hover .step-circle {
-  box-shadow: 0 0 0 4px
-    color-mix(in oklab, var(--toast-success-icon) 15%, transparent);
-}
-
-/* Wizard Steps Content */
-.wizard-step {
-  width: 100%;
-  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.wizard-step.hidden {
-  display: none;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Loader */
@@ -118,54 +35,6 @@ input[type="checkbox"],
 
 .assignment-loader.hidden {
   display: none;
-}
-
-/* Step 2: Student Selection */
-#classrooms-container {
-  max-height: 150px;
-  overflow-y: auto;
-}
-.table-wrapper {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.table-wrapper thead th {
-  position: sticky;
-  top: 0;
-  height: 4rem;
-  z-index: 10;
-  background-color: var(--card);
-}
-
-.td-classroom {
-  background-color: var(--muted);
-}
-
-.classroom-badge {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background: var(--card);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.classroom-badge:hover {
-  background-color: var(--muted);
-  border-color: var(--primary-alt);
-}
-
-.classroom-badge.selected {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
-}
-
-.search-bar--students {
-  width: var(--container-xl);
 }
 
 /* Step 3: Teacher Cards */

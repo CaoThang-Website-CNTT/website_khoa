@@ -11,18 +11,19 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Thêm danh mục mới</h2>
-    <p class="title-wrapper__description">Điền thông tin danh mục mới vào các trường dưới đây</p>
+<p class="title-wrapper__description">Điền thông tin danh mục mới vào các trường dưới đây</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/categories') ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i>
-      Quay lại
-    </a>
-    <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
-      <i class="fa-solid fa-floppy-disk"></i>
-      Thêm
-    </button>
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary" data-size="lg"
+  class="btn">
+  <i class="fa-solid fa-floppy-disk"></i>
+  Thêm
+</button>
 <?php $layout->end() ?>
 <form id="category-add-form" action="<?= url('admin/categories') ?>" method="POST">
   <?= csrf_field() ?>

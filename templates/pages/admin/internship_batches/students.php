@@ -17,29 +17,29 @@ $batch = $batch ?? null;
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Sinh viên & Phân công</h2>
-    <p class="title-wrapper__description">Quản lý sinh viên và phân công giảng viên hướng dẫn đợt thực tập
-      <span class="font-bold">"<?= htmlspecialchars($batch['title']) ?>"</span>
-    </p>
+<p class="title-wrapper__description">Quản lý sinh viên và phân công giảng viên hướng dẫn đợt thực tập
+  <span class="font-bold">"<?= htmlspecialchars($batch['title']) ?>"</span>
+</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
 <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
-      <i class="fa-solid fa-chevron-left"></i> Quay lại
-    </a>
+  <i class="fa-solid fa-chevron-left"></i> Quay lại
+</a>
 
-    <!-- Toolbar: Phân công tự động -->
-    <?php if ($batch['status'] !== 'closed'): ?>
-      <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
-        <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
-      </button>
-      <button type="button" id="btn-auto-even" class="btn" data-variant="primary" data-size="lg">
-        <i class="fa-solid fa-scale-balanced"></i> Chia đều
-      </button>
-    <?php endif; ?>
+<!-- Toolbar: Phân công tự động -->
+<?php if ($batch['status'] !== 'closed'): ?>
+  <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
+    <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
+  </button>
+  <button type="button" id="btn-auto-even" class="btn" data-variant="primary" data-size="lg">
+    <i class="fa-solid fa-chart-pie"></i> Chia đều
+  </button>
+<?php endif; ?>
 
-    <button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
-      <i class="fa-solid fa-bars"></i>
-    </button>
+<button type="button" class="btn js-sidebar-toggle" data-variant="outline" data-size="md" title="Thu gọn/Mở rộng">
+  <i class="fa-solid fa-bars"></i>
+</button>
 <?php $layout->end() ?>
 
 <div class="detail-layout detail-layout--collapsible">
@@ -96,15 +96,13 @@ $batch = $batch ?? null;
 
         <!-- Cột Lớp -->
         <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-filter-type="select"
-          data-tm-filter-options='<?= json_encode($classOptions ?? []) ?>' data-tm-sortable
-          data-tm-width="120px">
+          data-tm-filter-options='<?= json_encode($classOptions ?? []) ?>' data-tm-sortable data-tm-width="120px">
           <span class="text-sm font-semibold">{{ value || '--' }}</span>
         </template>
 
         <!-- Cột Công ty thực tập -->
         <template data-tm-col="company_name" data-tm-label="Công ty thực tập" data-tm-filter-type="select"
-          data-tm-filter-options='<?= json_encode($companyOptions ?? []) ?>'
-          data-tm-sortable data-tm-width="250px">
+          data-tm-filter-options='<?= json_encode($companyOptions ?? []) ?>' data-tm-sortable data-tm-width="250px">
           <div class="company-cell flex flex-col">
             <span class="font-semibold text-sm" title="{{ value || 'Chưa có công ty' }}">
               {{ value || 'Chưa có công ty' }}
@@ -119,7 +117,7 @@ $batch = $batch ?? null;
         </template>
 
         <!-- Cột Giảng viên hướng dẫn -->
-        <template data-tm-col="teacher_name" data-tm-label="Giảng viên HD" data-tm-filter-type="select" 
+        <template data-tm-col="teacher_name" data-tm-label="Giảng viên HD" data-tm-filter-type="select"
           data-tm-filter-options='<?= json_encode($teacherOptions ?? []) ?>' data-tm-sortable data-tm-width="280px">
           <div class="teacher-cell" data-assignment-id="{{ row.assignment_id || '' }}"
             data-batch-student-id="{{ row.batch_student_id }}" data-teacher-id="{{ row.teacher_id || '' }}">

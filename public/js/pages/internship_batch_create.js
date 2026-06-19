@@ -14,12 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // DOM Elements
-  const steps = document.querySelectorAll(".wizard-step");
-  const stepItems = document.querySelectorAll(".step-item");
+  const wizardRoot = document.getElementById("batch-create-step-wizard");
+  const steps = Array.from(document.querySelectorAll("[data-step-wizard-panel]"));
   const btnNext = document.querySelectorAll(".btn-next");
   const btnPrev = document.querySelectorAll(".btn-prev");
   const form = document.getElementById("form-create-batch");
-  const loader = document.getElementById("wizard-loader");
 
   // --- STEP 2 ELEMENTS ---
   const fileUploadStudents = document.getElementById("file-upload-students");
@@ -43,35 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchTeachersInput = document.getElementById("search-teachers");
   const btnEqualizeQuotas = document.getElementById("btn-equalize-quotas");
 
-  // Helpers
-  const showLoader = () => loader.classList.remove("hidden");
-  const hideLoader = () => loader.classList.add("hidden");
-
   const updateCounter = () => {
     selectedStudentsCount.textContent = `Đã chọn: ${state.selectedStudents.size} SV`;
   };
 
   // --- WIZARD NAVIGATION ---
-  const updateWizardUI = () => {
-    steps.forEach((step, index) => {
-      if (index + 1 === state.currentStep) {
-        step.classList.remove("hidden");
-      } else {
-        step.classList.add("hidden");
-      }
-    });
-
-    stepItems.forEach((item, index) => {
-      const stepNum = index + 1;
-      item.classList.remove("active", "completed");
-      if (stepNum === state.currentStep) {
-        item.classList.add("active");
-      } else if (stepNum < state.currentStep) {
-        item.classList.add("completed");
-      }
-    });
-  };
-
   const validateStep1 = () => {
     if (!form.reportValidity()) return false;
     const start = new Date(form.start_at.value);
@@ -103,33 +78,35 @@ document.addEventListener("DOMContentLoaded", () => {
     return true;
   };
 
+  const wizard = new window.StepWizard({
+    root: wizardRoot,
+    panels: steps,
+    initialIndex: 0,
+    beforeChange: (nextIndex, currentIndex) => {
+      if (nextIndex <= currentIndex) return true;
+      if (currentIndex === 0 && !validateStep1()) return false;
+      if (currentIndex === 1 && !validateStep2()) return false;
+      return true;
+    },
+  });
+
+  wizard.onChange((index) => {
+    state.currentStep = index + 1;
+
+    if (state.currentStep === 3) {
+      renderTeachers();
+    }
+  });
+
   btnNext.forEach((btn) => {
     btn.addEventListener("click", () => {
-      if (state.currentStep === 1 && !validateStep1()) return;
-      if (state.currentStep === 2 && !validateStep2()) return;
-
-      state.currentStep++;
-      if (state.currentStep === 3) {
-        renderTeachers();
-      }
-      updateWizardUI();
+      wizard.next();
     });
   });
 
   btnPrev.forEach((btn) => {
     btn.addEventListener("click", () => {
-      state.currentStep--;
-      updateWizardUI();
-    });
-  });
-
-  stepItems.forEach((item) => {
-    item.addEventListener("click", () => {
-      const targetStep = parseInt(item.getAttribute("data-step"));
-      if (targetStep < state.currentStep) {
-        state.currentStep = targetStep;
-        updateWizardUI();
-      }
+      wizard.back();
     });
   });
 
@@ -525,7 +502,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      showLoader();
       btnSubmit.setAttribute("disabled", "disabled");
       btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
 
@@ -562,11 +538,12 @@ document.addEventListener("DOMContentLoaded", () => {
       btnSubmit.removeAttribute("disabled");
       btnSubmit.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Hoàn tất tạo đợt`;
     } finally {
-      hideLoader();
     }
   });
 
   // Init
-  updateWizardUI();
+  wizard
+    .renderProgress(wizardRoot, window.BATCH_CREATE_WIZARD_STEPS || [])
+    .init();
   loadTeachers();
 });

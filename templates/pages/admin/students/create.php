@@ -19,7 +19,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary" data-size="lg" class="w-full btn">
+<button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="submit" data-variant="primary" data-size="lg"
+  class="btn">
   <i class="fa-solid fa-floppy-disk"></i>
   Thêm
 </button>
@@ -250,18 +251,18 @@ $old_input = request()->session()->getOldInputs() ?? [];
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
 
-    studentIdInput.addEventListener('input', function() {
+    studentIdInput.addEventListener('input', function () {
       const studentId = this.value.trim();
       emailInput.value = studentId ? `${studentId}@caothang.edu.vn` : '';
     });
 
-    nationalIdInput.addEventListener('input', function() {
+    nationalIdInput.addEventListener('input', function () {
       const nationalId = this.value.trim();
       passwordInput.value = nationalId ? nationalId : '';
     });
 
     // Confirm Btn Event Listener
-    confirmBtn.addEventListener('click', function() {
+    confirmBtn.addEventListener('click', function () {
       form.submit();
     });
   });
