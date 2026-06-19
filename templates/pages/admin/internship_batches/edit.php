@@ -25,7 +25,7 @@ $currentStatus = [
 
 <script>
   window.CURRENT_BATCH_ID = <?= $batchObj->id ?>;
-  window.API_BASE_URL = "<?= url('api/v1/internship/batches/' . $batchObj->id . '/management') ?>";
+  window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches/' . $batchObj->id . '/management')) ?>;
 </script>
 
 
@@ -292,25 +292,6 @@ $currentStatus = [
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
-<?php $layout->start("script") ?>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const setupConfirmAction = (confirmBtnId, formId) => {
-      const confirmBtn = document.getElementById(confirmBtnId);
-      if (confirmBtn) {
-        confirmBtn.addEventListener("click", () => {
-          const form = document.getElementById(formId);
-          if (form) form.submit();
-        });
-      }
-    };
-
-    setupConfirmAction("save-confirm-modal-btn", "batch-edit-form");
-
-    setupConfirmAction("delete-confirm-modal-btn", "delete-form");
-
-    setupConfirmAction("publish-confirm-modal-btn", "publish-form");
-    setupConfirmAction("close-confirm-modal-btn", "close-form");
-  });
-</script>
+<?php $layout->start("scripts") ?>
+<script src="<?= url('public/js/pages/admin/internship_batches/edit.js') ?>" type="module"></script>
 <?php $layout->end() ?>

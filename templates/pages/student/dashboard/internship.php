@@ -468,9 +468,7 @@ $effectiveMetadata = $effStatus ? [
   </div>
 <?php endif; ?>
 
-<script>
-  window.API_BASE_URL = '<?= url('api/v1') ?>';
-</script>
+<script>window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;</script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
 
 <?php if ($current): ?>

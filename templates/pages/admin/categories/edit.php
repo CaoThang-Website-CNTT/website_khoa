@@ -175,34 +175,5 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
 <?php endif; ?>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    <?php if ($category->isEditable()): ?>
-      const form = document.querySelector('#category-edit-form');
-      const confirmBtn = document.querySelector('#confirm-modal-btn');
-      const deleteBtn = document.querySelector('#delete-confirm-btn');
-      const deleteForm = document.querySelector('#category-delete-form');
-      const nameInput = document.querySelector('#name');
-      const slugInput = document.querySelector('#slug');
-
-      nameInput.addEventListener('input', () => {
-        if (slugInput.dataset.manual) return;
-        slugInput.value = nameInput.value
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/đ/g, 'd')
-          .replace(/[^a-z0-9\s-]/g, '')
-          .trim()
-          .replace(/\s+/g, '-');
-      });
-
-      slugInput.addEventListener('input', () => {
-        slugInput.dataset.manual = 'true';
-      });
-
-      confirmBtn.addEventListener('click', () => form.submit());
-      deleteBtn.addEventListener('click', () => deleteForm.submit());
-    <?php endif; ?>
-  });
-</script>
+<script>window.__categoryEdit__ = { isEditable: <?= $category->isEditable() ? 'true' : 'false' ?> };</script>
+<script src="<?= url('public/js/pages/admin/categories/edit.js') ?>" type="module"></script>

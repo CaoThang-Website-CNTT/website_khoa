@@ -74,11 +74,5 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <?php $layout->end() ?>
 
 <?php $layout->start("scripts") ?>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    document.querySelector('#confirm-modal-btn').addEventListener('click', () => {
-      document.querySelector('#ticket-create-form').submit();
-    });
-  });
-</script>
+<script src="<?= url('public/js/pages/admin/tickets/create.js') ?>" type="module"></script>
 <?php $layout->end() ?>

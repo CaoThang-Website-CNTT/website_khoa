@@ -49,9 +49,4 @@
   <div class="card__footer">
   </div>
 </div>
-<script>
-  document.querySelector("#import-file").addEventListener("change", (e) => {
-    e.preventDefault();
-    document.querySelector("#import-form").submit();
-  })
-</script>
+<script src="<?= url('public/js/pages/admin/students/import.js') ?>" type="module"></script>

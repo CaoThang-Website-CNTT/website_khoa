@@ -68,11 +68,5 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </div>
 
 <?php $layout->start('scripts'); ?>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelector("#login-submit-form-btn").addEventListener("click", () => {
-      document.querySelector("#login-form").submit();
-    })
-  })
-</script>
+<script src="<?= url('public/js/pages/auth/login.js') ?>" type="module"></script>
 <?php $layout->end(); ?>

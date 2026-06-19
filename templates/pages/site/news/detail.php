@@ -151,13 +151,4 @@
   </div>
 </section>
 
-<script>
-  function copyToClipboard() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      alert('Đã sao chép liên kết!');
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-    });
-  }
-</script>
+<script src="<?= url('public/js/pages/site/news/detail.js') ?>" type="module"></script>

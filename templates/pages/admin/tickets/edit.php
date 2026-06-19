@@ -46,11 +46,5 @@
 <?php $layout->end() ?>
 
 <?php $layout->start("scripts") ?>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    document.querySelector('#confirm-modal-btn').addEventListener('click', () => {
-      document.querySelector('#ticket-edit-form').submit();
-    });
-  });
-</script>
+<script src="<?= url('public/js/pages/admin/tickets/edit.js') ?>" type="module"></script>
 <?php $layout->end() ?>

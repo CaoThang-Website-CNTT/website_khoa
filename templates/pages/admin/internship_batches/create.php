@@ -197,8 +197,8 @@ $wizardSteps = [
 </div>
 
 <script>
-  window.API_BASE_URL = '<?= url('api/v1/internship/batches') ?>';
-  window.REDIRECT_URL = '<?= url('admin/internship_batches/{id}/students') ?>';
+  window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches')) ?>;
+  window.REDIRECT_URL = <?= json_encode(url('admin/internship_batches/{id}/students')) ?>;
   window.BATCH_CREATE_WIZARD_STEPS = <?= json_encode($wizardSteps, JSON_UNESCAPED_UNICODE) ?>;
 </script>
 <script src="<?= url('public/js/table/table_manager.js') ?>" type="module"></script>

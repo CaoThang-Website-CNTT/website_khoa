@@ -99,7 +99,7 @@ $supervisors = $supervisors ?? [];
 </script>
 
 <script>
-  window.API_BASE_URL = '<?= url('api/v1') ?>';
-  const BATCH_ID = <?= $batch['id'] ?>;
+  window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
+  window.BATCH_ID = <?= json_encode($batch['id']) ?>;
 </script>
 <script src="<?= url('public/js/pages/batch_teachers_manager.js') ?>"></script>
