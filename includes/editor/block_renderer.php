@@ -125,6 +125,7 @@ final class BlockRenderer
     $registry = self::getRegistry();
     $html = '';
     $tocEntries = [];
+    $imageCount = 0;
 
     foreach ($blocks as $block) {
       $type = $block['type'];
@@ -135,6 +136,14 @@ final class BlockRenderer
       }
 
       try {
+        // Track first image for LCP optimization
+        if ($type === 'blocks/image') {
+          $imageCount++;
+          if ($imageCount === 1) {
+            $block['isFirstImage'] = true;
+          }
+        }
+
         // Render HTML
         $blockHtml = $renderer->render($block);
 

@@ -156,3 +156,90 @@ function generateSlug(string $str): string
   $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
   return trim($slug, '-');
 }
+
+/**
+ * Định dạng SEO title: {pageTitle} | {siteTitle}
+ */
+function seo_title(string $pageTitle, ?string $siteTitle = null): string
+{
+  $pageTitle = trim($pageTitle);
+  $siteTitle = trim($siteTitle ?? APP_URL);
+
+  if ($pageTitle === '') {
+    return $siteTitle;
+  }
+  if ($siteTitle === '') {
+    return $pageTitle;
+  }
+  return $pageTitle . ' | ' . $siteTitle;
+}
+
+/**
+ * Generate canonical URL based on current request or provided path
+ */
+function seo_canonical(?string $path = null): string
+{
+  if ($path !== null) {
+    return url($path);
+  }
+
+  $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+  // Xóa query string
+  $pathOnly = parse_url($requestUri, PHP_URL_PATH) ?? '';
+
+  // Xóa thư mục con nếu có
+  $appPath = parse_url(APP_URL, PHP_URL_PATH) ?? '';
+  $appPath = trim($appPath, '/');
+  if ($appPath !== '') {
+    $pathOnly = preg_replace('/^\/' . preg_quote($appPath, '/') . '(\/|$)/i', '/', $pathOnly);
+  }
+
+  return url(ltrim($pathOnly, '/'));
+}
+
+/**
+ * Render Open Graph meta tags
+ */
+function seo_og_tags(array $data): string
+{
+  $html = [];
+  foreach ($data as $property => $content) {
+    if (!empty($content)) {
+      $html[] = sprintf(
+        '<meta property="%s" content="%s">',
+        htmlspecialchars($property, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($content, ENT_QUOTES, 'UTF-8')
+      );
+    }
+  }
+  return implode("\n  ", $html);
+}
+
+/**
+ * Render Twitter Card meta tags
+ */
+function seo_twitter_tags(array $data): string
+{
+  $html = [];
+  foreach ($data as $name => $content) {
+    if (!empty($content)) {
+      $html[] = sprintf(
+        '<meta name="%s" content="%s">',
+        htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($content, ENT_QUOTES, 'UTF-8')
+      );
+    }
+  }
+  return implode("\n  ", $html);
+}
+
+/**
+ * Render JSON-LD script tag
+ */
+function seo_jsonld(array $data): string
+{
+  if (empty($data)) return '';
+
+  $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+  return "<script type=\"application/ld+json\">\n" . $json . "\n</script>";
+}
