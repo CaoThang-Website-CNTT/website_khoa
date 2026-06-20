@@ -71,25 +71,6 @@ $letters = $letters ?? [];
 
 </div>
 
-<!-- Bulk Action Bar -->
-<div id="bulk-action-bar" class="bulk-action-bar hidden shadow-lg" data-state="closed">
-  <div class="flex justify-between items-center gap-2 px-6 py-3">
-    <div class="flex items-center gap-4">
-      <span class="badge" data-variant="primary" id="selected-count">Đã chọn: 0</span>
-    </div>
-    <div class="flex gap-2">
-      <button type="button" class="btn" data-variant="outline" data-size="md" id="btn-cancel-selection">Hủy
-        chọn</button>
-      <button type="button" class="btn" data-variant="destructive" data-size="md" id="btn-bulk-cancel">
-        <i class="fa-solid fa-xmark"></i> Hủy giấy giới thiệu
-      </button>
-      <button type="button" class="btn" data-variant="primary" data-size="md" id="btn-bulk-approve">
-        <i class="fa-solid fa-check"></i> Duyệt & In giấy
-      </button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal Chi tiết -->
 <div id="rl_detailModal" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">

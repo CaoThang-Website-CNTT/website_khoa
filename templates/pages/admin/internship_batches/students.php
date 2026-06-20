@@ -155,25 +155,6 @@ $batch = $batch ?? null;
   </aside>
 </div>
 
-<!-- Bulk Action Bar -->
-<div id="bulk-action-bar" class="bulk-action-bar hidden shadow-lg" data-state="closed">
-  <div class="flex justify-between items-center gap-2 px-6 py-3">
-    <div class="flex items-center gap-4">
-      <span class="badge" data-variant="primary" id="selected-count">Đã chọn: 0</span>
-    </div>
-    <div class="flex gap-2">
-      <button type="button" class="btn" data-variant="outline" data-size="md" id="btn-cancel-selection">Hủy
-        chọn</button>
-      <button type="button" class="btn" data-variant="destructive" data-size="md" id="btn-bulk-unassign">
-        <i class="fa-solid fa-user-minus"></i> Hủy phân công
-      </button>
-      <button type="button" class="btn" data-variant="primary" data-size="md" id="btn-bulk-assign">
-        <i class="fa-solid fa-user-plus"></i> Phân công giảng viên
-      </button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal: Phân công hàng loạt -->
 <div id="modal-bulk-assign" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
