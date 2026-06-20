@@ -2,7 +2,6 @@
 <html lang="vi">
 
 <head>
-  <?= $layout->yield("head_meta"); ?>
   <?php include_once BASE_PATH . '/templates/partials/site_head.php'; ?>
   <?= $layout->yield("head"); ?>
 </head>

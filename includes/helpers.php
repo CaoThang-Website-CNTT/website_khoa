@@ -243,3 +243,60 @@ function seo_jsonld(array $data): string
   $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
   return "<script type=\"application/ld+json\">\n" . $json . "\n</script>";
 }
+
+/**
+ * Render all SEO head tags from one normalized payload.
+ */
+function seo_head(array $data): string
+{
+  $siteTitle = $data['siteTitle'] ?? APP_URL;
+  $title = $data['title'] ?? $siteTitle;
+  if (!empty($data['title']) && !str_contains($title, ' | ')) {
+    $title = seo_title($title, $siteTitle);
+  }
+
+  $html = [
+    '<title>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</title>',
+  ];
+
+  if (!empty($data['description'])) {
+    $html[] = '<meta name="description" content="' . htmlspecialchars($data['description'], ENT_QUOTES, 'UTF-8') . '">';
+  }
+
+  $html[] = '<link rel="canonical" href="' . htmlspecialchars(seo_canonical($data['canonical'] ?? null), ENT_QUOTES, 'UTF-8') . '">';
+
+  if (!empty($data['meta']) && is_array($data['meta'])) {
+    $ogTags = [];
+    $twitterTags = [];
+
+    foreach ($data['meta'] as $name => $content) {
+      if (str_starts_with((string) $name, 'twitter:')) {
+        $twitterTags[$name] = $content;
+      } else {
+        $ogTags[$name] = $content;
+      }
+    }
+
+    if (!empty($ogTags)) {
+      $html[] = seo_og_tags($ogTags);
+    }
+    if (!empty($twitterTags)) {
+      $html[] = seo_twitter_tags($twitterTags);
+    }
+  }
+
+  $schemas = $data['jsonld'] ?? [];
+  if (!empty($schemas)) {
+    if (array_is_list($schemas)) {
+      foreach ($schemas as $schema) {
+        if (is_array($schema)) {
+          $html[] = seo_jsonld($schema);
+        }
+      }
+    } elseif (is_array($schemas)) {
+      $html[] = seo_jsonld($schemas);
+    }
+  }
+
+  return implode("\n", array_filter($html));
+}

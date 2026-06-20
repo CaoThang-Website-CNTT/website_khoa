@@ -56,11 +56,8 @@ $breadcrumbSchema = [
   '@type' => 'BreadcrumbList',
   'itemListElement' => $breadcrumbItems
 ];
+$pageJsonLd = [$articleSchema, $breadcrumbSchema];
 ?>
-<?php $layout->start("head_meta") ?>
-  <?= seo_jsonld($articleSchema) ?>
-  <?= seo_jsonld($breadcrumbSchema) ?>
-<?php $layout->end() ?>
 
 <!-- Breadcrumbs -->
 <section class="site-breadcrumbs py-4">

@@ -1,30 +1,19 @@
 <?php
 $_siteTitle = $settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
-$_metaTitle = $pageTitle ?? ($settings['seo.meta_title'] ?? $_siteTitle);
-if (isset($pageTitle) && !str_contains($_metaTitle, ' | ')) {
-  $_metaTitle = seo_title($pageTitle, $_siteTitle);
-}
-$_metaDesc = $pageDescription ?? ($settings['seo.meta_description'] ?? '');
+$_seoHead = [
+  'siteTitle' => $_siteTitle,
+  'title' => $pageTitle ?? ($settings['seo.meta_title'] ?? $_siteTitle),
+  'description' => $pageDescription ?? ($settings['seo.meta_description'] ?? ''),
+  'canonical' => $pageCanonical ?? null,
+  'meta' => $pageSeo ?? [],
+  'jsonld' => $pageJsonLd ?? [],
+];
 ?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-<title><?= htmlspecialchars($_metaTitle, ENT_QUOTES, 'UTF-8') ?></title>
-<?php if (!empty($_metaDesc)): ?>
-  <meta name="description" content="<?= htmlspecialchars($_metaDesc, ENT_QUOTES, 'UTF-8') ?>">
-<?php endif; ?>
-
-<link rel="canonical" href="<?= seo_canonical($pageCanonical ?? null) ?>">
-
-<?php if (isset($pageSeo)): ?>
-  <?= seo_og_tags($pageSeo) ?>
-  <?= seo_twitter_tags($pageSeo) ?>
-<?php endif; ?>
-
-<?php if (isset($pageJsonLd)): ?>
-  <?= seo_jsonld($pageJsonLd) ?>
-<?php endif; ?>
+<?= seo_head($_seoHead) ?>
 
 <!-- ========== All CSS files linkup ========= -->
 <link rel="icon" type="image/png" sizes="32x32" href="<?= url('public/favicon-32x32.png') ?>">
