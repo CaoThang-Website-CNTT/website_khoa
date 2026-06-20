@@ -43,6 +43,11 @@
   <?= $layout->yield('scripts'); ?>
   <!-- ========= Site Scripts End ======== -->
 
+  <!-- SCROLL TO TOP BUTTON -->
+  <button id="scrollToTopBtn" class="scroll-to-top-btn" aria-label="Cuộn lên đầu trang" title="Lên đầu trang">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
 </body>
 
 </html>

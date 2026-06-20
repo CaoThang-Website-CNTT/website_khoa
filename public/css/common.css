@@ -3122,4 +3122,42 @@
   .footer__copyright {
     border-top: #1e2939 1px solid;
   }
+
+  /* ==========================================================================
+     SCROLL TO TOP BUTTON
+     ========================================================================== */
+  .scroll-to-top-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-full);
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm)
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    z-index: 30;
+    box-shadow: var(--shadow-md);
+  }
+
+  .scroll-to-top-btn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .scroll-to-top-btn:hover {
+    background-color: color-mix(in srgb, var(--primary) 90%, black);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
 }

@@ -10,3 +10,4 @@
 <script src="<?= url('/public/js/select.js') ?>"></script>
 <script src="<?= url('/public/js/tabs.js') ?>"></script>
 <script src="<?= url('/public/js/step_wizard.js') ?>"></script>
+<script src="<?= url('/public/js/scroll_top.js') ?>"></script>
