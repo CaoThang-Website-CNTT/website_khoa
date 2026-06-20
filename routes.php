@@ -1,11 +1,12 @@
 <?php
 
-use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController};
 use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
 // Site
 $router->get('/', [SiteController::class, 'index']);
+$router->get('/sitemap.xml', [SitemapController::class, 'index']);
 $router->prefix('tin-tuc')->group(function (Router $router) {
   $router->get('/', [SiteController::class, 'news_index']);
   $router->get('/{slug}', [SiteController::class, 'news_show']);

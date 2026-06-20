@@ -20,6 +20,7 @@ interface IPostStore
   public function softDelete(int $id): void;
   public function findBySlug(string $slug): ?Post;
   public function getTotalCount(array $filters = []): int;
+  public function getForSitemap(): array;
 }
 
 class PostStore extends Store implements IPostStore
@@ -211,6 +212,23 @@ class PostStore extends Store implements IPostStore
 
     $row = $stmt->fetch(\PDO::FETCH_ASSOC);
     return $row ? (int) $row['total'] : 0;
+  }
+
+  public function getForSitemap(): array
+  {
+    $builder = new QueryBuilder(new MySQLCompiler());
+
+    $query = $builder
+      ->from('posts')
+      ->select(['slug', 'updated_at', 'published_at', 'created_at'])
+      ->eq('status', 'published')
+      ->is('deleted_at', null)
+      ->order('created_at', ['ascending' => false]);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
   }
 
   private function buildListingQuery(array $filters): QueryBuilder
