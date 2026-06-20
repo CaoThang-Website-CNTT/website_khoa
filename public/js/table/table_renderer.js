@@ -2,6 +2,12 @@ export class TableRenderer {
   /** @type {TableInstance} */
   #inst;
   #searchTimeout = null;
+  #bulkActionBar = null;
+  #bulkMoreDropdown = null;
+  #bulkMoreContent = null;
+  #headerEl = null;
+  #wrapperEl = null;
+  #dataWrapperEl = null;
 
   constructor(inst) { this.#inst = inst; }
   get #root() { return this.#inst.root; }
@@ -11,6 +17,7 @@ export class TableRenderer {
     const wrapper = document.createElement('div');
     wrapper.className = 'tm-wrapper';
     wrapper.dataset.tmWrapper = this.#inst.id;
+    this.#wrapperEl = wrapper;
 
     const headerTarget = this.#inst.root.dataset.tmToolbarTarget;
     const externalHeader = headerTarget ? document.querySelector(headerTarget) : null;
@@ -18,15 +25,18 @@ export class TableRenderer {
 
     if (externalHeader) {
       externalHeader.appendChild(toolbar);
+      this.#headerEl = externalHeader;
     } else {
       const header = document.createElement('div');
       header.className = 'tm-header-controls';
       header.appendChild(toolbar);
       wrapper.appendChild(header);
+      this.#headerEl = header;
     }
 
     const dataWrapper = document.createElement('div');
     dataWrapper.className = 'tm-data-wrapper';
+    this.#dataWrapperEl = dataWrapper;
 
     const scroll = document.createElement('div');
     scroll.className = 'tm-scroll';
@@ -215,8 +225,8 @@ export class TableRenderer {
         detail: { column: col.key, operator: op, value: val }
       }));
 
-      if (window.DropdownHandler?.instance) {
-        window.DropdownHandler.instance.close(wrap.dataset.dropdownId);
+      if (DropdownHandler?.instance) {
+        DropdownHandler.instance.close(wrap.dataset.dropdownId);
       }
     };
     applyBtn.addEventListener('click', activate);
@@ -227,9 +237,9 @@ export class TableRenderer {
       valueEl.addEventListener('keydown', e => { if (e.key === 'Enter') activate(); });
     }
 
-    if (window.DropdownHandler?.instance) {
+    if (DropdownHandler?.instance) {
       console.log(`[TableManager] Đã đăng ký dropdown cho cột: ${col.label}`);
-      requestAnimationFrame(() => window.DropdownHandler.instance.register(wrap));
+      requestAnimationFrame(() => DropdownHandler.instance.register(wrap));
     } else {
       console.warn('[TableManager] DropdownHandler không được tìm thấy! Filter sẽ không hoạt động.');
     }
@@ -296,6 +306,237 @@ export class TableRenderer {
     });
   }
 
+  buildBulkActionBar() {
+    const config = this.#inst.bulkActionsConfig;
+    if (!config || this.#bulkActionBar) return;
+
+    const bar = document.createElement('div');
+    bar.className = ['tm-bulk-action-bar', config.wrapperClass || ''].filter(Boolean).join(' ');
+    bar.dataset.tmBulkActionBar = this.#inst.id;
+    bar.dataset.state = 'closed';
+    bar.setAttribute('role', 'toolbar');
+    bar.setAttribute('aria-label', 'Bulk actions');
+    bar.hidden = true;
+
+    const count = document.createElement('span');
+    count.className = 'badge tm-bulk-action-bar__count';
+    count.dataset.variant = 'primary';
+    count.dataset.tmBulkCount = '';
+    count.setAttribute('aria-live', 'polite');
+
+    const loading = document.createElement('span');
+    loading.className = 'tm-bulk-action-bar__loading';
+    loading.dataset.tmBulkLoading = '';
+    loading.hidden = true;
+    loading.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span data-tm-bulk-loading-text></span>';
+
+    const actions = document.createElement('div');
+    actions.className = 'tm-bulk-action-bar__actions';
+    actions.dataset.tmBulkActions = '';
+
+    bar.append(count, loading, actions);
+    document.body.appendChild(bar);
+    this.#bulkActionBar = bar;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || !this.#inst.getRowSelection().length) return;
+      this.#inst.clearSelection();
+    });
+
+    window.addEventListener('resize', () => this.syncBulkActionBar());
+  }
+
+  syncBulkActionBar() {
+    const config = this.#inst.bulkActionsConfig;
+    if (!config) return;
+    this.buildBulkActionBar();
+    if (!this.#bulkActionBar) return;
+
+    const selectedCount = this.#inst.getRowSelection().length;
+    const isOpen = selectedCount > 0;
+    const loading = this.#inst.bulkActionsLoading || { active: false, message: '' };
+
+    this.#bulkActionBar.hidden = false;
+    this.#bulkActionBar.dataset.state = isOpen ? 'open' : 'closed';
+    this.#bulkActionBar.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    this.#bulkActionBar.querySelector('[data-tm-bulk-count]').textContent = config.countLabel(selectedCount);
+    this.#bulkActionBar.querySelector('[data-tm-bulk-loading]').hidden = !loading.active;
+    this.#bulkActionBar.querySelector('[data-tm-bulk-loading-text]').textContent = loading.message || 'Working...';
+    this.#bulkActionBar.querySelector('[data-tm-bulk-actions]').hidden = loading.active;
+    this.#wrapperEl?.toggleAttribute('data-tm-bulk-open', isOpen);
+    this.#dataWrapperEl?.toggleAttribute('data-tm-bulk-open', isOpen);
+
+    if (!isOpen) {
+      this.#closeBulkMorePanel();
+      window.setTimeout(() => {
+        if (this.#bulkActionBar?.dataset.state === 'closed') this.#bulkActionBar.hidden = true;
+      }, 200);
+    }
+
+    this.#renderBulkActionButtons();
+  }
+
+  #renderBulkActionButtons() {
+    const actionsEl = this.#bulkActionBar?.querySelector('[data-tm-bulk-actions]');
+    const config = this.#inst.bulkActionsConfig;
+    if (!actionsEl || !config) return;
+
+    this.#removeBulkMoreDropdown();
+    actionsEl.innerHTML = '';
+    const actions = config.actions || [];
+    const limit = this.#getBulkVisibleLimit(config.visibleLimit);
+    const visible = actions.slice(0, limit);
+    const overflow = actions.slice(limit);
+    const isLoading = this.#inst.bulkActionsLoading?.active;
+
+    visible.forEach(action => actionsEl.appendChild(this.#buildBulkActionButton(action, false, isLoading)));
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'dropdown tm-bulk-action-bar__more-dropdown';
+
+    const moreBtn = document.createElement('button');
+    moreBtn.type = 'button';
+    moreBtn.className = 'dropdown__trigger btn tm-bulk-action-bar__more';
+    moreBtn.dataset.variant = 'outline';
+    moreBtn.dataset.size = 'md';
+    moreBtn.dataset.dropdownTriggerMode = 'click';
+    moreBtn.dataset.side = 'bottom';
+    moreBtn.setAttribute('aria-label', 'More bulk actions');
+    moreBtn.innerHTML = '<i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i>';
+    moreBtn.disabled = isLoading;
+
+    const content = this.#buildBulkMoreDropdownContent(overflow, isLoading);
+    dropdown.append(moreBtn, content);
+    actionsEl.appendChild(dropdown);
+    this.#bulkMoreDropdown = dropdown;
+    this.#bulkMoreContent = content;
+
+    if (DropdownHandler?.instance) {
+      requestAnimationFrame(() => DropdownHandler.instance.register(dropdown));
+    }
+
+    this.#bulkActionBar.querySelectorAll('button').forEach(btn => {
+      btn.disabled = isLoading;
+    });
+  }
+
+  #buildBulkActionButton(action, inOverflow = false, isLoading = false) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = inOverflow ? 'dropdown__item btn tm-bulk-action-bar__more-dropdown-item' : 'btn tm-bulk-action-bar__action';
+    btn.dataset.variant = action.destructive ? 'destructive' : (action.variant || 'outline');
+    if (!inOverflow) btn.dataset.size = 'md';
+    btn.setAttribute('aria-label', action.ariaLabel || action.label);
+    btn.disabled = isLoading || action.disabled === true;
+
+    if (action.icon) {
+      const icon = document.createElement('i');
+      icon.className = action.icon;
+      icon.setAttribute('aria-hidden', 'true');
+      btn.appendChild(icon);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = action.label;
+    btn.appendChild(label);
+
+    btn.addEventListener('click', (event) => this.#runBulkAction(action, event));
+    return btn;
+  }
+
+  #runBulkAction(action, event) {
+    const selectedIds = this.#inst.getRowSelection();
+    if (!selectedIds.length) return;
+    if (action.confirm && !this.#confirmBulkAction(action, selectedIds.length)) return;
+
+    this.#closeBulkMorePanel();
+    const result = action.onClick?.({
+      selectedIds,
+      selectedRows: this.#inst.getSelectedRows(),
+      table: this.#inst,
+      event,
+      setLoading: (isLoading, message = '') => this.#inst.setBulkActionLoading(isLoading, message),
+      clearSelection: () => this.#inst.clearSelection(),
+    });
+
+    if (result?.then) {
+      this.#inst.setBulkActionLoading(true);
+      result.finally(() => this.#inst.setBulkActionLoading(false));
+    }
+  }
+
+  #confirmBulkAction(action, selectedCount) {
+    const confirmConfig = action.confirm;
+    if (confirmConfig === false) return true;
+    const message = typeof confirmConfig === 'object'
+      ? (confirmConfig.message || `Áp dụng ${action.label} cho ${selectedCount} dòng được chọn?`)
+      : `Áp dụng ${action.label} cho ${selectedCount} dòng được chọn?`;
+    return window.confirm(message);
+  }
+
+  #getBulkVisibleLimit(limitConfig = {}) {
+    const width = window.innerWidth;
+    if (width < 600) return limitConfig.mobile ?? 2;
+    if (width < 900) return limitConfig.tablet ?? 4;
+    return limitConfig.desktop ?? 4;
+  }
+
+  #buildBulkMoreDropdownContent(actions, isLoading = false) {
+    const content = document.createElement('div');
+    content.className = 'dropdown__content';
+    content.dataset.state = 'closed';
+    content.setAttribute('role', 'menu');
+
+    const nonDestructive = actions.filter(action => !action.destructive);
+    const destructive = actions.filter(action => action.destructive);
+    const orderedActions = [...nonDestructive, ...destructive];
+    orderedActions.forEach((action, index) => {
+      if (index === nonDestructive.length && destructive.length) {
+        const divider = document.createElement('hr');
+        divider.className = 'separator';
+        content.appendChild(divider);
+      }
+      content.appendChild(this.#buildBulkActionButton(action, true, isLoading));
+    });
+
+    if (orderedActions.length) {
+      const divider = document.createElement('hr');
+      divider.className = 'separator';
+      content.appendChild(divider);
+    }
+    content.appendChild(this.#buildBulkClearButton(isLoading));
+
+    return content;
+  }
+
+  #buildBulkClearButton(isLoading = false) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dropdown__item btn tm-bulk-action-bar__more-dropdown-item';
+    btn.dataset.variant = 'destructive';
+    btn.setAttribute('aria-label', 'Clear selection');
+    btn.disabled = isLoading;
+    btn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Clear</span>';
+    btn.addEventListener('click', () => {
+      this.#closeBulkMorePanel();
+      this.#inst.clearSelection();
+    });
+    return btn;
+  }
+
+  #closeBulkMorePanel() {
+    if (!this.#bulkMoreDropdown) return;
+    DropdownHandler?.instance?.close(this.#bulkMoreDropdown.dataset.dropdownId);
+  }
+
+  #removeBulkMoreDropdown() {
+    if (!this.#bulkMoreDropdown) return;
+    this.#bulkMoreContent?.remove();
+    this.#bulkMoreDropdown.remove();
+    this.#bulkMoreDropdown = null;
+    this.#bulkMoreContent = null;
+  }
+
   // ── Khung bảng (Table skeleton) ───────────────────────────────────────────
   buildTable() {
     const table = document.createElement('table');
@@ -346,15 +587,15 @@ export class TableRenderer {
         const checkAll = th.querySelector('.tm-check-all');
         checkAll.addEventListener('change', (e) => {
           const checked = e.target.checked;
+          e.target.indeterminate = false;
           const visibleCheckboxes = this.#root.querySelectorAll('.tm-row-checkbox');
           visibleCheckboxes.forEach(cb => {
             cb.checked = checked;
             const id = String(cb.value);
             this.#inst.toggleRowSelection(id, checked);
           });
-          this.#root.dispatchEvent(new CustomEvent('tm:selection-change', {
-            detail: { rowSelection: this.#inst.getRowSelection() }
-          }));
+          this.#inst.updateHeaderCheckbox();
+          this.#inst.dispatchSelectionChange();
         });
       } else if (col.sortable) {
         th.classList.add('tm-th--sortable');
@@ -453,9 +694,7 @@ export class TableRenderer {
     input.addEventListener('change', (e) => {
       this.#inst.toggleRowSelection(id, e.target.checked);
       this.#inst.updateHeaderCheckbox();
-      this.#root.dispatchEvent(new CustomEvent('tm:selection-change', {
-        detail: { rowSelection: this.#inst.getRowSelection() }
-      }));
+      this.#inst.dispatchSelectionChange();
     });
     return wrap;
   }

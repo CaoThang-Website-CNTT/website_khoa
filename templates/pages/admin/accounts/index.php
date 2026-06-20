@@ -41,7 +41,7 @@
 
 <?php $layout->start("scripts") ?>
 <script type="module">
-  import { TableManager } from '<?= url("public/js/table/table_manager.js") ?>';
+  import { TableManager } from '<?= url("public/js/table/index.js") ?>';
 
   const tm = TableManager.get("accounts");
 

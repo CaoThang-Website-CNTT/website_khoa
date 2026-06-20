@@ -1,4 +1,4 @@
-import { TableManager } from "../table/table_manager.js";
+import { TableManager } from "../table/index.js";
 import { ExportManager } from "../export/export_manager.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,10 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let supervisors = [];
   let tableData = [];
-
-  // DOM Elements
-  const bulkActionBar = document.querySelector("#bulk-action-bar");
-  const selectedCountText = document.querySelector("#selected-count");
+  let bulkActionsRegistered = false;
 
   // Modals
   const modalHandler = ModalHandler.instance;
@@ -132,6 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (tm) {
           tm.loadData(tableData);
           attachTableEvents();
+          registerBulkActions();
           
           // Đăng ký Export Excel
           const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
@@ -163,6 +161,42 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       retries++;
     }, 100);
+  };
+
+  const registerBulkActions = () => {
+    if (bulkActionsRegistered) return;
+    bulkActionsRegistered = true;
+
+    TableManager.registerBulkActions("batch_students_table", {
+      countLabel: count => `Đã chọn: ${count}`,
+      actions: [
+        {
+          id: "assign",
+          label: "Phân công giảng viên",
+          icon: "fa-solid fa-user-plus",
+          variant: "primary",
+          onClick: ({ selectedIds }) => {
+            document.querySelector("#bulk-student-count").textContent = selectedIds.length;
+
+            const select = document.querySelector("#bulk-teacher-select");
+            renderTeacherOptions(select, null);
+
+            modalHandler.open("#modal-bulk-assign");
+          },
+        },
+        {
+          id: "unassign",
+          label: "Hủy phân công",
+          icon: "fa-solid fa-user-minus",
+          destructive: true,
+          confirm: false,
+          onClick: ({ selectedIds }) => {
+            document.querySelector("#bulk-unassign-count").textContent = selectedIds.length;
+            modalHandler.open("#modal-bulk-unassign");
+          },
+        },
+      ],
+    });
   };
 
   /**
@@ -269,12 +303,12 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         if (reason === null) {
           loadData(); // Reset UI
-          return;
+          return false;
         }
         if (!reason.trim()) {
           toast.warning("Yêu cầu", "Lý do không được để trống.");
           loadData();
-          return;
+          return false;
         }
       }
 
@@ -292,49 +326,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       toast.success("Thành công", "Đã cập nhật phân công.");
       await loadData();
+      return true;
     } catch (error) {
       toast.error("Lỗi", error.message);
       loadData();
+      return false;
     }
   };
-
-  /**
-   * Xử lý Selection Change từ TableManager
-   */
-  document
-    .querySelector('[data-tm="batch_students_table"]')
-    .addEventListener("tm:selection-change", (e) => {
-      const selectedIds = e.detail.rowSelection || e.detail.selectedIds || [];
-      const count = selectedIds.length;
-
-      if (count > 0) {
-        bulkActionBar.classList.remove("hidden");
-        bulkActionBar.setAttribute("data-state", "open");
-        selectedCountText.textContent = `Đã chọn: ${count}`;
-      } else {
-        bulkActionBar.classList.add("hidden");
-        bulkActionBar.setAttribute("data-state", "closed");
-      }
-    });
-
-  // Bulk Action: Cancel
-  document
-    .querySelector("#btn-cancel-selection")
-    .addEventListener("click", () => {
-      TableManager.clearSelection("batch_students_table");
-    });
-
-  // Bulk Action: Assign Modal
-  document.querySelector("#btn-bulk-assign").addEventListener("click", () => {
-    const selectedIds = TableManager.getSelectedIds("batch_students_table");
-    document.querySelector("#bulk-student-count").textContent =
-      selectedIds.length;
-
-    const select = document.querySelector("#bulk-teacher-select");
-    renderTeacherOptions(select, null);
-
-    modalHandler.open("#modal-bulk-assign");
-  });
 
   document
     .querySelector("#btn-confirm-bulk-assign")
@@ -356,17 +354,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       modalHandler.close();
-      await saveAssignments(assignments, "Cập nhật phân công hàng loạt.");
-      TableManager.clearSelection("batch_students_table");
+      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      try {
+        const saved = await saveAssignments(assignments, "Cập nhật phân công hàng loạt.");
+        if (saved) TableManager.clearSelection("batch_students_table");
+      } finally {
+        TableManager.setBulkActionLoading("batch_students_table", false);
+      }
     });
-
-  // Bulk Action: Unassign Modal
-  document.querySelector("#btn-bulk-unassign").addEventListener("click", () => {
-    const selectedIds = TableManager.getSelectedIds("batch_students_table");
-    document.querySelector("#bulk-unassign-count").textContent =
-      selectedIds.length;
-    modalHandler.open("#modal-bulk-unassign");
-  });
 
   document
     .querySelector("#btn-confirm-bulk-unassign")
@@ -382,8 +377,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       modalHandler.close();
-      await saveAssignments(assignments, "Hủy phân công hàng loạt.");
-      TableManager.clearSelection("batch_students_table");
+      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      try {
+        const saved = await saveAssignments(assignments, "Hủy phân công hàng loạt.");
+        if (saved) TableManager.clearSelection("batch_students_table");
+      } finally {
+        TableManager.setBulkActionLoading("batch_students_table", false);
+      }
     });
 
   // Auto Assign: Shuffle

@@ -1,4 +1,4 @@
-import { TableManager } from "../table/table_manager.js";
+import { TableManager } from "../table/index.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const apiBase = window.API_BASE_URL;
@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnPrev = document.querySelectorAll(".btn-prev");
   const form = document.getElementById("form-create-batch");
 
-  // --- STEP 2 ELEMENTS ---
+  // STEP 2 ELEMENTS
   const fileUploadStudents = document.getElementById("file-upload-students");
   const uploadStatusText = document.getElementById("upload-status-text");
   const selectedStudentsCount = document.getElementById(
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedStudentsCount.textContent = `Đã chọn: ${state.selectedStudents.size} SV`;
   };
 
-  // --- WIZARD NAVIGATION ---
+  // WIZARD VALIDATION
   const validateStep1 = () => {
     if (!form.reportValidity()) return false;
     const start = new Date(form.start_at.value);
