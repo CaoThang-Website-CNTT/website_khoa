@@ -1,15 +1,30 @@
 <?php include_once BASE_PATH . '/templates/components/news_card.php'; ?>
-<!--
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Tin tức và sự kiện mới nhất từ Khoa Công nghệ Thông tin. Cập nhật thông tin về sinh viên, nghiên cứu, tuyển dụng và các sự kiện đặc biệt.">
-<meta name="keywords" content="tin tức, sự kiện, khoa CNTT, công nghệ thông tin, sinh viên">
-<meta name="author" content="Khoa Công nghệ Thông tin">
-<meta property="og:title" content="Tin tức & Sự kiện - Khoa Công nghệ Thông tin">
-<meta property="og:description" content="Cập nhật thông tin mới nhất từ Khoa CNTT">
-<meta property="og:type" content="website">
-<title>Tin tức & Sự kiện - Khoa Công nghệ Thông tin</title>
--->
+
+<?php
+$breadcrumbItems = [
+  [
+    '@type' => 'ListItem',
+    'position' => 1,
+    'name' => 'Trang chủ',
+    'item' => url('/')
+  ],
+  [
+    '@type' => 'ListItem',
+    'position' => 2,
+    'name' => 'Tin tức & Sự kiện',
+    'item' => url('tin-tuc')
+  ]
+];
+
+$breadcrumbSchema = [
+  '@context' => 'https://schema.org',
+  '@type' => 'BreadcrumbList',
+  'itemListElement' => $breadcrumbItems
+];
+?>
+<?php $layout->start("head_meta") ?>
+  <?= seo_jsonld($breadcrumbSchema) ?>
+<?php $layout->end() ?>
 
 <!-- Breadcrumbs -->
 <section class="site-breadcrumbs py-4">

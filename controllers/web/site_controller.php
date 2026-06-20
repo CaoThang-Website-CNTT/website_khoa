@@ -91,11 +91,26 @@ class SiteController extends Controller
       'is_featured' => "0"
     ]);
 
+    $pageUrl = url('tin-tuc');
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+    $pageTitle = 'Tin tức & Sự kiện';
+    $pageDescription = 'Tin tức và sự kiện mới nhất từ Khoa Công nghệ Thông tin. Cập nhật thông tin về sinh viên, nghiên cứu, tuyển dụng và các sự kiện đặc biệt.';
+
     return $this->render('site/news/index', [
       'headerMenu' => $this->_headerMenu->items,
       'featuredNews' => $featuredNews,
       'allNews' => $allNews,
       'settings' => $this->_settings,
+      'pageTitle' => $pageTitle,
+      'pageDescription' => $pageDescription,
+      'pageCanonical' => 'tin-tuc',
+      'pageSeo' => [
+        'og:title' => seo_title($pageTitle, $siteTitle),
+        'og:description' => $pageDescription,
+        'og:type' => 'website',
+        'og:url' => $pageUrl,
+        'og:site_name' => $siteTitle,
+      ]
     ], "site_layout");
   }
 
@@ -104,12 +119,38 @@ class SiteController extends Controller
     $news = $this->_postService->getPostBySlug($slug, with_author: true);
     $result = BlockRenderer::compile($news->content_json);
 
+    $description = $news->seo_description;
+    if (empty($description)) {
+      $plainText = strip_tags($result->html);
+      $plainText = preg_replace('/\s+/', ' ', $plainText);
+      $description = mb_substr(trim($plainText), 0, 155) . (mb_strlen($plainText) > 155 ? '...' : '');
+    }
+
+    $pageUrl = url('tin-tuc/' . $news->slug);
+    $imageUrl = $news->toArray()['image_url'] ?? url('public/img/default-post-thumb.jpg');
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+
     return $this->render('site/news/detail', [
       'headerMenu' => $this->_headerMenu->items,
       'news' => $news,
       'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'] ?? [],
       'detail' => $result,
       'settings' => $this->_settings,
+      'pageTitle' => $news->title,
+      'pageDescription' => $description,
+      'pageCanonical' => 'tin-tuc/' . $news->slug,
+      'pageSeo' => [
+        'og:title' => seo_title($news->title, $siteTitle),
+        'og:description' => $description,
+        'og:type' => 'article',
+        'og:url' => $pageUrl,
+        'og:image' => $imageUrl,
+        'og:site_name' => $siteTitle,
+        'twitter:card' => 'summary_large_image',
+        'twitter:title' => seo_title($news->title, $siteTitle),
+        'twitter:description' => $description,
+        'twitter:image' => $imageUrl,
+      ]
     ], "site_layout");
   }
 

@@ -65,7 +65,7 @@ final class ImageRenderer extends AbstractBlockRenderer
 
     // loading strategy: eager cho ảnh đầu (LCP), lazy cho phần còn lại.
     // Mặc định lazy; caller có thể override qua meta hoặc xử lý ở BlockRenderer.
-    $loading = 'lazy';
+    $loading = !empty($block['isFirstImage']) ? 'eager' : 'lazy';
 
     return <<<HTML
             <figure class="be-image be-image-align--{$align}">

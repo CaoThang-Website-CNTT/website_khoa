@@ -1,3 +1,67 @@
+<?php
+$pageUrl = url('tin-tuc/' . $news->slug);
+$imageUrl = $news->toArray()['image_url'] ?? url('public/img/default-post-thumb.jpg');
+$publishDate = $news->published_at ?? $news->created_at;
+$authorName = $news->author ? $news->author->email : 'Khoa Công Nghệ Thông Tin';
+
+$articleSchema = [
+  '@context' => 'https://schema.org',
+  '@type' => 'Article',
+  'headline' => $news->title,
+  'description' => $pageDescription ?? '',
+  'image' => $imageUrl,
+  'datePublished' => date('c', strtotime($publishDate)),
+  'dateModified' => date('c', strtotime($news->updated_at ?? $publishDate)),
+  'author' => [
+    '@type' => 'Person',
+    'name' => $authorName
+  ],
+  'publisher' => [
+    '@type' => 'Organization',
+    'name' => $settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin',
+    'logo' => [
+      '@type' => 'ImageObject',
+      'url' => url('public/img/logo.png')
+    ]
+  ],
+  'mainEntityOfPage' => [
+    '@type' => 'WebPage',
+    '@id' => $pageUrl
+  ]
+];
+
+$breadcrumbItems = [
+  [
+    '@type' => 'ListItem',
+    'position' => 1,
+    'name' => 'Trang chủ',
+    'item' => url('/')
+  ],
+  [
+    '@type' => 'ListItem',
+    'position' => 2,
+    'name' => 'Tin tức & Sự kiện',
+    'item' => url('tin-tuc')
+  ],
+  [
+    '@type' => 'ListItem',
+    'position' => 3,
+    'name' => $news->title,
+    'item' => $pageUrl
+  ]
+];
+
+$breadcrumbSchema = [
+  '@context' => 'https://schema.org',
+  '@type' => 'BreadcrumbList',
+  'itemListElement' => $breadcrumbItems
+];
+?>
+<?php $layout->start("head_meta") ?>
+  <?= seo_jsonld($articleSchema) ?>
+  <?= seo_jsonld($breadcrumbSchema) ?>
+<?php $layout->end() ?>
+
 <!-- Breadcrumbs -->
 <section class="site-breadcrumbs py-4">
   <div class="container">

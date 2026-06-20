@@ -30,6 +30,7 @@ interface IPostService
    */
   public function update(int $id, array $payload): Post;
   public function delete(int $id): void;
+  public function getPostsForSitemap(): array;
 }
 
 class PostService implements IPostService
@@ -106,6 +107,11 @@ class PostService implements IPostService
     }
 
     return $post;
+  }
+
+  public function getPostsForSitemap(): array
+  {
+    return $this->_postStore->getForSitemap();
   }
 
   /** @return Post[] */
