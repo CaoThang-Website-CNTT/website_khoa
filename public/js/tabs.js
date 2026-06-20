@@ -23,12 +23,15 @@ class TabHandler {
     this._tabsList.forEach(tabs => {
       const tabId = tabs.dataset.tabsId;
       const initialKey = this.resolveInitialKey(tabs, tabId);
+      const isNavigation = tabs.dataset.tabsMode === "navigation";
 
       this.activate(tabs, initialKey);
 
       // Gán events cho tab triggers
       tabs.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
         trigger.addEventListener("click", e => {
+          if (isNavigation) return;
+
           e.preventDefault();
           this.activate(tabs, trigger.dataset.tabsTrigger);
         });
@@ -40,7 +43,7 @@ class TabHandler {
    * Dựa vào Global config HOẶC data-attribute trên HTML
    */
   canSyncParams(tabs) {
-    // Nếu global config là true, kiểm tra xem HTML có ghi đè bằng data-tabs-sync="false" không
+    // Nếu cấu hình toàn cục là true, kiểm tra xem HTML có ghi đè bằng data-tabs-sync="false" không
     return this.config.syncParams && tabs.dataset.tabsSync !== "false";
   }
   /**
@@ -95,11 +98,11 @@ class TabHandler {
 
   /**
    * Đồng bộ tất cả observer elements bên ngoài tabs root.
-   * Bất kỳ element nào có data-tabs-observe="tabsId:key" sẽ được cập nhật data-state.
+   * Bất kỳ phần tử nào có data-tabs-observe="tabsId:key" sẽ được cập nhật data-state.
    *
    * Usage:
-   *   <div data-tabs-observe="users:students">  → active khi tab students active
-   *   <div data-tabs-observe="users:teachers">  → active khi tab teachers active
+   *   <div data-tabs-observe="users:students">  → kích hoạt khi tab students kích hoạt
+   *   <div data-tabs-observe="users:teachers">  → kích hoạt khi tab teachers kích hoạt
    *
    * @param {string} tabId
    * @param {string} key

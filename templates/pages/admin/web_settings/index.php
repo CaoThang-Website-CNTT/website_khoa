@@ -110,7 +110,7 @@ if (!empty($data)) {
     $tabPanels[$groupKey] = ob_get_clean();
   }
 } else {
-  $tabs[] = ['key' => 'empty', 'label' => 'No Data'];
+  $tabs[] = ['key' => 'empty', 'label' => 'Không có dữ liệu'];
   ob_start(); ?>
   <div class="card shadow rounded-md">
     <p>Chưa có cài đặt nào trong hệ thống.</p>
@@ -120,6 +120,29 @@ if (!empty($data)) {
 
 $tabsId = 'tab';
 $activeTab = $initialTab;
-
-include BASE_PATH . '/templates/components/tabs.php';
 ?>
+
+<div class="tabs" data-tabs data-tabs-id="<?= htmlspecialchars($tabsId) ?>"
+  data-tabs-panel-active="<?= htmlspecialchars($activeTab) ?>">
+  <div class="tabs__list" role="tablist">
+    <?php foreach ($tabs as $tab): ?>
+      <?php $isActive = $tab['key'] === $activeTab; ?>
+      <a href="#<?= htmlspecialchars($tabsId) ?>:<?= htmlspecialchars($tab['key']) ?>" role="tab"
+        aria-selected="<?= $isActive ? 'true' : 'false' ?>"
+        aria-controls="<?= htmlspecialchars($tabsId) ?>-panel-<?= htmlspecialchars($tab['key']) ?>"
+        data-tabs-trigger="<?= htmlspecialchars($tab['key']) ?>" data-tabs-trigger-state="<?= $isActive ? 'active' : 'idle' ?>"
+        tabindex="<?= $isActive ? '0' : '-1' ?>" class="tabs__trigger">
+        <?= htmlspecialchars($tab['label']) ?>
+      </a>
+    <?php endforeach; ?>
+  </div>
+
+  <?php foreach ($tabs as $tab): ?>
+    <?php $isActive = $tab['key'] === $activeTab; ?>
+    <div id="<?= htmlspecialchars($tabsId) ?>-panel-<?= htmlspecialchars($tab['key']) ?>" role="tabpanel"
+      data-tabs-panel="<?= htmlspecialchars($tab['key']) ?>" data-tabs-panel-state="<?= $isActive ? 'active' : 'idle' ?>"
+      class="tabs__panel">
+      <?= $tabPanels[$tab['key']] ?? '' ?>
+    </div>
+  <?php endforeach; ?>
+</div>
