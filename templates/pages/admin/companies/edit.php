@@ -3,9 +3,6 @@ $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
 
-
-
-
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">
   Thông tin Công ty
@@ -19,9 +16,18 @@ $old_input = request()->session()->getOldInputs() ?? [];
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit" data-variant="primary" data-size="lg"
-  class="btn">
-
+<?php if (!$company->is_verified): ?>
+  <form action="<?= url('admin/companies/' . $company->id . '/approve') ?>" method="POST" class="inline-block">
+    <button type="submit" data-variant="primary" data-size="lg" class="btn">
+      <i class="fa-solid fa-check"></i> Xác thực
+    </button>
+  </form>
+  <a href="<?= url('admin/companies/' . $company->id . '/merge') ?>" data-variant="secondary" data-size="lg" class="btn">
+    <i class="fa-solid fa-code-merge"></i> Gộp công ty
+  </a>
+<?php endif; ?>
+<button data-modal-trigger="#confirm-modal" id="edit-submit-btn" type="submit"
+  data-variant="<?= $company->is_verified ? 'primary' : 'outline' ?>" data-size="lg" class="btn">
   Lưu
 </button>
 <button data-modal-trigger="#delete-confirm-modal" id="delete-btn" data-variant="destructive" type="button"
@@ -30,6 +36,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   Xóa
 </button>
 <?php $layout->end() ?>
+
+<?php $layout->start("content") ?>
+
 <form class="detail-layout" id="company-edit-form" action="<?= url('admin/companies/' . $company->id) ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
@@ -94,7 +103,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
 
   </div>
   <div class="detail-layout__sidebar">
-    <!-- Metadata -->
     <div class="metadata-card card shadow">
       <div class="card__header">
         Thông tin
@@ -103,22 +111,35 @@ $old_input = request()->session()->getOldInputs() ?? [];
       <div class="card__content space-y-4">
         <dl class="flex justify-between">
           <dt>ID</dt>
-          <dd>
-            <?= htmlspecialchars($company->id) ?>
-          </dd>
+          <dd><?= htmlspecialchars($company->id) ?></dd>
         </dl>
         <hr class="separator">
         <dl class="flex justify-between">
           <dt>Được tạo vào</dt>
-          <dd>
-            <?= htmlspecialchars($company->created_at) ?>
-          </dd>
+          <dd><?= htmlspecialchars($company->created_at) ?></dd>
         </dl>
         <hr class="separator">
         <dl class="flex justify-between">
           <dt>Lần cuối cập nhật</dt>
+          <dd><?= htmlspecialchars($company->updated_at ? $company->updated_at : "Không có") ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Trạng thái xác thực</dt>
           <dd>
-            <?= htmlspecialchars($company->updated_at ? $company->updated_at : "Không có") ?>
+            <?php if ($company->is_verified): ?>
+              <span class="badge" data-variant="primary">Đã xác thực</span>
+            <?php else: ?>
+              <span class="badge" data-variant="warning">Chưa xác thực</span>
+            <?php endif; ?>
+          </dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Nguồn dữ liệu</dt>
+          <dd>
+            <span class="badge"
+              data-variant="outline"><?= $company->source === 'api' ? 'API' : 'Nhập thủ công' ?></span>
           </dd>
         </dl>
         <hr class="separator">
@@ -126,9 +147,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <dt>Trạng thái dữ liệu</dt>
           <dd>
             <?php if ($company->deleted_at): ?>
-              <span class="badge" data-variant="destructive">
-                Đã xóa
-              </span>
+              <span class="badge" data-variant="destructive">Đã xóa</span>
             <?php else: ?>
               <span class="badge" data-variant="primary">Hoạt động</span>
             <?php endif; ?>
@@ -139,10 +158,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 </form>
 
-<!-- ── Confirm Modal ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h3 class="modal__title">Bạn có chắc</h3>
+    <h2 class="modal__title">Bạn có chắc</h2>
     <p class="modal__description">Những thao tác này sẽ không thể hoàn tác.</p>
   </div>
   <div class="modal__footer">
@@ -154,10 +172,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </button>
 </div>
 
-<!-- ── Delete Confirm Modal ── -->
 <div class="modal" id="delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h3 class="modal__title">Bạn có chắc</h3>
+    <h2 class="modal__title">Bạn có chắc</h2>
     <p class="modal__description">Những thao tác này sẽ không thể hoàn tác.</p>
   </div>
   <div class="modal__footer">
@@ -173,10 +190,34 @@ $old_input = request()->session()->getOldInputs() ?? [];
 <form action="<?= url("admin/companies/delete/{$company->id}") ?>" method="POST" id="delete-form"><?= csrf_field() ?>
 </form>
 
+<?php $layout->end() ?>
+
 <?php $layout->start("scripts") ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
-<script src="<?= url('public/js/pages/admin/companies/edit.js') ?>" type="module"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector('#company-edit-form');
+    const confirmBtn = document.querySelector('#confirm-modal-btn');
+    const deleteConfirmBtn = document.querySelector('#delete-confirm-modal-btn');
+
+    const nameInput = document.querySelector('#company_name');
+    const idInput = document.querySelector('#id');
+    const taxCodeInput = document.querySelector('#tax_code');
+    const addressInput = document.querySelector('#address');
+    const emailInput = document.querySelector('#email');
+    const websiteInput = document.querySelector('#website');
+    const noteInput = document.querySelector('#note');
+
+    confirmBtn.addEventListener('click', () => {
+      form.submit();
+    });
+
+    deleteConfirmBtn.addEventListener('click', () => {
+      document.querySelector('#delete-form').submit();
+    });
+  });
+</script>
 <?php $layout->end() ?>

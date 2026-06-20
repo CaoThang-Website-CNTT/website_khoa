@@ -123,7 +123,7 @@ class ModalHandler {
   }
 
   _updateZIndices() {
-    const baseZIndex = 100;
+    const baseZIndex = 1100;
 
     this._activeModals.forEach((modal, index) => {
       // Mỗi modal được mở sau sẽ có z-index cao hơn để xếp chồng lên nhau

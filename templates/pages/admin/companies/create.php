@@ -3,9 +3,6 @@ $errors = request()->session()->getErrors() ?? [];
 $old_input = request()->session()->getOldInputs() ?? [];
 ?>
 
-
-
-
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Thêm công ty mới</h2>
 <p class="title-wrapper__description">Điền thông tin công ty mới vào các trường dưới đây</p>
@@ -18,17 +15,19 @@ $old_input = request()->session()->getOldInputs() ?? [];
 </a>
 <button data-modal-trigger="#confirm-modal" id="create-submit-btn" type="button" data-variant="primary" data-size="lg"
   class="btn">
-
   Thêm
 </button>
 <?php $layout->end() ?>
-<form class="detail-layout" id="classroom-add-form" action="<?= url('admin/classrooms') ?>" method="POST">
+
+<?php $layout->start("content") ?>
+
+<form class="detail-layout" id="company-add-form" action="<?= url('admin/companies') ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
     <div class="card shadow">
       <fieldset class="field__set">
         <div class="card__header">
-          <legend class="field__legend">Thông tin lớp học</legend>
+          <legend class="field__legend">Thông tin công ty</legend>
           <p class="field__description">
             Vui lòng điền đầy đủ thông tin. Những trường có dấu * là bắt buộc.
           </p>
@@ -38,92 +37,59 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <div class="field-group">
 
             <div class="field" data-field-required>
-              <label class="field__label" for="major_id">Ngành học</label>
-              <select id="major_id" class="field__input" name="major_id">
-                <option value="">-- Chọn ngành học --</option>
-                <?php foreach ($majors as $major): ?>
-                  <option value="<?= htmlspecialchars($major->id) ?>"
-                    data-short="<?= htmlspecialchars($major->short_name) ?>"
-                    data-level="<?= htmlspecialchars($major->level) ?>">
-                    <?= htmlspecialchars($major->full_name) ?> (<?= htmlspecialchars($major->short_name) ?>)
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="specialization_id">Chuyên ngành</label>
-              <select id="specialization_id" class="field__input" name="specialization_id" disabled>
-                <option value="">-- Chọn ngành trước --</option>
-              </select>
-              <p class="field__description">Chọn ngành học trước để lọc chuyên ngành. Có thể bỏ trống.</p>
+              <label class="field__label" for="company_name">Tên công ty</label>
+              <input id="company_name" class="field__input" type="text" name="company_name"
+                placeholder="VD: Công ty TNHH ABC" maxlength="255" value="">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-              <div class="field" data-field-required data-field-max="2">
-                <label class="field__label" for="class_of">Khóa học</label>
-                <input id="class_of" class="field__input" type="number" name="class_of" placeholder="VD: 23" min="20"
-                  max="99" value="">
-                <p class="field__description">2 chữ số cuối của năm nhập học (VD: 23 → 2023).</p>
+              <div class="field" data-field-required>
+                <label class="field__label" for="tax_code">Mã số thuế</label>
+                <input id="tax_code" class="field__input" type="text" name="tax_code" placeholder="VD: 0123456789"
+                  maxlength="50" value="">
               </div>
 
-              <div class="field" data-field-required data-field-max="1">
-                <label class="field__label" for="letter">Ký tự lớp</label>
-                <input id="letter" class="field__input" type="text" name="letter" placeholder="VD: A" maxlength="1"
-                  value="" style="text-transform: uppercase;">
-                <p class="field__description">Một ký tự phân biệt lớp (A, B, C…).</p>
+              <div class="field">
+                <label class="field__label" for="phone">Số điện thoại</label>
+                <input id="phone" class="field__input" type="tel" name="phone" placeholder="0901234567" value="">
               </div>
             </div>
-
-            <div class="field" data-field-readonly>
-              <label class="field__label" for="short_name">Mã lớp</label>
-              <input id="short_name" class="field__input" type="text" name="short_name" placeholder="Tự động tạo"
-                value="" readonly>
-              <p class="field__description">
-                Mã lớp được tự động tạo theo định dạng:
-                <strong>{Hệ}{Ngành}{Khóa}{Ký tự}</strong> - VD: CĐ CNTT 23A
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </fieldset>
-    </div>
-    <div class="card shadow">
-      <fieldset class="field__set">
-        <div class="card__header">
-          <legend class="field__legend">Giáo viên chủ nhiệm</legend>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="field-group">
 
             <div class="field" data-field-required>
-              <label class="field__label" for="homeroom_teacher_id">Giáo viên chủ nhiệm</label>
-              <select id="homeroom_teacher_id" class="field__input" name="homeroom_teacher_id">
-                <option value="">-- Chưa phân công --</option>
-                <?php foreach ($teachers as $teacher): ?>
-                  <option value="<?= htmlspecialchars($teacher->id) ?>">
-                    <?= htmlspecialchars($teacher->full_name) ?>
-                    - <?= htmlspecialchars($teacher->department) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-              <p class="field__description">Có thể phân công sau khi tạo lớp.</p>
+              <label class="field__label" for="address">Địa chỉ</label>
+              <textarea id="address" class="field__input" name="address" rows="3"
+                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea>
             </div>
 
+            <div class="grid grid-cols-2 gap-4">
+              <div class="field">
+                <label class="field__label" for="email">Email</label>
+                <input id="email" class="field__input" type="email" name="email" placeholder="info@abc.com" value="">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="website">Website</label>
+                <input id="website" class="field__input" type="url" name="website" placeholder="https://abc.com"
+                  value="">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="note">Ghi chú</label>
+              <textarea id="note" class="field__input" name="note" rows="3"
+                placeholder="Ghi chú về công ty này"></textarea>
+            </div>
           </div>
         </div>
       </fieldset>
     </div>
-
   </div>
 </form>
 
-<!-- ── Confirm Modal ── -->
+<!-- ── Hộp thoại xác nhận ── -->
 <div class="modal" id="confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h3 class="modal__title">Bạn có chắc</h3>
+    <h2 class="modal__title">Bạn có chắc</h2>
     <p class="modal__description">Những thao tác này sẽ không thể hoàn tác.</p>
   </div>
   <div class="modal__footer">
@@ -135,32 +101,22 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </button>
 </div>
 
+<?php $layout->end() ?>
+
 <?php $layout->start("scripts") ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
-  window.__specializations__ = <?= json_encode(
-    array_map(fn($s) => [
-      'id' => $s->id,
-      'major_id' => $s->major_id,
-      'full_name' => $s->full_name,
-      'short_name' => $s->short_name,
-    ], $specializations)
-  ) ?>;
-  window.__majors__ = <?= json_encode(
-    array_map(fn($m) => [
-      'id' => $m->id,
-      'short_name' => $m->short_name,
-      'level' => $m->level,
-    ], $majors)
-  ) ?>;
-  window.__teachers__ = <?= json_encode(
-    array_map(fn($t) => [
-      'id' => $t->id,
-      'full_name' => $t->full_name,
-      'department' => $t->department,
-    ], $teachers)
-  ) ?>;
 </script>
-<script src="<?= url('public/js/pages/admin/companies/create.js') ?>" type="module"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector('#company-add-form');
+    const confirmBtn = document.querySelector('#confirm-modal-btn');
+
+    // Xác nhận → gửi form
+    confirmBtn.addEventListener('click', () => {
+      form.submit();
+    });
+  });
+</script>
 <?php $layout->end() ?>

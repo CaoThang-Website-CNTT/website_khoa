@@ -22,8 +22,8 @@ class TabHandler {
 
     this._tabsList.forEach(tabs => {
       const tabId = tabs.dataset.tabsId;
-      const initialKey = this.resolveInitialKey(tabs, tabId);
       const isNavigation = tabs.dataset.tabsMode === "navigation";
+      const initialKey = this.resolveInitialKey(tabs, tabId, isNavigation);
 
       this.activate(tabs, initialKey);
 
@@ -54,7 +54,15 @@ class TabHandler {
    * @param {string} tabPanelId
    * @returns {string}
    */
-  resolveInitialKey(tabs, tabPanelId) {
+  resolveInitialKey(tabs, tabPanelId, isNavigation = false) {
+    if (isNavigation) {
+      return (
+        tabs.dataset.tabsPanelActive ??
+        tabs.querySelector('[data-tabs-trigger-state="active"]')?.dataset.tabsTrigger ??
+        tabs.querySelector("[data-tabs-trigger]")?.dataset.tabsTrigger
+      );
+    }
+
     const params = new URLSearchParams(window.location.search);
     const paramKey = params.get(tabPanelId);
 
