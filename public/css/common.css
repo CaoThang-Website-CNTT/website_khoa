@@ -541,6 +541,109 @@
   }
 
   /* ==========================================================================
+   TOOLTIP
+   ========================================================================== */
+  .tooltip {
+    display: inline-block;
+  }
+
+  .tooltip__trigger {
+    display: inline-flex;
+  }
+
+  .tooltip__content {
+    position: fixed;
+    display: none;
+    max-width: min(20rem, calc(100vw - 1rem));
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--radius-md);
+    background: var(--foreground);
+    color: var(--background);
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-line-height);
+    font-weight: var(--fw-medium);
+    box-shadow: var(--shadow-md);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(var(--tooltip-exit-x, 0), var(--tooltip-exit-y, 0))
+      scale(0.96);
+    transition:
+      opacity 130ms ease,
+      transform 130ms ease;
+    will-change: transform, opacity;
+  }
+
+  .tooltip__content::after {
+    content: "";
+    position: absolute;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: inherit;
+    transform: rotate(45deg);
+    border-radius: var(--radius-xs);
+  }
+
+  .tooltip__content[data-state="open"],
+  .tooltip__content[data-state="closed"] {
+    display: block;
+  }
+
+  .tooltip__content[data-state="open"] {
+    opacity: 1;
+    transform: translate(0, -0.5rem) scale(1);
+  }
+
+  .tooltip__content[data-state="closed"] {
+    opacity: 0;
+    transform: translate(var(--tooltip-exit-x, 0), var(--tooltip-exit-y, 0))
+      scale(0.96);
+  }
+
+  .tooltip__content[data-side="top"] {
+    --tooltip-exit-y: 0.25rem;
+    transform-origin: bottom center;
+  }
+
+  .tooltip__content[data-side="top"]::after {
+    left: 50%;
+    bottom: -0.2rem;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .tooltip__content[data-side="bottom"] {
+    --tooltip-exit-y: -0.25rem;
+    transform-origin: top center;
+  }
+
+  .tooltip__content[data-side="bottom"]::after {
+    left: 50%;
+    top: -0.2rem;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .tooltip__content[data-side="left"] {
+    --tooltip-exit-x: 0.25rem;
+    transform-origin: right center;
+  }
+
+  .tooltip__content[data-side="left"]::after {
+    top: 50%;
+    right: -0.2rem;
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .tooltip__content[data-side="right"] {
+    --tooltip-exit-x: -0.25rem;
+    transform-origin: left center;
+  }
+
+  .tooltip__content[data-side="right"]::after {
+    top: 50%;
+    left: -0.2rem;
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  /* ==========================================================================
    ALERT (Server Side) & TOAST (Client Side)
    ========================================================================== */
   /* Variants */

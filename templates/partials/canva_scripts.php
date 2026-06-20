@@ -1,4 +1,5 @@
 <script src="<?= url('/public/js/utils.js') ?>"></script>
+<script src="<?= url('/public/js/tooltip.js') ?>"></script>
 <script src="<?= url('/public/js/api_state.js') ?>"></script>
 <script src="<?= url('/public/js/tabs.js') ?>"></script>
 <script src="<?= url('/public/js/modal.js') ?>"></script>
