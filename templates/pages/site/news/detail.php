@@ -145,7 +145,7 @@
 
         <!-- Related Articles -->
         <?php if (!empty($relatedNews)): ?>
-          <div class="news-detail-related card" id="related-articles-block" data-post-id="<?= $news->id ?>" data-api-url="<?= url('api/v1/posts/' . $news->id . '/related') ?>">
+          <div class="news-detail-related card" id="related-articles-block" data-post-id="<?= $news->id ?>" data-api-url="<?= url('api/v1/posts/' . $news->id . '/related') ?>" data-base-url="<?= url('tin-tuc/') ?>">
             <h3 class="news-detail-related__title">Bài viết liên quan</h3>
             <div class="news-detail-related__list" id="related-articles-list">
               <?php foreach ($relatedNews as $index => $related): ?>

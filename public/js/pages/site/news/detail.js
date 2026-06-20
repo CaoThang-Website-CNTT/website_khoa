@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loadMoreBtn && relatedList && relatedBlock) {
     loadMoreBtn.addEventListener("click", async () => {
       const apiUrl = relatedBlock.getAttribute("data-api-url");
+      const baseUrl = relatedBlock.getAttribute("data-base-url");
       if (!apiUrl) return;
 
       const originalText = loadMoreBtn.innerHTML;
@@ -71,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const escapedCategory = div.innerHTML;
 
             article.innerHTML = `
-                <a href="/tin-tuc/${item.slug}" class="news-detail-related__link">
+                <a href="${baseUrl}${item.slug}" class="news-detail-related__link">
                   <div class="news-detail-related__thumb">
                     <img class="news-detail-related__image" src="${item.image_url}" alt="${escapedTitle}" loading="lazy">
                   </div>
