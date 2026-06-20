@@ -389,7 +389,8 @@ export class TableRenderer {
     const overflow = actions.slice(limit);
     const isLoading = this.#inst.bulkActionsLoading?.active;
 
-    visible.forEach(action => actionsEl.appendChild(this.#buildBulkActionButton(action, false, isLoading)));
+    this.#unregisterBulkActionTooltips(actionsEl);
+    visible.forEach(action => actionsEl.appendChild(this.#buildBulkActionTooltip(action, isLoading)));
 
     const dropdown = document.createElement('div');
     dropdown.className = 'dropdown tm-bulk-action-bar__more-dropdown';
@@ -417,6 +418,38 @@ export class TableRenderer {
 
     this.#bulkActionBar.querySelectorAll('button').forEach(btn => {
       btn.disabled = isLoading;
+    });
+
+    if (typeof TooltipHandler !== 'undefined' && TooltipHandler.instance) {
+      requestAnimationFrame(() => {
+        actionsEl.querySelectorAll('.tm-bulk-action-bar__tooltip')
+          .forEach(root => TooltipHandler.instance.register(root));
+      });
+    }
+  }
+
+  #buildBulkActionTooltip(action, isLoading = false) {
+    const tooltip = document.createElement('span');
+    tooltip.className = 'tooltip tm-bulk-action-bar__tooltip';
+    tooltip.dataset.side = 'top';
+    tooltip.dataset.align = 'center';
+
+    const btn = this.#buildBulkActionButton(action, false, isLoading);
+    btn.classList.add('tooltip__trigger');
+
+    const content = document.createElement('span');
+    content.className = 'tooltip__content';
+    content.textContent = action.tooltip || action.ariaLabel || action.label;
+
+    tooltip.append(btn, content);
+    return tooltip;
+  }
+
+  #unregisterBulkActionTooltips(container) {
+    container.querySelectorAll('.tm-bulk-action-bar__tooltip').forEach(root => {
+      if (typeof TooltipHandler !== 'undefined' && TooltipHandler.instance) {
+        TooltipHandler.instance.unregister(root);
+      }
     });
   }
 
@@ -512,11 +545,10 @@ export class TableRenderer {
   #buildBulkClearButton(isLoading = false) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'dropdown__item btn tm-bulk-action-bar__more-dropdown-item';
-    btn.dataset.variant = 'destructive';
+    btn.className = 'dropdown__item btn tm-bulk-action-bar__more-dropdown-item tm-bulk-action-bar__more-dropdown-item--destructive';
     btn.setAttribute('aria-label', 'Clear selection');
     btn.disabled = isLoading;
-    btn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Clear</span>';
+    btn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Bỏ chọn</span>';
     btn.addEventListener('click', () => {
       this.#closeBulkMorePanel();
       this.#inst.clearSelection();

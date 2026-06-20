@@ -125,7 +125,7 @@ body {
   position: fixed;
   inset-block: 0;
   left: 0;
-  z-index: 85;
+  z-index: 1000;
   border-right: 1px solid var(--border);
 }
 
@@ -768,7 +768,7 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
   .sidebar__overlay {
     position: fixed;
     inset: 0;
-    z-index: 84;
+    z-index: 999;
     background: color-mix(in oklab, black 10%, transparent);
     backdrop-filter: blur(2px);
   }
