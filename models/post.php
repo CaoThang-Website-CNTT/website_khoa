@@ -29,8 +29,7 @@ final class Post extends Model
     public ?array $media = [],
     /** @var Category[] */
     public ?array $categories = [],
-  ) {
-  }
+  ) {}
 
   /**
    * toArray() được override để loại bỏ các trường ảo
@@ -39,28 +38,29 @@ final class Post extends Model
   public function toArray(): array
   {
     return [
-      'id' => $this->id,
-      'title' => $this->title,
-      'slug' => $this->slug,
-      'content_json' => $this->content_json,
-      'settings_json' => $this->settings_json,
-      'author_id' => $this->author_id,
-      'status' => $this->status,
-      'view_count' => $this->view_count,
-      'seo_description' => $this->seo_description,
-      'seo_image_url' => $this->seo_image_url,
+      'id' => $this->id ?? null,
+      'title' => $this->title ?? '',
+      'slug' => $this->slug ?? '',
+      'content_json' => $this->content_json ?? '[]',
+      'settings_json' => $this->settings_json ?? null,
+      'author_id' => $this->author_id ?? null,
+      'status' => $this->status ?? 'draft',
+      'view_count' => $this->view_count ?? 0,
+      'seo_description' => $this->seo_description ?? null,
+      'seo_image_url' => $this->seo_image_url ?? null,
       'image_url' => $this->resolvedSeoImageUrl(),
-      'is_featured' => $this->is_featured ? 1 : 0,
-      'published_at' => $this->published_at,
-      'created_at' => $this->created_at,
-      'updated_at' => $this->updated_at,
+      'is_featured' => ($this->is_featured ?? false) ? 1 : 0,
+      'published_at' => $this->published_at ?? null,
+      'created_at' => $this->created_at ?? null,
+      'updated_at' => $this->updated_at ?? null,
+      'deleted_at' => $this->deleted_at ?? null,
     ];
   }
 
   private function resolvedSeoImageUrl(): string
   {
-    $fallbackUrl = \url('public/img/default-post-thumb.jpg');
-    $imagePath = trim((string) $this->seo_image_url);
+    $fallbackUrl = url('public/img/default-post-thumb.jpg');
+    $imagePath = trim((string) ($this->seo_image_url ?? ''));
 
     if ($imagePath === '') {
       return $fallbackUrl;
@@ -77,6 +77,6 @@ final class Post extends Model
       return $fallbackUrl;
     }
 
-    return \url('public/media/' . $relativePath);
+    return url('public/media/' . $relativePath);
   }
 }

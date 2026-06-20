@@ -20,6 +20,9 @@ interface ICategoryPostStore
   /** @return int[] */
   public function getPostIdsByCategoryId(int $categoryId): array;
 
+  /** @return int[] */
+  public function getPostIdsByCategoryIds(array $categoryIds): array;
+
   public function syncPostCategories(int $postId, array $categoryIds): bool;
 }
 
@@ -74,6 +77,24 @@ class CategoryPostStore extends Store implements ICategoryPostStore
     $stmt->execute($query->getBindings());
 
     return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: []);
+  }
+
+  public function getPostIdsByCategoryIds(array $categoryIds): array
+  {
+    $categoryIds = array_values(array_unique(array_map('intval', $categoryIds)));
+    if (empty($categoryIds)) {
+      return [];
+    }
+
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('category_post')
+      ->select('post_id')
+      ->in('category_id', $categoryIds);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    return array_values(array_unique(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN) ?: [])));
   }
 
   public function syncPostCategories(int $postId, array $categoryIds): bool

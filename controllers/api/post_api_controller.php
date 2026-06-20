@@ -43,4 +43,31 @@ class PostApiController extends Controller
       return $this->json(null, 500, 'Không thể truy vấn post.');
     }
   }
+
+  public function related(Request $request, int $id)
+  {
+    $limit = min(20, max(1, (int) $request->query('limit', 3)));
+    $offset = max(0, (int) $request->query('offset', 0));
+
+    try {
+      $post = $this->_postService->getPost($id);
+      $relatedNews = $this->_postService->getRelatedPosts($post, $limit, $offset);
+      $total = $this->_postService->countRelatedPosts($post);
+
+      $mapped = array_map(function($p) {
+        $arr = $p->toArray();
+        $arr['category'] = !empty($p->categories) ? $p->categories[0]->name : 'Tin tức';
+        return $arr;
+      }, $relatedNews);
+
+      return $this->json([
+        'items' => $mapped,
+        'total' => $total,
+        'has_more' => ($offset + $limit) < $total
+      ], 200);
+    } catch (Exception $e) {
+      error_log('Lỗi truy vấn bài viết liên quan: ' . $e->getMessage());
+      return $this->json(null, 500, 'Không thể tải bài viết liên quan.');
+    }
+  }
 }

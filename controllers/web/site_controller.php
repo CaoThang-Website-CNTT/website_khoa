@@ -104,11 +104,18 @@ class SiteController extends Controller
     $news = $this->_postService->getPostBySlug($slug, with_author: true);
     $result = BlockRenderer::compile($news->content_json);
 
+    $relatedNews = $this->_postService->getRelatedPosts($news, limit: 3, offset: 0);
+    $totalRelatedCount = $this->_postService->countRelatedPosts($news);
+    $hasMoreRelated = $totalRelatedCount > 3;
+
     return $this->render('site/news/detail', [
       'headerMenu' => $this->_headerMenu->items,
       'news' => $news,
       'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'] ?? [],
       'detail' => $result,
+      'relatedNews' => $relatedNews,
+      'totalRelatedCount' => $totalRelatedCount,
+      'hasMoreRelated' => $hasMoreRelated,
       'settings' => $this->_settings,
     ], "site_layout");
   }

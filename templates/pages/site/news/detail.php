@@ -27,9 +27,9 @@
       $showViewCount = $newsSettings['show_view_count'] ?? false;
       ?>
 
-      <div class="relative grid <?= $detail->hasToc() ? 'grid-cols-3' : 'grid-cols-1' ?> gap-8">
+      <div class="relative grid <?= ($detail->hasToc() || !empty($relatedNews)) ? 'grid-cols-3' : 'grid-cols-1' ?> gap-8">
         <!-- LEFT: MAIN -->
-        <div class="news-detail col-span-2">
+        <div class="news-detail <?= ($detail->hasToc() || !empty($relatedNews)) ? 'col-span-2' : '' ?>">
           <!-- News Header -->
           <div class="news-detail-header">
             <!-- News Category -->
@@ -115,34 +115,78 @@
 
           <!-- News Author -->
         </div>
-        <?php if ($detail->hasToc()): ?>
+        <?php if ($detail->hasToc() || !empty($relatedNews)): ?>
           <!-- RIGHT: SIDEBAR -->
           <div class="news-sidebar col-span-1">
             <div class="news-sidebar-wrapper">
               <!-- News TOC -->
-              <div class="news-toc card">
-                <div class="card__header">
-                  <h3 class="card__title">Nội dung bài viết</h3>
-                  <hr class="separator">
+              <?php if ($detail->hasToc()): ?>
+                <div class="news-toc card">
+                  <div class="card__header">
+                    <h3 class="card__title">Nội dung bài viết</h3>
+                    <hr class="separator">
+                  </div>
+                  <div class="card__content">
+                    <ul class="news-toc-list">
+                      <?php foreach ($detail->entries() as $entry): ?>
+                        <li class="new-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
+                          <?php if ($entry->anchorId !== ''): ?>
+                            <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
+                              <?= htmlspecialchars($entry->plainText) ?>
+                            </a>
+                          <?php else: ?>
+                            <span>
+                              <?= htmlspecialchars($entry->plainText) ?>
+                            </span>
+                          <?php endif; ?>
+                        </li>
+                      <?php endforeach; ?>
+                    </ul>
+                  </div>
                 </div>
-                <div class="card__content">
-                  <ul class="news-toc-list">
-                    <?php foreach ($detail->entries() as $entry): ?>
-                      <li class="new-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
-                        <?php if ($entry->anchorId !== ''): ?>
-                          <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
-                            <?= htmlspecialchars($entry->plainText) ?>
-                          </a>
-                        <?php else: ?>
-                          <span>
-                            <?= htmlspecialchars($entry->plainText) ?>
-                          </span>
-                        <?php endif; ?>
-                      </li>
+              <?php endif; ?>
+
+              <!-- Related Articles -->
+              <?php if (!empty($relatedNews)): ?>
+                <div class="news-detail-related card" id="related-articles-block" data-post-id="<?= $news->id ?>" data-api-url="<?= url('api/v1/posts/' . $news->id . '/related') ?>">
+                  <h3 class="news-detail-related__title">Bài viết liên quan</h3>
+                  <div class="news-detail-related__list" id="related-articles-list">
+                    <?php foreach ($relatedNews as $index => $related): ?>
+                      <?php
+                      $relatedCategory = !empty($related->categories) ? $related->categories[0]->name : 'Tin tức';
+                      $relatedDate = $related->published_at ?? $related->created_at;
+                      $relatedArray = $related->toArray();
+                      ?>
+                      <article class="news-detail-related__item">
+                        <a href="<?= url('tin-tuc/' . $related->slug) ?>" class="news-detail-related__link">
+                          <div class="news-detail-related__thumb">
+                            <img class="news-detail-related__image" src="<?= htmlspecialchars($relatedArray['image_url']) ?>"
+                              alt="<?= htmlspecialchars($related->title) ?>" loading="lazy">
+                          </div>
+                          <div class="news-detail-related__content">
+                            <span class="badge" data-variant="outline"><?= htmlspecialchars($relatedCategory) ?></span>
+                            <h4 class="news-detail-related__heading">
+                              <?= htmlspecialchars($related->title) ?>
+                            </h4>
+                            <time class="news-detail-related__date" datetime="<?= date('Y-m-d', strtotime($relatedDate)) ?>">
+                              <?= date('d/m/Y', strtotime($relatedDate)) ?>
+                            </time>
+                          </div>
+                        </a>
+                      </article>
+                      <?php if ($index < count($relatedNews) - 1): ?>
+                        <hr class="separator" aria-hidden="true">
+                      <?php endif; ?>
                     <?php endforeach; ?>
-                  </ul>
+                  </div>
+                  <?php if ($hasMoreRelated): ?>
+                    <button class="news-detail-related__more btn" id="load-more-related-btn" data-variant="outline">
+                      <span>Xem thêm</span>
+                      <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                  <?php endif; ?>
                 </div>
-              </div>
+              <?php endif; ?>
             </div>
           </div>
         <?php endif; ?>
