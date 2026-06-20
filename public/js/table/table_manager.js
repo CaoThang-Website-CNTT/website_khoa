@@ -109,6 +109,8 @@ class TableInstance {
     totalRows: 0,      // server mode: do loadData() set; client mode: tự tính
   };
   selectable = false;
+  bulkActionsConfig = null;
+  bulkActionsLoading = { active: false, message: '' };
   data = [];
   columns;
   #renderer;
@@ -167,20 +169,43 @@ class TableInstance {
     const visibleCheckboxes = this.root.querySelectorAll('.tm-row-checkbox');
     if (visibleCheckboxes.length === 0) {
       checkAll.checked = false;
+      checkAll.indeterminate = false;
       checkAll.disabled = true;
       return;
     }
     checkAll.disabled = false;
 
-    let allChecked = true;
-    visibleCheckboxes.forEach(cb => {
-      if (!cb.checked) allChecked = false;
-    });
+    const checkedCount = Array.from(visibleCheckboxes).filter(cb => cb.checked).length;
+    const allChecked = checkedCount === visibleCheckboxes.length;
+    const someChecked = checkedCount > 0;
+
     checkAll.checked = allChecked;
+    checkAll.indeterminate = someChecked && !allChecked;
   }
 
   getRowSelection() {
     return Array.from(this.#state.rowSelection);
+  }
+
+  getSelectedRows() {
+    const selected = this.#state.rowSelection;
+    return this.data.filter(row => selected.has(String(row?.[this.idKey])));
+  }
+
+  getSelectionPayload() {
+    const rowSelection = this.getRowSelection();
+    return {
+      rowSelection,
+      selectedIds: rowSelection,
+      selectedRows: this.getSelectedRows(),
+    };
+  }
+
+  dispatchSelectionChange() {
+    this.#renderer.syncBulkActionBar();
+    this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
+      detail: this.getSelectionPayload()
+    }));
   }
 
   clearSelection() {
@@ -191,9 +216,7 @@ class TableInstance {
         cb.checked = false;
       });
       this.updateHeaderCheckbox();
-      this.root.dispatchEvent(new CustomEvent('tm:selection-change', {
-        detail: { rowSelection: [] }
-      }));
+      this.dispatchSelectionChange();
     }
   }
 
@@ -213,6 +236,7 @@ class TableInstance {
   setRowSelection(ids) {
     this.#state.rowSelection = new Set(Array.from(ids).map(String));
     this.render();
+    this.dispatchSelectionChange();
   }
 
   /**
@@ -228,6 +252,30 @@ class TableInstance {
     } else {
       this.#state.rowSelection.delete(idStr);
     }
+  }
+
+  registerBulkActions(options = {}) {
+    const actions = Array.isArray(options.actions) ? options.actions : [];
+    this.bulkActionsConfig = {
+      ...options,
+      actions: actions
+        .map((action, index) => ({ ...action, _tmIndex: index }))
+        .sort((a, b) => (a.priority ?? a._tmIndex) - (b.priority ?? b._tmIndex)),
+      visibleLimit: {
+        desktop: 4,
+        tablet: 4,
+        mobile: 2,
+        ...(options.visibleLimit || {}),
+      },
+      countLabel: options.countLabel || ((count) => `${count} selected`),
+    };
+    this.#renderer.buildBulkActionBar();
+    this.#renderer.syncBulkActionBar();
+  }
+
+  setBulkActionLoading(isLoading, message = '') {
+    this.bulkActionsLoading = { active: Boolean(isLoading), message };
+    this.#renderer.syncBulkActionBar();
   }
 
   // Khởi tạo các element
@@ -267,6 +315,7 @@ class TableInstance {
     this.#renderer.updateSortUI(this.#table, this.#state.sort);
     this.#renderer.renderPagination({ pagState: this.#state.pagination, totalRows });
     this.#renderer.renderFilters(this.#state.filters);
+    this.#renderer.syncBulkActionBar();
 
     this.root.dispatchEvent(new CustomEvent('tm:render', {
       detail: { tableId: this.id, visibleRows: rows, totalRows, state: this.#getStateSnapshot() }
@@ -439,6 +488,7 @@ class TableInstance {
 export class TableManager {
   static #instance = null;
   static #registry = new Map();
+  static #pendingBulkActions = new Map();
 
   #isBootstrapped = false;
 
@@ -482,6 +532,10 @@ export class TableManager {
         const inst = new TableInstance(root);
         TableManager.#registry.set(inst.id, inst);
         inst.init();
+        if (TableManager.#pendingBulkActions.has(inst.id)) {
+          inst.registerBulkActions(TableManager.#pendingBulkActions.get(inst.id));
+          TableManager.#pendingBulkActions.delete(inst.id);
+        }
         const inlineData = TableManager.#readInlineData(inst.id);
         if (inlineData) {
           inst.loadData(inlineData);
@@ -531,6 +585,19 @@ export class TableManager {
 
   static clearSelection(tableId) {
     TableManager.get(tableId)?.clearSelection();
+  }
+
+  static registerBulkActions(tableId, options) {
+    const inst = TableManager.get(tableId);
+    if (inst) {
+      inst.registerBulkActions(options);
+      return;
+    }
+    TableManager.#pendingBulkActions.set(tableId, options);
+  }
+
+  static setBulkActionLoading(tableId, isLoading, message = '') {
+    TableManager.get(tableId)?.setBulkActionLoading(isLoading, message);
   }
 
   static loadData(tableId, payload) {
