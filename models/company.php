@@ -14,6 +14,8 @@ class Company
     public ?string $website = null,
     public ?string $address = null,
     public ?string $note = null,
+    public int $is_verified = 0,
+    public string $source = 'manual',
     public ?string $created_at = null,
     public ?string $updated_at = null,
     public ?string $deleted_at = null
@@ -30,6 +32,8 @@ class Company
       website: $data['website'] ?? null,
       address: $data['address'] ?? null,
       note: $data['note'] ?? null,
+      is_verified: $data['is_verified'] ?? 0,
+      source: $data['source'] ?? 'manual',
       created_at: $data['created_at'] ?? null,
       updated_at: $data['updated_at'] ?? null,
       deleted_at: $data['deleted_at'] ?? null

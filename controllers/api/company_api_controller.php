@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers\Api;
 
 use App\Core\Controller;
@@ -30,4 +29,18 @@ class CompanyApiController extends Controller
     $results = $this->_companyService->suggestByName($query);
     return $this->json($results);
   }
+
+  public function searchForMerge(Request $request)
+  {
+    $query = trim($request->query('q', ''));
+    $excludeId = (int) $request->query('exclude', 0);
+
+    if (strlen($query) < 1) {
+      return $this->json([]);
+    }
+
+    $results = $this->_companyService->searchForMerge($query, $excludeId);
+    return $this->json($results);
+  }
 }
+?>
