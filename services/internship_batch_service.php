@@ -7,6 +7,7 @@ use App\Models\{Student, Classroom};
 use App\Core\Pageable;
 use App\Enums\BatchStatus;
 use Database;
+use Exception;
 
 interface IInternshipBatchService
 {
@@ -79,12 +80,26 @@ class InternshipBatchService implements IInternshipBatchService
   public function createFullBatch(array $batchData, array $studentsInput, array $supervisors, int $adminId): int
   {
     return Database::getInstance()->transaction(function () use ($batchData, $studentsInput, $supervisors, $adminId) {
+      $studentCodes = array_map(fn($sv) => trim($sv['student_code']), $studentsInput);
+      if (!empty($studentCodes)) {
+        $existingValidation = $this->_store->validateStudentsByStudentIds($studentCodes);
+        $appEnv = $_ENV['APP_ENV'] ?? 'production';
+        
+        foreach ($existingValidation as $s) {
+          if (!empty($s['batch_id']) && $appEnv !== 'local') {
+            throw new Exception("Sinh viên {$s['student_id']} - {$s['full_name']} đã tham gia một đợt thực tập khác.");
+          }
+          if ($s['status'] !== 'Đang học') {
+            throw new Exception("Sinh viên {$s['student_id']} - {$s['full_name']} có trạng thái không hợp lệ (Không phải 'Đang học').");
+          }
+        }
+      }
 
       $batchData['created_by'] = $adminId;
       $batchId = $this->_store->createBatch($batchData);
 
       if (!$batchId) {
-        throw new \Exception('Không thể tạo thông tin đợt thực tập.');
+        throw new Exception('Không thể tạo thông tin đợt thực tập.');
       }
 
       $studentIds = [];
@@ -133,7 +148,7 @@ class InternshipBatchService implements IInternshipBatchService
 
             $newClassroomId = $this->_classroomStore->create($newClassroom);
             if (!$newClassroomId || !$newClassroomId->id) {
-              throw new \Exception("Không thể tự động tạo lớp $classroomShortName.");
+              throw new Exception("Không thể tự động tạo lớp $classroomShortName.");
             }
             $assignedClassroomId = $newClassroomId->id;
           } else {
@@ -153,7 +168,7 @@ class InternshipBatchService implements IInternshipBatchService
 
             $newClassroomId = $this->_classroomStore->create($newClassroom);
             if (!$newClassroomId || !$newClassroomId->id) {
-              throw new \Exception("Không thể tự động tạo lớp $classroomShortName.");
+              throw new Exception("Không thể tự động tạo lớp $classroomShortName.");
             }
             $assignedClassroomId = $newClassroomId->id;
           }
@@ -176,7 +191,7 @@ class InternshipBatchService implements IInternshipBatchService
           $account = $this->_accountStore->create($email, $studentCode, 'student');
 
           if (!$account) {
-            throw new \Exception("Tạo tài khoản thất bại cho sinh viên $studentCode.");
+            throw new Exception("Tạo tài khoản thất bại cho sinh viên $studentCode.");
           }
 
           $newStudent = new Student(
@@ -196,7 +211,7 @@ class InternshipBatchService implements IInternshipBatchService
 
           $newStudent = $this->_studentStore->create($newStudent);
           if (!$newStudent || !$newStudent->id) {
-            throw new \Exception("Tạo dữ liệu sinh viên thất bại cho $studentCode.");
+            throw new Exception("Tạo dữ liệu sinh viên thất bại cho $studentCode.");
           }
           $studentIds[] = $newStudent->id;
         }
@@ -313,7 +328,7 @@ class InternshipBatchService implements IInternshipBatchService
     $stats = $this->_store->getBatchStats($id);
 
     if ($stats['has_submissions'] || $stats['has_grades']) {
-      throw new \Exception('Không thể xóa đợt thực tập đã có bài nộp hoặc điểm số.');
+      throw new Exception('Không thể xóa đợt thực tập đã có bài nộp hoặc điểm số.');
     }
 
     return $this->_store->delete($id);
@@ -372,7 +387,7 @@ class InternshipBatchService implements IInternshipBatchService
     foreach ($supervisors as $sup) {
       if ($sup['teacher_id'] == $teacherId) {
         if ($newQuota < $sup['assigned_count']) {
-          throw new \Exception("Không thể giảm định mức xuống thấp hơn số sinh viên hiện đang hướng dẫn ({$sup['assigned_count']}).");
+          throw new Exception("Không thể giảm định mức xuống thấp hơn số sinh viên hiện đang hướng dẫn ({$sup['assigned_count']}).");
         }
         break;
       }
