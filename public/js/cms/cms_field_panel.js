@@ -9,6 +9,15 @@ export class CmsFieldPanel {
 
   init() {
     this.root?.addEventListener('input', (event) => {
+      const backgroundField = event.target.closest('[data-cms-background-path]');
+      if (backgroundField) {
+        this.bus.dispatch('field:background_input', {
+          path: backgroundField.dataset.cmsBackgroundPath,
+          value: backgroundField.value,
+        });
+        return;
+      }
+
       const field = event.target.closest('[data-cms-path]');
       if (!field) return;
       this.bus.dispatch('field:input', { path: field.dataset.cmsPath, value: field.value });
@@ -51,7 +60,7 @@ export class CmsFieldPanel {
 
     const activeImageField = imageFields.find((field) => field.path === activePath);
     if (activeImageField) {
-      this.root.innerHTML = `<div class="cms-field-grid">${this.#renderImageField(activeImageField, activePath)}</div>`;
+      this.root.innerHTML = `<div class="cms-field-grid">${this.#renderImageField(activeImageField, activePath)}${this.#renderBentoBackgroundField(section, activeImageField)}</div>`;
       return;
     }
 
@@ -113,6 +122,34 @@ export class CmsFieldPanel {
         </button>
       </div>
     `;
+  }
+
+  #renderBentoBackgroundField(section, imageField) {
+    const match = imageField.sectionId === 'bento_grid'
+      ? imageField.path.match(/^items\.(\d+)\.image\.src$/)
+      : null;
+    if (!match) return '';
+
+    const backgroundPath = `items.${match[1]}.background`;
+    const value = this.#normalizeColor(getPath(section.data || {}, backgroundPath));
+
+    return `
+      <label class="field cms-color-field" for="${escapeAttr(`cms-field-${imageField.sectionId}-${backgroundPath}`.replace(/[^a-z0-9_-]+/gi, '-'))}">
+        <span class="field__label">Background color ${Number(match[1]) + 1}</span>
+        <input
+          id="${escapeAttr(`cms-field-${imageField.sectionId}-${backgroundPath}`.replace(/[^a-z0-9_-]+/gi, '-'))}"
+          class="field__input"
+          type="color"
+          value="${escapeAttr(value)}"
+          data-cms-background-path="${escapeAttr(backgroundPath)}"
+        >
+      </label>
+    `;
+  }
+
+  #normalizeColor(value) {
+    const color = String(value || '').trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : '#ffffff';
   }
 
   #emptyPanel(title, description) {

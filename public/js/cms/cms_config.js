@@ -57,6 +57,7 @@ export const CMS_TEXT_FIELDS = {
   bento_grid: [
     ['items.*.content', 'Content'],
     ['items.*.subContent', 'Sub content'],
+    ['items.*.footer', 'Footer', 'textarea'],
   ],
 };
 
@@ -75,6 +76,7 @@ export const CMS_IMAGE_FIELDS = {
     ['sections.*.image.src', 'History image'],
   ],
   bento_grid: [
-    ['items.*.image.src', 'Item image'],
+    ['items.0.image.src', 'Featured item image'],
+    ['items.5.image.src', 'Community item image'],
   ],
 };

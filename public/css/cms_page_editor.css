@@ -187,6 +187,27 @@
   filter: brightness(0.96);
 }
 
+.cms-editable-image--empty {
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  min-height: 9rem;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--muted) 72%, transparent);
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.cms-editable-image--empty i {
+  font-size: var(--text-2xl);
+}
+
+.cms-editable-image--empty span {
+  font-size: var(--text-sm);
+}
+
 .cms-editable-text:empty::before {
   content: attr(data-placeholder);
   color: var(--muted-foreground);

@@ -34,7 +34,7 @@ export class StaticLayoutRenderer {
       case 'bento_grid':
         return this.renderBentoGrid(data, section.id);
       default:
-        return this.renderLockedPlaceholder(section.id, 'This section is not editable in CMS v1.');
+        return this.renderLockedPlaceholder(section.id, 'Section này không thể edit ở v1.');
     }
   }
 
@@ -45,11 +45,45 @@ export class StaticLayoutRenderer {
     return `<span class="cms-editable-text${activeClass}" contenteditable="true" spellcheck="false" data-placeholder="Click to edit" data-inline-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(path)}" data-multiline="${multiline ? 'true' : 'false'}">${escapeHtml(value ?? '')}</span>`;
   }
 
+  editableHtml(sectionId, path, value, multiline = false) {
+    if (!this.cmsDocument.isTextEditable(sectionId, path)) return value || '';
+    const active = this.getActiveState();
+    const activeClass = active.sectionId === sectionId && active.path === path ? ' is-active' : '';
+    return `<span class="cms-editable-text${activeClass}" contenteditable="true" spellcheck="false" data-placeholder="Click to edit" data-inline-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(path)}" data-multiline="${multiline ? 'true' : 'false'}">${value || ''}</span>`;
+  }
+
   imageAttrs(sectionId, path) {
     if (!this.cmsDocument.isImageEditable(sectionId, path)) return '';
     const active = this.getActiveState();
     const activeClass = active.sectionId === sectionId && active.path === path ? ' is-active' : '';
     return `class="cms-editable-image${activeClass}" data-cms-image-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(path)}"`;
+  }
+
+  imageDataAttrs(sectionId, path) {
+    if (!this.cmsDocument.isImageEditable(sectionId, path)) return '';
+    return `data-cms-image-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(path)}"`;
+  }
+
+  imageActiveClass(sectionId, path) {
+    const active = this.getActiveState();
+    return active.sectionId === sectionId && active.path === path ? ' is-active' : '';
+  }
+
+  bentoItemStyle(item) {
+    const background = String(item?.background || '').trim();
+    if (!/^#[0-9a-f]{6}$/i.test(background)) return '';
+    return ` style="--bento-item-background:${escapeAttr(background)}"`;
+  }
+
+  renderImagePlaceholder(sectionId, path, interactive = true) {
+    const dataAttrs = interactive ? this.imageDataAttrs(sectionId, path) : '';
+    const activeClass = interactive ? this.imageActiveClass(sectionId, path) : '';
+
+    return `
+      <div class="${interactive ? 'cms-editable-image ' : ''}cms-editable-image--empty${activeClass}" ${dataAttrs}>
+        <i class="fa-regular fa-image"></i>
+      </div>
+    `;
   }
 
   renderLockedPlaceholder(title, description) {
@@ -70,14 +104,28 @@ export class StaticLayoutRenderer {
     return `
       <section class="site-breadcrumbs py-4">
         <div class="container"><div class="container-wrapper">
-          <span class="badge" data-variant="secondary"><i class="fa-regular fa-house"></i> Home</span>
-          <span class="mx-2">/</span>
-          <span>About</span>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb__list">
+              <li class="breadcrumb__item">
+                <a href="#" class="breadcrumb__link" aria-current="false">
+                  <i class="fa-regular fa-house"></i>
+                  Trang chủ
+                </a>
+              </li>
+              <li class="breadcrumb__separator" role="presentation" aria-hidden="true">
+                <i class="fa-solid fa-chevron-right"></i>
+              </li>
+              <li class="breadcrumb__item">
+                <span class="breadcrumb__page" role="link" aria-disabled="true" aria-current="page">
+                  Giới Thiệu
+                </span>
+              </li>
+            </ol>
+          </nav>
         </div></div>
       </section>
     `;
   }
-
   renderLandingAbout(data, sectionId) {
     return `
       <section class="relative container py-16" id="landing-about-section">
@@ -219,8 +267,8 @@ export class StaticLayoutRenderer {
 
   renderAboutHero(data, sectionId) {
     return `
-      <section class="relative">
-        <div class="about-thumbnail__wrapper"><img class="w-full h-full object-cover cms-editable-image${this.getActiveState().sectionId === sectionId && this.getActiveState().path === 'image' ? ' is-active' : ''}" src="${escapeAttr(assetUrl(this.cmsDocument.urls, data.image))}" alt="" data-cms-image-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="image"></div>
+      <section class="relative cms-editable-image${this.imageActiveClass(sectionId, 'image')}" ${this.imageDataAttrs(sectionId, 'image')}>
+        <div class="about-thumbnail__wrapper"><img class="w-full h-full object-cover" src="${escapeAttr(assetUrl(this.cmsDocument.urls, data.image))}" alt=""></div>
         <div class="about-thumbnail-content__wrapper absolute inset-0 flex justify-center items-center">
           <div class="container"><div class="container-wrapper">
             <div class="about-thumbnail-content flex flex-col justify-center items-center gap-6 text-center">
@@ -240,8 +288,8 @@ export class StaticLayoutRenderer {
         <div class="container"><div class="container-wrapper flex flex-col gap-16">
           ${asArray(data.sections).map((item, index) => `
             <div class="flex flex-col md:${index % 2 !== 0 ? 'flex-row-reverse' : 'flex-row'} flex-1 items-center gap-12">
-              <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl">
-                <div class="history-image-wrapper image-wrapper"><img class="image w-full h-full cms-editable-image${this.getActiveState().sectionId === sectionId && this.getActiveState().path === `sections.${index}.image.src` ? ' is-active' : ''}" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image?.src))}" alt="" data-cms-image-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(`sections.${index}.image.src`)}"></div>
+              <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl cms-editable-image${this.imageActiveClass(sectionId, `sections.${index}.image.src`)}" ${this.imageDataAttrs(sectionId, `sections.${index}.image.src`)}>
+                <div class="history-image-wrapper image-wrapper"><img class="image w-full h-full" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image?.src))}" alt=""></div>
                 <div class="history-image-wrapper__content absolute inset-0 flex flex-col justify-end gap-1">
                   <div class="text-6xl">${this.editable(sectionId, `sections.${index}.year`, item.year)}</div>
                   <div class="text-xl">${this.editable(sectionId, `sections.${index}.image.caption`, item.image?.caption)}</div>
@@ -273,15 +321,19 @@ export class StaticLayoutRenderer {
           <div class="bento-grid">
             ${asArray(data.items).map((item, index) => {
       const hasImage = item.image?.src;
+      const imagePath = `items.${index}.image.src`;
+      const isImageEditable = this.cmsDocument.isImageEditable(sectionId, imagePath);
+      const editableClass = isImageEditable ? ` cms-editable-image${this.imageActiveClass(sectionId, imagePath)}` : '';
+      const editableAttrs = isImageEditable ? this.imageDataAttrs(sectionId, imagePath) : '';
       return `
-                <div class="card bento-grid-item ${hasImage ? 'bento-grid-item--has-image' : ''}">
-                  ${hasImage ? `<img class="bento-grid-item__image cms-editable-image${this.getActiveState().sectionId === sectionId && this.getActiveState().path === `items.${index}.image.src` ? ' is-active' : ''}" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image.src))}" alt="" data-cms-image-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(`items.${index}.image.src`)}">` : ''}
+                <div class="card bento-grid-item${editableClass} ${hasImage ? 'bento-grid-item--has-image' : 'bento-grid-item--empty-image'}" ${editableAttrs}${this.bentoItemStyle(item)}>
+                  ${hasImage ? `<img class="bento-grid-item__image" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image.src))}" alt="">` : ''}
                   <div class="card__header"><span class="badge" data-variant="glass">${item.badge || '<i class="fa-solid fa-lock"></i>'}</span></div>
                   <div class="card__content">
                     <div class="text-4xl md:text-6xl">${this.editable(sectionId, `items.${index}.content`, item.content)}</div>
                     <div class="text-xl">${this.editable(sectionId, `items.${index}.subContent`, item.subContent)}</div>
                   </div>
-                  <div class="card__footer flex flex-row flex-wrap">${item.footer || ''}</div>
+                  <div class="card__footer flex flex-row flex-wrap">${this.editableHtml(sectionId, `items.${index}.footer`, item.footer, true)}</div>
                 </div>
               `;
     }).join('')}
@@ -291,3 +343,4 @@ export class StaticLayoutRenderer {
     `;
   }
 }
+

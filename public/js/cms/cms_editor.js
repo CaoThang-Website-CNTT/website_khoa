@@ -105,6 +105,7 @@ export class CmsEditorManager {
   #bindEvents() {
     this.#bus.subscribe('section:select_request', (payload) => this.#selectSection(payload));
     this.#bus.subscribe('field:input', (payload) => this.#onFieldInput(payload));
+    this.#bus.subscribe('field:background_input', (payload) => this.#onBackgroundInput(payload));
     this.#bus.subscribe('field:focus', (payload) => this.#onFieldFocus(payload));
     this.#bus.subscribe('field:media_select_request', (payload) => this.#onMediaSelectRequest(payload));
     this.#bus.subscribe('preview:editable_selected', (payload) => this.#onPreviewEditableSelected(payload));
@@ -153,6 +154,13 @@ export class CmsEditorManager {
     if (!section) return;
     setPath(section.data, path, value);
     this.#activePath = path;
+    this.#preview.render();
+  }
+
+  #onBackgroundInput({ path, value }) {
+    const section = this.#cmsDocument.section(this.#activeSectionId);
+    if (!section) return;
+    setPath(section.data, path, value);
     this.#preview.render();
   }
 
