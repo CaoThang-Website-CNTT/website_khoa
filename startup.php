@@ -71,6 +71,7 @@ require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/models/media.php';
 require_once BASE_PATH . '/models/post.php';
+require_once BASE_PATH . '/models/cms_page.php';
 require_once BASE_PATH . '/models/company.php';
 require_once BASE_PATH . '/models/referral_letter.php';
 require_once BASE_PATH . '/models/ticket.php';
@@ -89,6 +90,9 @@ require_once BASE_PATH . '/includes/editor/blocks/table_renderer.php';
 require_once BASE_PATH . '/includes/editor/block_validator.php';
 require_once BASE_PATH . '/includes/editor/block_renderer.php';
 
+// CMS
+require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
+
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
 require_once BASE_PATH . '/stores/classroom_store.php';
@@ -104,6 +108,7 @@ require_once BASE_PATH . '/stores/internship_submission_store.php';
 require_once BASE_PATH . '/stores/internship_grade_store.php';
 require_once BASE_PATH . '/stores/media_store.php';
 require_once BASE_PATH . '/stores/post_store.php';
+require_once BASE_PATH . '/stores/cms_page_store.php';
 require_once BASE_PATH . '/stores/category_post_store.php';
 require_once BASE_PATH . '/stores/company_store.php';
 require_once BASE_PATH . '/stores/referral_letter_store.php';
@@ -125,6 +130,7 @@ require_once BASE_PATH . '/services/internship_batch_service.php';
 require_once BASE_PATH . '/services/internship_assignment_service.php';
 require_once BASE_PATH . '/services/media_service.php';
 require_once BASE_PATH . '/services/post_service.php';
+require_once BASE_PATH . '/services/cms_page_service.php';
 require_once BASE_PATH . '/services/company_service.php';
 require_once BASE_PATH . '/services/internship_submission_service.php';
 require_once BASE_PATH . '/services/internship_grade_service.php';
@@ -147,6 +153,7 @@ require_once BASE_PATH . '/controllers/web/web_setting_controller.php';
 require_once BASE_PATH . '/controllers/web/carousel_controller.php';
 require_once BASE_PATH . '/controllers/web/media_controller.php';
 require_once BASE_PATH . '/controllers/web/post_controller.php';
+require_once BASE_PATH . '/controllers/web/cms_page_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
 require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/company_controller.php';

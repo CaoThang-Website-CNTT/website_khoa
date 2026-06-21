@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController, CmsPageController};
 use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
@@ -158,6 +158,14 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/{group}/edit', [WebSettingsController::class, 'edit']);
     $router->post('/{group}', [WebSettingsController::class, 'batchUpdate']);
     $router->post('/delete/{id}', [WebSettingsController::class, 'destroy']);
+  });
+
+  // CMS Pages
+  $router->prefix('cms-pages')->group(function ($router) {
+    $router->get('/', [CmsPageController::class, 'index']);
+    $router->get('/{slug}', [CmsPageController::class, 'edit']);
+    $router->post('/{slug}', [CmsPageController::class, 'update']);
+    $router->post('/{slug}/publish', [CmsPageController::class, 'publish']);
   });
 
   // Internship Batches
