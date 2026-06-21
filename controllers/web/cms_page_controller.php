@@ -77,47 +77,6 @@ class CmsPageController extends Controller
     $this->redirect("admin/cms-pages/{$slug}");
   }
 
-  public function saveBuilderDraft(string $slug, Request $request): void
-  {
-    try {
-      $payload = $this->decodeEditorPayload($request);
-      $actorId = $request->session()->authUser()['account_id'] ?? null;
-      $page = $this->_cmsPageService->saveBuilderDraft(
-        $slug,
-        $payload,
-        is_numeric($actorId) ? (int) $actorId : null,
-      );
-
-      $request->session()->flashNotify(
-        'success',
-        'Đã lưu bản nháp CMS v2',
-        "Bản nháp CMS v2 cho '{$page->title}' đã được cập nhật."
-      );
-    } catch (\InvalidArgumentException | \RuntimeException $e) {
-      $request->flashOldInputs();
-      $request->session()->flashNotify('error', 'Không thể lưu bản nháp CMS v2', $e->getMessage());
-    }
-
-    $this->redirect("admin/cms-pages/{$slug}");
-  }
-
-  public function publishBuilder(string $slug, Request $request): void
-  {
-    try {
-      $page = $this->_cmsPageService->publishBuilder($slug);
-      $request->session()->flashNotify(
-        'success',
-        'Đã bật CMS v2',
-        "CMS v2 cho '{$page->title}' đã được xuất bản thủ công."
-      );
-    } catch (\InvalidArgumentException | \RuntimeException $e) {
-      $request->flashOldInputs();
-      $request->session()->flashNotify('error', 'Không thể bật CMS v2', $e->getMessage());
-    }
-
-    $this->redirect("admin/cms-pages/{$slug}");
-  }
-
   private function decodeEditorPayload(Request $request): array
   {
     $raw = $request->input('editor_data');

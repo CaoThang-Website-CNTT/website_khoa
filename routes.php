@@ -166,8 +166,6 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/{slug}', [CmsPageController::class, 'edit']);
     $router->post('/{slug}', [CmsPageController::class, 'update']);
     $router->post('/{slug}/publish', [CmsPageController::class, 'publish']);
-    $router->post('/{slug}/builder-draft', [CmsPageController::class, 'saveBuilderDraft']);
-    $router->post('/{slug}/builder-publish', [CmsPageController::class, 'publishBuilder']);
   });
 
   // Internship Batches

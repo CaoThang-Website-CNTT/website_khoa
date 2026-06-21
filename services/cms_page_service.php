@@ -16,8 +16,6 @@ interface ICmsPageService
   public function getPublishedPageBySlug(string $slug): ?CmsPage;
   public function getPageForEditing(string $slug): array;
   public function saveDraft(string $slug, array $payload): CmsPage;
-  public function saveBuilderDraft(string $slug, array $payload, ?int $actorId = null): CmsPage;
-  public function publishBuilder(string $slug): CmsPage;
   public function publish(string $slug, array $payload): CmsPage;
   public function delete(int $id): void;
 }
@@ -46,13 +44,13 @@ class CmsPageService implements ICmsPageService
   public function getPage(int $id): CmsPage
   {
     return $this->_store->getById($id)
-      ?? throw new \RuntimeException("Trang CMS #{$id} không tồn tại.");
+      ?? throw new \RuntimeException("CMS page #{$id} does not exist.");
   }
 
   public function getPageBySlug(string $slug): CmsPage
   {
     if (!$this->_schemas->hasPage($slug)) {
-      throw new \InvalidArgumentException("Trang CMS '{$slug}' chưa được đăng ký.");
+      throw new \InvalidArgumentException("CMS page '{$slug}' is not registered.");
     }
 
     return $this->_store->findBySlug($slug)
@@ -73,7 +71,7 @@ class CmsPageService implements ICmsPageService
     $schema = $this->_schemas->page($slug);
 
     if ($schema === null) {
-      throw new \InvalidArgumentException("Trang CMS '{$slug}' chưa được đăng ký.");
+      throw new \InvalidArgumentException("CMS page '{$slug}' is not registered.");
     }
 
     $page = $this->getPageBySlug($slug);
@@ -82,9 +80,6 @@ class CmsPageService implements ICmsPageService
       'page' => $page,
       'schema' => $schema,
       'document' => $this->normalizeDocument($slug, $page->content()),
-      'builderDocument' => $this->normalizeBuilderDocument($page->builderDraft()),
-      'builderPublishedDocument' => $this->normalizeBuilderDocument($page->builderPublished()),
-      'builderSnapshots' => $page->builderSnapshots(),
     ];
   }
 
@@ -98,84 +93,6 @@ class CmsPageService implements ICmsPageService
     return $this->upsertFromPayload($slug, $payload, 'published');
   }
 
-  public function saveBuilderDraft(string $slug, array $payload, ?int $actorId = null): CmsPage
-  {
-    $schema = $this->_schemas->page($slug);
-
-    if ($schema === null) {
-      throw new \InvalidArgumentException("Trang CMS '{$slug}' chưa được đăng ký.");
-    }
-
-    $page = $this->getPageBySlug($slug);
-    $document = $this->normalizeBuilderDocument($payload['content'] ?? $payload);
-    $snapshots = $this->appendBuilderSnapshot($page->builderSnapshots(), $document, $actorId);
-
-    $data = [
-      'builder_draft_json' => $this->encodeJson($document),
-      'builder_snapshots_json' => $this->encodeJson($snapshots),
-    ];
-
-    return Database::getInstance()->transaction(function () use ($page, $schema, $data): CmsPage {
-      if ($page->id === null) {
-        return $this->_store->create(new CmsPage(
-          title: $schema['title'],
-          slug: $schema['slug'],
-          route_path: $schema['route_path'],
-          type: $schema['type'],
-          layout_mode: $schema['layout_mode'],
-          content_json: $this->encodeJson($this->_schemas->defaultDocument($schema['slug'])),
-          settings_json: '{}',
-          builder_draft_json: $data['builder_draft_json'],
-          builder_snapshots_json: $data['builder_snapshots_json'],
-        ));
-      }
-
-      return $this->_store->update((int) $page->id, $data);
-    });
-  }
-
-  public function publishBuilder(string $slug): CmsPage
-  {
-    $schema = $this->_schemas->page($slug);
-
-    if ($schema === null) {
-      throw new \InvalidArgumentException("Trang CMS '{$slug}' chưa được đăng ký.");
-    }
-
-    $page = $this->getPageBySlug($slug);
-    $document = $this->normalizeBuilderDocument($page->builderDraft());
-
-    if (empty($document['blocks'])) {
-      throw new \InvalidArgumentException('Bản nháp CMS v2 không có block nào để xuất bản.');
-    }
-
-    $data = [
-      'layout_mode' => 'block_builder',
-      'builder_published_json' => $this->encodeJson($document),
-      'builder_enabled_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-    ];
-
-    return Database::getInstance()->transaction(function () use ($page, $schema, $document, $data): CmsPage {
-      if ($page->id === null) {
-        return $this->_store->create(new CmsPage(
-          title: $schema['title'],
-          slug: $schema['slug'],
-          route_path: $schema['route_path'],
-          type: $schema['type'],
-          status: 'published',
-          layout_mode: 'block_builder',
-          content_json: $this->encodeJson($this->_schemas->defaultDocument($schema['slug'])),
-          settings_json: '{}',
-          builder_draft_json: $this->encodeJson($document),
-          builder_published_json: $data['builder_published_json'],
-          builder_enabled_at: $data['builder_enabled_at'],
-        ));
-      }
-
-      return $this->_store->update((int) $page->id, $data);
-    });
-  }
-
   public function delete(int $id): void
   {
     $this->getPage($id);
@@ -187,7 +104,7 @@ class CmsPageService implements ICmsPageService
     $schema = $this->_schemas->page($slug);
 
     if ($schema === null) {
-      throw new \InvalidArgumentException("Trang CMS '{$slug}' chưa được đăng ký.");
+      throw new \InvalidArgumentException("CMS page '{$slug}' is not registered.");
     }
 
     $document = $this->normalizeDocument($slug, $payload['content'] ?? $payload);
@@ -234,7 +151,7 @@ class CmsPageService implements ICmsPageService
     $schema = $this->_schemas->page($slug);
 
     if ($schema === null) {
-      throw new \InvalidArgumentException("Trang CMS '{$slug}' chưa được đăng ký.");
+      throw new \InvalidArgumentException("CMS page '{$slug}' is not registered.");
     }
 
     return new CmsPage(
@@ -366,173 +283,12 @@ class CmsPageService implements ICmsPageService
     ];
   }
 
-  private function normalizeBuilderDocument(array $document): array
-  {
-    $theme = is_array($document['theme'] ?? null) ? $document['theme'] : [];
-    $activeTheme = trim((string) ($theme['active'] ?? 'default'));
-
-    if (!preg_match('/^[a-z][a-z0-9_-]{0,63}$/', $activeTheme)) {
-      throw new \InvalidArgumentException('Tên theme CMS v2 không hợp lệ.');
-    }
-
-    return [
-      'version' => 2,
-      'blocks' => $this->normalizeBuilderBlocks($document['blocks'] ?? []),
-      'globalStyles' => $this->filterStyleObject($document['globalStyles'] ?? []),
-      'theme' => [
-        'active' => $activeTheme,
-        'options' => is_array($theme['options'] ?? null) ? $theme['options'] : [],
-      ],
-    ];
-  }
-
-  private function normalizeBuilderBlocks(mixed $blocks, int $depth = 0): array
-  {
-    if (!is_array($blocks)) {
-      throw new \InvalidArgumentException('Các block CMS v2 phải là một mảng.');
-    }
-
-    if ($depth > 6) {
-      throw new \InvalidArgumentException('Các block CMS v2 được lồng nhau quá sâu.');
-    }
-
-    return array_map(
-      fn(mixed $block) => $this->normalizeBuilderBlock($block, $depth),
-      array_values($blocks),
-    );
-  }
-
-  private function normalizeBuilderBlock(mixed $block, int $depth): array
-  {
-    if (!is_array($block)) {
-      throw new \InvalidArgumentException('Block CMS v2 phải là một đối tượng.');
-    }
-
-    $type = (string) ($block['type'] ?? '');
-    $allowedTypes = [
-      'cms/section',
-      'cms/row',
-      'cms/column',
-      'cms/grid',
-      'cms/heading',
-      'cms/paragraph',
-      'cms/image',
-      'cms/button',
-      'cms/spacer',
-      'cms/theme-banner',
-    ];
-
-    if (!in_array($type, $allowedTypes, true)) {
-      throw new \InvalidArgumentException("Loại block '{$type}' không được phép sử dụng");
-    }
-
-    $id = trim((string) ($block['id'] ?? ''));
-    if ($id !== '' && !preg_match('/^[A-Za-z][A-Za-z0-9_-]{0,63}$/', $id)) {
-      throw new \InvalidArgumentException("ID block'{$id}' không hợp lệ.");
-    }
-
-    $attrs = is_array($block['attrs'] ?? null) ? $block['attrs'] : [];
-    $attrs['advanced'] = $this->normalizeAdvancedAttrs(
-      is_array($attrs['advanced'] ?? null) ? $attrs['advanced'] : [],
-    );
-
-    return [
-      'id' => $id,
-      'type' => $type,
-      'version' => max(1, (int) ($block['version'] ?? 1)),
-      'attrs' => $this->filterBuilderAttrs($attrs),
-      'style' => $this->filterStyleObject($block['style'] ?? []),
-      'children' => $this->normalizeBuilderBlocks($block['children'] ?? [], $depth + 1),
-    ];
-  }
-
-  private function normalizeAdvancedAttrs(array $advanced): array
-  {
-    $anchorId = trim((string) ($advanced['anchorId'] ?? ''));
-    if ($anchorId !== '' && !preg_match('/^[A-Za-z][A-Za-z0-9_-]{0,63}$/', $anchorId)) {
-      throw new \InvalidArgumentException("Anchor ID '{$anchorId}' không hợp lệ.");
-    }
-
-    $classTokens = $advanced['classTokens'] ?? [];
-    if (!is_array($classTokens)) {
-      $classTokens = [];
-    }
-
-    $safeTokens = [];
-    foreach ($classTokens as $token) {
-      $token = trim((string) $token);
-      if ($token === '') {
-        continue;
-      }
-      if (!preg_match('/^[a-z][a-z0-9_-]{0,63}$/', $token)) {
-        throw new \InvalidArgumentException("Class '{$token}' không hợp lệ.");
-      }
-      $safeTokens[] = $token;
-    }
-
-    return [
-      'anchorId' => $anchorId,
-      'classTokens' => array_values(array_unique($safeTokens)),
-    ];
-  }
-
-  private function filterBuilderAttrs(array $attrs): array
-  {
-    foreach (['url', 'href', 'src'] as $key) {
-      if (isset($attrs[$key]) && !$this->isSafeUrl((string) $attrs[$key])) {
-        throw new \InvalidArgumentException("Trường URL CMS v2 '{$key}' không hợp lệ.");
-      }
-    }
-
-    return $attrs;
-  }
-
-  private function filterStyleObject(mixed $style): array
-  {
-    if (!is_array($style)) {
-      return [];
-    }
-
-    $safe = [];
-    foreach ($style as $key => $value) {
-      if (!is_string($key) || !preg_match('/^[a-z][a-zA-Z0-9_-]{0,63}$/', $key)) {
-        continue;
-      }
-
-      if (is_scalar($value) || $value === null) {
-        $safe[$key] = $value;
-      } elseif (is_array($value)) {
-        $safe[$key] = $this->filterStyleObject($value);
-      }
-    }
-
-    return $safe;
-  }
-
-  private function appendBuilderSnapshot(array $snapshots, array $document, ?int $actorId): array
-  {
-    array_unshift($snapshots, [
-      'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-      'actor_id' => $actorId,
-      'summary' => 'Đã lưu bản nháp CMS v2',
-      'document' => $document,
-    ]);
-
-    return array_slice($snapshots, 0, 20);
-  }
-
-  private function isSafeUrl(string $url): bool
-  {
-    $url = trim($url);
-    return $url === '' || (bool) preg_match('/^(https?:\/\/|mailto:|\/|public\/|media\/)[^\s]*$/i', $url);
-  }
-
   private function encodeJson(array $payload): string
   {
     $encoded = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     if ($encoded === false) {
-      throw new \InvalidArgumentException('Dữ liệu trang CMS không thể mã hóa thành JSON.');
+      throw new \InvalidArgumentException('CMS page payload cannot be encoded as JSON.');
     }
 
     return $encoded;

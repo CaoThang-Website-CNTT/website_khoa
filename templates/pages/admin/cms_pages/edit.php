@@ -9,13 +9,6 @@ $pagePayload = [
   ],
   'schema' => $schema,
   'document' => $document,
-  'builderDocument' => $builderDocument ?? ['version' => 2, 'blocks' => [], 'globalStyles' => [], 'theme' => ['active' => 'default', 'options' => []]],
-  'builderPublishedDocument' => $builderPublishedDocument ?? ['version' => 2, 'blocks' => [], 'globalStyles' => [], 'theme' => ['active' => 'default', 'options' => []]],
-  'builderSnapshots' => $builderSnapshots ?? [],
-  'builderActions' => [
-    'draft' => url('admin/cms-pages/' . $schema['slug'] . '/builder-draft'),
-    'publish' => url('admin/cms-pages/' . $schema['slug'] . '/builder-publish'),
-  ],
   'urls' => [
     'base' => url(''),
     'public' => url('public'),
