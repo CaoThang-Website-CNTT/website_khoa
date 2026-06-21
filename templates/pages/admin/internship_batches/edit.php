@@ -266,6 +266,17 @@ $currentStatus = [
   <div class="modal__header">
     <h3 class="modal__title">Xác nhận công bố</h3>
     <p class="modal__description">Sinh viên và giảng viên sẽ nhìn thấy đợt thực tập này sau khi công bố.</p>
+    <?php if ($stats['total_supervisors'] == 0): ?>
+      <div class="alert mt-4" data-variant="warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Đợt thực tập này <strong>chưa có giảng viên hướng dẫn</strong>. Bạn có chắc muốn công bố không?</span>
+      </div>
+    <?php elseif ($stats['assigned_students'] < $stats['total_students']): ?>
+      <div class="alert mt-4" data-variant="warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Có <strong><?= $stats['total_students'] - $stats['assigned_students'] ?> sinh viên</strong> chưa được phân công giảng viên. Bạn có chắc muốn công bố không?</span>
+      </div>
+    <?php endif; ?>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>

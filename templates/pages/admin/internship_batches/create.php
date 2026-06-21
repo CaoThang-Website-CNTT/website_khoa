@@ -196,6 +196,19 @@ $wizardSteps = [
   </form>
 </div>
 
+<!-- Modal xác nhận bỏ qua step 3 -->
+<div class="modal" id="skip-step3-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận tạo đợt</h3>
+    <p class="modal__description" id="skip-step3-confirm-msg">Bạn chưa hoàn tất chỉ định giảng viên hướng dẫn trong đợt thực tập. Bạn có chắc muốn tiếp tục tạo đợt thực tập này không?</p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="skip-step3-confirm-btn" data-variant="primary" class="btn" data-size="lg" type="button">Đồng ý</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+</div>
+
 <?php $layout->start("scripts") ?>
 <script>
   window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches')) ?>;

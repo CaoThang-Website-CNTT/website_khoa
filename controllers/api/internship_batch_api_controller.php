@@ -111,7 +111,7 @@ class InternshipBatchApiController extends Controller
         'start_at' => ['required', 'date'],
         'end_at' => ['required', 'date'],
         'students' => ['required'],
-        'supervisors' => ['required']
+        'supervisors' => []
       ];
 
       if (!$validator->validate($data, $rules)) {
@@ -135,7 +135,7 @@ class InternshipBatchApiController extends Controller
           'end_at' => $data['end_at']
         ],
         is_array($data['students']) ? $data['students'] : json_decode((string)$data['students'], true),
-        is_array($data['supervisors']) ? $data['supervisors'] : json_decode((string)$data['supervisors'], true),
+        isset($data['supervisors']) && is_array($data['supervisors']) ? $data['supervisors'] : (json_decode((string)($data['supervisors'] ?? '[]'), true) ?: []),
         $adminId
       );
 
