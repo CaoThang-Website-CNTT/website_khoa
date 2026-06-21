@@ -37,7 +37,7 @@ class CmsPageController extends Controller
       $this->redirect('admin/cms-pages');
     }
 
-    $this->render('admin/cms_pages/edit', $payload, layout: 'canva_layout');
+    $this->render('admin/cms_pages/edit', $payload, layout: 'cms_layout');
   }
 
   public function update(string $slug, Request $request): void

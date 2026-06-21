@@ -42,13 +42,24 @@ final class CmsPage extends Model
 
   public function content(): array
   {
-    $payload = json_decode($this->content_json, true);
-    return is_array($payload) ? $payload : ['version' => 1, 'sections' => []];
+    return $this->decodeJsonObject($this->content_json, ['version' => 1, 'sections' => []]);
   }
 
   public function settings(): array
   {
-    $payload = json_decode($this->settings_json ?? '{}', true);
-    return is_array($payload) ? $payload : [];
+    return $this->decodeJsonObject($this->settings_json ?? '{}', []);
+  }
+
+  private function decodeJsonObject(string $json, array $fallback): array
+  {
+    $payload = json_decode($json, true);
+
+    if (is_array($payload)) {
+      return $payload;
+    }
+
+    $unescapedPayload = json_decode(stripcslashes($json), true);
+
+    return is_array($unescapedPayload) ? $unescapedPayload : $fallback;
   }
 }

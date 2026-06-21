@@ -53,6 +53,7 @@ $menuConfig = [
           'children' => [
             ['label' => 'Menu', 'url' => 'admin/menus'],
             ['label' => 'Carousel', 'url' => 'admin/carousels'],
+            ['label' => 'Trang CMS', 'url' => 'admin/cms-pages'],
           ]
         ],
         [
