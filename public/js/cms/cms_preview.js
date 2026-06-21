@@ -125,6 +125,7 @@ export class CmsPreview {
       'css/base.css',
       'css/common.css',
       'css/main.css',
+      'css/landing.css',
       'css/block_preview.css',
       'css/cms_page_editor.css',
     ];

@@ -92,6 +92,7 @@ require_once BASE_PATH . '/includes/editor/block_renderer.php';
 
 // CMS
 require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
+require_once BASE_PATH . '/includes/cms/cms_static_page_renderer.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';

@@ -7,6 +7,7 @@
 <link rel="preload" as="style" href="<?= url('public/css/common.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/base.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/main.css') ?>">
+<link rel="preload" as="style" href="<?= url('public/css/landing.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/fontawesome/fontawesome.min.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/fontawesome/solid.min.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/fontawesome/regular.min.css') ?>">
@@ -15,6 +16,7 @@
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/landing.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_editor.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/cms_page_editor.css') ?>">

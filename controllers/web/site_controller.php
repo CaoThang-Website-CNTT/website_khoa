@@ -4,8 +4,9 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
+use App\Cms\CmsStaticPageRenderer;
 use App\Middlewares\Traits\HasDashboardRouting;
-use App\Services\{PostService, CarouselService, MenuService, WebSettingsService};
+use App\Services\{PostService, CarouselService, MenuService, WebSettingsService, CmsPageService};
 use App\Editor\BlockRenderer;
 use App\Models\Menu;
 
@@ -17,6 +18,7 @@ class SiteController extends Controller
   private PostService $_postService;
   private CarouselService $_carouselService;
   private WebSettingsService $_settingService;
+  private CmsPageService $_cmsPageService;
 
   /**
    * Header Menu
@@ -46,11 +48,13 @@ class SiteController extends Controller
     CarouselService $carouselService,
     PostService $postService,
     WebSettingsService $settingService,
+    CmsPageService $cmsPageService,
   ) {
     $this->_menuService = $menuService;
     $this->_carouselService = $carouselService;
     $this->_postService = $postService;
     $this->_settingService = $settingService;
+    $this->_cmsPageService = $cmsPageService;
 
     $this->_loadHeaderMenu();
     $this->_loadSettings();
@@ -72,11 +76,18 @@ class SiteController extends Controller
     ]);
     $latestNewsItems = $allNewsPageable->getItems();
 
+    $cmsHtml = $this->_renderCmsPage('landing', [
+      'carouselSlides' => $carouselSlides,
+      'featuredNews' => $featuredNews,
+      'latestNewsItems' => $latestNewsItems,
+    ]);
+
     return $this->render('site/landing', [
       'headerMenu' => $this->_headerMenu->items,
       'carouselSlides' => $carouselSlides,
       'featuredNews' => $featuredNews,
       'latestNewsItems' => $latestNewsItems,
+      'cmsHtml' => $cmsHtml,
       'settings' => $this->_settings,
     ], "site_layout");
   }
@@ -156,8 +167,11 @@ class SiteController extends Controller
 
   public function about()
   {
+    $cmsHtml = $this->_renderCmsPage('about');
+
     return $this->render('site/about', [
       'headerMenu' => $this->_headerMenu->items,
+      'cmsHtml' => $cmsHtml,
       'settings' => $this->_settings,
     ], "site_layout");
   }
@@ -193,5 +207,13 @@ class SiteController extends Controller
         $this->_settings[$setting->key] = $setting->cast_value;
       }
     }
+  }
+
+  private function _renderCmsPage(string $slug, array $context = []): string
+  {
+    $page = $this->_cmsPageService->getPublishedPageBySlug($slug)
+      ?? $this->_cmsPageService->getPageBySlug($slug);
+
+    return (new CmsStaticPageRenderer($context))->render($page->content());
   }
 }
