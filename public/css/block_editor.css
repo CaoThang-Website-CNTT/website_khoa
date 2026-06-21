@@ -55,12 +55,7 @@ body {
   gap: 0.5rem;
 }
 
-#be-topbar-left {
-  width: var(--left-panel-width);
-}
-
 #be-topbar-right {
-  width: var(--right-panel-width);
   justify-content: flex-end;
 }
 

@@ -1,15 +1,6 @@
-<?php
-$_metaTitle = htmlspecialchars($settings['seo.meta_title'] ?? ($settings['site_title'] ?? 'Khoa Cong Nghe Thong Tin'));
-$_metaDesc = htmlspecialchars($settings['seo.meta_description'] ?? '');
-?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>
-  <?= $_metaTitle ?>
-</title>
-<?php if ($_metaDesc): ?>
-  <meta name="description" content="<?= $_metaDesc ?>">
-<?php endif; ?>
+<title>CMS - Cao Thắng CNTT Dashboard</title>
 
 <link rel="icon" type="image/png" sizes="32x32" href="<?= url('public/favicon-32x32.png') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/fonts.css') ?>">

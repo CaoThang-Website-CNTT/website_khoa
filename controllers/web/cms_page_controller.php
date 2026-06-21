@@ -33,7 +33,7 @@ class CmsPageController extends Controller
     try {
       $payload = $this->_cmsPageService->getPageForEditing($slug);
     } catch (\InvalidArgumentException $e) {
-      $request->session()->flashNotify('error', 'CMS page not found', $e->getMessage());
+      $request->session()->flashNotify('error', 'Không tìm thấy CMS page', $e->getMessage());
       $this->redirect('admin/cms-pages');
     }
 
@@ -52,12 +52,12 @@ class CmsPageController extends Controller
 
       $request->session()->flashNotify(
         'success',
-        $action === 'publish' ? 'Published CMS page' : 'Saved CMS draft',
-        "CMS page '{$page->title}' has been updated."
+        $action === 'publish' ? 'Đã xuất bản CMS page' : 'Đã lưu bản nháp CMS',
+        "CMS page '{$page->title}' đã được cập nhật."
       );
     } catch (\InvalidArgumentException | \RuntimeException $e) {
       $request->flashOldInputs();
-      $request->session()->flashNotify('error', 'Unable to save CMS page', $e->getMessage());
+      $request->session()->flashNotify('error', 'Không thể lưu CMS page', $e->getMessage());
     }
 
     $this->redirect("admin/cms-pages/{$slug}");
@@ -68,10 +68,10 @@ class CmsPageController extends Controller
     try {
       $payload = $this->decodeEditorPayload($request);
       $page = $this->_cmsPageService->publish($slug, $payload);
-      $request->session()->flashNotify('success', 'Published CMS page', "CMS page '{$page->title}' is now public.");
+      $request->session()->flashNotify('success', 'Đã xuât bản CMS page', "CMS page '{$page->title}' đã được công khai.");
     } catch (\InvalidArgumentException | \RuntimeException $e) {
       $request->flashOldInputs();
-      $request->session()->flashNotify('error', 'Unable to publish CMS page', $e->getMessage());
+      $request->session()->flashNotify('error', 'Không thể xuất bản CMS page', $e->getMessage());
     }
 
     $this->redirect("admin/cms-pages/{$slug}");
@@ -92,7 +92,7 @@ class CmsPageController extends Controller
     $decoded = json_decode($raw, true);
 
     if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-      throw new \InvalidArgumentException('CMS editor payload must be valid JSON.');
+      throw new \InvalidArgumentException('CMS editor payload phải là JSON.');
     }
 
     return $decoded;

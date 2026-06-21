@@ -24,10 +24,6 @@ function url(string $path = '', bool $strict = false): string
     return APP_URL;
   }
 
-  if ($path === 'public/media' || $path === 'public/media/') {
-    $path = 'public/img/default-post-thumb.jpg';
-  }
-
   if (preg_match('/^https?:\/\//i', $path)) {
     $appHost = parse_url(APP_URL, PHP_URL_HOST);
     $pathHost = parse_url($path, PHP_URL_HOST);
@@ -238,7 +234,8 @@ function seo_twitter_tags(array $data): string
  */
 function seo_jsonld(array $data): string
 {
-  if (empty($data)) return '';
+  if (empty($data))
+    return '';
 
   $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
   return "<script type=\"application/ld+json\">\n" . $json . "\n</script>";
