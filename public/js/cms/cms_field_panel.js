@@ -105,7 +105,7 @@ export class CmsFieldPanel {
       <label class="field cms-text-field${active}" for="${escapeAttr(id)}">
         <span class="field__label">${escapeHtml(field.label)}</span>
         <input id="${escapeAttr(id)}" class="field__input" type="text" value="${escapeAttr(valueText)}" data-cms-path="${escapeAttr(field.path)}">
-        ${isIconField ? '<small class="field__hint">Enter Font Awesome classes, for example fa-solid fa-award.</small>' : ''}
+        ${isIconField ? '<small class="field__description">Enter Font Awesome classes, for example fa-solid fa-award.</small>' : ''}
       </label>
     `;
   }
