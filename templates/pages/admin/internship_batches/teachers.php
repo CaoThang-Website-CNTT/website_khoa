@@ -20,6 +20,9 @@ $supervisors = $supervisors ?? [];
 <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
   <i class="fa-solid fa-chevron-left"></i> Quay lại
 </a>
+<button type="button" class="btn" data-variant="primary" data-size="lg" data-modal-trigger="#modal-add-teacher">
+  <i class="fa-solid fa-plus"></i> Thêm giảng viên
+</button>
 <?php $layout->end() ?>
 
 <div class="tm-container" data-tm="batch_teachers_table" data-tm-mode="client" data-tm-searchable="true">
@@ -68,7 +71,60 @@ $supervisors = $supervisors ?? [];
     </div>
   </template>
 
+  <!-- Cột Hành động -->
+  <template data-tm-col="actions" data-tm-label="Thao tác" data-tm-width="60px">
+    <div class="flex justify-end items-center">
+      <!-- Ẩn nút xóa nếu đã có SV đang hướng dẫn -->
+      {{#if !row.assigned_count}}
+        <button type="button" class="btn btn-delete-teacher" data-variant="destructive" data-size="sm" title="Xóa khỏi đợt" data-teacher-id="{{ row.teacher_id }}">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      {{/if}}
+    </div>
+  </template>
+
   <template data-tm-pagination></template>
+</div>
+
+<!-- Modal: Thêm Giảng Viên -->
+<div id="modal-add-teacher" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Thêm giảng viên hướng dẫn</h3>
+    <p class="modal__description">Thêm giảng viên và chỉ định hạn mức sinh viên.</p>
+  </div>
+  <div class="modal__body space-y-4">
+    <div class="field">
+      <label class="field__label">Tìm kiếm giảng viên</label>
+      <div class="teacher-search">
+        <input type="text" id="search-teacher-input" class="field__input" placeholder="Nhập tên giảng viên..." autocomplete="off">
+        <div id="search-teacher-results" class="teacher-search__results hidden shadow shadow-sm">
+          <!-- Results will be injected here -->
+        </div>
+      </div>
+      <div id="selected-teachers-container" class="flex flex-col gap-2 mt-4">
+        <!-- Selected teachers will be appended here -->
+      </div>
+    </div>
+
+
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="btn-submit-add-teacher" data-variant="primary" class="btn" data-size="lg" type="button" disabled>Thêm giảng viên</button>
+  </div>
+</div>
+
+<!-- Modal: Xác nhận Xóa Giảng Viên -->
+<div id="modal-delete-teacher" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xóa giảng viên</h3>
+    <p class="modal__description">Bạn có chắc chắn muốn xóa giảng viên này khỏi đợt thực tập không?</p>
+  </div>
+  <div class="modal__footer">
+    <input type="hidden" id="delete-teacher-id">
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="btn-submit-delete-teacher" data-variant="destructive" class="btn" data-size="lg" type="button">Xóa</button>
+  </div>
 </div>
 
 <!-- JSON Data Source cho TableManager -->

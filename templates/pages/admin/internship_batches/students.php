@@ -142,6 +142,9 @@ $batch = $batch ?? null;
       <div class="card__header flex justify-between items-center">
         <h3 class="font-bold text-lg"><i class="fa-solid fa-chalkboard-user mr-2"></i>Giảng viên <span class="badge"
             data-variant="primary" id="supervisor-count">0</span></h3>
+        <a href="<?= url('admin/internship_batches/' . $batch['id'] . '/teachers') ?>" class="btn" data-variant="outline" data-size="sm" title="Quản lý giảng viên">
+          <i class="fa-solid fa-up-right-from-square"></i>
+        </a>
       </div>
       <hr class="separator">
       <div id="supervisor-stats-container" class="supervisor-list">

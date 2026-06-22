@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <input type="checkbox" class="dept-select-all" ${isAllSelected ? "checked" : ""}>
               Chọn tất cả
             </label>
-            <button type="button" class="btn-toggle-dept btn btn--icon btn--sm" data-variant="ghost">
+            <button type="button" class="btn-toggle-dept btn" data-variant="outline-alt" data-size="sm">
               <i class="fa-solid fa-chevron-up"></i>
             </button>
           </div>

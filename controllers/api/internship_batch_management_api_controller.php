@@ -84,6 +84,20 @@ class InternshipBatchManagementApiController extends Controller
   public function addSupervisor($id, Request $request)
   {
     $data = $request->json();
+
+    // Hỗ trợ lưu nhiều giảng viên cùng lúc
+    if (isset($data['teachers']) && is_array($data['teachers'])) {
+      if (empty($data['teachers'])) {
+        return $this->json(['message' => 'Danh sách giảng viên rỗng.'], 422);
+      }
+
+      try {
+        $this->_batchService->addSupervisorsBulk((int)$id, $data['teachers']);
+        return $this->json([], 200, 'Thêm các giảng viên thành công.');
+      } catch (Exception $e) {
+        return $this->json(['message' => $e->getMessage()], 400);
+      }
+    }
     $teacherId = $data['teacher_id'] ?? null;
     $maxStudents = $data['max_students'] ?? 15;
 

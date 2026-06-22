@@ -27,6 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
       closeEditor(cell);
       return;
     }
+
+    // Nút Xóa
+    const deleteBtn = e.target.closest('.btn-delete-teacher');
+    if (deleteBtn) {
+      const teacherId = deleteBtn.dataset.teacherId;
+      document.getElementById('delete-teacher-id').value = teacherId;
+      if (typeof ModalHandler !== 'undefined') {
+        ModalHandler.open('modal-delete-teacher');
+      }
+      return;
+    }
   });
 
   // Xử lý phím Enter / Escape trong input
@@ -125,5 +136,219 @@ document.addEventListener('DOMContentLoaded', () => {
       cancelBtn.disabled = false;
       input.disabled = false;
     }
+  }
+  // Xóa giảng viên
+  const btnSubmitDelete = document.getElementById("btn-submit-delete-teacher");
+  if (btnSubmitDelete) {
+    btnSubmitDelete.addEventListener("click", async () => {
+      const teacherId = document.getElementById("delete-teacher-id").value;
+      if (!teacherId) return;
+
+      btnSubmitDelete.disabled = true;
+      try {
+        const res = await fetch(
+          `${window.API_BASE_URL}/internship/batches/${BATCH_ID}/management/supervisors/${teacherId}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
+            },
+          },
+        );
+
+        const result = await res.json();
+        if (!res.ok)
+          throw new Error(result.message || "Lỗi khi xóa giảng viên.");
+
+        if (window.toast)
+          window.toast.success(
+            "Thành công",
+            result.message || "Xóa giảng viên thành công.",
+          );
+        setTimeout(() => window.location.reload(), 500);
+      } catch (err) {
+        if (window.toast) window.toast.error("Lỗi", err.message);
+        btnSubmitDelete.disabled = false;
+      }
+    });
+  }
+
+  // Thêm giảng viên
+  const searchInput = document.getElementById("search-teacher-input");
+  const searchResults = document.getElementById("search-teacher-results");
+  const selectedContainer = document.getElementById(
+    "selected-teachers-container",
+  );
+  const btnSubmitAdd = document.getElementById("btn-submit-add-teacher");
+
+  let searchTimeout = null;
+  let selectedTeachers = [];
+
+  function renderSelectedTeachers() {
+    if (!selectedContainer) return;
+    selectedContainer.innerHTML = "";
+    if (selectedTeachers.length === 0) {
+      if (btnSubmitAdd) btnSubmitAdd.disabled = true;
+      return;
+    }
+    if (btnSubmitAdd) btnSubmitAdd.disabled = false;
+
+    selectedTeachers.forEach((t) => {
+      const el = document.createElement("div");
+      el.className = "teacher-preview";
+      el.innerHTML = `
+        <div class="teacher-preview__info">
+          <div class="teacher-preview__name">${t.name}</div>
+          <div class="teacher-preview__dept">${t.dept}</div>
+        </div>
+        <div class="teacher-preview__actions">
+          <input type="number" class="teacher-preview__quota field__input" min="1" max="999" value="${t.max_students}" data-id="${t.id}" title="Hạn mức sinh viên">
+          <button type="button" class="teacher-preview__clear btn-remove-selected" data-id="${t.id}" title="Bỏ chọn">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `;
+      selectedContainer.appendChild(el);
+    });
+  }
+
+  if (selectedContainer) {
+    selectedContainer.addEventListener("input", (e) => {
+      if (e.target.classList.contains("teacher-preview__quota")) {
+        const id = e.target.dataset.id;
+        const val = parseInt(e.target.value, 10) || 15;
+        const teacher = selectedTeachers.find((t) => t.id == id);
+        if (teacher) teacher.max_students = val;
+      }
+    });
+
+    selectedContainer.addEventListener("click", (e) => {
+      const removeBtn = e.target.closest(".btn-remove-selected");
+      if (removeBtn) {
+        const id = removeBtn.dataset.id;
+        selectedTeachers = selectedTeachers.filter((t) => t.id != id);
+        renderSelectedTeachers();
+      }
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+      clearTimeout(searchTimeout);
+
+      if (query.length < 2) {
+        searchResults.classList.add("hidden");
+        return;
+      }
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(
+            `${window.API_BASE_URL}/internship/batches/${BATCH_ID}/management/search-eligible-teachers?q=${encodeURIComponent(query)}`,
+          );
+          if (!res.ok) return;
+          const responsePayload = await res.json();
+          renderSearchResults(responsePayload.data || []);
+        } catch (err) {
+          console.error("Lỗi tìm kiếm giảng viên:", err);
+        }
+      }, 300);
+    });
+
+    // Ẩn kết quả khi click ra ngoài
+    document.addEventListener("click", (e) => {
+      if (
+        !searchInput.contains(e.target) &&
+        !searchResults.contains(e.target)
+      ) {
+        searchResults.classList.add("hidden");
+      }
+    });
+  }
+
+  function renderSearchResults(teachers) {
+    if (!teachers || teachers.length === 0) {
+      searchResults.innerHTML =
+        '<div class="teacher-search__empty">Không tìm thấy giảng viên phù hợp.</div>';
+    } else {
+      searchResults.innerHTML = teachers
+        .map(
+          (t) => `
+        <div class="teacher-search__item" 
+             data-id="${t.id}" 
+             data-name="${t.full_name}" 
+             data-dept="${t.department_name || ""}">
+          <div class="teacher-search__item-name">${t.degree ? t.degree + ". " : ""}${t.full_name}</div>
+          <div class="teacher-search__item-dept">${t.department_name || "Chưa cập nhật"}</div>
+        </div>
+      `,
+        )
+        .join("");
+
+      searchResults
+        .querySelectorAll(".teacher-search__item")
+        .forEach((item) => {
+          item.addEventListener("click", () => {
+            selectTeacher(
+              item.dataset.id,
+              item.dataset.name,
+              item.dataset.dept,
+            );
+          });
+        });
+    }
+    searchResults.classList.remove("hidden");
+  }
+
+  function selectTeacher(id, name, dept) {
+    if (!selectedTeachers.find((t) => t.id == id)) {
+      selectedTeachers.push({ id, name, dept, max_students: 15 });
+    }
+    searchInput.value = "";
+    searchResults.classList.add("hidden");
+    searchInput.focus();
+    renderSelectedTeachers();
+  }
+
+  if (btnSubmitAdd) {
+    btnSubmitAdd.addEventListener("click", async () => {
+      if (selectedTeachers.length === 0) return;
+
+      btnSubmitAdd.disabled = true;
+      const payload = selectedTeachers.map((t) => ({
+        teacher_id: t.id,
+        max_students: t.max_students,
+      }));
+
+      try {
+        const res = await fetch(
+          `${window.API_BASE_URL}/internship/batches/${BATCH_ID}/management/supervisors`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
+            },
+            body: JSON.stringify({ teachers: payload }),
+          },
+        );
+
+        const result = await res.json();
+        if (!res.ok)
+          throw new Error(result.message || "Lỗi khi thêm giảng viên.");
+
+        if (window.toast)
+          window.toast.success(
+            "Thành công",
+            result.message || "Thêm giảng viên thành công.",
+          );
+        setTimeout(() => window.location.reload(), 500);
+      } catch (err) {
+        if (window.toast) window.toast.error("Lỗi", err.message);
+        btnSubmitAdd.disabled = false;
+      }
+    });
   }
 });

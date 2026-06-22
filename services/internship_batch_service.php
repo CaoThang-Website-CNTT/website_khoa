@@ -84,7 +84,7 @@ class InternshipBatchService implements IInternshipBatchService
       if (!empty($studentCodes)) {
         $existingValidation = $this->_store->validateStudentsByStudentIds($studentCodes);
         $appEnv = $_ENV['APP_ENV'] ?? 'production';
-        
+
         foreach ($existingValidation as $s) {
           if (!empty($s['batch_id']) && $appEnv !== 'local') {
             throw new Exception("Sinh viên {$s['student_id']} - {$s['full_name']} đã tham gia một đợt thực tập khác.");
@@ -368,20 +368,59 @@ class InternshipBatchService implements IInternshipBatchService
     return $this->_store->removeStudentFromBatch($batchId, $studentId);
   }
 
+  private function checkBatchModifiable(int $batchId): void
+  {
+    $batch = $this->_store->getById($batchId);
+    if (!$batch) {
+      throw new Exception('Đợt thực tập không tồn tại.');
+    }
+    if (in_array($batch['status'], ['closed', 'completed'])) {
+      throw new Exception('Không thể thay đổi thông tin giảng viên khi đợt thực tập đã kết thúc.');
+    }
+  }
+
   public function addSupervisorToBatch(int $batchId, int $teacherId, int $maxStudents): bool
   {
+    $this->checkBatchModifiable($batchId);
+    if ($this->_store->isSupervisorOfBatch($batchId, $teacherId)) {
+      throw new Exception('Giảng viên đã có trong danh sách quản lý của đợt này.');
+    }
     return $this->_store->addSupervisorsToBatch($batchId, [
       ['teacher_id' => $teacherId, 'max_students' => $maxStudents]
     ]);
   }
 
+  public function addSupervisorsBulk(int $batchId, array $supervisors): bool
+  {
+    $this->checkBatchModifiable($batchId);
+    $validSupervisors = [];
+    foreach ($supervisors as $sup) {
+      if (!$this->_store->isSupervisorOfBatch($batchId, $sup['teacher_id'])) {
+        $validSupervisors[] = $sup;
+      }
+    }
+    if (empty($validSupervisors)) {
+      return true;
+    }
+    return $this->_store->addSupervisorsToBatch($batchId, $validSupervisors);
+  }
+
   public function removeSupervisorFromBatch(int $batchId, int $teacherId): bool
   {
+    $this->checkBatchModifiable($batchId);
+    $supervisors = $this->_store->getBatchSupervisorsWithDetails($batchId);
+    foreach ($supervisors as $sup) {
+      if ($sup['teacher_id'] == $teacherId && $sup['assigned_count'] > 0) {
+        throw new Exception('Không thể xóa giảng viên đang có sinh viên hướng dẫn. Vui lòng phân công lại sinh viên sang giảng viên khác trước khi xóa.');
+      }
+    }
     return $this->_store->removeSupervisorFromBatch($batchId, $teacherId);
   }
 
   public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool
   {
+    $this->checkBatchModifiable($batchId);
+
     // Kiểm tra quota mới có nhỏ hơn số lượng đã phân công không
     $supervisors = $this->_store->getBatchSupervisorsWithDetails($batchId);
     foreach ($supervisors as $sup) {
