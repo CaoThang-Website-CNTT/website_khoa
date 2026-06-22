@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/landing.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/cms_blocks.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_editor.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/cms_page_editor.css') ?>">
 

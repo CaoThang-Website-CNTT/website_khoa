@@ -32,6 +32,7 @@ $_seoHead = [
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/landing.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/cms_blocks.css') ?>">
 
 <script src="<?= url('/public/js/toast.js') ?>"></script>
 

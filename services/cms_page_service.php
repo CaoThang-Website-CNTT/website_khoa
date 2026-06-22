@@ -167,6 +167,12 @@ class CmsPageService implements ICmsPageService
 
   private function normalizeDocument(string $slug, array $document): array
   {
+    $schema = $this->_schemas->page($slug);
+
+    if (($schema['layout_mode'] ?? 'section_schema') === 'block_builder') {
+      return $this->normalizeBlockBuilderDocument($slug, $document);
+    }
+
     $sectionSchemas = $this->_schemas->sectionMap($slug);
     $submittedSections = $this->submittedSectionMap($document['sections'] ?? []);
     $sections = [];
@@ -190,6 +196,123 @@ class CmsPageService implements ICmsPageService
       'version' => 1,
       'sections' => $sections,
     ];
+  }
+
+  private function normalizeBlockBuilderDocument(string $slug, array $document): array
+  {
+    if (isset($document['blocks']) && is_array($document['blocks'])) {
+      $blocks = $document['blocks'];
+    } elseif ($this->isListArray($document)) {
+      $blocks = $document;
+    } else {
+      $blocks = [];
+    }
+
+    if (empty($blocks) && isset($document['sections'])) {
+      return $this->_schemas->defaultDocument($slug);
+    }
+
+    return [
+      'version' => 1,
+      'blocks' => array_values(array_filter(array_map(
+        fn($block) => $this->normalizeCmsBlock($block),
+        $blocks,
+      ))),
+    ];
+  }
+
+  private function normalizeCmsBlock(mixed $block): ?array
+  {
+    if (!is_array($block)) {
+      return null;
+    }
+
+    $type = (string) ($block['type'] ?? '');
+    if (!in_array($type, $this->allowedCmsBlockTypes(), true)) {
+      return null;
+    }
+
+    $data = is_array($block['data'] ?? null) ? $block['data'] : [];
+    $richText = is_array($data['rich_text'] ?? null) ? $this->normalizeRichText($data['rich_text']) : [];
+    $meta = is_array($data['meta'] ?? null) ? $this->sanitizeCmsMeta($data['meta']) : [];
+
+    return [
+      'id' => $this->validId($block['id'] ?? null),
+      'type' => $type,
+      'version' => (int) ($block['version'] ?? 1),
+      'data' => [
+        'rich_text' => $richText,
+        'meta' => $meta,
+      ],
+    ];
+  }
+
+  private function isListArray(array $value): bool
+  {
+    if ($value === []) {
+      return true;
+    }
+
+    return array_keys($value) === range(0, count($value) - 1);
+  }
+
+  private function allowedCmsBlockTypes(): array
+  {
+    return [
+      'cms/heading',
+      'cms/paragraph',
+      'cms/image',
+      'cms/button',
+      'cms/button_group',
+      'cms/spacer',
+      'cms/columns',
+      'cms/card_grid',
+      'cms/stat_grid',
+      'cms/quote',
+      'cms/carousel',
+      'cms/newsfeed',
+    ];
+  }
+
+  private function normalizeRichText(array $segments): array
+  {
+    $normalized = [];
+
+    foreach ($segments as $segment) {
+      if (!is_array($segment) || !is_string($segment['text'] ?? null)) {
+        continue;
+      }
+
+      $marks = is_array($segment['marks'] ?? null)
+        ? array_values(array_intersect($segment['marks'], ['bold', 'italic', 'underline', 'link']))
+        : [];
+
+      $item = [
+        'type' => in_array('link', $marks, true) ? 'link' : 'text',
+        'text' => mb_substr((string) $segment['text'], 0, 5000),
+        'marks' => $marks,
+      ];
+
+      if ($item['type'] === 'link') {
+        $href = trim((string) ($segment['href'] ?? ''));
+        $item['href'] = preg_match('#^(https?://|mailto:|/)[^\s]*$#i', $href) ? $href : '';
+      }
+
+      $normalized[] = $item;
+    }
+
+    return $normalized;
+  }
+
+  private function sanitizeCmsMeta(array $meta): array
+  {
+    return json_decode(json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true) ?: [];
+  }
+
+  private function validId(mixed $id): string
+  {
+    $id = is_string($id) ? trim($id) : '';
+    return preg_match('/^[a-zA-Z0-9_-]{6,80}$/', $id) ? $id : bin2hex(random_bytes(8));
   }
 
   private function submittedSectionMap(array $sections): array

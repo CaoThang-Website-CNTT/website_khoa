@@ -10,108 +10,32 @@ final class CmsPageSchemaRegistry
       'slug' => 'landing',
       'route_path' => '/',
       'type' => 'landing_page',
-      'layout_mode' => 'section_schema',
-      'sections' => [
+      'layout_mode' => 'block_builder',
+      'blocks' => [
         [
-          'id' => 'hero',
-          'type' => 'sections/landing_hero',
-          'label' => 'Hero carousel',
-          'locked' => true,
-          'data' => [],
-          'editable_fields' => [],
+          'type' => 'cms/carousel',
+          'data' => ['meta' => ['carousel_slug' => 'landing-page', 'variant' => 'standard']],
         ],
         [
-          'id' => 'landing_about',
-          'type' => 'sections/landing_about',
-          'label' => 'Landing about',
-          'locked' => false,
-          'data' => [
-            'items' => [],
-          ],
-          'editable_fields' => [
-            'items.*.number',
-            'items.*.image.src',
-            'items.*.image.alt',
-            'items.*.card.value',
-            'items.*.card.label',
-            'items.*.eyebrow',
-            'items.*.title',
-            'items.*.description',
-          ],
+          'type' => 'cms/heading',
+          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Khoa Công Nghệ Thông Tin', 'marks' => []]], 'meta' => ['level' => 2, 'align' => 'center', 'variant' => 'display']],
         ],
         [
-          'id' => 'why_choose_us',
-          'type' => 'sections/why_choose_us',
-          'label' => 'Why choose us',
-          'locked' => false,
-          'data' => [
-            'badge' => '',
-            'title' => '',
-            'subtitle' => '',
-            'feature' => [],
-            'stats' => [],
-            'perks' => [],
-            'highlights' => [],
-          ],
-          'editable_fields' => [
-            'badge',
-            'title',
-            'subtitle',
-            'feature.image',
-            'feature.alt',
-            'feature.badge',
-            'feature.title',
-            'feature.description',
-            'feature.cta_label',
-            'feature.cta_url',
-            'stats.*.number',
-            'stats.*.title',
-            'stats.*.description',
-            'perks.*.icon',
-            'perks.*.title',
-            'perks.*.description',
-            'highlights.*.image',
-            'highlights.*.alt',
-            'highlights.*.title',
-            'highlights.*.description',
-          ],
+          'type' => 'cms/paragraph',
+          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Xây dựng năng lực công nghệ, kết nối doanh nghiệp và đồng hành cùng sinh viên trong hành trình nghề nghiệp.', 'marks' => []]], 'meta' => ['align' => 'center', 'variant' => 'lead']],
         ],
         [
-          'id' => 'stats',
-          'type' => 'sections/stats',
-          'label' => 'Statistics',
-          'locked' => false,
-          'data' => [
-            'title' => '',
-            'subtitle' => '',
-            'stats' => [],
-            'benefits' => [],
-            'cta' => [],
-          ],
-          'editable_fields' => [
-            'title',
-            'subtitle',
-            'stats.*.icon',
-            'stats.*.number',
-            'stats.*.label',
-            'stats.*.description',
-            'benefits.*.icon',
-            'benefits.*.title',
-            'benefits.*.items.*',
-            'cta.title',
-            'cta.description',
-            'cta.buttons.*.label',
-            'cta.buttons.*.url',
-            'cta.buttons.*.variant',
-          ],
+          'type' => 'cms/stat_grid',
+          'data' => ['meta' => ['variant' => 'cards', 'columns' => 4, 'items' => [
+            ['number' => '20+', 'label' => 'Năm đào tạo', 'description' => 'Kinh nghiệm đào tạo nhân lực CNTT.'],
+            ['number' => '1K+', 'label' => 'Sinh viên', 'description' => 'Sinh viên học tập và thực hành mỗi năm.'],
+            ['number' => '50+', 'label' => 'Đối tác', 'description' => 'Doanh nghiệp đồng hành tuyển dụng và thực tập.'],
+            ['number' => '95%', 'label' => 'Có việc làm', 'description' => 'Sinh viên sẵn sàng gia nhập thị trường lao động.'],
+          ]]],
         ],
         [
-          'id' => 'newsfeed',
-          'type' => 'sections/newsfeed',
-          'label' => 'Newsfeed',
-          'locked' => true,
-          'data' => [],
-          'editable_fields' => [],
+          'type' => 'cms/newsfeed',
+          'data' => ['meta' => ['mode' => 'featured_latest', 'featured_count' => 4, 'latest_count' => 3, 'variant' => 'landing']],
         ],
       ],
     ],
@@ -120,69 +44,34 @@ final class CmsPageSchemaRegistry
       'slug' => 'about',
       'route_path' => '/gioi-thieu',
       'type' => 'landing_page',
-      'layout_mode' => 'section_schema',
-      'sections' => [
+      'layout_mode' => 'block_builder',
+      'blocks' => [
         [
-          'id' => 'breadcrumbs',
-          'type' => 'sections/breadcrumbs',
-          'label' => 'Breadcrumbs',
-          'locked' => true,
-          'data' => [],
-          'editable_fields' => [],
+          'type' => 'cms/heading',
+          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Giới thiệu khoa', 'marks' => []]], 'meta' => ['level' => 1, 'align' => 'center', 'variant' => 'display']],
         ],
         [
-          'id' => 'about_hero',
-          'type' => 'sections/about_hero',
-          'label' => 'About hero',
-          'locked' => false,
-          'data' => [
-            'image' => 'public/img/about.jpg',
-            'badge' => '',
-            'title' => '',
-            'subtitle' => '',
-          ],
-          'editable_fields' => [
-            'image',
-            'badge',
-            'title',
-            'subtitle',
-          ],
+          'type' => 'cms/paragraph',
+          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Khoa Công Nghệ Thông Tin là nơi đào tạo, nghiên cứu và kết nối cộng đồng công nghệ ứng dụng.', 'marks' => []]], 'meta' => ['align' => 'center', 'variant' => 'lead']],
         ],
         [
-          'id' => 'history',
-          'type' => 'sections/history',
-          'label' => 'History',
-          'locked' => false,
-          'data' => [
-            'sections' => [],
-          ],
-          'editable_fields' => [
-            'sections.*.image.src',
-            'sections.*.image.alt',
-            'sections.*.image.caption',
-            'sections.*.year',
-            'sections.*.badge',
-            'sections.*.title',
-            'sections.*.timeline.*.year',
-            'sections.*.timeline.*.description',
-          ],
+          'type' => 'cms/image',
+          'data' => ['meta' => ['url' => 'public/img/about.jpg', 'alt' => 'Giới thiệu khoa', 'ratio' => 'wide', 'variant' => 'rounded']],
         ],
         [
-          'id' => 'bento_grid',
-          'type' => 'sections/bento_grid',
-          'label' => 'Bento grid',
-          'locked' => false,
-          'data' => [
-            'items' => [],
-          ],
-          'editable_fields' => [
-            'items.*.badge',
-            'items.*.image.src',
-            'items.*.image.alt',
-            'items.*.content',
-            'items.*.subContent',
-            'items.*.footer',
-          ],
+          'type' => 'cms/columns',
+          'data' => ['meta' => ['columns' => [
+            ['title' => 'Sứ mệnh', 'body' => 'Đào tạo nhân lực CNTT có năng lực thực hành, tư duy hệ thống và tinh thần học tập lâu dài.'],
+            ['title' => 'Kết nối', 'body' => 'Gắn kết sinh viên, giảng viên và doanh nghiệp qua các hoạt động học tập, thực tập và nghiên cứu.'],
+          ], 'variant' => 'balanced']],
+        ],
+        [
+          'type' => 'cms/card_grid',
+          'data' => ['meta' => ['columns' => 3, 'variant' => 'soft', 'items' => [
+            ['title' => 'Đào tạo ứng dụng', 'description' => 'Chương trình học chú trọng thực hành và dự án.'],
+            ['title' => 'Môi trường mở', 'description' => 'Khuyến khích sáng tạo, chia sẻ và hợp tác.'],
+            ['title' => 'Cơ hội nghề nghiệp', 'description' => 'Kết nối thực tập và tuyển dụng với doanh nghiệp.'],
+          ]]],
         ],
       ],
     ],
@@ -211,11 +100,21 @@ final class CmsPageSchemaRegistry
       throw new \InvalidArgumentException("Unknown CMS page schema: {$slug}");
     }
 
+    if (($schema['layout_mode'] ?? 'section_schema') === 'block_builder') {
+      return [
+        'version' => 1,
+        'blocks' => array_map(
+          fn(array $block) => $this->blockToDocumentNode($block),
+          $schema['blocks'] ?? [],
+        ),
+      ];
+    }
+
     return [
       'version' => 1,
       'sections' => array_map(
         fn(array $section) => $this->sectionToDocumentNode($section),
-        $schema['sections'],
+        $schema['sections'] ?? [],
       ),
     ];
   }
@@ -229,7 +128,7 @@ final class CmsPageSchemaRegistry
     }
 
     $map = [];
-    foreach ($schema['sections'] as $section) {
+    foreach (($schema['sections'] ?? []) as $section) {
       $map[$section['id']] = $section;
     }
 
@@ -243,6 +142,16 @@ final class CmsPageSchemaRegistry
       'type' => $section['type'],
       'locked' => (bool) ($section['locked'] ?? false),
       'data' => $section['data'] ?? [],
+    ];
+  }
+
+  private function blockToDocumentNode(array $block): array
+  {
+    return [
+      'id' => $block['id'] ?? bin2hex(random_bytes(8)),
+      'type' => $block['type'],
+      'version' => (int) ($block['version'] ?? 1),
+      'data' => $block['data'] ?? ['rich_text' => [], 'meta' => []],
     ];
   }
 }

@@ -9,4 +9,4 @@
 <script src="<?= url('/public/js/switch.js') ?>"></script>
 <script src="<?= url('/public/js/select.js') ?>"></script>
 <script src="<?= url('/public/js/media_uploader.js') ?>"></script>
-<script type="module" src="<?= url('public/js/cms/index.js') ?>"></script>
+<script type="module" src="<?= url('public/js/cms-builder/index.js') ?>"></script>

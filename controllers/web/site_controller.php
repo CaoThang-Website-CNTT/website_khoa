@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
+use App\Cms\CmsBlockPageRenderer;
 use App\Cms\CmsStaticPageRenderer;
 use App\Middlewares\Traits\HasDashboardRouting;
 use App\Services\{PostService, CarouselService, MenuService, WebSettingsService, CmsPageService};
@@ -213,6 +214,10 @@ class SiteController extends Controller
   {
     $page = $this->_cmsPageService->getPublishedPageBySlug($slug)
       ?? $this->_cmsPageService->getPageBySlug($slug);
+
+    if ($page->layout_mode === 'block_builder') {
+      return (new CmsBlockPageRenderer($context))->render($page->content());
+    }
 
     return (new CmsStaticPageRenderer($context))->render($page->content());
   }
