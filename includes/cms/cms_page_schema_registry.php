@@ -17,20 +17,45 @@ final class CmsPageSchemaRegistry
           'data' => ['meta' => ['carousel_slug' => 'landing-page', 'variant' => 'standard']],
         ],
         [
-          'type' => 'cms/heading',
-          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Khoa Công Nghệ Thông Tin', 'marks' => []]], 'meta' => ['level' => 2, 'align' => 'center', 'variant' => 'display']],
+          'type' => 'cms/landing_story',
+          'data' => ['meta' => ['items' => [
+            ['number' => '01', 'eyebrow' => 'Lorem ispum gì đó ở đây', 'title' => 'Đảm bảo chất lượng đào tạo', 'description' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'image' => 'public/img/about.jpg', 'badge_value' => 'Top 1', 'badge_label' => 'Khoa CNTT tại Miền Nam', 'image_side' => 'right'],
+            ['number' => '02', 'eyebrow' => 'Lorem ispum gì đó ở đây', 'title' => 'Cơ hội Nghề nghiệp', 'description' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'image' => 'public/img/about.jpg', 'badge_value' => '98%', 'badge_label' => 'Tỷ lệ có việc làm', 'image_side' => 'left'],
+            ['number' => '03', 'eyebrow' => 'Lorem ispum gì đó ở đây', 'title' => 'Nghiên cứu Đột phá', 'description' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'image' => 'public/img/about.jpg', 'badge_value' => '50+', 'badge_label' => 'Doanh nghiệp', 'image_side' => 'right'],
+          ]]],
         ],
         [
-          'type' => 'cms/paragraph',
-          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Xây dựng năng lực công nghệ, kết nối doanh nghiệp và đồng hành cùng sinh viên trong hành trình nghề nghiệp.', 'marks' => []]], 'meta' => ['align' => 'center', 'variant' => 'lead']],
+          'type' => 'cms/experience_grid',
+          'data' => ['meta' => ['badge' => 'Tại sao chọn chúng tôi', 'title' => 'Trải nghiệm Khoa CNTT Cao Thắng', 'subtitle' => 'Nơi ươm mầm tài năng công nghệ thông tin, kết nối tri thức với thực tiễn', 'image' => 'public/img/about.jpg', 'feature_title' => 'Môi trường học tập hiện đại, sáng tạo', 'feature_description' => 'Trang bị phòng lab tiêu chuẩn quốc tế, thư viện số phong phú, không gian làm việc nhóm linh hoạt và hệ thống học tập trực tuyến tiên tiến.', 'stats' => [
+            ['number' => '20', 'label' => 'Năm kinh nghiệm', 'description' => 'Tiên phong trong đào tạo CNTT chất lượng cao tại TP.HCM từ năm 2003', 'variant' => 'blue'],
+            ['number' => '95%', 'label' => 'Tỷ lệ việc làm', 'description' => 'Sinh viên có việc làm trong vòng 6 tháng sau tốt nghiệp', 'variant' => 'pink'],
+          ], 'perks' => [
+            ['icon' => 'fa-solid fa-code', 'title' => 'Công nghệ tiên tiến', 'description' => 'Học tập với công nghệ mới nhất.'],
+            ['icon' => 'fa-solid fa-briefcase', 'title' => 'Cộng đồng Mạnh mẽ', 'description' => 'Kết nối sinh viên với toàn cầu.'],
+            ['icon' => 'fa-solid fa-award', 'title' => 'Chất lượng Quốc tế', 'description' => 'Chương trình đạt chuẩn ABET.'],
+            ['icon' => 'fa-solid fa-rocket', 'title' => 'Khởi nghiệp', 'description' => 'Ươm mầm ý tưởng startup.'],
+          ], 'cards' => [
+            ['title' => 'Nghiên cứu & Phát triển', 'description' => 'Tham gia các dự án nghiên cứu thực tế cùng giảng viên', 'image' => 'public/img/about.jpg', 'variant' => 'blue'],
+            ['title' => 'Hợp tác Quốc tế', 'description' => 'Cơ hội trao đổi sinh viên và học bổng du học', 'image' => 'public/img/about.jpg', 'variant' => 'green'],
+          ]]],
         ],
         [
-          'type' => 'cms/stat_grid',
-          'data' => ['meta' => ['variant' => 'cards', 'columns' => 4, 'items' => [
-            ['number' => '20+', 'label' => 'Năm đào tạo', 'description' => 'Kinh nghiệm đào tạo nhân lực CNTT.'],
-            ['number' => '1K+', 'label' => 'Sinh viên', 'description' => 'Sinh viên học tập và thực hành mỗi năm.'],
-            ['number' => '50+', 'label' => 'Đối tác', 'description' => 'Doanh nghiệp đồng hành tuyển dụng và thực tập.'],
-            ['number' => '95%', 'label' => 'Có việc làm', 'description' => 'Sinh viên sẵn sàng gia nhập thị trường lao động.'],
+          'type' => 'cms/metric_summary',
+          'data' => ['meta' => ['title' => 'Khoa CNTT Cao Thắng', 'subtitle' => 'Định hình tương lai công nghệ thông tin Việt Nam', 'metrics' => [
+            ['icon' => 'fa-solid fa-award', 'number' => '50+', 'label' => 'Giải thưởng', 'description' => 'Trong các cuộc thi lập trình'],
+            ['icon' => 'fa-solid fa-graduation-cap', 'number' => '10K+', 'label' => 'Sinh viên', 'description' => 'Tốt nghiệp thành công'],
+            ['icon' => 'fa-solid fa-briefcase', 'number' => '95%', 'label' => 'Việc làm', 'description' => 'Sau 6 tháng tốt nghiệp'],
+            ['icon' => 'fa-solid fa-earth-asia', 'number' => '20+', 'label' => 'Quốc gia', 'description' => 'Hợp tác quốc tế'],
+          ], 'cards' => [
+            ['title' => 'Chương trình Đào tạo Tiên tiến', 'items' => ['Cập nhật theo công nghệ mới nhất', 'Tích hợp chứng chỉ quốc tế', 'Thực hành dự án thực tế', 'Được quy kỹ năng mềm']],
+            ['title' => 'Phát triển Nghề nghiệp', 'items' => ['Kết nối với 100+ doanh nghiệp', 'Thực tập tại công ty hàng đầu', 'Tư vấn định hướng nghề nghiệp', 'Cơ hội việc làm cao']],
+          ]]],
+        ],
+        [
+          'type' => 'cms/cta_band',
+          'data' => ['meta' => ['title' => 'Sẵn sàng bắt đầu hành trình của bạn?', 'description' => 'Gia nhập cộng đồng hơn 10.000 sinh viên và cựu sinh viên đang làm việc tại các công ty công nghệ hàng đầu', 'buttons' => [
+            ['label' => 'Đăng ký tư vấn', 'url' => '#', 'variant' => 'secondary'],
+            ['label' => 'Xem chương trình đào tạo', 'url' => '#', 'variant' => 'outline'],
           ]]],
         ],
         [
@@ -47,30 +72,25 @@ final class CmsPageSchemaRegistry
       'layout_mode' => 'block_builder',
       'blocks' => [
         [
-          'type' => 'cms/heading',
-          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Giới thiệu khoa', 'marks' => []]], 'meta' => ['level' => 1, 'align' => 'center', 'variant' => 'display']],
+          'type' => 'cms/about_hero',
+          'data' => ['meta' => ['image' => 'public/img/about.jpg', 'badge' => 'Về Chúng Tôi', 'title' => 'Câu chuyện của Cao Thắng', 'subtitle' => 'Từ những ngày đầu tiên đến hôm nay, Cao Thắng không ngừng phát triển để mang đến giáo dục công nghệ chất lượng cao cho sinh viên Việt Nam']],
         ],
         [
-          'type' => 'cms/paragraph',
-          'data' => ['rich_text' => [['type' => 'text', 'text' => 'Khoa Công Nghệ Thông Tin là nơi đào tạo, nghiên cứu và kết nối cộng đồng công nghệ ứng dụng.', 'marks' => []]], 'meta' => ['align' => 'center', 'variant' => 'lead']],
+          'type' => 'cms/timeline_story',
+          'data' => ['meta' => ['items' => [
+            ['badge' => 'Khoa Công Nghệ Thông Tin', 'title' => '27 năm đổi mới & phát triển', 'image' => 'public/img/about.jpg', 'year' => '1998', 'caption' => 'Khoa CNTT được thành lập', 'image_side' => 'left', 'timeline' => [['year' => '1998', 'description' => 'Khoa Điện Tử - Tin Học, tiền thân của khoa Công Nghệ Thông Tin được thành lập.'], ['year' => '2020', 'description' => 'Đổi tên Khoa Điện tử - Tin học thành Khoa Công nghệ thông tin.']]],
+            ['badge' => 'Trường Cao Đẳng Kỹ Thuật Cao Thắng', 'title' => '100+ năm truyền thống', 'image' => 'public/img/about.jpg', 'year' => '1906', 'caption' => 'Trường được thành lập', 'image_side' => 'right', 'timeline' => [['year' => '1906', 'description' => 'Chính thức thành lập Trường Cơ khí Á Châu.'], ['year' => '1915', 'description' => 'Chủ tịch Tôn Đức Thắng nhập học.'], ['year' => '2016', 'description' => 'Đạt chuẩn kiểm định quốc tế ABET.']]],
+          ]]],
         ],
         [
-          'type' => 'cms/image',
-          'data' => ['meta' => ['url' => 'public/img/about.jpg', 'alt' => 'Giới thiệu khoa', 'ratio' => 'wide', 'variant' => 'rounded']],
-        ],
-        [
-          'type' => 'cms/columns',
-          'data' => ['meta' => ['columns' => [
-            ['title' => 'Sứ mệnh', 'body' => 'Đào tạo nhân lực CNTT có năng lực thực hành, tư duy hệ thống và tinh thần học tập lâu dài.'],
-            ['title' => 'Kết nối', 'body' => 'Gắn kết sinh viên, giảng viên và doanh nghiệp qua các hoạt động học tập, thực tập và nghiên cứu.'],
-          ], 'variant' => 'balanced']],
-        ],
-        [
-          'type' => 'cms/card_grid',
-          'data' => ['meta' => ['columns' => 3, 'variant' => 'soft', 'items' => [
-            ['title' => 'Đào tạo ứng dụng', 'description' => 'Chương trình học chú trọng thực hành và dự án.'],
-            ['title' => 'Môi trường mở', 'description' => 'Khuyến khích sáng tạo, chia sẻ và hợp tác.'],
-            ['title' => 'Cơ hội nghề nghiệp', 'description' => 'Kết nối thực tập và tuyển dụng với doanh nghiệp.'],
+          'type' => 'cms/bento_showcase',
+          'data' => ['meta' => ['items' => [
+            ['type' => 'image', 'span' => 'large', 'title' => 'Thành tựu', 'badge' => 'Chứng nhận Quốc Tế', 'image' => 'public/img/about.jpg', 'description' => '30+ Quốc gia công nhận'],
+            ['type' => 'color', 'variant' => 'green', 'number' => '25+', 'title' => 'Giảng Viên', 'description' => 'Có hơn 15 năm kinh nghiệm trong việc giảng dạy'],
+            ['type' => 'color', 'variant' => 'pink', 'number' => '50+', 'title' => 'Giải Thưởng', 'description' => 'Từ chính phủ và các tổ chức kiểm định quốc tế'],
+            ['type' => 'plain', 'number' => '10+', 'title' => 'Phòng Lab hiện đại', 'description' => 'Trang bị công nghệ tiên tiến phục vụ học tập và nghiên cứu'],
+            ['type' => 'color', 'variant' => 'orange', 'number' => '100+', 'title' => 'Học bổng hằng năm', 'description' => 'Từ học bổng toàn phần đến các suất trao đổi quốc tế'],
+            ['type' => 'image', 'span' => 'tall', 'title' => 'Môi trường', 'badge' => 'Cộng đồng học tập', 'image' => 'public/img/about.jpg', 'description' => 'Năng động & sáng tạo'],
           ]]],
         ],
       ],

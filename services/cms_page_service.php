@@ -271,6 +271,13 @@ class CmsPageService implements ICmsPageService
       'cms/quote',
       'cms/carousel',
       'cms/newsfeed',
+      'cms/landing_story',
+      'cms/experience_grid',
+      'cms/metric_summary',
+      'cms/cta_band',
+      'cms/about_hero',
+      'cms/timeline_story',
+      'cms/bento_showcase',
     ];
   }
 

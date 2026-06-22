@@ -13,6 +13,13 @@ const BLOCKS = [
   { type: 'cms/stat_grid', title: 'Stat grid', icon: 'fa-chart-simple', group: 'Layout' },
   { type: 'cms/carousel', title: 'Carousel', icon: 'fa-images', group: 'Dynamic' },
   { type: 'cms/newsfeed', title: 'Newsfeed', icon: 'fa-newspaper', group: 'Dynamic' },
+  { type: 'cms/landing_story', title: 'Landing story', icon: 'fa-timeline', group: 'Landing presets' },
+  { type: 'cms/experience_grid', title: 'Experience grid', icon: 'fa-layer-group', group: 'Landing presets' },
+  { type: 'cms/metric_summary', title: 'Metric summary', icon: 'fa-chart-column', group: 'Landing presets' },
+  { type: 'cms/cta_band', title: 'CTA band', icon: 'fa-bullhorn', group: 'Landing presets' },
+  { type: 'cms/about_hero', title: 'About hero', icon: 'fa-panorama', group: 'About presets' },
+  { type: 'cms/timeline_story', title: 'Timeline story', icon: 'fa-clock-rotate-left', group: 'About presets' },
+  { type: 'cms/bento_showcase', title: 'Bento showcase', icon: 'fa-border-all', group: 'About presets' },
 ];
 
 const DEFAULTS = {
@@ -28,6 +35,13 @@ const DEFAULTS = {
   'cms/stat_grid': { rich_text: [], meta: { columns: 4, variant: 'cards', items: [{ number: '100+', label: 'Metric', description: 'Short description.' }, { number: '24/7', label: 'Support', description: 'Short description.' }, { number: '50+', label: 'Partners', description: 'Short description.' }, { number: '95%', label: 'Success', description: 'Short description.' }] } },
   'cms/carousel': { rich_text: [], meta: { carousel_slug: 'landing-page', variant: 'standard' } },
   'cms/newsfeed': { rich_text: [], meta: { mode: 'featured_latest', featured_count: 4, latest_count: 3, variant: 'landing' } },
+  'cms/landing_story': { rich_text: [], meta: { items: [{ number: '01', eyebrow: 'Eyebrow', title: 'Story title', description: 'Story description.', image: 'public/img/about.jpg', badge_value: 'Top 1', badge_label: 'Short label', image_side: 'right' }] } },
+  'cms/experience_grid': { rich_text: [], meta: { badge: 'Why choose us', title: 'Experience title', subtitle: 'Short supporting text', image: 'public/img/about.jpg', feature_title: 'Feature title', feature_description: 'Feature description.', stats: [{ number: '20', label: 'Years', description: 'Description', variant: 'blue' }, { number: '95%', label: 'Jobs', description: 'Description', variant: 'pink' }], perks: [], cards: [] } },
+  'cms/metric_summary': { rich_text: [], meta: { title: 'Metric summary', subtitle: 'Short supporting text', metrics: [{ icon: 'fa-solid fa-award', number: '50+', label: 'Awards', description: 'Description' }], cards: [{ title: 'Summary card', items: ['First item', 'Second item'] }] } },
+  'cms/cta_band': { rich_text: [], meta: { title: 'Ready to start?', description: 'Short call to action description.', buttons: [{ label: 'Contact us', url: '#', variant: 'secondary' }] } },
+  'cms/about_hero': { rich_text: [], meta: { image: 'public/img/about.jpg', badge: 'About us', title: 'About hero title', subtitle: 'About hero subtitle.' } },
+  'cms/timeline_story': { rich_text: [], meta: { items: [{ badge: 'Badge', title: 'Timeline title', image: 'public/img/about.jpg', year: '1998', caption: 'Caption', image_side: 'left', timeline: [{ year: '1998', description: 'Timeline description.' }] }] } },
+  'cms/bento_showcase': { rich_text: [], meta: { items: [{ type: 'image', span: 'large', title: 'Bento title', badge: 'Badge', image: 'public/img/about.jpg', description: 'Description' }, { type: 'color', variant: 'green', number: '25+', title: 'Metric', description: 'Description' }] } },
 };
 
 class CmsBuilder {
@@ -214,6 +228,20 @@ class CmsBuilder {
         return `<section class="cms-dynamic-section relative container py-16"><div class="container-wrapper"><div class="cms-dynamic-section__box"><span class="badge" data-variant="primary"><i class="fa-solid fa-images"></i> Dynamic</span><h2 class="section__title">Carousel</h2><p class="section__sub-title">Renders existing carousel slides on the public page.</p></div></div></section>`;
       case 'cms/newsfeed':
         return `<section class="cms-dynamic-section relative container py-16"><div class="container-wrapper"><div class="cms-dynamic-section__box"><span class="badge" data-variant="primary"><i class="fa-regular fa-newspaper"></i> Dynamic</span><h2 class="section__title">Newsfeed</h2><p class="section__sub-title">Renders featured and latest posts on the public page.</p></div></div></section>`;
+      case 'cms/landing_story':
+        return renderLandingStory(meta);
+      case 'cms/experience_grid':
+        return renderExperienceGrid(meta);
+      case 'cms/metric_summary':
+        return renderMetricSummary(meta);
+      case 'cms/cta_band':
+        return renderCtaBand(meta);
+      case 'cms/about_hero':
+        return renderAboutHero(meta);
+      case 'cms/timeline_story':
+        return renderTimelineStory(meta);
+      case 'cms/bento_showcase':
+        return renderBentoShowcase(meta);
       default:
         return '';
     }
@@ -297,6 +325,20 @@ class CmsBuilder {
         return `<div class="field"><span class="field__label">Carousel slug</span><input class="field__input" data-meta-key="carousel_slug" value="${escapeAttr(meta.carousel_slug || 'landing-page')}"></div>`;
       case 'cms/newsfeed':
         return `<div class="field"><span class="field__label">Featured count</span><input class="field__input" type="number" min="0" max="6" data-meta-key="featured_count" value="${escapeAttr(meta.featured_count || 4)}"></div><div class="field"><span class="field__label">Latest count</span><input class="field__input" type="number" min="0" max="6" data-meta-key="latest_count" value="${escapeAttr(meta.latest_count || 3)}"></div>`;
+      case 'cms/landing_story':
+        return jsonField('items', meta.items || []);
+      case 'cms/experience_grid':
+        return textField('badge', meta.badge) + textField('title', meta.title) + textField('subtitle', meta.subtitle) + textField('image', meta.image) + textField('feature_title', meta.feature_title) + textField('feature_description', meta.feature_description) + jsonField('stats', meta.stats || []) + jsonField('perks', meta.perks || []) + jsonField('cards', meta.cards || []);
+      case 'cms/metric_summary':
+        return textField('title', meta.title) + textField('subtitle', meta.subtitle) + jsonField('metrics', meta.metrics || []) + jsonField('cards', meta.cards || []);
+      case 'cms/cta_band':
+        return textField('title', meta.title) + textField('description', meta.description) + jsonField('buttons', meta.buttons || []);
+      case 'cms/about_hero':
+        return textField('image', meta.image) + textField('badge', meta.badge) + textField('title', meta.title) + textField('subtitle', meta.subtitle);
+      case 'cms/timeline_story':
+        return jsonField('items', meta.items || []);
+      case 'cms/bento_showcase':
+        return jsonField('items', meta.items || []);
       default:
         return '';
     }
@@ -401,6 +443,10 @@ function jsonField(key, value) {
   return `<div class="field"><span class="field__label">${escapeHtml(key)} JSON</span><textarea class="field__input cms-json-field" rows="10" data-json-key="${escapeAttr(key)}">${escapeHtml(JSON.stringify(value, null, 2))}</textarea><div class="field__description">Edit structured items for this preset block.</div></div>`;
 }
 
+function textField(key, value = '') {
+  return `<div class="field"><span class="field__label">${escapeHtml(key)}</span><input class="field__input" data-meta-key="${escapeAttr(key)}" value="${escapeAttr(value || '')}"></div>`;
+}
+
 function buttonFields(meta) {
   return `<div class="field"><span class="field__label">Label</span><input class="field__input" data-meta-key="label" value="${escapeAttr(meta.label || '')}"></div><div class="field"><span class="field__label">URL</span><input class="field__input" data-meta-key="url" value="${escapeAttr(meta.url || '#')}"></div><div class="field"><span class="field__label">Variant</span>${select('variant', meta.variant || 'primary', ['primary', 'outline', 'secondary'])}</div>`;
 }
@@ -418,6 +464,51 @@ function titleFor(block) {
 
 function iconFor(type) {
   return BLOCKS.find((item) => item.type === type)?.icon || 'fa-square';
+}
+
+function renderLandingStory(meta) {
+  return `<section class="cms-landing-story container"><div class="container-wrapper">${(meta.items || []).map((item, index) => {
+    const reverse = (item.image_side || (index % 2 === 0 ? 'right' : 'left')) === 'left' ? ' cms-story-row--reverse' : '';
+    return `<article class="cms-story-row${reverse}"><div class="cms-story-copy"><span class="cms-story-number">${escapeHtml(item.number || '')}</span><span class="cms-story-eyebrow">${escapeHtml(item.eyebrow || '')}</span><h2>${escapeHtml(item.title || '')}</h2><p>${escapeHtml(item.description || '')}</p></div><div class="cms-story-media"><img src="${escapeAttr(asset(item.image || ''))}" alt=""><div class="cms-floating-badge"><strong>${escapeHtml(item.badge_value || '')}</strong><span>${escapeHtml(item.badge_label || '')}</span></div></div></article>`;
+  }).join('')}</div></section>`;
+}
+
+function renderExperienceGrid(meta) {
+  return `<section class="cms-experience container py-16"><div class="container-wrapper"><div class="cms-section-intro"><span class="badge" data-variant="primary">${escapeHtml(meta.badge || '')}</span><h2>${escapeHtml(meta.title || '')}</h2><p>${escapeHtml(meta.subtitle || '')}</p></div><div class="cms-experience-grid"><article class="cms-experience-feature"><img src="${escapeAttr(asset(meta.image || ''))}" alt=""><div><span class="badge" data-variant="primary">Featured</span><h3>${escapeHtml(meta.feature_title || '')}</h3><p>${escapeHtml(meta.feature_description || '')}</p></div></article>${(meta.stats || []).map((stat) => `<article class="cms-experience-stat cms-experience-stat--${escapeAttr(stat.variant || 'blue')}"><strong>${escapeHtml(stat.number || '')}</strong><h3>${escapeHtml(stat.label || '')}</h3><p>${escapeHtml(stat.description || '')}</p></article>`).join('')}</div><div class="cms-perk-grid">${(meta.perks || []).map((perk) => `<article><span><i class="${escapeAttr(perk.icon || 'fa-solid fa-circle')}"></i></span><h3>${escapeHtml(perk.title || '')}</h3><p>${escapeHtml(perk.description || '')}</p></article>`).join('')}</div><div class="cms-feature-card-grid">${(meta.cards || []).map((card) => `<article class="cms-image-card cms-image-card--${escapeAttr(card.variant || 'blue')}"><img src="${escapeAttr(asset(card.image || ''))}" alt=""><div><h3>${escapeHtml(card.title || '')}</h3><p>${escapeHtml(card.description || '')}</p></div></article>`).join('')}</div></div></section>`;
+}
+
+function renderMetricSummary(meta) {
+  return `<section class="cms-metric-summary container py-16"><div class="container-wrapper"><div class="cms-section-intro"><h2>${escapeHtml(meta.title || '')}</h2><p>${escapeHtml(meta.subtitle || '')}</p></div><div class="cms-metric-grid">${(meta.metrics || []).map((metric) => `<article><span><i class="${escapeAttr(metric.icon || 'fa-solid fa-award')}"></i></span><strong>${escapeHtml(metric.number || '')}</strong><h3>${escapeHtml(metric.label || '')}</h3><p>${escapeHtml(metric.description || '')}</p></article>`).join('')}</div><div class="cms-summary-card-grid">${(meta.cards || []).map((card) => `<article><h3>${escapeHtml(card.title || '')}</h3><ul>${(card.items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></article>`).join('')}</div></div></section>`;
+}
+
+function renderCtaBand(meta) {
+  return `<section class="container py-8"><div class="container-wrapper"><div class="cms-cta-band"><h2>${escapeHtml(meta.title || '')}</h2><p>${escapeHtml(meta.description || '')}</p><div class="cms-button-group">${(meta.buttons || []).map(buttonHtml).join('')}</div></div></div></section>`;
+}
+
+function renderAboutHero(meta) {
+  return `<section class="cms-about-hero"><img src="${escapeAttr(asset(meta.image || ''))}" alt=""><div><span class="badge" data-variant="primary">${escapeHtml(meta.badge || '')}</span><h1>${escapeHtml(meta.title || '')}</h1><p>${escapeHtml(meta.subtitle || '')}</p></div></section>`;
+}
+
+function renderTimelineStory(meta) {
+  return `<section class="cms-timeline-story container py-16"><div class="container-wrapper">${(meta.items || []).map((item, index) => {
+    const reverse = (item.image_side || (index % 2 ? 'right' : 'left')) === 'right' ? ' cms-timeline-row--reverse' : '';
+    return `<article class="cms-timeline-row${reverse}"><div class="cms-timeline-image"><img src="${escapeAttr(asset(item.image || ''))}" alt=""><div><strong>${escapeHtml(item.year || '')}</strong><span>${escapeHtml(item.caption || '')}</span></div></div><div class="cms-timeline-copy"><span class="badge" data-variant="primary">${escapeHtml(item.badge || '')}</span><h2>${escapeHtml(item.title || '')}</h2>${(item.timeline || []).map((point) => `<p><strong>${escapeHtml(point.year || '')}:</strong> ${escapeHtml(point.description || '')}</p>`).join('')}</div></article>`;
+  }).join('')}</div></section>`;
+}
+
+function renderBentoShowcase(meta) {
+  return `<section class="cms-bento-showcase container py-16"><div class="container-wrapper"><div class="cms-bento-grid">${(meta.items || []).map((item) => {
+    const style = item.type === 'image' ? ` style="background-image:url(${escapeAttr(asset(item.image || ''))})"` : '';
+    return `<article class="cms-bento-card cms-bento-card--${escapeAttr(item.type || 'plain')} cms-bento-card--${escapeAttr(item.span || 'normal')} cms-bento-card--${escapeAttr(item.variant || 'blue')}"${style}><span>${escapeHtml(item.badge || '')}</span><strong>${escapeHtml(item.number || '')}</strong><h3>${escapeHtml(item.title || '')}</h3><p>${escapeHtml(item.description || '')}</p></article>`;
+  }).join('')}</div></div></section>`;
+}
+
+function asset(value) {
+  const src = String(value || '').trim();
+  if (!src) return '';
+  if (/^(https?:)?\/\//.test(src) || src.startsWith('data:') || src.startsWith('/')) return src;
+  if (src.startsWith('public/')) return `${location.origin}${location.pathname.replace(/admin\/.*$/, '')}${src}`.replace(/([^:]\/)\/+/g, '$1');
+  return src;
 }
 
 const builder = new CmsBuilder(window.CmsPageEditor || {});

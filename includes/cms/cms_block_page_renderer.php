@@ -51,6 +51,13 @@ final class CmsBlockPageRenderer
       'cms/quote' => $this->renderQuote($data, $meta),
       'cms/carousel' => $this->renderCarousel(),
       'cms/newsfeed' => $this->renderNewsfeed($meta),
+      'cms/landing_story' => $this->renderLandingStory($meta),
+      'cms/experience_grid' => $this->renderExperienceGrid($meta),
+      'cms/metric_summary' => $this->renderMetricSummary($meta),
+      'cms/cta_band' => $this->renderCtaBand($meta),
+      'cms/about_hero' => $this->renderAboutHeroBlock($meta),
+      'cms/timeline_story' => $this->renderTimelineStory($meta),
+      'cms/bento_showcase' => $this->renderBentoShowcase($meta),
       default => '',
     };
   }
@@ -173,6 +180,112 @@ final class CmsBlockPageRenderer
     $content = RichTextRenderer::render($data['rich_text'] ?? []);
     $citation = trim((string) ($meta['citation'] ?? ''));
     return '<section class="cms-block-section"><blockquote class="cms-quote"><p>' . $content . '</p>' . ($citation !== '' ? '<cite>' . $this->e($citation) . '</cite>' : '') . '</blockquote></section>';
+  }
+
+  private function renderLandingStory(array $meta): string
+  {
+    $items = is_array($meta['items'] ?? null) ? $meta['items'] : [];
+    if (empty($items)) return '';
+
+    $html = '';
+    foreach ($items as $index => $item) {
+      if (!is_array($item)) continue;
+      $reverse = ($item['image_side'] ?? ($index % 2 === 0 ? 'right' : 'left')) === 'left' ? ' cms-story-row--reverse' : '';
+      $html .= '<article class="cms-story-row' . $reverse . '">'
+        . '<div class="cms-story-copy"><span class="cms-story-number">' . $this->e($item['number'] ?? '') . '</span><span class="cms-story-eyebrow">' . $this->e($item['eyebrow'] ?? '') . '</span><h2>' . $this->e($item['title'] ?? '') . '</h2><p>' . $this->e($item['description'] ?? '') . '</p></div>'
+        . '<div class="cms-story-media"><img src="' . $this->e($this->asset($item['image'] ?? '')) . '" alt=""><div class="cms-floating-badge"><strong>' . $this->e($item['badge_value'] ?? '') . '</strong><span>' . $this->e($item['badge_label'] ?? '') . '</span></div></div>'
+        . '</article>';
+    }
+
+    return '<section class="cms-landing-story container"><div class="container-wrapper">' . $html . '</div></section>';
+  }
+
+  private function renderExperienceGrid(array $meta): string
+  {
+    $stats = is_array($meta['stats'] ?? null) ? $meta['stats'] : [];
+    $perks = is_array($meta['perks'] ?? null) ? $meta['perks'] : [];
+    $cards = is_array($meta['cards'] ?? null) ? $meta['cards'] : [];
+    $html = '<section class="cms-experience container py-16"><div class="container-wrapper">'
+      . '<div class="cms-section-intro"><span class="badge" data-variant="primary">' . $this->e($meta['badge'] ?? '') . '</span><h2>' . $this->e($meta['title'] ?? '') . '</h2><p>' . $this->e($meta['subtitle'] ?? '') . '</p></div>'
+      . '<div class="cms-experience-grid"><article class="cms-experience-feature"><img src="' . $this->e($this->asset($meta['image'] ?? '')) . '" alt=""><div><span class="badge" data-variant="primary">Nổi bật</span><h3>' . $this->e($meta['feature_title'] ?? '') . '</h3><p>' . $this->e($meta['feature_description'] ?? '') . '</p></div></article>';
+    foreach ($stats as $stat) {
+      if (!is_array($stat)) continue;
+      $html .= '<article class="cms-experience-stat cms-experience-stat--' . $this->e($stat['variant'] ?? 'blue') . '"><strong>' . $this->e($stat['number'] ?? '') . '</strong><h3>' . $this->e($stat['label'] ?? '') . '</h3><p>' . $this->e($stat['description'] ?? '') . '</p></article>';
+    }
+    $html .= '</div><div class="cms-perk-grid">';
+    foreach ($perks as $perk) {
+      if (!is_array($perk)) continue;
+      $html .= '<article><span><i class="' . $this->e($perk['icon'] ?? 'fa-solid fa-circle') . '"></i></span><h3>' . $this->e($perk['title'] ?? '') . '</h3><p>' . $this->e($perk['description'] ?? '') . '</p></article>';
+    }
+    $html .= '</div><div class="cms-feature-card-grid">';
+    foreach ($cards as $card) {
+      if (!is_array($card)) continue;
+      $html .= '<article class="cms-image-card cms-image-card--' . $this->e($card['variant'] ?? 'blue') . '"><img src="' . $this->e($this->asset($card['image'] ?? '')) . '" alt=""><div><h3>' . $this->e($card['title'] ?? '') . '</h3><p>' . $this->e($card['description'] ?? '') . '</p></div></article>';
+    }
+    return $html . '</div></div></section>';
+  }
+
+  private function renderMetricSummary(array $meta): string
+  {
+    $metrics = is_array($meta['metrics'] ?? null) ? $meta['metrics'] : [];
+    $cards = is_array($meta['cards'] ?? null) ? $meta['cards'] : [];
+    $html = '<section class="cms-metric-summary container py-16"><div class="container-wrapper"><div class="cms-section-intro"><h2>' . $this->e($meta['title'] ?? '') . '</h2><p>' . $this->e($meta['subtitle'] ?? '') . '</p></div><div class="cms-metric-grid">';
+    foreach ($metrics as $metric) {
+      if (!is_array($metric)) continue;
+      $html .= '<article><span><i class="' . $this->e($metric['icon'] ?? 'fa-solid fa-award') . '"></i></span><strong>' . $this->e($metric['number'] ?? '') . '</strong><h3>' . $this->e($metric['label'] ?? '') . '</h3><p>' . $this->e($metric['description'] ?? '') . '</p></article>';
+    }
+    $html .= '</div><div class="cms-summary-card-grid">';
+    foreach ($cards as $card) {
+      if (!is_array($card)) continue;
+      $items = is_array($card['items'] ?? null) ? $card['items'] : [];
+      $html .= '<article><h3>' . $this->e($card['title'] ?? '') . '</h3><ul>';
+      foreach ($items as $item) $html .= '<li>' . $this->e($item) . '</li>';
+      $html .= '</ul></article>';
+    }
+    return $html . '</div></div></section>';
+  }
+
+  private function renderCtaBand(array $meta): string
+  {
+    $buttons = is_array($meta['buttons'] ?? null) ? $meta['buttons'] : [];
+    $buttonHtml = '';
+    foreach ($buttons as $button) if (is_array($button)) $buttonHtml .= $this->button($button);
+    return '<section class="container py-8"><div class="container-wrapper"><div class="cms-cta-band"><h2>' . $this->e($meta['title'] ?? '') . '</h2><p>' . $this->e($meta['description'] ?? '') . '</p><div class="cms-button-group">' . $buttonHtml . '</div></div></div></section>';
+  }
+
+  private function renderAboutHeroBlock(array $meta): string
+  {
+    return '<section class="cms-about-hero"><img src="' . $this->e($this->asset($meta['image'] ?? '')) . '" alt=""><div><span class="badge" data-variant="primary">' . $this->e($meta['badge'] ?? '') . '</span><h1>' . $this->e($meta['title'] ?? '') . '</h1><p>' . $this->e($meta['subtitle'] ?? '') . '</p></div></section>';
+  }
+
+  private function renderTimelineStory(array $meta): string
+  {
+    $items = is_array($meta['items'] ?? null) ? $meta['items'] : [];
+    $html = '<section class="cms-timeline-story container py-16"><div class="container-wrapper">';
+    foreach ($items as $index => $item) {
+      if (!is_array($item)) continue;
+      $reverse = ($item['image_side'] ?? ($index % 2 ? 'right' : 'left')) === 'right' ? ' cms-timeline-row--reverse' : '';
+      $timeline = is_array($item['timeline'] ?? null) ? $item['timeline'] : [];
+      $html .= '<article class="cms-timeline-row' . $reverse . '"><div class="cms-timeline-image"><img src="' . $this->e($this->asset($item['image'] ?? '')) . '" alt=""><div><strong>' . $this->e($item['year'] ?? '') . '</strong><span>' . $this->e($item['caption'] ?? '') . '</span></div></div><div class="cms-timeline-copy"><span class="badge" data-variant="primary">' . $this->e($item['badge'] ?? '') . '</span><h2>' . $this->e($item['title'] ?? '') . '</h2>';
+      foreach ($timeline as $point) if (is_array($point)) $html .= '<p><strong>' . $this->e($point['year'] ?? '') . ':</strong> ' . $this->e($point['description'] ?? '') . '</p>';
+      $html .= '</div></article>';
+    }
+    return $html . '</div></section>';
+  }
+
+  private function renderBentoShowcase(array $meta): string
+  {
+    $items = is_array($meta['items'] ?? null) ? $meta['items'] : [];
+    $html = '<section class="cms-bento-showcase container py-16"><div class="container-wrapper"><div class="cms-bento-grid">';
+    foreach ($items as $item) {
+      if (!is_array($item)) continue;
+      $type = $this->choice($item['type'] ?? 'plain', ['plain', 'color', 'image'], 'plain');
+      $span = $this->choice($item['span'] ?? 'normal', ['normal', 'large', 'tall'], 'normal');
+      $variant = $this->choice($item['variant'] ?? 'blue', ['blue', 'green', 'pink', 'orange', 'dark'], 'blue');
+      $style = $type === 'image' ? ' style="background-image:url(' . $this->e($this->asset($item['image'] ?? '')) . ')"' : '';
+      $html .= '<article class="cms-bento-card cms-bento-card--' . $type . ' cms-bento-card--' . $span . ' cms-bento-card--' . $variant . '"' . $style . '><span>' . $this->e($item['badge'] ?? '') . '</span><strong>' . $this->e($item['number'] ?? '') . '</strong><h3>' . $this->e($item['title'] ?? '') . '</h3><p>' . $this->e($item['description'] ?? '') . '</p></article>';
+    }
+    return $html . '</div></div></section>';
   }
 
   private function renderCarousel(): string
