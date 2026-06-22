@@ -42,25 +42,28 @@ export class CmsFieldPanel {
     const schema = this.cmsDocument.sectionSchema(sectionId);
 
     if (!section || !schema) {
-      this.root.innerHTML = this.#emptyPanel('Select section', 'Choose a section from the preview or section list.');
+      this.root.innerHTML = this.#emptyPanel('Chọn section', 'Chọn một section từ live preview.');
       return;
     }
 
     const fields = this.cmsDocument.textFieldInstances(sectionId);
     const imageFields = this.cmsDocument.imageFieldInstances(sectionId);
-    if (schema.locked || (!fields.length && !imageFields.length)) {
-      this.root.innerHTML = this.#emptyPanel('Locked section', 'This section is locked in CMS v1.');
+    const variantOptions = this.cmsDocument.variantOptions(sectionId);
+    if (schema.locked || (!fields.length && !imageFields.length && variantOptions.length <= 1)) {
+      this.root.innerHTML = this.#emptyPanel('Section bị khóa', 'Section này đã bị khóa trong CMS v1.');
       return;
     }
 
     if (!activePath) {
-      this.root.innerHTML = this.#emptyPanel('Select a field', 'Choose editable text or an image from the preview.');
+      this.root.innerHTML = variantOptions.length > 1
+        ? `<div class="cms-field-grid">${this.#renderVariantField(section, variantOptions)}</div>`
+        : this.#emptyPanel('Chọn một trường', 'Chọn văn bản có thể chỉnh sửa hoặc một hình ảnh từ bản xem trước.');
       return;
     }
 
     const activeImageField = imageFields.find((field) => field.path === activePath);
     if (activeImageField) {
-      this.root.innerHTML = `<div class="cms-field-grid">${this.#renderImageField(activeImageField, activePath)}${this.#renderBentoBackgroundField(section, activeImageField)}</div>`;
+      this.root.innerHTML = `<div class="cms-field-grid">${this.#renderVariantField(section, variantOptions)}${this.#renderImageField(activeImageField, activePath)}${this.#renderBentoBackgroundField(section, activeImageField)}</div>`;
       return;
     }
 
@@ -68,13 +71,14 @@ export class CmsFieldPanel {
     if (activeTextField) {
       this.root.innerHTML = `
         <div class="cms-field-grid">
+          ${this.#renderVariantField(section, variantOptions)}
           ${this.#renderTextField(activeTextField, getPath(section.data || {}, activeTextField.path), activePath)}
         </div>
       `;
       return;
     }
 
-    this.root.innerHTML = this.#emptyPanel('Field unavailable', 'This field is not editable in CMS v1.');
+    this.root.innerHTML = this.#emptyPanel('Trường không khả dụng', 'Trường này không chỉnh sửa ở CMS v1.');
   }
 
   syncValue(path, value) {
@@ -86,6 +90,7 @@ export class CmsFieldPanel {
     const id = `cms-field-${field.sectionId}-${field.path}`.replace(/[^a-z0-9_-]+/gi, '-');
     const valueText = value == null ? '' : String(value);
     const active = activePath === field.path ? ' is-active' : '';
+    const isIconField = this.#isIconPath(field.path);
 
     if (field.control === 'textarea') {
       return `
@@ -100,6 +105,25 @@ export class CmsFieldPanel {
       <label class="field cms-text-field${active}" for="${escapeAttr(id)}">
         <span class="field__label">${escapeHtml(field.label)}</span>
         <input id="${escapeAttr(id)}" class="field__input" type="text" value="${escapeAttr(valueText)}" data-cms-path="${escapeAttr(field.path)}">
+        ${isIconField ? '<small class="field__hint">Enter Font Awesome classes, for example fa-solid fa-award.</small>' : ''}
+      </label>
+    `;
+  }
+
+  #isIconPath(path) {
+    return /(^|\.)icon$/.test(path);
+  }
+
+  #renderVariantField(section, options) {
+    if (options.length <= 1) return '';
+
+    const value = section.data?.variant || options[0]?.value || 'default';
+    return `
+      <label class="field cms-variant-field" for="${escapeAttr(`cms-field-${section.id}-variant`)}">
+        <span class="field__label">Variant</span>
+        <select id="${escapeAttr(`cms-field-${section.id}-variant`)}" class="field__input" data-cms-path="variant">
+          ${options.map((option) => `<option value="${escapeAttr(option.value)}"${option.value === value ? ' selected' : ''}>${escapeHtml(option.label)}</option>`).join('')}
+        </select>
       </label>
     `;
   }

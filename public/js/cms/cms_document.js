@@ -1,4 +1,3 @@
-import { CMS_IMAGE_FIELDS, CMS_TEXT_FIELDS } from './cms_config.js';
 import { getPath, isEditableScalar } from './cms_utils.js';
 
 export class CmsDocument {
@@ -23,7 +22,7 @@ export class CmsDocument {
 
   textFieldInstances(sectionId) {
     const section = this.section(sectionId);
-    const specs = CMS_TEXT_FIELDS[sectionId] || [];
+    const specs = this.#textFieldSpecs(sectionId);
     return specs.flatMap(([pattern, label, control]) => this.#expandTextPattern(section?.data || {}, pattern).map((path) => ({
       sectionId,
       path,
@@ -34,7 +33,7 @@ export class CmsDocument {
 
   imageFieldInstances(sectionId) {
     const section = this.section(sectionId);
-    const specs = CMS_IMAGE_FIELDS[sectionId] || [];
+    const specs = this.#imageFieldSpecs(sectionId);
     return specs.flatMap(([pattern, label]) => this.#expandPathPattern(section?.data || {}, pattern).map((path) => ({
       sectionId,
       path,
@@ -49,6 +48,48 @@ export class CmsDocument {
 
   isImageEditable(sectionId, path) {
     return this.imageFieldInstances(sectionId).some((field) => field.path === path);
+  }
+
+  variantOptions(sectionId) {
+    const schema = this.sectionSchema(sectionId);
+    const variants = schema?.variants || {};
+    return Object.entries(variants).map(([value, label]) => ({ value, label }));
+  }
+
+  #textFieldSpecs(sectionId) {
+    const schema = this.sectionSchema(sectionId);
+    return (schema?.editable_fields || [])
+      .filter((path) => path !== 'variant' && !this.#isImagePath(path))
+      .map((path) => [path, this.#fieldLabel(schema, path), this.#controlForPattern(path)]);
+  }
+
+  #imageFieldSpecs(sectionId) {
+    const schema = this.sectionSchema(sectionId);
+    return (schema?.editable_fields || [])
+      .filter((path) => this.#isImagePath(path))
+      .map((path) => [path, this.#fieldLabel(schema, path)]);
+  }
+
+  #isImagePath(path) {
+    return /(^|\.)(image|src)$/.test(path) || /(^|\.)(image|src)(\.|$)/.test(path);
+  }
+
+  #controlForPattern(path) {
+    return path.match(/description|subtitle|content|footer|items\.\*$/i) ? 'textarea' : 'input';
+  }
+
+  #labelForPattern(path) {
+    return path
+      .replace(/\.\*/g, '')
+      .split('.')
+      .filter(Boolean)
+      .map((part) => part.replace(/_/g, ' '))
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  #fieldLabel(schema, path) {
+    return schema?.field_labels?.[path] || this.#labelForPattern(path);
   }
 
   #expandTextPattern(data, pattern) {

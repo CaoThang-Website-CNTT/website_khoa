@@ -91,8 +91,12 @@ require_once BASE_PATH . '/includes/editor/block_validator.php';
 require_once BASE_PATH . '/includes/editor/block_renderer.php';
 
 // CMS
-require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
+require_once BASE_PATH . '/includes/cms/cms_render_context.php';
+require_once BASE_PATH . '/includes/cms/cms_section_definition_interface.php';
+require_once BASE_PATH . '/includes/cms/cms_callback_section_definition.php';
+require_once BASE_PATH . '/includes/cms/cms_section_registry.php';
 require_once BASE_PATH . '/includes/cms/cms_static_page_renderer.php';
+require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';

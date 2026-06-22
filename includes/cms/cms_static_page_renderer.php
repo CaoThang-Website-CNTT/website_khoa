@@ -4,44 +4,259 @@ namespace App\Cms;
 
 final class CmsStaticPageRenderer
 {
-  public function __construct(private array $context = [])
+  private CmsSectionRegistry $_sections;
+
+  public function __construct(
+    private array $context = [],
+    ?CmsSectionRegistry $sections = null,
+    private string $pageSlug = '',
+  )
   {
+    $this->_sections = $sections ?? self::defaultRegistry();
   }
 
   public function render(array $document): string
   {
     $html = '';
+    $context = new CmsRenderContext($this->pageSlug, '', $this->context);
+
     foreach ($document['sections'] ?? [] as $section) {
       if (!is_array($section)) {
         continue;
       }
-      $html .= $this->renderSection($section);
+      $html .= $this->_sections->renderSection($section, $context);
     }
     return $html;
   }
 
-  private function renderSection(array $section): string
+  public static function defaultRegistry(): CmsSectionRegistry
   {
-    $data = is_array($section['data'] ?? null) ? $section['data'] : [];
+    $renderer = new self([], new CmsSectionRegistry());
+    $registry = new CmsSectionRegistry();
 
-    return match ($section['id'] ?? '') {
-      'hero' => $this->renderHero(),
-      'newsfeed' => $this->renderNewsfeed(),
-      'breadcrumbs' => $this->renderBreadcrumbs(),
-      'landing_about' => $this->renderLandingAbout($data),
-      'why_choose_us' => $this->renderWhyChooseUs($data),
-      'stats' => $this->renderStats($data),
-      'about_hero' => $this->renderAboutHero($data),
-      'history' => $this->renderHistory($data),
-      'bento_grid' => $this->renderBentoGrid($data),
-      default => '',
-    };
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/landing_hero',
+      'Hero carousel',
+      [],
+      [],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderHero($context),
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/newsfeed',
+      'Newsfeed',
+      [],
+      [],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderNewsfeed($context),
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/breadcrumbs',
+      'Breadcrumbs',
+      [],
+      [],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderBreadcrumbs(),
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/landing_about',
+      'Landing about',
+      ['variant' => 'default', 'items' => []],
+      [
+        'items.*.number',
+        'items.*.image.src',
+        'items.*.image.alt',
+        'items.*.card.value',
+        'items.*.card.label',
+        'items.*.eyebrow',
+        'items.*.title',
+        'items.*.description',
+      ],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderLandingAbout($data),
+      [
+        'items.*.number' => 'Number',
+        'items.*.image.src' => 'Image',
+        'items.*.image.alt' => 'Image alt text',
+        'items.*.card.value' => 'Card value',
+        'items.*.card.label' => 'Card label',
+        'items.*.eyebrow' => 'Eyebrow',
+        'items.*.title' => 'Title',
+        'items.*.description' => 'Description',
+      ],
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/why_choose_us',
+      'Why choose us',
+      ['variant' => 'default', 'badge' => '', 'title' => '', 'subtitle' => '', 'feature' => [], 'stats' => [], 'perks' => [], 'highlights' => []],
+      [
+        'badge',
+        'title',
+        'subtitle',
+        'feature.image',
+        'feature.alt',
+        'feature.badge',
+        'feature.title',
+        'feature.description',
+        'feature.cta_label',
+        'feature.cta_url',
+        'stats.*.number',
+        'stats.*.title',
+        'stats.*.description',
+        'perks.*.icon',
+        'perks.*.title',
+        'perks.*.description',
+        'highlights.*.image',
+        'highlights.*.alt',
+        'highlights.*.title',
+        'highlights.*.description',
+      ],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderWhyChooseUs($data),
+      [
+        'badge' => 'Badge',
+        'title' => 'Title',
+        'subtitle' => 'Subtitle',
+        'feature.image' => 'Feature image',
+        'feature.alt' => 'Feature image alt text',
+        'feature.badge' => 'Feature badge',
+        'feature.title' => 'Feature title',
+        'feature.description' => 'Feature description',
+        'feature.cta_label' => 'Feature button label',
+        'feature.cta_url' => 'Feature button URL',
+        'stats.*.number' => 'Stat number',
+        'stats.*.title' => 'Stat title',
+        'stats.*.description' => 'Stat description',
+        'perks.*.icon' => 'Perk icon classes',
+        'perks.*.title' => 'Perk title',
+        'perks.*.description' => 'Perk description',
+        'highlights.*.image' => 'Highlight image',
+        'highlights.*.alt' => 'Highlight image alt text',
+        'highlights.*.title' => 'Highlight title',
+        'highlights.*.description' => 'Highlight description',
+      ],
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/stats',
+      'Statistics',
+      ['variant' => 'default', 'title' => '', 'subtitle' => '', 'stats' => [], 'benefits' => [], 'cta' => []],
+      [
+        'title',
+        'subtitle',
+        'stats.*.icon',
+        'stats.*.number',
+        'stats.*.label',
+        'stats.*.description',
+        'benefits.*.icon',
+        'benefits.*.title',
+        'benefits.*.items.*',
+        'cta.title',
+        'cta.description',
+        'cta.buttons.*.label',
+        'cta.buttons.*.url',
+        'cta.buttons.*.variant',
+      ],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderStats($data),
+      [
+        'title' => 'Title',
+        'subtitle' => 'Subtitle',
+        'stats.*.icon' => 'Stat icon classes',
+        'stats.*.number' => 'Stat number',
+        'stats.*.label' => 'Stat label',
+        'stats.*.description' => 'Stat description',
+        'benefits.*.icon' => 'Benefit icon classes',
+        'benefits.*.title' => 'Benefit title',
+        'benefits.*.items.*' => 'Benefit item',
+        'cta.title' => 'CTA title',
+        'cta.description' => 'CTA description',
+        'cta.buttons.*.label' => 'Button label',
+        'cta.buttons.*.url' => 'Button URL',
+        'cta.buttons.*.variant' => 'Button variant',
+      ],
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/about_hero',
+      'About hero',
+      ['variant' => 'default', 'image' => 'public/img/about.jpg', 'badge' => '', 'title' => '', 'subtitle' => ''],
+      ['image', 'badge', 'title', 'subtitle'],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderAboutHero($data),
+      [
+        'image' => 'Hero image',
+        'badge' => 'Badge',
+        'title' => 'Title',
+        'subtitle' => 'Subtitle',
+      ],
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/history',
+      'History',
+      ['variant' => 'default', 'sections' => []],
+      [
+        'sections.*.image.src',
+        'sections.*.image.alt',
+        'sections.*.image.caption',
+        'sections.*.year',
+        'sections.*.badge',
+        'sections.*.title',
+        'sections.*.timeline.*.year',
+        'sections.*.timeline.*.description',
+      ],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderHistory($data),
+      [
+        'sections.*.image.src' => 'History image',
+        'sections.*.image.alt' => 'History image alt text',
+        'sections.*.image.caption' => 'Image caption',
+        'sections.*.year' => 'Year',
+        'sections.*.badge' => 'Badge',
+        'sections.*.title' => 'Title',
+        'sections.*.timeline.*.year' => 'Timeline year',
+        'sections.*.timeline.*.description' => 'Timeline description',
+      ],
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/bento_grid',
+      'Bento grid',
+      ['variant' => 'default', 'items' => []],
+      [
+        'items.*.badge',
+        'items.*.image.src',
+        'items.*.image.alt',
+        'items.*.content',
+        'items.*.subContent',
+        'items.*.footer',
+        'items.*.background',
+      ],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderBentoGrid($data),
+      [
+        'items.*.badge' => 'Badge',
+        'items.*.image.src' => 'Image',
+        'items.*.image.alt' => 'Image alt text',
+        'items.*.content' => 'Content',
+        'items.*.subContent' => 'Sub content',
+        'items.*.footer' => 'Footer',
+        'items.*.background' => 'Background color',
+      ],
+    ));
+
+    return $registry;
   }
 
-  private function renderHero(): string
+  private function renderHero(CmsRenderContext $context): string
   {
     ob_start();
-    $carouselSlides = $this->context['carouselSlides'] ?? [];
+    $carouselSlides = $context->value('carouselSlides', []);
     ?>
     <section class="relative" id="hero-section">
       <div class="container">
@@ -265,12 +480,12 @@ final class CmsStaticPageRenderer
     return (string) ob_get_clean();
   }
 
-  private function renderNewsfeed(): string
+  private function renderNewsfeed(CmsRenderContext $context): string
   {
     include_once BASE_PATH . '/templates/components/news_card.php';
     ob_start();
-    $featuredNews = $this->context['featuredNews'] ?? [];
-    $latestNewsItems = $this->context['latestNewsItems'] ?? [];
+    $featuredNews = $context->value('featuredNews', []);
+    $latestNewsItems = $context->value('latestNewsItems', []);
     ?>
     <section class="relative container py-16" id="newsfeed-section">
       <div class="container-wrapper">

@@ -13,6 +13,8 @@ export class CmsPreview {
     this.scale = 1;
     this.frame = null;
     this.resizeObserver = null;
+    this.pendingScrollSectionId = null;
+    this.highlightEditables = false;
   }
 
   init() {
@@ -37,6 +39,8 @@ export class CmsPreview {
     this.frame = this.root.querySelector('iframe');
     this.frame.addEventListener('load', () => {
       this.#bindFrame();
+      this.#applyEditableHighlights();
+      this.#flushPendingScroll();
       requestAnimationFrame(() => this.#syncFrameHeight());
     });
     this.frame.srcdoc = this.#renderDocument();
@@ -60,8 +64,30 @@ export class CmsPreview {
   }
 
   scrollToSection(sectionId) {
+    this.pendingScrollSectionId = sectionId;
+    this.#flushPendingScroll();
+  }
+
+  setEditableHighlights(enabled) {
+    this.highlightEditables = Boolean(enabled);
+    this.#applyEditableHighlights();
+  }
+
+  #applyEditableHighlights() {
+    const body = this.frame?.contentDocument?.body;
+    if (!body) return;
+    body.classList.toggle('cms-preview-body--highlight-editables', this.highlightEditables);
+  }
+
+  #flushPendingScroll() {
+    const sectionId = this.pendingScrollSectionId;
+    if (!sectionId) return;
+
     const node = this.frame?.contentDocument?.querySelector(`[data-section-id="${cssEscape(sectionId)}"]`);
-    node?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!node) return;
+
+    node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.pendingScrollSectionId = null;
   }
 
   markActiveEditable() {
@@ -70,6 +96,7 @@ export class CmsPreview {
     if (!doc) return;
     doc.querySelectorAll('.cms-editable-text.is-active').forEach((node) => node.classList.remove('is-active'));
     doc.querySelectorAll('.cms-editable-image.is-active').forEach((node) => node.classList.remove('is-active'));
+    doc.querySelectorAll('.cms-editable-icon.is-active').forEach((node) => node.classList.remove('is-active'));
     if (!active.sectionId || !active.path) return;
     doc.querySelector(`[data-section-id="${cssEscape(active.sectionId)}"] [data-cms-path="${cssEscape(active.path)}"]`)?.classList.add('is-active');
   }
@@ -140,6 +167,7 @@ export class CmsPreview {
     doc.addEventListener('click', (event) => {
       const editableNode = event.target.closest('[data-inline-edit="true"]');
       const imageNode = event.target.closest('[data-cms-image-edit="true"]');
+      const iconNode = event.target.closest('[data-cms-icon-edit="true"]');
       const sectionNode = event.target.closest('[data-section-id]');
 
       if (editableNode) {
@@ -155,6 +183,14 @@ export class CmsPreview {
         this.bus.dispatch('preview:image_selected', {
           sectionId: imageNode.dataset.sectionId,
           path: imageNode.dataset.cmsPath,
+        });
+        return;
+      }
+
+      if (iconNode) {
+        this.bus.dispatch('preview:icon_selected', {
+          sectionId: iconNode.dataset.sectionId,
+          path: iconNode.dataset.cmsPath,
         });
         return;
       }

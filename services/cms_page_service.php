@@ -182,7 +182,7 @@ class CmsPageService implements ICmsPageService
         'locked' => (bool) ($sectionSchema['locked'] ?? false),
         'data' => ($sectionSchema['locked'] ?? false)
           ? $defaultData
-          : $this->filterDataByAllowedPaths($submittedData, $sectionSchema['editable_fields'] ?? [], $defaultData),
+          : $this->normalizeSectionData($submittedData, $sectionSchema, $defaultData),
       ];
     }
 
@@ -213,6 +213,26 @@ class CmsPageService implements ICmsPageService
 
     foreach ($allowedPaths as $path) {
       $this->copyAllowedPath($submitted, $filtered, explode('.', $path));
+    }
+
+    return $filtered;
+  }
+
+  private function normalizeSectionData(array $submittedData, array $sectionSchema, array $defaultData): array
+  {
+    $allowedPaths = $sectionSchema['editable_fields'] ?? [];
+    $variants = is_array($sectionSchema['variants'] ?? null) ? $sectionSchema['variants'] : [];
+
+    if (!empty($variants)) {
+      $allowedPaths[] = 'variant';
+    }
+
+    $filtered = $this->filterDataByAllowedPaths($submittedData, $allowedPaths, $defaultData);
+
+    if (!empty($variants)) {
+      $defaultVariant = array_key_first($variants) ?: 'default';
+      $variant = trim((string) ($filtered['variant'] ?? $defaultVariant));
+      $filtered['variant'] = isset($variants[$variant]) ? $variant : $defaultVariant;
     }
 
     return $filtered;

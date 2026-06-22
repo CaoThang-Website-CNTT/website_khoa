@@ -214,6 +214,6 @@ class SiteController extends Controller
     $page = $this->_cmsPageService->getPublishedPageBySlug($slug)
       ?? $this->_cmsPageService->getPageBySlug($slug);
 
-    return (new CmsStaticPageRenderer($context))->render($page->content());
+    return (new CmsStaticPageRenderer($context, pageSlug: $slug))->render($page->content());
   }
 }

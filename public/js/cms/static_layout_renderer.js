@@ -14,23 +14,32 @@ export class StaticLayoutRenderer {
 
     const data = section.data || {};
 
-    switch (section.id) {
+    switch (section.type || section.id) {
+      case 'sections/landing_hero':
       case 'hero':
         return this.renderLockedPlaceholder('Landing Carousel', 'Carousel slides đươc quản lý từ CMS editor.');
+      case 'sections/newsfeed':
       case 'newsfeed':
         return this.renderLockedPlaceholder('Newsfeed', 'Nội dung News được lấy từ Database.');
+      case 'sections/breadcrumbs':
       case 'breadcrumbs':
         return this.renderBreadcrumbsPreview();
+      case 'sections/landing_about':
       case 'landing_about':
         return this.renderLandingAbout(data, section.id);
+      case 'sections/why_choose_us':
       case 'why_choose_us':
         return this.renderWhyChooseUs(data, section.id);
+      case 'sections/stats':
       case 'stats':
         return this.renderStats(data, section.id);
+      case 'sections/about_hero':
       case 'about_hero':
         return this.renderAboutHero(data, section.id);
+      case 'sections/history':
       case 'history':
         return this.renderHistory(data, section.id);
+      case 'sections/bento_grid':
       case 'bento_grid':
         return this.renderBentoGrid(data, section.id);
       default:
@@ -67,6 +76,13 @@ export class StaticLayoutRenderer {
   imageActiveClass(sectionId, path) {
     const active = this.getActiveState();
     return active.sectionId === sectionId && active.path === path ? ' is-active' : '';
+  }
+
+  iconAttrs(sectionId, path) {
+    if (!this.cmsDocument.isTextEditable(sectionId, path)) return '';
+    const active = this.getActiveState();
+    const activeClass = active.sectionId === sectionId && active.path === path ? ' is-active' : '';
+    return `cms-editable-icon${activeClass}" data-cms-icon-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(path)}`;
   }
 
   bentoItemStyle(item) {
@@ -174,7 +190,7 @@ export class StaticLayoutRenderer {
                   <span class="wcu__feature-card-badge badge" data-variant="primary">${this.editable(sectionId, 'feature.badge', data.feature?.badge)}</span>
                   <h3 class="wcu__feature-card-title text-md md:text-3xl font-semibold">${this.editable(sectionId, 'feature.title', data.feature?.title)}</h3>
                   <p class="wcu__feature-card-description text-xs md:text-md font-normal">${this.editable(sectionId, 'feature.description', data.feature?.description, true)}</p>
-                  <span class="wcu__feature-card-link md:text-md font-normal">${this.editable(sectionId, 'feature.cta_label', data.feature?.cta_label)} <i class="fa-solid fa-lock"></i></span>
+                  <span class="wcu__feature-card-link md:text-md font-normal">${this.editable(sectionId, 'feature.cta_label', data.feature?.cta_label)} <i class="fa-solid fa-arrow-up-right-from-square"></i></span>
                 </div>
               </div>
               ${asArray(data.stats).map((stat, index) => `
@@ -190,7 +206,7 @@ export class StaticLayoutRenderer {
             <div class="wcu__perks-list grid grid-cols-2 grid-rows-2 md:flex justify-center items-stretch self-stretch gap-3 md:gap-6 mb-6">
               ${asArray(data.perks).map((perk, index) => `
                 <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-3 md:p-6">
-                  <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3"><i class="${escapeAttr(perk.icon || 'fa-solid fa-circle')} wcu__perk-item-icon"></i></div>
+                  <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3"><i class="${escapeAttr(perk.icon || 'fa-solid fa-circle')} wcu__perk-item-icon ${this.iconAttrs(sectionId, `perks.${index}.icon`)}"></i></div>
                   <h4 class="wcu__perk-item-title md:text-md font-semibold mb-2">${this.editable(sectionId, `perks.${index}.title`, perk.title)}</h4>
                   <p class="wcu__perk-item-description text-xs md:text-sm font-normal">${this.editable(sectionId, `perks.${index}.description`, perk.description, true)}</p>
                 </div>
@@ -225,7 +241,7 @@ export class StaticLayoutRenderer {
             <div class="stats__grid grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 gap-3 md:gap-6">
               ${asArray(data.stats).map((stat, index) => `
                 <div class="stats__stat-card flex flex-1 flex-col items-center gap-3 md:gap-6 rounded-3xl p-3 md:p-6">
-                  <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full"><i class="${escapeAttr(stat.icon || 'fa-solid fa-award')} stats__stat-card-icon"></i></div>
+                  <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full"><i class="${escapeAttr(stat.icon || 'fa-solid fa-award')} stats__stat-card-icon ${this.iconAttrs(sectionId, `stats.${index}.icon`)}"></i></div>
                   <div class="flex flex-col gap-1 items-center">
                     <h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h3>
                     <h4 class="stats__stat-card-label font-semibold">${this.editable(sectionId, `stats.${index}.label`, stat.label)}</h4>
@@ -238,7 +254,7 @@ export class StaticLayoutRenderer {
               ${asArray(data.benefits).map((benefit, index) => `
                 <div class="stats__benefit-card flex-1 flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
                   <div class="stats__benefit-card-header flex gap-2 md:gap-4 items-center">
-                    <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="${escapeAttr(benefit.icon || 'fa-solid fa-building-columns')} stats__benefit-card-icon"></i></div>
+                    <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="${escapeAttr(benefit.icon || 'fa-solid fa-building-columns')} stats__benefit-card-icon ${this.iconAttrs(sectionId, `benefits.${index}.icon`)}"></i></div>
                     <h3 class="stats__benefit-card-title text-lg md:text-2xl font-semibold">${this.editable(sectionId, `benefits.${index}.title`, benefit.title)}</h3>
                   </div>
                   <ul class="stats__benefit-card-list flex flex-col gap-2 md:gap-4">
@@ -343,4 +359,3 @@ export class StaticLayoutRenderer {
     `;
   }
 }
-

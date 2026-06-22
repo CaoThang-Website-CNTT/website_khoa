@@ -65,6 +65,7 @@ export class CmsEditorManager {
   #activeSectionId;
   #activePath = null;
   #previewMode = 'desktop';
+  #highlightEditables = false;
 
   constructor(payload = {}) {
     this.#bus = new CmsEditorEventBus();
@@ -110,11 +111,20 @@ export class CmsEditorManager {
     this.#bus.subscribe('field:media_select_request', (payload) => this.#onMediaSelectRequest(payload));
     this.#bus.subscribe('preview:editable_selected', (payload) => this.#onPreviewEditableSelected(payload));
     this.#bus.subscribe('preview:image_selected', (payload) => this.#onPreviewImageSelected(payload));
+    this.#bus.subscribe('preview:icon_selected', (payload) => this.#onPreviewIconSelected(payload));
     this.#bus.subscribe('preview:input', (payload) => this.#onPreviewInput(payload));
 
     document.addEventListener('click', (event) => {
       const widthTrigger = event.target.closest('[data-preview-width]');
-      if (!widthTrigger) return;
+      const highlightTrigger = event.target.closest('[data-preview-highlight]');
+      if (!widthTrigger && !highlightTrigger) return;
+
+      if (highlightTrigger) {
+        this.#highlightEditables = !this.#highlightEditables;
+        this.#preview.setEditableHighlights(this.#highlightEditables);
+        this.#updateHighlightButton();
+        return;
+      }
 
       this.#previewMode = widthTrigger.dataset.previewWidth === 'mobile' ? 'mobile' : 'desktop';
       this.#preview.setMode(this.#previewMode);
@@ -137,6 +147,7 @@ export class CmsEditorManager {
     this.#preview.setMode(this.#previewMode);
     this.#preview.render();
     this.#updatePreviewModeButtons();
+    this.#updateHighlightButton();
   }
 
   #selectSection({ sectionId, scroll = false, rerenderPreview = true }) {
@@ -207,6 +218,14 @@ export class CmsEditorManager {
     this.#preview.markActiveEditable();
   }
 
+  #onPreviewIconSelected({ sectionId, path }) {
+    this.#activeSectionId = sectionId;
+    this.#activePath = path;
+    this.#sectionNav.render(this.#activeSectionId);
+    this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
+    this.#preview.markActiveEditable();
+  }
+
   #onPreviewInput({ sectionId, path, value }) {
     const section = this.#cmsDocument.section(sectionId);
     if (!section) return;
@@ -236,6 +255,13 @@ export class CmsEditorManager {
   #updatePreviewModeButtons() {
     document.querySelectorAll('[data-preview-width]').forEach((button) => {
       button.dataset.variant = button.dataset.previewWidth === this.#previewMode ? 'primary' : 'outline';
+    });
+  }
+
+  #updateHighlightButton() {
+    document.querySelectorAll('[data-preview-highlight]').forEach((button) => {
+      button.dataset.variant = this.#highlightEditables ? 'primary' : 'outline';
+      button.setAttribute('aria-pressed', this.#highlightEditables ? 'true' : 'false');
     });
   }
 
