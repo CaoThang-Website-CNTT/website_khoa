@@ -230,6 +230,7 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
   // Nộp tài liệu
   $router->post('/internship/{batch_id}/upload', [StudentDashboardController::class, 'uploadSubmission']);
   // Đăng ký giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters/create', [StudentDashboardController::class, 'createReferralLetter']);
   $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
 
   // Trang danh sách giấy giới thiệu

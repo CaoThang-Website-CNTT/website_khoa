@@ -361,6 +361,36 @@ class StudentDashboardController extends Controller
     return $this->redirect("/student/internship/{$batch_id}");
   }
 
+  public function createReferralLetter(Request $request, int $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $batchStudentId = $this->checkOwnershipAndGetBatchStudentId($student->id, $batch_id);
+    if (!$batchStudentId) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    $batch = $this->_internshipBatchService->getBatchById($batch_id);
+
+    $majorName = 'Công nghệ thông tin';
+    if (!empty($student->classroom_id)) {
+      $major = $this->_classroomService->getMajorByClassroomId($student->classroom_id);
+      if ($major) {
+        $majorName = $major->full_name;
+      }
+    }
+
+    return $this->render('student/dashboard/referral_letters_create', [
+      'current' => $batch,
+      'student' => $student,
+      'majorName' => $majorName,
+      'batch_student_id' => $batchStudentId
+    ], layout: 'dashboard_layout');
+  }
+
   public function requestReferralLetter(Request $request, int $batch_id)
   {
     $authUser = $request->session()->authUser();
@@ -386,7 +416,8 @@ class StudentDashboardController extends Controller
 
     if (!$validator->validate($data, $rules)) {
       $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+      $request->session()->flashErrors($data);
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters/create");
     }
 
     try {
@@ -404,10 +435,55 @@ class StudentDashboardController extends Controller
         ]);
       }
 
-      $success = $this->_referralLetterService->create([
+      // Fetch teacher_id from internship_assignments
+      $assignment = $this->_internshipAssignmentService->getAssignmentByBatchStudentId($batchStudentId);
+      $teacherId = $assignment ? $assignment->teacher_id : null;
+
+      $letterData = [
         'batch_student_id' => $batchStudentId,
-        'company_id' => $companyId
-      ]);
+        'company_id' => $companyId,
+        'teacher_id' => $teacherId,
+      ];
+
+      // Parse students from request
+      $students = [];
+      // Request might send arrays: student_name[], student_major[], student_dob[], student_address[]
+      if (!empty($data['student_name']) && is_array($data['student_name'])) {
+        foreach ($data['student_name'] as $index => $name) {
+          if (!trim($name)) continue;
+          $students[] = [
+            'full_name' => trim($name),
+            'training_program' => $data['student_major'][$index] ?? null,
+            'dob' => $data['student_dob'][$index] ?? null,
+            'address' => $data['student_address'][$index] ?? null,
+            // If it's the primary student (e.g. index 0), we can set their IDs
+            'student_id' => ($index === 0) ? $student->id : null,
+            'batch_student_id' => ($index === 0) ? $batchStudentId : null,
+            'sort_order' => $index,
+          ];
+        }
+      } else {
+        // Fallback to single student
+        // Find major
+        $majorName = null;
+        if ($student->classroom_id) {
+          $major = $this->_classroomService->getMajorByClassroomId($student->classroom_id);
+          if ($major) {
+            $majorName = $major->full_name;
+          }
+        }
+        $students[] = [
+          'full_name' => $student->full_name,
+          'training_program' => $majorName ?: 'Công nghệ thông tin',
+          'dob' => $student->dob,
+          'address' => $student->address,
+          'student_id' => $student->id,
+          'batch_student_id' => $batchStudentId,
+          'sort_order' => 0,
+        ];
+      }
+
+      $success = $this->_referralLetterService->create($letterData, $students);
 
       if ($success) {
         $request->session()->flashNotify('success', 'Đăng ký nhận giấy giới thiệu thành công!');
@@ -437,8 +513,17 @@ class StudentDashboardController extends Controller
     $total_referral_letters = count($referralLetters);
     $recent_referral_letters = array_slice($referralLetters, 0, 2);
 
+    $majorName = 'Công nghệ thông tin';
+    if (!empty($student->classroom_id)) {
+      $major = $this->_classroomService->getMajorByClassroomId($student->classroom_id);
+      if ($major) {
+        $majorName = $major->full_name;
+      }
+    }
+
     return $this->render('student/dashboard/referral_letters', array_merge($dashboardData, [
       'student' => $student,
+      'majorName' => $majorName,
       'title' => 'Quản lý Giấy giới thiệu',
       'referralLetters' => $referralLetters,
       'total_referral_letters' => $total_referral_letters,
@@ -533,10 +618,25 @@ class StudentDashboardController extends Controller
       // Theo yêu cầu Q7: Tạo record mới, và hủy record cũ
       $cancelSuccess = $this->_referralLetterService->cancel($letter_id, 'Thay đổi công ty mới');
       if ($cancelSuccess) {
+        $oldStudents = $this->_referralLetterService->getWithStudentsByLetterId($letter_id)['students'] ?? [];
+        $studentsToInsert = [];
+        foreach ($oldStudents as $oldSt) {
+          $studentsToInsert[] = [
+            'full_name' => $oldSt['full_name'],
+            'training_program' => $oldSt['training_program'],
+            'dob' => $oldSt['dob'],
+            'address' => $oldSt['address'],
+            'student_id' => $oldSt['student_id'],
+            'batch_student_id' => $oldSt['batch_student_id'],
+            'sort_order' => $oldSt['sort_order'],
+          ];
+        }
+
         $createSuccess = $this->_referralLetterService->create([
           'batch_student_id' => $batchStudentId,
-          'company_id' => $companyId
-        ]);
+          'company_id' => $companyId,
+          'teacher_id' => $letter->teacher_id
+        ], $studentsToInsert);
         if ($createSuccess) {
           $request->session()->flashNotify('success', 'Đã cập nhật công ty mới (Hủy giấy cũ, tạo giấy mới)!');
         } else {

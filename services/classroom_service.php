@@ -24,6 +24,7 @@ interface IClassroomService
   /** @return Major[] */
   public function getAllMajors(): array;
   public function getMajorById(int $id): ?Major;
+  public function getMajorByClassroomId(int $classroomId): ?Major;
   /** @return Specialization[] */
   public function getAllSpecializations(): array;
   /** @return Specialization[] */
@@ -154,6 +155,10 @@ class ClassroomService implements IClassroomService
   public function getMajorById(int $id): ?Major
   {
     return $this->_classroomStore->getMajorById($id);
+  }
+  public function getMajorByClassroomId(int $classroomId): ?Major
+  {
+    return $this->_classroomStore->getMajorByClassroomId($classroomId);
   }
   /** @return Specialization[] */
   public function getAllSpecializations(): array

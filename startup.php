@@ -75,6 +75,7 @@ require_once BASE_PATH . '/models/company.php';
 require_once BASE_PATH . '/models/referral_letter.php';
 require_once BASE_PATH . '/models/ticket.php';
 require_once BASE_PATH . '/models/department.php';
+require_once BASE_PATH . '/models/referral_letter_student.php';
 
 // Editor (Post)
 require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
