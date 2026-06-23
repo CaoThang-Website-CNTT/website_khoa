@@ -95,4 +95,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ModalHandler.instance.close();
     });
   });
+
+  // Handle predefined cancel reasons
+  document.addEventListener('click', (e) => {
+    const suggestionBtn = e.target.closest('.btn-cancel-suggestion');
+    if (suggestionBtn) {
+      const input = document.getElementById('cancel_reason_input');
+      if (input) {
+        input.value = suggestionBtn.innerText;
+        input.focus();
+      }
+    }
+  });
 });

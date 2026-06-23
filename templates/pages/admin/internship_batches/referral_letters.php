@@ -82,8 +82,20 @@ $letters = $letters ?? [];
       chọn:</p>
     <div class="field" data-field-required>
       <label class="field__label">Lý do hủy</label>
+      <div class="flex flex-wrap gap-2 mb-2">
+        <?php
+        $adminCancelReasons = [
+          'Thông tin công ty không hợp lệ',
+          'Thông tin sinh viên không hợp lệ',
+          'Hết hạn đăng ký'
+        ];
+        foreach ($adminCancelReasons as $reason):
+        ?>
+          <button type="button" class="badge btn-cancel-suggestion" data-variant="outline"><?= $reason ?></button>
+        <?php endforeach; ?>
+      </div>
       <textarea id="cancel_reason_input" class="field__input" required rows="3"
-        placeholder="Nhập lý do hủy..."></textarea>
+        placeholder="Hoặc nhập lý do hủy khác..."></textarea>
     </div>
   </div>
   <div class="modal__footer">

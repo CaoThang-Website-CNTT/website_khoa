@@ -15,4 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Handle predefined cancel reasons
+  document.addEventListener("click", (e) => {
+    const suggestionBtn = e.target.closest(".btn-cancel-suggestion");
+    if (suggestionBtn) {
+      const textarea = suggestionBtn
+        .closest(".field")
+        .querySelector("textarea");
+      if (textarea) {
+        textarea.value = suggestionBtn.innerText;
+        textarea.focus();
+      }
+    }
+  });
 });

@@ -113,8 +113,20 @@ $rlData = array_map(function ($rl) {
       <p class="mb-4">Bạn có chắc chắn muốn hủy giấy giới thiệu này?</p>
       <div class="field" data-field-required>
         <label class="field__label">Lý do hủy</label>
+        <div class="flex flex-wrap gap-2 mb-2">
+          <?php
+          $studentCancelReasons = [
+            'Em muốn đổi công ty khác',
+            'Em nhập sai thông tin',
+            'Em không còn nhu cầu đăng ký'
+          ];
+          foreach ($studentCancelReasons as $reason):
+          ?>
+            <button type="button" class="badge btn-cancel-suggestion" data-variant="outline"><?= $reason ?></button>
+          <?php endforeach; ?>
+        </div>
         <textarea name="cancel_reason" class="field__input" required rows="3"
-          placeholder="Nhập lý do hủy..."></textarea>
+          placeholder="Hoặc nhập lý do hủy khác..."></textarea>
       </div>
     </form>
   </div>
