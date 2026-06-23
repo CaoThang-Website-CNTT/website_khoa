@@ -27,51 +27,57 @@ $letters = $letters ?? [];
 
   <!-- Checkbox column is auto prepended by table-manager -->
 
-  <template data-tm-col="created_at" data-tm-label="Thông tin đăng ký" data-tm-sortable>
-    <div class="flex flex-col gap-1">
-      <span class="font-medium text-sm">#{{ row.id }}</span>
-      <span class="text-xs">{{ row._formatted_date }}</span>
-    </div>
+  <template data-tm-col="id" data-tm-label="Id" data-tm-sortable>
+    <span class="font-medium text-sm">#{{ row.id }}</span>
   </template>
 
   <template data-tm-col="student_search" data-tm-label="Sinh viên" data-tm-filter-type="text" data-tm-sortable>
     <div class="flex flex-col gap-1">
-      <span class="font-medium text-sm">{{ row.student_full_name }}</span>
-      <span class="text-xs">{{ row.student_code }} - {{ row.classroom_name }}</span>
+      <span class="font-medium text-sm">
+        {{ row.student_full_name }}
+        <span class="badge {{ row.student_count <= 1 ? 'hidden' : '' }}" data-variant="primary" data-size="sm">Nhóm {{ row.student_count }} SV</span>
+      </span>
+      <span class="text-xs">{{ row.student_code }} - {{ row.classroom_name }}
     </div>
+  </template>
+
+  <template data-tm-col="teacher_name" data-tm-label="GVHD" data-tm-filter-type="text" data-tm-sortable>
+    <span class="font-medium text-sm">{{ row.teacher_name || 'Chưa có' }}</span>
   </template>
 
   <template data-tm-col="company_search" data-tm-label="Công ty" data-tm-filter-type="text" data-tm-sortable>
-    <div class="flex flex-col gap-1 max-w-[250px]">
-      <span class="font-medium text-sm line-clamp-1" title="{{ row.company_name }}">{{ row.company_name }}</span>
-      <span class="text-xs">MST: {{ row.company_tax_code || '--' }}</span>
-      <span class="text-xs line-clamp-1" title="{{ row.company_address }}">{{ row.company_address }}</span>
-    </div>
-  </template>
-
-  <template data-tm-col="company_verified_label" data-tm-label="Trạng thái Công ty" data-tm-filter-type="select"
-    data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Đã xác thực","label":"Đã xác thực"},{"value":"Chưa xác thực","label":"Chưa xác thực"}]'>
-    <span class="badge" data-variant="{{ row.company_is_verified == 1 ? 'primary' : 'secondary' }}">{{ value }}</span>
+    <span class="font-medium text-sm" title="{{ row.company_name }}">{{ row.company_name }}</span>
   </template>
 
   <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select"
-    data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"Chờ duyệt","label":"Chờ duyệt"},{"value":"Đã in","label":"Đã in"},{"value":"Đã hủy","label":"Đã hủy"}]'>
+    data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"pending","label":"Chờ duyệt"},{"value":"printed","label":"Đã in"},{"value":"cancelled","label":"Đã hủy"}]'>
     <span class="badge" data-variant="{{ row.status_variant }}">{{ value }}</span>
   </template>
 
-  <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="100px" data-tm-align="right">
-    <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm" data-id="{{ row.id }}"
-      data-student="{{ row.student_full_name }} - {{ row.student_code }}" data-company-name="{{ row.company_name }}"
-      data-company-tax="{{ row.company_tax_code }}" data-company-address="{{ row.company_address }}"
-      data-status-label="{{ row.status_label }}" data-status-variant="{{ row.status_variant }}"
-      data-reason="{{ row.cancel_reason }}">
-      Chi tiết
-    </button>
+  <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="120px" data-tm-align="right">
+    <div class="flex gap-2 justify-end">
+      <!-- [TẠM ẨN - Sẽ triển khai sau chức năng Xem chi tiết]
+      <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm" data-id="{{ row.id }}"
+        data-student="{{ row.student_full_name }} - {{ row.student_code }}" data-company-name="{{ row.company_name }}"
+        data-company-tax="{{ row.company_tax_code }}" data-company-address="{{ row.company_address }}"
+        data-status-label="{{ row.status_label }}" data-status-variant="{{ row.status_variant }}"
+        data-reason="{{ row.cancel_reason }}" title="Chi tiết">
+        <i class="fa-solid fa-eye"></i>
+      </button>
+      -->
+      <button type="button" class="btn btn-cancel {{ row.status !== 'pending' ? 'hidden' : '' }}" data-variant="destructive" data-size="sm" data-id="{{ row.id }}" title="Hủy giấy">
+        <i class="fa-solid fa-ban"></i>
+      </button>
+      <a href="<?= url("admin/internship_batches/{$batch['id']}/referral_letters") ?>/{{ row.id }}/print" type="button"
+        target="_blank" class="btn btn-print" data-variant="primary" data-size="sm" title="In / Xem trước">
+        <i class="fa-solid fa-print"></i>
+      </a>
+    </div>
   </template>
 
 </div>
 
-<!-- Modal Chi tiết -->
+<!-- [TẠM ẨN - Sẽ triển khai sau chức năng Xem chi tiết]
 <div id="rl_detailModal" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Chi tiết Giấy giới thiệu</h3>
@@ -105,6 +111,7 @@ $letters = $letters ?? [];
     <button type="button" class="btn" data-variant="outline" data-size="lg" data-modal-close>Đóng</button>
   </div>
 </div>
+-->
 
 <!-- Modal Nhập lý do hủy -->
 <div id="cancel-reason-modal" class="modal" tabindex="-1" data-state="closed">
@@ -127,26 +134,6 @@ $letters = $letters ?? [];
     <button type="button" class="btn" data-size="lg" data-variant="outline" data-modal-close>Hủy bỏ</button>
     <button type="button" id="btn-confirm-cancel" class="btn" data-size="lg" data-variant="destructive">Xác nhận
       Hủy</button>
-  </div>
-</div>
-
-<!-- Modal Xác nhận Duyệt -->
-<div id="approve-confirm-modal" class="modal" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h3 class="modal__title">Xác nhận Duyệt</h3>
-    <button type="button" class="modal__close" data-modal-close>
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-  <div class="py-4">
-    <p>Bạn có chắc chắn muốn duyệt và in <span id="approve-count" class="font-bold">0</span> giấy giới thiệu đã chọn?
-    </p>
-    <p class="text-sm mt-2">Lưu ý: Các giấy không ở trạng thái "Chờ duyệt" sẽ bị từ chối/bỏ qua.</p>
-  </div>
-  <div class="modal__footer">
-    <button type="button" class="btn" data-size="lg" data-variant="outline" data-modal-close>Hủy bỏ</button>
-    <button type="button" id="btn-confirm-approve" class="btn" data-size="lg" data-variant="primary">Xác nhận
-      Duyệt</button>
   </div>
 </div>
 
@@ -178,6 +165,8 @@ $letters = $letters ?? [];
       'status_label' => $st['label'],
       'status_variant' => $st['variant'],
       'cancel_reason' => $rl['cancel_reason'],
+      'student_count' => $rl['student_count'] ?? 1,
+      'teacher_name' => $rl['teacher_name']
     ];
   }, $letters);
   echo json_encode([

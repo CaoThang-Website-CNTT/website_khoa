@@ -197,10 +197,7 @@ class InternshipBatchManagementApiController extends Controller
     }
 
     try {
-      if ($action === 'approve') {
-        $count = $this->_referralLetterService->bulkApprove($ids, $processedBy);
-        return $this->json(['count' => $count], 200, "Đã duyệt {$count} giấy giới thiệu thành công.");
-      } elseif ($action === 'cancel') {
+      if ($action === 'cancel') {
         if (empty(trim($reason))) {
           return $this->json(['message' => 'Vui lòng nhập lý do hủy.'], 422);
         }

@@ -25,15 +25,11 @@ document.addEventListener("DOMContentLoaded", () => {
             taxCodeInput.setAttribute("disabled", "disabled");
             taxCodeInput.required = false;
             btnCheckMST.classList.add("hidden");
-            companyNameInput.removeAttribute("readonly");
-            companyAddressInput.removeAttribute("readonly");
             if (mstError) mstError.classList.add("hidden");
           } else {
             taxCodeInput.removeAttribute("disabled");
             taxCodeInput.required = true;
             btnCheckMST.classList.remove("hidden");
-            companyNameInput.setAttribute("readonly", "readonly");
-            companyAddressInput.setAttribute("readonly", "readonly");
           }
         });
       }

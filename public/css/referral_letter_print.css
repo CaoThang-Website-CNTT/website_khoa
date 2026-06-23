@@ -1,0 +1,249 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+@media screen {
+  body {
+    background: #e2e8f0;
+    margin: 0;
+    padding: 20px 0;
+    display: flex;
+    justify-content: center;
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+  }
+
+  .print-page {
+    overflow: hidden; /* Hide overflow to match printer behavior */
+    background: white;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 2cm 2cm 2cm 3cm;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
+    margin-bottom: 20px;
+    box-sizing: border-box;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0; /* Set to 0 to disable browser headers/footers */
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+  }
+  .print-page {
+    padding: 2cm 2cm 2cm 3cm; /* Apply actual margins here instead of @page */
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+    box-sizing: border-box;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Document typography matching standard Vietnam document formats */
+.print-page {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 14pt;
+  line-height: 1.5;
+  color: black;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 12pt;
+}
+.header-left {
+  width: 49%;
+}
+
+.org-name strong {
+  font-size: 11pt;
+  text-decoration: underline;
+}
+
+.republic {
+  font-weight: bold;
+  font-size: 11pt;
+}
+
+.motto {
+  text-decoration: underline;
+}
+
+.title {
+  font-style: italic;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 12pt;
+  font-weight: normal;
+}
+
+.table th,
+.table td {
+  border: 1px solid black;
+}
+
+.table tbody {
+  text-align: left;
+}
+
+.table tbody td {
+  padding-left: 16px;
+}
+
+.signature {
+  text-align: right;
+}
+
+.signature-title {
+  font-weight: bold;
+  margin-bottom: 80px;
+  margin-right: 50px;
+  font-size: 13pt;
+}
+
+.date {
+  font-style: italic;
+  text-align: right;
+  margin-top: 12px;
+}
+
+.admin-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 300px;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.admin-controls label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.admin-controls input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.admin-controls button {
+  width: 100%;
+  padding: 10px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-controls button:hover {
+  background: #1d4ed8;
+}
+
+/* Extracted from inline styles */
+.btn-close {
+  background: #64748b !important;
+  margin-top: 10px;
+}
+
+.btn-close:hover {
+  background: #475569 !important;
+}
+
+.print-message {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: bold;
+  display: none;
+}
+
+.number-wrapper {
+  margin-top: 10px;
+  font-size: 12pt;
+  font-style: italic;
+}
+
+.recipient-section {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.recipient-label {
+  display: inline-block;
+  text-align: right;
+  font-weight: bold;
+  margin-right: 20px;
+}
+
+.recipient-name {
+  text-transform: uppercase;
+}
+
+.paragraph {
+  text-indent: 1cm;
+  text-align: justify;
+}
+
+.page2-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.page2-title {
+  font-weight: bold;
+  font-size: 16pt;
+}
+
+.col-stt {
+  width: 50px;
+}
+.col-major {
+  width: 25%;
+}
+.col-dob {
+  width: 16%;
+}
+.col-address {
+  width: 30%;
+}

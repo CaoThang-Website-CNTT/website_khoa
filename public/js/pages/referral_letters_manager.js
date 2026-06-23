@@ -8,17 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     TableManager.registerBulkActions('referral_letters_table', {
       countLabel: count => `Đã chọn: ${count}`,
       actions: [
-        {
-          id: 'approve',
-          label: 'Duyệt & In giấy',
-          icon: 'fa-solid fa-check',
-          variant: 'primary',
-          onClick: ({ selectedIds }) => {
-            currentSelectedIds = selectedIds;
-            document.getElementById('approve-count').textContent = currentSelectedIds.length;
-            ModalHandler.instance.open('#approve-confirm-modal');
-          },
-        },
+
         {
           id: 'cancel',
           label: 'Hủy giấy giới thiệu',
@@ -35,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ],
     });
 
+    /* [TẠM ẨN - Sẽ triển khai sau chức năng Xem chi tiết]
     tableContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-detail');
       if (!btn) return;
@@ -62,6 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       ModalHandler.instance.open('#rl_detailModal');
+    });
+    */
+
+    tableContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-cancel');
+      if (!btn) return;
+
+      const id = btn.getAttribute('data-id');
+      currentSelectedIds = [id];
+      document.getElementById('cancel-count').textContent = '1';
+      document.getElementById('cancel_reason_input').value = '';
+      ModalHandler.instance.open('#cancel-reason-modal');
     });
   }
 
@@ -103,15 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
       TableManager.setBulkActionLoading('referral_letters_table', false);
     }
   };
-
-  document.getElementById('btn-confirm-approve')?.addEventListener('click', () => {
-    const btnConfirm = document.getElementById('btn-confirm-approve');
-    btnConfirm.disabled = true;
-    callBulkActionApi('approve').finally(() => {
-      btnConfirm.disabled = false;
-      ModalHandler.instance.close();
-    });
-  });
 
   document.getElementById('btn-confirm-cancel')?.addEventListener('click', () => {
     const reason = document.getElementById('cancel_reason_input').value.trim();

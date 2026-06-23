@@ -17,6 +17,7 @@ interface IInternshipAssignmentService
   public function bulkSave(int $batchId, array $assignmentsData, int $adminId, string $reason): int;
   public function unassign(int $assignmentId, int $adminId, string $reason): bool;
   public function getLogsByStudent(int $batchStudentId): array;
+  public function getAssignmentByBatchStudentId(int $batchStudentId);
 }
 
 class InternshipAssignmentService implements IInternshipAssignmentService
@@ -306,5 +307,10 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   public function getLogsByStudent(int $batchStudentId): array
   {
     return $this->_store->getLogsByBatchStudent($batchStudentId);
+  }
+
+  public function getAssignmentByBatchStudentId(int $batchStudentId)
+  {
+    return $this->_store->getAssignmentByBatchStudentId($batchStudentId);
   }
 }
