@@ -12,8 +12,7 @@ $letters = $letters ?? [];
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Giấy giới thiệu</h2>
-<p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập
-  #<?= htmlspecialchars($batch['id']) ?></p>
+<p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập "<?= htmlspecialchars($batch['title']) ?>"</p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
@@ -35,7 +34,7 @@ $letters = $letters ?? [];
     <div class="flex flex-col gap-1">
       <span class="font-medium text-sm">
         {{ row.student_full_name }}
-        <span class="badge {{ row.student_count <= 1 ? 'hidden' : '' }}" data-variant="primary" data-size="sm">Nhóm {{ row.student_count }} SV</span>
+        <span class="badge {{ row.student_count == 1 ? 'hidden' : '' }}" data-variant="primary" data-size="sm">Nhóm {{ row.student_count }} SV</span>
       </span>
       <span class="text-xs">{{ row.student_code }} - {{ row.classroom_name }}
     </div>
@@ -60,12 +59,13 @@ $letters = $letters ?? [];
         <i class="fa-solid fa-ban"></i>
       </button>
       <a href="<?= url("admin/internship_batches/{$batch['id']}/referral_letters") ?>/{{ row.id }}/print" type="button"
-        target="_blank" class="btn btn-print" data-variant="primary" data-size="sm" title="In / Xem trước">
+        target="_blank" class="btn btn-print" data-variant="primary" data-size="sm" title="Xem trước & In">
         <i class="fa-solid fa-print"></i>
       </a>
     </div>
   </template>
 
+  <template data-tm-pagination></template>
 </div>
 
 

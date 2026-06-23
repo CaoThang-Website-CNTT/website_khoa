@@ -93,6 +93,7 @@ $rlData = array_map(function ($rl) {
     </div>
   </template>
 
+  <template data-tm-pagination></template>
 </div>
 
 <script type="application/json" data-tm-data="student_referral_letters_table">
