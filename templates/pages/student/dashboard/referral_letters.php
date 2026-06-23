@@ -59,8 +59,8 @@ $rlData = array_map(function ($rl) {
 <div class="tm-container" data-tm="student_referral_letters_table" data-tm-mode="client" data-tm-searchable
   data-tm-id-key="id">
 
-  <template data-tm-col="stt" data-tm-label="STT" data-tm-width="60px">
-    <span class="text-sm">{{ index + 1 }}</span>
+  <template data-tm-col="id" data-tm-label="Id" data-tm-width="60px">
+    <span class="text-sm">{{ row.id }}</span>
   </template>
 
   <template data-tm-col="created_at" data-tm-label="Ngày đăng ký" data-tm-sortable>
@@ -71,7 +71,7 @@ $rlData = array_map(function ($rl) {
     <div class="font-medium" title="{{ row.company_name }}">
       <div>
         {{ row.company_name }}
-        <span class="badge {{ row.student_count <= 1 ? 'hidden' : '' }}" data-variant="primary" data-size="sm">Nhóm {{ row.student_count }} SV</span>
+        <span class="badge {{ row.student_count == 1 ? 'hidden' : '' }}" data-variant="primary" data-size="sm">Nhóm {{ row.student_count }} SV</span>
       </div>
     </div>
   </template>
@@ -83,20 +83,13 @@ $rlData = array_map(function ($rl) {
 
   <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="150px" data-tm-align="right">
     <div class="flex gap-2 justify-end">
-      <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm"
-        data-id="{{ row.id }}" data-company-name="{{ row.company_name }}"
-        data-company-tax-code="{{ row.company_tax_code || '--' }}"
-        data-company-address="{{ row.company_address }}" data-status="{{ row.status }}"
-        data-created-at="{{ row.created_at_formatted }}"
-        data-cancel-reason="{{ row.cancel_reason || '' }}"
-        data-students="{{ row.students_json }}"
-        data-modal-trigger="#rl_detailModal">
-        <i class="fa-solid fa-eye"></i> Chi tiết
-      </button>
       <button type="button" class="btn btn-cancel {{ row.status !== 'pending' ? 'hidden' : '' }}" data-variant="destructive" data-size="sm"
         data-id="{{ row.id }}" data-modal-trigger="#rl_cancelModal">
         <i class="fa-solid fa-xmark"></i> Hủy
       </button>
+      <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>/{{ row.id }}" class="btn btn-detail" data-variant="outline" data-size="sm">
+        <i class="fa-solid fa-eye"></i>
+      </a>
     </div>
   </template>
 
@@ -130,62 +123,21 @@ $rlData = array_map(function ($rl) {
     <button type="submit" form="rl_cancelForm" class="btn" data-variant="destructive">Hủy giấy giới thiệu</button>
   </div>
 </div>
-<!-- Modal Chi tiết -->
-<div id="rl_detailModal" class="modal" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h3 class="modal__title">Chi tiết giấy giới thiệu</h3>
-    <button class="modal__close" type="button" data-modal-close>
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-  <div>
-    <div class="grid gap-4">
-      <div class="detail-item">
-        <div class="text-xs font-semibold">Tên công ty</div>
-        <div id="dt_company_name" class="font-medium"></div>
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="detail-item">
-          <div class="text-xs font-semibold">Mã số thuế</div>
-          <div id="dt_tax_code"></div>
-        </div>
-        <div class="detail-item">
-          <div class="text-xs font-semibold">Ngày đăng ký</div>
-          <div id="dt_created_at"></div>
-        </div>
-        <div class="detail-item">
-          <div class="text-xs font-semibold">Danh sách sinh viên</div>
-          <div id="dt_students_list" class="text-sm mt-1"></div>
-        </div>
-        <div class="detail-item">
-          <div class="text-xs font-semibold">Trạng thái</div>
-          <div id="dt_status"></div>
-        </div>
-        <div id="dt_cancel_reason_wrapper" class="detail-item hidden">
-          <div class="text-xs font-semibold">Lý do hủy</div>
-          <div id="dt_cancel_reason"></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal__footer">
-      <button type="button" class="btn" data-variant="outline" data-modal-close>Đóng</button>
-    </div>
-  </div>
 
-  <?php $layout->start("scripts") ?>
-  <script>
-    window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
-    window.__studentReferralLetters__ = {
-      batchId: <?= json_encode($current['id']) ?>,
-      baseUrl: <?= json_encode(url("student/internship/{$current['id']}/referral_letters")) ?>,
-      currentStudent: {
-        fullName: <?= json_encode($student->full_name) ?>,
-        dob: <?= json_encode($student->dob) ?>,
-        address: <?= json_encode($student->address) ?>,
-        majorName: <?= json_encode($majorName) ?>
-      }
-    };
-  </script>
-  <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
-  <script src="<?= url('public/js/pages/student/dashboard/referral_letters.js') ?>" type="module"></script>
-  <?php $layout->end() ?>
+<?php $layout->start("scripts") ?>
+<script>
+  window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
+  window.__studentReferralLetters__ = {
+    batchId: <?= json_encode($current['id']) ?>,
+    baseUrl: <?= json_encode(url("student/internship/{$current['id']}/referral_letters")) ?>,
+    currentStudent: {
+      fullName: <?= json_encode($student->full_name) ?>,
+      dob: <?= json_encode($student->dob) ?>,
+      address: <?= json_encode($student->address) ?>,
+      majorName: <?= json_encode($majorName) ?>
+    }
+  };
+</script>
+<script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
+<script src="<?= url('public/js/pages/student/dashboard/referral_letters.js') ?>" type="module"></script>
+<?php $layout->end() ?>

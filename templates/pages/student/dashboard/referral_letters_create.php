@@ -15,6 +15,7 @@ $layout->start("scripts"); ?>
 </script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
 <script type="module" src="<?= url('public/js/pages/student_referral_letters_create.js') ?>"></script>
+<link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
 <?php $layout->end() ?>
 
 <?php $layout->start("heading") ?>
@@ -35,25 +36,23 @@ $layout->start("scripts"); ?>
 <?php $layout->end() ?>
 
 <?php $layout->start("content"); ?>
-<div class="card p-6 max-w-4xl">
-  <div class="mb-4 p-3 text-sm rounded-md">
-    <strong>Lưu ý:</strong> Một khi đã được duyệt, bạn sẽ không thể hủy hoặc thay đổi thông tin giấy. Hãy chắc chắn
-    công ty tiếp nhận đã đồng ý trước khi xin giấy giới thiệu.
-  </div>
+<div class="card p-4 shadow-sm">
+
+  <p class="field__label mb-0 font-semibold">Thông tin công ty thực tập</p>
 
   <form action="<?= url('student/internship/' . $current['id'] . '/referral_letters') ?>" method="POST" id="rl_requestForm">
     <?= csrf_field() ?>
 
     <div class="field mb-4" data-orientation="horizontal">
       <input type="checkbox" id="rl_is_manual" name="is_manual" value="1" class="field__input">
-      <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số thuế</label>
+      <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty chưa có mã số thuế</label>
     </div>
 
     <div class="field mb-4">
       <label class="field__label">Mã số thuế</label>
       <div class="field__input-group">
         <input type="text" name="tax_code" id="rl_tax_code" class="field__input">
-        <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn mt-2">Kiểm tra</button>
+        <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm tra</button>
       </div>
       <div id="rl_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin...</div>
       <div id="rl_mstError" class="field__error hidden"></div>
@@ -80,7 +79,7 @@ $layout->start("scripts"); ?>
           <label class="field__label mb-0 font-semibold">Danh sách nhóm sinh viên thực tập</label>
           <div class="text-sm mt-1">Thêm các sinh viên thực tập chung công ty vào chung một nhóm để xuất chung 1 giấy giới thiệu.</div>
         </div>
-        <button type="button" class="btn shrink-0" data-variant="outline" data-size="sm" id="rl_btnAddStudent">
+        <button type="button" class="btn shrink-0" data-variant="secondary" data-size="sm" id="rl_btnAddStudent">
           <i class="fa-solid fa-plus mr-1"></i> Thêm sinh viên
         </button>
       </div>

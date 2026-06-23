@@ -235,10 +235,10 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
 
   // Trang danh sách giấy giới thiệu
   $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
+  // Trang chi tiết giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters/{letter_id}', [StudentDashboardController::class, 'showReferralLetter']);
   // Hủy giấy giới thiệu
   $router->post('/internship/{batch_id}/referral_letters/{letter_id}/cancel', [StudentDashboardController::class, 'cancelReferralLetter']);
-  // Cập nhật công ty cho giấy giới thiệu (pending)
-  $router->post('/internship/{batch_id}/referral_letters/{letter_id}/update-company', [StudentDashboardController::class, 'updateReferralLetterCompany']);
 });
 
 // Teacher Dashboard

@@ -22,12 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const isManual = isManualToggle.checked;
           if (isManual) {
             taxCodeInput.value = "";
-            taxCodeInput.setAttribute("disabled", "disabled");
+            taxCodeInput.setAttribute("readonly", "readonly");
             taxCodeInput.required = false;
             btnCheckMST.classList.add("hidden");
             if (mstError) mstError.classList.add("hidden");
           } else {
-            taxCodeInput.removeAttribute("disabled");
+            taxCodeInput.removeAttribute("readonly");
             taxCodeInput.required = true;
             btnCheckMST.classList.remove("hidden");
           }

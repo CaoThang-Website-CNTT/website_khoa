@@ -56,15 +56,6 @@ $letters = $letters ?? [];
 
   <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="120px" data-tm-align="right">
     <div class="flex gap-2 justify-end">
-      <!-- [TẠM ẨN - Sẽ triển khai sau chức năng Xem chi tiết]
-      <button type="button" class="btn btn-detail" data-variant="outline" data-size="sm" data-id="{{ row.id }}"
-        data-student="{{ row.student_full_name }} - {{ row.student_code }}" data-company-name="{{ row.company_name }}"
-        data-company-tax="{{ row.company_tax_code }}" data-company-address="{{ row.company_address }}"
-        data-status-label="{{ row.status_label }}" data-status-variant="{{ row.status_variant }}"
-        data-reason="{{ row.cancel_reason }}" title="Chi tiết">
-        <i class="fa-solid fa-eye"></i>
-      </button>
-      -->
       <button type="button" class="btn btn-cancel {{ row.status !== 'pending' ? 'hidden' : '' }}" data-variant="destructive" data-size="sm" data-id="{{ row.id }}" title="Hủy giấy">
         <i class="fa-solid fa-ban"></i>
       </button>
@@ -77,41 +68,6 @@ $letters = $letters ?? [];
 
 </div>
 
-<!-- [TẠM ẨN - Sẽ triển khai sau chức năng Xem chi tiết]
-<div id="rl_detailModal" class="modal" tabindex="-1" data-state="closed">
-  <div class="modal__header">
-    <h3 class="modal__title">Chi tiết Giấy giới thiệu</h3>
-    <button class="modal__close" type="button" data-modal-close>
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-  <div>
-    <div class="grid gap-4">
-      <div class="detail-item">
-        <div class="text-xs font-semibold mb-1">Sinh viên</div>
-        <div id="dt_student" class="font-medium"></div>
-      </div>
-      <div class="detail-item">
-        <div class="text-xs font-semibold mb-1">Công ty tiếp nhận</div>
-        <div id="dt_company_name" class="font-medium text-sm"></div>
-        <div id="dt_company_tax" class="text-xs mt-1"></div>
-        <div id="dt_company_address" class="text-xs mt-1"></div>
-      </div>
-      <div class="detail-item">
-        <div class="text-xs font-semibold mb-1">Trạng thái</div>
-        <div id="dt_status"></div>
-      </div>
-      <div id="dt_cancel_reason_wrapper" class="detail-item hidden">
-        <div class="text-xs font-semibold mb-1">Lý do hủy</div>
-        <div id="dt_cancel_reason" class="text-sm border-l-2 pl-2"></div>
-      </div>
-    </div>
-  </div>
-  <div class="modal__footer">
-    <button type="button" class="btn" data-variant="outline" data-size="lg" data-modal-close>Đóng</button>
-  </div>
-</div>
--->
 
 <!-- Modal Nhập lý do hủy -->
 <div id="cancel-reason-modal" class="modal" tabindex="-1" data-state="closed">

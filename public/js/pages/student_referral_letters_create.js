@@ -19,19 +19,19 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="flex-1 grid grid-cols-2 gap-3">
         <div class="field" data-field-required>
           <label class="field__label mb-1 text-xs">Họ và tên ${isPrimary ? "(Người đại diện)" : ""}</label>
-          <input type="text" name="student_name[]" class="field__input py-1.5 px-2 text-sm" value="${data.fullName || ""}" required>
+          <input type="text" name="student_name[]" class="field__input py-2 px-2 text-sm" value="${data.fullName || ""}" required>
         </div>
         <div class="field" data-field-required>
           <label class="field__label mb-1 text-xs">Ngành/Nghề</label>
-          <input type="text" name="student_major[]" class="field__input py-1.5 px-2 text-sm" value="${data.majorName || ""}" required>
+          <input type="text" name="student_major[]" class="field__input py-2 px-2 text-sm" value="${data.majorName || ""}" required>
         </div>
         <div class="field" data-field-required>
           <label class="field__label mb-1 text-xs">Ngày sinh</label>
-          <input type="date" name="student_dob[]" class="field__input py-1.5 px-2 text-sm" value="${data.dob || ""}" required>
+          <input type="date" name="student_dob[]" class="field__input py-2 px-2 text-sm" value="${data.dob || ""}" required>
         </div>
         <div class="field" data-field-required>
           <label class="field__label mb-1 text-xs">Địa chỉ hiện tại</label>
-          <input type="text" name="student_address[]" class="field__input py-1.5 px-2 text-sm" value="${data.address || ""}" required>
+          <textarea name="student_address[]" class="field__input py-2 px-2 text-sm" required>${data.address || ""}</textarea>
         </div>
       </div>
       ${

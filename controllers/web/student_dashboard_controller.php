@@ -256,9 +256,9 @@ class StudentDashboardController extends Controller
     }
 
     try {
-      if ($isManual) {
+      if ($isManual && empty($data['tax_code'])) {
         $companyId = $this->_companyService->createManual([
-          'tax_code' => $data['tax_code'] ?: null,
+          'tax_code' => null,
           'name' => $data['name'],
           'address' => $data['address'],
         ]);
@@ -421,9 +421,9 @@ class StudentDashboardController extends Controller
     }
 
     try {
-      if ($isManual) {
+      if ($isManual && empty($data['tax_code'])) {
         $companyId = $this->_companyService->createManual([
-          'tax_code' => $data['tax_code'] ?: null,
+          'tax_code' => null,
           'name' => $data['name'],
           'address' => $data['address'],
         ]);
@@ -531,6 +531,34 @@ class StudentDashboardController extends Controller
     ]), layout: 'dashboard_layout');
   }
 
+  public function showReferralLetter(Request $request, int $batch_id, int $letter_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+
+    $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, $batch_id);
+    if (!$dashboardData['current'] || $dashboardData['current']['id'] != $batch_id) {
+      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
+      return $this->redirect('/student/internship');
+    }
+
+    $batchStudentId = (int)$dashboardData['current']['batch_student_id'];
+
+    $letterResult = $this->_referralLetterService->getWithStudentsByLetterId($letter_id);
+    if (!$letterResult || $letterResult['batch_student_id'] != $batchStudentId) {
+      $request->session()->flashNotify('error', 'Giấy giới thiệu không tồn tại hoặc bạn không có quyền xem.');
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+    }
+
+    return $this->render('student/dashboard/referral_letters_show', array_merge($dashboardData, [
+      'student' => $student,
+      'title' => 'Chi tiết Giấy giới thiệu',
+      'letter' => $letterResult,
+      'students' => $letterResult['students'] ?? []
+    ]), layout: 'dashboard_layout');
+  }
+
   public function cancelReferralLetter(Request $request, int $batch_id, int $letter_id)
   {
     $authUser = $request->session()->authUser();
@@ -565,92 +593,6 @@ class StudentDashboardController extends Controller
     return $this->redirect("/student/internship/{$batch_id}/referral_letters");
   }
 
-  public function updateReferralLetterCompany(Request $request, int $batch_id, int $letter_id)
-  {
-    $authUser = $request->session()->authUser();
-    if (!$authUser) return $this->redirect('/login');
-    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
-
-    $batchStudentId = $this->checkOwnershipAndGetBatchStudentId($student->id, $batch_id);
-    if (!$batchStudentId) {
-      $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
-      return $this->redirect('/student/internship');
-    }
-
-    // Verify ownership of the letter
-    $letter = $this->_referralLetterService->getById($letter_id);
-    if (!$letter || $letter->batch_student_id !== $batchStudentId) {
-      $request->session()->flashNotify('error', 'Giấy giới thiệu không tồn tại hoặc bạn không có quyền thao tác.');
-      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
-    }
-
-    $data = $request->all();
-    $isManual = isset($data['is_manual']) && $data['is_manual'] == 1;
-
-    $validator = new RequestValidator();
-
-    $rules = [
-      'tax_code' => $isManual ? ['nullable'] : ['required'],
-      'name' => ['required', 'max:255'],
-      'address' => ['required']
-    ];
-
-    if (!$validator->validate($data, $rules)) {
-      $request->session()->flashErrors($validator->getErrors());
-      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
-    }
-
-    try {
-      if ($isManual) {
-        $companyId = $this->_companyService->createManual([
-          'tax_code' => $data['tax_code'] ?: null,
-          'name' => $data['name'],
-          'address' => $data['address'],
-        ]);
-      } else {
-        $companyId = $this->_companyService->upsertFromApi([
-          'tax_code' => $data['tax_code'],
-          'name' => $data['name'],
-          'address' => $data['address'],
-        ]);
-      }
-
-      // Theo yêu cầu Q7: Tạo record mới, và hủy record cũ
-      $cancelSuccess = $this->_referralLetterService->cancel($letter_id, 'Thay đổi công ty mới');
-      if ($cancelSuccess) {
-        $oldStudents = $this->_referralLetterService->getWithStudentsByLetterId($letter_id)['students'] ?? [];
-        $studentsToInsert = [];
-        foreach ($oldStudents as $oldSt) {
-          $studentsToInsert[] = [
-            'full_name' => $oldSt['full_name'],
-            'training_program' => $oldSt['training_program'],
-            'dob' => $oldSt['dob'],
-            'address' => $oldSt['address'],
-            'student_id' => $oldSt['student_id'],
-            'batch_student_id' => $oldSt['batch_student_id'],
-            'sort_order' => $oldSt['sort_order'],
-          ];
-        }
-
-        $createSuccess = $this->_referralLetterService->create([
-          'batch_student_id' => $batchStudentId,
-          'company_id' => $companyId,
-          'teacher_id' => $letter->teacher_id
-        ], $studentsToInsert);
-        if ($createSuccess) {
-          $request->session()->flashNotify('success', 'Đã cập nhật công ty mới (Hủy giấy cũ, tạo giấy mới)!');
-        } else {
-          $request->session()->flashNotify('error', 'Đã hủy giấy cũ nhưng không tạo được giấy mới.');
-        }
-      } else {
-        $request->session()->flashNotify('error', 'Có lỗi khi hủy giấy giới thiệu cũ.');
-      }
-    } catch (Exception $e) {
-      $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
-    }
-
-    return $this->redirect("/student/internship/{$batch_id}/referral_letters");
-  }
 
   /**
    * Hiển thị thông tin đồ án tốt nghiệp

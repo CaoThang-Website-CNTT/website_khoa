@@ -25,36 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ],
     });
 
-    /* [TẠM ẨN - Sẽ triển khai sau chức năng Xem chi tiết]
-    tableContainer.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-detail');
-      if (!btn) return;
-
-      const student = btn.getAttribute('data-student');
-      const companyName = btn.getAttribute('data-company-name');
-      const companyTax = btn.getAttribute('data-company-tax');
-      const companyAddress = btn.getAttribute('data-company-address');
-      const statusLabel = btn.getAttribute('data-status-label');
-      const statusVariant = btn.getAttribute('data-status-variant');
-      const reason = btn.getAttribute('data-reason');
-
-      document.getElementById('dt_student').textContent = student;
-      document.getElementById('dt_company_name').textContent = companyName;
-      document.getElementById('dt_company_tax').textContent = `MST: ${companyTax || '--'}`;
-      document.getElementById('dt_company_address').textContent = `Địa chỉ: ${companyAddress || '--'}`;
-      document.getElementById('dt_status').innerHTML = `<span class="badge" data-variant="${statusVariant}">${statusLabel}</span>`;
-
-      const reasonWrapper = document.getElementById('dt_cancel_reason_wrapper');
-      if (reason && reason !== 'null') {
-        document.getElementById('dt_cancel_reason').textContent = reason;
-        reasonWrapper.classList.remove('hidden');
-      } else {
-        reasonWrapper.classList.add('hidden');
-      }
-
-      ModalHandler.instance.open('#rl_detailModal');
-    });
-    */
 
     tableContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-cancel');
