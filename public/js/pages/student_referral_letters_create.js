@@ -1,10 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Khởi tạo logic autocomplete và kiểm tra MST cho form đăng ký
-  // Các field trong form đăng ký dùng prefix 'rl_' (ví dụ: rl_tax_code, rl_company_name)
-  if (typeof initCompanyFormLogic === "function") {
-    initCompanyFormLogic("rl_");
-  }
-
   // Logic form đăng ký sinh viên
   const btnAddStudent = document.getElementById("rl_btnAddStudent");
   const studentsContainer = document.getElementById("rl_studentsContainer");

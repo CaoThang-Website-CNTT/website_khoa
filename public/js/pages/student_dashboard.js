@@ -16,9 +16,37 @@ document.addEventListener("DOMContentLoaded", () => {
       `${prefix}companySuggestions`,
     );
 
+    if (companyNameInput) {
+      if (companyNameInput.dataset.companyLogicInit) return;
+      companyNameInput.dataset.companyLogicInit = "true";
+    }
+
+    // Nút clear thông tin công ty chọn từ danh sách gợi ý
+    let clearBtn;
+    if (companyNameInput && suggestionsContainer) {
+      clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      clearBtn.className = "suggestions-list__clear hidden";
+      clearBtn.title = "Bỏ chọn công ty";
+      companyNameInput.parentNode.appendChild(clearBtn);
+
+      clearBtn.addEventListener("click", () => {
+        companyNameInput.value = "";
+        companyAddressInput.value = "";
+        companyNameInput.removeAttribute("readonly");
+        companyAddressInput.removeAttribute("readonly");
+        clearBtn.classList.add("hidden");
+        if (taxCodeInput && isManualToggle && isManualToggle.checked) {
+          taxCodeInput.value = "";
+        }
+        companyNameInput.focus();
+      });
+    }
+
     if (btnCheckMST && taxCodeInput) {
       if (isManualToggle) {
-        isManualToggle.addEventListener("change", () => {
+        const updateManualState = () => {
           const isManual = isManualToggle.checked;
           if (isManual) {
             taxCodeInput.value = "";
@@ -26,12 +54,34 @@ document.addEventListener("DOMContentLoaded", () => {
             taxCodeInput.required = false;
             btnCheckMST.classList.add("hidden");
             if (mstError) mstError.classList.add("hidden");
+
+            companyNameInput.removeAttribute("readonly");
+            companyAddressInput.removeAttribute("readonly");
+            companyNameInput.value = "";
+            companyAddressInput.value = "";
+            if (clearBtn) clearBtn.classList.add("hidden");
           } else {
             taxCodeInput.removeAttribute("readonly");
             taxCodeInput.required = true;
             btnCheckMST.classList.remove("hidden");
+
+            companyNameInput.setAttribute("readonly", "readonly");
+            companyAddressInput.setAttribute("readonly", "readonly");
+            companyNameInput.value = "";
+            companyAddressInput.value = "";
+            if (clearBtn) clearBtn.classList.add("hidden");
           }
-        });
+        };
+
+        isManualToggle.addEventListener("change", updateManualState);
+        if (
+          !companyNameInput.value &&
+          !companyAddressInput.value &&
+          isManualToggle.checked
+        ) {
+          companyNameInput.removeAttribute("readonly");
+          companyAddressInput.removeAttribute("readonly");
+        }
       }
 
       btnCheckMST.addEventListener("click", async () => {
@@ -46,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mstError.classList.add("hidden");
         companyNameInput.value = "";
         companyAddressInput.value = "";
+        if (clearBtn) clearBtn.classList.add("hidden");
 
         try {
           const response = await fetch(
@@ -56,6 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
           if (result.code === "00" && result.data) {
             companyNameInput.value = result.data.name;
             companyAddressInput.value = result.data.address;
+            companyNameInput.setAttribute("readonly", "readonly");
+            companyAddressInput.setAttribute("readonly", "readonly");
           } else {
             mstError.textContent = "Không tìm thấy thông tin công ty.";
             mstError.classList.remove("hidden");
@@ -115,6 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
           div.addEventListener("click", () => {
             companyNameInput.value = company.name;
             companyAddressInput.value = company.address;
+            companyNameInput.setAttribute("readonly", "readonly");
+            companyAddressInput.setAttribute("readonly", "readonly");
+            clearBtn.classList.remove("hidden");
+
             if (company.tax_code && taxCodeInput) {
               taxCodeInput.value = company.tax_code;
             }
@@ -129,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "input",
         debounce((e) => {
           const isManual = isManualToggle?.checked;
-          if (isManual) {
+          if (isManual && !companyNameInput.hasAttribute("readonly")) {
             fetchSuggestions(e.target.value);
           }
         }, 300),
