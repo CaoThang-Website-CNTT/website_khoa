@@ -84,6 +84,20 @@ class InternshipBatchManagementApiController extends Controller
   public function addSupervisor($id, Request $request)
   {
     $data = $request->json();
+
+    // Hỗ trợ lưu nhiều giảng viên cùng lúc
+    if (isset($data['teachers']) && is_array($data['teachers'])) {
+      if (empty($data['teachers'])) {
+        return $this->json(['message' => 'Danh sách giảng viên rỗng.'], 422);
+      }
+
+      try {
+        $this->_batchService->addSupervisorsBulk((int)$id, $data['teachers']);
+        return $this->json([], 200, 'Thêm các giảng viên thành công.');
+      } catch (Exception $e) {
+        return $this->json(['message' => $e->getMessage()], 400);
+      }
+    }
     $teacherId = $data['teacher_id'] ?? null;
     $maxStudents = $data['max_students'] ?? 15;
 
@@ -183,10 +197,7 @@ class InternshipBatchManagementApiController extends Controller
     }
 
     try {
-      if ($action === 'approve') {
-        $count = $this->_referralLetterService->bulkApprove($ids, $processedBy);
-        return $this->json(['count' => $count], 200, "Đã duyệt {$count} giấy giới thiệu thành công.");
-      } elseif ($action === 'cancel') {
+      if ($action === 'cancel') {
         if (empty(trim($reason))) {
           return $this->json(['message' => 'Vui lòng nhập lý do hủy.'], 422);
         }

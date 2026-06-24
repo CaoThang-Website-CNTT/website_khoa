@@ -122,7 +122,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $sql = "SELECT s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id
             FROM students s
             LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
-            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published')
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published') AND b.deleted_at IS NULL
             WHERE s.classroom_id = :classroom_id AND b.id IS NULL AND s.status = 'Đang học'
             GROUP BY s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id";
 
@@ -139,7 +139,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $sql = "SELECT s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id, s.phone
             FROM students s
             LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
-            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published')
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published') AND b.deleted_at IS NULL
             WHERE s.classroom_id IN ($placeholders) AND b.id IS NULL AND s.status = 'Đang học'
             GROUP BY s.id, s.student_id, s.full_name, s.gender, s.dob, s.classroom_id";
 
@@ -157,7 +157,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
             b.id as batch_id, b.status as batch_status, c.short_name as classroom_name
             FROM students s
             LEFT JOIN internship_batch_students bs ON s.id = bs.student_id
-            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published')
+            LEFT JOIN internship_batches b ON bs.batch_id = b.id AND b.status IN ('draft', 'published') AND b.deleted_at IS NULL
             LEFT JOIN classrooms c ON s.classroom_id = c.id AND c.deleted_at IS NULL
             WHERE s.student_id IN ($placeholders)";
 
@@ -420,7 +420,12 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function searchEligibleStudents(int $batchId, string $query = '', ?int $classroomId = null): array
   {
     $params = [':batch_id' => $batchId];
-    $where = ["s.id NOT IN (SELECT student_id FROM internship_batch_students WHERE batch_id = :batch_id)"];
+    $where = ["s.id NOT IN (
+                SELECT bs.student_id 
+                FROM internship_batch_students bs 
+                JOIN internship_batches b ON bs.batch_id = b.id 
+                WHERE (b.status IN ('draft', 'published') AND b.deleted_at IS NULL) OR b.id = :batch_id
+              )"];
     $where[] = "s.status = 'Đang học'";
 
     if ($query) {

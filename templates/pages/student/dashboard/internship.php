@@ -130,7 +130,7 @@ $effectiveMetadata = $effStatus ? [
 
               <div class="field mb-3" data-orientation="horizontal">
                 <input type="checkbox" id="is_manual" name="is_manual" value="1" class="field__input">
-                <label for="is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số
+                <label for="is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty chưa có mã số
                   thuế</label>
               </div>
 
@@ -220,10 +220,10 @@ $effectiveMetadata = $effStatus ? [
             Giấy giới thiệu
           </h3>
           <?php if ($current): ?>
-            <button type="button" class="btn" data-variant="primary" data-size="lg" data-modal-trigger="#rl_requestModal">
+            <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="btn" data-variant="primary" data-size="lg">
               <i class="fa-solid fa-plus mr-1"></i>
               Đăng ký
-            </button>
+            </a>
             <div id="internship-data" data-batch-student-id="<?= $current['batch_student_id'] ?>" class="hidden"></div>
           <?php endif; ?>
         </div>
@@ -468,64 +468,9 @@ $effectiveMetadata = $effStatus ? [
   </div>
 <?php endif; ?>
 
-
-
-
-<?php if ($current): ?>
-  <!-- Modal Đăng ký Giấy giới thiệu -->
-  <div id="rl_requestModal" class="modal" tabindex="-1" data-state="closed">
-      <div class="modal__header">
-        <h3 class="modal__title">Đăng ký giấy giới thiệu thực tập</h3>
-        <button class="modal__close" type="button" data-modal-close>
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div>
-        <form action="<?= url("student/internship/{$current['id']}/referral_letters") ?>" method="POST"
-          id="rl_requestForm">
-          <?= csrf_field() ?>
-
-          <div class="field mb-4" data-orientation="horizontal">
-            <input type="checkbox" id="rl_is_manual" name="is_manual" value="1" class="field__input">
-            <label for="rl_is_manual" class="field__label">Tôi không tìm thấy mã số thuế / Công ty không có mã số
-              thuế</label>
-          </div>
-
-          <div class="field mb-4" data-field-required>
-            <label class="field__label">Mã số thuế</label>
-            <div class="field__input-group">
-              <input type="text" name="tax_code" id="rl_tax_code" class="field__input" required>
-              <button type="button" id="rl_btnCheckMST" data-variant="outline" data-size="md" class="btn">Kiểm
-                tra</button>
-            </div>
-            <div id="rl_mstLoading" class="field__description hidden"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải
-              thông tin...</div>
-            <div id="rl_mstError" class="field__error hidden"></div>
-          </div>
-
-          <div class="field mb-4" data-field-required>
-            <label class="field__label">Tên công ty</label>
-            <div class="field__suggest-wrapper">
-              <input type="text" name="name" id="rl_company_name" class="field__input relative" required readonly
-                autocomplete="off">
-              <div id="rl_companySuggestions" class="suggestions-list hidden"></div>
-            </div>
-          </div>
-
-          <div class="field mb-4" data-field-required>
-            <label class="field__label">Địa chỉ</label>
-            <textarea name="address" id="rl_company_address" class="field__input" required readonly></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal__footer">
-        <button type="button" class="btn" data-variant="outline" data-modal-close>Hủy</button>
-        <button type="submit" form="rl_requestForm" class="btn" data-variant="primary">Gửi đăng ký</button>
-      </div>
-  </div>
-<?php endif; ?>
-
 <?php $layout->start("scripts") ?>
-<script>window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;</script>
+<script>
+  window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
+</script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
 <?php $layout->end() ?>

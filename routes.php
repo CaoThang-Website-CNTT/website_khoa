@@ -180,6 +180,8 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
 
     // Referral Letters
     $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
+    $router->get('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'printReferralLetter']);
+    $router->post('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'confirmPrint']);
 
     // Students
     $router->get('/{id}/students', [InternshipBatchController::class, 'students']);
@@ -236,14 +238,15 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
   // Nộp tài liệu
   $router->post('/internship/{batch_id}/upload', [StudentDashboardController::class, 'uploadSubmission']);
   // Đăng ký giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters/create', [StudentDashboardController::class, 'createReferralLetter']);
   $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
 
   // Trang danh sách giấy giới thiệu
   $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
+  // Trang chi tiết giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters/{letter_id}', [StudentDashboardController::class, 'showReferralLetter']);
   // Hủy giấy giới thiệu
   $router->post('/internship/{batch_id}/referral_letters/{letter_id}/cancel', [StudentDashboardController::class, 'cancelReferralLetter']);
-  // Cập nhật công ty cho giấy giới thiệu (pending)
-  $router->post('/internship/{batch_id}/referral_letters/{letter_id}/update-company', [StudentDashboardController::class, 'updateReferralLetterCompany']);
 });
 
 // Teacher Dashboard

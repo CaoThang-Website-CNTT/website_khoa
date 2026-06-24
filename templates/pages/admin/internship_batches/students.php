@@ -142,6 +142,9 @@ $batch = $batch ?? null;
       <div class="card__header flex justify-between items-center">
         <h3 class="font-bold text-lg"><i class="fa-solid fa-chalkboard-user mr-2"></i>Giảng viên <span class="badge"
             data-variant="primary" id="supervisor-count">0</span></h3>
+        <a href="<?= url('admin/internship_batches/' . $batch['id'] . '/teachers') ?>" class="btn" data-variant="outline" data-size="sm" title="Quản lý giảng viên">
+          <i class="fa-solid fa-up-right-from-square"></i>
+        </a>
       </div>
       <hr class="separator">
       <div id="supervisor-stats-container" class="supervisor-list">
@@ -201,7 +204,7 @@ $batch = $batch ?? null;
 <div id="modal-auto-even" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Phân công đều</h3>
-    <p class="modal__description">Phân công đều số lương sinh viên cho giảng viên theo thứ tự từ trên xuống.</p>
+    <p class="modal__description">Phân công đều số lượng sinh viên cho giảng viên theo thứ tự từ trên xuống.</p>
   </div>
   <div class="modal__footer">
     <button type="button" id="btn-close-even-modal" class="btn" data-size="lg" data-variant="outline"

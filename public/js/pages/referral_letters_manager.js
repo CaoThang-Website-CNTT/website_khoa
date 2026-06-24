@@ -8,17 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     TableManager.registerBulkActions('referral_letters_table', {
       countLabel: count => `Đã chọn: ${count}`,
       actions: [
-        {
-          id: 'approve',
-          label: 'Duyệt & In giấy',
-          icon: 'fa-solid fa-check',
-          variant: 'primary',
-          onClick: ({ selectedIds }) => {
-            currentSelectedIds = selectedIds;
-            document.getElementById('approve-count').textContent = currentSelectedIds.length;
-            ModalHandler.instance.open('#approve-confirm-modal');
-          },
-        },
+
         {
           id: 'cancel',
           label: 'Hủy giấy giới thiệu',
@@ -35,33 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ],
     });
 
+
     tableContainer.addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-detail');
+      const btn = e.target.closest('.btn-cancel');
       if (!btn) return;
 
-      const student = btn.getAttribute('data-student');
-      const companyName = btn.getAttribute('data-company-name');
-      const companyTax = btn.getAttribute('data-company-tax');
-      const companyAddress = btn.getAttribute('data-company-address');
-      const statusLabel = btn.getAttribute('data-status-label');
-      const statusVariant = btn.getAttribute('data-status-variant');
-      const reason = btn.getAttribute('data-reason');
-
-      document.getElementById('dt_student').textContent = student;
-      document.getElementById('dt_company_name').textContent = companyName;
-      document.getElementById('dt_company_tax').textContent = `MST: ${companyTax || '--'}`;
-      document.getElementById('dt_company_address').textContent = `Địa chỉ: ${companyAddress || '--'}`;
-      document.getElementById('dt_status').innerHTML = `<span class="badge" data-variant="${statusVariant}">${statusLabel}</span>`;
-
-      const reasonWrapper = document.getElementById('dt_cancel_reason_wrapper');
-      if (reason && reason !== 'null') {
-        document.getElementById('dt_cancel_reason').textContent = reason;
-        reasonWrapper.classList.remove('hidden');
-      } else {
-        reasonWrapper.classList.add('hidden');
-      }
-
-      ModalHandler.instance.open('#rl_detailModal');
+      const id = btn.getAttribute('data-id');
+      currentSelectedIds = [id];
+      document.getElementById('cancel-count').textContent = '1';
+      document.getElementById('cancel_reason_input').value = '';
+      ModalHandler.instance.open('#cancel-reason-modal');
     });
   }
 
@@ -104,15 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  document.getElementById('btn-confirm-approve')?.addEventListener('click', () => {
-    const btnConfirm = document.getElementById('btn-confirm-approve');
-    btnConfirm.disabled = true;
-    callBulkActionApi('approve').finally(() => {
-      btnConfirm.disabled = false;
-      ModalHandler.instance.close();
-    });
-  });
-
   document.getElementById('btn-confirm-cancel')?.addEventListener('click', () => {
     const reason = document.getElementById('cancel_reason_input').value.trim();
     if (!reason) {
@@ -130,5 +94,17 @@ document.addEventListener('DOMContentLoaded', () => {
       btnConfirm.disabled = false;
       ModalHandler.instance.close();
     });
+  });
+
+  // Handle predefined cancel reasons
+  document.addEventListener('click', (e) => {
+    const suggestionBtn = e.target.closest('.btn-cancel-suggestion');
+    if (suggestionBtn) {
+      const input = document.getElementById('cancel_reason_input');
+      if (input) {
+        input.value = suggestionBtn.innerText;
+        input.focus();
+      }
+    }
   });
 });

@@ -62,6 +62,49 @@ class InternshipBatchController extends Controller
     ], layout: "dashboard_layout");
   }
 
+  public function printReferralLetter($id, $letterId, Request $request)
+  {
+    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    if (!$batch) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
+      return $this->redirect('admin/internship_batches');
+    }
+
+    $letter = $this->_referralLetterService->getForPrint((int)$letterId);
+    if (!$letter) {
+      $request->session()->flashNotify('error', 'Không tìm thấy giấy giới thiệu');
+      return $this->redirect("admin/internship_batches/$id/referral_letters");
+    }
+
+    $this->render("admin/internship_batches/referral_letter_print", [
+      'batch' => $batch,
+      'letter' => $letter
+    ], layout: null);
+  }
+
+  public function confirmPrint($id, $letterId, Request $request)
+  {
+    $data = $request->all();
+    $overrides = [
+      'internship_start_date' => $data['internship_start_date'] ?? null,
+      'internship_end_date' => $data['internship_end_date'] ?? null,
+      'document_number' => $data['document_number'] ?? null,
+    ];
+
+    $authUser = $request->session()->authUser();
+    $processedBy = $authUser['account_id'] ?? 0;
+
+    try {
+      $isSuccess = $this->_referralLetterService->printLetter((int)$letterId, $processedBy, $overrides);
+      if ($isSuccess) {
+        return $this->json(null, 200, 'Cập nhật trạng thái in thành công');
+      }
+      return $this->json(null, 400, 'Có lỗi xảy ra khi cập nhật trạng thái in');
+    } catch (\Exception $e) {
+      return $this->json(null, 400, $e->getMessage());
+    }
+  }
+
   public function teachers($id, Request $request)
   {
     $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);

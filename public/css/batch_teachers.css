@@ -11,6 +11,11 @@
   gap: 0.25rem;
 }
 
+.quota-cell__display.hidden,
+.quota-cell__editor.hidden {
+  display: none;
+}
+
 .quota-cell__input {
   width: 4rem;
   height: 1.75rem;
@@ -47,4 +52,122 @@ tr:hover .btn-quota-edit,
 
 .btn-quota-cancel:hover {
   background: color-mix(in oklab, var(--destructive) 10%, transparent);
+}
+
+#modal-add-teacher .modal__body {
+  overflow: visible;
+  clip-path: none;
+}
+
+/* Modal Search Dropdown */
+.teacher-search {
+  position: relative;
+  z-index: 50;
+}
+
+.teacher-search__results {
+  position: absolute;
+  z-index: 50;
+  width: 100%;
+  margin-top: 0.25rem;
+  background-color: var(--background);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.teacher-search__item {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease;
+}
+
+.teacher-search__item:last-child {
+  border-bottom: none;
+}
+
+.teacher-search__item:hover {
+  background-color: var(--muted);
+}
+
+.teacher-search__item-name {
+  font-size: var(--text-sm);
+}
+
+.teacher-search__item-dept {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+
+.teacher-search__empty {
+  padding: 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
+/* Selected Teacher Preview */
+#selected-teachers-container {
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.teacher-preview {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.teacher-preview__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.teacher-preview__name {
+  font-size: var(--text-sm);
+}
+
+.teacher-preview__dept {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+
+.teacher-preview__clear {
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.teacher-preview__clear:hover {
+  color: var(--destructive);
+  background-color: color-mix(in oklab, var(--destructive) 10%, transparent);
+}
+
+.teacher-preview__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.teacher-preview__quota {
+  width: 4rem;
+  height: 2rem;
+  text-align: center;
+  font-size: var(--text-sm);
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
 }

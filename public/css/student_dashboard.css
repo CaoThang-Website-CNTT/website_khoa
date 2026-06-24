@@ -152,3 +152,21 @@
   flex-wrap: wrap;
   margin-top: 0.25rem;
 }
+
+.suggestions-list__clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+}
+
+.suggestions-list__clear:hover {
+  color: var(--destructive);
+}
+
+@media (max-width: 64rem) {
+  #rl_studentsContainer .grid-cols-2 {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
