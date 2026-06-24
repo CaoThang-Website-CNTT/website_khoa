@@ -77,7 +77,7 @@ $layout->start("scripts"); ?>
       <div class="flex justify-between items-center mb-4">
         <div>
           <label class="field__label mb-0 font-semibold">Danh sách nhóm sinh viên thực tập</label>
-          <div class="text-sm mt-1">Thêm các sinh viên thực tập chung công ty vào chung một nhóm để xuất chung 1 giấy giới thiệu.</div>
+          <div class="text-sm mt-1">Thêm các sinh viên thực tập chung công ty vào chung một nhóm để xuất chung 1 giấy giới thiệu. Tối đa 15 sinh viên.</div>
         </div>
         <button type="button" class="btn shrink-0" data-variant="secondary" data-size="sm" id="rl_btnAddStudent">
           <i class="fa-solid fa-plus mr-1"></i> Thêm sinh viên

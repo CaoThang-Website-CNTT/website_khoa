@@ -3,9 +3,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnAddStudent = document.getElementById("rl_btnAddStudent");
   const studentsContainer = document.getElementById("rl_studentsContainer");
   let studentCount = 0;
+  const MAX_STUDENTS = 15;
+
+  function updateAddButtonState() {
+    if (btnAddStudent && studentsContainer) {
+      if (studentsContainer.children.length >= MAX_STUDENTS) {
+        btnAddStudent.disabled = true;
+        btnAddStudent.title = "Đã đạt tối đa 15 sinh viên";
+      } else {
+        btnAddStudent.disabled = false;
+        btnAddStudent.title = "Thêm sinh viên";
+      }
+    }
+  }
 
   function addStudentRow(data = {}, isPrimary = false) {
     if (!studentsContainer) return;
+    
+    if (!isPrimary && studentsContainer.children.length >= MAX_STUDENTS) {
+      if (window.toast) window.toast.error("Lỗi", `Chỉ được thêm tối đa ${MAX_STUDENTS} sinh viên.`);
+      return;
+    }
+
     const idx = studentCount++;
     const row = document.createElement("div");
     row.className = "p-3 border rounded-md flex gap-4 items-start relative";
@@ -42,10 +61,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isPrimary) {
       row.querySelector(".btn-remove-student").addEventListener("click", () => {
         row.remove();
+        updateAddButtonState();
       });
     }
 
     studentsContainer.appendChild(row);
+    updateAddButtonState();
   }
 
   if (

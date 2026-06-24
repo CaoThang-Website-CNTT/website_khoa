@@ -449,6 +449,10 @@ class StudentDashboardController extends Controller
       $students = [];
       // Request might send arrays: student_name[], student_major[], student_dob[], student_address[]
       if (!empty($data['student_name']) && is_array($data['student_name'])) {
+        if (count($data['student_name']) > 15) {
+          $request->session()->flashNotify('error', 'Một nhóm đăng ký không được vượt quá 15 sinh viên.');
+          return $this->redirect("/student/internship/{$batch_id}/referral_letters/create");
+        }
         foreach ($data['student_name'] as $index => $name) {
           if (!trim($name)) continue;
           $students[] = [
