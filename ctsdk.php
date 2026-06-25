@@ -3,7 +3,7 @@ define('BASE_PATH', __DIR__);
 
 require_once BASE_PATH . '/includes/env_loader.php';
 
-App\EnvLoader::load(BASE_PATH . '/.env.staging');
+App\EnvLoader::load(BASE_PATH . '/.env.sdk.staging');
 
 // Database
 require_once BASE_PATH . '/includes/core/database.php';
