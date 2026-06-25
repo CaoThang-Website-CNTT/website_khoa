@@ -1,5 +1,4 @@
 import { ContextAnalyzer } from './context_analyzer.js';
-import { CapabilityResolver } from './capability_resolver.js';
 
 export class ContextStore {
   /** @type {EditorEventBus} */
@@ -38,54 +37,16 @@ export class ContextStore {
   #activeBlockId = null;
 
   /**
-   * Schema của block đang active - cần để CapabilityResolver tính đúng.
-   * @type {object|null}
-   */
-  #activeBlockSchema = null;
-
-  /**
-   * Capabilities của context hiện tại (base + block-specific).
-   * Được recompute mỗi khi type hoặc activeBlockSchema thay đổi.
+   * Deprecated compatibility field. Kept empty so context snapshots preserve shape.
    * @type {Set<string>}
    */
   #capabilities = new Set();
 
-  /** @type {object[]} */
-  #undoStack = [];
-  /** @type {object[]} */
-  #redoStack = [];
-  /** @type {number} */
-  #limit = 100;
-
-  /**
-   * Lưu cursor state ngay trước khi record delta.
-   * @type {CursorState|null}
-   */
-  #pendingPreCursor = null;
-
-  /**
-   * Map blockType → schema, được inject từ ngoài (thường là BLOCK_REGISTRY).
-   * ContextStore không import BLOCK_REGISTRY trực tiếp để tránh circular dep.
-   * @type {Map<string, object>}
-   */
-  #schemaRegistry;
-
   constructor(bus, canvas, options = {}) {
-    const { schemaRegistry = new Map() } = options;
-
     this.#bus = bus;
     this.#canvas = canvas;
-    this.#schemaRegistry = schemaRegistry;
 
     this.mount();
-  }
-
-  getUndoStack() {
-    return this.#undoStack;
-  }
-
-  getRedoStack() {
-    return this.#redoStack;
   }
 
   mount() {
@@ -101,28 +62,10 @@ export class ContextStore {
       this.#onBlockActivated(blockId);
     });
 
-    // Block bị xóa → nếu đang active thì clear
     this.#bus.subscribe('block:removed', ({ blockId }) => {
       if (this.#activeBlockId === blockId) this.#resetToNone();
     });
 
-    /* Tạm thời vô hiệu hóa phím tắt Undo/Redo
-    document.addEventListener('keydown', (e) => {
-      const ctrl = e.ctrlKey || e.metaKey;
-      if (!ctrl) return;
-
-      if (e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        this.undo();
-      } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
-        e.preventDefault();
-        this.redo();
-      }
-    }, { signal, capture: true });
-    */
-
-    // selectionchange để cập nhật cursor state real-time (không debounce ở đây,
-    // vì chỉ update state - render/dispatch vẫn debounce ở InlineToolbar)
     document.addEventListener('selectionchange', () => {
       this.#onSelectionChange();
     }, { signal });
@@ -134,10 +77,7 @@ export class ContextStore {
    */
   destroy() {
     this.#ac.abort();
-    this.#undoStack = [];
-    this.#redoStack = [];
     this.#selection.range = null;
-    this.#pendingPreCursor = null;
   }
 
   /** @returns {ContextType} */
@@ -161,73 +101,6 @@ export class ContextStore {
   /** @returns {Set<string>} - bản copy, không phải reference gốc */
   get capabilities() { return new Set(this.#capabilities); }
 
-  /** @returns {boolean} */
-  get canUndo() { return this.#undoStack.length > 0; }
-
-  /** @returns {boolean} */
-  get canRedo() { return this.#redoStack.length > 0; }
-
-  /** @returns {number} */
-  get historySize() { return this.#undoStack.length; }
-
-  beginRecord() {
-    this.#pendingPreCursor = { ...this.#cursor };
-  }
-
-  /**
-   * Notion-style Operation Recorder
-   */
-  recordOperation(op) {
-    const operation = {
-      ...op,
-      cursorBefore: this.#pendingPreCursor ?? { ...this.#cursor },
-      cursorAfter: { ...this.#cursor },
-      timestamp: Date.now()
-    };
-
-    this.#undoStack.push(operation);
-    if (this.#undoStack.length > this.#limit) this.#undoStack.shift();
-
-    this.#redoStack = []; // Quan trọng: Clear redo khi có hành động mới
-    this.#pendingPreCursor = null;
-
-    this.#emitHistoryState();
-  }
-
-  undo() {
-    if (this.#undoStack.length === 0) return;
-    const op = this.#undoStack.pop();
-    this.#redoStack.push(op);
-
-    this.#bus.dispatch('context:undo_applied', {
-      blockId: op.blockId,
-      action: op.action,
-      attr: op.attribute,
-      value: op.prev,
-      cursor: op.cursorBefore,
-      label: op.label
-    });
-
-    this.#emitHistoryState();
-  }
-
-  redo() {
-    if (this.#redoStack.length === 0) return;
-    const op = this.#redoStack.pop();
-    this.#undoStack.push(op);
-
-    this.#bus.dispatch('context:redo_applied', {
-      blockId: op.blockId,
-      action: op.action,
-      attr: op.attribute,
-      value: op.next,
-      cursor: op.cursorAfter,
-      label: op.label
-    });
-
-    this.#emitHistoryState();
-  }
-
   /**
    * Force sync context từ bên ngoài (vd: Manager gọi sau khi block được focus
    * bằng programmatic focus, không qua selection event).
@@ -244,26 +117,6 @@ export class ContextStore {
     this.#applyRawContext(raw);
   }
 
-  /**
-   * Đăng ký capability group cho block type mới.
-   * Proxy tới CapabilityResolver để caller không cần import CapabilityResolver.
-   *
-   * @param {string}   supportsKey
-   * @param {string[]} capabilities
-   */
-  registerCapabilityGroup(supportsKey, capabilities) {
-    CapabilityResolver.registerSupport(supportsKey, capabilities);
-  }
-
-  /**
-   * Xóa toàn bộ history (vd: sau khi save thành công).
-   */
-  clearHistory() {
-    this.#undoStack = [];
-    this.#redoStack = [];
-    this.#emitHistoryState();
-  }
-
   // Tất cả mutation state đều đi qua đây để đảm bảo nhất quán.
 
   /**
@@ -272,9 +125,6 @@ export class ContextStore {
    * @param {RawContext} raw
    */
   #applyRawContext(raw) {
-    const prevType = this.#type;
-    const prevBlockId = this.#cursor.blockId;
-
     this.#type = raw.type;
 
     if (raw.type === 'cursor') {
@@ -323,11 +173,6 @@ export class ContextStore {
       this.#clearSelection();
     }
 
-    // Recompute capabilities nếu type hoặc block thay đổi
-    if (prevType !== this.#type || prevBlockId !== this.#cursor.blockId) {
-      this.#recomputeCapabilities();
-    }
-
     // Emit state thay đổi
     this.#bus.dispatch('context:changed', this.#buildPublicSnapshot());
   }
@@ -351,7 +196,6 @@ export class ContextStore {
     this.#type = 'none';
     this.#cursor = { blockId: null, blockType: null, charOffset: null, line: null };
     this.#clearSelection();
-    this.#recomputeCapabilities();
     this.#bus.dispatch('context:changed', this.#buildPublicSnapshot());
   }
 
@@ -418,31 +262,7 @@ export class ContextStore {
 
   #onBlockActivated(blockId) {
     this.#activeBlockId = blockId;
-    const blockType = this.#canvas
-      .querySelector(`[data-be-block-id="${blockId}"]`)
-      ?.dataset.beBlockType ?? null;
-
-    this.#activeBlockSchema = this.#schemaRegistry.get(blockType) ?? null;
-    this.#recomputeCapabilities();
-
     this.#bus.dispatch('context:changed', this.#buildPublicSnapshot());
-  }
-
-  #recomputeCapabilities() {
-    const isTextSelection = this.#type === 'text';
-    this.#capabilities = CapabilityResolver.resolve(
-      this.#type,
-      this.#activeBlockSchema,
-      isTextSelection
-    );
-  }
-
-  #emitHistoryState() {
-    this.#bus.dispatch('context:history_changed', {
-      canUndo: this.canUndo,
-      canRedo: this.canRedo,
-      historySize: this.historySize,
-    });
   }
 
   /**
@@ -461,8 +281,6 @@ export class ContextStore {
       }),
       activeBlockId: this.#activeBlockId,
       capabilities: new Set(this.#capabilities),
-      canUndo: this.canUndo,
-      canRedo: this.canRedo,
     });
   }
 }

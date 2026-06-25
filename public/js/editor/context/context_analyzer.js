@@ -2,17 +2,6 @@ import { RichTextParser } from '../rich_text_parser.js';
 
 export class ContextAnalyzer {
   /**
-   * BASE capabilities áp dụng theo loại ngữ cảnh, không phụ thuộc block type.
-   * Block-specific capabilities đến từ schema.supports (xem CapabilityResolver).
-   */
-  static BASE_CAPABILITIES = {
-    text: ['bold', 'italic', 'underline', 'link'],
-    cursor: ['delete', 'duplicate', 'move-up', 'move-down'],
-    block: ['delete', 'duplicate', 'move-up', 'move-down'],
-    none: [],
-  };
-
-  /**
    * Phân tích ngữ cảnh từ DOM và trả về raw context object.
    * Không mutate bất kỳ state nào - toàn bộ kết quả được ContextStore lưu.
    *

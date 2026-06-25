@@ -255,6 +255,15 @@ export class InlineToolbar extends EditorToolbar {
     this.bus.subscribe('inline:marks_updated', ({ activeMarks }) => {
       this.#syncButtonStates(activeMarks);
     });
+
+    this.bus.subscribe('inline:range_restored', ({ blockId, range }) => {
+      if (!range || !blockId) return;
+      this.#savedRange = range.cloneRange();
+      this.#activeBlockId = blockId;
+      if (this.root?.style.display !== 'none') {
+        this.#positionToolbar(this.#savedRange);
+      }
+    });
   }
 
   #handleSelection() {

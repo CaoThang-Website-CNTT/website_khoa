@@ -7,6 +7,7 @@ import { InlineToolbar } from './toolbar/inline_toolbar.js';
 import { BlockToolbar } from './toolbar/block_toolbar.js';
 import { InlineFormatter } from './inline_formatter_v2.js';
 import { EditorUI } from './editor_ui.js';
+import { EditorHistory } from './editor_history.js';
 
 /** Đảm nhận việc truyền tin */
 class EditorEventBus {
@@ -63,6 +64,8 @@ export class EditorManager {
   #metadata;
   /** @type {ContextStore} */
   #contextStore;
+  /** @type {EditorHistory} */
+  #history;
 
   #blockList;
   #canvas;
@@ -70,9 +73,9 @@ export class EditorManager {
   #isEmpty;
   #isDirty;
   #inputRecordTimeout = null;
-  #lastInputSnapshot = null;
   #lastInputBlockId = null;
-  #lastRecordTime = 0;
+  #isRestoring = false;
+  #restoreFocusBlockId = null;
 
   constructor(initialMetaData = {}) {
     this.#bus = new EditorEventBus();
@@ -92,6 +95,7 @@ export class EditorManager {
       maxSnapshots: 10,
       schemaRegistry: BLOCK_REGISTRY,
     });
+    this.#history = new EditorHistory(this.#bus, { limit: 100 });
 
     this.#inlineToolbar = new InlineToolbar(
       this.#bus,
@@ -123,12 +127,12 @@ export class EditorManager {
     this.#bus.subscribe('inline:link_request', (p) => this.#onInlineLinkRequest(p));
     this.#bus.subscribe('inline:unlink_request', (p) => this.#onInlineUnlinkRequest(p));
 
-    // this.#bus.subscribe('context:undo_applied', (p) => this.#onUndoApplied(p));
-    // this.#bus.subscribe('context:redo_applied', (p) => this.#onRedoApplied(p));
     this.#bus.subscribe('block:input', (p) => this.#onBlockInput(p));
 
     this.#initialRender();
     this.#initCanvas();
+    this.#history.reset(this.#snapshotBlocks());
+    this.#initHistoryShortcuts();
 
     console.log('[EditorManager] Khởi tạo thành công.');
   }
@@ -160,9 +164,12 @@ export class EditorManager {
     // Lắng nghe sự kiên drop block
     // Lắng nghe sự kiên drop block để cập nhật lại order trong Canvas
     DnDMonitor.on('dragend', () => {
+      if (this.#isRestoring) return;
+      this.#commitPendingInput();
       const orderedIds = Array.from(this.#blockList.querySelectorAll('.be-block-card'))
         .map(el => el.dataset.beBlockId);
       this.#canvas.reorderBlocks(orderedIds);
+      this.#recordHistory('Reorder blocks');
     });
 
     this.#blockList.addEventListener('click', (e) => {
@@ -202,10 +209,24 @@ export class EditorManager {
         this.#handleGlobalEnter(e);
       }
     });
+
+    this.#blockList.addEventListener('input', (e) => {
+      const card = e.target.closest?.('.be-block-card');
+      if (!card || this.#isRestoring) return;
+      this.#scheduleInputCommit(card.dataset.beBlockId);
+    }, true);
+
+    this.#blockList.addEventListener('focusout', (e) => {
+      const fromCard = e.target.closest?.('.be-block-card');
+      const toCard = e.relatedTarget?.closest?.('.be-block-card');
+      if (fromCard && fromCard !== toCard) this.#commitPendingInput();
+    }, true);
   }
 
   #onBlockAddRequested({ type, data = {}, afterId = null }) {
+    if (!this.#isRestoring) this.#commitPendingInput();
     this.#canvas.addBlock(type, data, afterId);
+    this.#recordHistory('Add block');
   }
 
   #onBlockSelected({ blockId }) {
@@ -255,10 +276,14 @@ export class EditorManager {
 
     const newCard = new EditorBlockWrapper(this.#bus, block);
     oldCard.replaceWith(newCard);
+    this.#recordHistory('Update block');
   }
 
   #onBlockRemoveRequested({ blockId }) {
+    if (!this.#isRestoring) this.#commitPendingInput();
+    this.#restoreFocusBlockId = blockId;
     this.#canvas.removeBlock(blockId);
+    this.#recordHistory('Delete block');
   }
 
   #onBlockRemoved({ blockId, index }) {
@@ -295,7 +320,9 @@ export class EditorManager {
     if (!block) return;
 
     if (typeof block.handleToolbarAction === 'function') {
+      this.#commitPendingInput();
       block.handleToolbarAction(action, selection);
+      this.#recordHistory(action);
     } else {
       console.warn(`[EditorManager] Block "${blockId}" không implement handleToolbarAction()`);
     }
@@ -342,12 +369,11 @@ export class EditorManager {
     const editable = this.#getEditableEl(blockId, range);
     if (!block || !editable) return;
 
-    const prevContent = block._cloneData().content;
+    const prevContent = block._cloneData().rich_text;
     const offsets = InlineFormatter.getRangeOffsets(range, editable);
     if (!offsets) return;
 
     this.#commitPendingInput();
-    this.#contextStore.beginRecord();
     const tokens = InlineFormatter.parse(editable.innerHTML);
     const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, command);
 
@@ -361,6 +387,13 @@ export class EditorManager {
       "UPDATE",
       editable
     );
+    const restoredRange = this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+    if (restoredRange) {
+      this.#bus.dispatch('inline:range_restored', {
+        blockId,
+        range: restoredRange,
+      });
+    }
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
@@ -378,12 +411,11 @@ export class EditorManager {
     const editable = this.#getEditableEl(blockId, range);
     if (!block || !editable) return;
 
-    const prevContent = block._cloneData().content;
+    const prevContent = block._cloneData().rich_text;
     const offsets = InlineFormatter.getRangeOffsets(range, editable);
     if (!offsets) return;
 
     this.#commitPendingInput();
-    this.#contextStore.beginRecord();
     const tokens = InlineFormatter.parse(editable.innerHTML);
     const newTokens = InlineFormatter.applyMark(tokens, offsets.start, offsets.end, 'link', href);
 
@@ -397,6 +429,13 @@ export class EditorManager {
       "UPDATE",
       editable
     );
+    const restoredRange = this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+    if (restoredRange) {
+      this.#bus.dispatch('inline:range_restored', {
+        blockId,
+        range: restoredRange,
+      });
+    }
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
@@ -414,12 +453,11 @@ export class EditorManager {
     const editable = this.#getEditableEl(blockId, range);
     if (!block || !editable) return;
 
-    const prevContent = block._cloneData().content;
+    const prevContent = block._cloneData().rich_text;
     const offsets = InlineFormatter.getRangeOffsets(range, editable);
     if (!offsets) return;
 
     this.#commitPendingInput();
-    this.#contextStore.beginRecord();
     const tokens = InlineFormatter.parse(editable.innerHTML);
     const newTokens = InlineFormatter.removeLink(tokens, offsets.start, offsets.end);
 
@@ -433,6 +471,13 @@ export class EditorManager {
       "UPDATE",
       editable
     );
+    const restoredRange = this.#restoreSelectionByOffset(editable, offsets.start, offsets.end);
+    if (restoredRange) {
+      this.#bus.dispatch('inline:range_restored', {
+        blockId,
+        range: restoredRange,
+      });
+    }
 
     const activeMarks = InlineFormatter.getActiveMarks(newTokens, offsets.start, offsets.end);
     this.#bus.dispatch('inline:marks_updated', { activeMarks });
@@ -461,6 +506,7 @@ export class EditorManager {
         editable.dispatchEvent(new Event('input', { bubbles: true }));
       }
     }
+    this.#recordHistory(label);
   }
 
   #onBlockInput({ blockId }) {
@@ -473,18 +519,173 @@ export class EditorManager {
       const data = block.serializeData(editable);
       this.#canvas.updateBlock(blockId, data, { silent: true });
     }
+    this.#scheduleInputCommit(blockId);
   }
 
   /**
-   * Chốt (Commit) mọi thay đổi (Đã vô hiệu hóa cùng với Undo/Redo)
+   * Chốt input đang debounce vào history.
    */
   #commitPendingInput() {
-    // Logic gỡ bỏ tạm thời
+    if (!this.#inputRecordTimeout) return;
+
+    clearTimeout(this.#inputRecordTimeout);
+    this.#inputRecordTimeout = null;
+    this.#commitAllDomToModel();
+    this.#recordHistory('Edit content');
+    this.#lastInputBlockId = null;
   }
 
   /**
    * Xử lý phím Enter tập trung
    */
+  #scheduleInputCommit(blockId) {
+    if (this.#isRestoring) return;
+
+    if (this.#lastInputBlockId && this.#lastInputBlockId !== blockId) {
+      this.#commitPendingInput();
+    }
+
+    this.#lastInputBlockId = blockId;
+    if (this.#inputRecordTimeout) clearTimeout(this.#inputRecordTimeout);
+
+    this.#inputRecordTimeout = setTimeout(() => {
+      this.#inputRecordTimeout = null;
+      this.#commitAllDomToModel();
+      this.#recordHistory('Edit content');
+      this.#lastInputBlockId = null;
+    }, 700);
+  }
+
+  #commitAllDomToModel() {
+    this.#canvas.getBlocks().forEach(block => {
+      const data = block.serializeData(this.#getEditableEl(block.id));
+      this.#canvas.updateBlock(block.id, data, { silent: true });
+    });
+  }
+
+  #snapshotBlocks() {
+    this.#commitAllDomToModel();
+
+    return this.#canvas.getBlocks().map(block => ({
+      id: block.id,
+      type: block.type,
+      version: block.schema?.version ?? 1,
+      data: block._cloneData(),
+    }));
+  }
+
+  #recordHistory(label) {
+    if (this.#isRestoring) return;
+    this.#isDirty = true;
+    this.#history.record(this.#snapshotBlocks(), label);
+    if (label !== 'Delete block') this.#restoreFocusBlockId = null;
+  }
+
+  #initHistoryShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (!ctrl || !this.#isEditorInteraction()) return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        this.undo();
+      } else if ((key === 'z' && e.shiftKey) || key === 'y') {
+        e.preventDefault();
+        this.redo();
+      }
+    }, { capture: true });
+  }
+
+  #isEditorInteraction() {
+    const active = document.activeElement;
+    if (active && (
+      this.#blockList.contains(active) ||
+      document.querySelector('#be-block-settings-panel')?.contains(active)
+    )) {
+      return true;
+    }
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+
+    return this.#blockList.contains(sel.getRangeAt(0).commonAncestorContainer);
+  }
+
+  undo() {
+    this.#commitPendingInput();
+    const snapshot = this.#history.undo();
+    if (!snapshot) return false;
+
+    this.#restoreSnapshot(snapshot);
+    return true;
+  }
+
+  redo() {
+    this.#commitPendingInput();
+    const snapshot = this.#history.redo();
+    if (!snapshot) return false;
+
+    this.#restoreSnapshot(snapshot);
+    return true;
+  }
+
+  canUndo() {
+    return this.#history.canUndo();
+  }
+
+  canRedo() {
+    return this.#history.canRedo();
+  }
+
+  #restoreSnapshot(snapshot) {
+    const previousActiveBlockId = this.#activeBlockId;
+
+    this.#isRestoring = true;
+    try {
+      this.#canvas.replaceBlocks(snapshot);
+      this.#renderCanvasFromState();
+
+      const blocks = this.#canvas.getBlocks();
+      const target =
+        blocks.find(block => block.id === this.#restoreFocusBlockId) ??
+        blocks.find(block => block.id === previousActiveBlockId) ??
+        blocks[blocks.length - 1] ??
+        null;
+
+      if (target) {
+        this.#activeBlockId = target.id;
+        this.#ui.renderSettingsPanel(target);
+        setTimeout(() => target.focus(this.#bus, 'end'), 0);
+      } else {
+        this.#activeBlockId = "";
+        this.#ui.clearSettingsPanel();
+      }
+    } finally {
+      this.#restoreFocusBlockId = null;
+      this.#isRestoring = false;
+    }
+  }
+
+  #renderCanvasFromState() {
+    const blocks = this.#canvas.getBlocks();
+    this.#blockList.innerHTML = "";
+
+    if (blocks.length === 0) {
+      this.#isEmpty = true;
+      this.#ui.showCanvasEmptyState();
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    blocks.forEach(block => {
+      fragment.appendChild(new EditorBlockWrapper(this.#bus, block));
+    });
+
+    this.#isEmpty = false;
+    this.#blockList.appendChild(fragment);
+  }
+
   #handleGlobalEnter(e) {
     const { blockId, blockType } = this.#contextStore.cursor;
 
@@ -523,7 +724,7 @@ export class EditorManager {
 
   #restoreSelectionByOffset(container, start, end) {
     const sel = window.getSelection();
-    if (!sel) return;
+    if (!sel) return null;
 
     const findPoint = (targetOffset) => {
       let charCount = 0;
@@ -549,7 +750,7 @@ export class EditorManager {
 
     const startPoint = findPoint(start);
     const endPoint = findPoint(end);
-    if (!startPoint || !endPoint) return;
+    if (!startPoint || !endPoint) return null;
 
     try {
       const range = document.createRange();
@@ -558,8 +759,10 @@ export class EditorManager {
 
       sel.removeAllRanges();
       sel.addRange(range);
+      return range.cloneRange();
     } catch (err) {
       console.warn('[EditorManager] Không thể restore selection:', err);
+      return null;
     }
   }
 
@@ -579,6 +782,7 @@ export class EditorManager {
         this.#canvas.addBlock(b.type, b.data || {}, null, b.id);
       });
     }
+    this.#history.reset(this.#snapshotBlocks());
   }
 
   getCanvas() {
@@ -781,6 +985,27 @@ class EditorCanvas {
     this.#bus.dispatch("block:reordered", {
       blocks: this.#blocks.map(b => ({ ...b }))
     })
+  }
+
+  replaceBlocks(snapshot = []) {
+    this.#blocks = snapshot.map(payload => {
+      const blueprint = BLOCK_REGISTRY.get(payload.type);
+      if (!blueprint) throw new Error(`[EditorCanvas] KhÃ´ng tá»“n táº¡i block type: "${payload.type}"`);
+
+      const { schema, blockClass } = blueprint;
+      return new blockClass({
+        id: payload.id,
+        data: this.#clone(payload.data || {}),
+      }, schema, this.#bus);
+    });
+
+    this.#bus.dispatch("block:reordered", {
+      blocks: this.#blocks.map(b => ({ ...b }))
+    });
+  }
+
+  #clone(value) {
+    try { return JSON.parse(JSON.stringify(value)); } catch { return value; }
   }
 }
 /** Lưu các metadata */

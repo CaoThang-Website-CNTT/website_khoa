@@ -31,6 +31,7 @@ export class BlockInspector {
       }
 
       // Dispatch để các panel khác (như List View) cập nhật theo
+      bus.dispatch('block:input', { blockId: block.id });
       bus.dispatch('block:updated', { block, silent: true });
     });
 
