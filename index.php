@@ -3,7 +3,7 @@ define('BASE_PATH', __DIR__);
 
 // App
 require_once BASE_PATH . '/includes/env_loader.php';
-App\EnvLoader::load(BASE_PATH . '/.env.local');
+App\EnvLoader::load(BASE_PATH . '/.env.staging');
 
 // Bật chế độ ghi log lỗi
 ini_set('log_errors', '1');
