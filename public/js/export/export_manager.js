@@ -63,8 +63,12 @@ export class ExportManager {
     wrapper.appendChild(btnToggle);
     wrapper.appendChild(menu);
 
-    // Chèn vào toolbar của table
+    // Xóa nút export cũ nếu đã tồn tại để tránh render trùng lặp
     const toolbar = tableInstance.root.querySelector(".tm-toolbar-actions");
+    const target = toolbar || tableInstance.root;
+    const existing = target.querySelector(".tm-export-wrapper");
+    if (existing) existing.remove();
+
     if (toolbar) {
       toolbar.appendChild(wrapper);
     } else {

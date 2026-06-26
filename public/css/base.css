@@ -527,7 +527,7 @@
 @layer utilities {
   /* Display */
   .hidden {
-    display: none;
+    display: none !important;
   }
 
   .flex {
