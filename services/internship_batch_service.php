@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore, InternshipGradeStore};
-use App\Models\{Student, Classroom};
+use App\Models\{Student, Classroom, InternshipBatch};
 use App\Core\Pageable;
 use App\Enums\BatchStatus;
 use Database;
@@ -360,22 +360,30 @@ class InternshipBatchService implements IInternshipBatchService
 
   public function addStudentToBatch(int $batchId, int $studentId): bool
   {
+    $this->checkBatchModifiable($batchId, 'sinh viên');
     return $this->_store->addStudentsToBatch($batchId, [$studentId]);
   }
 
   public function removeStudentFromBatch(int $batchId, int $studentId): bool
   {
+    $this->checkBatchModifiable($batchId, 'sinh viên');
     return $this->_store->removeStudentFromBatch($batchId, $studentId);
   }
 
-  private function checkBatchModifiable(int $batchId): void
+  private function checkBatchModifiable(int $batchId, string $actionType = 'giảng viên'): void
   {
     $batch = $this->_store->getById($batchId);
     if (!$batch) {
       throw new Exception('Đợt thực tập không tồn tại.');
     }
-    if (in_array($batch['status'], [BatchStatus::CLOSED, BatchStatus::ENDED])) {
-      throw new Exception('Không thể thay đổi thông tin giảng viên khi đợt thực tập đã kết thúc.');
+
+    $batchModel = new InternshipBatch();
+    $batchModel->status = $batch['status'] ?? BatchStatus::DRAFT;
+    $batchModel->start_at = $batch['start_at'] ?? null;
+    $batchModel->end_at = $batch['end_at'] ?? null;
+
+    if (in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED])) {
+      throw new Exception("Không thể thay đổi thông tin $actionType khi đợt thực tập đã kết thúc.");
     }
   }
 

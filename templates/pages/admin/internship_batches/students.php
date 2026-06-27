@@ -8,8 +8,14 @@
  */
 
 use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
 
 $batch = $batch ?? null;
+$batchModel = new InternshipBatch();
+$batchModel->status = $batch['status'] ?? BatchStatus::DRAFT;
+$batchModel->start_at = $batch['start_at'] ?? null;
+$batchModel->end_at = $batch['end_at'] ?? null;
+$isReadOnly = in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED]);
 ?>
 
 <link rel="stylesheet" href="<?= url('public/css/batch_students.css') ?>">
@@ -31,7 +37,7 @@ $batch = $batch ?? null;
 </a>
 
 <!-- Toolbar: Phân công tự động -->
-<?php if ($batch['status'] !== BatchStatus::CLOSED): ?>
+<?php if (!$isReadOnly): ?>
   <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
     <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
   </button>
@@ -122,9 +128,11 @@ $batch = $batch ?? null;
             data-batch-student-id="{{ row.batch_student_id }}" data-teacher-id="{{ row.teacher_id || '' }}">
             <div class="teacher-cell__display">
               <span class="teacher-cell__name text-sm font-semibold">{{ value || 'Chưa phân công' }}</span>
-              <button type="button" class="btn-teacher-edit btn-icon" title="Sửa phân công">
-                <i class="fa-solid fa-pen text-xs"></i>
-              </button>
+              <?php if (!$isReadOnly): ?>
+                <button type="button" class="btn-teacher-edit btn-icon" title="Sửa phân công">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+              <?php endif; ?>
             </div>
             <div class="teacher-cell__editor hidden">
               <select class="teacher-cell__select field__input">
@@ -240,6 +248,7 @@ $batch = $batch ?? null;
   window.BATCH_TITLE = <?= json_encode($batch['title'] ?? '', JSON_UNESCAPED_UNICODE) ?>;
   window.BATCH_START = <?= json_encode($batch['start_at'] ? date('d/m/Y', strtotime($batch['start_at'])) : '') ?>;
   window.BATCH_END = <?= json_encode($batch['end_at'] ? date('d/m/Y', strtotime($batch['end_at'])) : '') ?>;
+  window.IS_READONLY = <?= json_encode($isReadOnly) ?>;
   window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches')) ?>;
 </script>
 <script type="module" src="<?= url('public/js/pages/batch_students_manager.js') ?>"></script>

@@ -232,7 +232,7 @@ $currentStatus = [
 <div class="modal" id="delete-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Xác nhận xóa đợt thực tập</h3>
-    <p class="modal__description">Đợt thực tập <strong><?= htmlspecialchars($batchObj->title) ?></strong> sẽ bị xóa và
+    <p class="modal__description">Đợt thực tập <span class="font-semibold"><?= htmlspecialchars($batchObj->title) ?></span> sẽ bị xóa và
       không thể khôi phục. Bạn có chắc chắn?</p>
   </div>
   <div class="modal__footer">
@@ -290,7 +290,7 @@ $currentStatus = [
 <div class="modal" id="close-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Xác nhận kết thúc đợt thực tập</h3>
-    <p class="modal__description">Hệ thống sẽ khóa mọi hoạt động nộp bài và chấm điểm cho đợt thực tập này.</p>
+    <p class="modal__description">Hệ thống sẽ khóa mọi hoạt động liên quan đến đợt thực tập này. Ví dụ: phân công, nộp tài liệu, chấm điểm, ... Bạn chỉ có thể xem thông tin và xuất báo cáo. Thao tác này không thể hoàn tác, bạn có chắc chắn muốn kết thúc không?</p>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>

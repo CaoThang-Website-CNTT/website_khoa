@@ -4,8 +4,18 @@
  * View: Danh sách giảng viên hướng dẫn của một Đợt thực tập
  * Route: /admin/internship_batches/{id}/teachers
  */
+
+use App\Models\InternshipBatch;
+use App\Enums\BatchStatus;
+
 $batch = $batch ?? null;
 $supervisors = $supervisors ?? [];
+
+$batchModel = new InternshipBatch();
+$batchModel->status = $batch['status'] ?? BatchStatus::DRAFT;
+$batchModel->start_at = $batch['start_at'] ?? null;
+$batchModel->end_at = $batch['end_at'] ?? null;
+$isReadOnly = in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED]);
 ?>
 
 <link rel="stylesheet" href="<?= url('public/css/batch_teachers.css') ?>">
@@ -20,9 +30,11 @@ $supervisors = $supervisors ?? [];
 <a href="<?= url('admin/internship_batches/' . $batch['id']) ?>" data-variant="outline" data-size="lg" class="btn">
   <i class="fa-solid fa-chevron-left"></i> Quay lại
 </a>
-<button type="button" class="btn" data-variant="primary" data-size="lg" data-modal-trigger="#modal-add-teacher">
-  <i class="fa-solid fa-plus"></i> Thêm giảng viên
-</button>
+<?php if (!$isReadOnly): ?>
+  <button type="button" class="btn" data-variant="primary" data-size="lg" data-modal-trigger="#modal-add-teacher">
+    <i class="fa-solid fa-plus"></i> Thêm giảng viên
+  </button>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <div class="tm-container" data-tm="batch_teachers_table" data-tm-mode="client" data-tm-searchable="true">
@@ -55,9 +67,11 @@ $supervisors = $supervisors ?? [];
     <div class="quota-cell" data-teacher-id="{{ row.teacher_id }}">
       <span class="quota-cell__display">
         <span class="quota-cell__value font-medium text-sm">{{ value }}</span>
-        <button type="button" class="btn-quota-edit btn-icon" title="Sửa hạn mức">
-          <i class="fa-solid fa-pen-to-square text-xs"></i>
-        </button>
+        <?php if (!$isReadOnly): ?>
+          <button type="button" class="btn-quota-edit btn-icon" title="Sửa hạn mức">
+            <i class="fa-solid fa-pen-to-square text-xs"></i>
+          </button>
+        <?php endif; ?>
       </span>
       <span class="quota-cell__editor hidden">
         <input type="number" class="quota-cell__input field__input" value="{{ value }}" min="0" max="999">
@@ -74,12 +88,14 @@ $supervisors = $supervisors ?? [];
   <!-- Cột Hành động -->
   <template data-tm-col="actions" data-tm-label="Thao tác" data-tm-width="60px">
     <div class="flex justify-end items-center">
-      <!-- Ẩn nút xóa nếu đã có SV đang hướng dẫn -->
-      {{#if !row.assigned_count}}
-        <button type="button" class="btn btn-delete-teacher" data-variant="destructive" data-size="sm" title="Xóa khỏi đợt" data-teacher-id="{{ row.teacher_id }}">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      {{/if}}
+      <?php if (!$isReadOnly): ?>
+        <!-- Ẩn nút xóa nếu đã có SV đang hướng dẫn -->
+        {{#if !row.assigned_count}}
+          <button type="button" class="btn btn-delete-teacher" data-variant="destructive" data-size="sm" title="Xóa khỏi đợt" data-teacher-id="{{ row.teacher_id }}">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        {{/if}}
+      <?php endif; ?>
     </div>
   </template>
 

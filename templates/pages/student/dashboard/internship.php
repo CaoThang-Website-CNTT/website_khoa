@@ -220,10 +220,12 @@ $effectiveMetadata = $effStatus ? [
             Giấy giới thiệu
           </h3>
           <?php if ($current): ?>
-            <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="btn" data-variant="primary" data-size="lg">
-              <i class="fa-solid fa-plus mr-1"></i>
-              Đăng ký
-            </a>
+            <?php if (!in_array($effStatus, [BatchStatus::CLOSED, BatchStatus::ENDED])): ?>
+              <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="btn" data-variant="primary" data-size="lg">
+                <i class="fa-solid fa-plus mr-1"></i>
+                Đăng ký
+              </a>
+            <?php endif; ?>
             <div id="internship-data" data-batch-student-id="<?= $current['batch_student_id'] ?>" class="hidden"></div>
           <?php endif; ?>
         </div>
@@ -360,7 +362,7 @@ $effectiveMetadata = $effStatus ? [
               </div>
               <div id="filePreview" class="hidden mt-4 text-sm text-center"></div>
               <div class="mt-4 flex justify-end">
-                <?php if ($can_submit_report): ?>
+                <?php if ($can_submit_report && $effStatus !== BatchStatus::CLOSED): ?>
                   <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài
                     liệu</button>
                 <?php else: ?>
@@ -425,35 +427,7 @@ $effectiveMetadata = $effStatus ? [
       <?php endif; ?>
 
       <!-- Thông báo & Lịch sử -->
-      <div class="card shadow">
-        <div class="card__header">
-          <h3 class="card__title">
-            <i class="fa-solid fa-clock-rotate-left mr-2"></i>
-            Thông báo & Lịch sử
-          </h3>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="timeline-container">
-            <?php if (empty($logs)): ?>
-              <div class="empty-state">
-                <p class="text-sm">Chưa có lịch sử hoạt động.</p>
-              </div>
-            <?php else: ?>
-              <?php foreach ($logs as $log): ?>
-                <article class="timeline-item">
-                  <div class="timeline-item__indicator"></div>
-                  <time class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></time>
-                  <div class="timeline-item__title"><?= htmlspecialchars($log['action']) ?></div>
-                  <?php if ($log['reason']): ?>
-                    <p class="timeline-item__reason text-sm mt-1"><?= htmlspecialchars($log['reason']) ?></p>
-                  <?php endif; ?>
-                </article>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
+      <!-- Tạm ẩn đi vì đã có gửi email thông báo -->
     </div>
   </div>
 <?php else: ?>

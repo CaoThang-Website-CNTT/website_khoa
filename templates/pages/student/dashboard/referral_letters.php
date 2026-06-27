@@ -50,10 +50,12 @@ $rlData = array_map(function ($rl) {
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" id="btn-request" class="btn" data-variant="primary" data-size="md">
-  <i class="fa-solid fa-plus mr-2"></i>
-  Đăng ký mới
-</a>
+<?php if ($canRequestLetter ?? true): ?>
+  <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" id="btn-request" class="btn" data-variant="primary" data-size="md">
+    <i class="fa-solid fa-plus mr-2"></i>
+    Đăng ký mới
+  </a>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <div class="tm-container" data-tm="student_referral_letters_table" data-tm-mode="client" data-tm-searchable

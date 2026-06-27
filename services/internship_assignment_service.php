@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
 use App\Stores\{InternshipAssignmentStore, InternshipBatchStore};
 use App\Services\MailService;
 use Database;
@@ -57,11 +58,44 @@ class InternshipAssignmentService implements IInternshipAssignmentService
     }
   }
 
+  private function checkBatchModifiableByBatchId(int $batchId): void
+  {
+    $batch = $this->_batchStore->getById($batchId);
+    if (!$batch) {
+      throw new Exception('Đợt thực tập không tồn tại.');
+    }
+
+    $batchModel = new InternshipBatch();
+    $batchModel->status = $batch['status'] ?? BatchStatus::DRAFT;
+    $batchModel->start_at = $batch['start_at'] ?? null;
+    $batchModel->end_at = $batch['end_at'] ?? null;
+
+    if (in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED])) {
+      throw new Exception('Không thể phân công khi đợt thực tập đã kết thúc.');
+    }
+  }
+
+  private function checkBatchModifiableByBatchStudentId(int $batchStudentId): void
+  {
+    $mailDetails = $this->_store->getMailingDetails($batchStudentId, null, null);
+    if (!empty($mailDetails['student'])) {
+      $batchModel = new InternshipBatch();
+      $batchModel->status = $mailDetails['student']['batch_status'] ?? BatchStatus::DRAFT;
+      $batchModel->start_at = $mailDetails['student']['start_at'] ?? null;
+      $batchModel->end_at = $mailDetails['student']['end_at'] ?? null;
+
+      if (in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED])) {
+        throw new Exception('Không thể phân công khi đợt thực tập đã kết thúc.');
+      }
+    }
+  }
+
   /**
    * Phân công lần đầu (hoặc chạy qua auto-assign)
    */
   public function assign(int $batchStudentId, int $teacherId, ?int $assignedBy = null): bool
   {
+    $this->checkBatchModifiableByBatchStudentId($batchStudentId);
     return Database::getInstance()->transaction(function () use ($batchStudentId, $teacherId, $assignedBy) {
       // Kiểm tra xem sinh viên đã có assignment nào chưa
       $existingAssignment = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
@@ -99,6 +133,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
    */
   public function autoAssign(int $batchId, string $method, int $adminId): int
   {
+    $this->checkBatchModifiableByBatchId($batchId);
     return Database::getInstance()->transaction(function () use ($batchId, $method, $adminId) {
       $batch = $this->_batchStore->getById($batchId);
       if (!$batch || !in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::PUBLISHED])) {
@@ -219,8 +254,12 @@ class InternshipAssignmentService implements IInternshipAssignmentService
    */
   public function reassign(int $assignmentId, int $newTeacherId, int $adminId, string $reason): bool
   {
-    return Database::getInstance()->transaction(function () use ($assignmentId, $newTeacherId, $adminId, $reason) {
-      $assignment = $this->_store->getAssignmentById($assignmentId);
+    $assignment = $this->_store->getAssignmentById($assignmentId);
+    if ($assignment) {
+      $this->checkBatchModifiableByBatchStudentId($assignment->batch_student_id);
+    }
+
+    return Database::getInstance()->transaction(function () use ($assignmentId, $newTeacherId, $adminId, $reason, $assignment) {
       if (!$assignment) {
         throw new Exception('Không tìm thấy bản ghi phân công này.');
       }
@@ -257,6 +296,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
   public function bulkSave(int $batchId, array $assignmentsData, int $adminId, string $reason): int
   {
+    $this->checkBatchModifiableByBatchId($batchId);
     return Database::getInstance()->transaction(function () use ($batchId, $assignmentsData, $adminId, $reason) {
       $batch = $this->_batchStore->getById($batchId);
       if (!$batch || !in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::PUBLISHED])) {
@@ -397,8 +437,11 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
   public function unassign(int $assignmentId, int $adminId, string $reason): bool
   {
-    return Database::getInstance()->transaction(function () use ($assignmentId, $adminId, $reason) {
-      $assignment = $this->_store->getAssignmentById($assignmentId);
+    $assignment = $this->_store->getAssignmentById($assignmentId);
+    if ($assignment) {
+      $this->checkBatchModifiableByBatchStudentId($assignment->batch_student_id);
+    }
+    return Database::getInstance()->transaction(function () use ($assignmentId, $adminId, $reason, $assignment) {
       if (!$assignment) {
         throw new Exception('Không tìm thấy bản ghi phân công này.');
       }

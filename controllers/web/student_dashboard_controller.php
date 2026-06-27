@@ -7,6 +7,8 @@ use App\Core\Request;
 use App\Core\RequestValidator;
 use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, WebSettingsService};
 use App\Core\Files\UploadedFileHandler;
+use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
 use Exception;
 
 class StudentDashboardController extends Controller
@@ -127,7 +129,11 @@ class StudentDashboardController extends Controller
     $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, null);
 
     if ($dashboardData['current']) {
-      return $this->redirect('/student/internship/' . $dashboardData['current']['id']);
+      if ($dashboardData['current']['status'] === BatchStatus::DRAFT) {
+        return $this->redirect('/student/internship');
+      } else {
+        return $this->redirect('/student/internship/' . $dashboardData['current']['id']);
+      }
     }
 
     return $this->render('student/dashboard/internship', [
@@ -165,6 +171,11 @@ class StudentDashboardController extends Controller
 
     if (!$dashboardData['current'] || $dashboardData['current']['id'] != $batch_id) {
       $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này hoặc đợt không tồn tại.');
+      return $this->redirect('/student/internship');
+    }
+
+    if ($dashboardData['current']['status'] === BatchStatus::DRAFT) {
+      $request->session()->flashNotify('error', 'Đợt thực tập này chưa được công bố.');
       return $this->redirect('/student/internship');
     }
 
@@ -227,12 +238,18 @@ class StudentDashboardController extends Controller
 
     // Kiểm tra hạn chót khai báo/chỉnh sửa công ty
     $batch = $this->_internshipBatchService->getBatchById($batch_id);
-    if ($batch && $batch['start_at']) {
-      $allowedWeeks = (int)$this->_webSettingsService->getValue('internship_company_declaration_weeks', 3);
-      $deadlineDt = (new \DateTime($batch['start_at']))->modify("+{$allowedWeeks} weeks");
-      if (new \DateTime() > $deadlineDt) {
-        $request->session()->flashNotify('error', 'Đã hết thời hạn khai báo thông tin công ty.');
+    if ($batch) {
+      if ($batch['status'] === BatchStatus::CLOSED) {
+        $request->session()->flashNotify('error', 'Đợt thực tập đã bị đóng, không thể cập nhật thông tin.');
         return $this->redirect("/student/internship/{$batch_id}");
+      }
+      if ($batch['start_at']) {
+        $allowedWeeks = (int)$this->_webSettingsService->getValue('internship_company_declaration_weeks', 3);
+        $deadlineDt = (new \DateTime($batch['start_at']))->modify("+{$allowedWeeks} weeks");
+        if (new \DateTime() > $deadlineDt) {
+          $request->session()->flashNotify('error', 'Đã hết thời hạn khai báo thông tin công ty.');
+          return $this->redirect("/student/internship/{$batch_id}");
+        }
       }
     }
 
@@ -317,11 +334,16 @@ class StudentDashboardController extends Controller
 
       // Server-side validation: Kiểm tra hạn chót nộp báo cáo
       $batch = $this->_internshipBatchService->getBatchById($batch_id);
-      if ($batch && $batch['end_at']) {
-        $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
-        $deadlineDt = (new \DateTime($batch['end_at']))->modify("+{$allowedDays} days");
-        if (new \DateTime() > $deadlineDt) {
-          throw new Exception('Đã hết thời hạn nộp báo cáo thực tập.');
+      if ($batch) {
+        if ($batch['status'] === BatchStatus::CLOSED) {
+          throw new Exception('Đợt thực tập đã bị đóng, không thể nộp thêm tài liệu.');
+        }
+        if ($batch['end_at']) {
+          $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
+          $deadlineDt = (new \DateTime($batch['end_at']))->modify("+{$allowedDays} days");
+          if (new \DateTime() > $deadlineDt) {
+            throw new Exception('Đã hết thời hạn nộp báo cáo thực tập.');
+          }
         }
       }
 
@@ -374,6 +396,17 @@ class StudentDashboardController extends Controller
     }
 
     $batch = $this->_internshipBatchService->getBatchById($batch_id);
+    if ($batch) {
+      $batchModel = new InternshipBatch();
+      $batchModel->status = $batch['status'] ?? BatchStatus::DRAFT;
+      $batchModel->start_at = $batch['start_at'] ?? null;
+      $batchModel->end_at = $batch['end_at'] ?? null;
+
+      if (in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED])) {
+        $request->session()->flashNotify('error', 'Không thể đăng ký giấy giới thiệu khi đợt thực tập đã kết thúc.');
+        return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+      }
+    }
 
     $majorName = 'Công nghệ thông tin';
     if (!empty($student->classroom_id)) {
@@ -401,6 +434,19 @@ class StudentDashboardController extends Controller
     if (!$batchStudentId) {
       $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
       return $this->redirect('/student/internship');
+    }
+
+    $batch = $this->_internshipBatchService->getBatchById($batch_id);
+    if ($batch) {
+      $batchModel = new InternshipBatch();
+      $batchModel->status = $batch['status'] ?? BatchStatus::DRAFT;
+      $batchModel->start_at = $batch['start_at'] ?? null;
+      $batchModel->end_at = $batch['end_at'] ?? null;
+
+      if (in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED])) {
+        $request->session()->flashNotify('error', 'Không thể đăng ký giấy giới thiệu khi đợt thực tập đã kết thúc.');
+        return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+      }
     }
 
     $data = $request->all();
@@ -525,13 +571,26 @@ class StudentDashboardController extends Controller
       }
     }
 
+    $canRequestLetter = true;
+    if ($dashboardData['current']) {
+      $batchModel = new InternshipBatch();
+      $batchModel->status = $dashboardData['current']['status'] ?? BatchStatus::DRAFT;
+      $batchModel->start_at = $dashboardData['current']['start_at'] ?? null;
+      $batchModel->end_at = $dashboardData['current']['end_at'] ?? null;
+
+      if (in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, BatchStatus::ENDED])) {
+        $canRequestLetter = false;
+      }
+    }
+
     return $this->render('student/dashboard/referral_letters', array_merge($dashboardData, [
       'student' => $student,
       'majorName' => $majorName,
       'title' => 'Quản lý Giấy giới thiệu',
       'referralLetters' => $referralLetters,
       'total_referral_letters' => $total_referral_letters,
-      'recent_referral_letters' => $recent_referral_letters
+      'recent_referral_letters' => $recent_referral_letters,
+      'canRequestLetter' => $canRequestLetter
     ]), layout: 'dashboard_layout');
   }
 

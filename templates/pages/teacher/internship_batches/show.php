@@ -51,6 +51,7 @@ foreach ($classrooms as $c) {
   $batchModel->start_at = $batch['start_at'] ?? null;
   $batchModel->end_at = $batch['end_at'] ?? null;
   $effStatus = $batchModel->getEffectiveStatus();
+  $isClosed = $effStatus === BatchStatus::CLOSED;
   ?>
   <span class="badge ml-2" data-variant="<?= BatchStatus::getVariant($effStatus) ?>">
     <?= BatchStatus::getLabel($effStatus) ?>
@@ -193,10 +194,12 @@ foreach ($classrooms as $c) {
                 data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
                 <i class="fa-solid fa-eye"></i>
               </button>
-              <button class="btn btn-icon" data-variant="outline-alt" data-size="sm" title="Nhập điểm"
-                data-action="grade" data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
+              <?php if (!$isClosed): ?>
+                <button class="btn btn-icon" data-variant="outline-alt" data-size="sm" title="Nhập điểm"
+                  data-action="grade" data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              <?php endif; ?>
             </div>
           </template>
 

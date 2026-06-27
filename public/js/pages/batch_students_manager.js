@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const registerBulkActions = () => {
-    if (bulkActionsRegistered) return;
+    if (bulkActionsRegistered || window.IS_READONLY) return;
     bulkActionsRegistered = true;
 
     TableManager.registerBulkActions("batch_students_table", {
@@ -214,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Xử lý click để bật editor
     tableRoot.addEventListener("click", (e) => {
-      if (batchStatus === "closed" || isProcessing) return;
+      if (window.IS_READONLY || isProcessing) return;
 
       const display = e.target.closest(".teacher-cell__display");
       if (display) {
