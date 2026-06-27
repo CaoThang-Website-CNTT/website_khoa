@@ -56,24 +56,24 @@ use App\Models\InternshipBatch;
           'level' => $b->level ?? 'N/A',
           'start_at' => $b->start_at ? date('d/m/Y', strtotime($b->start_at)) : 'N/A',
           'end_at' => $b->end_at ? date('d/m/Y', strtotime($b->end_at)) : 'N/A',
-          'status' => $b->status ?? 'draft',
+          'status' => $b->status ?? BatchStatus::DRAFT,
           'effective_status' => (function () use ($b) {
           $batchModel = new InternshipBatch();
-          $batchModel->status = $b->status ?? 'draft';
+          $batchModel->status = $b->status ?? BatchStatus::DRAFT;
           $batchModel->start_at = $b->start_at ?? null;
           $batchModel->end_at = $b->end_at ?? null;
           return $batchModel->getEffectiveStatus();
         })(),
           'effective_status_label' => (function () use ($b) {
           $batchModel = new InternshipBatch();
-          $batchModel->status = $b->status ?? 'draft';
+          $batchModel->status = $b->status ?? BatchStatus::DRAFT;
           $batchModel->start_at = $b->start_at ?? null;
           $batchModel->end_at = $b->end_at ?? null;
           return BatchStatus::getLabel($batchModel->getEffectiveStatus());
         })(),
           'effective_status_variant' => (function () use ($b) {
           $batchModel = new InternshipBatch();
-          $batchModel->status = $b->status ?? 'draft';
+          $batchModel->status = $b->status ?? BatchStatus::DRAFT;
           $batchModel->start_at = $b->start_at ?? null;
           $batchModel->end_at = $b->end_at ?? null;
           return BatchStatus::getVariant($batchModel->getEffectiveStatus());

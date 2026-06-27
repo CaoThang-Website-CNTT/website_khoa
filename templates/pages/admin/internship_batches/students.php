@@ -6,6 +6,9 @@
  *
  * @var array $batch
  */
+
+use App\Enums\BatchStatus;
+
 $batch = $batch ?? null;
 ?>
 
@@ -28,7 +31,7 @@ $batch = $batch ?? null;
 </a>
 
 <!-- Toolbar: Phân công tự động -->
-<?php if ($batch['status'] !== 'closed'): ?>
+<?php if ($batch['status'] !== BatchStatus::CLOSED): ?>
   <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
     <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
   </button>

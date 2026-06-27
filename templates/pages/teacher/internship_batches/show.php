@@ -47,7 +47,7 @@ foreach ($classrooms as $c) {
   <?= htmlspecialchars((string) $batch['description']) ?>
   <?php
   $batchModel = new InternshipBatch();
-  $batchModel->status = $batch['status'] ?? 'draft';
+  $batchModel->status = $batch['status'] ?? BatchStatus::DRAFT;
   $batchModel->start_at = $batch['start_at'] ?? null;
   $batchModel->end_at = $batch['end_at'] ?? null;
   $effStatus = $batchModel->getEffectiveStatus();

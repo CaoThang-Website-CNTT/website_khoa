@@ -7,6 +7,7 @@ use App\Core\Request;
 use App\Core\RequestValidator;
 use App\Services\{TeacherService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, InternshipGradeService};
 use App\Core\Files\UploadedFileHandler;
+use App\Enums\BatchStatus;
 use Exception;
 
 class TeacherDashboardController extends Controller
@@ -165,7 +166,7 @@ class TeacherDashboardController extends Controller
     }
 
     // Không cho xem đợt draft
-    if ($detail['batch']['status'] === 'draft') {
+    if ($detail['batch']['status'] === BatchStatus::DRAFT) {
       $request->session()->flashNotify('error', 'Đợt thực tập này chưa được công bố.');
       return $this->redirect('/teacher/internship_batches');
     }

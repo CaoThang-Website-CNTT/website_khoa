@@ -14,7 +14,7 @@ class InternshipBatch
     public string $level = '',
     public ?string $start_at = null,
     public ?string $end_at = null,
-    public string $status = 'draft',
+    public string $status = BatchStatus::DRAFT,
     public ?int $created_by = null,
     public ?string $published_at = null,
     public ?string $closed_at = null,

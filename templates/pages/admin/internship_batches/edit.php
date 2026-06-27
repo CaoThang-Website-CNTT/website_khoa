@@ -8,7 +8,7 @@ $stats = $batchObj->stats;
 $assignedPercent = $stats['total_students'] > 0 ? round(($stats['assigned_students'] / $stats['total_students']) * 100) : 0;
 
 $batchModel = new InternshipBatch();
-$batchModel->status = $batchObj->status ?? 'draft';
+$batchModel->status = $batchObj->status ?? BatchStatus::DRAFT;
 $batchModel->start_at = $batchObj->start_at ?? null;
 $batchModel->end_at = $batchObj->end_at ?? null;
 

@@ -18,7 +18,7 @@ $grade = $grade ?? null;
 
 $batchModel = new InternshipBatch();
 if ($current) {
-  $batchModel->status = $current['status'] ?? 'draft';
+  $batchModel->status = $current['status'] ?? BatchStatus::DRAFT;
   $batchModel->start_at = $current['start_at'] ?? null;
   $batchModel->end_at = $current['end_at'] ?? null;
 }
@@ -51,7 +51,7 @@ $effectiveMetadata = $effStatus ? [
     <?php endif; ?>
   </select>
 </div>
-<?php if ($current && $current['status'] !== 'draft'): ?>
+<?php if ($current && $current['status'] !== BatchStatus::DRAFT): ?>
   <div class="detail-layout">
     <div class="detail-layout__main">
       <!-- Chi tiết phân công -->

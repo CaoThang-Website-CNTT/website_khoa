@@ -374,7 +374,7 @@ class InternshipBatchService implements IInternshipBatchService
     if (!$batch) {
       throw new Exception('Đợt thực tập không tồn tại.');
     }
-    if (in_array($batch['status'], ['closed', 'completed'])) {
+    if (in_array($batch['status'], [BatchStatus::CLOSED, BatchStatus::ENDED])) {
       throw new Exception('Không thể thay đổi thông tin giảng viên khi đợt thực tập đã kết thúc.');
     }
   }
