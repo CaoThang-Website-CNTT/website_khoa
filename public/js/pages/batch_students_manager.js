@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let supervisors = [];
   let tableData = [];
   let bulkActionsRegistered = false;
+  let tableEventsAttached = false;
+  let isProcessing = false;
 
   // Modals
   const modalHandler = ModalHandler.instance;
@@ -128,9 +130,12 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(interval);
         if (tm) {
           tm.loadData(tableData);
-          attachTableEvents();
+          if (!tableEventsAttached) {
+            attachTableEvents();
+            tableEventsAttached = true;
+          }
           registerBulkActions();
-          
+
           // Đăng ký Export Excel
           const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
           ExportManager.register(tm, {
@@ -209,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Xử lý click để bật editor
     tableRoot.addEventListener("click", (e) => {
-      if (batchStatus === "closed") return;
+      if (batchStatus === "closed" || isProcessing) return;
 
       const display = e.target.closest(".teacher-cell__display");
       if (display) {
@@ -233,12 +238,48 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target.classList.contains("teacher-cell__select")) {
         const select = e.target;
         const cell = select.closest(".teacher-cell");
+        const display = cell.querySelector(".teacher-cell__display");
+        const editor = cell.querySelector(".teacher-cell__editor");
+
         const batchStudentId = cell.dataset.batchStudentId;
         const assignmentId = cell.dataset.assignmentId;
         const newTeacherId =
           select.value && select.value !== "unassign"
             ? parseInt(select.value)
             : null;
+
+        // Xác nhận gửi email
+        let isConfirmed = false;
+        const confirmMsg =
+          "Bạn có chắc chắn muốn thay đổi phân công?\n\nThao tác này sẽ gửi thông báo qua email cho Sinh viên và Giảng viên có liên quan.";
+        if (typeof modalHandler.confirm === "function") {
+          isConfirmed = await modalHandler.confirm(
+            "Xác nhận thay đổi",
+            confirmMsg,
+          );
+        } else {
+          isConfirmed = window.confirm(confirmMsg);
+        }
+
+        if (!isConfirmed) {
+          // Khôi phục lại value cũ
+          select.value = cell.dataset.teacherId || "";
+          setTimeout(() => select.blur(), 10);
+          return;
+        }
+
+        // Vô hiệu hóa select để tránh spam
+        select.disabled = true;
+        const nameSpan = display.querySelector(".teacher-cell__name");
+        if (nameSpan) {
+          nameSpan.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang lưu...';
+          nameSpan.classList.add("text-gray-500", "italic");
+        }
+
+        // Ẩn editor và hiện display ngay lập tức
+        editor.classList.add("hidden");
+        display.classList.remove("hidden");
 
         await saveAssignments(
           [
@@ -295,6 +336,8 @@ document.addEventListener("DOMContentLoaded", () => {
    * Gọi API lưu phân công
    */
   const saveAssignments = async (assignments, reason) => {
+    if (isProcessing) return false;
+
     try {
       if (batchStatus === "published" && !reason) {
         reason = prompt(
@@ -306,11 +349,14 @@ document.addEventListener("DOMContentLoaded", () => {
           return false;
         }
         if (!reason.trim()) {
-          toast.warning("Yêu cầu", "Lý do không được để trống.");
+          toast.warn("Yêu cầu", "Lý do không được để trống.");
           loadData();
           return false;
         }
       }
+
+      isProcessing = true;
+      document.body.style.cursor = "wait"; // Hiển thị con trỏ chuột loading cho toàn trang
 
       const res = await fetch(`${apiBase}/${batchId}/bulk-save`, {
         method: "POST",
@@ -331,6 +377,9 @@ document.addEventListener("DOMContentLoaded", () => {
       toast.error("Lỗi", error.message);
       loadData();
       return false;
+    } finally {
+      isProcessing = false;
+      document.body.style.cursor = "default";
     }
   };
 
@@ -343,7 +392,48 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
+
+      // Kiểm tra hạn mức
+      const selectedTeacher = supervisors.find(
+        (s) => s.teacher_id == teacherId,
+      );
+      if (selectedTeacher) {
+        let newAssignmentsCount = 0;
+        selectedIds.forEach((sid) => {
+          const row = tableData.find((r) => r.batch_student_id == sid);
+          if (row && row.teacher_id != teacherId) {
+            newAssignmentsCount++;
+          }
+        });
+
+        const remaining =
+          selectedTeacher.max_students - selectedTeacher.current_assigned;
+        if (newAssignmentsCount > remaining) {
+          toast.warn(
+            "Thao tác không thành công",
+            `Giảng viên này chỉ còn nhận thêm tối đa ${remaining} sinh viên.`,
+          );
+          return;
+        }
+      }
+
+      let isConfirmed = false;
+      const confirmMsg =
+        "Bạn có chắc chắn muốn thay đổi phân công cho các sinh viên đã chọn?\n\nThao tác này sẽ gửi thông báo qua email cho Sinh viên và Giảng viên có liên quan.";
+      if (typeof modalHandler.confirm === "function") {
+        isConfirmed = await modalHandler.confirm(
+          "Xác nhận phân công hàng loạt",
+          confirmMsg,
+        );
+      } else {
+        isConfirmed = window.confirm(confirmMsg);
+      }
+
+      if (!isConfirmed) {
+        return;
+      }
+
       const assignments = selectedIds.map((sid) => {
         const row = tableData.find((r) => r.batch_student_id == sid);
         return {
@@ -354,9 +444,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       modalHandler.close();
-      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      TableManager.setBulkActionLoading(
+        "batch_students_table",
+        true,
+        "Đang xử lý...",
+      );
       try {
-        const saved = await saveAssignments(assignments, "Cập nhật phân công hàng loạt.");
+        const saved = await saveAssignments(
+          assignments,
+          "Cập nhật phân công hàng loạt.",
+        );
         if (saved) TableManager.clearSelection("batch_students_table");
       } finally {
         TableManager.setBulkActionLoading("batch_students_table", false);
@@ -366,7 +463,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .querySelector("#btn-confirm-bulk-unassign")
     .addEventListener("click", async () => {
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
         const row = tableData.find((r) => r.batch_student_id == sid);
         return {
@@ -377,9 +474,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       modalHandler.close();
-      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      TableManager.setBulkActionLoading(
+        "batch_students_table",
+        true,
+        "Đang xử lý...",
+      );
       try {
-        const saved = await saveAssignments(assignments, "Hủy phân công hàng loạt.");
+        const saved = await saveAssignments(
+          assignments,
+          "Hủy phân công hàng loạt.",
+        );
         if (saved) TableManager.clearSelection("batch_students_table");
       } finally {
         TableManager.setBulkActionLoading("batch_students_table", false);

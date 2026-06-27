@@ -7,7 +7,9 @@ require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/stores/internship_assignment_store.php';
 
 use App\Stores\{InternshipAssignmentStore, InternshipBatchStore};
+use App\Services\MailService;
 use Database;
+use Exception;
 
 interface IInternshipAssignmentService
 {
@@ -24,11 +26,38 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 {
   private InternshipAssignmentStore $_store;
   private InternshipBatchStore $_batchStore;
+  private MailService $_mailService;
 
-  public function __construct(InternshipAssignmentStore $store, InternshipBatchStore $batchStore)
+  public function __construct(InternshipAssignmentStore $store, InternshipBatchStore $batchStore, ?MailService $mailService = null)
   {
     $this->_store = $store;
     $this->_batchStore = $batchStore;
+    $this->_mailService = $mailService;
+  }
+
+  private function _sendReassignEmails(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId, string $reason): void
+  {
+    $mailDetails = $this->_store->getMailingDetails($batchStudentId, $oldTeacherId, $newTeacherId);
+    $details = [
+      'studentName' => $mailDetails['student']['name'] ?? 'Sinh viên',
+      'mssv' => $mailDetails['student']['mssv'] ?? 'Không rõ',
+      'batchTitle' => $mailDetails['student']['batch_title'] ?? 'Không rõ',
+      'startAt' => isset($mailDetails['student']['start_at']) ? date('d/m/Y', strtotime($mailDetails['student']['start_at'])) : 'Không rõ',
+      'endAt' => isset($mailDetails['student']['end_at']) ? date('d/m/Y', strtotime($mailDetails['student']['end_at'])) : 'Không rõ',
+      'oldTeacherName' => $mailDetails['old_teacher']['name'] ?? 'Không có',
+      'newTeacherName' => $mailDetails['new_teacher']['name'] ?? 'Không có',
+      'reason' => $reason
+    ];
+
+    if (!empty($mailDetails['student']['email'])) {
+      $this->_mailService->sendReassignNotification($mailDetails['student']['email'], $mailDetails['student']['name'], $details);
+    }
+    if (!empty($mailDetails['old_teacher']['email'])) {
+      $this->_mailService->sendReassignNotification($mailDetails['old_teacher']['email'], $mailDetails['old_teacher']['name'], $details);
+    }
+    if (!empty($mailDetails['new_teacher']['email'])) {
+      $this->_mailService->sendReassignNotification($mailDetails['new_teacher']['email'], $mailDetails['new_teacher']['name'], $details);
+    }
   }
 
   /**
@@ -40,27 +69,27 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       // Kiểm tra xem sinh viên đã có assignment nào chưa
       $existingAssignment = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
       if ($existingAssignment) {
-        throw new \Exception('Sinh viên này đã được phân công trong đợt. Vui lòng dùng tính năng Reassign.');
+        throw new Exception('Sinh viên này đã được phân công trong đợt. Vui lòng dùng tính năng Reassign.');
       }
 
       $assignmentId = $this->_store->createAssignment(
-        batchStudentId: $batchStudentId, 
-        teacherId: $teacherId, 
-        method: 'manual', 
+        batchStudentId: $batchStudentId,
+        teacherId: $teacherId,
+        method: 'manual',
         assignedBy: $assignedBy
       );
 
       if (!$assignmentId) {
-        throw new \Exception('Không thể lưu phân công.');
+        throw new Exception('Không thể lưu phân công.');
       }
 
       // Log hành động CREATE
       $this->_store->logAction(
-        assignmentId: $assignmentId, 
-        action: 'CREATE', 
-        oldTeacherId: null, 
-        newTeacherId: $teacherId, 
-        performedBy: $assignedBy, 
+        assignmentId: $assignmentId,
+        action: 'CREATE',
+        oldTeacherId: null,
+        newTeacherId: $teacherId,
+        performedBy: $assignedBy,
         reason: 'Phân công lần đầu'
       );
 
@@ -76,7 +105,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
     return Database::getInstance()->transaction(function () use ($batchId, $method, $adminId) {
       $batch = $this->_batchStore->getById($batchId);
       if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
-        throw new \Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
+        throw new Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
       }
 
       $unassigned = $this->_store->getUnassignedStudentsInBatch($batchId);
@@ -87,7 +116,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       $supervisors = $this->_store->getBatchSupervisorsWithStats($batchId);
       $totalRemainingQuota = 0;
       $availableSupervisors = [];
-      
+
       foreach ($supervisors as $sup) {
         $max = $sup['max_students'];
         $remaining = $max - $sup['current_assigned'];
@@ -102,7 +131,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       }
 
       if (count($unassigned) > $totalRemainingQuota) {
-        throw new \Exception('Tổng số sinh viên chưa phân công ('.count($unassigned).') lớn hơn tổng hạn mức còn lại ('.$totalRemainingQuota.') của các giảng viên.');
+        throw new Exception('Tổng số sinh viên chưa phân công (' . count($unassigned) . ') lớn hơn tổng hạn mức còn lại (' . $totalRemainingQuota . ') của các giảng viên.');
       }
 
       if ($method === 'auto_shuffle') {
@@ -117,7 +146,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         }
 
         if ($method === 'auto_even') {
-          usort($availableSupervisors, function($a, $b) {
+          usort($availableSupervisors, function ($a, $b) {
             return $a['current'] <=> $b['current'];
           });
           $chosenIndex = 0;
@@ -127,14 +156,14 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
         $sup = &$availableSupervisors[$chosenIndex];
         $teacherId = $sup['teacher_id'];
-        
+
         $assignmentId = $this->_store->createAssignment(
           batchStudentId: $student['batch_student_id'],
           teacherId: $teacherId,
           method: $method,
           assignedBy: $adminId
         );
-        
+
         $this->_store->logAction(
           assignmentId: $assignmentId,
           action: 'CREATE',
@@ -146,11 +175,11 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
         $sup['current']++;
         $sup['remaining']--;
-        
+
         if ($sup['remaining'] <= 0) {
           array_splice($availableSupervisors, $chosenIndex, 1);
         }
-        
+
         $assignedCount++;
       }
 
@@ -166,31 +195,34 @@ class InternshipAssignmentService implements IInternshipAssignmentService
     return Database::getInstance()->transaction(function () use ($assignmentId, $newTeacherId, $adminId, $reason) {
       $assignment = $this->_store->getAssignmentById($assignmentId);
       if (!$assignment) {
-        throw new \Exception('Không tìm thấy bản ghi phân công này.');
+        throw new Exception('Không tìm thấy bản ghi phân công này.');
       }
 
       if ($assignment->teacher_id == $newTeacherId) {
-        throw new \Exception('Giảng viên mới trùng với giảng viên hiện tại.');
+        throw new Exception('Giảng viên mới trùng với giảng viên hiện tại.');
       }
 
       $oldTeacherId = $assignment->teacher_id;
 
       // Update ID Giảng viên mới (vẫn giữ nguyên status hiện tại)
       $updated = $this->_store->updateAssignmentTeacher($assignmentId, $newTeacherId);
-      
+
       if (!$updated) {
-        throw new \Exception('Cập nhật phân công thất bại.');
+        throw new Exception('Cập nhật phân công thất bại.');
       }
 
       // Log hành động UPDATE
       $this->_store->logAction(
-        assignmentId: $assignmentId, 
-        action: 'UPDATE', 
-        oldTeacherId: $oldTeacherId, 
-        newTeacherId: $newTeacherId, 
-        performedBy: $adminId, 
+        assignmentId: $assignmentId,
+        action: 'UPDATE',
+        oldTeacherId: $oldTeacherId,
+        newTeacherId: $newTeacherId,
+        performedBy: $adminId,
         reason: $reason
       );
+
+      // Gửi email thông báo
+      $this->_sendReassignEmails($assignment->batch_student_id, $oldTeacherId, $newTeacherId, $reason);
 
       return true;
     });
@@ -201,7 +233,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
     return Database::getInstance()->transaction(function () use ($batchId, $assignmentsData, $adminId, $reason) {
       $batch = $this->_batchStore->getById($batchId);
       if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
-        throw new \Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
+        throw new Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
       }
 
       $count = 0;
@@ -236,22 +268,26 @@ class InternshipAssignmentService implements IInternshipAssignmentService
           if ($assignment->teacher_id == $newTeacherId) {
             continue;
           }
-          
+
           $oldTeacherId = $assignment->teacher_id;
           $this->_store->updateAssignmentTeacher($assignmentId, $newTeacherId);
-          
+
           $this->_store->logAction(
-            assignmentId: $assignmentId, 
-            action: 'UPDATE', 
-            oldTeacherId: $oldTeacherId, 
-            newTeacherId: $newTeacherId, 
-            performedBy: $adminId, 
+            assignmentId: $assignmentId,
+            action: 'UPDATE',
+            oldTeacherId: $oldTeacherId,
+            newTeacherId: $newTeacherId,
+            performedBy: $adminId,
             reason: $reason
           );
+
+          // Gửi email thông báo
+          $this->_sendReassignEmails($assignment->batch_student_id, $oldTeacherId, $newTeacherId, $reason);
+
           $count++;
         } else {
           if ($newTeacherId === null || $newTeacherId === 0) continue;
-          
+
           $existing = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
           if ($existing) continue;
 
@@ -271,11 +307,15 @@ class InternshipAssignmentService implements IInternshipAssignmentService
               performedBy: $adminId,
               reason: $reason
             );
+
+            // Gửi email thông báo
+            $this->_sendReassignEmails($batchStudentId, null, $newTeacherId, $reason);
+
             $count++;
           }
         }
       }
-      
+
       return $count;
     });
   }
@@ -285,7 +325,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
     return Database::getInstance()->transaction(function () use ($assignmentId, $adminId, $reason) {
       $assignment = $this->_store->getAssignmentById($assignmentId);
       if (!$assignment) {
-        throw new \Exception('Không tìm thấy bản ghi phân công này.');
+        throw new Exception('Không tìm thấy bản ghi phân công này.');
       }
 
       $this->_store->logAction(

@@ -24,6 +24,7 @@ interface IInternshipAssignmentStore
   public function getStudentsInBatchWithAssignment(int $batchId): array;
   public function getUnassignedStudentsInBatch(int $batchId): array;
   public function deleteAssignment(int $assignmentId): bool;
+  public function getMailingDetails(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): array;
 }
 
 class InternshipAssignmentStore extends Store implements IInternshipAssignmentStore
@@ -195,5 +196,45 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getMailingDetails(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): array
+  {
+    $result = [
+      'student' => null,
+      'old_teacher' => null,
+      'new_teacher' => null
+    ];
+
+    // Lấy thông tin SV và đợt thực tập
+    $sqlStudent = "SELECT s.full_name as name, s.student_id as mssv, a.email,
+                          ib.title as batch_title, ib.start_at, ib.end_at
+                   FROM internship_batch_students bs
+                   JOIN students s ON bs.student_id = s.id
+                   JOIN accounts a ON s.account_id = a.id
+                   JOIN internship_batches ib ON bs.batch_id = ib.id
+                   WHERE bs.id = :batch_student_id";
+    $stmt = $this->db->prepare($sqlStudent);
+    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $result['student'] = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+    // Lấy thông tin GV hướng dẫn
+    $sqlTeacher = "SELECT t.full_name as name, a.email 
+                   FROM teachers t
+                   JOIN accounts a ON t.account_id = a.id
+                   WHERE t.id = :teacher_id";
+    $stmtTeacher = $this->db->prepare($sqlTeacher);
+
+    if ($oldTeacherId) {
+      $stmtTeacher->execute([':teacher_id' => $oldTeacherId]);
+      $result['old_teacher'] = $stmtTeacher->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    if ($newTeacherId) {
+      $stmtTeacher->execute([':teacher_id' => $newTeacherId]);
+      $result['new_teacher'] = $stmtTeacher->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    return $result;
   }
 }

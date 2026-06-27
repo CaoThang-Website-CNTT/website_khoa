@@ -143,6 +143,7 @@ require_once BASE_PATH . '/services/internship_submission_service.php';
 require_once BASE_PATH . '/services/internship_grade_service.php';
 require_once BASE_PATH . '/services/referral_letter_service.php';
 require_once BASE_PATH . '/services/ticket_service.php';
+require_once BASE_PATH . '/services/mail_service.php';
 
 // Controllers
 // Web
