@@ -2,10 +2,7 @@
 
 namespace App\Services;
 
-require_once BASE_PATH . '/models/internship_assignment.php';
-require_once BASE_PATH . '/models/assignment_log.php';
-require_once BASE_PATH . '/stores/internship_assignment_store.php';
-
+use App\Enums\BatchStatus;
 use App\Stores\{InternshipAssignmentStore, InternshipBatchStore};
 use App\Services\MailService;
 use Database;
@@ -104,7 +101,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   {
     return Database::getInstance()->transaction(function () use ($batchId, $method, $adminId) {
       $batch = $this->_batchStore->getById($batchId);
-      if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
+      if (!$batch || !in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::PUBLISHED])) {
         throw new Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
       }
 
@@ -139,6 +136,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       }
 
       $assignedCount = 0;
+      $digestData = []; // [teacherId => ['teacher' => [...], 'assigned' => [...], 'unassigned' => []]]
 
       foreach ($unassigned as $student) {
         if (empty($availableSupervisors)) {
@@ -173,6 +171,14 @@ class InternshipAssignmentService implements IInternshipAssignmentService
           reason: 'Phân công tự động của hệ thống'
         );
 
+        $mailDetails = $this->_store->getMailingDetails($student['batch_student_id'], null, $teacherId);
+        if (!isset($digestData[$teacherId])) {
+          $digestData[$teacherId] = ['teacher' => $mailDetails['new_teacher'], 'assigned' => [], 'unassigned' => []];
+        }
+        $digestData[$teacherId]['assigned'][] = $mailDetails['student'];
+
+        $this->_queueStudentNotification($student['batch_student_id'], null, $teacherId);
+
         $sup['current']++;
         $sup['remaining']--;
 
@@ -181,6 +187,27 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         }
 
         $assignedCount++;
+      }
+
+      if ($this->_mailService && $assignedCount > 0 && $batch['status'] === BatchStatus::PUBLISHED) {
+        $batchDetails = [
+          'title' => $batch['title'],
+          'startAt' => isset($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'Không rõ',
+          'endAt' => isset($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'Không rõ'
+        ];
+
+        foreach ($digestData as $teacherId => $data) {
+          $teacher = $data['teacher'];
+          if (!empty($teacher['email'])) {
+            $this->_mailService->queueDigestNotification(
+              $teacher['email'],
+              $teacher['name'] ?? 'Giảng viên',
+              $batchDetails,
+              $data['assigned'],
+              $data['unassigned']
+            );
+          }
+        }
       }
 
       return $assignedCount;
@@ -222,7 +249,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       );
 
       // Gửi email thông báo
-      $this->_sendReassignEmails($assignment->batch_student_id, $oldTeacherId, $newTeacherId, $reason);
+      $this->_queueStudentNotification($assignment->batch_student_id, $oldTeacherId, $newTeacherId);
 
       return true;
     });
@@ -232,11 +259,13 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   {
     return Database::getInstance()->transaction(function () use ($batchId, $assignmentsData, $adminId, $reason) {
       $batch = $this->_batchStore->getById($batchId);
-      if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
+      if (!$batch || !in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::PUBLISHED])) {
         throw new Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
       }
 
       $count = 0;
+      $digestData = []; // [teacherId => ['teacher' => [...], 'assigned' => [...], 'unassigned' => [...]]]
+
       foreach ($assignmentsData as $data) {
         $assignmentId = $data['assignment_id'] ?? null;
         $batchStudentId = $data['batch_student_id'] ?? null;
@@ -250,26 +279,35 @@ class InternshipAssignmentService implements IInternshipAssignmentService
           $assignment = $this->_store->getAssignmentById($assignmentId);
           if (!$assignment) continue;
 
+          $oldTeacherId = $assignment->teacher_id;
           if ($newTeacherId === null || $newTeacherId === 0) {
             // UNASSIGN
             $this->_store->logAction(
               assignmentId: $assignmentId,
               action: 'DELETE',
-              oldTeacherId: $assignment->teacher_id,
+              oldTeacherId: $oldTeacherId,
               newTeacherId: null,
               performedBy: $adminId,
               reason: $reason
             );
             $this->_store->deleteAssignment($assignmentId);
+
+            $mailDetails = $this->_store->getMailingDetails($assignment->batch_student_id, $oldTeacherId, null);
+            if (!isset($digestData[$oldTeacherId])) {
+              $digestData[$oldTeacherId] = ['teacher' => $mailDetails['old_teacher'], 'assigned' => [], 'unassigned' => []];
+            }
+            $digestData[$oldTeacherId]['unassigned'][] = $mailDetails['student'];
+
+            $this->_queueStudentNotification($assignment->batch_student_id, $oldTeacherId, null);
+
             $count++;
             continue;
           }
 
-          if ($assignment->teacher_id == $newTeacherId) {
+          if ($oldTeacherId == $newTeacherId) {
             continue;
           }
 
-          $oldTeacherId = $assignment->teacher_id;
           $this->_store->updateAssignmentTeacher($assignmentId, $newTeacherId);
 
           $this->_store->logAction(
@@ -281,8 +319,19 @@ class InternshipAssignmentService implements IInternshipAssignmentService
             reason: $reason
           );
 
-          // Gửi email thông báo
-          $this->_sendReassignEmails($assignment->batch_student_id, $oldTeacherId, $newTeacherId, $reason);
+          $mailDetails = $this->_store->getMailingDetails($assignment->batch_student_id, $oldTeacherId, $newTeacherId);
+
+          if (!isset($digestData[$oldTeacherId])) {
+            $digestData[$oldTeacherId] = ['teacher' => $mailDetails['old_teacher'], 'assigned' => [], 'unassigned' => []];
+          }
+          $digestData[$oldTeacherId]['unassigned'][] = $mailDetails['student'];
+
+          if (!isset($digestData[$newTeacherId])) {
+            $digestData[$newTeacherId] = ['teacher' => $mailDetails['new_teacher'], 'assigned' => [], 'unassigned' => []];
+          }
+          $digestData[$newTeacherId]['assigned'][] = $mailDetails['student'];
+
+          $this->_queueStudentNotification($assignment->batch_student_id, $oldTeacherId, $newTeacherId);
 
           $count++;
         } else {
@@ -308,10 +357,36 @@ class InternshipAssignmentService implements IInternshipAssignmentService
               reason: $reason
             );
 
-            // Gửi email thông báo
-            $this->_sendReassignEmails($batchStudentId, null, $newTeacherId, $reason);
+            $mailDetails = $this->_store->getMailingDetails($batchStudentId, null, $newTeacherId);
+            if (!isset($digestData[$newTeacherId])) {
+              $digestData[$newTeacherId] = ['teacher' => $mailDetails['new_teacher'], 'assigned' => [], 'unassigned' => []];
+            }
+            $digestData[$newTeacherId]['assigned'][] = $mailDetails['student'];
+
+            $this->_queueStudentNotification($batchStudentId, null, $newTeacherId);
 
             $count++;
+          }
+        }
+      }
+
+      if ($this->_mailService && $count > 0 && $batch['status'] === BatchStatus::PUBLISHED) {
+        $batchDetails = [
+          'title' => $batch['title'],
+          'startAt' => isset($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'Không rõ',
+          'endAt' => isset($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'Không rõ'
+        ];
+
+        foreach ($digestData as $teacherId => $data) {
+          $teacher = $data['teacher'];
+          if (!empty($teacher['email'])) {
+            $this->_mailService->queueDigestNotification(
+              $teacher['email'],
+              $teacher['name'] ?? 'Giảng viên',
+              $batchDetails,
+              $data['assigned'],
+              $data['unassigned']
+            );
           }
         }
       }
@@ -337,6 +412,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         reason: $reason
       );
 
+      $this->_queueStudentNotification($assignment->batch_student_id, $assignment->teacher_id, null);
+
       return $this->_store->deleteAssignment($assignmentId);
     });
   }
@@ -352,5 +429,31 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   public function getAssignmentByBatchStudentId(int $batchStudentId)
   {
     return $this->_store->getAssignmentByBatchStudentId($batchStudentId);
+  }
+
+  private function _queueStudentNotification(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): void
+  {
+    if (!$this->_mailService) return;
+
+    $mailDetails = $this->_store->getMailingDetails($batchStudentId, $oldTeacherId, $newTeacherId);
+    if (empty($mailDetails['student']['email']) || ($mailDetails['student']['batch_status'] ?? '') === BatchStatus::DRAFT) {
+      return;
+    }
+
+    $details = [
+      'studentName' => $mailDetails['student']['name'],
+      'mssv' => $mailDetails['student']['mssv'],
+      'batchTitle' => $mailDetails['student']['batch_title'] ?? 'Không rõ',
+      'startAt' => isset($mailDetails['student']['start_at']) ? date('d/m/Y', strtotime($mailDetails['student']['start_at'])) : 'Không rõ',
+      'endAt' => isset($mailDetails['student']['end_at']) ? date('d/m/Y', strtotime($mailDetails['student']['end_at'])) : 'Không rõ',
+      'oldTeacherName' => $mailDetails['old_teacher']['name'] ?? 'Không có',
+      'newTeacherName' => $mailDetails['new_teacher']['name'] ?? 'Không có'
+    ];
+
+    $this->_mailService->sendReassignNotification(
+      $mailDetails['student']['email'],
+      $mailDetails['student']['name'],
+      $details
+    );
   }
 }

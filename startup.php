@@ -99,6 +99,11 @@ require_once BASE_PATH . '/includes/cms/cms_section_registry.php';
 require_once BASE_PATH . '/includes/cms/cms_static_page_renderer.php';
 require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
 
+// Mail
+require_once BASE_PATH . '/includes/mail/PHPMailer/Exception.php';
+require_once BASE_PATH . '/includes/mail/PHPMailer/PHPMailer.php';
+require_once BASE_PATH . '/includes/mail/PHPMailer/SMTP.php';
+
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
 require_once BASE_PATH . '/stores/classroom_store.php';
@@ -121,6 +126,7 @@ require_once BASE_PATH . '/stores/referral_letter_store.php';
 require_once BASE_PATH . '/stores/referral_letter_student_store.php';
 require_once BASE_PATH . '/stores/ticket_store.php';
 require_once BASE_PATH . '/stores/department_store.php';
+require_once BASE_PATH . '/stores/email_job_store.php';
 
 // Services
 require_once BASE_PATH . '/services/account_service.php';

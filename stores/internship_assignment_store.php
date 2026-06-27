@@ -207,10 +207,11 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
     ];
 
     // Lấy thông tin SV và đợt thực tập
-    $sqlStudent = "SELECT s.full_name as name, s.student_id as mssv, a.email,
-                          ib.title as batch_title, ib.start_at, ib.end_at
+    $sqlStudent = "SELECT s.full_name as name, s.student_id as mssv, a.email, c.short_name as class_name,
+                          ib.title as batch_title, ib.start_at, ib.end_at, ib.status as batch_status
                    FROM internship_batch_students bs
                    JOIN students s ON bs.student_id = s.id
+                   LEFT JOIN classrooms c ON s.classroom_id = c.id
                    JOIN accounts a ON s.account_id = a.id
                    JOIN internship_batches ib ON bs.batch_id = ib.id
                    WHERE bs.id = :batch_student_id";
