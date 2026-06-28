@@ -79,6 +79,7 @@ class InternshipBatchService implements IInternshipBatchService
    */
   public function createFullBatch(array $batchData, array $studentsInput, array $supervisors, int $adminId): int
   {
+    $this->validateBatchDates($batchData);
     return Database::getInstance()->transaction(function () use ($batchData, $studentsInput, $supervisors, $adminId) {
       $studentCodes = array_map(fn($sv) => trim($sv['student_code']), $studentsInput);
       if (!empty($studentCodes)) {
@@ -86,7 +87,8 @@ class InternshipBatchService implements IInternshipBatchService
         $appEnv = $_ENV['APP_ENV'] ?? 'production';
 
         foreach ($existingValidation as $s) {
-          if (!empty($s['batch_id']) && $appEnv !== 'local') {
+          // Overlap is checked after student IDs are resolved; historical/non-overlapping programs are allowed.
+          if (false) {
             throw new Exception("Sinh viên {$s['student_id']} - {$s['full_name']} đã tham gia một đợt thực tập khác.");
           }
           if ($s['status'] !== 'Đang học') {
@@ -122,7 +124,7 @@ class InternshipBatchService implements IInternshipBatchService
           if (preg_match($regex, $classroomShortName, $matches)) {
             $level = $matches[1];
             $majorKey = trim($matches[2]);
-            $classOf = (int)$matches[3];
+            $classOf = (int) $matches[3];
             $specKey = $matches[4] ?? '';
             $letter = $matches[5] ?? '';
 
@@ -155,7 +157,7 @@ class InternshipBatchService implements IInternshipBatchService
             // dự phòng: Nếu không khớp regex thì dùng logic đơn giản
             $classOf = 26;
             if (preg_match('/([0-9]{2,3})/u', $classroomShortName, $m)) {
-              $classOf = (int)$m[1];
+              $classOf = (int) $m[1];
             }
 
             $newClassroom = new Classroom(
@@ -220,6 +222,12 @@ class InternshipBatchService implements IInternshipBatchService
       // Xóa các ID trùng lặp trước khi thêm vào đợt thực tập
       $studentIds = array_unique($studentIds);
       $classroomIds = array_unique($classroomIds);
+
+      foreach ($studentIds as $studentId) {
+        if ($this->_store->hasOverlappingEnrollment((int) $studentId, $batchData['start_at'], $batchData['end_at'], $batchId)) {
+          throw new Exception('Sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
+        }
+      }
 
       $this->_store->addClassroomsToBatch($batchId, $classroomIds);
       $this->_store->addStudentsToBatch($batchId, $studentIds);
@@ -312,7 +320,8 @@ class InternshipBatchService implements IInternshipBatchService
   public function getBatchWithStats(int $id): ?array
   {
     $batch = $this->_store->getById($id);
-    if (!$batch) return null;
+    if (!$batch)
+      return null;
 
     $stats = $this->_store->getBatchStats($id);
     return array_merge($batch, ['stats' => $stats]);
@@ -320,6 +329,13 @@ class InternshipBatchService implements IInternshipBatchService
 
   public function updateBatch(int $id, array $data): bool
   {
+    $this->checkBatchModifiable($id);
+    $this->validateBatchDates($data);
+    foreach ($this->_store->getBatchStudentsWithDetails($id) as $student) {
+      if ($this->_store->hasOverlappingEnrollment((int) $student['student_id'], $data['start_at'], $data['end_at'], $id)) {
+        throw new Exception("Không thể cập nhật ngày vì sinh viên {$student['student_code']} có một đợt thực tập khác bị trùng lịch.");
+      }
+    }
     return $this->_store->update($id, $data);
   }
 
@@ -327,7 +343,7 @@ class InternshipBatchService implements IInternshipBatchService
   {
     $stats = $this->_store->getBatchStats($id);
 
-    if ($stats['has_submissions'] || $stats['has_grades']) {
+    if ($stats['assigned_students'] > 0 || $stats['total_referrals'] > 0 || $stats['has_submissions'] || $stats['has_grades']) {
       throw new Exception('Không thể xóa đợt thực tập đã có bài nộp hoặc điểm số.');
     }
 
@@ -336,6 +352,16 @@ class InternshipBatchService implements IInternshipBatchService
 
   public function publishBatch(int $id): bool
   {
+    $batch = $this->_store->getById($id);
+    if (!$batch)
+      throw new Exception('Không tìm thấy đợt thực tập.');
+    if ($batch['status'] !== BatchStatus::DRAFT) {
+      throw new Exception('Chỉ có đợt thực tập ở trạng thái bản nháp mới có thể công bố.');
+    }
+    $this->validateBatchDates($batch);
+    if ($this->_store->getBatchStats($id)['total_students'] < 1) {
+      throw new Exception('Vui lòng thêm ít nhất một sinh viên trước khi công bố.');
+    }
     return $this->_store->updateStatus($id, BatchStatus::PUBLISHED, [
       'published_at' => date('Y-m-d H:i:s')
     ]);
@@ -343,6 +369,12 @@ class InternshipBatchService implements IInternshipBatchService
 
   public function closeBatch(int $id): bool
   {
+    $batch = $this->_store->getById($id);
+    if (!$batch)
+      throw new Exception('Không tìm thấy đợt thực tập.');
+    if ($batch['status'] !== BatchStatus::PUBLISHED) {
+      throw new Exception('Chỉ có đợt thực tập đã công bố mới có thể đóng.');
+    }
     return $this->_store->updateStatus($id, BatchStatus::CLOSED, [
       'closed_at' => date('Y-m-d H:i:s')
     ]);
@@ -360,11 +392,26 @@ class InternshipBatchService implements IInternshipBatchService
 
   public function addStudentToBatch(int $batchId, int $studentId): bool
   {
+    $this->checkBatchModifiable($batchId);
+    $batch = $this->_store->getById($batchId);
+    if ($this->_store->getBatchStudent($batchId, $studentId)) {
+      throw new Exception('Sinh viên đã được đăng ký vào đợt thực tập này.');
+    }
+    if ($this->_store->hasOverlappingEnrollment($studentId, $batch['start_at'], $batch['end_at'], $batchId)) {
+      throw new Exception('Sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
+    }
     return $this->_store->addStudentsToBatch($batchId, [$studentId]);
   }
 
   public function removeStudentFromBatch(int $batchId, int $studentId): bool
   {
+    $this->checkBatchModifiable($batchId);
+    $batchStudent = $this->_store->getBatchStudent($batchId, $studentId);
+    if (!$batchStudent)
+      throw new Exception('Sinh viên chưa được đăng ký vào đợt thực tập này.');
+    if ($this->_store->batchStudentHasDependencies((int) $batchStudent['id'])) {
+      throw new Exception('Không thể xóa sinh viên đã có phân công, giấy giới thiệu, báo cáo hoặc điểm số.');
+    }
     return $this->_store->removeStudentFromBatch($batchId, $studentId);
   }
 
@@ -374,8 +421,20 @@ class InternshipBatchService implements IInternshipBatchService
     if (!$batch) {
       throw new Exception('Đợt thực tập không tồn tại.');
     }
-    if (in_array($batch['status'], ['closed', 'completed'])) {
+    if ($batch['status'] === BatchStatus::CLOSED) {
       throw new Exception('Không thể thay đổi thông tin giảng viên khi đợt thực tập đã kết thúc.');
+    }
+  }
+
+  private function validateBatchDates(array $data): void
+  {
+    if (empty($data['title']) || empty($data['start_at']) || empty($data['end_at'])) {
+      throw new Exception('Tiêu đề, thời gian bắt đầu và thời gian kết thúc là bắt buộc.');
+    }
+    $start = strtotime((string) $data['start_at']);
+    $end = strtotime((string) $data['end_at']);
+    if ($start === false || $end === false || $start >= $end) {
+      throw new Exception('Thời gian kết thúc phải lớn hơn thời gian bắt đầu.');
     }
   }
 
@@ -467,7 +526,8 @@ class InternshipBatchService implements IInternshipBatchService
       $currentBatch = $batches[0];
     }
 
-    if (!$currentBatch) return ['batches' => $batches, 'current' => null];
+    if (!$currentBatch)
+      return ['batches' => $batches, 'current' => null];
 
     // Lấy chi tiết thông tin thực tập của SV
     $assignment = $this->_assignmentStore->getAssignmentByBatchStudentId($currentBatch['batch_student_id']);
@@ -509,7 +569,8 @@ class InternshipBatchService implements IInternshipBatchService
   public function getTeacherBatchDetail(int $batchId, int $teacherId): ?array
   {
     $batch = $this->_store->getById($batchId);
-    if (!$batch) return null;
+    if (!$batch)
+      return null;
 
     $stats = $this->_store->getTeacherBatchStats($batchId, $teacherId);
     $students = $this->_store->getTeacherStudentsInBatch($batchId, $teacherId);

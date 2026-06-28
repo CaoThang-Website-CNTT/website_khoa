@@ -37,6 +37,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   public function assign(int $batchStudentId, int $teacherId, ?int $assignedBy = null): bool
   {
     return Database::getInstance()->transaction(function () use ($batchStudentId, $teacherId, $assignedBy) {
+      $this->validateAssignmentTarget($batchStudentId, $teacherId);
       // Kiểm tra xem sinh viên đã có assignment nào chưa
       $existingAssignment = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
       if ($existingAssignment) {
@@ -44,9 +45,9 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       }
 
       $assignmentId = $this->_store->createAssignment(
-        batchStudentId: $batchStudentId, 
-        teacherId: $teacherId, 
-        method: 'manual', 
+        batchStudentId: $batchStudentId,
+        teacherId: $teacherId,
+        method: 'manual',
         assignedBy: $assignedBy
       );
 
@@ -56,11 +57,11 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
       // Log hành động CREATE
       $this->_store->logAction(
-        assignmentId: $assignmentId, 
-        action: 'CREATE', 
-        oldTeacherId: null, 
-        newTeacherId: $teacherId, 
-        performedBy: $assignedBy, 
+        assignmentId: $assignmentId,
+        action: 'CREATE',
+        oldTeacherId: null,
+        newTeacherId: $teacherId,
+        performedBy: $assignedBy,
         reason: 'Phân công lần đầu'
       );
 
@@ -87,9 +88,9 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       $supervisors = $this->_store->getBatchSupervisorsWithStats($batchId);
       $totalRemainingQuota = 0;
       $availableSupervisors = [];
-      
+
       foreach ($supervisors as $sup) {
-        $max = $sup['max_students'];
+        $max = $sup['max_students'] === null ? count($unassigned) + (int) $sup['current_assigned'] : (int) $sup['max_students'];
         $remaining = $max - $sup['current_assigned'];
         if ($remaining > 0) {
           $totalRemainingQuota += $remaining;
@@ -102,7 +103,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       }
 
       if (count($unassigned) > $totalRemainingQuota) {
-        throw new \Exception('Tổng số sinh viên chưa phân công ('.count($unassigned).') lớn hơn tổng hạn mức còn lại ('.$totalRemainingQuota.') của các giảng viên.');
+        throw new \Exception('Tổng số sinh viên chưa phân công (' . count($unassigned) . ') lớn hơn tổng hạn mức còn lại (' . $totalRemainingQuota . ') của các giảng viên.');
       }
 
       if ($method === 'auto_shuffle') {
@@ -117,7 +118,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         }
 
         if ($method === 'auto_even') {
-          usort($availableSupervisors, function($a, $b) {
+          usort($availableSupervisors, function ($a, $b) {
             return $a['current'] <=> $b['current'];
           });
           $chosenIndex = 0;
@@ -127,14 +128,14 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
         $sup = &$availableSupervisors[$chosenIndex];
         $teacherId = $sup['teacher_id'];
-        
+
         $assignmentId = $this->_store->createAssignment(
           batchStudentId: $student['batch_student_id'],
           teacherId: $teacherId,
           method: $method,
           assignedBy: $adminId
         );
-        
+
         $this->_store->logAction(
           assignmentId: $assignmentId,
           action: 'CREATE',
@@ -146,11 +147,11 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
         $sup['current']++;
         $sup['remaining']--;
-        
+
         if ($sup['remaining'] <= 0) {
           array_splice($availableSupervisors, $chosenIndex, 1);
         }
-        
+
         $assignedCount++;
       }
 
@@ -169,6 +170,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         throw new \Exception('Không tìm thấy bản ghi phân công này.');
       }
 
+      $this->validateAssignmentTarget((int) $assignment->batch_student_id, $newTeacherId, $assignmentId);
+
       if ($assignment->teacher_id == $newTeacherId) {
         throw new \Exception('Giảng viên mới trùng với giảng viên hiện tại.');
       }
@@ -177,18 +180,18 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
       // Update ID Giảng viên mới (vẫn giữ nguyên status hiện tại)
       $updated = $this->_store->updateAssignmentTeacher($assignmentId, $newTeacherId);
-      
+
       if (!$updated) {
         throw new \Exception('Cập nhật phân công thất bại.');
       }
 
       // Log hành động UPDATE
       $this->_store->logAction(
-        assignmentId: $assignmentId, 
-        action: 'UPDATE', 
-        oldTeacherId: $oldTeacherId, 
-        newTeacherId: $newTeacherId, 
-        performedBy: $adminId, 
+        assignmentId: $assignmentId,
+        action: 'UPDATE',
+        oldTeacherId: $oldTeacherId,
+        newTeacherId: $newTeacherId,
+        performedBy: $adminId,
         reason: $reason
       );
 
@@ -216,7 +219,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 
         if ($assignmentId) {
           $assignment = $this->_store->getAssignmentById($assignmentId);
-          if (!$assignment) continue;
+          if (!$assignment)
+            continue;
 
           if ($newTeacherId === null || $newTeacherId === 0) {
             // UNASSIGN
@@ -233,27 +237,32 @@ class InternshipAssignmentService implements IInternshipAssignmentService
             continue;
           }
 
+          $this->validateAssignmentTarget((int) $assignment->batch_student_id, (int) $newTeacherId, (int) $assignmentId);
+
           if ($assignment->teacher_id == $newTeacherId) {
             continue;
           }
-          
+
           $oldTeacherId = $assignment->teacher_id;
           $this->_store->updateAssignmentTeacher($assignmentId, $newTeacherId);
-          
+
           $this->_store->logAction(
-            assignmentId: $assignmentId, 
-            action: 'UPDATE', 
-            oldTeacherId: $oldTeacherId, 
-            newTeacherId: $newTeacherId, 
-            performedBy: $adminId, 
+            assignmentId: $assignmentId,
+            action: 'UPDATE',
+            oldTeacherId: $oldTeacherId,
+            newTeacherId: $newTeacherId,
+            performedBy: $adminId,
             reason: $reason
           );
           $count++;
         } else {
-          if ($newTeacherId === null || $newTeacherId === 0) continue;
-          
+          if ($newTeacherId === null || $newTeacherId === 0)
+            continue;
+          $this->validateAssignmentTarget((int) $batchStudentId, (int) $newTeacherId);
+
           $existing = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
-          if ($existing) continue;
+          if ($existing)
+            continue;
 
           $newId = $this->_store->createAssignment(
             batchStudentId: $batchStudentId,
@@ -275,7 +284,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
           }
         }
       }
-      
+
       return $count;
     });
   }
@@ -287,6 +296,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       if (!$assignment) {
         throw new \Exception('Không tìm thấy bản ghi phân công này.');
       }
+
+      $this->validateAssignmentTarget((int) $assignment->batch_student_id, (int) $assignment->teacher_id, (int) $assignment->id);
 
       $this->_store->logAction(
         assignmentId: $assignmentId,
@@ -312,5 +323,35 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   public function getAssignmentByBatchStudentId(int $batchStudentId)
   {
     return $this->_store->getAssignmentByBatchStudentId($batchStudentId);
+  }
+
+  private function validateAssignmentTarget(int $batchStudentId, int $teacherId, ?int $currentAssignmentId = null): void
+  {
+    $student = $this->_batchStore->getStudentGradingDetail($batchStudentId);
+    if (!$student)
+      throw new \Exception('Sinh viên chưa được đăng ký vào đợc thực tập.');
+    $batchId = (int) $student['batch_id'];
+    $batch = $this->_batchStore->getById($batchId);
+    if (!$batch || !in_array($batch['status'], ['draft', 'published'], true)) {
+      throw new \Exception('Không thể thay đổi phân công cho đợt thực tập đã đóng.');
+    }
+    if (!$this->_batchStore->isSupervisorOfBatch($batchId, $teacherId)) {
+      throw new \Exception('Giảng viên được chọn không phải là giảng viên hướng dẫn trong đợt thực tập này.');
+    }
+    foreach ($this->_store->getBatchSupervisorsWithStats($batchId) as $supervisor) {
+      if ((int) $supervisor['teacher_id'] !== $teacherId)
+        continue;
+      $current = (int) $supervisor['current_assigned'];
+      if ($currentAssignmentId !== null) {
+        $currentAssignment = $this->_store->getAssignmentById($currentAssignmentId);
+        if ($currentAssignment && (int) $currentAssignment->teacher_id === $teacherId)
+          return;
+      }
+      if ($supervisor['max_students'] !== null && $current >= (int) $supervisor['max_students']) {
+        throw new \Exception('Giảng viên hướng dẫn được chọn đã đạt giới hạn số lượng sinh viên.');
+      }
+      return;
+    }
+    throw new \Exception('Không tìm thấy thông tin về thông tin phân công của giảng viên hướng dẫn.');
   }
 }

@@ -76,6 +76,14 @@ class InternshipGradeService implements IInternshipGradeService
 
   public function canTeacherGrade(int $batchId, int $teacherId, int $batchStudentId): array
   {
+    $batch = $this->_batchStore->getById($batchId);
+    if (!$batch || !in_array($batch['status'], ['published', 'closed'], true)) {
+      return ['allowed' => false, 'reason' => 'Đợt thực tập chưa được công bố.'];
+    }
+    $student = $this->_batchStore->getStudentGradingDetail($batchStudentId);
+    if (!$student || (int) $student['batch_id'] !== $batchId) {
+      return ['allowed' => false, 'reason' => 'Sinh viên không thuộc đợt thực tập này.'];
+    }
     if (!$this->_batchStore->isSupervisorOfBatch($batchId, $teacherId)) {
       return ['allowed' => false, 'reason' => 'Bạn không phải giảng viên hướng dẫn của đợt thực tập này.'];
     }
@@ -95,14 +103,17 @@ class InternshipGradeService implements IInternshipGradeService
   public function isWithinGradingDeadline(int $batchId): bool
   {
     $batch = $this->_batchStore->getById($batchId);
-    if (!$batch || empty($batch['start_at'])) return false;
+    if (!$batch || empty($batch['start_at']))
+      return false;
 
     $now = new DateTime();
     $startAt = new DateTime($batch['start_at']);
 
-    if ($now < $startAt) return false;
+    if ($now < $startAt)
+      return false;
 
-    if (empty($batch['end_at'])) return true;
+    if (empty($batch['end_at']))
+      return true;
 
     $deadlineWeeks = (int) $this->_webSettingsService->getValue('internship_grading_deadline_weeks', 2);
     $endAt = new DateTime($batch['end_at']);
@@ -114,7 +125,8 @@ class InternshipGradeService implements IInternshipGradeService
   public function getStudentGradingData(int $batchStudentId, int $teacherId): ?array
   {
     $studentInfo = $this->_batchStore->getStudentGradingDetail($batchStudentId);
-    if (!$studentInfo) return null;
+    if (!$studentInfo)
+      return null;
 
     $submissions = $this->_submissionStore->getLatestByBatchStudentGroupedByType($batchStudentId);
     $allSubmissions = $this->_submissionStore->getAllByBatchStudentId($batchStudentId);

@@ -7,7 +7,9 @@ use App\Models\ReferralLetter;
 use Exception;
 use App\Core\Pageable;
 use App\Stores\ReferralLetterStudentStore;
+use App\Stores\InternshipBatchStore;
 use Database;
+use App\Enums\ReferralLetterStatus;
 
 interface IReferralLetterService
 {
@@ -18,7 +20,10 @@ interface IReferralLetterService
   public function getByIdWithCompany(int $id): ?array;
   public function getWithStudentsByLetterId(int $id): ?array;
   public function getForPrint(int $id): ?array;
-  public function cancel(int $id, string $reason = ''): bool;
+  public function cancel(int $id, string $reason = '', ?int $cancelledBy = null): bool;
+  public function approve(int $id, int $processedBy): bool;
+  public function reject(int $id, string $reason, int $processedBy): bool;
+  public function bulkReview(array $ids, string $action, string $reason, int $processedBy): int;
   public function updateCompany(int $id, int $companyId): bool;
   public function getAllWithDetailsByBatchId(int $batchId): array;
   public function printLetter(int $id, int $processedBy, array $printData = []): bool;
@@ -29,15 +34,34 @@ class ReferralLetterService implements IReferralLetterService
 {
   private ReferralLetterStore $_store;
   private ReferralLetterStudentStore $_studentStore;
+  private InternshipBatchStore $_batchStore;
 
-  public function __construct(ReferralLetterStore $store, ReferralLetterStudentStore $studentStore)
+  public function __construct(ReferralLetterStore $store, ReferralLetterStudentStore $studentStore, InternshipBatchStore $batchStore)
   {
     $this->_store = $store;
     $this->_studentStore = $studentStore;
+    $this->_batchStore = $batchStore;
   }
 
   public function create(array $data, array $students = []): bool
   {
+    $primaryId = (int) ($data['batch_student_id'] ?? 0);
+    $primary = $this->_batchStore->getStudentGradingDetail($primaryId);
+    if (!$primary)
+      throw new Exception('Sinh viên yêu cầu chưa được đăng ký vào đợt thực tập này.');
+    $batch = $this->_batchStore->getById((int) $primary['batch_id']);
+    if (!$batch || $batch['status'] !== 'published') {
+      throw new Exception('Giấy giới thiệu chỉ có thể được yêu cầu cho một đợt thực tập đã công bố.');
+    }
+    if (empty($students))
+      throw new Exception('Yêu cầu phải có ít nhất một sinh viên trong danh sách.');
+    foreach ($students as $student) {
+      $memberId = (int) ($student['batch_student_id'] ?? 0);
+      $member = $this->_batchStore->getStudentGradingDetail($memberId);
+      if (!$member || (int) $member['batch_id'] !== (int) $primary['batch_id']) {
+        throw new Exception('Tất cả thành viên tham gia nhận giấy giới thiệu phải thuộc cùng một đợt thực tập.');
+      }
+    }
     return Database::getInstance()->transaction(function () use ($data, $students) {
       $letterId = $this->_store->create($data);
       if ($letterId > 0 && !empty($students)) {
@@ -56,7 +80,8 @@ class ReferralLetterService implements IReferralLetterService
   {
     $letters = $this->_store->getLettersWithCompanyByBatchStudentId($batchStudentId);
 
-    if (empty($letters)) return [];
+    if (empty($letters))
+      return [];
 
     $letterIds = array_column($letters, 'id');
     $studentsGrouped = $this->_studentStore->getByLetterIds($letterIds);
@@ -95,7 +120,7 @@ class ReferralLetterService implements IReferralLetterService
     return $this->_store->getForPrint($id);
   }
 
-  public function cancel(int $id, string $reason = ''): bool
+  public function cancel(int $id, string $reason = '', ?int $cancelledBy = null): bool
   {
     $letter = $this->_store->getById($id);
     if (!$letter) {
@@ -105,7 +130,54 @@ class ReferralLetterService implements IReferralLetterService
       throw new Exception('Chỉ có thể hủy giấy giới thiệu đang chờ xử lý');
     }
 
-    return $this->_store->updateStatus($id, 'cancelled', ['cancel_reason' => $reason]);
+    return $this->_store->updateStatus($id, ReferralLetterStatus::CANCELLED, [
+      'cancel_reason' => $reason,
+      'cancelled_by' => $cancelledBy,
+    ]);
+  }
+
+  public function approve(int $id, int $processedBy): bool
+  {
+    return $this->review($id, ReferralLetterStatus::APPROVED, '', $processedBy);
+  }
+
+  public function reject(int $id, string $reason, int $processedBy): bool
+  {
+    if (trim($reason) === '')
+      throw new Exception('A rejection reason is required.');
+    return $this->review($id, ReferralLetterStatus::REJECTED, trim($reason), $processedBy);
+  }
+
+  private function review(int $id, string $status, string $reason, int $processedBy): bool
+  {
+    $letter = $this->_store->getById($id);
+    if (!$letter)
+      throw new Exception('Referral letter not found.');
+    if ($letter->status !== ReferralLetterStatus::PENDING) {
+      throw new Exception('Only pending referral letters can be reviewed.');
+    }
+    return $this->_store->updateStatus($id, $status, [
+      'cancel_reason' => $reason ?: null,
+      'processed_by' => $processedBy,
+      'reviewed_at' => date('Y-m-d H:i:s'),
+    ]);
+  }
+
+  public function bulkReview(array $ids, string $action, string $reason, int $processedBy): int
+  {
+    if (!in_array($action, ['approve', 'reject'], true))
+      throw new Exception('Invalid review action.');
+    return Database::getInstance()->transaction(function () use ($ids, $action, $reason, $processedBy) {
+      $count = 0;
+      foreach ($ids as $id) {
+        $success = $action === 'approve'
+          ? $this->approve((int) $id, $processedBy)
+          : $this->reject((int) $id, $reason, $processedBy);
+        if ($success)
+          $count++;
+      }
+      return $count;
+    });
   }
 
   public function updateCompany(int $id, int $companyId): bool
@@ -133,8 +205,8 @@ class ReferralLetterService implements IReferralLetterService
       throw new Exception('Không tìm thấy giấy giới thiệu');
     }
 
-    if ($letter->status === 'cancelled') {
-      throw new Exception("Giấy giới thiệu #{$letter->id} đã bị hủy, không thể in.");
+    if (!in_array($letter->status, [ReferralLetterStatus::APPROVED, ReferralLetterStatus::PRINTED], true)) {
+      throw new Exception('Giấy giới thiệu phải được duyệt trước khi in.');
     }
 
     return Database::getInstance()->transaction(function () use ($id, $processedBy, $printData) {
@@ -142,7 +214,7 @@ class ReferralLetterService implements IReferralLetterService
         $this->_store->updatePrintInfo($id, $printData);
       }
 
-      return $this->_store->updateStatus($id, 'printed', [
+      return $this->_store->updateStatus($id, ReferralLetterStatus::PRINTED, [
         'printed_at' => date('Y-m-d H:i:s'),
         'processed_by' => $processedBy
       ]);
@@ -151,7 +223,8 @@ class ReferralLetterService implements IReferralLetterService
 
   public function bulkCancel(array $ids, string $reason, int $processedBy): int
   {
-    if (empty($ids)) return 0;
+    if (empty($ids))
+      return 0;
 
     $letters = $this->_store->getByIds($ids);
     $processedCount = 0;
