@@ -24,15 +24,16 @@ interface IReferralLetterStore
   public function getWithStudentsByLetterId(int $id): ?array;
   public function getForPrint(int $id): ?array;
   public function updatePrintInfo(int $id, array $printData): bool;
+  public function getByIds(array $ids): array;
 }
 
 class ReferralLetterStore extends Store implements IReferralLetterStore
 {
   public function getById(int $id): ?ReferralLetter
   {
-    $sql = "SELECT * FROM referral_letters WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->select('*')->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ? ReferralLetter::fromArray($result) : null;
   }
@@ -179,23 +180,25 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
    */
   public function create(array $referralLetter): int
   {
-    $sql = "INSERT INTO referral_letters (batch_student_id, company_id, teacher_id, status, 
-            cancel_reason, internship_start_date, internship_end_date, document_number, note, printed_at, processed_by, created_at, updated_at)
-            VALUES (:batch_student_id, :company_id, :teacher_id, :status, :cancel_reason, :internship_start_date, :internship_end_date, :document_number, :note, :printed_at, :processed_by, NOW(), NOW())";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':batch_student_id' => $referralLetter['batch_student_id'] ?? null,
-      ':company_id'       => $referralLetter['company_id'] ?? null,
-      ':teacher_id'       => $referralLetter['teacher_id'] ?? null,
-      ':status'           => $referralLetter['status'] ?? 'pending',
-      ':cancel_reason'    => $referralLetter['cancel_reason'] ?? null,
-      ':internship_start_date' => $referralLetter['internship_start_date'] ?? null,
-      ':internship_end_date'   => $referralLetter['internship_end_date'] ?? null,
-      ':document_number'  => $referralLetter['document_number'] ?? null,
-      ':note'             => $referralLetter['note'] ?? null,
-      ':printed_at'       => $referralLetter['printed_at'] ?? null,
-      ':processed_by'     => $referralLetter['processed_by'] ?? null,
+    $now = date('Y-m-d H:i:s');
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->insert([
+      'batch_student_id' => $referralLetter['batch_student_id'] ?? null,
+      'company_id' => $referralLetter['company_id'] ?? null,
+      'teacher_id' => $referralLetter['teacher_id'] ?? null,
+      'status' => $referralLetter['status'] ?? 'pending',
+      'cancel_reason' => $referralLetter['cancel_reason'] ?? null,
+      'reviewed_at' => $referralLetter['reviewed_at'] ?? null,
+      'internship_start_date' => $referralLetter['internship_start_date'] ?? null,
+      'internship_end_date' => $referralLetter['internship_end_date'] ?? null,
+      'document_number' => $referralLetter['document_number'] ?? null,
+      'note' => $referralLetter['note'] ?? null,
+      'printed_at' => $referralLetter['printed_at'] ?? null,
+      'processed_by' => $referralLetter['processed_by'] ?? null,
+      'cancelled_by' => $referralLetter['cancelled_by'] ?? null,
+      'created_at' => $now, 'updated_at' => $now,
     ]);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return (int) $this->db->lastInsertId();
   }
 
@@ -249,9 +252,23 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
       $params[':cancel_reason'] = $extraData['cancel_reason'];
     }
 
-    $sql = "UPDATE referral_letters SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute($params);
+    if (array_key_exists('reviewed_at', $extraData)) {
+      $fields[] = "reviewed_at = :reviewed_at";
+      $params[':reviewed_at'] = $extraData['reviewed_at'];
+    }
+
+    if (array_key_exists('cancelled_by', $extraData)) {
+      $fields[] = "cancelled_by = :cancelled_by";
+      $params[':cancelled_by'] = $extraData['cancelled_by'];
+    }
+
+    $data = ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')];
+    foreach (['printed_at', 'processed_by', 'cancel_reason', 'reviewed_at', 'cancelled_by'] as $key) {
+      if (array_key_exists($key, $extraData)) $data[$key] = $extraData[$key];
+    }
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->update($data)->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function updateCompanyId(int $id, int $companyId): bool

@@ -387,7 +387,8 @@ class StudentDashboardController extends Controller
       'current' => $batch,
       'student' => $student,
       'majorName' => $majorName,
-      'batch_student_id' => $batchStudentId
+      'batch_student_id' => $batchStudentId,
+      'batch_students' => $this->_internshipBatchService->getBatchStudents($batch_id)
     ], layout: 'dashboard_layout');
   }
 
@@ -462,7 +463,7 @@ class StudentDashboardController extends Controller
             'address' => $data['student_address'][$index] ?? null,
             // If it's the primary student (e.g. index 0), we can set their IDs
             'student_id' => ($index === 0) ? $student->id : null,
-            'batch_student_id' => ($index === 0) ? $batchStudentId : null,
+            'batch_student_id' => (int)($data['student_batch_student_id'][$index] ?? 0),
             'sort_order' => $index,
           ];
         }
@@ -585,7 +586,7 @@ class StudentDashboardController extends Controller
     $reason = $request->input('cancel_reason') ?: '';
 
     try {
-      if ($this->_referralLetterService->cancel($letter_id, $reason)) {
+      if ($this->_referralLetterService->cancel($letter_id, $reason, (int)$authUser['account_id'])) {
         $request->session()->flashNotify('success', 'Đã hủy đăng ký giấy giới thiệu.');
       } else {
         $request->session()->flashNotify('error', 'Có lỗi xảy ra khi hủy giấy giới thiệu.');

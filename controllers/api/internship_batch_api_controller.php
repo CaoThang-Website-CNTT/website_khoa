@@ -84,7 +84,7 @@ class InternshipBatchApiController extends Controller
       $students = BatchStudentImporter::import($uploadedFile->tmpPath);
 
       return $this->json($students, 200);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
       return $this->json(['message' => $e->getMessage()], 400);
     }
   }

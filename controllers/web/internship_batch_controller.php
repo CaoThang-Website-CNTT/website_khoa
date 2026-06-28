@@ -35,7 +35,7 @@ class InternshipBatchController extends Controller
 
   public function show($id, Request $request)
   {
-    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    $batch = $this->_internshipBatchService->getBatchWithStats((int) $id);
     if (!$batch) {
       $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
       return $this->redirect('admin/internship_batches');
@@ -48,13 +48,13 @@ class InternshipBatchController extends Controller
 
   public function referralLetters($id, Request $request)
   {
-    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    $batch = $this->_internshipBatchService->getBatchWithStats((int) $id);
     if (!$batch) {
       $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
       return $this->redirect('admin/internship_batches');
     }
 
-    $letters = $this->_referralLetterService->getAllWithDetailsByBatchId((int)$id);
+    $letters = $this->_referralLetterService->getAllWithDetailsByBatchId((int) $id);
 
     $this->render("admin/internship_batches/referral_letters", [
       'batch' => $batch,
@@ -64,15 +64,19 @@ class InternshipBatchController extends Controller
 
   public function printReferralLetter($id, $letterId, Request $request)
   {
-    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    $batch = $this->_internshipBatchService->getBatchWithStats((int) $id);
     if (!$batch) {
       $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
       return $this->redirect('admin/internship_batches');
     }
 
-    $letter = $this->_referralLetterService->getForPrint((int)$letterId);
+    $letter = $this->_referralLetterService->getForPrint((int) $letterId);
     if (!$letter) {
       $request->session()->flashNotify('error', 'Không tìm thấy giấy giới thiệu');
+      return $this->redirect("admin/internship_batches/$id/referral_letters");
+    }
+    if ((int) $letter['batch_id'] !== (int) $id || !in_array($letter['status'], ['approved', 'printed'], true)) {
+      $request->session()->flashNotify('error', 'Giấy giới thiệu phải được duyệt trước khi in.');
       return $this->redirect("admin/internship_batches/$id/referral_letters");
     }
 
@@ -84,6 +88,10 @@ class InternshipBatchController extends Controller
 
   public function confirmPrint($id, $letterId, Request $request)
   {
+    $letter = $this->_referralLetterService->getForPrint((int) $letterId);
+    if (!$letter || (int) $letter['batch_id'] !== (int) $id) {
+      return $this->json(null, 404, 'Referral letter not found in this internship program.');
+    }
     $data = $request->all();
     $overrides = [
       'internship_start_date' => $data['internship_start_date'] ?? null,
@@ -95,7 +103,7 @@ class InternshipBatchController extends Controller
     $processedBy = $authUser['account_id'] ?? 0;
 
     try {
-      $isSuccess = $this->_referralLetterService->printLetter((int)$letterId, $processedBy, $overrides);
+      $isSuccess = $this->_referralLetterService->printLetter((int) $letterId, $processedBy, $overrides);
       if ($isSuccess) {
         return $this->json(null, 200, 'Cập nhật trạng thái in thành công');
       }
@@ -107,13 +115,13 @@ class InternshipBatchController extends Controller
 
   public function teachers($id, Request $request)
   {
-    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    $batch = $this->_internshipBatchService->getBatchWithStats((int) $id);
     if (!$batch) {
       $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
       return $this->redirect('admin/internship_batches');
     }
 
-    $supervisors = $this->_internshipBatchService->getBatchSupervisors((int)$id);
+    $supervisors = $this->_internshipBatchService->getBatchSupervisors((int) $id);
 
     $this->render("admin/internship_batches/teachers", [
       'batch' => $batch,
@@ -123,14 +131,14 @@ class InternshipBatchController extends Controller
 
   public function students($id, Request $request)
   {
-    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    $batch = $this->_internshipBatchService->getBatchWithStats((int) $id);
     if (!$batch) {
       $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập này');
       return $this->redirect('admin/internship_batches');
     }
 
     // Lấy dữ liệu để build các dropdown filter
-    $students = $this->_internshipBatchService->getBatchStudents((int)$id);
+    $students = $this->_internshipBatchService->getBatchStudents((int) $id);
 
     // filter lớp
     $classrooms = array_unique(array_filter(array_column($students, 'classroom_name')));
@@ -149,7 +157,7 @@ class InternshipBatchController extends Controller
     }
 
     // filter giảng viên HD
-    $supervisors = $this->_internshipBatchService->getBatchSupervisors((int)$id);
+    $supervisors = $this->_internshipBatchService->getBatchSupervisors((int) $id);
     $teacherOptions = [];
     foreach ($supervisors as $s) {
       $teacherOptions[] = ['label' => $s['full_name'], 'value' => $s['full_name']];
@@ -166,8 +174,12 @@ class InternshipBatchController extends Controller
   public function update($id, Request $request)
   {
     $data = $request->all();
-
-    $isSuccess = $this->_internshipBatchService->updateBatch((int)$id, $data);
+    try {
+      $isSuccess = $this->_internshipBatchService->updateBatch((int) $id, $data);
+    } catch (\Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+      return $this->redirect("admin/internship_batches/$id");
+    }
     if ($isSuccess) {
       $request->session()->flashNotify('success', 'Cập nhật thông tin đợt thực tập thành công!');
     } else {
@@ -180,7 +192,7 @@ class InternshipBatchController extends Controller
   public function destroy($id, Request $request)
   {
     try {
-      $isSuccess = $this->_internshipBatchService->deleteBatch((int)$id);
+      $isSuccess = $this->_internshipBatchService->deleteBatch((int) $id);
       if ($isSuccess) {
         $request->session()->flashNotify('success', 'Xóa đợt thực tập thành công!');
       } else {
@@ -195,7 +207,12 @@ class InternshipBatchController extends Controller
 
   public function publish($id, Request $request)
   {
-    $isSuccess = $this->_internshipBatchService->publishBatch((int)$id);
+    try {
+      $isSuccess = $this->_internshipBatchService->publishBatch((int) $id);
+    } catch (\Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+      return $this->redirect("admin/internship_batches/$id");
+    }
     if ($isSuccess) {
       $request->session()->flashNotify('success', 'Công bố đợt thực tập thành công!');
     } else {
@@ -206,7 +223,12 @@ class InternshipBatchController extends Controller
 
   public function close($id, Request $request)
   {
-    $isSuccess = $this->_internshipBatchService->closeBatch((int)$id);
+    try {
+      $isSuccess = $this->_internshipBatchService->closeBatch((int) $id);
+    } catch (\Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+      return $this->redirect("admin/internship_batches/$id");
+    }
     if ($isSuccess) {
       $request->session()->flashNotify('success', 'Kết thúc đợt thực tập thành công!');
     } else {

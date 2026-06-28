@@ -188,7 +188,7 @@ class TeacherDashboardController extends Controller
     if (!$teacher) return $this->redirect('/');
 
     $canGrade = $this->_gradeInternshipService->canTeacherGrade($batchId, $teacher->id, $batchStudentId);
-    if (!$canGrade) {
+    if (!$canGrade['allowed']) {
       $request->session()->flashNotify('error', 'Không thể chấm điểm đợt thực tập này.');
       return $this->redirect("/teacher/internship_batches/{$batchId}");
     }

@@ -65,8 +65,9 @@ class InternshipAssignmentApiController extends Controller
     }
 
     try {
-      // TODO: Get admin ID from Auth logic, using mock ID 1 for now
-      $adminId = 1;
+      $adminId = (int) ($request->session()->authUser()['account_id'] ?? 0);
+      if ($adminId < 1)
+        return $this->json(['message' => 'Chưa xác thực.'], 401);
 
       $assignedCount = $this->_assignmentService->autoAssign((int) $id, $data['method'], $adminId);
       return $this->json(['assigned_count' => $assignedCount], 200, 'Đã phân công tự động thành công ' . $assignedCount . ' sinh viên.');
@@ -97,8 +98,9 @@ class InternshipAssignmentApiController extends Controller
     }
 
     try {
-      // TODO: Get admin ID from Auth logic, using mock ID 1 for now
-      $adminId = 1;
+      $adminId = (int) ($request->session()->authUser()['account_id'] ?? 0);
+      if ($adminId < 1)
+        return $this->json(['message' => 'Chưa xác thực.'], 401);
 
       $this->_assignmentService->bulkSave(
         (int) $id,

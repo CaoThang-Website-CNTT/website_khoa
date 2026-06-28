@@ -7,6 +7,8 @@ require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
 
 use App\Core\Store;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 use App\Models\InternshipAssignment;
 use App\Models\AssignmentLog;
 use PDO;
@@ -30,23 +32,22 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
 {
   public function createAssignment(int $batchStudentId, int $teacherId, string $method = 'manual', ?int $assignedBy = null): ?int
   {
-    $sql = "INSERT INTO internship_assignments (batch_student_id, teacher_id, assignment_method, assigned_by) 
-            VALUES (:batch_student_id, :teacher_id, :method, :assigned_by)";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':batch_student_id' => $batchStudentId,
-      ':teacher_id' => $teacherId,
-      ':method' => $method,
-      ':assigned_by' => $assignedBy
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_assignments')->insert([
+      'batch_student_id' => $batchStudentId,
+      'teacher_id' => $teacherId,
+      'assignment_method' => $method,
+      'assigned_by' => $assignedBy,
     ]);
-    return $this->db->lastInsertId();
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return (int)$this->db->lastInsertId();
   }
 
   public function getAssignmentById(int $assignmentId): ?InternshipAssignment
   {
-    $sql = "SELECT * FROM internship_assignments WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':id' => $assignmentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_assignments')->select('*')->eq('id', $assignmentId);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $data = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$data) return null;
 
@@ -65,9 +66,9 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
 
   public function getAssignmentByBatchStudentId(int $batchStudentId): ?InternshipAssignment
   {
-    $sql = "SELECT * FROM internship_assignments WHERE batch_student_id = :batch_student_id";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_assignments')->select('*')->eq('batch_student_id', $batchStudentId);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $data = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$data) return null;
 
@@ -86,29 +87,27 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
 
   public function updateAssignmentTeacher(int $assignmentId, int $newTeacherId): bool
   {
-    $sql = "UPDATE internship_assignments 
-            SET teacher_id = :teacher_id, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':teacher_id' => $newTeacherId, ':id' => $assignmentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_assignments')->update([
+      'teacher_id' => $newTeacherId,
+      'updated_at' => date('Y-m-d H:i:s'),
+    ])->eq('id', $assignmentId);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return $stmt->rowCount() > 0;
   }
 
   public function deleteAssignment(int $assignmentId): bool
   {
-    $sql = "DELETE FROM internship_assignments WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':id' => $assignmentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_assignments')->delete()->eq('id', $assignmentId);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return $stmt->rowCount() > 0;
   }
 
 
   public function logAction(int $assignmentId, string $action, ?int $oldTeacherId, ?int $newTeacherId, ?int $performedBy, ?string $reason): bool
   {
-    $sql = "INSERT INTO assignment_logs (assignment_id, action, old_teacher_id, new_teacher_id, performed_by, reason) 
-            VALUES (:assignment_id, :action, :old_teacher_id, :new_teacher_id, :performed_by, :reason)";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('assignment_logs')->insert([
       'assignment_id' => $assignmentId,
       'action' => $action,
       'old_teacher_id' => $oldTeacherId,
@@ -116,6 +115,8 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
       'performed_by' => $performedBy,
       'reason' => $reason
     ]);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return $stmt->rowCount() > 0;
   }
 
