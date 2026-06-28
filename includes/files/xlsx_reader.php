@@ -260,13 +260,13 @@ class XlsxReader
       $rowIdx = (int) $row['r'];
 
       foreach ($row->c as $c) {
-        if (!isset($c->v)) {
+        $type = (string) $c['t'];
+        if (!isset($c->v) && $type !== 'inlineStr') {
           continue; // Bỏ qua ô trống
         }
 
         $ref = (string) $c['r'];
-        $type = (string) $c['t'];
-        $raw = (string) $c->v;
+        $raw = isset($c->v) ? (string) $c->v : '';
         // Tách lấy chữ cái trong tọa độ để chuyển thành số thứ tự cột
         $colIdx = self::colLettersToIndex(
           (string) preg_replace('/[0-9]/', '', $ref)

@@ -72,20 +72,31 @@ class InternshipBatchApiController extends Controller
       $rawFile = $request->file('file_import');
 
       if (!$rawFile) {
-        return $this->json(['message' => 'Vui lòng chọn file để upload.'], 400);
+        return $this->json(['message' => 'Vui lòng chọn file để upload.'], 400, 'Vui lòng chọn file để upload.');
       }
 
       $uploadedFile = $fileHandler->processUpload($rawFile);
 
       if ($uploadedFile->extension !== 'xlsx') {
-        return $this->json(['message' => 'Chỉ hỗ trợ file định dạng .xlsx'], 400);
+        return $this->json(['message' => 'Chỉ hỗ trợ file định dạng .xlsx'], 400, 'Chỉ hỗ trợ file định dạng .xlsx');
       }
 
       $students = BatchStudentImporter::import($uploadedFile->tmpPath);
 
+      // Lấy danh sách lớp hợp lệ để hiển thị
+      $allClassrooms = $this->_service->getAllClassrooms();
+      $validClassroomNames = array_map(function ($c) {
+        return str_replace(' ', '', mb_strtolower($c['name'], 'UTF-8'));
+      }, $allClassrooms);
+
+      foreach ($students as &$student) {
+        $normalizedName = str_replace(' ', '', mb_strtolower($student['classroom_name'], 'UTF-8'));
+        $student['is_classroom_invalid'] = !in_array($normalizedName, $validClassroomNames);
+      }
+
       return $this->json($students, 200);
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(['message' => $e->getMessage()], 400, $e->getMessage());
     }
   }
 
@@ -153,7 +164,7 @@ class InternshipBatchApiController extends Controller
       return $this->json([
         'message' => $e->getMessage(),
         'debug_output' => $output
-      ], 400);
+      ], 400, $e->getMessage());
     }
   }
 }

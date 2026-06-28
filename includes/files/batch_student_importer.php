@@ -37,6 +37,7 @@ class BatchStudentImportConfig
   public const COL_TEN = 4;
   public const COL_NGAY_SINH = 5;
   public const COL_LOP = 6;
+  public const COL_CCCD = 7;
 }
 
 /**
@@ -99,6 +100,11 @@ class BatchStudentImporter
       // để hiển thị và lưu DB chuẩn, tạm thời sẽ giữ string và chuẩn hóa ở Service/Client.
       $ngaySinh = trim((string) ($row[BatchStudentImportConfig::COL_NGAY_SINH] ?? ''));
       $lop = trim((string) ($row[BatchStudentImportConfig::COL_LOP] ?? ''));
+      $cccd = trim((string) ($row[BatchStudentImportConfig::COL_CCCD] ?? ''));
+
+      if ($cccd === '') {
+        throw new \RuntimeException("Dòng " . ($rowIdx) . ": Thiếu số CCCD.");
+      }
 
       $students[] = [
         'stt' => (int) $stt,
@@ -106,6 +112,7 @@ class BatchStudentImporter
         'full_name' => $fullName,
         'dob' => $ngaySinh,
         'classroom_name' => $lop, // Tên viết tắt của lớp (short_name)
+        'national_id' => $cccd,
       ];
     }
 

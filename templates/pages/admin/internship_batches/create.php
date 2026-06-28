@@ -90,13 +90,15 @@ $wizardSteps = [
 
             <div class="field">
               <label class="field__label">Tải lên danh sách sinh viên (.xlsx)</label>
-              <div class="flex gap-4 items-center">
-                <input type="file" id="file-upload-students" class="field__input" accept=".xlsx">
-                <span class="text-sm" id="upload-status-text"></span>
-              </div>
+              <input type="file" id="file-upload-students" class="field__input" accept=".xlsx">
+              <p class="text-sm mt-1" id="upload-status-text"></p>
               <p class="field__description">
-                Lưu ý: Mẫu file yêu cầu cột theo thứ tự (A: STT, B: MSSV, C: Họ đệm, D: Tên, E: Ngày sinh, F: Lớp).
+                Lưu ý: Mẫu file yêu cầu cột theo thứ tự (A: STT, B: MSSV, C: Họ đệm, D: Tên, E: Ngày sinh, F: Lớp, G: Số CCCD).
                 File chứa tối đa 1000 sinh viên. Dữ liệu từ dòng số 2.
+                <a href="<?= url('public/import_students_template.xlsx') ?>" class="btn shrink-0" data-variant="secondary" data-size="sm" download>
+                  <i class="fa-solid fa-download"></i>
+                  Tải file mẫu
+                </a>
               </p>
             </div>
 
@@ -121,8 +123,13 @@ $wizardSteps = [
                   <span class="font-medium">{{ value }}</span>
                 </template>
                 <template data-tm-col="dob" data-tm-label="Ngày sinh" data-tm-width="120px"></template>
-                <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-sortable data-tm-width="150px">
-                  <span class="badge" data-variant="secondary">{{ value }}</span>
+                <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-sortable data-tm-width="130px">
+                  <span class="badge" data-variant="{{ row.is_classroom_invalid ? 'destructive' : 'secondary' }}" title="{{ row.is_classroom_invalid ? 'Lớp này chưa tồn tại trong hệ thống' : '' }}">
+                    {{ value }}
+                  </span>
+                </template>
+                <template data-tm-col="national_id" data-tm-label="Số CCCD" data-tm-sortable data-tm-width="140px">
+                  <span class="font-medium font-mono">{{ value }}</span>
                 </template>
                 <template data-tm-pagination></template>
               </div>
@@ -172,7 +179,7 @@ $wizardSteps = [
                 <!-- Validation Quota UI -->
                 <div class="quota-summary flex items-center gap-4 px-4 py-2 rounded-md" id="quota-summary-box">
                   <span class="text-xl font-bold" id="total-capacity-text">0 / 0</span>
-                  <i class="fa-solid fa-check-circle text-success hidden" id="quota-status-icon"></i>
+                  <i class="fa-solid fa-check-circle hidden" id="quota-status-icon"></i>
                 </div>
               </div>
               <div class="teacher-selection-container" id="teachers-container">
