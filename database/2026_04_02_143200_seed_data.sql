@@ -265,43 +265,22 @@ INSERT INTO `categories` (`id`, `name`, `slug`, `type`, `parent_id`) VALUES
 -- ---------------------------------------------------------------------------- 
 INSERT INTO `menus` (`id`, `key`, `label`, `type`) VALUES 
 (1, 'header_menu', 'Menu Chính', 'const'),
-(2, 'footer_menu', 'Menu Chân Trang', 'const'),
-(3, 'student_menu', 'Menu Sinh Viên', 'const'),
-(4, 'navbar_menu', 'Menu điều hướng', 'custom');
+(2, 'footer_menu', 'Menu Chân Trang', 'const');
 
 INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_order`) VALUES
 -- Header Menu
 (1, 1, NULL, 'Trang chủ', '/', 1),
 (2, 1, NULL, 'Giới thiệu', '/gioi-thieu', 2),
-(3, 1, NULL, 'Tuyển sinh', '/tuyen-sinh', 3),
-(4, 1, NULL, 'Đào tạo', '/dao-tao', 4),
-(5, 1, 4, 'Các ngành đào tạo', '/dao-tao/nganh-hoc', 1),
-(6, 1, 4, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 2),
+(3, 1, NULL, 'Đào tạo', '/dao-tao', 4),
+(4, 1, 3, 'Tuyển sinh', '/tuyen-sinh', 1),
+(5, 1, 3, 'Chương trình đào tạo', '/dao-tao/nganh-hoc', 2),
 (7, 1, NULL, 'Tin tức', '/tin-tuc', 5),
-(8, 1, NULL, 'Liên hệ', '/lien-he', 6),
 (25, 1, NULL, 'Portal', '/portal', 7),
 
 -- Footer Menu
 (9, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
 (10, 2, NULL, 'Điều khoản sử dụng', '/terms', 2),
-(11, 2, NULL, 'Sơ đồ website', '/sitemap', 3),
-
--- Student Menu (có parent_id)
-(12, 3, NULL, 'Học tập', NULL, 1),
-(13, 3, 12, 'Thời khóa biểu', '/sinhvien/thoi-khoa-bieu', 1),
-(14, 3, 12, 'Kết quả học tập', '/sinhvien/diem', 2),
-(15, 3, NULL, 'Học phí', '/sinhvien/hoc-phi', 2),
-(16, 3, NULL, 'Đăng ký học phần', '/sinhvien/dang-ky', 3),
-(17, 3, NULL, 'Biểu mẫu', '/sinhvien/bieu-mau', 4),
-
--- Navbar Menu
-(18, 4, NULL, 'Giới thiệu', '/gioi-thieu', 1),
-(19, 4, NULL, 'Tuyển sinh', '/tuyen-sinh', 2),
-(20, 4, NULL, 'Đào tạo', '/dao-tao', 3),
-(21, 4, 20, 'Các ngành đào tạo', '/dao-tao/nganh-hoc', 1),
-(22, 4, 20, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 2),
-(23, 4, NULL, 'Tin tức', '/tin-tuc', 4),
-(24, 4, NULL, 'Liên hệ', '/lien-he', 5);
+(11, 2, NULL, 'Sơ đồ website', '/sitemap', 3);
 
 -- ---------------------------------------------------------------------------- 
 -- 11. BẢNG CAROUSELS & CAROUSEL_SLIDES
