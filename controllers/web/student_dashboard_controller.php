@@ -7,6 +7,7 @@ use App\Core\Request;
 use App\Core\RequestValidator;
 use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, WebSettingsService};
 use App\Core\Files\UploadedFileHandler;
+use App\Enums\BatchStatus;
 use Exception;
 
 class StudentDashboardController extends Controller
@@ -370,6 +371,10 @@ class StudentDashboardController extends Controller
     }
 
     $batch = $this->_internshipBatchService->getBatchById($batch_id);
+    if (!$batch || $batch['status'] !== BatchStatus::PUBLISHED) {
+      $request->session()->flashNotify('error', 'Chỉ có thể đăng ký giấy giới thiệu cho đợt thực tập đã công bố.');
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
+    }
 
     $majorName = 'Công nghệ thông tin';
     if (!empty($student->classroom_id)) {
@@ -398,6 +403,12 @@ class StudentDashboardController extends Controller
     if (!$batchStudentId) {
       $request->session()->flashNotify('error', 'Bạn không thuộc đợt thực tập này.');
       return $this->redirect('/student/internship');
+    }
+
+    $batch = $this->_internshipBatchService->getBatchById($batch_id);
+    if (!$batch || $batch['status'] !== BatchStatus::PUBLISHED) {
+      $request->session()->flashNotify('error', 'Chỉ có thể đăng ký giấy giới thiệu cho đợt thực tập đã công bố.');
+      return $this->redirect("/student/internship/{$batch_id}/referral_letters");
     }
 
     $data = $request->all();
@@ -528,7 +539,8 @@ class StudentDashboardController extends Controller
       'title' => 'Quản lý Giấy giới thiệu',
       'referralLetters' => $referralLetters,
       'total_referral_letters' => $total_referral_letters,
-      'recent_referral_letters' => $recent_referral_letters
+      'recent_referral_letters' => $recent_referral_letters,
+      'canRequestLetter' => $dashboardData['current']['status'] === BatchStatus::PUBLISHED
     ]), layout: 'dashboard_layout');
   }
 

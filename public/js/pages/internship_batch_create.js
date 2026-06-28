@@ -152,11 +152,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         state.importedStudents = data;
-        uploadStatusText.innerHTML = `<span class="text-success"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
+        uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
 
         initOrReloadTableManager();
       } catch (error) {
-        uploadStatusText.innerHTML = `<span><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
+        uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
         if (window.toast) toast.error("Lỗi Import", error.message);
 
         wrapperTableStudents.setAttribute("data-state", "closed");

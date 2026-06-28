@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore, InternshipGradeStore};
-use App\Models\{Student, Classroom};
+use App\Models\Student;
 use App\Core\Pageable;
 use App\Enums\BatchStatus;
 use Database;
@@ -84,17 +84,26 @@ class InternshipBatchService implements IInternshipBatchService
       $studentCodes = array_map(fn($sv) => trim($sv['student_code']), $studentsInput);
       if (!empty($studentCodes)) {
         $existingValidation = $this->_store->validateStudentsByStudentIds($studentCodes);
-        $appEnv = $_ENV['APP_ENV'] ?? 'production';
-
         foreach ($existingValidation as $s) {
-          // Overlap is checked after student IDs are resolved; historical/non-overlapping programs are allowed.
-          if (false) {
-            throw new Exception("Sinh viên {$s['student_id']} - {$s['full_name']} đã tham gia một đợt thực tập khác.");
-          }
           if ($s['status'] !== 'Đang học') {
             throw new Exception("Sinh viên {$s['student_id']} - {$s['full_name']} có trạng thái không hợp lệ (Không phải 'Đang học').");
           }
         }
+      }
+
+      $missingClassrooms = [];
+      foreach ($studentsInput as $studentInput) {
+        $classroomShortName = trim($studentInput['classroom_name'] ?? '');
+        if ($classroomShortName === '' || !$this->_classroomStore->getByShortName($classroomShortName)) {
+          $missingClassrooms[] = $classroomShortName !== '' ? $classroomShortName : '(trống)';
+        }
+      }
+
+      if ($missingClassrooms !== []) {
+        throw new Exception(
+          'Các lớp sau chưa tồn tại trong hệ thống: ' . implode(', ', array_unique($missingClassrooms)) .
+          '. Vui lòng thêm các lớp này trước khi import.'
+        );
       }
 
       $batchData['created_by'] = $adminId;
@@ -113,72 +122,14 @@ class InternshipBatchService implements IInternshipBatchService
         $classroomShortName = trim($sv['classroom_name'] ?? '');
         $classroom = $this->_classroomStore->getByShortName($classroomShortName);
 
+        // All classrooms are validated before creating the batch. Keep this guard
+        // close to the lookup so a concurrent deletion cannot silently remap data.
         if (!$classroom) {
-          // Level: CĐ / CĐN
-          // Major: Text between Level and Number
-          // ClassOf: 2-3 digits
-          // Spec: Optional text after number
-          // Letter: Last single character
-          $regex = '/^(CĐN|CĐ)\s*([A-ZĐ\s]+?)\s*(\d{2,3})\s*([A-Z]*?)([A-Z])?$/u';
-
-          if (preg_match($regex, $classroomShortName, $matches)) {
-            $level = $matches[1];
-            $majorKey = trim($matches[2]);
-            $classOf = (int) $matches[3];
-            $specKey = $matches[4] ?? '';
-            $letter = $matches[5] ?? '';
-
-            // Map Major
-            $major = $this->_classroomStore->getMajorByShortNameAndLevel($majorKey, $level);
-            $majorId = $major ? $major->id : 1; // Fallback to 1 (CNTT) if not found
-
-            // Map Specialization
-            $specId = null;
-            if ($specKey) {
-              $spec = $this->_classroomStore->getSpecializationByShortNameAndMajorId($specKey, $majorId);
-              $specId = $spec ? $spec->id : null;
-            }
-
-            $newClassroom = new Classroom(
-              id: 0,
-              short_name: $classroomShortName,
-              major_id: $majorId,
-              specialization_id: $specId,
-              class_of: $classOf,
-              letter: $letter ?: null
-            );
-
-            $newClassroomId = $this->_classroomStore->create($newClassroom);
-            if (!$newClassroomId || !$newClassroomId->id) {
-              throw new Exception("Không thể tự động tạo lớp $classroomShortName.");
-            }
-            $assignedClassroomId = $newClassroomId->id;
-          } else {
-            // dự phòng: Nếu không khớp regex thì dùng logic đơn giản
-            $classOf = 26;
-            if (preg_match('/([0-9]{2,3})/u', $classroomShortName, $m)) {
-              $classOf = (int) $m[1];
-            }
-
-            $newClassroom = new Classroom(
-              id: 0,
-              short_name: $classroomShortName,
-              major_id: 1,
-              class_of: $classOf,
-              letter: substr($classroomShortName, -1)
-            );
-
-            $newClassroomId = $this->_classroomStore->create($newClassroom);
-            if (!$newClassroomId || !$newClassroomId->id) {
-              throw new Exception("Không thể tự động tạo lớp $classroomShortName.");
-            }
-            $assignedClassroomId = $newClassroomId->id;
-          }
-          $classroomIds[] = $assignedClassroomId;
-        } else {
-          $classroomIds[] = $classroom->id;
-          $assignedClassroomId = $classroom->id;
+          throw new Exception("Lớp $classroomShortName không còn tồn tại trong hệ thống.");
         }
+
+        $classroomIds[] = $classroom->id;
+        $assignedClassroomId = $classroom->id;
 
         // --- 2. XỬ LÝ ACCOUNT & STUDENT ---
         $studentCode = trim($sv['student_code']);
@@ -187,13 +138,24 @@ class InternshipBatchService implements IInternshipBatchService
         if ($existingStudent) {
           $studentIds[] = $existingStudent->id;
         } else {
+          $nationalId = trim($sv['national_id'] ?? '');
+          if ($nationalId === '') {
+            throw new Exception("Sinh viên $studentCode thiếu số CCCD.");
+          }
+
           // Chưa có student => tạo Account, rồi tạo Student
           $email = $studentCode . '@caothang.edu.vn';
-          // Pwd mặc định là MSSV
-          $account = $this->_accountStore->create($email, $studentCode, 'student');
+          // Mật khẩu mặc định là CCCD theo mẫu import.
+          $account = $this->_accountStore->create($email, $nationalId, 'student');
 
           if (!$account) {
             throw new Exception("Tạo tài khoản thất bại cho sinh viên $studentCode.");
+          }
+
+          $majorName = null;
+          if ($classroom->major_id) {
+            $major = $this->_classroomStore->getMajorById($classroom->major_id);
+            $majorName = $major?->full_name;
           }
 
           $newStudent = new Student(
@@ -202,13 +164,13 @@ class InternshipBatchService implements IInternshipBatchService
             full_name: $sv['full_name'],
             gender: 'male',
             dob: str_replace('/', '-', $sv['dob']),
-            national_id: $studentCode, // Dùng tạm MSSV làm CCCD để tránh lỗi NOT NULL
+            national_id: $nationalId,
             phone: '',
             address: '',
             classroom_id: $assignedClassroomId,
             birth_place: '',
             status: 'Đang học',
-            major: 'Công nghệ thông tin' // Tạm hardcode ngành CNTT
+            major: $majorName
           );
 
           $newStudent = $this->_studentStore->create($newStudent);

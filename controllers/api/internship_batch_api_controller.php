@@ -83,6 +83,17 @@ class InternshipBatchApiController extends Controller
 
       $students = BatchStudentImporter::import($uploadedFile->tmpPath);
 
+      $validClassroomNames = array_map(
+        fn(array $classroom): string => str_replace(' ', '', mb_strtolower($classroom['name'], 'UTF-8')),
+        $this->_service->getAllClassrooms()
+      );
+
+      foreach ($students as &$student) {
+        $normalizedName = str_replace(' ', '', mb_strtolower($student['classroom_name'], 'UTF-8'));
+        $student['is_classroom_invalid'] = !in_array($normalizedName, $validClassroomNames, true);
+      }
+      unset($student);
+
       return $this->json($students, 200);
     } catch (\Throwable $e) {
       return $this->json(['message' => $e->getMessage()], 400);
