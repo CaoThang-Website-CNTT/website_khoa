@@ -135,6 +135,10 @@ class XlsxReader
       throw new \RuntimeException("Không tìm thấy file: {$filePath}");
     }
 
+    if (!class_exists(\ZipArchive::class)) {
+      throw new \RuntimeException('PHP ZIP extension is required to read XLSX files.');
+    }
+
     $zip = new \ZipArchive();
     if ($zip->open($filePath) !== true) {
       throw new \RuntimeException("Không thể mở file XLSX (không phải định dạng ZIP hợp lệ): {$filePath}");
