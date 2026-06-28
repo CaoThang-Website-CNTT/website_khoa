@@ -249,17 +249,32 @@ document.addEventListener("DOMContentLoaded", () => {
             : null;
 
         // Xác nhận gửi email
-        let isConfirmed = false;
         const confirmMsg =
           "Bạn có chắc chắn muốn thay đổi phân công?\n\nThao tác này sẽ gửi thông báo qua email cho Sinh viên và Giảng viên có liên quan.";
-        if (typeof modalHandler.confirm === "function") {
-          isConfirmed = await modalHandler.confirm(
-            "Xác nhận thay đổi",
-            confirmMsg,
-          );
-        } else {
-          isConfirmed = window.confirm(confirmMsg);
-        }
+          
+        const isConfirmed = await new Promise((resolve) => {
+          document.getElementById("confirm-assignment-title").textContent = "Xác nhận thay đổi";
+          document.getElementById("confirm-assignment-desc").textContent = confirmMsg;
+          modalHandler.open("#modal-confirm-assignment");
+
+          const btnConfirm = document.getElementById("btn-confirm-assignment");
+          const btnCancel = document.getElementById("btn-cancel-assignment");
+          const btnClose = document.getElementById("btn-close-assignment-modal");
+
+          const cleanup = () => {
+            btnConfirm.removeEventListener("click", onConfirm);
+            btnCancel.removeEventListener("click", onCancel);
+            btnClose.removeEventListener("click", onCancel);
+            modalHandler.close();
+          };
+
+          const onConfirm = () => { cleanup(); resolve(true); };
+          const onCancel = () => { cleanup(); resolve(false); };
+
+          btnConfirm.addEventListener("click", onConfirm);
+          btnCancel.addEventListener("click", onCancel);
+          btnClose.addEventListener("click", onCancel);
+        });
 
         if (!isConfirmed) {
           // Khôi phục lại value cũ
@@ -418,17 +433,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      let isConfirmed = false;
       const confirmMsg =
         "Bạn có chắc chắn muốn thay đổi phân công cho các sinh viên đã chọn?\n\nThao tác này sẽ gửi thông báo qua email cho Sinh viên và Giảng viên có liên quan.";
-      if (typeof modalHandler.confirm === "function") {
-        isConfirmed = await modalHandler.confirm(
-          "Xác nhận phân công hàng loạt",
-          confirmMsg,
-        );
-      } else {
-        isConfirmed = window.confirm(confirmMsg);
-      }
+        
+      const isConfirmed = await new Promise((resolve) => {
+        document.getElementById("confirm-assignment-title").textContent = "Xác nhận phân công hàng loạt";
+        document.getElementById("confirm-assignment-desc").textContent = confirmMsg;
+        modalHandler.open("#modal-confirm-assignment");
+
+        const btnConfirm = document.getElementById("btn-confirm-assignment");
+        const btnCancel = document.getElementById("btn-cancel-assignment");
+        const btnClose = document.getElementById("btn-close-assignment-modal");
+
+        const cleanup = () => {
+          btnConfirm.removeEventListener("click", onConfirm);
+          btnCancel.removeEventListener("click", onCancel);
+          btnClose.removeEventListener("click", onCancel);
+          modalHandler.close();
+        };
+
+        const onConfirm = () => { cleanup(); resolve(true); };
+        const onCancel = () => { cleanup(); resolve(false); };
+
+        btnConfirm.addEventListener("click", onConfirm);
+        btnCancel.addEventListener("click", onCancel);
+        btnClose.addEventListener("click", onCancel);
+      });
 
       if (!isConfirmed) {
         return;

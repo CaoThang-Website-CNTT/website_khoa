@@ -241,6 +241,20 @@ $isReadOnly = in_array($batchModel->getEffectiveStatus(), [BatchStatus::CLOSED, 
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
+<!-- Modal: Xác nhận Thay đổi Phân công -->
+<div id="modal-confirm-assignment" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title" id="confirm-assignment-title">Xác nhận</h3>
+    <p class="modal__description" id="confirm-assignment-desc" style="white-space: pre-wrap;"></p>
+  </div>
+  <div class="modal__footer">
+    <button type="button" id="btn-cancel-assignment" class="btn" data-size="lg" data-variant="outline"
+      data-modal-close>Hủy</button>
+    <button type="button" id="btn-confirm-assignment" class="btn" data-size="lg" data-variant="primary">Xác nhận</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close id="btn-close-assignment-modal"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
 <?php $layout->start("scripts") ?>
 <script>
   window.BATCH_ID = <?= json_encode($batch['id']) ?>;
