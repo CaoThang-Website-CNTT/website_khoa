@@ -126,14 +126,10 @@ class StudentDashboardController extends Controller
 
     $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, null);
 
-    if ($dashboardData['current']) {
-      return $this->redirect('/student/internship/' . $dashboardData['current']['id']);
-    }
-
     return $this->render('student/dashboard/internship', [
       'student' => $student,
       'title' => 'Thông tin thực tập',
-      'batches' => [],
+      'batches' => $dashboardData['batches'] ?? [],
       'current' => null
     ], layout: 'dashboard_layout');
   }

@@ -10,7 +10,7 @@
 /* Grid cho các thẻ thống kê */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: 1rem;
 }
 
@@ -18,6 +18,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
 }
 
 .stat-card__icon {
@@ -58,6 +59,7 @@
 .stat-card__info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .stat-card__label {
@@ -69,7 +71,10 @@
   font-size: var(--text-xl);
   font-weight: var(--fw-bold);
   color: var(--foreground);
-  text-align: center;
+}
+
+.stat-card__label {
+  overflow-wrap: anywhere;
 }
 
 @media screen and (min-width: 1280px) {

@@ -77,29 +77,6 @@ input[type="checkbox"],
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 20%, transparent);
 }
 
-/* Sticky Bottom Bar */
-.fixed-bottom-bar {
-  position: fixed;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 3rem);
-  max-width: var(--container-6xl);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border);
-  z-index: 100;
-  box-shadow: var(--shadow-xl);
-  margin-left: 125px; /* Adjust for sidebar if needed, but centering usually works */
-}
-
-/* Fix for Sidebar inset layout */
-@media (min-width: 1024px) {
-  .sidebar__inset .fixed-bottom-bar {
-    left: calc(50% + 125px); /* Half of sidebar width */
-    width: calc(100% - 250px - 3rem);
-  }
-}
-
 .quota-summary {
   transition: all 0.3s ease;
 }
@@ -175,7 +152,7 @@ input[type="checkbox"],
     grid-template-columns: repeat(3, 1fr);
   }
   .teacher-card {
-    background-color: white;
+    background-color: var(--card);
     padding: 1rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -184,12 +161,12 @@ input[type="checkbox"],
 
   .teacher-card:hover {
     border-color: var(--primary);
-    background-color: rgba(128, 128, 128, 0.05);
+    background-color: color-mix(in oklab, var(--muted) 50%, transparent);
   }
 
   .teacher-card.selected {
     border-color: var(--primary);
-    background-color: var(--primary-50);
+    background-color: color-mix(in oklab, var(--primary) 8%, transparent);
   }
 
   .teacher-info {
@@ -211,13 +188,13 @@ input[type="checkbox"],
   }
 
   .quota-input:disabled {
-    background-color: rgba(128, 128, 128, 0.1);
+    background-color: var(--muted);
     cursor: not-allowed;
   }
 
   .quota-progress-container {
     height: 8px;
-    background-color: #e5e7eb; /* Gray-200 for better visibility */
+    background-color: var(--muted);
     border-radius: 4px;
     overflow: hidden;
     margin-top: 0.25rem;
@@ -226,17 +203,17 @@ input[type="checkbox"],
 
   .quota-progress-bar {
     height: 100%;
-    background-color: #2563eb; /* Hardcoded blue if var(--primary) is failing */
+    background-color: var(--primary);
     transition: width 0.3s ease;
   }
 }
 
 .quota-progress-bar.warning {
-  background-color: #eab308;
+  background-color: var(--chart-4);
 }
 
 .quota-progress-bar.danger {
-  background-color: #dc2626;
+  background-color: var(--destructive);
 }
 
 .quota-percentage {

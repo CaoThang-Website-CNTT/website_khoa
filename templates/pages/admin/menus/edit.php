@@ -322,8 +322,8 @@ function renderMenuItems(array $items, object $menu): void
 <script>
   window.__menuEdit__ = {
     isEditable: <?= $isEditable ? 'true' : 'false' ?>,
-    editTitle: <?= json_encode($isEditable ? 'Ch?nh s?a m?c menu' : 'Chi ti?t m?c menu', JSON_UNESCAPED_UNICODE) ?>,
-    editDescription: <?= json_encode($isEditable ? 'Thay ??i th?ng tin m?c menu b?n d??i.' : 'Th?ng tin chi ti?t c?a m?c menu h? th?ng.', JSON_UNESCAPED_UNICODE) ?>,
+    editTitle: <?= json_encode($isEditable ? 'Chỉnh sửa mục menu' : 'Chi tiết mục menu', JSON_UNESCAPED_UNICODE) ?>,
+    editDescription: <?= json_encode($isEditable ? 'Thay đổi thông tin mục menu.' : 'Thông tin chi tiết của mục menu hệ thống.', JSON_UNESCAPED_UNICODE) ?>,
     itemCreateUrl: <?= json_encode(url('admin/menus/' . $menu->id . '/items')) ?>,
     itemBaseUrl: <?= json_encode(url('admin/menu-items/')) ?>
   };

@@ -349,7 +349,7 @@ body {
    ========================================================================== */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: 1rem;
 }
 
@@ -404,6 +404,7 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .title-wrapper .title-wrapper__title {
@@ -413,6 +414,8 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
   color: var(--foreground);
   font-size: var(--text-2xl);
   font-weight: var(--fw-semibold);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .title-wrapper .title-wrapper__actions {
@@ -420,6 +423,27 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
+  max-width: 100%;
+}
+
+.title-wrapper .title-wrapper__actions .btn {
+  max-width: 100%;
+}
+
+.card__header,
+.card__content,
+.card__footer {
+  min-width: 0;
+}
+
+.metadata-card dl {
+  gap: 1rem;
+}
+
+.metadata-card dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .detail-layout {
@@ -478,6 +502,7 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
     opacity 0.4s ease,
     padding 0.4s ease,
     margin 0.4s ease;
+  width: min(100%, 24rem);
 }
 
 .detail-layout--reverse .detail-layout__main {
@@ -799,6 +824,7 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
   .detail-layout__sidebar {
     flex: 1 1 auto;
     width: 100%;
+    max-width: 100%;
   }
 
   .detail-layout--reverse .detail-layout__main,
@@ -824,6 +850,23 @@ a.stats-card:hover :is(.fa-solid, .fa-regular, svg) {
 
   .detail-modal {
     width: calc(100% - 1rem);
+  }
+
+  .grid.grid-cols-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .field__input-group {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .title-wrapper .title-wrapper__actions {
+    width: 100%;
+  }
+
+  .title-wrapper .title-wrapper__actions .btn {
+    flex: 1 1 auto;
   }
 
   .mu-zone {

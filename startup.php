@@ -67,6 +67,7 @@ require_once BASE_PATH . '/models/web_setting.php';
 require_once BASE_PATH . '/models/internship_batch.php';
 require_once BASE_PATH . '/models/internship_batch_student.php';
 require_once BASE_PATH . '/models/internship_batch_supervisor.php';
+require_once BASE_PATH . '/includes/core/enums/referral_letter_status.php';
 require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/models/media.php';
