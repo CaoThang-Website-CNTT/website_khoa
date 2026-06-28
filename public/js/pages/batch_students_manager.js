@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tm.loadData(tableData);
           attachTableEvents();
           registerBulkActions();
-          
+
           // Đăng ký Export Excel
           const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
           ExportManager.register(tm, {
@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return false;
         }
         if (!reason.trim()) {
-          toast.warning("Yêu cầu", "Lý do không được để trống.");
+          toast.warn("Yêu cầu", "Lý do không được để trống.");
           loadData();
           return false;
         }

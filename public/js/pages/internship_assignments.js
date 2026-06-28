@@ -86,14 +86,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 <option value="unassign" class="font-bold" ${!ass.teacher_id ? "disabled" : ""}>Không có</option>
                 <hr>
                 ${supervisors
-                  .map(
-                    (sup) => `
+          .map(
+            (sup) => `
                   <option value="${sup.teacher_id}" ${sup.teacher_id == ass.teacher_id ? "selected" : ""}>
                     ${sup.teacher_name} (${sup.current_assigned}/${sup.max_students})
                   </option>
                 `,
-                  )
-                  .join("")}
+          )
+          .join("")}
               </select>
             </div>
           </div>
@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
           if (reason.trim() === "") {
-            toast.warning(
+            toast.warn(
               "Yêu cầu",
               "Bạn phải nhập lý do khi đợt thực tập đã công bố.",
             );
@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
           if (reason === null) return;
           if (reason.trim() === "") {
-            toast.warning(
+            toast.warn(
               "Yêu cầu",
               "Bạn phải nhập lý do khi đợt thực tập đã công bố.",
             );
@@ -337,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     if (studentsToUnassign.length === 0) {
-      toast.warning("Thông báo", "Không có sinh viên nào có phân công để hủy.");
+      toast.warn("Thông báo", "Không có sinh viên nào có phân công để hủy.");
       return;
     }
 
@@ -370,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         if (reason === null) return;
         if (reason.trim() === "") {
-          toast.warning(
+          toast.warn(
             "Yêu cầu",
             "Bạn phải nhập lý do khi đợt thực tập đã công bố.",
           );

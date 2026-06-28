@@ -248,6 +248,13 @@ document.addEventListener("DOMContentLoaded", () => {
       fileInput.click();
     });
 
+    uploadArea.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        fileInput.click();
+      }
+    });
+
     fileInput.addEventListener("change", () => {
       updateFilePreview();
     });

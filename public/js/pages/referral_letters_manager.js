@@ -8,9 +8,18 @@ document.addEventListener('DOMContentLoaded', () => {
     TableManager.registerBulkActions('referral_letters_table', {
       countLabel: count => `Đã chọn: ${count}`,
       actions: [
+        {
+          id: 'approve',
+          label: 'Approve',
+          icon: 'fa-solid fa-check',
+          onClick: ({ selectedIds }) => {
+            currentSelectedIds = selectedIds;
+            callBulkActionApi('approve');
+          },
+        },
 
         {
-          id: 'cancel',
+          id: 'reject',
           label: 'Hủy giấy giới thiệu',
           icon: 'fa-solid fa-xmark',
           destructive: true,
@@ -27,6 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     tableContainer.addEventListener('click', (e) => {
+      const approveBtn = e.target.closest('.btn-approve');
+      if (approveBtn) {
+        currentSelectedIds = [approveBtn.getAttribute('data-id')];
+        callBulkActionApi('approve');
+        return;
+      }
       const btn = e.target.closest('.btn-cancel');
       if (!btn) return;
 
@@ -90,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btnConfirm = document.getElementById('btn-confirm-cancel');
     btnConfirm.disabled = true;
-    callBulkActionApi('cancel', reason).finally(() => {
+    callBulkActionApi('reject', reason).finally(() => {
       btnConfirm.disabled = false;
       ModalHandler.instance.close();
     });

@@ -467,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedIds = Object.keys(state.selectedTeachers);
       if (selectedIds.length === 0) {
         if (window.toast)
-          toast.warning("Cảnh báo", "Vui lòng chọn ít nhất 1 giảng viên.");
+          toast.warn("Cảnh báo", "Vui lòng chọn ít nhất 1 giảng viên.");
         return;
       }
 

@@ -167,7 +167,7 @@ export class ExportManager {
 
           if (checkedKeys.length === 0) {
             if (window.toast)
-              window.toast.warning(
+              window.toast.warn(
                 "Chưa chọn cột",
                 "Vui lòng chọn ít nhất một cột để xuất.",
               );

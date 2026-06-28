@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Logic form đăng ký sinh viên
   const btnAddStudent = document.getElementById("rl_btnAddStudent");
   const studentsContainer = document.getElementById("rl_studentsContainer");
+  const rosterSelect = document.getElementById("rl_rosterStudent");
   let studentCount = 0;
   const MAX_STUDENTS = 15;
 
@@ -19,6 +20,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function addStudentRow(data = {}, isPrimary = false) {
     if (!studentsContainer) return;
+    if (!isPrimary) {
+      const id = Number(rosterSelect?.value || 0);
+      const member = window.__studentReferralLetters__?.roster?.find(item => Number(item.batchStudentId) === id);
+      if (!member) return;
+      if (studentsContainer.querySelector(`input[name="student_batch_student_id[]"][value="${id}"]`)) return;
+      data = { ...data, ...member };
+      rosterSelect.value = '';
+    }
     
     if (!isPrimary && studentsContainer.children.length >= MAX_STUDENTS) {
       if (window.toast) window.toast.error("Lỗi", `Chỉ được thêm tối đa ${MAX_STUDENTS} sinh viên.`);
@@ -29,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const row = document.createElement("div");
     row.className = "p-3 border rounded-md flex gap-4 items-start relative";
     row.innerHTML = `
+      <input type="hidden" name="student_batch_student_id[]" value="${data.batchStudentId || ''}">
       <div class="flex-1 grid grid-cols-2 gap-3">
         <div class="field" data-field-required>
           <label class="field__label mb-1 text-xs">Họ và tên ${isPrimary ? "(Người đại diện)" : ""}</label>
