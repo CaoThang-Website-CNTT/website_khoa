@@ -85,8 +85,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   {
     return Database::getInstance()->transaction(function () use ($batchId, $method, $adminId) {
       $batch = $this->_batchStore->getById($batchId);
-      if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
-        throw new \Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
+      if (!$batch || $batch['status'] === BatchStatus::CLOSED) {
+        throw new \Exception('Không thể thay đổi phân công cho đợt thực tập đã đóng.');
       }
 
       $unassigned = $this->_store->getUnassignedStudentsInBatch($batchId);
@@ -223,8 +223,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   {
     return Database::getInstance()->transaction(function () use ($batchId, $assignmentsData, $adminId, $reason) {
       $batch = $this->_batchStore->getById($batchId);
-      if (!$batch || !in_array($batch['status'], ['draft', 'published'])) {
-        throw new \Exception('Chỉ có thể phân công khi đợt thực tập ở trạng thái Nháp hoặc Đang mở.');
+      if (!$batch || $batch['status'] === BatchStatus::CLOSED) {
+        throw new \Exception('Không thể thay đổi phân công cho đợt thực tập đã đóng.');
       }
 
       $count = 0;
@@ -461,7 +461,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       throw new \Exception('Sinh viên chưa được đăng ký vào đợc thực tập.');
     $batchId = (int) $student['batch_id'];
     $batch = $this->_batchStore->getById($batchId);
-    if (!$batch || !in_array($batch['status'], ['draft', 'published'], true)) {
+    if (!$batch || $batch['status'] === BatchStatus::CLOSED) {
       throw new \Exception('Không thể thay đổi phân công cho đợt thực tập đã đóng.');
     }
     if (!$this->_batchStore->isSupervisorOfBatch($batchId, $teacherId)) {

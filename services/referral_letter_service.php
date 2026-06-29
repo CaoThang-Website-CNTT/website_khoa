@@ -6,6 +6,7 @@ use App\Stores\ReferralLetterStore;
 use App\Models\ReferralLetter;
 use Exception;
 use App\Core\Pageable;
+use App\Enums\BatchStatus;
 use App\Stores\ReferralLetterStudentStore;
 use App\Stores\InternshipBatchStore;
 use Database;
@@ -50,8 +51,8 @@ class ReferralLetterService implements IReferralLetterService
     if (!$primary)
       throw new Exception('Sinh viên yêu cầu chưa được đăng ký vào đợt thực tập này.');
     $batch = $this->_batchStore->getById((int) $primary['batch_id']);
-    if (!$batch || $batch['status'] !== 'published') {
-      throw new Exception('Giấy giới thiệu chỉ có thể được yêu cầu cho một đợt thực tập đã công bố.');
+    if (!$batch || in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::CLOSED])) {
+      throw new Exception('Bạn không thể xin giấy giới thiệu khi đợt thực tập đã đóng hoặc chưa được công bố.');
     }
     if (empty($students))
       throw new Exception('Yêu cầu phải có ít nhất một sinh viên trong danh sách.');

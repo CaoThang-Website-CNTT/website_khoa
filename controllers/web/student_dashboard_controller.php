@@ -371,8 +371,8 @@ class StudentDashboardController extends Controller
     }
 
     $batch = $this->_internshipBatchService->getBatchById($batch_id);
-    if (!$batch || $batch['status'] !== BatchStatus::PUBLISHED) {
-      $request->session()->flashNotify('error', 'Chỉ có thể đăng ký giấy giới thiệu cho đợt thực tập đã công bố.');
+    if (!$batch || in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::CLOSED])) {
+      $request->session()->flashNotify('error', 'Chỉ có thể đăng ký giấy giới thiệu cho đợt thực tập đang mở.');
       return $this->redirect("/student/internship/{$batch_id}/referral_letters");
     }
 
@@ -406,8 +406,8 @@ class StudentDashboardController extends Controller
     }
 
     $batch = $this->_internshipBatchService->getBatchById($batch_id);
-    if (!$batch || $batch['status'] !== BatchStatus::PUBLISHED) {
-      $request->session()->flashNotify('error', 'Chỉ có thể đăng ký giấy giới thiệu cho đợt thực tập đã công bố.');
+    if (!$batch || in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::CLOSED])) {
+      $request->session()->flashNotify('error', 'Chỉ có thể đăng ký giấy giới thiệu cho đợt thực tập đang mở.');
       return $this->redirect("/student/internship/{$batch_id}/referral_letters");
     }
 

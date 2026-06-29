@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BatchStatus;
 use App\Stores\InternshipGradeStore;
 use App\Stores\InternshipSubmissionStore;
 use App\Stores\InternshipBatchStore;
@@ -77,8 +78,8 @@ class InternshipGradeService implements IInternshipGradeService
   public function canTeacherGrade(int $batchId, int $teacherId, int $batchStudentId): array
   {
     $batch = $this->_batchStore->getById($batchId);
-    if (!$batch || !in_array($batch['status'], ['published', 'closed'], true)) {
-      return ['allowed' => false, 'reason' => 'Đợt thực tập chưa được công bố.'];
+    if (!$batch || in_array($batch['status'], [BatchStatus::DRAFT, BatchStatus::CLOSED])) {
+      return ['allowed' => false, 'reason' => 'Không thể thay đổi điểm cho đợt thực tập này.'];
     }
     $student = $this->_batchStore->getStudentGradingDetail($batchStudentId);
     if (!$student || (int) $student['batch_id'] !== $batchId) {
