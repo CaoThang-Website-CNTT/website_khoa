@@ -298,31 +298,51 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /**
+   * Xác nhận thay đổi phân công khi đợt đã công bố
+   */
+  const confirmPublishedAssignment = () => {
+    return new Promise((resolve) => {
+      const modal = document.querySelector("#modal-confirm-published-assignment");
+      if (!modal) return resolve(true);
+
+      const btnConfirm = modal.querySelector("#btn-confirm-published-assignment");
+      const btnCancel = modal.querySelector("#btn-close-published-assignment");
+      const btnClose = modal.querySelector(".modal__close");
+
+      const cleanup = () => {
+        btnConfirm.removeEventListener("click", onConfirm);
+        btnCancel.removeEventListener("click", onCancel);
+        btnClose.removeEventListener("click", onCancel);
+      };
+
+      const onConfirm = () => {
+        cleanup();
+        modalHandler.close();
+        resolve(true);
+      };
+
+      const onCancel = () => {
+        cleanup();
+        modalHandler.close();
+        resolve(false);
+      };
+
+      btnConfirm.addEventListener("click", onConfirm);
+      btnCancel.addEventListener("click", onCancel);
+      btnClose.addEventListener("click", onCancel);
+
+      modalHandler.open("#modal-confirm-published-assignment");
+    });
+  };
+
+  /**
    * Gọi API lưu phân công
    */
   const saveAssignments = async (assignments, reason) => {
     try {
-      if (
-        batchStatus === "published" &&
-        !window.confirm(
-          "Thao tác này sẽ cập nhật phân công và gửi thông báo email cho sinh viên, giảng viên liên quan. Bạn có muốn tiếp tục?",
-        )
-      ) {
-        loadData();
-        return false;
-      }
-
-      if (batchStatus === "published" && !reason) {
-        reason = prompt(
-          "Đợt thực tập đã công bố. Vui lòng nhập lý do thay đổi:",
-          "",
-        );
-        if (reason === null) {
-          loadData(); // Reset UI
-          return false;
-        }
-        if (!reason.trim()) {
-          toast.warn("Yêu cầu", "Lý do không được để trống.");
+      if (batchStatus === "published") {
+        const confirmed = await confirmPublishedAssignment();
+        if (!confirmed) {
           loadData();
           return false;
         }

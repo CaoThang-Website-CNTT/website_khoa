@@ -235,6 +235,19 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
+<!-- Modal: Xác nhận thay đổi khi đợt đã công bố -->
+<div id="modal-confirm-published-assignment" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận thay đổi phân công</h3>
+    <p class="modal__description">Thao tác này sẽ cập nhật phân công và gửi thông báo email cho sinh viên, giảng viên liên quan. Bạn có muốn tiếp tục?</p>
+  </div>
+  <div class="modal__footer">
+    <button type="button" id="btn-close-published-assignment" class="btn" data-size="lg" data-variant="outline" data-modal-close>Hủy</button>
+    <button type="button" id="btn-confirm-published-assignment" class="btn" data-size="lg" data-variant="primary">Tiếp tục</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+</div>
+
 <?php $layout->start("scripts") ?>
 <script>
   window.BATCH_ID = <?= json_encode($batch['id']) ?>;
