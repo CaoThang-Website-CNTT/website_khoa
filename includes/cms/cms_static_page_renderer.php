@@ -276,11 +276,11 @@ final class CmsStaticPageRenderer
 
   private static function educationEditableFields(string $type): array
   {
-    $header = ['eyebrow', 'title', 'description'];
+    $header = ['title', 'description'];
     return match ($type) {
-      'sections/education_hub' => [...$header, 'links.*.icon', 'links.*.title', 'links.*.description', 'links.*.url', 'links.*.label', 'programs_title', 'programs_description', 'programs.*.key', 'programs.*.name', 'programs.*.short_name', 'programs.*.summary', 'programs.*.credits'],
-      'sections/admissions' => [...$header, 'notice_title', 'notice', 'cta_label', 'cta_url', 'steps_title', 'steps.*.title', 'steps.*.description', 'programs.*.key', 'programs.*.name', 'programs.*.summary'],
-      'sections/programs' => [...$header, 'programs.*.key', 'programs.*.short_name', 'programs.*.name', 'programs.*.summary', 'programs.*.duration', 'programs.*.credits', 'programs.*.practice_ratio', 'programs.*.source_year', 'programs.*.updated_at', 'programs.*.career', 'programs.*.objectives.*', 'programs.*.specializations.*'],
+      'sections/education_hub' => $header,
+      'sections/admissions' => ['title', 'cta_label', 'cta_url'],
+      'sections/programs' => [...$header, 'programs.*.key', 'programs.*.short_name', 'programs.*.name', 'programs.*.summary', 'programs.*.duration', 'programs.*.credits', 'programs.*.source_year', 'programs.*.updated_at', 'programs.*.career', 'programs.*.objectives.*', 'programs.*.specializations.*'],
       'sections/outcomes' => [...$header, 'programs.*.key', 'programs.*.short_name', 'programs.*.name', 'programs.*.source_year', 'programs.*.updated_at', 'programs.*.objectives.*', 'programs.*.outcomes.*'],
       'sections/curriculum' => [...$header, 'programs.*.key', 'programs.*.short_name', 'programs.*.name', 'programs.*.source_year', 'programs.*.updated_at', 'programs.*.credits', 'programs.*.semesters.*.key', 'programs.*.semesters.*.name', 'programs.*.semesters.*.courses.*.code', 'programs.*.semesters.*.courses.*.name', 'programs.*.semesters.*.courses.*.credits', 'programs.*.semesters.*.courses.*.theory', 'programs.*.semesters.*.courses.*.practice'],
       default => $header,

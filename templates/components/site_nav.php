@@ -2,6 +2,12 @@
 
 use App\Models\MenuItem;
 
+function currentNavUrl(): string
+{
+  $query = parse_url(request()->fullUri(), PHP_URL_QUERY);
+  return request()->path() . ($query !== null && $query !== '' ? '?' . $query : '');
+}
+
 /**
  * Render một leaf item (.dropdown__item) - dùng cho cả depth 1 và depth 2+.
  * @param MenuItem $item
@@ -11,10 +17,13 @@ function renderLeafItem(MenuItem $item): void
   $disabled = !empty($item->disabled) ? 'data-disabled' : '';
   $hasUrl = $item->url && $item->url !== '#';
   $itemUrl = htmlspecialchars(url($item->url));
+  $isActive = $item->isActive(currentNavUrl());
+  $activeClass = $isActive ? ' dropdown__item--active' : '';
+  $ariaCurrent = $isActive ? ' aria-current="page"' : '';
   ?>
-  <div class="dropdown__item" role="menuitem" tabindex="-1" <?= $disabled ?>>
+  <div class="dropdown__item<?= $activeClass ?>" role="menuitem" tabindex="-1" <?= $disabled ?>>
     <?php if ($hasUrl): ?>
-      <a href="<?= $itemUrl ?>" class="navbar__link">
+      <a href="<?= $itemUrl ?>" class="navbar__link"<?= $ariaCurrent ?>>
         <?= htmlspecialchars($item->label) ?>
       </a>
     <?php else: ?>
@@ -50,14 +59,16 @@ function renderDropdownItem(
 
   /* ---- Depth 0: Root trigger + content panel --------------------- */
   if ($depth === 0) {
-    $activeClass = $item->isActive(request()->path()) ? ' navbar__item--active' : '';
+    $isActive = $item->isActiveTree(currentNavUrl());
+    $activeClass = $isActive ? ' navbar__item--active' : '';
+    $ariaCurrent = $item->isActive(currentNavUrl()) ? ' aria-current="page"' : '';
     ?>
     <div class="dropdown">
 
       <div class="navbar__item<?= $activeClass ?> dropdown__trigger"
         data-dropdown-trigger-mode="<?= htmlspecialchars($triggerMode) ?>" data-state="closed" role="button" tabindex="0"
         aria-haspopup="menu" aria-expanded="false">
-        <a href="<?= $itemUrl ?>" class="navbar__link" tabindex="-1">
+        <a href="<?= $itemUrl ?>" class="navbar__link" tabindex="-1"<?= $ariaCurrent ?>>
           <?= htmlspecialchars($item->label) ?>
         </a>
         <?php if ($hasChildren): ?>
@@ -160,8 +171,9 @@ function renderNav(
         <?php else: ?>
           <?php $itemUrl = htmlspecialchars(url($item->url)); ?>
 
-          <div class="navbar__item <?= $item->isActive(request()->path()) ? 'navbar__item--active' : '' ?>">
-            <a href="<?= $itemUrl ?>" class="navbar__link">
+          <?php $isActive = $item->isActiveTree(currentNavUrl()); ?>
+          <div class="navbar__item <?= $isActive ? 'navbar__item--active' : '' ?>">
+            <a href="<?= $itemUrl ?>" class="navbar__link"<?= $item->isActive(currentNavUrl()) ? ' aria-current="page"' : '' ?>>
               <?= htmlspecialchars($item->label) ?>
             </a>
           </div>

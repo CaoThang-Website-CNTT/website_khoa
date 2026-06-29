@@ -407,4 +407,28 @@ INSERT INTO `companies` (`id`, `tax_code`, `name`, `normalized_name`, `phone`, `
 (9, '0316443322', 'Công ty TNHH Giải pháp ERP Toàn Cầu', 'cong ty tnhh giai phap erp toan cau', '02837718899', 'admin@erp-global.com', 'https://erp-global.com', 'Số 7 Đường số 2, KDC Him Lam, Quận 7, TP.HCM', 1, 'api'),
 (10, '0310229988', 'Công ty TNHH MTV Kỹ thuật Phần cứng và Mạng Bách Khoa', 'cong ty tnhh mtv ky thuat phan cung va mang bach khoa', '02837223344', 'bachkhoa@bk-tech.edu.vn', 'https://bk-tech.vn', 'Khu Công nghệ cao, Quận Thủ Đức, TP.HCM', 1, 'api');
 
+
+UPDATE `cms_pages` AS education
+JOIN `cms_pages` AS admissions ON admissions.slug = 'admissions'
+JOIN `cms_pages` AS programs ON programs.slug = 'academic-programs'
+JOIN `cms_pages` AS outcomes ON outcomes.slug = 'program-outcomes'
+JOIN `cms_pages` AS curriculum ON curriculum.slug = 'curriculum'
+SET education.content_json = JSON_OBJECT(
+  'version', 1,
+  'sections', JSON_ARRAY(
+    JSON_SET(JSON_EXTRACT(education.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(admissions.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(programs.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(outcomes.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(curriculum.content_json, '$.sections[0]'), '$.locked', TRUE)
+  )
+)
+WHERE education.slug = 'education';
+
+DELETE FROM `cms_pages` WHERE slug IN ('admissions', 'academic-programs', 'program-outcomes', 'curriculum');
+UPDATE `menu_items` SET url = '/dao-tao#tuyen-sinh' WHERE url = '/dao-tao/tuyen-sinh';
+UPDATE `menu_items` SET url = '/dao-tao#chuong-trinh-dao-tao' WHERE url = '/dao-tao/chuong-trinh-dao-tao';
+UPDATE `menu_items` SET url = '/dao-tao#chuan-dau-ra' WHERE url = '/dao-tao/chuan-dau-ra';
+UPDATE `menu_items` SET url = '/dao-tao#danh-sach-mon-hoc' WHERE url = '/dao-tao/danh-sach-mon-hoc';
+
 SET FOREIGN_KEY_CHECKS = 1;

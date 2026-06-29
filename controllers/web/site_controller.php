@@ -227,22 +227,22 @@ class SiteController extends Controller
 
   public function admissions(): void
   {
-    $this->_renderEducationPage('admissions', 'Thông tin tuyển sinh', 'Thông tin định hướng chương trình và liên kết đến cổng tuyển sinh chính thức của Trường Cao đẳng Kỹ thuật Cao Thắng.', 'dao-tao/tuyen-sinh');
+    $this->redirect('dao-tao#tuyen-sinh', 301);
   }
 
   public function academicPrograms(): void
   {
-    $this->_renderEducationPage('academic-programs', 'Chương trình đào tạo', 'Tổng quan ba chương trình đào tạo cao đẳng của Khoa Công nghệ thông tin.', 'dao-tao/chuong-trinh-dao-tao');
+    $this->redirect('dao-tao#chuong-trinh-dao-tao', 301);
   }
 
   public function programOutcomes(): void
   {
-    $this->_renderEducationPage('program-outcomes', 'Chuẩn đầu ra', 'Mục tiêu chương trình và chuẩn đầu ra của các ngành thuộc Khoa Công nghệ thông tin.', 'dao-tao/chuan-dau-ra');
+    $this->redirect('dao-tao#chuan-dau-ra', 301);
   }
 
   public function curriculum(): void
   {
-    $this->_renderEducationPage('curriculum', 'Danh sách môn học', 'Kế hoạch học tập, tín chỉ và thời lượng lý thuyết, thực hành theo từng học kỳ.', 'dao-tao/danh-sach-mon-hoc');
+    $this->redirect('dao-tao#danh-sach-mon-hoc', 301);
   }
 
   public function portal(Request $request): void

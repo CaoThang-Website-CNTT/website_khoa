@@ -81,9 +81,16 @@ final class CmsPageSchemaRegistry
       'route_path' => '/dao-tao',
       'type' => 'education_page',
       'layout_mode' => 'section_schema',
-      'sections' => [['id' => 'education_hub', 'type' => 'sections/education_hub', 'locked' => false]],
+      'sections' => [
+        ['id' => 'education_hub', 'type' => 'sections/education_hub', 'locked' => false],
+        ['id' => 'admissions', 'type' => 'sections/admissions', 'locked' => false],
+        ['id' => 'programs', 'type' => 'sections/programs', 'locked' => false],
+        ['id' => 'outcomes', 'type' => 'sections/outcomes', 'locked' => false],
+        ['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false],
+      ],
     ],
-    'admissions' => [
+    /* Retired pages are kept out of the registry; legacy public routes redirect below. */
+    /* 'admissions' => [
       'title' => 'Thông tin tuyển sinh',
       'slug' => 'admissions',
       'route_path' => '/dao-tao/tuyen-sinh',
@@ -114,7 +121,7 @@ final class CmsPageSchemaRegistry
       'type' => 'education_page',
       'layout_mode' => 'section_schema',
       'sections' => [['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false]],
-    ],
+    ], */
   ];
 
   public function allPages(): array
