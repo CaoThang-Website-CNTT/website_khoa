@@ -96,7 +96,7 @@ class InternshipBatchApiController extends Controller
 
       return $this->json($students, 200);
     } catch (\Throwable $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(['message' => $e->getMessage()], 400, $e->getMessage());
     }
   }
 
@@ -164,7 +164,7 @@ class InternshipBatchApiController extends Controller
       return $this->json([
         'message' => $e->getMessage(),
         'debug_output' => $output
-      ], 400);
+      ], 400, $e->getMessage());
     }
   }
 }
