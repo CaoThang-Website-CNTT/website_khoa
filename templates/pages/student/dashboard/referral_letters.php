@@ -78,8 +78,8 @@ $rlData = array_map(function ($rl) {
     </div>
   </template>
 
-  <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select"
-    data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"pending","label":"Chờ xử lý"},{"value":"printed","label":"Đã in"},{"value":"cancelled","label":"Đã hủy"}]'>
+  <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
+    data-tm-filter-options='[{"value":"pending","label":"Chờ xử lý"},{"value":"printed","label":"Đã in"},{"value":"cancelled","label":"Đã hủy"}]'>
     <span class="badge" data-variant="{{ row.status_variant }}">{{ row.status_label }}</span>
   </template>
 
