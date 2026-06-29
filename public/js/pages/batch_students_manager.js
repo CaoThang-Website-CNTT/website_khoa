@@ -296,6 +296,16 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   const saveAssignments = async (assignments, reason) => {
     try {
+      if (
+        batchStatus === "published" &&
+        !window.confirm(
+          "Thao tác này sẽ cập nhật phân công và gửi thông báo email cho sinh viên, giảng viên liên quan. Bạn có muốn tiếp tục?",
+        )
+      ) {
+        loadData();
+        return false;
+      }
+
       if (batchStatus === "published" && !reason) {
         reason = prompt(
           "Đợt thực tập đã công bố. Vui lòng nhập lý do thay đổi:",

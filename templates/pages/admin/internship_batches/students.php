@@ -209,7 +209,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 <div id="modal-auto-even" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Phân công đều</h3>
-    <p class="modal__description">Phân công đều số lượng sinh viên cho giảng viên theo thứ tự từ trên xuống.</p>
+    <p class="modal__description">Phân công đều số lượng sinh viên cho giảng viên theo thứ tự từ trên xuống. Nếu đợt đã công bố, hệ thống sẽ gửi thông báo email cho sinh viên và giảng viên liên quan.</p>
   </div>
   <div class="modal__footer">
     <button type="button" id="btn-close-even-modal" class="btn" data-size="lg" data-variant="outline"
@@ -224,7 +224,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 <div id="modal-auto-shuffle" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Phân công ngẫu nhiên</h3>
-    <p class="modal__description">Phân công ngẫu nhiên sinh viên cho giảng viên.</p>
+    <p class="modal__description">Phân công ngẫu nhiên sinh viên cho giảng viên. Nếu đợt đã công bố, hệ thống sẽ gửi thông báo email cho sinh viên và giảng viên liên quan.</p>
   </div>
   <div class="modal__footer">
     <button type="button" id="btn-close-shuffle-modal" class="btn" data-size="lg" data-variant="outline"

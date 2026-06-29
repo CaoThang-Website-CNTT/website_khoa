@@ -7,6 +7,7 @@ require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/stores/internship_assignment_store.php';
 
 use App\Stores\{InternshipAssignmentStore, InternshipBatchStore};
+use App\Enums\BatchStatus;
 use Database;
 
 interface IInternshipAssignmentService
@@ -24,11 +25,13 @@ class InternshipAssignmentService implements IInternshipAssignmentService
 {
   private InternshipAssignmentStore $_store;
   private InternshipBatchStore $_batchStore;
+  private ?MailService $_mailService;
 
-  public function __construct(InternshipAssignmentStore $store, InternshipBatchStore $batchStore)
+  public function __construct(InternshipAssignmentStore $store, InternshipBatchStore $batchStore, ?MailService $mailService = null)
   {
     $this->_store = $store;
     $this->_batchStore = $batchStore;
+    $this->_mailService = $mailService;
   }
 
   /**
@@ -64,6 +67,12 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         performedBy: $assignedBy,
         reason: 'Phân công lần đầu'
       );
+
+      $this->queueStudentNotification($batchStudentId, null, $teacherId);
+      $digestData = [];
+      $this->recordDigestChange($digestData, $batchStudentId, null, $teacherId);
+      $studentDetails = $this->_store->getMailingDetails($batchStudentId, null, null);
+      $this->queueTeacherDigestsFromStudentDetails($studentDetails, $digestData);
 
       return true;
     });
@@ -111,6 +120,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       }
 
       $assignedCount = 0;
+      $digestData = [];
 
       foreach ($unassigned as $student) {
         if (empty($availableSupervisors)) {
@@ -145,6 +155,9 @@ class InternshipAssignmentService implements IInternshipAssignmentService
           reason: 'Phân công tự động của hệ thống'
         );
 
+        $this->recordDigestChange($digestData, (int) $student['batch_student_id'], null, (int) $teacherId);
+        $this->queueStudentNotification((int) $student['batch_student_id'], null, (int) $teacherId);
+
         $sup['current']++;
         $sup['remaining']--;
 
@@ -155,6 +168,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         $assignedCount++;
       }
 
+      $this->queueTeacherDigests($batch, $digestData);
       return $assignedCount;
     });
   }
@@ -195,6 +209,12 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         reason: $reason
       );
 
+      $digestData = [];
+      $this->recordDigestChange($digestData, (int) $assignment->batch_student_id, (int) $oldTeacherId, $newTeacherId);
+      $this->queueStudentNotification((int) $assignment->batch_student_id, (int) $oldTeacherId, $newTeacherId);
+      $studentDetails = $this->_store->getMailingDetails((int) $assignment->batch_student_id, null, null);
+      $this->queueTeacherDigestsFromStudentDetails($studentDetails, $digestData);
+
       return true;
     });
   }
@@ -208,6 +228,7 @@ class InternshipAssignmentService implements IInternshipAssignmentService
       }
 
       $count = 0;
+      $digestData = [];
       foreach ($assignmentsData as $data) {
         $assignmentId = $data['assignment_id'] ?? null;
         $batchStudentId = $data['batch_student_id'] ?? null;
@@ -233,6 +254,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
               reason: $reason
             );
             $this->_store->deleteAssignment($assignmentId);
+            $this->recordDigestChange($digestData, (int) $assignment->batch_student_id, (int) $assignment->teacher_id, null);
+            $this->queueStudentNotification((int) $assignment->batch_student_id, (int) $assignment->teacher_id, null);
             $count++;
             continue;
           }
@@ -254,6 +277,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
             performedBy: $adminId,
             reason: $reason
           );
+          $this->recordDigestChange($digestData, (int) $assignment->batch_student_id, (int) $oldTeacherId, (int) $newTeacherId);
+          $this->queueStudentNotification((int) $assignment->batch_student_id, (int) $oldTeacherId, (int) $newTeacherId);
           $count++;
         } else {
           if ($newTeacherId === null || $newTeacherId === 0)
@@ -280,11 +305,14 @@ class InternshipAssignmentService implements IInternshipAssignmentService
               performedBy: $adminId,
               reason: $reason
             );
+            $this->recordDigestChange($digestData, (int) $batchStudentId, null, (int) $newTeacherId);
+            $this->queueStudentNotification((int) $batchStudentId, null, (int) $newTeacherId);
             $count++;
           }
         }
       }
 
+      $this->queueTeacherDigests($batch, $digestData);
       return $count;
     });
   }
@@ -308,6 +336,12 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         reason: $reason
       );
 
+      $digestData = [];
+      $this->recordDigestChange($digestData, (int) $assignment->batch_student_id, (int) $assignment->teacher_id, null);
+      $this->queueStudentNotification((int) $assignment->batch_student_id, (int) $assignment->teacher_id, null);
+      $studentDetails = $this->_store->getMailingDetails((int) $assignment->batch_student_id, null, null);
+      $this->queueTeacherDigestsFromStudentDetails($studentDetails, $digestData);
+
       return $this->_store->deleteAssignment($assignmentId);
     });
   }
@@ -323,6 +357,101 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   public function getAssignmentByBatchStudentId(int $batchStudentId)
   {
     return $this->_store->getAssignmentByBatchStudentId($batchStudentId);
+  }
+
+  private function queueStudentNotification(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): void
+  {
+    if (!$this->_mailService)
+      return;
+
+    $mailDetails = $this->_store->getMailingDetails($batchStudentId, $oldTeacherId, $newTeacherId);
+    $student = $mailDetails['student'] ?? null;
+    if (!$student || empty($student['email']) || ($student['batch_status'] ?? '') !== BatchStatus::PUBLISHED)
+      return;
+
+    $this->_mailService->sendReassignNotification($student['email'], $student['name'], [
+      'studentName' => $student['name'],
+      'mssv' => $student['mssv'],
+      'batchTitle' => $student['batch_title'] ?? 'Không rõ',
+      'startAt' => isset($student['start_at']) ? date('d/m/Y', strtotime($student['start_at'])) : 'Không rõ',
+      'endAt' => isset($student['end_at']) ? date('d/m/Y', strtotime($student['end_at'])) : 'Không rõ',
+      'oldTeacherName' => $mailDetails['old_teacher']['name'] ?? 'Không có',
+      'newTeacherName' => $mailDetails['new_teacher']['name'] ?? 'Không có',
+    ]);
+  }
+
+  private function recordDigestChange(array &$digestData, int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): void
+  {
+    if (!$this->_mailService)
+      return;
+
+    $mailDetails = $this->_store->getMailingDetails($batchStudentId, $oldTeacherId, $newTeacherId);
+    $student = $mailDetails['student'] ?? null;
+    if (!$student)
+      return;
+
+    if ($oldTeacherId && !empty($mailDetails['old_teacher'])) {
+      $digestData[$oldTeacherId] ??= [
+        'teacher' => $mailDetails['old_teacher'],
+        'assigned' => [],
+        'unassigned' => [],
+      ];
+      $digestData[$oldTeacherId]['unassigned'][] = $student;
+    }
+
+    if ($newTeacherId && !empty($mailDetails['new_teacher'])) {
+      $digestData[$newTeacherId] ??= [
+        'teacher' => $mailDetails['new_teacher'],
+        'assigned' => [],
+        'unassigned' => [],
+      ];
+      $digestData[$newTeacherId]['assigned'][] = $student;
+    }
+  }
+
+  private function queueTeacherDigests(array $batch, array $digestData): void
+  {
+    if (!$this->_mailService || ($batch['status'] ?? '') !== BatchStatus::PUBLISHED)
+      return;
+
+    $this->queueTeacherDigestsWithBatchDetails([
+      'title' => $batch['title'] ?? 'Không rõ',
+      'startAt' => isset($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'Không rõ',
+      'endAt' => isset($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'Không rõ',
+    ], $digestData);
+  }
+
+  private function queueTeacherDigestsFromStudentDetails(array $mailDetails, array $digestData): void
+  {
+    $student = $mailDetails['student'] ?? null;
+    if (!$student || ($student['batch_status'] ?? '') !== BatchStatus::PUBLISHED)
+      return;
+
+    $this->queueTeacherDigestsWithBatchDetails([
+      'title' => $student['batch_title'] ?? 'Không rõ',
+      'startAt' => isset($student['start_at']) ? date('d/m/Y', strtotime($student['start_at'])) : 'Không rõ',
+      'endAt' => isset($student['end_at']) ? date('d/m/Y', strtotime($student['end_at'])) : 'Không rõ',
+    ], $digestData);
+  }
+
+  private function queueTeacherDigestsWithBatchDetails(array $batchDetails, array $digestData): void
+  {
+    if (!$this->_mailService)
+      return;
+
+    foreach ($digestData as $data) {
+      $teacher = $data['teacher'];
+      if (empty($teacher['email']))
+        continue;
+
+      $this->_mailService->queueDigestNotification(
+        $teacher['email'],
+        $teacher['name'] ?? 'Giảng viên',
+        $batchDetails,
+        $data['assigned'],
+        $data['unassigned']
+      );
+    }
   }
 
   private function validateAssignmentTarget(int $batchStudentId, int $teacherId, ?int $currentAssignmentId = null): void
