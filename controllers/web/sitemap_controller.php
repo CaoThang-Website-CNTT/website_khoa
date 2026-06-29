@@ -34,6 +34,11 @@ class SitemapController extends Controller
       ['loc' => url('/'), 'lastmod' => $now, 'changefreq' => 'daily', 'priority' => '1.0'],
       ['loc' => url('tin-tuc'), 'lastmod' => $now, 'changefreq' => 'daily', 'priority' => '0.8'],
       ['loc' => url('gioi-thieu'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.6'],
+      ['loc' => url('dao-tao'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.8'],
+      ['loc' => url('dao-tao/tuyen-sinh'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.8'],
+      ['loc' => url('dao-tao/chuong-trinh-dao-tao'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.8'],
+      ['loc' => url('dao-tao/chuan-dau-ra'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.7'],
+      ['loc' => url('dao-tao/danh-sach-mon-hoc'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.7'],
       ['loc' => url('lien-he'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.6']
     ];
 

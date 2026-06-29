@@ -176,6 +176,31 @@ class SiteController extends Controller
     ], "site_layout");
   }
 
+  public function education(): void
+  {
+    $this->_renderEducationPage('education', 'Đào tạo', 'Khám phá chương trình đào tạo, chuẩn đầu ra và kế hoạch học tập của Khoa Công nghệ thông tin.', 'dao-tao');
+  }
+
+  public function admissions(): void
+  {
+    $this->_renderEducationPage('admissions', 'Thông tin tuyển sinh', 'Thông tin định hướng chương trình và liên kết đến cổng tuyển sinh chính thức của Trường Cao đẳng Kỹ thuật Cao Thắng.', 'dao-tao/tuyen-sinh');
+  }
+
+  public function academicPrograms(): void
+  {
+    $this->_renderEducationPage('academic-programs', 'Chương trình đào tạo', 'Tổng quan ba chương trình đào tạo cao đẳng của Khoa Công nghệ thông tin.', 'dao-tao/chuong-trinh-dao-tao');
+  }
+
+  public function programOutcomes(): void
+  {
+    $this->_renderEducationPage('program-outcomes', 'Chuẩn đầu ra', 'Mục tiêu chương trình và chuẩn đầu ra của các ngành thuộc Khoa Công nghệ thông tin.', 'dao-tao/chuan-dau-ra');
+  }
+
+  public function curriculum(): void
+  {
+    $this->_renderEducationPage('curriculum', 'Danh sách môn học', 'Kế hoạch học tập, tín chỉ và thời lượng lý thuyết, thực hành theo từng học kỳ.', 'dao-tao/danh-sach-mon-hoc');
+  }
+
   public function portal(Request $request): void
   {
     $user = $request->session()->authUser();
@@ -215,5 +240,25 @@ class SiteController extends Controller
       ?? $this->_cmsPageService->getPageBySlug($slug);
 
     return (new CmsStaticPageRenderer($context, pageSlug: $slug))->render($page->content());
+  }
+
+  private function _renderEducationPage(string $slug, string $title, string $description, string $canonical): void
+  {
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+    $this->render('site/education', [
+      'headerMenu' => $this->_headerMenu->items,
+      'cmsHtml' => $this->_renderCmsPage($slug),
+      'settings' => $this->_settings,
+      'pageTitle' => $title,
+      'pageDescription' => $description,
+      'pageCanonical' => $canonical,
+      'pageSeo' => [
+        'og:title' => seo_title($title, $siteTitle),
+        'og:description' => $description,
+        'og:type' => 'website',
+        'og:url' => url($canonical),
+        'og:site_name' => $siteTitle,
+      ],
+    ], 'site_layout');
   }
 }

@@ -12,6 +12,11 @@ $router->prefix('tin-tuc')->group(function (Router $router) {
   $router->get('/{slug}', [SiteController::class, 'news_show']);
 });
 $router->get('/gioi-thieu', [SiteController::class, 'about']);
+$router->get('/dao-tao', [SiteController::class, 'education']);
+$router->get('/dao-tao/tuyen-sinh', [SiteController::class, 'admissions']);
+$router->get('/dao-tao/chuong-trinh-dao-tao', [SiteController::class, 'academicPrograms']);
+$router->get('/dao-tao/chuan-dau-ra', [SiteController::class, 'programOutcomes']);
+$router->get('/dao-tao/danh-sach-mon-hoc', [SiteController::class, 'curriculum']);
 $router->get('/lien-he', [SiteController::class, 'contact']);
 // Đăng ký route /portal để tự chuyển hướng theo role thay vì phải set cứng
 $router->get('/portal', [SiteController::class, 'portal'])->middleware([VerifyAuth::class]);

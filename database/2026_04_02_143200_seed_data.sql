@@ -271,9 +271,11 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 -- Header Menu
 (1, 1, NULL, 'Trang chủ', '/', 1),
 (2, 1, NULL, 'Giới thiệu', '/gioi-thieu', 2),
-(3, 1, NULL, 'Đào tạo', '/dao-tao', 4),
-(4, 1, 3, 'Tuyển sinh', '/tuyen-sinh', 1),
-(5, 1, 3, 'Chương trình đào tạo', '/dao-tao/nganh-hoc', 2),
+(3, 1, NULL, 'Đào tạo', '/dao-tao', 3),
+(4, 1, 3, 'Thông tin tuyển sinh', '/dao-tao/tuyen-sinh', 1),
+(5, 1, 3, 'Chương trình đào tạo', '/dao-tao/chuong-trinh-dao-tao', 2),
+(6, 1, 3, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 3),
+(8, 1, 3, 'Danh sách môn học', '/dao-tao/danh-sach-mon-hoc', 4),
 (7, 1, NULL, 'Tin tức', '/tin-tuc', 5),
 (25, 1, NULL, 'Portal', '/portal', 7),
 
