@@ -10,6 +10,13 @@ export class ExportManager {
       return;
     }
 
+    // Xóa export wrapper cũ nếu đã tồn tại để tránh duplicate
+    const existingWrapper =
+      tableInstance.root.querySelector(".tm-export-wrapper");
+    if (existingWrapper) {
+      existingWrapper.remove();
+    }
+
     const endpoint = config.endpoint || "/api/v1/export";
     const wrapper = document.createElement("div");
     wrapper.className = "tm-export-wrapper";

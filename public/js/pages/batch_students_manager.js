@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let supervisors = [];
   let tableData = [];
   let bulkActionsRegistered = false;
+  let isTableInitialized = false;
 
   // Modals
   const modalHandler = ModalHandler.instance;
@@ -128,35 +129,43 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(interval);
         if (tm) {
           tm.loadData(tableData);
-          attachTableEvents();
-          registerBulkActions();
 
-          // Đăng ký Export Excel
-          const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
-          ExportManager.register(tm, {
-            source: 'batch_students',
-            source_id: batchId,
-            endpoint: window.API_BASE_URL.replace('/internship/batches', '/export'),
-            filename: `Danh-sach-sinh-vien-${batchTitle}`,
-            metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
-            metadataDateRange: window.BATCH_START && window.BATCH_END
-              ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
-              : null,
-            columnsMap: {
-              student_code: "MSSV",
-              student_name: "Họ và tên",
-              classroom_name: "Lớp",
-              student_phone: "SĐT",
-              student_email: "Email",
-              company_name: "Tên Công ty",
-              company_tax_code: "Mã số thuế",
-              company_address: "Địa chỉ",
-              teacher_name: "Giảng viên hướng dẫn",
-              grade_score: "Điểm số",
-              grade_reason: "Diễn giải điểm",
-              grade_feedback: "Nhận xét"
-            }
-          });
+          if (!isTableInitialized) {
+            isTableInitialized = true;
+            attachTableEvents();
+            registerBulkActions();
+
+            // Đăng ký Export Excel
+            const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
+            ExportManager.register(tm, {
+              source: "batch_students",
+              source_id: batchId,
+              endpoint: window.API_BASE_URL.replace(
+                "/internship/batches",
+                "/export",
+              ),
+              filename: `Danh-sach-sinh-vien-${batchTitle}`,
+              metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
+              metadataDateRange:
+                window.BATCH_START && window.BATCH_END
+                  ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
+                  : null,
+              columnsMap: {
+                student_code: "MSSV",
+                student_name: "Họ và tên",
+                classroom_name: "Lớp",
+                student_phone: "SĐT",
+                student_email: "Email",
+                company_name: "Tên Công ty",
+                company_tax_code: "Mã số thuế",
+                company_address: "Địa chỉ",
+                teacher_name: "Giảng viên hướng dẫn",
+                grade_score: "Điểm số",
+                grade_reason: "Diễn giải điểm",
+                grade_feedback: "Nhận xét",
+              },
+            });
+          }
         }
       }
       retries++;
@@ -164,9 +173,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const registerBulkActions = () => {
-    if (bulkActionsRegistered) return;
-    bulkActionsRegistered = true;
-
     TableManager.registerBulkActions("batch_students_table", {
       countLabel: count => `Đã chọn: ${count}`,
       actions: [
@@ -353,7 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
         const row = tableData.find((r) => r.batch_student_id == sid);
         return {
@@ -376,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .querySelector("#btn-confirm-bulk-unassign")
     .addEventListener("click", async () => {
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
         const row = tableData.find((r) => r.batch_student_id == sid);
         return {
