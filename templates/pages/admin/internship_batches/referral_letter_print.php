@@ -27,6 +27,7 @@ $startDateStr = $letter['internship_start_date'] ? date('d/m/Y', strtotime($lett
 $endDateStr = $letter['internship_end_date'] ? date('d/m/Y', strtotime($letter['internship_end_date'])) : date('d/m/Y', strtotime($batch['end_at']));
 
 $documentNumber = $letter['document_number'] ?? '';
+$displayDocNum = $documentNumber ?: '___';
 ?>
 
 <!DOCTYPE html>
@@ -66,7 +67,7 @@ $documentNumber = $letter['document_number'] ?? '';
       <div class="header-left">
         <div class="org-name"><?= $orgName ?></div>
         <div class="org-name"><strong><?= $schoolName ?></strong></div>
-        <div class="number-wrapper">Số: <span class="dyn-num"><?= htmlspecialchars($documentNumber) ?></span><span>/CĐKTCT-CTCT HSSV</span></div>
+        <div class="number-wrapper">Số: <span class="dyn-num"><?= htmlspecialchars($displayDocNum) ?></span><span>/CĐKTCT-CTCT HSSV</span></div>
         <div class="title"><?= $docTitle ?></div>
       </div>
       <div class="header-right">
@@ -116,7 +117,7 @@ $documentNumber = $letter['document_number'] ?? '';
   <div class="print-page page-2">
     <div class="page2-header">
       <div class="page2-title">DANH SÁCH SINH VIÊN THỰC TẬP TỐT NGHIỆP</div>
-      <div class="page2-subtitle">Kèm theo công văn Số: <span class="dyn-num"><?= htmlspecialchars($documentNumber) ?><span>/CĐKTCT-CTCT HSSV</span></span> ngày <?= $now->format('d') ?> tháng <?= $now->format('m') ?> năm <?= $now->format('Y') ?></div>
+      <div class="page2-subtitle">Kèm theo công văn Số: <span class="dyn-num"><?= htmlspecialchars($displayDocNum) ?></span><span>/CĐKTCT-CTCT HSSV</span> ngày <?= $now->format('d') ?> tháng <?= $now->format('m') ?> năm <?= $now->format('Y') ?></div>
     </div>
 
     <table class="table">
