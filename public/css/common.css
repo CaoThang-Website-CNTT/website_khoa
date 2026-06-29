@@ -438,6 +438,93 @@
   }
 
   /* ==========================================================================
+   ACCORDION
+   ========================================================================== */
+  .accordion {
+    width: 100%;
+    color: var(--foreground);
+  }
+
+  .accordion_item {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .accordion__trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+    border: 0;
+    color: var(--foreground);
+    background: transparent;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+    transition: color 150ms ease;
+  }
+
+  .accordion__trigger:hover:not(:disabled) {
+    text-decoration: underline;
+  }
+
+  .accordion__trigger:focus-visible {
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+  }
+
+  .accordion__trigger::after {
+    width: 0.5rem;
+    height: 0.5rem;
+    content: "";
+    flex-shrink: 0;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 200ms ease;
+  }
+
+  .accordion__trigger[data-state="open"]::after {
+    transform: rotate(225deg);
+  }
+
+  .accordion__content {
+    height: var(--accordion-content-height, 0px);
+    overflow: hidden;
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+    transition: height 200ms ease;
+  }
+
+  .accordion__content > :first-child {
+    margin-top: 0;
+  }
+
+  .accordion__content > :last-child {
+    margin-bottom: 1rem;
+  }
+
+  .accordion_item[disabled] {
+    opacity: 0.5;
+  }
+
+  .accordion_item[disabled] .accordion__trigger {
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .accordion__trigger::after,
+    .accordion__content {
+      transition: none;
+    }
+  }
+
+  /* ==========================================================================
    POPOVER
    ========================================================================== */
   .popover {

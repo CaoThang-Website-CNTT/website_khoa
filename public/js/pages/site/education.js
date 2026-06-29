@@ -4,30 +4,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const items = [...accordion.querySelectorAll('[data-program]')];
   const params = new URLSearchParams(window.location.search);
+  const initialProgram = items.find(item => item.dataset.program === params.get('program')) || items[0];
+  if (initialProgram) {
+    accordion.dataset.accordionDefaultValue = initialProgram.dataset.program;
+    AccordionHandler.instance.setValue(accordion, initialProgram.dataset.program, { emit: false });
+  }
 
-  const setProgram = (key, { updateHistory = true } = {}) => {
-    const target = items.find((item) => item.dataset.program === key) || items[0];
-    if (!target) return;
+  let syncingHistory = false;
+  accordion.addEventListener('accordion:change', event => {
+    const value = event.detail?.value;
+    if (!value || syncingHistory) return;
 
-    items.forEach((item) => {
-      const open = item === target;
-      const trigger = item.querySelector('[data-program-trigger]');
-      const panel = item.querySelector('.education-accordion__panel');
-      trigger?.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (panel) panel.hidden = !open;
-      item.dataset.state = open ? 'open' : 'closed';
-    });
+    const next = new URL(window.location.href);
+    next.searchParams.set('program', value);
+    history.pushState({ program: value }, '', next);
+  });
 
-    if (updateHistory) {
-      const next = new URL(window.location.href);
-      next.searchParams.set('program', target.dataset.program);
-      history.pushState({ program: target.dataset.program }, '', next);
-    }
+  const syncProgramFromUrl = () => {
+    const current = new URLSearchParams(window.location.search);
+    const target = items.find(item => item.dataset.program === current.get('program')) || items[0];
+    if (!target || target.dataset.state === 'open') return;
+
+    syncingHistory = true;
+    AccordionHandler.instance.setValue(accordion, target.dataset.program, { emit: false });
+    syncingHistory = false;
   };
-
-  items.forEach((item) => item.querySelector('[data-program-trigger]')?.addEventListener('click', () => {
-    setProgram(item.dataset.program);
-  }));
 
   document.querySelectorAll('[data-semester-tabs]').forEach((tabs) => {
     const triggers = [...tabs.querySelectorAll('[data-semester-trigger]')];
@@ -63,9 +64,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  setProgram(params.get('program') || items[0]?.dataset.program, { updateHistory: false });
-  window.addEventListener('popstate', () => {
-    const current = new URLSearchParams(window.location.search);
-    setProgram(current.get('program') || items[0]?.dataset.program, { updateHistory: false });
-  });
+  window.addEventListener('popstate', syncProgramFromUrl);
 });

@@ -77,7 +77,7 @@ final class EducationSectionRenderer
       $details .= '</div><div class="education-inline-actions"><a href="' . $this->e(url('dao-tao/chuan-dau-ra?program=' . $key)) . '">Xem chuẩn đầu ra</a><a href="' . $this->e(url('dao-tao/danh-sach-mon-hoc?program=' . $key)) . '">Xem danh sách môn học</a></div>';
       $content .= $this->accordion($program, $index, $details);
     }
-    return $this->shell($data, $context, '<div class="education-accordion" data-program-accordion>' . $content . '</div>');
+    return $this->shell($data, $context, $this->accordionGroup($data, $content));
   }
 
   private function outcomes(array $data, CmsRenderContext $context): string
@@ -90,7 +90,7 @@ final class EducationSectionRenderer
       $details = $this->sourceMeta($program) . '<div class="education-outcome-grid"><section><span class="education-label">Sau 2–3 năm làm việc</span><h3>Mục tiêu chương trình</h3><ol>' . $objectives . '</ol></section><section><span class="education-label">Tại thời điểm tốt nghiệp</span><h3>Chuẩn đầu ra</h3><ol>' . $outcomes . '</ol></section></div>';
       $content .= $this->accordion($program, $index, $details);
     }
-    return $this->shell($data, $context, '<div class="education-accordion" data-program-accordion>' . $content . '</div>');
+    return $this->shell($data, $context, $this->accordionGroup($data, $content));
   }
 
   private function curriculum(array $data, CmsRenderContext $context): string
@@ -112,14 +112,24 @@ final class EducationSectionRenderer
       $details = $this->sourceMeta($program) . '<div class="education-semesters" data-semester-tabs data-program-key="' . $this->e($program['key'] ?? '') . '"><div class="education-semester-tabs" role="tablist" aria-label="Chọn học kỳ">' . $tabs . '</div>' . $panels . '</div>';
       $content .= $this->accordion($program, $index, $details);
     }
-    return $this->shell($data, $context, '<div class="education-accordion" data-program-accordion>' . $content . '</div>');
+    return $this->shell($data, $context, $this->accordionGroup($data, $content));
+  }
+
+  private function accordionGroup(array $data, string $content): string
+  {
+    $programs = $this->items($data, 'programs');
+    $defaultValue = isset($programs[0])
+      ? $this->key($programs[0]['key'] ?? '', 'program-0')
+      : '';
+
+    return '<div class="accordion education-accordion" data-program-accordion data-accordion-type="single" data-accordion-default-value="' . $this->e($defaultValue) . '">' . $content . '</div>';
   }
 
   private function accordion(array $program, int $index, string $details): string
   {
     $key = $this->key($program['key'] ?? '', 'program-' . $index);
     $id = 'education-program-' . $key;
-    return '<article class="education-accordion__item" data-program="' . $this->e($key) . '"><h2><button type="button" aria-expanded="false" aria-controls="' . $this->e($id) . '" data-program-trigger><span><small>' . $this->e($program['short_name'] ?? '') . '</small>' . $this->e($program['name'] ?? '') . '</span><i class="fa-solid fa-plus" aria-hidden="true"></i></button></h2><div class="education-accordion__panel" id="' . $this->e($id) . '" hidden>' . $details . '</div></article>';
+    return '<article class="accordion_item education-accordion__item" data-accordion-value="' . $this->e($key) . '" data-program="' . $this->e($key) . '"><h2><button class="accordion__trigger" type="button"><span><small>' . $this->e($program['short_name'] ?? '') . '</small>' . $this->e($program['name'] ?? '') . '</span><i class="fa-solid fa-plus" aria-hidden="true"></i></button></h2><div class="accordion__content education-accordion__panel" id="' . $this->e($id) . '"><div class="education-accordion__panel-inner">' . $details . '</div></div></article>';
   }
 
   private function sourceMeta(array $program): string

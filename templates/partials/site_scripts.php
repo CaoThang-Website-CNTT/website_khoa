@@ -10,4 +10,5 @@
 <script src="<?= url('/public/js/site_header.js') ?>"></script>
 <script src="<?= url('/public/js/select.js') ?>"></script>
 <script src="<?= url('/public/js/tabs.js') ?>"></script>
+<script src="<?= url('/public/js/accordion.js') ?>"></script>
 <script src="<?= url('/public/js/step_wizard.js') ?>"></script>

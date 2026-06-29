@@ -614,6 +614,9 @@
     cursor: pointer;
     font: inherit;
   }
+  .education-accordion .accordion__trigger::after {
+    display: none;
+  }
   .education-accordion__item h2 button span {
     display: flex;
     align-items: center;
@@ -629,7 +632,13 @@
   .education-accordion__item[data-state="open"] h2 i {
     transform: rotate(45deg);
   }
+  .education-accordion__item h2 i {
+    transition: transform 200ms ease;
+  }
   .education-accordion__panel {
+    padding: 0;
+  }
+  .education-accordion__panel-inner {
     padding: 0 2rem 2rem;
   }
   .education-facts {
@@ -751,7 +760,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .education-accordion__item h2 button,
-  .education-accordion__panel {
+  .education-accordion__panel-inner {
     padding-left: 1.25rem;
     padding-right: 1.25rem;
   }
