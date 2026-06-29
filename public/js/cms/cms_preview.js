@@ -153,6 +153,7 @@ export class CmsPreview {
       'css/common.css',
       'css/main.css',
       'css/landing.css',
+      'css/education.css',
       'css/block_preview.css',
       'css/cms_page_editor.css',
     ];

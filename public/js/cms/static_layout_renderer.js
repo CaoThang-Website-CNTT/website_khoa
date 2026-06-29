@@ -42,6 +42,12 @@ export class StaticLayoutRenderer {
       case 'sections/bento_grid':
       case 'bento_grid':
         return this.renderBentoGrid(data, section.id);
+      case 'sections/education_hub':
+      case 'sections/admissions':
+      case 'sections/programs':
+      case 'sections/outcomes':
+      case 'sections/curriculum':
+        return this.renderEducation(data, section.id, section.type);
       default:
         return this.renderLockedPlaceholder(section.id, 'Section này không thể edit ở v1.');
     }
@@ -357,5 +363,49 @@ export class StaticLayoutRenderer {
         </div></div>
       </section>
     `;
+  }
+
+  renderEducation(data, sectionId, type) {
+    const header = `
+      <header class="education-hero">
+        <span class="education-hero__eyebrow">${this.editable(sectionId, 'eyebrow', data.eyebrow)}</span>
+        <h1>${this.editable(sectionId, 'title', data.title)}</h1>
+        <p>${this.editable(sectionId, 'description', data.description, true)}</p>
+      </header>`;
+
+    let body = '';
+    if (type === 'sections/education_hub') {
+      body = `<div class="education-link-grid">${asArray(data.links).map((item, index) => `
+        <article class="education-link-card"><span class="education-link-card__icon"><i class="${escapeAttr(item.icon || 'fa-solid fa-link')}"></i></span>
+          <h2>${this.editable(sectionId, `links.${index}.title`, item.title)}</h2>
+          <p>${this.editable(sectionId, `links.${index}.description`, item.description, true)}</p>
+          <span class="education-link-card__cta">${this.editable(sectionId, `links.${index}.label`, item.label)}</span>
+        </article>`).join('')}</div>
+        <section class="education-programs-intro"><div class="education-section-heading"><h2>${this.editable(sectionId, 'programs_title', data.programs_title)}</h2><p>${this.editable(sectionId, 'programs_description', data.programs_description, true)}</p></div>${this.renderEducationProgramCards(data, sectionId)}</section>`;
+    } else if (type === 'sections/admissions') {
+      body = `<aside class="education-notice"><div><span class="education-notice__icon"><i class="fa-solid fa-circle-info"></i></span><div><h2>${this.editable(sectionId, 'notice_title', data.notice_title)}</h2><p>${this.editable(sectionId, 'notice', data.notice, true)}</p></div></div><span class="btn" data-variant="primary">${this.editable(sectionId, 'cta_label', data.cta_label)}</span></aside>
+        <div class="education-admissions-grid"><section><h2>${this.editable(sectionId, 'steps_title', data.steps_title)}</h2><ol class="education-steps">${asArray(data.steps).map((step, index) => `<li><span>${index + 1}</span><div><h3>${this.editable(sectionId, `steps.${index}.title`, step.title)}</h3><p>${this.editable(sectionId, `steps.${index}.description`, step.description, true)}</p></div></li>`).join('')}</ol></section><section>${this.renderEducationProgramCards(data, sectionId)}</section></div>`;
+    } else {
+      body = `<div class="education-accordion">${asArray(data.programs).map((program, index) => this.renderEducationProgram(sectionId, program, index, type)).join('')}</div>`;
+    }
+    return `<section class="education-page"><div class="container"><div class="container-wrapper">${header}${body}</div></div></section>`;
+  }
+
+  renderEducationProgramCards(data, sectionId) {
+    return `<div class="education-program-summary-grid">${asArray(data.programs).map((program, index) => `<article class="education-program-summary"><span>${this.editable(sectionId, `programs.${index}.short_name`, program.short_name || program.key)}</span><h3>${this.editable(sectionId, `programs.${index}.name`, program.name)}</h3><p>${this.editable(sectionId, `programs.${index}.summary`, program.summary, true)}</p></article>`).join('')}</div>`;
+  }
+
+  renderEducationProgram(sectionId, program, index, type) {
+    const prefix = `programs.${index}`;
+    let inner = '';
+    if (type === 'sections/programs') {
+      inner = `<div class="education-facts"><span><strong>${this.editable(sectionId, `${prefix}.duration`, program.duration)}</strong> Thời lượng</span><span><strong>${this.editable(sectionId, `${prefix}.credits`, program.credits)}</strong> Tín chỉ</span><span><strong>${this.editable(sectionId, `${prefix}.practice_ratio`, program.practice_ratio)}</strong> Thực hành</span></div><div class="education-copy-grid"><div><h3>Định hướng nghề nghiệp</h3><p>${this.editable(sectionId, `${prefix}.career`, program.career, true)}</p><ol>${asArray(program.objectives).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.objectives.${itemIndex}`, item, true)}</li>`).join('')}</ol></div><aside><ul>${asArray(program.specializations).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.specializations.${itemIndex}`, item)}</li>`).join('')}</ul></aside></div>`;
+    } else if (type === 'sections/outcomes') {
+      inner = `<div class="education-outcome-grid"><section><h3>Mục tiêu chương trình</h3><ol>${asArray(program.objectives).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.objectives.${itemIndex}`, item, true)}</li>`).join('')}</ol></section><section><h3>Chuẩn đầu ra</h3><ol>${asArray(program.outcomes).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.outcomes.${itemIndex}`, item, true)}</li>`).join('')}</ol></section></div>`;
+    } else {
+      const semester = asArray(program.semesters)[0];
+      inner = semester ? `<div class="education-semester-tabs"><button aria-selected="true">${this.editable(sectionId, `${prefix}.semesters.0.name`, semester.name)}</button></div><div class="education-table-wrap"><table><thead><tr><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr></thead><tbody>${asArray(semester.courses).map((course, courseIndex) => `<tr><th>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.name`, course.name)}</th><td>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.credits`, course.credits)}</td><td>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.theory`, course.theory)}</td><td>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.practice`, course.practice)}</td></tr>`).join('')}</tbody></table></div>` : '<p>Chưa có học kỳ.</p>';
+    }
+    return `<article class="education-accordion__item" data-state="open"><h2><button type="button"><span><small>${this.editable(sectionId, `${prefix}.short_name`, program.short_name)}</small>${this.editable(sectionId, `${prefix}.name`, program.name)}</span><i class="fa-solid fa-plus"></i></button></h2><div class="education-accordion__panel">${inner}</div></article>`;
   }
 }

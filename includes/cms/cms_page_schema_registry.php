@@ -75,6 +75,46 @@ final class CmsPageSchemaRegistry
         ],
       ],
     ],
+    'education' => [
+      'title' => 'Đào tạo',
+      'slug' => 'education',
+      'route_path' => '/dao-tao',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'education_hub', 'type' => 'sections/education_hub', 'locked' => false]],
+    ],
+    'admissions' => [
+      'title' => 'Thông tin tuyển sinh',
+      'slug' => 'admissions',
+      'route_path' => '/dao-tao/tuyen-sinh',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'admissions', 'type' => 'sections/admissions', 'locked' => false]],
+    ],
+    'academic-programs' => [
+      'title' => 'Chương trình đào tạo',
+      'slug' => 'academic-programs',
+      'route_path' => '/dao-tao/chuong-trinh-dao-tao',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'programs', 'type' => 'sections/programs', 'locked' => false]],
+    ],
+    'program-outcomes' => [
+      'title' => 'Chuẩn đầu ra',
+      'slug' => 'program-outcomes',
+      'route_path' => '/dao-tao/chuan-dau-ra',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'outcomes', 'type' => 'sections/outcomes', 'locked' => false]],
+    ],
+    'curriculum' => [
+      'title' => 'Danh sách môn học',
+      'slug' => 'curriculum',
+      'route_path' => '/dao-tao/danh-sach-mon-hoc',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false]],
+    ],
   ];
 
   public function allPages(): array
@@ -166,6 +206,25 @@ final class CmsPageSchemaRegistry
     );
     $section['variants'] ??= $definition->variants();
 
+    if (str_starts_with((string) ($section['type'] ?? ''), 'sections/education_')
+      || in_array($section['type'] ?? '', ['sections/admissions', 'sections/programs', 'sections/outcomes', 'sections/curriculum'], true)) {
+      $allRepeaters = EducationPageDefaults::repeaterBlueprints();
+      $section['repeaters'] = array_filter(
+        $allRepeaters,
+        fn(string $path): bool => self::repeaterAppliesToFields($path, $section['editable_fields'] ?? []),
+        ARRAY_FILTER_USE_KEY,
+      );
+    }
+
     return $section;
+  }
+
+  private static function repeaterAppliesToFields(string $repeater, array $fields): bool
+  {
+    $prefix = rtrim(str_replace('.*', '', $repeater), '.');
+    foreach ($fields as $field) {
+      if ($field === $repeater || str_starts_with(str_replace('.*', '', $field), $prefix . '.')) return true;
+    }
+    return false;
   }
 }

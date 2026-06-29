@@ -1,4 +1,4 @@
-import { assetUrl, cssEscape, escapeAttr, escapeHtml, getPath } from './cms_utils.js';
+import { asArray, assetUrl, cssEscape, escapeAttr, escapeHtml, getPath } from './cms_utils.js';
 
 export class CmsFieldPanel {
   constructor(bus, cmsDocument, root) {
@@ -26,13 +26,24 @@ export class CmsFieldPanel {
     this.root?.addEventListener('focusin', (event) => {
       const field = event.target.closest('[data-cms-path]');
       if (!field) return;
+      if (field.closest('.cms-all-fields')) return;
       this.bus.dispatch('field:focus', { path: field.dataset.cmsPath });
     });
 
     this.root?.addEventListener('click', (event) => {
       const button = event.target.closest('[data-cms-media-path]');
-      if (!button) return;
-      this.bus.dispatch('field:media_select_request', { path: button.dataset.cmsMediaPath });
+      if (button) {
+        this.bus.dispatch('field:media_select_request', { path: button.dataset.cmsMediaPath });
+        return;
+      }
+      const structureButton = event.target.closest('[data-cms-array-action]');
+      if (!structureButton) return;
+      this.bus.dispatch('structure:mutate', {
+        action: structureButton.dataset.cmsArrayAction,
+        path: structureButton.dataset.cmsArrayPath,
+        index: Number(structureButton.dataset.cmsArrayIndex),
+        blueprint: structureButton.dataset.cmsArrayBlueprint,
+      });
     });
   }
 
@@ -55,6 +66,11 @@ export class CmsFieldPanel {
     }
 
     if (!activePath) {
+      const structure = this.#renderStructureManager(section, schema, fields);
+      if (structure) {
+        this.root.innerHTML = structure;
+        return;
+      }
       this.root.innerHTML = variantOptions.length > 1
         ? `<div class="cms-field-grid">${this.#renderVariantField(section, variantOptions)}</div>`
         : this.#emptyPanel('Chọn một trường', 'Chọn văn bản có thể chỉnh sửa hoặc một hình ảnh từ bản xem trước.');
@@ -186,5 +202,47 @@ export class CmsFieldPanel {
         </div>
       </div>
     `;
+  }
+
+  #renderStructureManager(section, schema, fields) {
+    const definitions = schema.repeaters || {};
+    const groups = Object.entries(definitions).flatMap(([pattern, definition]) =>
+      this.#expandRepeaterPattern(section.data || {}, pattern).map((path) => ({ path, pattern, definition }))
+    );
+    if (!groups.length) return '';
+
+    const fieldEditor = `<details class="cms-all-fields"><summary>Chỉnh sửa tất cả trường dữ liệu (${fields.length})</summary><div class="cms-field-grid">${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')).join('')}</div></details>`;
+    return `<div class="cms-structure-manager"><div class="cms-structure-manager__intro"><strong>Cấu trúc nội dung</strong><small>Thêm, nhân bản, sắp xếp hoặc xóa mục. Chọn nội dung trong bản xem trước để sửa văn bản.</small></div>${groups.map(({ path, pattern, definition }) => {
+      const items = asArray(getPath(section.data || {}, path));
+      return `<section class="cms-repeater"><header><strong>${escapeHtml(definition.label || path)}</strong><span>${items.length} mục</span></header><div class="cms-repeater__items">${items.map((item, index) => `
+        <div class="cms-repeater__item"><span>${escapeHtml(this.#itemLabel(item, index))}</span><div>
+          <button type="button" title="Lên" data-cms-array-action="up" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}" ${index === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
+          <button type="button" title="Xuống" data-cms-array-action="down" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}" ${index === items.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-arrow-down"></i></button>
+          <button type="button" title="Nhân bản" data-cms-array-action="duplicate" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}"><i class="fa-regular fa-copy"></i></button>
+          <button type="button" title="Xóa" data-cms-array-action="remove" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}"><i class="fa-regular fa-trash-can"></i></button>
+        </div></div>`).join('')}</div><button type="button" class="btn" data-size="sm" data-variant="outline" data-cms-array-action="add" data-cms-array-path="${escapeAttr(path)}" data-cms-array-blueprint="${escapeAttr(pattern)}"><i class="fa-solid fa-plus"></i> Thêm mục</button></section>`;
+    }).join('')}${fieldEditor}</div>`;
+  }
+
+  #expandRepeaterPattern(data, pattern) {
+    const segments = pattern.split('.');
+    const paths = [];
+    const walk = (value, index, trail) => {
+      if (index >= segments.length) { if (Array.isArray(value)) paths.push(trail.join('.')); return; }
+      const segment = segments[index];
+      if (segment === '*') {
+        if (!Array.isArray(value)) return;
+        value.forEach((item, itemIndex) => walk(item, index + 1, [...trail, String(itemIndex)]));
+      } else if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, segment)) {
+        walk(value[segment], index + 1, [...trail, segment]);
+      }
+    };
+    walk(data, 0, []);
+    return paths;
+  }
+
+  #itemLabel(item, index) {
+    if (typeof item === 'string' || typeof item === 'number') return String(item).slice(0, 70) || `Mục ${index + 1}`;
+    return item?.name || item?.title || item?.label || item?.code || `Mục ${index + 1}`;
   }
 }

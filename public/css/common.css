@@ -3150,6 +3150,11 @@
     padding: 0;
   }
 
+  .navbar__item-content .dropdown__item,
+  .navbar__item-content .dropdown__sub .dropdown__sub-trigger {
+    border-radius: 0;
+  }
+
   .navbar__item-content .dropdown__item:first-child,
   .navbar__item-content .dropdown__sub:first-child .dropdown__sub-trigger {
     border-radius: var(--radius-md) var(--radius-md) 0 0;

@@ -249,7 +249,48 @@ final class CmsStaticPageRenderer
       ],
     ));
 
+    $educationRenderer = new EducationSectionRenderer();
+    $educationSections = [
+      'sections/education_hub' => ['Education hub', EducationPageDefaults::hub()],
+      'sections/admissions' => ['Admissions', EducationPageDefaults::admissions()],
+      'sections/programs' => ['Academic programs', EducationPageDefaults::programsSection()],
+      'sections/outcomes' => ['Program outcomes', EducationPageDefaults::outcomes()],
+      'sections/curriculum' => ['Curriculum', EducationPageDefaults::curriculum()],
+    ];
+
+    foreach ($educationSections as $type => [$label, $defaults]) {
+      $fields = self::educationEditableFields($type);
+      $registry->register(new CmsCallbackSectionDefinition(
+        $type,
+        $label,
+        $defaults,
+        $fields,
+        ['default' => 'Default'],
+        fn(array $data, CmsRenderContext $context): string => $educationRenderer->render($type, $data, $context),
+        array_combine($fields, array_map(fn(string $field): string => self::educationFieldLabel($field), $fields)) ?: [],
+      ));
+    }
+
     return $registry;
+  }
+
+  private static function educationEditableFields(string $type): array
+  {
+    $header = ['eyebrow', 'title', 'description'];
+    return match ($type) {
+      'sections/education_hub' => [...$header, 'links.*.icon', 'links.*.title', 'links.*.description', 'links.*.url', 'links.*.label', 'programs_title', 'programs_description', 'programs.*.key', 'programs.*.name', 'programs.*.short_name', 'programs.*.summary', 'programs.*.credits'],
+      'sections/admissions' => [...$header, 'notice_title', 'notice', 'cta_label', 'cta_url', 'steps_title', 'steps.*.title', 'steps.*.description', 'programs.*.key', 'programs.*.name', 'programs.*.summary'],
+      'sections/programs' => [...$header, 'programs.*.key', 'programs.*.short_name', 'programs.*.name', 'programs.*.summary', 'programs.*.duration', 'programs.*.credits', 'programs.*.practice_ratio', 'programs.*.source_year', 'programs.*.updated_at', 'programs.*.career', 'programs.*.objectives.*', 'programs.*.specializations.*'],
+      'sections/outcomes' => [...$header, 'programs.*.key', 'programs.*.short_name', 'programs.*.name', 'programs.*.source_year', 'programs.*.updated_at', 'programs.*.objectives.*', 'programs.*.outcomes.*'],
+      'sections/curriculum' => [...$header, 'programs.*.key', 'programs.*.short_name', 'programs.*.name', 'programs.*.source_year', 'programs.*.updated_at', 'programs.*.credits', 'programs.*.semesters.*.key', 'programs.*.semesters.*.name', 'programs.*.semesters.*.courses.*.code', 'programs.*.semesters.*.courses.*.name', 'programs.*.semesters.*.courses.*.credits', 'programs.*.semesters.*.courses.*.theory', 'programs.*.semesters.*.courses.*.practice'],
+      default => $header,
+    };
+  }
+
+  private static function educationFieldLabel(string $field): string
+  {
+    $leaf = str_replace('_', ' ', basename(str_replace('.', '/', str_replace('.*', '', $field))));
+    return ucfirst($leaf);
   }
 
   private function renderHero(CmsRenderContext $context): string

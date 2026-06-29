@@ -266,3 +266,92 @@
 .cms-editor-error.is-visible {
   display: block;
 }
+.cms-structure-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.cms-structure-manager__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.cms-structure-manager__intro small {
+  color: var(--muted-foreground);
+}
+.cms-repeater {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+.cms-repeater > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.cms-repeater > header span {
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+}
+.cms-repeater__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+.cms-repeater__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius-lg);
+  background: var(--muted);
+  font-size: var(--text-xs);
+}
+.cms-repeater__item > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cms-repeater__item > div {
+  display: flex;
+  flex: 0 0 auto;
+}
+.cms-repeater__item button {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.cms-repeater__item button:hover {
+  color: var(--primary);
+  background: var(--background);
+}
+.cms-repeater__item button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.cms-all-fields {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+.cms-all-fields summary {
+  cursor: pointer;
+  font-weight: var(--fw-semibold);
+}
+.cms-all-fields .cms-field-grid {
+  max-height: 34rem;
+  overflow-y: auto;
+  margin-top: 0.75rem;
+  padding-right: 0.25rem;
+}
