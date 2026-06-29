@@ -257,7 +257,16 @@ INSERT INTO `categories` (`id`, `name`, `slug`, `type`, `parent_id`) VALUES
 (17, 'Cơ hội việc làm', 'co-hoi-viec-lam', 'custom', 15),
 (18, 'Sáng tạo khởi nghiệp', 'sang-tao-khoi-nghiep', 'custom', 19),
 (19, 'Góc sinh viên', 'goc-sinh-vien', 'custom', 9),
-(20, 'Tin nội bộ', 'tin-noi-bo', 'custom', 1);
+(20, 'Tin nội bộ', 'tin-noi-bo', 'custom', 1),
+(21, 'Hoạt động', 'hoat-dong', 'const', NULL),
+(22, 'Công tác giảng dạy', 'cong-tac-giang-day', 'custom', 21),
+(23, 'Nghiên cứu khoa học', 'nghien-cuu-khoa-hoc', 'custom', 21),
+(24, 'Giảng viên', 'giang-vien', 'custom', 23),
+(25, 'Học thuật', 'hoc-thuat', 'custom', 21),
+(26, 'Thi đua đoàn thể', 'thi-dua-doan-the', 'custom', 21),
+(27, 'Phong trào & Ngoại khóa', 'phong-trao-ngoai-khoa', 'custom', 21),
+(28, 'CLB Tin học', 'clb-tin-hoc', 'custom', 21),
+(29, 'Thông báo', 'thong-bao', 'const', NULL);
 
 
 -- ---------------------------------------------------------------------------- 
@@ -274,15 +283,26 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 (3, 1, NULL, 'Đào tạo', '/dao-tao', 3),
 (4, 1, 3, 'Thông tin tuyển sinh', '/dao-tao/tuyen-sinh', 1),
 (5, 1, 3, 'Chương trình đào tạo', '/dao-tao/chuong-trinh-dao-tao', 2),
-(6, 1, 3, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 3),
-(8, 1, 3, 'Danh sách môn học', '/dao-tao/danh-sach-mon-hoc', 4),
-(7, 1, NULL, 'Tin tức', '/tin-tuc', 5),
-(25, 1, NULL, 'Portal', '/portal', 7),
+(6, 1, 5, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 1),
+(7, 1, 5, 'Danh sách môn học', '/dao-tao/danh-sach-mon-hoc', 2),
+(8, 1, NULL, 'Hoạt động', '/tin-tuc?category=hoat-dong', 4),
+(9, 1, 8, 'Công tác giảng dạy', '/tin-tuc?category=cong-tac-giang-day', 1),
+(10, 1, 8, 'Nghiên cứu khoa học', '/tin-tuc?category=nghien-cuu-khoa-hoc', 2),
+(11, 1, 10, 'Sinh viên', '/tin-tuc?category=nghien-cuu-khoa-hoc,sinh-vien', 1),
+(12, 1, 10, 'Giảng viên', '/tin-tuc?category=nghien-cuu-khoa-hoc,giang-vien', 2),
+(13, 1, 8, 'Học thuật', '/tin-tuc?category=hoc-thuat', 3),
+(14, 1, 8, 'Thi đua đoàn thể', '/tin-tuc?category=thi-dua-doan-the', 4),
+(15, 1, 8, 'Phong trào & Ngoại khóa', '/tin-tuc?category=phong-trao-ngoai-khoa', 5),
+(16, 1, 8, 'CLB Tin học', '/tin-tuc?category=clb-tin-hoc', 6),
+(17, 1, NULL, 'Sinh viên', '/tin-tuc?category=sinh-vien', 5),
+(18, 1, 17, 'E-learning', 'https://ttth-caothang.site', 1),
+(19, 1, 17, 'Thông báo', '/tin-tuc?category=thong-bao', 2),
+(20, 1, 17, 'Portal', '/portal', 3),
 
 -- Footer Menu
-(9, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
-(10, 2, NULL, 'Điều khoản sử dụng', '/terms', 2),
-(11, 2, NULL, 'Sơ đồ website', '/sitemap', 3);
+(101, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
+(102, 2, NULL, 'Điều khoản sử dụng', '/terms', 2),
+(103, 2, NULL, 'Sơ đồ website', '/sitemap', 3);
 
 -- ---------------------------------------------------------------------------- 
 -- 11. BẢNG CAROUSELS & CAROUSEL_SLIDES

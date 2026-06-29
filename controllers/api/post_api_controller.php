@@ -25,7 +25,8 @@ class PostApiController extends Controller
     $sortBy = trim((string) $request->query('sort', $request->query('sort_by', 'published_at'))) ?: 'published_at';
     $sortBy = $sortBy === 'published_at' ? $sortBy : 'published_at';
     $order = strtolower(trim((string) $request->query('order', 'desc'))) === 'asc' ? 'asc' : 'desc';
-    $featured = filter_var($request->query('featured', false), FILTER_VALIDATE_BOOLEAN);
+    $featured = $request->query('featured');
+    $featuredFilter = in_array((string) $featured, ['0', '1'], true) ? (string) $featured : null;
 
     try {
       return $this->json(
@@ -34,7 +35,7 @@ class PostApiController extends Controller
           'category' => $category,
           'sort' => $sortBy,
           'order' => $order,
-          'is_featured' => $featured ? '1' : null
+          'is_featured' => $featuredFilter
         ]),
         200
       );
