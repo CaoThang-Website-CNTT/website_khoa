@@ -23,6 +23,7 @@ interface IInternshipAssignmentStore
   public function getLogsByBatchStudent(int $batchStudentId): array;
 
   public function getBatchSupervisorsWithStats(int $batchId): array;
+  public function getMailingDetails(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): array;
   public function getStudentsInBatchWithAssignment(int $batchId): array;
   public function getUnassignedStudentsInBatch(int $batchId): array;
   public function deleteAssignment(int $assignmentId): bool;
@@ -196,5 +197,45 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getMailingDetails(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): array
+  {
+    $result = [
+      'student' => null,
+      'old_teacher' => null,
+      'new_teacher' => null,
+    ];
+
+    $sqlStudent = "SELECT s.full_name AS name, s.student_id AS mssv, a.email,
+                          c.short_name AS class_name, ib.title AS batch_title,
+                          ib.start_at, ib.end_at, ib.status AS batch_status
+                   FROM internship_batch_students bs
+                   JOIN students s ON bs.student_id = s.id
+                   LEFT JOIN classrooms c ON s.classroom_id = c.id
+                   JOIN accounts a ON s.account_id = a.id
+                   JOIN internship_batches ib ON bs.batch_id = ib.id
+                   WHERE bs.id = :batch_student_id";
+    $stmt = $this->db->prepare($sqlStudent);
+    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $result['student'] = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+    $sqlTeacher = "SELECT t.full_name AS name, a.email
+                   FROM teachers t
+                   JOIN accounts a ON t.account_id = a.id
+                   WHERE t.id = :teacher_id";
+    $stmtTeacher = $this->db->prepare($sqlTeacher);
+
+    if ($oldTeacherId) {
+      $stmtTeacher->execute([':teacher_id' => $oldTeacherId]);
+      $result['old_teacher'] = $stmtTeacher->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    if ($newTeacherId) {
+      $stmtTeacher->execute([':teacher_id' => $newTeacherId]);
+      $result['new_teacher'] = $stmtTeacher->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    return $result;
   }
 }
