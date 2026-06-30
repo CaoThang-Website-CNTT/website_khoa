@@ -9,9 +9,12 @@ class Major extends Model
     public ?string $full_name = null,
     public ?string $short_name = null,
     public ?string $level = null,
+    public ?int $department_id = null,
     public ?string $created_at = null,
     public ?string $updated_at = null,
     public ?string $deleted_at = null,
   ) {
   }
+
+  public ?Department $department = null;
 }

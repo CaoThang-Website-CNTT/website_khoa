@@ -59,8 +59,7 @@ class ClassroomController extends Controller
       'specialization_id' => ['nullable'],
       'class_of' => ['required'],
       'letter' => ['size:1'],
-      'short_name' => ['required'],
-      'homeroom_teacher_id' => ['required'],
+      'homeroom_teacher_id' => ['nullable'],
     ];
 
     if (!$validator->validate($data, $rules)) {
@@ -119,8 +118,7 @@ class ClassroomController extends Controller
       'specialization_id' => ['nullable'],
       'class_of' => ['required'],
       'letter' => ['size:1'],
-      'short_name' => ['required'],
-      'homeroom_teacher_id' => ['required'],
+      'homeroom_teacher_id' => ['nullable'],
     ];
 
     if (!$validator->validate($data, $rules)) {
