@@ -4,7 +4,9 @@ define('BASE_PATH', dirname(__DIR__));
 
 require_once BASE_PATH . '/includes/env_loader.php';
 // Load environment variables
-if (file_exists(BASE_PATH . '/.env.local')) {
+if (file_exists(BASE_PATH . '/.env.staging')) {
+  App\EnvLoader::load(BASE_PATH . '/.env.staging');
+} elseif (file_exists(BASE_PATH . '/.env.local')) {
   App\EnvLoader::load(BASE_PATH . '/.env.local');
 } elseif (file_exists(BASE_PATH . '/.env')) {
   App\EnvLoader::load(BASE_PATH . '/.env');
