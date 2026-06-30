@@ -368,39 +368,208 @@ export class StaticLayoutRenderer {
   renderEducation(data, sectionId, type) {
     const isIntro = type === 'sections/education_hub';
     const anchorIds = { admissions: 'tuyen-sinh', programs: 'chuong-trinh-dao-tao', outcomes: 'chuan-dau-ra', curriculum: 'danh-sach-mon-hoc' };
+    const anchorId = anchorIds[sectionId] || '';
+
     const header = `
-      <header class="education-hero">
-        ${isIntro ? '<h1>' : '<h2>'}${this.editable(sectionId, 'title', data.title)}${isIntro ? '</h1>' : '</h2>'}
-        ${type === 'sections/admissions' ? '' : `<p>${this.editable(sectionId, 'description', data.description, true)}</p>`}
-      </header>`;
+        <header class="section-title mb-8"${anchorId ? ` aria-labelledby="${anchorId}-title"` : ''}>
+          <h2${anchorId ? ` id="${anchorId}-title"` : ''} class="section-title__heading">
+            ${this.editable(sectionId, 'title', data.title)}
+          </h2>
+          ${type === 'sections/admissions'
+        ? ''
+        : `<p class="section-title__subtitle">${this.editable(sectionId, 'description', data.description, true)}</p>`}
+        </header>
+      `;
 
     let body = '';
-    if (type === 'sections/education_hub') {
-      body = '';
-    } else if (type === 'sections/admissions') {
-      body = `<span class="btn" data-variant="primary">${this.editable(sectionId, 'cta_label', data.cta_label)}</span>`;
-    } else {
-      body = `<div class="education-accordion">${asArray(data.programs).map((program, index) => this.renderEducationProgram(sectionId, program, index, type)).join('')}</div>`;
+    if (type === 'sections/admissions') {
+      body = `
+        <span class="btn" data-variant="primary">
+          ${this.editable(sectionId, 'cta_label', data.cta_label)}
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </span>
+      `;
+    } else if (!isIntro) {
+      body = `
+        <div class="accordion education-accordion flex flex-col gap-4">
+          ${asArray(data.programs)
+        .map((program, index) => this.renderEducationProgram(sectionId, program, index, type))
+        .join('')}
+        </div>
+      `;
     }
-    const anchor = anchorIds[sectionId] ? ` id="${anchorIds[sectionId]}"` : '';
-    return `<section class="education-page${isIntro ? '' : ' education-detail'}"${anchor}><div class="container"><div class="container-wrapper">${header}${body}</div></div></section>`;
-  }
 
-  renderEducationProgramCards(data, sectionId) {
-    return `<div class="education-program-summary-grid">${asArray(data.programs).map((program, index) => `<article class="education-program-summary"><span>${this.editable(sectionId, `programs.${index}.short_name`, program.short_name || program.key)}</span><h3>${this.editable(sectionId, `programs.${index}.name`, program.name)}</h3><p>${this.editable(sectionId, `programs.${index}.summary`, program.summary, true)}</p></article>`).join('')}</div>`;
+    if (isIntro) {
+      return `
+        <section class="my-8">
+          <div class="container">
+            <div class="container-wrapper"></div>
+          </div>
+        </section>
+      `;
+    }
+
+    return `
+      <section class="py-8 container"${anchorId ? ` id="${anchorId}"` : ''}>
+        <div class="container-wrapper">
+          ${header}
+          ${body}
+        </div>
+      </section>
+    `;
   }
 
   renderEducationProgram(sectionId, program, index, type) {
     const prefix = `programs.${index}`;
-    let inner = '';
+    let details = '';
+
     if (type === 'sections/programs') {
-      inner = `<div class="education-facts"><span><strong>${this.editable(sectionId, `${prefix}.duration`, program.duration)}</strong> Thời lượng</span><span><strong>${this.editable(sectionId, `${prefix}.credits`, program.credits)}</strong> Tín chỉ</span></div><div class="education-copy-grid"><div><h3>Định hướng nghề nghiệp</h3><p>${this.editable(sectionId, `${prefix}.career`, program.career, true)}</p><ol>${asArray(program.objectives).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.objectives.${itemIndex}`, item, true)}</li>`).join('')}</ol></div><aside><ul>${asArray(program.specializations).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.specializations.${itemIndex}`, item)}</li>`).join('')}</ul></aside></div>`;
+      details = this.renderEducationProgramDetails(sectionId, program, prefix);
     } else if (type === 'sections/outcomes') {
-      inner = `<div class="education-outcome-grid"><section><h3>Mục tiêu chương trình</h3><ol>${asArray(program.objectives).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.objectives.${itemIndex}`, item, true)}</li>`).join('')}</ol></section><section><h3>Chuẩn đầu ra</h3><ol>${asArray(program.outcomes).map((item, itemIndex) => `<li>${this.editable(sectionId, `${prefix}.outcomes.${itemIndex}`, item, true)}</li>`).join('')}</ol></section></div>`;
+      details = this.renderEducationOutcomes(sectionId, program, prefix);
     } else {
-      const semester = asArray(program.semesters)[0];
-      inner = semester ? `<div class="education-semester-tabs"><button aria-selected="true">${this.editable(sectionId, `${prefix}.semesters.0.name`, semester.name)}</button></div><div class="education-table-wrap"><table><thead><tr><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr></thead><tbody>${asArray(semester.courses).map((course, courseIndex) => `<tr><th>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.name`, course.name)}</th><td>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.credits`, course.credits)}</td><td>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.theory`, course.theory)}</td><td>${this.editable(sectionId, `${prefix}.semesters.0.courses.${courseIndex}.practice`, course.practice)}</td></tr>`).join('')}</tbody></table></div>` : '<p>Chưa có học kỳ.</p>';
+      details = this.renderEducationCurriculum(sectionId, program, prefix);
     }
-    return `<article class="education-accordion__item" data-state="open"><h2><button type="button"><span><small>${this.editable(sectionId, `${prefix}.short_name`, program.short_name)}</small>${this.editable(sectionId, `${prefix}.name`, program.name)}</span><i class="fa-solid fa-plus"></i></button></h2><div class="education-accordion__panel">${inner}</div></article>`;
+
+    return `
+      <article class="accordion_item border rounded-3xl overflow-hidden" data-state="open">
+        <h2>
+          <button class="accordion__trigger flex w-full justify-between items-center gap-4 py-6 px-5 md:px-8" type="button">
+            <span class="flex flex-col md:flex-row gap-1 md:gap-4">
+              <span>${this.editable(sectionId, `${prefix}.short_name`, program.short_name)}</span>
+              ${this.editable(sectionId, `${prefix}.name`, program.name)}
+            </span>
+            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+          </button>
+        </h2>
+        <div class="accordion__content p-0">
+          <div class="px-5 md:px-8 pb-8">${details}</div>
+        </div>
+      </article>
+    `;
+  }
+
+  renderEducationProgramDetails(sectionId, program, prefix) {
+    const specializations = asArray(program.specializations);
+
+    return `
+      <div class="education-facts grid grid-cols-2 md:grid-cols-3 gap-4 p-5 rounded-3xl">
+        <span><strong>${this.editable(sectionId, `${prefix}.duration`, program.duration)}</strong> Thời lượng</span>
+        <span><strong>${this.editable(sectionId, `${prefix}.credits`, program.credits)}</strong> Tín chỉ</span>
+        <span><strong>${this.editable(sectionId, `${prefix}.source_year`, program.source_year)}</strong> Áp dụng</span>
+      </div>
+      <div class="education-copy-grid grid gap-8 mt-8">
+        <div>
+          <h3>Định hướng nghề nghiệp</h3>
+          <p>${this.editable(sectionId, `${prefix}.career`, program.career, true)}</p>
+          <h3>Mục tiêu chương trình</h3>
+          <ol>${this.renderEducationList(sectionId, `${prefix}.objectives`, program.objectives, true)}</ol>
+        </div>
+        ${specializations.length ? `
+          <aside>
+            <h3>Các hướng chuyên môn</h3>
+            <ul>${this.renderEducationList(sectionId, `${prefix}.specializations`, specializations)}</ul>
+          </aside>
+        ` : ''}
+      </div>
+      <div class="education-inline-actions flex flex-col md:flex-row gap-6 mt-6">
+        <a href="#chuan-dau-ra">Xem chuẩn đầu ra</a>
+        <a href="#danh-sach-mon-hoc">Xem danh sách môn học</a>
+      </div>
+    `;
+  }
+
+  renderEducationOutcomes(sectionId, program, prefix) {
+    return `
+      ${this.renderEducationSource(sectionId, program, prefix)}
+      <div class="education-content grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <section>
+          <h3>Mục tiêu chương trình</h3>
+          <ol>${this.renderEducationList(sectionId, `${prefix}.objectives`, program.objectives, true)}</ol>
+        </section>
+        <section>
+          <h3>Chuẩn đầu ra</h3>
+          <ol>${this.renderEducationList(sectionId, `${prefix}.outcomes`, program.outcomes, true)}</ol>
+        </section>
+      </div>
+    `;
+  }
+
+  renderEducationCurriculum(sectionId, program, prefix) {
+    const semesters = asArray(program.semesters);
+
+    if (!semesters.length) return '<p>Chưa có học kỳ.</p>';
+
+    const semesterKey = (semester, semesterIndex) => escapeAttr(semester.key || String(semesterIndex + 1));
+    const firstSemesterKey = semesterKey(semesters[0], 0);
+    const tabsId = escapeAttr(`education-semesters-${sectionId}-${prefix.replace(/\./g, '-')}`);
+    const tabs = semesters.map((semester, semesterIndex) => `
+      <button
+        type="button"
+        data-tabs-trigger="${semesterKey(semester, semesterIndex)}"
+        data-tabs-trigger-state="${semesterIndex === 0 ? 'active' : 'idle'}"
+      >
+        ${this.editable(sectionId, `${prefix}.semesters.${semesterIndex}.name`, semester.name)}
+      </button>
+    `).join('');
+    const panels = semesters.map((semester, semesterIndex) => `
+      <div
+        class="tabs__panel"
+        data-tabs-panel="${semesterKey(semester, semesterIndex)}"
+        data-tabs-panel-state="${semesterIndex === 0 ? 'active' : 'idle'}"
+      >
+        <div class="education-table-wrap w-full overflow-x-auto border rounded-3xl">
+          ${this.renderEducationCourseTable(sectionId, semester, prefix, semesterIndex)}
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      ${this.renderEducationSource(sectionId, program, prefix)}
+      <div data-tabs data-tabs-id="${tabsId}" data-tabs-panel-active="${firstSemesterKey}">
+        <div class="education-semester-tabs flex gap-2 overflow-x-auto py-5">${tabs}</div>
+        ${panels}
+      </div>
+    `;
+  }
+
+  renderEducationCourseTable(sectionId, semester, prefix, semesterIndex) {
+    const courses = asArray(semester.courses);
+    const rows = courses.length
+      ? courses.map((course, courseIndex) => {
+        const coursePath = `${prefix}.semesters.${semesterIndex}.courses.${courseIndex}`;
+        return `
+          <tr>
+            <td>${courseIndex + 1}</td>
+            <td>${this.editable(sectionId, `${coursePath}.code`, course.code)}</td>
+            <th scope="row">${this.editable(sectionId, `${coursePath}.name`, course.name)}</th>
+            <td>${this.editable(sectionId, `${coursePath}.credits`, course.credits)}</td>
+            <td>${this.editable(sectionId, `${coursePath}.theory`, course.theory)}</td>
+            <td>${this.editable(sectionId, `${coursePath}.practice`, course.practice)}</td>
+          </tr>
+        `;
+      }).join('')
+      : '<tr><td colspan="6" class="text-center">Chưa có học phần cho học kỳ này.</td></tr>';
+
+    return `
+      <table>
+        <thead><tr><th>STT</th><th>Mã HP</th><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  renderEducationSource(sectionId, program, prefix) {
+    return `
+      <div class="education-source flex flex-col md:flex-row justify-between gap-4 text-sm pb-4">
+        <span>Cập nhật: ${this.editable(sectionId, `${prefix}.updated_at`, program.updated_at)}</span>
+      </div>
+    `;
+  }
+
+  renderEducationList(sectionId, path, items, multiline = false) {
+    return asArray(items)
+      .map((item, index) => `<li>${this.editable(sectionId, `${path}.${index}`, item, multiline)}</li>`)
+      .join('');
   }
 }

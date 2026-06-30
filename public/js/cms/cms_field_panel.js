@@ -121,7 +121,7 @@ export class CmsFieldPanel {
       <label class="field cms-text-field${active}" for="${escapeAttr(id)}">
         <span class="field__label">${escapeHtml(field.label)}</span>
         <input id="${escapeAttr(id)}" class="field__input" type="text" value="${escapeAttr(valueText)}" data-cms-path="${escapeAttr(field.path)}">
-        ${isIconField ? '<small class="field__description">Enter Font Awesome classes, for example fa-solid fa-award.</small>' : ''}
+        ${isIconField ? '<p class="field__description">Enter Font Awesome classes, for example fa-solid fa-award.</p>' : ''}
       </label>
     `;
   }
@@ -211,17 +211,82 @@ export class CmsFieldPanel {
     );
     if (!groups.length) return '';
 
-    const fieldEditor = `<details class="cms-all-fields"><summary>Chỉnh sửa tất cả trường dữ liệu (${fields.length})</summary><div class="cms-field-grid">${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')).join('')}</div></details>`;
-    return `<div class="cms-structure-manager"><div class="cms-structure-manager__intro"><strong>Cấu trúc nội dung</strong><small>Thêm, nhân bản, sắp xếp hoặc xóa mục. Chọn nội dung trong bản xem trước để sửa văn bản.</small></div>${groups.map(({ path, pattern, definition }) => {
-      const items = asArray(getPath(section.data || {}, path));
-      return `<section class="cms-repeater"><header><strong>${escapeHtml(definition.label || path)}</strong><span>${items.length} mục</span></header><div class="cms-repeater__items">${items.map((item, index) => `
-        <div class="cms-repeater__item"><span>${escapeHtml(this.#itemLabel(item, index))}</span><div>
-          <button type="button" title="Lên" data-cms-array-action="up" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}" ${index === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
-          <button type="button" title="Xuống" data-cms-array-action="down" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}" ${index === items.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-arrow-down"></i></button>
-          <button type="button" title="Nhân bản" data-cms-array-action="duplicate" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}"><i class="fa-regular fa-copy"></i></button>
-          <button type="button" title="Xóa" data-cms-array-action="remove" data-cms-array-path="${escapeAttr(path)}" data-cms-array-index="${index}"><i class="fa-regular fa-trash-can"></i></button>
-        </div></div>`).join('')}</div><button type="button" class="btn" data-size="sm" data-variant="outline" data-cms-array-action="add" data-cms-array-path="${escapeAttr(path)}" data-cms-array-blueprint="${escapeAttr(pattern)}"><i class="fa-solid fa-plus"></i> Thêm mục</button></section>`;
-    }).join('')}${fieldEditor}</div>`;
+    const repeaters = groups
+      .map((group) => this.#renderRepeater(section, group))
+      .join('');
+    const fieldEditor = `
+      <details class="cms-all-fields">
+        <summary>Chỉnh sửa tất cả trường dữ liệu (${fields.length})</summary>
+        <div class="cms-field-grid">
+          ${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')).join('')}
+        </div>
+      </details>
+    `;
+
+    return `
+      <div class="cms-structure-manager">
+        <div class="cms-structure-manager__intro">
+          <strong>Cấu trúc nội dung</strong>
+          <p class="cms-structure-manager__description">
+            Thêm, nhân bản, sắp xếp hoặc xóa mục. Chọn nội dung trong bản xem trước để sửa văn bản.
+          </p>
+        </div>
+        ${repeaters}
+        ${fieldEditor}
+      </div>
+    `;
+  }
+
+  #renderRepeater(section, { path, pattern, definition }) {
+    const items = asArray(getPath(section.data || {}, path));
+    const escapedPath = escapeAttr(path);
+
+    return `
+      <section class="cms-repeater">
+        <header>
+          <strong>${escapeHtml(definition.label || path)}</strong>
+          <span>${items.length} mục</span>
+        </header>
+        <div class="cms-repeater__items">
+          ${items.map((item, index) => this.#renderRepeaterItem(item, index, items.length, escapedPath)).join('')}
+        </div>
+        <button
+          type="button"
+          class="btn"
+          data-size="sm"
+          data-variant="outline"
+          data-cms-array-action="add"
+          data-cms-array-path="${escapedPath}"
+          data-cms-array-blueprint="${escapeAttr(pattern)}"
+        >
+          <i class="fa-solid fa-plus"></i> Thêm mục
+        </button>
+      </section>
+    `;
+  }
+
+  #renderRepeaterItem(item, index, itemCount, escapedPath) {
+    const actionAttributes = `data-cms-array-path="${escapedPath}" data-cms-array-index="${index}"`;
+
+    return `
+      <div class="cms-repeater__item">
+        <span>${escapeHtml(this.#itemLabel(item, index))}</span>
+        <div>
+          <button type="button" title="Lên" data-cms-array-action="up" ${actionAttributes} ${index === 0 ? 'disabled' : ''}>
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+          <button type="button" title="Xuống" data-cms-array-action="down" ${actionAttributes} ${index === itemCount - 1 ? 'disabled' : ''}>
+            <i class="fa-solid fa-arrow-down"></i>
+          </button>
+          <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${actionAttributes}>
+            <i class="fa-regular fa-copy"></i>
+          </button>
+          <button type="button" title="Xóa" data-cms-array-action="remove" ${actionAttributes}>
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      </div>
+    `;
   }
 
   #expandRepeaterPattern(data, pattern) {

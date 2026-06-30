@@ -17,21 +17,37 @@ final class EducationSectionRenderer
     };
   }
 
-  private function header(array $data): string
-  {
-    return '<header class="education-hero">'
-      . '<h1>' . $this->e($data['title'] ?? '') . '</h1>'
-      . '<p>' . $this->e($data['description'] ?? '') . '</p>'
-      . '</header>';
-  }
-
   private function shell(array $data, CmsRenderContext $context, string $body): string
   {
     $breadcrumb = $context->pageSlug() === 'education' ? 'Đào tạo' : $this->e($data['title'] ?? 'Đào tạo');
-    return '<section class="site-breadcrumbs py-4"><div class="container"><div class="container-wrapper">'
-      . '<nav aria-label="breadcrumb"><ol class="breadcrumb__list"><li class="breadcrumb__item"><a class="breadcrumb__link" href="' . $this->e(url('/')) . '"><i class="fa-regular fa-house"></i> Trang chủ</a></li><li class="breadcrumb__separator" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></li><li class="breadcrumb__item"><span class="breadcrumb__page" aria-current="page">' . $breadcrumb . '</span></li></ol></nav>'
-      . '</div></div></section><section class="education-page"><div class="container"><div class="container-wrapper">'
-      . $this->header($data) . $body . '</div></div></section>';
+    $homeUrl = $this->e(url('/'));
+
+    return <<<HTML
+      <section class="site-breadcrumbs py-4">
+        <div class="container">
+          <div class="container-wrapper">
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb__list">
+                <li class="breadcrumb__item">
+                  <a class="breadcrumb__link" href="{$homeUrl}"><i class="fa-regular fa-house"></i> Trang chủ</a>
+                </li>
+                <li class="breadcrumb__separator" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></li>
+                <li class="breadcrumb__item">
+                  <span class="breadcrumb__page" aria-current="page">{$breadcrumb}</span>
+                </li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+      </section>
+      <section class="my-8">
+        <div class="container">
+          <div class="container-wrapper">
+            {$body}
+          </div>
+        </div>
+      </section>
+      HTML;
   }
 
   private function hub(array $data, CmsRenderContext $context): string
@@ -42,7 +58,14 @@ final class EducationSectionRenderer
   private function admissions(array $data, CmsRenderContext $context): string
   {
     $cta = $this->safeExternalUrl($data['cta_url'] ?? '');
-    $body = '<a class="btn" data-variant="primary" href="' . $this->e($cta) . '" target="_blank" rel="noopener noreferrer">' . $this->e($data['cta_label'] ?? '') . ' <i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
+    $ctaUrl = $this->e($cta);
+    $ctaLabel = $this->e($data['cta_label'] ?? '');
+    $body = <<<HTML
+      <a class="btn" data-variant="primary" href="{$ctaUrl}" target="_blank" rel="noopener noreferrer">
+        {$ctaLabel} <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+      HTML;
+
     return $this->detailSection('tuyen-sinh', $data, $body, false);
   }
 
@@ -51,13 +74,46 @@ final class EducationSectionRenderer
     $content = '';
     foreach ($this->items($data, 'programs') as $index => $program) {
       $specializations = '';
-      foreach ($this->items($program, 'specializations') as $item) $specializations .= '<li>' . $this->e($item) . '</li>';
+      foreach ($this->items($program, 'specializations') as $item)
+        $specializations .= '<li>' . $this->e($item) . '</li>';
       $objectives = '';
-      foreach ($this->items($program, 'objectives') as $item) $objectives .= '<li>' . $this->e($item) . '</li>';
-      $details = '<div class="education-facts"><span><strong>' . $this->e($program['duration'] ?? '') . '</strong> Thời lượng</span><span><strong>' . $this->e($program['credits'] ?? '') . '</strong> Tín chỉ</span><span><strong>' . $this->e($program['source_year'] ?? '') . '</strong> Áp dụng</span></div><div class="education-copy-grid"><div><h3>Định hướng nghề nghiệp</h3><p>' . $this->e($program['career'] ?? '') . '</p><h3>Mục tiêu chương trình</h3><ol>' . $objectives . '</ol></div>';
-      if ($specializations !== '') $details .= '<aside><h3>Các hướng chuyên môn</h3><ul>' . $specializations . '</ul></aside>';
-      $key = $this->key($program['key'] ?? '', 'program-' . $index);
-      $details .= '</div><div class="education-inline-actions"><a href="' . $this->e(url('dao-tao') . '#chuan-dau-ra') . '">Xem chuẩn đầu ra</a><a href="' . $this->e(url('dao-tao') . '#danh-sach-mon-hoc') . '">Xem danh sách môn học</a></div>';
+      foreach ($this->items($program, 'objectives') as $item)
+        $objectives .= '<li>' . $this->e($item) . '</li>';
+
+      $duration = $this->e($program['duration'] ?? '');
+      $credits = $this->e($program['credits'] ?? '');
+      $sourceYear = $this->e($program['source_year'] ?? '');
+      $career = $this->e($program['career'] ?? '');
+      $outcomesUrl = $this->e(url('dao-tao') . '#chuan-dau-ra');
+      $curriculumUrl = $this->e(url('dao-tao') . '#danh-sach-mon-hoc');
+      $specializationsAside = $specializations === '' ? '' : <<<HTML
+        <aside>
+          <h3>Các hướng chuyên môn</h3>
+          <ul>{$specializations}</ul>
+        </aside>
+        HTML;
+
+      $details = <<<HTML
+        <div class="education-facts grid grid-cols-2 md:grid-cols-3 gap-4 p-5 rounded-3xl">
+          <span><strong>{$duration}</strong> Thời lượng</span>
+          <span><strong>{$credits}</strong> Tín chỉ</span>
+          <span><strong>{$sourceYear}</strong> Áp dụng</span>
+        </div>
+        <div class="education-copy-grid grid gap-8 mt-8">
+          <div>
+            <h3>Định hướng nghề nghiệp</h3>
+            <p>{$career}</p>
+            <h3>Mục tiêu chương trình</h3>
+            <ol>{$objectives}</ol>
+          </div>
+          {$specializationsAside}
+        </div>
+        <div class="education-inline-actions flex flex-col md:flex-row gap-6 mt-6">
+          <a href="{$outcomesUrl}">Xem chuẩn đầu ra</a>
+          <a href="{$curriculumUrl}">Xem danh sách môn học</a>
+        </div>
+        HTML;
+
       $content .= $this->accordion($program, $index, $details);
     }
     return $this->detailSection('chuong-trinh-dao-tao', $data, $this->accordionGroup($data, $content));
@@ -68,9 +124,25 @@ final class EducationSectionRenderer
     $content = '';
     foreach ($this->items($data, 'programs') as $index => $program) {
       $objectives = $outcomes = '';
-      foreach ($this->items($program, 'objectives') as $item) $objectives .= '<li>' . $this->e($item) . '</li>';
-      foreach ($this->items($program, 'outcomes') as $item) $outcomes .= '<li>' . $this->e($item) . '</li>';
-      $details = $this->sourceMeta($program) . '<div class="education-outcome-grid"><section><h3>Mục tiêu chương trình</h3><ol>' . $objectives . '</ol></section><section><h3>Chuẩn đầu ra</h3><ol>' . $outcomes . '</ol></section></div>';
+      foreach ($this->items($program, 'objectives') as $item)
+        $objectives .= '<li>' . $this->e($item) . '</li>';
+      foreach ($this->items($program, 'outcomes') as $item)
+        $outcomes .= '<li>' . $this->e($item) . '</li>';
+      $sourceMeta = $this->sourceMeta($program);
+      $details = <<<HTML
+        {$sourceMeta}
+        <div class="education-content grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+          <section>
+            <h3>Mục tiêu chương trình</h3>
+            <ol>{$objectives}</ol>
+          </section>
+          <section>
+            <h3>Chuẩn đầu ra</h3>
+            <ol>{$outcomes}</ol>
+          </section>
+        </div>
+        HTML;
+
       $content .= $this->accordion($program, $index, $details);
     }
     return $this->detailSection('chuan-dau-ra', $data, $this->accordionGroup($data, $content));
@@ -85,17 +157,63 @@ final class EducationSectionRenderer
       foreach ($this->items($program, 'semesters') as $semesterIndex => $semester) {
         $semesterKey = $this->key($semester['key'] ?? '', (string) ($semesterIndex + 1));
         $active = $semesterIndex === 0;
-        if ($active) $firstSemesterKey = $semesterKey;
-        $tabs .= '<button type="button" data-tabs-trigger="' . $this->e($semesterKey) . '" data-tabs-trigger-state="' . ($active ? 'active' : 'idle') . '">' . $this->e($semester['name'] ?? ('Học kỳ ' . ($semesterIndex + 1))) . '</button>';
+        if ($active)
+          $firstSemesterKey = $semesterKey;
+        $escapedSemesterKey = $this->e($semesterKey);
+        $tabState = $active ? 'active' : 'idle';
+        $semesterName = $this->e($semester['name'] ?? ('Học kỳ ' . ($semesterIndex + 1)));
+        $tabs .= <<<HTML
+          <button type="button" data-tabs-trigger="{$escapedSemesterKey}" data-tabs-trigger-state="{$tabState}">
+            {$semesterName}
+          </button>
+          HTML;
+
         $rows = '';
         foreach ($this->items($semester, 'courses') as $courseIndex => $course) {
-          $rows .= '<tr><td>' . ($courseIndex + 1) . '</td><td>' . $this->e($course['code'] ?? '') . '</td><th scope="row">' . $this->e($course['name'] ?? '') . '</th><td>' . $this->e($course['credits'] ?? '') . '</td><td>' . $this->e($course['theory'] ?? '') . '</td><td>' . $this->e($course['practice'] ?? '') . '</td></tr>';
+          $number = $courseIndex + 1;
+          $code = $this->e($course['code'] ?? '');
+          $name = $this->e($course['name'] ?? '');
+          $credits = $this->e($course['credits'] ?? '');
+          $theory = $this->e($course['theory'] ?? '');
+          $practice = $this->e($course['practice'] ?? '');
+          $rows .= <<<HTML
+            <tr>
+              <td>{$number}</td>
+              <td>{$code}</td>
+              <th scope="row">{$name}</th>
+              <td>{$credits}</td>
+              <td>{$theory}</td>
+              <td>{$practice}</td>
+            </tr>
+            HTML;
         }
-        if ($rows === '') $rows = '<tr><td colspan="6" class="education-empty">Chưa có học phần cho học kỳ này.</td></tr>';
-        $panels .= '<div class="tabs__panel" data-tabs-panel="' . $this->e($semesterKey) . '" data-tabs-panel-state="' . ($active ? 'active' : 'idle') . '"><div class="education-table-wrap"><table><thead><tr><th>STT</th><th>Mã HP</th><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr></thead><tbody>' . $rows . '</tbody></table></div></div>';
+        if ($rows === '')
+          $rows = '<tr><td colspan="6" class="text-center">Chưa có học phần cho học kỳ này.</td></tr>';
+        $panels .= <<<HTML
+          <div class="tabs__panel" data-tabs-panel="{$escapedSemesterKey}" data-tabs-panel-state="{$tabState}">
+            <div class="education-table-wrap w-full overflow-x-auto border rounded-3xl">
+              <table>
+                <thead>
+                  <tr><th>STT</th><th>Mã HP</th><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr>
+                </thead>
+                <tbody>{$rows}</tbody>
+              </table>
+            </div>
+          </div>
+          HTML;
       }
       $tabsId = 'education-semesters-' . $this->key($program['key'] ?? '', 'program-' . $index);
-      $details = $this->sourceMeta($program) . '<div class="education-semesters" data-tabs data-tabs-id="' . $this->e($tabsId) . '" data-tabs-panel-active="' . $this->e($firstSemesterKey) . '"><div class="education-semester-tabs">' . $tabs . '</div>' . $panels . '</div>';
+      $tabsId = $this->e($tabsId);
+      $firstSemesterKey = $this->e($firstSemesterKey);
+      $sourceMeta = $this->sourceMeta($program);
+      $details = <<<HTML
+        {$sourceMeta}
+        <div data-tabs data-tabs-id="{$tabsId}" data-tabs-panel-active="{$firstSemesterKey}">
+          <div class="education-semester-tabs flex gap-2 overflow-x-auto py-5">{$tabs}</div>
+          {$panels}
+        </div>
+        HTML;
+
       $content .= $this->accordion($program, $index, $details);
     }
     return $this->detailSection('danh-sach-mon-hoc', $data, $this->accordionGroup($data, $content));
@@ -103,9 +221,24 @@ final class EducationSectionRenderer
 
   private function detailSection(string $id, array $data, string $body, bool $showDescription = true): string
   {
-    return '<section class="education-page education-detail" id="' . $this->e($id) . '"><div class="container"><div class="container-wrapper">'
-      . '<header class="education-section-heading"><h2>' . $this->e($data['title'] ?? '') . '</h2>' . ($showDescription ? '<p>' . $this->e($data['description'] ?? '') . '</p>' : '') . '</header>'
-      . $body . '</div></div></section>';
+    $sectionId = $this->e($id);
+    $titleId = $this->e($id . '-title');
+    $title = $this->e($data['title'] ?? '');
+    $description = $showDescription
+      ? '<p class="section-title__subtitle">' . $this->e($data['description'] ?? '') . '</p>'
+      : '';
+
+    return <<<HTML
+      <section class="py-8 container" id="{$sectionId}">
+          <div class="container-wrapper">
+            <header class="section-title mb-8" aria-labelledby="{$titleId}">
+              <h2 id="{$titleId}" class="section-title__heading">{$title}</h2>
+              {$description}
+            </header>
+            {$body}
+          </div>
+      </section>
+      HTML;
   }
 
   private function accordionGroup(array $data, string $content): string
@@ -115,19 +248,48 @@ final class EducationSectionRenderer
       ? $this->key($programs[0]['key'] ?? '', 'program-0')
       : '';
 
-    return '<div class="accordion education-accordion" data-accordion-type="single" data-accordion-collapsible data-accordion-default-value="' . $this->e($defaultValue) . '">' . $content . '</div>';
+    $defaultValue = $this->e($defaultValue);
+
+    return <<<HTML
+      <div class="accordion education-accordion flex flex-col gap-4" data-accordion-type="single" data-accordion-collapsible data-accordion-default-value="{$defaultValue}">
+        {$content}
+      </div>
+      HTML;
   }
 
   private function accordion(array $program, int $index, string $details): string
   {
     $key = $this->key($program['key'] ?? '', 'program-' . $index);
     $id = 'education-program-' . $key . '-' . (++$this->accordionId);
-    return '<article class="accordion_item education-accordion__item" data-accordion-value="' . $this->e($key) . '"><h2><button class="accordion__trigger" type="button"><span><small>' . $this->e($program['short_name'] ?? '') . '</small>' . $this->e($program['name'] ?? '') . '</span><i class="fa-solid fa-plus" aria-hidden="true"></i></button></h2><div class="accordion__content education-accordion__panel" id="' . $this->e($id) . '"><div class="education-accordion__panel-inner">' . $details . '</div></div></article>';
+    $key = $this->e($key);
+    $id = $this->e($id);
+    $shortName = $this->e($program['short_name'] ?? '');
+    $name = $this->e($program['name'] ?? '');
+
+    return <<<HTML
+      <article class="accordion_item border rounded-3xl overflow-hidden" data-accordion-value="{$key}">
+        <h2>
+          <button class="accordion__trigger flex w-full justify-between items-center gap-4 py-6 px-5 md:px-8" type="button">
+            <span class="flex flex-col md:flex-row gap-1 md:gap-4"><span>{$shortName}</span>{$name}</span>
+            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+          </button>
+        </h2>
+        <div class="accordion__content p-0" id="{$id}">
+          <div class="px-5 md:px-8 pb-8">{$details}</div>
+        </div>
+      </article>
+      HTML;
   }
 
   private function sourceMeta(array $program): string
   {
-    return '<div class="education-source"><span>Cập nhật: ' . $this->e($program['updated_at'] ?? '') . '</span></div>';
+    $updatedAt = $this->e($program['updated_at'] ?? '');
+
+    return <<<HTML
+      <div class="education-source flex flex-col md:flex-row justify-between gap-4 text-sm pb-4">
+        <span>Cập nhật: {$updatedAt}</span>
+      </div>
+      HTML;
   }
 
   private function items(array $data, string $key): array

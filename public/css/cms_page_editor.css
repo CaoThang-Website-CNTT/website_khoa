@@ -276,7 +276,7 @@
   flex-direction: column;
   gap: 0.35rem;
 }
-.cms-structure-manager__intro small {
+.cms-structure-manager__description {
   color: var(--muted-foreground);
 }
 .cms-repeater {

@@ -468,7 +468,8 @@
     transition: color 150ms ease;
   }
 
-  .accordion__trigger:hover:not(:disabled) {
+  .accordion__trigger:hover:not(:disabled)
+    > :not(:is(svg, .fa-solid, .fa-regular, .fa-brand, .fa-brands)) {
     text-decoration: underline;
   }
 

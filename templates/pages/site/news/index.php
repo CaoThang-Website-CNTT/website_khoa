@@ -46,9 +46,9 @@ $pageJsonLd = [$breadcrumbSchema];
 
 <section class="relative container py-16">
   <div class="container-wrapper flex flex-col gap-16">
-    <section class="news-title" aria-labelledby="page-title">
-      <h1 id="page-title" class="news-title__heading"><?= htmlspecialchars($pageTitle ?? 'Tin tức & Sự kiện') ?></h1>
-      <p class="news-title__subtitle">
+    <section class="section-title" aria-labelledby="page-title">
+      <h1 id="page-title" class="section-title__heading"><?= htmlspecialchars($pageTitle ?? 'Tin tức & Sự kiện') ?></h1>
+      <p class="section-title__subtitle">
         <?= $isFiltered
           ? htmlspecialchars('Tìm thấy ' . $allNews->getTotal() . ' bài viết phù hợp')
           : 'Cập nhật thông tin mới nhất từ Khoa CNTT' ?>

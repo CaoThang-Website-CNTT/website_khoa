@@ -8,8 +8,8 @@ final class EducationPageDefaults
   {
     return [
       'eyebrow' => 'Đào tạo tại Khoa Công nghệ thông tin',
-      'title' => 'Chọn lộ trình phù hợp với bạn',
-      'description' => 'Khám phá thông tin tuyển sinh, định hướng từng chương trình, chuẩn đầu ra và kế hoạch học tập được công bố từ các tài liệu đào tạo chính thức.',
+      'title' => 'Chọn chương trình phù hợp với bạn',
+      'description' => 'Khám phá thông tin tuyển sinh, định hướng từng chương trình, chuẩn đầu ra và kế hoạch học tập được công bố chính thức.',
       'links' => [
         ['icon' => 'fa-solid fa-user-graduate', 'title' => 'Thông tin tuyển sinh', 'description' => 'Tìm hiểu ngành đào tạo trước khi xem hướng dẫn đăng ký chính thức của Trường.', 'url' => 'dao-tao/tuyen-sinh', 'label' => 'Xem thông tin'],
         ['icon' => 'fa-solid fa-graduation-cap', 'title' => 'Chương trình đào tạo', 'description' => 'So sánh mục tiêu, định hướng nghề nghiệp và cấu trúc của ba chương trình.', 'url' => 'dao-tao/chuong-trinh-dao-tao', 'label' => 'Khám phá chương trình'],
@@ -32,7 +32,7 @@ final class EducationPageDefaults
   {
     return [
       'eyebrow' => 'Thông tin tuyển sinh',
-      'title' => 'Bắt đầu hành trình công nghệ tại Cao Thắng',
+      'title' => 'Bắt đầu hành trình tại Cao Thắng',
       'description' => 'Khoa Công nghệ thông tin đào tạo theo định hướng ứng dụng, chú trọng năng lực thực hành và khả năng thích nghi với môi trường nghề nghiệp.',
       'notice_title' => 'Thông tin đăng ký chính thức',
       'notice' => 'Chỉ tiêu, phương thức xét tuyển, mốc thời gian, học phí và hồ sơ được Trường Cao đẳng Kỹ thuật Cao Thắng công bố tập trung trên cổng tuyển sinh. Nội dung tại trang này giúp bạn định hướng chương trình, không thay thế thông báo tuyển sinh chính thức.',
@@ -46,7 +46,9 @@ final class EducationPageDefaults
         ['title' => 'Theo dõi thông báo chính thức', 'description' => 'Kiểm tra điều kiện và thời hạn đăng ký tại cổng tuyển sinh của Trường.'],
       ],
       'programs' => array_map(fn(array $program) => [
-        'key' => $program['key'], 'name' => $program['name'], 'summary' => $program['summary'],
+        'key' => $program['key'],
+        'name' => $program['name'],
+        'summary' => $program['summary'],
       ], self::programs()),
     ];
   }
@@ -56,7 +58,7 @@ final class EducationPageDefaults
     return [
       'eyebrow' => 'Chương trình đào tạo',
       'title' => 'Nền tảng vững, kỹ năng sát thực tế',
-      'description' => 'Mở từng chương trình để xem mục tiêu, cấu trúc và hướng phát triển nghề nghiệp.',
+      'description' => 'Xem mục tiêu, cấu trúc và hướng phát triển nghề nghiệp của từng chương trình.',
       'programs' => self::programs(),
     ];
   }
@@ -68,9 +70,13 @@ final class EducationPageDefaults
       'title' => 'Năng lực được hình thành qua chương trình',
       'description' => 'Mục tiêu chương trình mô tả năng lực sau 2–3 năm làm việc; chuẩn đầu ra là những gì sinh viên có khả năng thực hiện khi tốt nghiệp.',
       'programs' => array_map(fn(array $program) => [
-        'key' => $program['key'], 'name' => $program['name'], 'short_name' => $program['short_name'],
-        'source_year' => $program['outcomes_year'], 'updated_at' => '27/05/2026',
-        'objectives' => $program['objectives'], 'outcomes' => $program['outcomes'],
+        'key' => $program['key'],
+        'name' => $program['name'],
+        'short_name' => $program['short_name'],
+        'source_year' => $program['outcomes_year'],
+        'updated_at' => '27/05/2026',
+        'objectives' => $program['objectives'],
+        'outcomes' => $program['outcomes'],
       ], self::programs()),
     ];
   }
@@ -80,10 +86,14 @@ final class EducationPageDefaults
     return [
       'eyebrow' => 'Danh sách môn học',
       'title' => 'Kế hoạch học tập theo từng học kỳ',
-      'description' => 'Chọn chương trình và học kỳ để xem các học phần. Các con số phản ánh tài liệu chương trình áp dụng từ năm 2026.',
+      'description' => 'Chọn chương trình và học kỳ để xem các học phần.',
       'programs' => array_map(fn(array $program) => [
-        'key' => $program['key'], 'name' => $program['name'], 'short_name' => $program['short_name'],
-        'source_year' => '2026', 'updated_at' => '27/05/2026', 'credits' => $program['credits'],
+        'key' => $program['key'],
+        'name' => $program['name'],
+        'short_name' => $program['short_name'],
+        'source_year' => '2026',
+        'updated_at' => '27/05/2026',
+        'credits' => $program['credits'],
         'semesters' => self::semesters($program['key']),
       ], self::programs()),
     ];
@@ -107,9 +117,16 @@ final class EducationPageDefaults
   {
     return [
       [
-        'key' => 'cntt', 'short_name' => 'CNTT', 'name' => 'Cao đẳng Công nghệ thông tin',
+        'key' => 'cntt',
+        'short_name' => 'CNTT',
+        'name' => 'Cao đẳng Công nghệ thông tin',
         'summary' => 'Phát triển giải pháp phần mềm, web, di động, mạng máy tính và trí tuệ nhân tạo ứng dụng.',
-        'duration' => '6 học kỳ', 'credits' => '134', 'practice_ratio' => '59,8%', 'source_year' => '2026', 'outcomes_year' => '2026', 'updated_at' => '21/04/2026',
+        'duration' => '6 học kỳ',
+        'credits' => '134',
+        'practice_ratio' => '59,8%',
+        'source_year' => '2026',
+        'outcomes_year' => '2026',
+        'updated_at' => '21/04/2026',
         'career' => 'Tham gia phân tích, thiết kế, triển khai và tư vấn các giải pháp công nghệ thông tin trong cơ quan, tổ chức và doanh nghiệp.',
         'objectives' => [
           'Là thành viên chủ chốt trong nhóm phân tích, thiết kế, triển khai, tư vấn các giải pháp và dự án công nghệ thông tin.',
@@ -127,9 +144,16 @@ final class EducationPageDefaults
         'specializations' => ['Công nghệ lập trình ứng dụng Web', 'Công nghệ lập trình ứng dụng Di động', 'Mạng máy tính', 'Trí tuệ nhân tạo ứng dụng'],
       ],
       [
-        'key' => 'qtm', 'short_name' => 'QTM', 'name' => 'Cao đẳng Quản trị mạng máy tính',
+        'key' => 'qtm',
+        'short_name' => 'QTM',
+        'name' => 'Cao đẳng Quản trị mạng máy tính',
         'summary' => 'Thiết kế, triển khai, vận hành và bảo vệ hạ tầng mạng, máy chủ và dịch vụ hệ thống.',
-        'duration' => '6 học kỳ', 'credits' => '134', 'practice_ratio' => '58,5%', 'source_year' => '2026', 'outcomes_year' => '2026', 'updated_at' => '27/05/2026',
+        'duration' => '6 học kỳ',
+        'credits' => '134',
+        'practice_ratio' => '58,5%',
+        'source_year' => '2026',
+        'outcomes_year' => '2026',
+        'updated_at' => '27/05/2026',
         'career' => 'Làm việc trong quản trị hệ thống mạng, triển khai hạ tầng, bảo mật và tư vấn giải pháp tin học hóa cho tổ chức, doanh nghiệp.',
         'objectives' => [
           'Là nhân viên lành nghề trong công việc quản trị hệ thống mạng của tổ chức, doanh nghiệp.',
@@ -149,9 +173,16 @@ final class EducationPageDefaults
         'specializations' => [],
       ],
       [
-        'key' => 'scmt', 'short_name' => 'SCMT', 'name' => 'Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính',
+        'key' => 'scmt',
+        'short_name' => 'SCMT',
+        'name' => 'Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính',
         'summary' => 'Lắp ráp, chẩn đoán, sửa chữa phần cứng và triển khai hệ thống máy tính, thiết bị mạng.',
-        'duration' => '6 học kỳ', 'credits' => '131', 'practice_ratio' => '59,8%', 'source_year' => '2026', 'outcomes_year' => '2024', 'updated_at' => '27/05/2026',
+        'duration' => '6 học kỳ',
+        'credits' => '131',
+        'practice_ratio' => '59,8%',
+        'source_year' => '2026',
+        'outcomes_year' => '2024',
+        'updated_at' => '27/05/2026',
         'career' => 'Xây dựng, bảo trì và sửa chữa hệ thống máy tính; tư vấn giải pháp kỹ thuật và lựa chọn thiết bị tin học.',
         'objectives' => [
           'Là nhân viên lành nghề trong xây dựng, bảo trì, sửa chữa hệ thống máy tính của cơ quan, tổ chức và doanh nghiệp.',
