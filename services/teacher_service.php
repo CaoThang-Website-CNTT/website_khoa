@@ -55,9 +55,16 @@ class TeacherService implements ITeacherService
     $departments = $this->_departmentStore->getByIds($departmentIds);
     $departmentMap = array_column($departments, null, 'id');
 
+    $accountIds = array_filter(array_column($teachers, 'account_id'));
+    $accounts = $this->_accountStore->getByIds($accountIds);
+    $accountMap = array_column($accounts, null, 'id');
+
     foreach ($teachers as $teacher) {
       if ($teacher->department_id && isset($departmentMap[$teacher->department_id])) {
         $teacher->department = $departmentMap[$teacher->department_id];
+      }
+      if ($teacher->account_id && isset($accountMap[$teacher->account_id])) {
+        $teacher->account = $accountMap[$teacher->account_id];
       }
     }
 

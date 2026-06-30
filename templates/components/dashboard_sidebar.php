@@ -23,6 +23,12 @@ $menuConfig = [
           'url' => 'admin/accounts',
         ],
         [
+          'type' => 'link',
+          'label' => 'Lớp học',
+          'icon' => 'fa-solid fa-chalkboard',
+          'url' => 'admin/classrooms',
+        ],
+        [
           'type' => 'collapsible',
           'label' => 'Nội dung',
           'icon' => 'fa-solid fa-list',

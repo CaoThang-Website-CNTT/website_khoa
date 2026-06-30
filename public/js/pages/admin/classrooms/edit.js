@@ -45,13 +45,15 @@
 
       if (!majorId) {
         specSelect.disabled = true;
+        teacherSelect.disabled = true;
+        teacherSelect.innerHTML = '<option value="">-- Vui lòng chọn ngành trước --</option>';
         buildShortName();
         return;
       }
 
       const selectedMajor = getSelectedMajor();
       const filteredSpecs = allSpecs.filter(s => s.major_id === majorId);
-      const filteredTeachers = allTeachers.filter(t => t.department === selectedMajor?.short_name);
+      const filteredTeachers = allTeachers.filter(t => t.department_id === selectedMajor?.department_id);
 
       // --- XỬ LÝ CHUYÊN NGÀNH ---
       if (filteredSpecs.length === 0) {
@@ -82,7 +84,7 @@
         filteredTeachers.forEach(t => {
           const opt = document.createElement('option');
           opt.value = t.id;
-          opt.textContent = `${t.full_name} - ${t.department}`;
+          opt.textContent = `${t.full_name} - ${t.email}`;
 
           // Pre-select dữ liệu cũ nếu đang ở lần load đầu tiên
           if (isInit && t.id == initialTeacherId) {

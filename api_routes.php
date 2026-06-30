@@ -1,12 +1,16 @@
 <?php
 
-use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController};
+use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController, ClassroomApiController};
 use App\Core\Router;
 
 $router->prefix('api')->group(function ($router) {
   $router->prefix('v1')->group(function ($router) {
     $router->prefix('accounts')->group(function ($router) {
       $router->get('/', [AccountApiController::class, 'index']);
+    });
+
+    $router->prefix('classrooms')->group(function ($router) {
+      $router->get('/', [ClassroomApiController::class, 'index']);
     });
 
     $router->prefix('students')->group(function ($router) {

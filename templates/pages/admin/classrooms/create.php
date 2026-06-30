@@ -22,6 +22,8 @@ $old_input = request()->session()->getOldInputs() ?? [];
   Thêm
 </button>
 <?php $layout->end() ?>
+
+<?php $layout->start("content") ?>
 <form class="detail-layout" id="classroom-add-form" action="<?= url('admin/classrooms') ?>" method="POST">
   <?= csrf_field() ?>
   <div class="detail-layout__main">
@@ -98,16 +100,10 @@ $old_input = request()->session()->getOldInputs() ?? [];
         <div class="card__content">
           <div class="field-group">
 
-            <div class="field" data-field-required>
+            <div class="field">
               <label class="field__label" for="homeroom_teacher_id">Giáo viên chủ nhiệm</label>
               <select id="homeroom_teacher_id" class="field__input" name="homeroom_teacher_id">
-                <option value="">-- Chưa phân công --</option>
-                <?php foreach ($teachers as $teacher): ?>
-                  <option value="<?= htmlspecialchars($teacher->id) ?>">
-                    <?= htmlspecialchars($teacher->full_name) ?>
-                    - <?= htmlspecialchars($teacher->department) ?>
-                  </option>
-                <?php endforeach; ?>
+                <option value="">-- Vui lòng chọn ngành trước --</option>
               </select>
               <p class="field__description">Có thể phân công sau khi tạo lớp.</p>
             </div>
@@ -135,32 +131,36 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </button>
 </div>
 
+<?php $layout->end() ?>
+
 <?php $layout->start("scripts") ?>
 <script>
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
   window.__specializations__ = <?= json_encode(
-    array_map(fn($s) => [
-      'id' => $s->id,
-      'major_id' => $s->major_id,
-      'full_name' => $s->full_name,
-      'short_name' => $s->short_name,
-    ], $specializations)
-  ) ?>;
+                                  array_map(fn($s) => [
+                                    'id' => $s->id,
+                                    'major_id' => $s->major_id,
+                                    'full_name' => $s->full_name,
+                                    'short_name' => $s->short_name,
+                                  ], $specializations)
+                                ) ?>;
   window.__majors__ = <?= json_encode(
-    array_map(fn($m) => [
-      'id' => $m->id,
-      'short_name' => $m->short_name,
-      'level' => $m->level,
-    ], $majors)
-  ) ?>;
+                        array_map(fn($m) => [
+                          'id' => $m->id,
+                          'short_name' => $m->short_name,
+                          'level' => $m->level,
+                          'department_id' => $m->department_id,
+                        ], $majors)
+                      ) ?>;
   window.__teachers__ = <?= json_encode(
-    array_map(fn($t) => [
-      'id' => $t->id,
-      'full_name' => $t->full_name,
-      'department' => $t->department,
-    ], $teachers)
-  ) ?>;
+                          array_map(fn($t) => [
+                            'id' => $t->id,
+                            'full_name' => $t->full_name,
+                            'email' => $t->account ? $t->account->email : 'Chưa có email',
+                            'department_id' => $t->department_id,
+                          ], $teachers)
+                        ) ?>;
 </script>
 <script src="<?= url('public/js/pages/admin/classrooms/create.js') ?>" type="module"></script>
 <?php $layout->end() ?>

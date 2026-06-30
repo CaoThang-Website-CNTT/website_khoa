@@ -190,3 +190,4 @@ require_once BASE_PATH . '/controllers/api/company_api_controller.php';
 require_once BASE_PATH . '/controllers/api/post_api_controller.php';
 require_once BASE_PATH . '/controllers/api/teacher_dashboard_api_controller.php';
 require_once BASE_PATH . '/controllers/api/export_api_controller.php';
+require_once BASE_PATH . '/controllers/api/classroom_api_controller.php';
