@@ -429,3 +429,78 @@
     flex-wrap: wrap;
   }
 }
+
+/* Education page */
+.education-facts {
+  background: var(--muted);
+}
+
+.education-facts > span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--muted-foreground);
+}
+
+.education-facts strong,
+.education-program-short-name {
+  color: var(--primary);
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+}
+
+.education-copy-grid h3,
+.education-content h3 {
+  margin-bottom: 0.75rem;
+  color: var(--primary);
+  font-weight: var(--fw-semibold);
+}
+
+.education-copy-grid h3:not(:first-child) {
+  margin-top: 1.5rem;
+}
+
+.education-copy-grid :is(ul, ol),
+.education-content :is(ul, ol) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-left: 1.25rem;
+  list-style: disc outside;
+}
+
+.education-copy-grid li::marker,
+.education-content li::marker {
+  color: var(--primary);
+}
+
+.education-semester-tabs [data-tabs-trigger] {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.education-semester-tabs .badge {
+  min-height: 2.5rem;
+  padding: 0.625rem 1.125rem;
+  font-size: var(--text-md);
+  line-height: 1.25;
+}
+
+.education-table-wrap {
+  border-color: var(--border);
+  background: var(--background);
+}
+
+.education-course-table tbody tr:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.education-course-table tbody :is(td, th) {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+}
+
+.education-course-table tbody tr:hover {
+  background: color-mix(in oklab, var(--muted) 60%, transparent);
+}

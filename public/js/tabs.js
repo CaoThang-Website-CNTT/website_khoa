@@ -89,6 +89,8 @@ class TabHandler {
     tabs.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
       const isActive = trigger.dataset.tabsTrigger === key;
       trigger.dataset.tabsTriggerState = isActive ? "active" : "idle";
+      const badge = trigger.querySelector(":scope > .badge");
+      if (badge) badge.dataset.variant = isActive ? "primary" : "outline";
       trigger.setAttribute("aria-selected", isActive ? "true" : "false");
       trigger.setAttribute("tabindex", isActive ? "0" : "-1");
     });

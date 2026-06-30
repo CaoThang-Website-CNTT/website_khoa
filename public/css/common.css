@@ -478,19 +478,13 @@
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
   }
 
-  .accordion__trigger::after {
-    width: 0.5rem;
-    height: 0.5rem;
-    content: "";
+  .accordion__icon {
     flex-shrink: 0;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(45deg);
     transition: transform 200ms ease;
   }
 
-  .accordion__trigger[data-state="open"]::after {
-    transform: rotate(225deg);
+  .accordion__trigger[data-state="open"] .accordion__icon {
+    transform: rotate(180deg);
   }
 
   .accordion__content {
@@ -519,7 +513,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .accordion__trigger::after,
+    .accordion__icon,
     .accordion__content {
       transition: none;
     }

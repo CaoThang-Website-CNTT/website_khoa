@@ -112,6 +112,14 @@ class AccordionHandler {
     const rootId = root.dataset.accordionId || root.id || this._createId("accordion");
     root.dataset.accordionId = rootId;
 
+    let icon = item.trigger.querySelector(":scope > .accordion__icon");
+    if (!icon) {
+      icon = document.createElement("i");
+      icon.className = "accordion__icon fa-solid fa-chevron-down";
+      icon.setAttribute("aria-hidden", "true");
+      item.trigger.appendChild(icon);
+    }
+
     item.trigger.type = "button";
     item.trigger.id ||= `${rootId}-trigger-${index + 1}`;
     item.content.id ||= `${rootId}-content-${index + 1}`;

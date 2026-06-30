@@ -370,31 +370,35 @@ export class StaticLayoutRenderer {
     const anchorIds = { admissions: 'tuyen-sinh', programs: 'chuong-trinh-dao-tao', outcomes: 'chuan-dau-ra', curriculum: 'danh-sach-mon-hoc' };
     const anchorId = anchorIds[sectionId] || '';
 
-    const header = `
+    const header = type === 'sections/admissions' ? '' : `
         <header class="section-title mb-8"${anchorId ? ` aria-labelledby="${anchorId}-title"` : ''}>
           <h2${anchorId ? ` id="${anchorId}-title"` : ''} class="section-title__heading">
             ${this.editable(sectionId, 'title', data.title)}
           </h2>
-          ${type === 'sections/admissions'
-        ? ''
-        : `<p class="section-title__subtitle">${this.editable(sectionId, 'description', data.description, true)}</p>`}
+          <p class="section-title__subtitle">${this.editable(sectionId, 'description', data.description, true)}</p>
         </header>
       `;
 
     let body = '';
     if (type === 'sections/admissions') {
       body = `
-        <span class="btn" data-variant="primary">
-          ${this.editable(sectionId, 'cta_label', data.cta_label)}
-          <i class="fa-solid fa-arrow-up-right-from-square"></i>
-        </span>
+        <div class="stats__cta flex flex-col items-center p-3 md:p-12 rounded-3xl">
+          <h2 class="stats__cta-title text-center text-xl md:text-3xl font-semibold mb-2">${this.editable(sectionId, 'title', data.title)}</h2>
+          <p class="stats__cta-description text-center text-sm md:text-xl font-light mb-6">${this.editable(sectionId, 'description', data.description, true)}</p>
+          <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
+            <span class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full" data-variant="secondary">
+              ${this.editable(sectionId, 'cta_label', data.cta_label)}
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </span>
+          </div>
+        </div>
       `;
     } else if (!isIntro) {
       body = `
         <div class="accordion education-accordion flex flex-col gap-4">
           ${asArray(data.programs)
-        .map((program, index) => this.renderEducationProgram(sectionId, program, index, type))
-        .join('')}
+          .map((program, index) => this.renderEducationProgram(sectionId, program, index, type))
+          .join('')}
         </div>
       `;
     }
@@ -436,10 +440,9 @@ export class StaticLayoutRenderer {
         <h2>
           <button class="accordion__trigger flex w-full justify-between items-center gap-4 py-6 px-5 md:px-8" type="button">
             <span class="flex flex-col md:flex-row gap-1 md:gap-4">
-              <span>${this.editable(sectionId, `${prefix}.short_name`, program.short_name)}</span>
+              <span class="education-program-short-name">${this.editable(sectionId, `${prefix}.short_name`, program.short_name)}</span>
               ${this.editable(sectionId, `${prefix}.name`, program.name)}
             </span>
-            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
           </button>
         </h2>
         <div class="accordion__content p-0">
@@ -461,7 +464,7 @@ export class StaticLayoutRenderer {
       <div class="education-copy-grid grid gap-8 mt-8">
         <div>
           <h3>Định hướng nghề nghiệp</h3>
-          <p>${this.editable(sectionId, `${prefix}.career`, program.career, true)}</p>
+          <ul><li>${this.editable(sectionId, `${prefix}.career`, program.career, true)}</li></ul>
           <h3>Mục tiêu chương trình</h3>
           <ol>${this.renderEducationList(sectionId, `${prefix}.objectives`, program.objectives, true)}</ol>
         </div>
@@ -472,9 +475,9 @@ export class StaticLayoutRenderer {
           </aside>
         ` : ''}
       </div>
-      <div class="education-inline-actions flex flex-col md:flex-row gap-6 mt-6">
-        <a href="#chuan-dau-ra">Xem chuẩn đầu ra</a>
-        <a href="#danh-sach-mon-hoc">Xem danh sách môn học</a>
+      <div class="education-inline-actions flex flex-col md:flex-row gap-3 mt-6">
+        <a class="btn rounded-full" data-variant="outline" data-size="lg" href="#chuan-dau-ra">Xem chuẩn đầu ra</a>
+        <a class="btn rounded-full" data-variant="outline" data-size="lg" href="#danh-sach-mon-hoc">Xem danh sách môn học</a>
       </div>
     `;
   }
@@ -509,7 +512,7 @@ export class StaticLayoutRenderer {
         data-tabs-trigger="${semesterKey(semester, semesterIndex)}"
         data-tabs-trigger-state="${semesterIndex === 0 ? 'active' : 'idle'}"
       >
-        ${this.editable(sectionId, `${prefix}.semesters.${semesterIndex}.name`, semester.name)}
+        <span class="badge" data-variant="${semesterIndex === 0 ? 'primary' : 'outline'}" data-size="lg">${this.editable(sectionId, `${prefix}.semesters.${semesterIndex}.name`, semester.name)}</span>
       </button>
     `).join('');
     const panels = semesters.map((semester, semesterIndex) => `
@@ -552,7 +555,7 @@ export class StaticLayoutRenderer {
       : '<tr><td colspan="6" class="text-center">Chưa có học phần cho học kỳ này.</td></tr>';
 
     return `
-      <table>
+      <table class="data-table education-course-table">
         <thead><tr><th>STT</th><th>Mã HP</th><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>

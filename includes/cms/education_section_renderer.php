@@ -60,13 +60,21 @@ final class EducationSectionRenderer
     $cta = $this->safeExternalUrl($data['cta_url'] ?? '');
     $ctaUrl = $this->e($cta);
     $ctaLabel = $this->e($data['cta_label'] ?? '');
+    $title = $this->e($data['title'] ?? '');
+    $description = $this->e($data['description'] ?? '');
     $body = <<<HTML
-      <a class="btn" data-variant="primary" href="{$ctaUrl}" target="_blank" rel="noopener noreferrer">
-        {$ctaLabel} <i class="fa-solid fa-arrow-up-right-from-square"></i>
-      </a>
+      <div class="stats__cta flex flex-col items-center p-3 md:p-12 rounded-3xl">
+        <h2 class="stats__cta-title text-center text-xl md:text-3xl font-semibold mb-2">{$title}</h2>
+        <p class="stats__cta-description text-center text-sm md:text-xl font-light mb-6">{$description}</p>
+        <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
+          <a class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full" data-variant="secondary" href="{$ctaUrl}" target="_blank" rel="noopener noreferrer">
+            {$ctaLabel} <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
+      </div>
       HTML;
 
-    return $this->detailSection('tuyen-sinh', $data, $body, false);
+    return $this->detailSection('tuyen-sinh', $data, $body, false, false);
   }
 
   private function programs(array $data, CmsRenderContext $context): string
@@ -102,15 +110,15 @@ final class EducationSectionRenderer
         <div class="education-copy-grid grid gap-8 mt-8">
           <div>
             <h3>Định hướng nghề nghiệp</h3>
-            <p>{$career}</p>
+            <ul><li>{$career}</li></ul>
             <h3>Mục tiêu chương trình</h3>
             <ol>{$objectives}</ol>
           </div>
           {$specializationsAside}
         </div>
-        <div class="education-inline-actions flex flex-col md:flex-row gap-6 mt-6">
-          <a href="{$outcomesUrl}">Xem chuẩn đầu ra</a>
-          <a href="{$curriculumUrl}">Xem danh sách môn học</a>
+        <div class="education-inline-actions flex flex-col md:flex-row gap-3 mt-6">
+          <a class="btn rounded-full" data-variant="outline" data-size="lg" href="{$outcomesUrl}">Xem chuẩn đầu ra</a>
+          <a class="btn rounded-full" data-variant="outline" data-size="lg" href="{$curriculumUrl}">Xem danh sách môn học</a>
         </div>
         HTML;
 
@@ -161,10 +169,11 @@ final class EducationSectionRenderer
           $firstSemesterKey = $semesterKey;
         $escapedSemesterKey = $this->e($semesterKey);
         $tabState = $active ? 'active' : 'idle';
+        $badgeVariant = $active ? 'primary' : 'outline';
         $semesterName = $this->e($semester['name'] ?? ('Học kỳ ' . ($semesterIndex + 1)));
         $tabs .= <<<HTML
           <button type="button" data-tabs-trigger="{$escapedSemesterKey}" data-tabs-trigger-state="{$tabState}">
-            {$semesterName}
+            <span class="badge" data-variant="{$badgeVariant}" data-size="lg">{$semesterName}</span>
           </button>
           HTML;
 
@@ -192,7 +201,7 @@ final class EducationSectionRenderer
         $panels .= <<<HTML
           <div class="tabs__panel" data-tabs-panel="{$escapedSemesterKey}" data-tabs-panel-state="{$tabState}">
             <div class="education-table-wrap w-full overflow-x-auto border rounded-3xl">
-              <table>
+              <table class="data-table education-course-table">
                 <thead>
                   <tr><th>STT</th><th>Mã HP</th><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr>
                 </thead>
@@ -219,7 +228,7 @@ final class EducationSectionRenderer
     return $this->detailSection('danh-sach-mon-hoc', $data, $this->accordionGroup($data, $content));
   }
 
-  private function detailSection(string $id, array $data, string $body, bool $showDescription = true): string
+  private function detailSection(string $id, array $data, string $body, bool $showDescription = true, bool $showHeader = true): string
   {
     $sectionId = $this->e($id);
     $titleId = $this->e($id . '-title');
@@ -227,14 +236,17 @@ final class EducationSectionRenderer
     $description = $showDescription
       ? '<p class="section-title__subtitle">' . $this->e($data['description'] ?? '') . '</p>'
       : '';
-
-    return <<<HTML
-      <section class="py-8 container" id="{$sectionId}">
-          <div class="container-wrapper">
+    $header = $showHeader ? <<<HTML
             <header class="section-title mb-8" aria-labelledby="{$titleId}">
               <h2 id="{$titleId}" class="section-title__heading">{$title}</h2>
               {$description}
             </header>
+      HTML : '';
+
+    return <<<HTML
+      <section class="py-8 container" id="{$sectionId}">
+          <div class="container-wrapper">
+            {$header}
             {$body}
           </div>
       </section>
@@ -270,8 +282,7 @@ final class EducationSectionRenderer
       <article class="accordion_item border rounded-3xl overflow-hidden" data-accordion-value="{$key}">
         <h2>
           <button class="accordion__trigger flex w-full justify-between items-center gap-4 py-6 px-5 md:px-8" type="button">
-            <span class="flex flex-col md:flex-row gap-1 md:gap-4"><span>{$shortName}</span>{$name}</span>
-            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+            <span class="flex flex-col md:flex-row gap-1 md:gap-4"><span class="education-program-short-name">{$shortName}</span>{$name}</span>
           </button>
         </h2>
         <div class="accordion__content p-0" id="{$id}">
