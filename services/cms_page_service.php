@@ -14,6 +14,7 @@ interface ICmsPageService
   public function getPage(int $id): CmsPage;
   public function getPageBySlug(string $slug): CmsPage;
   public function getPublishedPageBySlug(string $slug): ?CmsPage;
+  public function getSectionData(string $slug, string $sectionId): array;
   public function getPageForEditing(string $slug): array;
   public function saveDraft(string $slug, array $payload): CmsPage;
   public function publish(string $slug, array $payload): CmsPage;
@@ -64,6 +65,20 @@ class CmsPageService implements ICmsPageService
     }
 
     return $this->_store->findPublishedBySlug($slug);
+  }
+
+  public function getSectionData(string $slug, string $sectionId): array
+  {
+    $page = $this->getPublishedPageBySlug($slug) ?? $this->getPageBySlug($slug);
+    $document = $this->normalizeDocument($slug, $page->content());
+
+    foreach ($document['sections'] as $section) {
+      if (($section['id'] ?? '') === $sectionId) {
+        return is_array($section['data'] ?? null) ? $section['data'] : [];
+      }
+    }
+
+    return [];
   }
 
   public function getPageForEditing(string $slug): array

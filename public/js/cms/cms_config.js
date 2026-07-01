@@ -42,6 +42,15 @@ export const CMS_TEXT_FIELDS = {
     ['cta.description', 'CTA description', 'textarea'],
     ['cta.buttons.*.label', 'Button label'],
   ],
+  partnerships: [
+    ['title', 'Title'],
+    ['subtitle', 'Subtitle', 'textarea'],
+    ['partners.*.name', 'Partner name'],
+    ['partners.*.url', 'Partner URL'],
+    ['partners.*.image.alt', 'Partner logo alt text'],
+    ['partners.*.description', 'Partner description', 'textarea'],
+    ['partners.*.description_source_url', 'Description source URL'],
+  ],
   about_hero: [
     ['badge', 'Badge'],
     ['title', 'Title'],
@@ -78,5 +87,8 @@ export const CMS_IMAGE_FIELDS = {
   bento_grid: [
     ['items.0.image.src', 'Featured item image'],
     ['items.5.image.src', 'Community item image'],
+  ],
+  partnerships: [
+    ['partners.*.image.src', 'Partner logo'],
   ],
 };

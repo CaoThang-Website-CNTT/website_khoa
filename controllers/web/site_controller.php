@@ -223,8 +223,11 @@ class SiteController extends Controller
 
   public function partners(): void
   {
-    $carousel = $this->_carouselService->getBySlugWithSlides('partner-companies', with_media: true);
-    $partners = $carousel ? $carousel->getActiveSlides() : [];
+    $partnerships = $this->_cmsPageService->getSectionData('landing', 'partnerships');
+    $partners = array_values(array_filter(
+      is_array($partnerships['partners'] ?? null) ? $partnerships['partners'] : [],
+      static fn(mixed $partner): bool => is_array($partner) && trim((string) ($partner['name'] ?? '')) !== '',
+    ));
     $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
     $description = 'Các doanh nghiệp đồng hành cùng Khoa Công nghệ thông tin trong đào tạo, thực tập và tuyển dụng.';
 

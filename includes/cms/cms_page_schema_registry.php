@@ -40,6 +40,11 @@ final class CmsPageSchemaRegistry
           'locked' => false,
         ],
         [
+          'id' => 'partnerships',
+          'type' => 'sections/partnerships',
+          'locked' => false,
+        ],
+        [
           'id' => 'newsfeed',
           'type' => 'sections/newsfeed',
           'locked' => true,

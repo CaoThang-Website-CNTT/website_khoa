@@ -87,6 +87,7 @@ final class CmsSectionRegistry
       'landing_about' => 'sections/landing_about',
       'why_choose_us' => 'sections/why_choose_us',
       'stats' => 'sections/stats',
+      'partnerships' => 'sections/partnerships',
       'about_hero' => 'sections/about_hero',
       'history' => 'sections/history',
       'bento_grid' => 'sections/bento_grid',

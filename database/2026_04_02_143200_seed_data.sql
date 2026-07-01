@@ -524,6 +524,37 @@ SET content_json = JSON_SET(
 )
 WHERE slug = 'landing';
 
+UPDATE `cms_pages`
+SET content_json = JSON_ARRAY_INSERT(
+  content_json,
+  '$.sections[4]',
+  JSON_OBJECT(
+    'id', 'partnerships',
+    'type', 'sections/partnerships',
+    'locked', FALSE,
+    'data', JSON_OBJECT(
+      'variant', 'default',
+      'title', 'Đối tác Doanh nghiệp',
+      'subtitle', 'Sinh viên được kết nối trực tiếp với các doanh nghiệp hàng đầu trong lĩnh vực công nghệ.',
+      'partners', JSON_ARRAY(
+        JSON_OBJECT('name', 'NVIDIA', 'url', 'https://www.nvidia.com/en-in/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/f241854894669bf5ca4b65ce5614b3d2.png', 'alt', 'NVIDIA')),
+        JSON_OBJECT('name', 'Lexar Việt Nam', 'url', 'https://www.facebook.com/Lexarviet', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/41f87152f57bd05bf848bcf01113f3b3.png', 'alt', 'Lexar Việt Nam')),
+        JSON_OBJECT('name', 'Tin học ngôi sao', 'url', 'https://tinhocngoisao.com/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/0c09c04e408300357f835dc97eb1a6e6.png', 'alt', 'Tin học ngôi sao')),
+        JSON_OBJECT('name', 'An Phát Co.,Ltd', 'url', 'https://vitinhanphat.com.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/1ae64b95ef7ddafef717166e9edabfd5.png', 'alt', 'An Phát Co.,Ltd')),
+        JSON_OBJECT('name', 'SMNET', 'url', 'https://smnet.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/20131828c2f34e5eec6dc06826cb936f.png', 'alt', 'SMNET')),
+        JSON_OBJECT('name', 'Tin học đại dương', 'url', 'https://tinhocdaiduong.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/cd22e173fe39bc2f2f1c6f756e46d78e.png', 'alt', 'Tin học đại dương')),
+        JSON_OBJECT('name', 'Nguyễn Thuận', 'url', 'https://thuancomputer.com/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/6858fbd5fab3b644b2b486587b94cda5.png', 'alt', 'Nguyễn Thuận')),
+        JSON_OBJECT('name', 'ENGENIUS', 'url', 'https://engenius.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/4846e8f8f53fd5bb49b7ecda45792660.png', 'alt', 'ENGENIUS')),
+        JSON_OBJECT('name', 'PAT GROUP / Siêu Thị Công Nghệ', 'url', 'https://www.sieuthicongnghe.com.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/1cc65af6ae144feaa9d8ed7f66d7aee4.png', 'alt', 'PAT GROUP / Siêu Thị Công Nghệ')),
+        JSON_OBJECT('name', 'Anta6', 'url', 'https://anta6.com/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/bb134adbde2b708a630f3539ac02aa02.png', 'alt', 'Anta6')),
+        JSON_OBJECT('name', 'Waverley Software', 'url', 'https://waverleysoftware.com', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/7717dab3bbd70e2f3d31aa0cd6202ff5.png', 'alt', 'Waverley Software')),
+        JSON_OBJECT('name', 'Ryomo Vietnam Solutions Co., Ltd.', 'url', 'http://rvsc.ryomo-gr.com/vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/c31d40d21703b76e070989017e080e3d.png', 'alt', 'Ryomo Vietnam Solutions Co., Ltd.'))
+      )
+    )
+  )
+)
+WHERE slug = 'landing';
+
 UPDATE `carousel_slides`
 SET title = CASE sort_order
     WHEN 1 THEN 'Khoa Công nghệ thông tin'

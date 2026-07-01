@@ -33,6 +33,9 @@ export class StaticLayoutRenderer {
       case 'sections/stats':
       case 'stats':
         return this.renderStats(data, section.id);
+      case 'sections/partnerships':
+      case 'partnerships':
+        return this.renderPartnerships(data, section.id);
       case 'sections/about_hero':
       case 'about_hero':
         return this.renderAboutHero(data, section.id);
@@ -283,6 +286,47 @@ export class StaticLayoutRenderer {
               <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
                 ${asArray(data.cta?.buttons).map((button, index) => `<span data-variant="${escapeAttr(button.variant || 'outline')}" class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full ${index === 1 ? 'bg-transparent' : ''}">${this.editable(sectionId, `cta.buttons.${index}.label`, button.label)}</span>`).join('')}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  renderPartnerships(data, sectionId) {
+    const partners = asArray(data.partners).filter((partner) => String(partner?.image?.src ?? '').trim());
+    if (!partners.length) {
+      return this.renderLockedPlaceholder('Partnerships', 'Chưa có logo đối tác để hiển thị.');
+    }
+
+    const renderGroup = (isDuplicate = false) => `
+      <div class="partnerships__group" aria-hidden="${isDuplicate ? 'true' : 'false'}">
+        ${partners.map((partner, index) => {
+          const name = String(partner?.name ?? '').trim();
+          const imagePath = `partners.${index}.image.src`;
+          const activeClass = this.imageActiveClass(sectionId, imagePath);
+          const editableClass = isDuplicate ? '' : ` cms-editable-image${activeClass}`;
+          const editableAttrs = isDuplicate ? '' : this.imageDataAttrs(sectionId, imagePath);
+          return `
+            <span class="partnerships__item" aria-label="${escapeAttr(name || 'Partner')}">
+              <img class="partnerships__logo${editableClass}" src="${escapeAttr(assetUrl(this.cmsDocument.urls, partner?.image?.src))}" alt="${escapeAttr(partner?.image?.alt || name)}" ${editableAttrs}>
+            </span>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    return `
+      <section class="partnerships relative container py-16" id="partnerships-section">
+        <div class="container-wrapper">
+          <div class="partnerships__header flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
+            <h2 class="partnerships__title section__title">${this.editable(sectionId, 'title', data.title)}</h2>
+            <p class="partnerships__subtitle section__sub-title">${this.editable(sectionId, 'subtitle', data.subtitle, true)}</p>
+          </div>
+          <div class="partnerships__viewport" aria-label="${escapeAttr(data.title || 'Đối tác doanh nghiệp')}">
+            <div class="partnerships__track">
+              ${renderGroup(false)}
+              ${renderGroup(true)}
             </div>
           </div>
         </div>

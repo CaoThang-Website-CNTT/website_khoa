@@ -1,23 +1,52 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const track = document.querySelector('[data-partners-track]');
-  const dialog = document.querySelector('[data-partner-dialog]');
-  if (!track || !dialog) return;
+  const directory = document.querySelector('[data-partners-directory]');
+  if (!directory) return;
 
-  const step = () => Math.max(280, track.clientWidth * 0.75);
-  document.querySelector('[data-partners-prev]')?.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
-  document.querySelector('[data-partners-next]')?.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+  const dataElement = directory.querySelector('[data-partners-json]');
+  const detail = directory.querySelector('[data-partner-detail]');
+  const cards = [...directory.querySelectorAll('[data-partner-card]')];
+  if (!dataElement || !detail || !cards.length) return;
 
-  track.querySelectorAll('[data-partner]').forEach((card) => card.addEventListener('click', () => {
-    dialog.querySelector('[data-partner-dialog-title]').textContent = card.dataset.title || '';
-    dialog.querySelector('[data-partner-dialog-description]').textContent = card.dataset.description || '';
-    const image = dialog.querySelector('[data-partner-dialog-image]');
-    image.src = card.dataset.image || '';
-    image.alt = card.dataset.title || '';
-    const link = dialog.querySelector('[data-partner-dialog-link]');
-    link.href = card.dataset.url || '#';
-    link.hidden = !card.dataset.url;
-    dialog.showModal();
-  }));
-  dialog.querySelector('[data-partner-close]')?.addEventListener('click', () => dialog.close());
-  dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  let partners = [];
+  try {
+    partners = JSON.parse(dataElement.textContent || '[]');
+  } catch {
+    return;
+  }
+
+  const image = detail.querySelector('[data-partner-detail-image]');
+  const title = detail.querySelector('[data-partner-detail-title]');
+  const description = detail.querySelector('[data-partner-detail-description]');
+  const website = detail.querySelector('[data-partner-detail-link]');
+  const mobileQuery = window.matchMedia('(max-width: 767px)');
+  if (!image || !title || !description || !website) return;
+
+  const selectPartner = (index, shouldMoveToDetail = false) => {
+    const partner = partners[index];
+    if (!partner) return;
+
+    cards.forEach((card, cardIndex) => {
+      const isActive = cardIndex === index;
+      card.classList.toggle('partner-grid-card--active', isActive);
+      card.setAttribute('aria-pressed', String(isActive));
+    });
+
+    image.src = partner.image?.src || '';
+    image.alt = partner.image?.alt || partner.name || '';
+    title.textContent = partner.name || '';
+    description.textContent = partner.description || '';
+    website.href = partner.url || '#';
+
+    if (shouldMoveToDetail && mobileQuery.matches) {
+      detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => detail.focus({ preventScroll: true }), 350);
+    }
+  };
+
+  directory.addEventListener('click', (event) => {
+    const card = event.target.closest('[data-partner-card]');
+    if (!card || !directory.contains(card)) return;
+
+    selectPartner(Number.parseInt(card.dataset.partnerIndex || '0', 10), true);
+  });
 });
