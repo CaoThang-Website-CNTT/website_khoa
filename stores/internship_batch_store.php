@@ -36,6 +36,7 @@ interface IInternshipBatchStore
   public function getBatchesByStudentId(int $studentId): array;
   public function getTeacherStudentsInBatch(int $batchId, int $teacherId): array;
   public function getStudentGradingDetail(int $batchStudentId): ?array;
+  public function getTeacherStudentDetail(int $batchStudentId): ?array;
   public function getTeacherBatchStats(int $batchId, int $teacherId): array;
   public function isSupervisorOfBatch(int $batchId, int $teacherId): bool;
   public function hasOverlappingEnrollment(int $studentId, string $startAt, string $endAt, ?int $excludeBatchId = null): bool;
@@ -550,6 +551,35 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               bs.internship_end_date
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN companies co ON bs.company_id = co.id
+            WHERE bs.id = :batch_student_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result ?: null;
+  }
+
+  public function getTeacherStudentDetail(int $batchStudentId): ?array
+  {
+    $sql = "SELECT
+              bs.id AS batch_student_id,
+              bs.batch_id,
+              s.student_id AS student_code,
+              s.full_name,
+              s.phone,
+              s.dob,
+              s.gender,
+              a.email,
+              c.short_name AS classroom_name,
+              co.name AS company_name,
+              co.address AS company_address,
+              bs.position,
+              bs.internship_start_date,
+              bs.internship_end_date
+            FROM internship_batch_students bs
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN accounts a ON s.account_id = a.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
             LEFT JOIN companies co ON bs.company_id = co.id
             WHERE bs.id = :batch_student_id";

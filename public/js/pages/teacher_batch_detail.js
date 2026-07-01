@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const studentName = btn.dataset.name;
 
       if (action === "view") {
-        alert(`Xem chi tiết sinh viên: ${studentName} (ID: ${id})`);
-        // TODO: Chuyển hướng hoặc mở modal chi tiết SV
+        const currentUrl = window.location.pathname.replace(/\/$/, '');
+        window.location.href = `${currentUrl}/student/${id}`;
       } else if (action === "grade") {
         const currentUrl = window.location.pathname.replace(/\/$/, '');
         window.location.href = `${currentUrl}/grade/${id}`;

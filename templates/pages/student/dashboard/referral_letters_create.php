@@ -80,20 +80,20 @@ $layout->start("scripts"); ?>
     <hr class="my-6" />
 
     <div class="mb-4">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <label class="field__label mb-0 font-semibold">Danh sách nhóm sinh viên thực tập</label>
-          <div class="text-sm mt-1">Thêm các sinh viên thực tập chung công ty vào chung một nhóm để xuất chung 1 giấy giới thiệu. Tối đa 15 sinh viên.</div>
-        </div>
+      <div>
+        <label class="field__label mb-0 font-semibold">Danh sách nhóm sinh viên thực tập</label>
+        <div class="text-sm mt-1">Thêm các sinh viên thực tập chung công ty vào chung một nhóm để xuất chung 1 giấy giới thiệu. Tối đa 15 sinh viên.</div>
+      </div>
+      <div class="flex justify-between items-center my-4 gap-2">
         <select id="rl_rosterStudent" class="field__input">
-          <option value="">-- Select a student in this program --</option>
+          <option value="">-- Chọn sinh viên trong đợt --</option>
           <?php foreach (($batch_students ?? []) as $rosterStudent): ?>
             <?php if ((int)$rosterStudent['batch_student_id'] !== (int)$batch_student_id): ?>
               <option value="<?= (int)$rosterStudent['batch_student_id'] ?>"><?= htmlspecialchars($rosterStudent['student_code'] . ' - ' . $rosterStudent['full_name']) ?></option>
             <?php endif; ?>
           <?php endforeach; ?>
         </select>
-        <button type="button" class="btn shrink-0" data-variant="secondary" data-size="sm" id="rl_btnAddStudent">
+        <button type="button" class="btn shrink-0" data-variant="secondary" data-size="md" id="rl_btnAddStudent">
           <i class="fa-solid fa-plus mr-1"></i> Thêm sinh viên
         </button>
       </div>
