@@ -64,6 +64,11 @@ final class CmsPageSchemaRegistry
           'locked' => false,
         ],
         [
+          'id' => 'vision_mission',
+          'type' => 'sections/vision_mission',
+          'locked' => false,
+        ],
+        [
           'id' => 'history',
           'type' => 'sections/history',
           'locked' => false,

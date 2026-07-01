@@ -128,6 +128,7 @@ class SiteController extends Controller
     $filterSlugs = [
       'hoat-dong', 'cong-tac-giang-day', 'nghien-cuu-khoa-hoc', 'hoc-thuat',
       'thi-dua-doan-the', 'phong-trao-ngoai-khoa', 'clb-tin-hoc', 'thong-bao',
+      'tuyen-dung',
     ];
     $newsCategories = array_values(array_filter(array_map(
       fn(string $slug) => $categoryMap[$slug] ?? null,
@@ -218,6 +219,25 @@ class SiteController extends Controller
       'cmsHtml' => $cmsHtml,
       'settings' => $this->_settings,
     ], "site_layout");
+  }
+
+  public function partners(): void
+  {
+    $carousel = $this->_carouselService->getBySlugWithSlides('partner-companies', with_media: true);
+    $partners = $carousel ? $carousel->getActiveSlides() : [];
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+    $description = 'Các doanh nghiệp đồng hành cùng Khoa Công nghệ thông tin trong đào tạo, thực tập và tuyển dụng.';
+
+    $this->render('site/partners', [
+      'headerMenu' => $this->_headerMenu->items,
+      'partners' => $partners,
+      'settings' => $this->_settings,
+      'pageTitle' => 'Doanh nghiệp đối tác',
+      'pageDescription' => $description,
+      'pageCanonical' => 'viec-lam/doanh-nghiep',
+      'pageSeo' => ['og:title' => seo_title('Doanh nghiệp đối tác', $siteTitle), 'og:description' => $description,
+        'og:type' => 'website', 'og:url' => url('viec-lam/doanh-nghiep'), 'og:site_name' => $siteTitle],
+    ], 'site_layout');
   }
 
   public function education(): void

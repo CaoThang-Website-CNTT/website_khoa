@@ -249,6 +249,15 @@ final class CmsStaticPageRenderer
       ],
     ));
 
+    $registry->register(new CmsCallbackSectionDefinition(
+      'sections/vision_mission',
+      'Vision and mission',
+      self::visionMissionDefaults(),
+      ['title', 'introduction', 'vision_title', 'vision', 'mission_title', 'mission'],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderVisionMission($data),
+    ));
+
     $educationRenderer = new EducationSectionRenderer();
     $educationSections = [
       'sections/education_hub' => ['Education hub', EducationPageDefaults::hub()],
@@ -644,7 +653,7 @@ final class CmsStaticPageRenderer
   {
     ob_start();
     ?>
-    <section class="py-12">
+    <section id="lich-su-phat-trien" class="py-12 scroll-section">
       <div class="container">
         <div class="container-wrapper flex flex-col gap-16">
           <?php foreach ($this->items($data, 'sections') as $index => $item): ?>
@@ -687,7 +696,7 @@ final class CmsStaticPageRenderer
       <div class="container">
         <div class="container-wrapper">
           <div class="bento-grid">
-            <?php foreach ($this->items($data, 'items') as $index => $item): ?>
+            <?php foreach (array_slice($this->items($data, 'items'), 0, 5) as $index => $item): ?>
               <?php $hasImage = !empty($item['image']['src']); ?>
               <div
                 class="card bento-grid-item <?= $hasImage ? 'bento-grid-item--has-image' : 'bento-grid-item--empty-image' ?>"
@@ -710,6 +719,59 @@ final class CmsStaticPageRenderer
     </section>
     <?php
     return (string) ob_get_clean();
+  }
+
+  private function renderVisionMission(array $data): string
+  {
+    $defaults = self::visionMissionDefaults();
+    foreach ($defaults as $key => $value) {
+      if (!isset($data[$key]) || $data[$key] === '' || $data[$key] === []) $data[$key] = $value;
+    }
+    ob_start(); ?>
+    <section id="tam-nhin-su-menh" class="vision-mission py-12 scroll-section">
+      <div class="container"><div class="container-wrapper">
+        <header class="flex flex-col items-center gap-2 md:gap-4 mb-8 md:mb-12 text-center">
+          <h2 class="section__title"><?= $this->e($data['title'] ?? '') ?></h2>
+          <p class="section__sub-title"><?= $this->e($data['introduction'] ?? '') ?></p>
+        </header>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 items-stretch">
+          <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+            <div class="flex gap-2 md:gap-4 items-center">
+              <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-eye stats__benefit-card-icon" aria-hidden="true"></i></div>
+              <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['vision_title'] ?? 'Tầm nhìn') ?></h3>
+            </div>
+            <p><?= $this->e($data['vision'] ?? '') ?></p>
+          </article>
+          <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+            <div class="flex gap-2 md:gap-4 items-center">
+              <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-bullseye stats__benefit-card-icon" aria-hidden="true"></i></div>
+              <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['mission_title'] ?? 'Sứ mệnh') ?></h3>
+            </div>
+            <p><?= $this->e($data['mission'] ?? '') ?></p>
+          </article>
+        </div>
+      </div></div>
+    </section>
+    <?php return (string) ob_get_clean();
+  }
+
+  private static function visionMissionDefaults(): array
+  {
+    return [
+      'eyebrow' => 'Định hướng phát triển',
+      'title' => 'Tầm nhìn & Sứ mệnh',
+      'introduction' => 'Kế thừa truyền thống đào tạo kỹ thuật của Cao Thắng, Khoa Công nghệ thông tin gắn tri thức với thực hành, đổi mới và nhu cầu của xã hội.',
+      'vision_title' => 'Tầm nhìn',
+      'vision' => 'Trở thành đơn vị đào tạo công nghệ thông tin ứng dụng vững mạnh, hiện đại và nhân văn; không ngừng nâng cao chất lượng để người học thích nghi, sáng tạo và phát triển trong môi trường công nghệ luôn thay đổi.',
+      'mission_title' => 'Sứ mệnh',
+      'mission' => 'Đào tạo nguồn nhân lực có kỷ luật, đạo đức nghề nghiệp, kiến thức vững và tay nghề tốt; kết nối đào tạo với thực tiễn doanh nghiệp, thúc đẩy nghiên cứu, đổi mới phương pháp giảng dạy và ứng dụng công nghệ phục vụ nhà trường và cộng đồng.',
+      'principles' => [
+        ['title' => 'Học đi đôi với hành', 'description' => 'Chú trọng năng lực thực hành, giải quyết vấn đề và khả năng đáp ứng công việc thực tế.'],
+        ['title' => 'Đổi mới liên tục', 'description' => 'Cập nhật chương trình, công nghệ và phương pháp giảng dạy phù hợp với sự phát triển của xã hội.'],
+        ['title' => 'Đồng hành cùng doanh nghiệp', 'description' => 'Mở rộng hợp tác trong đào tạo, thực tập, nghiên cứu và tạo cơ hội nghề nghiệp cho sinh viên.'],
+      ],
+      'source_note' => 'Nội dung được biên soạn từ tư liệu lịch sử Kỷ yếu Khoa Điện tử - Tin học; đây là bản CMS có thể tiếp tục hiệu chỉnh và phê duyệt.',
+    ];
   }
 
   private function bentoStyle(array $item): string

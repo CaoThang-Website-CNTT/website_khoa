@@ -125,47 +125,26 @@ function renderDropdownItem(
 }
 
 /**
- * Render thanh navbar với danh sách item gốc.
- * Items vượt quá $maxVisible được gộp vào nhóm "Khác".
+ * Render thanh navbar với toàn bộ danh sách item gốc.
  *
  * Usage:
- *   renderNav($menu);                    // hover, 5 visible, 2 levels
- *   renderNav($menu, 7);                 // show 7 trước "Khác"
- *   renderNav($menu, 5, 'click');        // click mode
- *   renderNav($menu, 5, 'hover', 3);     // 3 levels deep
+ *   renderNav($menu);                    // hover, 2 levels
+ *   renderNav($menu, 'click');           // click mode
+ *   renderNav($menu, 'hover', 3);        // 3 levels deep
  *
  * @param MenuItem[] $menu
- * @param int        $maxVisible
  * @param string     $triggerMode  "hover" | "click"
  * @param int        $maxDepth
  */
 function renderNav(
   array $menu,
-  int $maxVisible = 5,
   string $triggerMode = 'hover',
   int $maxDepth = 2
 ): void {
-  $navItems = $menu;
-
-  if (count($menu) > $maxVisible) {
-    $khac = new MenuItem(
-      id: 0,
-      menu_id: $menu[0]->menu_id,
-      parent_id: null,
-      label: 'Khác',
-      url: '#',
-      sort_order: $maxVisible + 1,
-      created_at: '',
-      updated_at: '',
-      deleted_at: null,
-    );
-    $khac->children = array_slice($menu, $maxVisible);
-    $navItems = [...array_slice($menu, 0, $maxVisible), $khac];
-  }
   ?>
   <nav class="navbar hidden md:block">
     <div class="container flex py-2 px-4 gap-4">
-      <?php foreach ($navItems as $item): ?>
+      <?php foreach ($menu as $item): ?>
         <?php if ($item->hasChildren()): ?>
           <?php renderDropdownItem($item, $triggerMode, 0, $maxDepth); ?>
         <?php else: ?>

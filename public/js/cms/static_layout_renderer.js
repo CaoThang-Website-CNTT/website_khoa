@@ -39,6 +39,9 @@ export class StaticLayoutRenderer {
       case 'sections/history':
       case 'history':
         return this.renderHistory(data, section.id);
+      case 'sections/vision_mission':
+      case 'vision_mission':
+        return this.renderVisionMission(data, section.id);
       case 'sections/bento_grid':
       case 'bento_grid':
         return this.renderBentoGrid(data, section.id);
@@ -336,12 +339,53 @@ export class StaticLayoutRenderer {
     `;
   }
 
+  renderVisionMission(data, sectionId) {
+    const defaults = {
+      eyebrow: 'Định hướng phát triển', title: 'Tầm nhìn & Sứ mệnh',
+      introduction: 'Kế thừa truyền thống đào tạo kỹ thuật của Cao Thắng, Khoa Công nghệ thông tin gắn tri thức với thực hành, đổi mới và nhu cầu của xã hội.',
+      vision_title: 'Tầm nhìn',
+      vision: 'Trở thành đơn vị đào tạo công nghệ thông tin ứng dụng vững mạnh, hiện đại và nhân văn; không ngừng nâng cao chất lượng để người học thích nghi, sáng tạo và phát triển trong môi trường công nghệ luôn thay đổi.',
+      mission_title: 'Sứ mệnh',
+      mission: 'Đào tạo nguồn nhân lực có kỷ luật, đạo đức nghề nghiệp, kiến thức vững và tay nghề tốt; kết nối đào tạo với thực tiễn doanh nghiệp, thúc đẩy nghiên cứu, đổi mới phương pháp giảng dạy và ứng dụng công nghệ phục vụ nhà trường và cộng đồng.',
+      principles: [
+        { title: 'Học đi đôi với hành', description: 'Chú trọng năng lực thực hành, giải quyết vấn đề và khả năng đáp ứng công việc thực tế.' },
+        { title: 'Đổi mới liên tục', description: 'Cập nhật chương trình, công nghệ và phương pháp giảng dạy phù hợp với sự phát triển của xã hội.' },
+        { title: 'Đồng hành cùng doanh nghiệp', description: 'Mở rộng hợp tác trong đào tạo, thực tập, nghiên cứu và tạo cơ hội nghề nghiệp cho sinh viên.' }
+      ],
+      source_note: 'Nội dung được biên soạn từ tư liệu lịch sử Kỷ yếu Khoa Điện tử - Tin học; đây là bản CMS có thể tiếp tục hiệu chỉnh và phê duyệt.'
+    };
+    data = Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key,
+      data?.[key] === undefined || data[key] === '' || (Array.isArray(data[key]) && data[key].length === 0) ? value : data[key]
+    ]));
+    return `
+      <section id="tam-nhin-su-menh" class="vision-mission py-12 scroll-section">
+        <div class="container"><div class="container-wrapper">
+          <header class="flex flex-col items-center gap-2 md:gap-4 mb-8 md:mb-12 text-center">
+            <h2 class="section__title">${this.editable(sectionId, 'title', data.title)}</h2>
+            <p class="section__sub-title">${this.editable(sectionId, 'introduction', data.introduction, true)}</p>
+          </header>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 items-stretch">
+            <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+              <div class="flex gap-2 md:gap-4 items-center"><div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-eye stats__benefit-card-icon"></i></div>
+              <h3 class="text-lg md:text-2xl font-semibold">${this.editable(sectionId, 'vision_title', data.vision_title)}</h3></div>
+              <p>${this.editable(sectionId, 'vision', data.vision, true)}</p>
+            </article>
+            <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+              <div class="flex gap-2 md:gap-4 items-center"><div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-bullseye stats__benefit-card-icon"></i></div>
+              <h3 class="text-lg md:text-2xl font-semibold">${this.editable(sectionId, 'mission_title', data.mission_title)}</h3></div>
+              <p>${this.editable(sectionId, 'mission', data.mission, true)}</p>
+            </article>
+          </div>
+        </div></div>
+      </section>`;
+  }
+
   renderBentoGrid(data, sectionId) {
     return `
       <section class="py-12">
         <div class="container"><div class="container-wrapper">
           <div class="bento-grid">
-            ${asArray(data.items).map((item, index) => {
+            ${asArray(data.items).slice(0, 5).map((item, index) => {
       const hasImage = item.image?.src;
       const imagePath = `items.${index}.image.src`;
       const isImageEditable = this.cmsDocument.isImageEditable(sectionId, imagePath);
@@ -349,7 +393,7 @@ export class StaticLayoutRenderer {
       const editableAttrs = isImageEditable ? this.imageDataAttrs(sectionId, imagePath) : '';
       return `
                 <div class="card bento-grid-item${editableClass} ${hasImage ? 'bento-grid-item--has-image' : 'bento-grid-item--empty-image'}" ${editableAttrs}${this.bentoItemStyle(item)}>
-                  ${hasImage ? `<img class="bento-grid-item__image" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image.src))}" alt="">` : ''}
+                  ${hasImage ? `<img class="bento-grid-item__image" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image.src))}" alt="${escapeAttr(item.image?.alt || '')}">` : ''}
                   <div class="card__header"><span class="badge" data-variant="glass">${item.badge || '<i class="fa-solid fa-lock"></i>'}</span></div>
                   <div class="card__content">
                     <div class="text-4xl md:text-6xl">${this.editable(sectionId, `items.${index}.content`, item.content)}</div>

@@ -504,3 +504,91 @@
 .education-course-table tbody tr:hover {
   background: color-mix(in oklab, var(--muted) 60%, transparent);
 }
+
+.partners-page__header {
+  max-width: 52rem;
+  margin: 2rem auto 3rem;
+  text-align: center;
+}
+
+.scroll-section{scroll-margin-top:8rem}
+.partners-page__header h1 {
+  margin: 0.75rem 0;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
+.partners-slider {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+}
+.partners-slider__track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 0.5rem;
+}
+.partner-card {
+  min-width: min(22rem, 82vw);
+  scroll-snap-align: start;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+.partner-card__logo {
+  height: 12rem;
+  padding: 1.5rem;
+  background: #fff;
+}
+.partner-card__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.partner-card__content {
+  padding: 1.25rem;
+}
+.partner-card__content p {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.partner-card__content span {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--primary);
+}
+.partner-dialog {
+  max-width: 38rem;
+  width: calc(100% - 2rem);
+  padding: 2rem;
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+.partner-dialog::backdrop {
+  background: rgb(0 0 0/0.65);
+}
+.partner-dialog img {
+  width: 100%;
+  height: 12rem;
+  object-fit: contain;
+}
+.partner-dialog__close {
+  float: right;
+}
+.partners-page__empty {
+  text-align: center;
+  padding: 4rem 1rem;
+}
+@media (max-width: 767px) {
+  .partners-slider {
+    grid-template-columns: 1fr;
+  }
+  .partners-slider__control {
+    display: none;
+  }
+}

@@ -298,6 +298,11 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 (18, 1, 17, 'E-learning', 'https://ttth-caothang.site', 1),
 (19, 1, 17, 'Thông báo', '/tin-tuc?category=thong-bao', 2),
 (20, 1, 17, 'Portal', '/portal', 3),
+(21, 1, 2, 'Tầm nhìn & Sứ mệnh', '/gioi-thieu#tam-nhin-su-menh', 1),
+(25, 1, 2, 'Lịch sử phát triển', '/gioi-thieu#lich-su-phat-trien', 2),
+(22, 1, NULL, 'Việc Làm', '/tin-tuc?category=tuyen-dung', 6),
+(23, 1, 22, 'Doanh Nghiệp', '/viec-lam/doanh-nghiep', 1),
+(24, 1, 22, 'Tin Tuyển Dụng', '/tin-tuc?category=tuyen-dung', 2),
 
 -- Footer Menu
 (101, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
@@ -308,7 +313,8 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 -- 11. BẢNG CAROUSELS & CAROUSEL_SLIDES
 -- ---------------------------------------------------------------------------- 
 INSERT INTO `carousels` (`id`, `name`, `slug`, `is_active`) VALUES 
-(1, 'Trang chủ (Landing Page)', 'landing-page', 1);
+(1, 'Trang chủ (Landing Page)', 'landing-page', 1),
+(2, 'Doanh nghiệp đối tác', 'partner-companies', 1);
 
 -- Thêm dữ liệu cho bảng carousel_slides (4 slides)
 INSERT INTO `carousel_slides` 
@@ -328,6 +334,9 @@ INSERT INTO `cms_pages` (`title`, `slug`, `route_path`, `type`, `status`, `layou
 '{}', NOW(), NOW(), NOW()),
 ('Giới thiệu', 'about', '/gioi-thieu', 'landing_page', 'published', 'section_schema',
 '{"version":1,"sections":[{"id":"breadcrumbs","type":"sections/breadcrumbs","locked":true,"data":[]},{"id":"about_hero","type":"sections/about_hero","locked":false,"data":{"image":"public/img/about.jpg","badge":"Về Chúng Tôi","title":"Câu chuyện của Cao Thắng","subtitle":"Từ những ngày đầu tiên đến hôm nay, Cao Thắng không ngừng phát triển để mang đến giáo dục công nghệ chất lượng cao cho sinh viên Việt Nam"}},{"id":"history","type":"sections/history","locked":false,"data":{"sections":[{"image":{"src":"public/img/about.jpg","alt":"Lecture hall with students","caption":"Khoa CNTT được thành lập"},"year":"1998","badge":"<i class=\\"fa-solid fa-graduation-cap\\"></i> <span class=\\"text-sm\\">Khoa Công Nghệ Thông Tin</span>","title":"27 năm đổi mới & phát triển","timeline":[{"year":"1998","description":"Khoa Điện Tử - Tin Học, tiền thân của khoa Công Nghệ Thông Tin được thành lập."},{"year":"2020","description":"Đổi tên Khoa Điện tử - Tin học thành Khoa Công nghệ thông tin."}]},{"image":{"src":"public/img/about.jpg","alt":"Lecture hall with students","caption":"Trường được thành lập"},"year":"1906","badge":"<i class=\\"fa-solid fa-building-columns\\"></i> <span class=\\"text-sm\\">Trường Cao Đẳng Kỹ Thuật Cao Thắng</span>","title":"100+ năm truyền thống","timeline":[{"year":"1906","description":"Chính thức thành lập Trường Cơ khí Á Châu (L''école des Mécaniciens Asiatiques), tiền thân của trường."},{"year":"1915","description":"Chủ tịch Tôn Đức Thắng nhập học."},{"year":"2004","description":"Chính thức đổi tên thành Trường Cao đẳng Kỹ thuật Cao Thắng."},{"year":"2016","description":"Đạt chuẩn kiểm định quốc tế ABET."}]}]}},{"id":"bento_grid","type":"sections/bento_grid","locked":false,"data":{"items":[{"badge":"<i class=\\"fa-solid fa-award\\"></i> <span>Chứng nhận Quốc Tế</span>","image":{"src":"public/img/about.jpg","alt":""},"content":"Thành tựu","footer":"<span class=\\"badge px-3 py-2 text-sm md:text-md\\" data-variant=\\"glass\\">30+ Quốc gia công nhận</span> <span class=\\"badge px-3 py-2 text-sm md:text-md\\" data-variant=\\"glass\\">Top 5 Khoa CNTT VN</span>"},{"badge":"<i class=\\"fa-solid fa-user-group\\"></i>","image":{"src":"","alt":""},"content":"25+","subContent":"Giảng Viên","footer":"Có hơn 15 năm kinh nghiệm trong việc giảng dạy"},{"badge":"<i class=\\"fa-solid fa-award\\"></i>","image":{"src":"","alt":""},"content":"50+","subContent":"Giải Thưởng","footer":"Từ chính phủ và các tổ chức kiểm định quốc tế"},{"badge":"<i class=\\"fa-solid fa-rocket\\"></i>","image":{"src":"","alt":""},"content":"10+","subContent":"Phòng Lab hiện đại","footer":"Trang bị công nghệ tiên tiến phục vụ học tập và nghiên cứu"},{"badge":"<i class=\\"fa-solid fa-graduation-cap\\"></i>","image":{"src":"","alt":""},"content":"100+","subContent":"Học bổng hàng năm","footer":"Từ học bổng toàn phần đến các suất trao đổi quốc tế"},{"badge":"<i class=\\"fa-solid fa-user-group\\"></i> <span>Cộng đồng học tập</span>","image":{"src":"public/img/about.jpg","alt":""},"content":"Môi trường","subContent":"Năng động & sáng tạo","footer":"Nhiều hoạt động, sự kiện nhằm thúc đẩy tinh thần năng nổ của Sinh Viên"},{"badge":"<i class=\\"fa-solid fa-building\\"></i>","image":{"src":"","alt":""},"content":"100+","subContent":"Doanh nghiệp đối tác","footer":"FPT, Viettel, Samsung, Google và nhiều công ty hàng đầu"},{"badge":"<i class=\\"fa-solid fa-arrow-trend-up\\"></i>","image":{"src":"","alt":""},"content":"1,000+","subContent":"Cựu sinh viên","footer":"Làm việc tại các công ty công nghệ hàng đầu toàn cầu"}]}}]}',
+'{}', NOW(), NOW(), NOW()),
+('Tầm nhìn & Sứ mệnh', 'vision-mission', '/gioi-thieu/tam-nhin-su-menh', 'about_page', 'published', 'section_schema',
+'{"version":1,"sections":[{"id":"vision_mission","type":"sections/vision_mission","locked":false,"data":{"eyebrow":"Định hướng phát triển","title":"Tầm nhìn & Sứ mệnh","introduction":"Kế thừa truyền thống đào tạo kỹ thuật của Cao Thắng, Khoa Công nghệ thông tin gắn tri thức với thực hành, đổi mới và nhu cầu của xã hội.","vision_title":"Tầm nhìn","vision":"Trở thành đơn vị đào tạo công nghệ thông tin ứng dụng vững mạnh, hiện đại và nhân văn; không ngừng nâng cao chất lượng để người học thích nghi, sáng tạo và phát triển trong môi trường công nghệ luôn thay đổi.","mission_title":"Sứ mệnh","mission":"Đào tạo nguồn nhân lực có kỷ luật, đạo đức nghề nghiệp, kiến thức vững và tay nghề tốt; kết nối đào tạo với thực tiễn doanh nghiệp, thúc đẩy nghiên cứu, đổi mới phương pháp giảng dạy và ứng dụng công nghệ phục vụ nhà trường và cộng đồng.","principles":[{"title":"Học đi đôi với hành","description":"Chú trọng năng lực thực hành, giải quyết vấn đề và khả năng đáp ứng công việc thực tế."},{"title":"Đổi mới liên tục","description":"Cập nhật chương trình, công nghệ và phương pháp giảng dạy phù hợp với sự phát triển của xã hội."},{"title":"Đồng hành cùng doanh nghiệp","description":"Mở rộng hợp tác trong đào tạo, thực tập, nghiên cứu và tạo cơ hội nghề nghiệp cho sinh viên."}],"source_note":"Nội dung được biên soạn từ tư liệu lịch sử Kỷ yếu Khoa Điện tử - Tin học; đây là bản CMS có thể tiếp tục hiệu chỉnh và phê duyệt."}}]}',
 '{}', NOW(), NOW(), NOW()),
 ('Đào tạo', 'education', '/dao-tao', 'education_page', 'published', 'section_schema',
 '{"version":1,"sections":[{"id":"education_hub","type":"sections/education_hub","locked":false,"data":{"eyebrow":"Đào tạo tại Khoa Công nghệ thông tin","title":"Chọn chương trình phù hợp với bạn","description":"Khám phá thông tin tuyển sinh, định hướng từng chương trình, chuẩn đầu ra và kế hoạch học tập được công bố chính thức.","links":[{"icon":"fa-solid fa-user-graduate","title":"Thông tin tuyển sinh","description":"Tìm hiểu ngành đào tạo trước khi xem hướng dẫn đăng ký chính thức của Trường.","url":"dao-tao/tuyen-sinh","label":"Xem thông tin"},{"icon":"fa-solid fa-graduation-cap","title":"Chương trình đào tạo","description":"So sánh mục tiêu, định hướng nghề nghiệp và cấu trúc của ba chương trình.","url":"dao-tao/chuong-trinh-dao-tao","label":"Khám phá chương trình"},{"icon":"fa-solid fa-bullseye","title":"Chuẩn đầu ra","description":"Những năng lực sinh viên cần đạt khi tốt nghiệp và sau khi tham gia thị trường lao động.","url":"dao-tao/chuan-dau-ra","label":"Xem chuẩn đầu ra"},{"icon":"fa-solid fa-list-check","title":"Danh sách môn học","description":"Theo dõi các học phần theo từng học kỳ, gồm tín chỉ và thời lượng lý thuyết, thực hành.","url":"dao-tao/danh-sach-mon-hoc","label":"Xem kế hoạch học tập"}],"programs_title":"Ba chương trình, nhiều hướng phát triển","programs_description":"Các chương trình kết hợp kiến thức nền tảng với thực hành nghề nghiệp và được tổ chức trong sáu học kỳ.","programs":[{"key":"cntt","name":"Cao đẳng Công nghệ thông tin","short_name":"CNTT","summary":"Phát triển giải pháp phần mềm, web, di động, mạng máy tính và trí tuệ nhân tạo ứng dụng.","credits":"134"},{"key":"qtm","name":"Cao đẳng Quản trị mạng máy tính","short_name":"QTM","summary":"Thiết kế, triển khai, vận hành và bảo vệ hạ tầng mạng, máy chủ và dịch vụ hệ thống.","credits":"134"},{"key":"scmt","name":"Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính","short_name":"SCMT","summary":"Lắp ráp, chẩn đoán, sửa chữa phần cứng và triển khai hệ thống máy tính, thiết bị mạng.","credits":"131"}]}}]}',
@@ -426,9 +435,46 @@ SET education.content_json = JSON_OBJECT(
 WHERE education.slug = 'education';
 
 DELETE FROM `cms_pages` WHERE slug IN ('admissions', 'academic-programs', 'program-outcomes', 'curriculum');
+UPDATE `cms_pages`
+SET content_json = JSON_ARRAY_INSERT(content_json, '$.sections[2]', JSON_OBJECT(
+  'id', 'vision_mission',
+  'type', 'sections/vision_mission',
+  'locked', FALSE,
+  'data', (SELECT JSON_EXTRACT(source_page.content_json, '$.sections[0].data')
+           FROM (SELECT content_json FROM cms_pages WHERE slug = 'vision-mission' LIMIT 1) AS source_page)
+))
+WHERE slug = 'about';
+DELETE FROM `cms_pages` WHERE slug = 'vision-mission';
 UPDATE `menu_items` SET url = '/dao-tao#tuyen-sinh' WHERE url = '/dao-tao/tuyen-sinh';
 UPDATE `menu_items` SET url = '/dao-tao#chuong-trinh-dao-tao' WHERE url = '/dao-tao/chuong-trinh-dao-tao';
 UPDATE `menu_items` SET url = '/dao-tao#chuan-dau-ra' WHERE url = '/dao-tao/chuan-dau-ra';
 UPDATE `menu_items` SET url = '/dao-tao#danh-sach-mon-hoc' WHERE url = '/dao-tao/danh-sach-mon-hoc';
+
+-- Replace About-page demo claims with dated facts from the Faculty yearbook.
+UPDATE `cms_pages`
+SET content_json = JSON_SET(
+  content_json,
+  '$.sections[3].data.sections[0].title', 'Thành lập và phát triển từ năm 1998',
+  '$.sections[3].data.sections[0].timeline', JSON_ARRAY(
+    JSON_OBJECT('year', '1998', 'description', 'Khoa Điện tử - Tin học được thành lập vào tháng 8, ban đầu đào tạo hai ngành Điện tử và Tin học.'),
+    JSON_OBJECT('year', '2014', 'description', 'Olympic Tin học Cao Thắng được tổ chức lần đầu, mở đầu sân chơi học thuật thường niên cho sinh viên CNTT.'),
+    JSON_OBJECT('year', '2018', 'description', 'Đội tuyển Tin học Cao Thắng giành giải nhất đồng đội khối Cao đẳng tại Olympic Tin học Sinh viên Việt Nam, cùng nhiều giải cá nhân.'),
+    JSON_OBJECT('year', '2020', 'description', 'Khoa Điện tử - Tin học được đổi tên thành Khoa Công nghệ thông tin.')
+  ),
+  '$.sections[3].data.sections[1].title', 'Hơn một thế kỷ đào tạo kỹ thuật',
+  '$.sections[3].data.sections[1].timeline', JSON_ARRAY(
+    JSON_OBJECT('year', '1906', 'description', 'Trường Cơ khí Á Châu, tiền thân của Trường Cao đẳng Kỹ thuật Cao Thắng, được thành lập.'),
+    JSON_OBJECT('year', '1915', 'description', 'Chủ tịch Tôn Đức Thắng theo học tại trường.'),
+    JSON_OBJECT('year', '2004', 'description', 'Trường chính thức mang tên Trường Cao đẳng Kỹ thuật Cao Thắng.')
+  ),
+  '$.sections[4].data.items', JSON_ARRAY(
+    JSON_OBJECT('badge', '<i class="fa-solid fa-handshake"></i> <span>Đào tạo gắn doanh nghiệp</span>', 'image', JSON_OBJECT('src', 'public/img/about.jpg', 'alt', 'Đào tạo Công nghệ thông tin gắn kết doanh nghiệp'), 'content', 'Thực tiễn', 'subContent', 'Kết nối doanh nghiệp', 'footer', 'Bộ môn Tin học gắn đào tạo với nhu cầu thực tế và tăng cường kết nối doanh nghiệp.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-computer"></i>', 'image', JSON_OBJECT('src', '', 'alt', ''), 'content', '10+', 'subContent', 'Phòng máy & thực hành', 'footer', 'Hệ thống phòng máy và phòng thực hành phục vụ đào tạo Công nghệ thông tin.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-graduation-cap"></i>', 'image', JSON_OBJECT('src', '', 'alt', ''), 'content', '4', 'subContent', 'Chương trình đào tạo CNTT', 'footer', 'Bộ môn Tin học tổ chức bốn chương trình đào tạo thuộc lĩnh vực Công nghệ thông tin.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-users"></i>', 'image', JSON_OBJECT('src', '', 'alt', ''), 'content', '1.700+', 'subContent', 'Người học liên quan CNTT', 'footer', 'Hơn 1.700 học sinh, sinh viên theo học các chương trình liên quan đến Công nghệ thông tin.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-trophy"></i> <span>Olympic Tin học</span>', 'image', JSON_OBJECT('src', 'public/img/about.jpg', 'alt', 'Thành tích Olympic Tin học của đội tuyển Cao Thắng'), 'content', 'Hạng nhất', 'subContent', 'Đồng đội khối Cao đẳng', 'footer', 'Đội tuyển Tin học Cao Thắng giành giải nhất đồng đội khối Cao đẳng cùng nhiều giải cá nhân.')
+  )
+)
+WHERE slug = 'about';
 
 SET FOREIGN_KEY_CHECKS = 1;
