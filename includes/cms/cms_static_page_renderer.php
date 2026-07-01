@@ -464,9 +464,11 @@ final class CmsStaticPageRenderer
             <?php foreach ($this->items($data, 'stats') as $index => $stat): ?>
               <div
                 class="wcu__stat-card <?= $index === 0 ? 'wcu__stat-card--primary col-start-1 md:col-start-3 row-start-2 md:row-start-1' : 'wcu__stat-card--gradient col-start-2 md:col-start-3 row-start-2 md:row-start-2' ?> rounded-3xl p-3 md:p-6 flex flex-col gap-2 justify-center">
-                <h2
-                  class="wcu__stat-card-number flex-1 md:flex-none flex justify-center items-center md:block text-6xl md:text-7xl font-bold">
-                  <?= $this->e($stat['number'] ?? '') ?></h2>
+                <?php if (trim((string) ($stat['number'] ?? '')) !== ''): ?>
+                  <h2
+                    class="wcu__stat-card-number flex-1 md:flex-none flex justify-center items-center md:block text-6xl md:text-7xl font-bold">
+                    <?= $this->e($stat['number']) ?></h2>
+                <?php endif; ?>
                 <div class="wcu__stat-card-content flex flex-col gap-2">
                   <p class="wcu__stat-card-title md:text-xl font-semibold"><?= $this->e($stat['title'] ?? '') ?></p>
                   <p class="wcu__stat-card-description text-xs md:text-md font-normal">
@@ -527,8 +529,9 @@ final class CmsStaticPageRenderer
                 <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full"><i
                     class="<?= $this->e($stat['icon'] ?? 'fa-solid fa-award') ?> stats__stat-card-icon"></i></div>
                 <div class="flex flex-col gap-1 items-center">
-                  <h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold"><?= $this->e($stat['number'] ?? '') ?>
-                  </h3>
+                  <?php if (trim((string) ($stat['number'] ?? '')) !== ''): ?>
+                    <h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold"><?= $this->e($stat['number']) ?></h3>
+                  <?php endif; ?>
                   <h4 class="stats__stat-card-label font-semibold"><?= $this->e($stat['label'] ?? '') ?></h4>
                   <p class="stats__stat-card-description text-xs md:text-sm text-center">
                     <?= $this->e($stat['description'] ?? '') ?></p>

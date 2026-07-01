@@ -477,4 +477,73 @@ SET content_json = JSON_SET(
 )
 WHERE slug = 'about';
 
+-- Replace Landing-page placeholders with verified Khoa CNTT information.
+UPDATE `cms_pages`
+SET content_json = JSON_SET(
+  content_json,
+  '$.sections[1].data.items', JSON_ARRAY(
+    JSON_OBJECT('number', '01', 'image', JSON_OBJECT('src', './public/img/about.jpg', 'alt', 'Hoạt động của Khoa Công nghệ thông tin Cao Thắng'), 'card', JSON_OBJECT('value', '1998', 'label', 'Khởi đầu Bộ môn Tin học'), 'eyebrow', 'Hình thành & phát triển', 'title', 'Hơn hai thập kỷ đào tạo công nghệ thông tin', 'description', 'Từ Bộ môn Tin học thuộc Khoa Điện tử - Tin học, Khoa Công nghệ thông tin được tổ chức lại thành khoa chuyên ngành từ năm 2020, tập trung sâu vào đào tạo và ứng dụng CNTT.'),
+    JSON_OBJECT('number', '02', 'image', JSON_OBJECT('src', './public/img/about.jpg', 'alt', 'Sinh viên thực hành Công nghệ thông tin'), 'card', JSON_OBJECT('value', '12', 'label', 'Phòng thực hành CNTT'), 'eyebrow', 'Học đi đôi với hành', 'title', 'Không gian thực hành phục vụ kỹ năng nghề nghiệp', 'description', 'Hệ thống phòng thực hành hỗ trợ sinh viên rèn luyện lập trình, phần cứng, mạng máy tính và triển khai các sản phẩm công nghệ.'),
+    JSON_OBJECT('number', '03', 'image', JSON_OBJECT('src', './public/img/about.jpg', 'alt', 'Đội tuyển Olympic Tin học Cao Thắng'), 'card', JSON_OBJECT('value', 'Hạng nhất', 'label', 'Đồng đội khối Cao đẳng'), 'eyebrow', 'Bản lĩnh sinh viên', 'title', 'Khẳng định năng lực tại Olympic Tin học', 'description', 'Đội tuyển Tin học Cao Thắng từng giành giải nhất đồng đội khối Cao đẳng cùng nhiều giải cá nhân tại Olympic Tin học Sinh viên Việt Nam.')
+  ),
+  '$.sections[2].data', JSON_OBJECT(
+    'badge', 'Tại sao chọn Khoa CNTT Cao Thắng',
+    'title', 'Nền tảng nghề nghiệp được xây dựng từ thực hành',
+    'subtitle', 'Chương trình chuyên môn, cơ sở thực hành và hoạt động kết nối doanh nghiệp cùng hướng đến khả năng làm việc thực tế của sinh viên.',
+    'feature', JSON_OBJECT('image', 'public/img/about.jpg', 'alt', 'Sinh viên Khoa CNTT Cao Thắng học tập và thực hành', 'badge', 'Đào tạo gắn thực tiễn', 'title', 'Học qua bài tập, dự án và trải nghiệm nghề nghiệp', 'description', 'Sinh viên phát triển năng lực từ kiến thức nền tảng đến thực hành chuyên môn, đồ án, thực tập và các hoạt động học thuật của Khoa.', 'cta_label', 'Tìm hiểu chương trình', 'cta_url', '/dao-tao'),
+    'stats', JSON_ARRAY(
+      JSON_OBJECT('number', '12', 'title', 'Phòng thực hành CNTT', 'description', 'Phục vụ học tập và rèn luyện kỹ năng chuyên môn.'),
+      JSON_OBJECT('number', '30', 'title', 'Giảng viên', 'description', 'Đội ngũ phụ trách đào tạo, nghiên cứu và đồng hành cùng sinh viên.')
+    ),
+    'perks', JSON_ARRAY(
+      JSON_OBJECT('icon', 'fa-solid fa-graduation-cap', 'title', 'Ba chương trình đào tạo', 'description', 'Công nghệ thông tin, Quản trị mạng máy tính và Sửa chữa - lắp ráp máy tính.'),
+      JSON_OBJECT('icon', 'fa-solid fa-code', 'title', 'Chuyên môn rõ ràng', 'description', 'Tổ chức chuyên môn về Công nghệ phần mềm và Phần cứng - Mạng máy tính.'),
+      JSON_OBJECT('icon', 'fa-solid fa-handshake', 'title', 'Kết nối doanh nghiệp', 'description', 'Gắn đào tạo với tham quan, thực tập, tuyển dụng và nhu cầu nhân lực thực tế.'),
+      JSON_OBJECT('icon', 'fa-solid fa-trophy', 'title', 'Học thuật và thi đấu', 'description', 'Olympic Tin học và hoạt động câu lạc bộ giúp sinh viên phát triển tư duy giải quyết vấn đề.')
+    ),
+    'highlights', JSON_ARRAY(
+      JSON_OBJECT('image', 'public/img/about.jpg', 'alt', 'Sinh viên thực hiện đồ án Công nghệ thông tin', 'title', 'Đồ án và thực tập', 'description', 'Vận dụng kiến thức vào sản phẩm, nhiệm vụ và môi trường làm việc thực tế.'),
+      JSON_OBJECT('image', 'public/img/about.jpg', 'alt', 'Hoạt động kết nối doanh nghiệp của Khoa CNTT', 'title', 'Đồng hành cùng doanh nghiệp', 'description', 'Mở rộng trải nghiệm nghề nghiệp thông qua hợp tác đào tạo và tuyển dụng.')
+    )
+  ),
+  '$.sections[3].data', JSON_OBJECT(
+    'title', 'Những con số về Khoa CNTT Cao Thắng',
+    'subtitle', 'Nền tảng đào tạo được xây dựng từ chuyên môn, thực hành và hoạt động học thuật.',
+    'stats', JSON_ARRAY(
+      JSON_OBJECT('icon', 'fa-solid fa-graduation-cap', 'number', '3', 'label', 'Chương trình đào tạo', 'description', 'Ba lộ trình nghề nghiệp thuộc lĩnh vực CNTT.'),
+      JSON_OBJECT('icon', 'fa-solid fa-code-branch', 'number', '2', 'label', 'Bộ môn chuyên môn', 'description', 'Công nghệ phần mềm và Phần cứng - Mạng máy tính.'),
+      JSON_OBJECT('icon', 'fa-solid fa-trophy', 'number', '9', 'label', 'Kỳ Olympic Tin học', 'description', 'Olympic Tin học Cao Thắng đã bước sang lần tổ chức thứ 9.'),
+      JSON_OBJECT('icon', 'fa-solid fa-building-columns', 'number', '2020', 'label', 'Khoa CNTT', 'description', 'Được tổ chức lại thành khoa chuyên ngành Công nghệ thông tin.')
+    ),
+    'benefits', JSON_ARRAY(
+      JSON_OBJECT('icon', 'fa-solid fa-laptop-code', 'title', 'Đào tạo hướng đến năng lực thực hành', 'items', JSON_ARRAY('Rèn kỹ năng qua bài tập và giờ thực hành chuyên môn', 'Phát triển sản phẩm qua đồ án môn học và đồ án tốt nghiệp', 'Thực tập tốt nghiệp gắn với môi trường nghề nghiệp', 'Bổ sung kỹ năng giao tiếp, làm việc nhóm và trình bày kỹ thuật')),
+      JSON_OBJECT('icon', 'fa-solid fa-arrow-trend-up', 'title', 'Phát triển nghề nghiệp cùng doanh nghiệp', 'items', JSON_ARRAY('Tham quan và tìm hiểu môi trường làm việc', 'Tiếp cận cơ hội thực tập và tuyển dụng', 'Kết nối nhu cầu doanh nghiệp với hoạt động đào tạo', 'Rèn tư duy và bản lĩnh qua sân chơi học thuật'))
+    ),
+    'cta', JSON_OBJECT('title', 'Sẵn sàng bắt đầu hành trình công nghệ?', 'description', 'Khám phá chương trình đào tạo và chọn lộ trình phù hợp với năng lực, sở thích và định hướng nghề nghiệp của bạn.', 'buttons', JSON_ARRAY(JSON_OBJECT('label', 'Xem chương trình đào tạo', 'url', '/dao-tao', 'variant', 'outline-alt'), JSON_OBJECT('label', 'Khám phá cơ hội nghề nghiệp', 'url', '/tin-tuc?category=tuyen-dung', 'variant', 'outline')))
+  )
+)
+WHERE slug = 'landing';
+
+UPDATE `carousel_slides`
+SET title = CASE sort_order
+    WHEN 1 THEN 'Khoa Công nghệ thông tin'
+    WHEN 2 THEN 'Tuyển sinh'
+    WHEN 3 THEN 'Olympic Tin học Cao Thắng'
+  END,
+  title_highlight = CASE sort_order
+    WHEN 1 THEN 'Học từ thực hành, trưởng thành cùng công nghệ'
+    WHEN 2 THEN 'Chọn lộ trình công nghệ phù hợp với bạn'
+    WHEN 3 THEN 'Sân chơi học thuật và bản lĩnh sinh viên'
+  END,
+  description = CASE sort_order
+    WHEN 1 THEN 'Đào tạo nguồn nhân lực công nghệ thông tin có kiến thức vững, kỹ năng nghề nghiệp và khả năng thích ứng với nhu cầu doanh nghiệp.'
+    WHEN 2 THEN 'Khám phá ba chương trình: Công nghệ thông tin, Quản trị mạng máy tính và Sửa chữa - lắp ráp máy tính.'
+    WHEN 3 THEN 'Nơi sinh viên vận dụng kiến thức, phát triển tư duy giải quyết vấn đề và làm việc với những sản phẩm thực tế.'
+  END,
+  cta_label = CASE sort_order WHEN 1 THEN 'Khám phá Khoa CNTT' WHEN 2 THEN 'Xem chương trình đào tạo' WHEN 3 THEN 'Xem tin nổi bật' END,
+  cta_url = CASE sort_order WHEN 1 THEN '/gioi-thieu' WHEN 2 THEN '/dao-tao' WHEN 3 THEN '/tin-tuc' END,
+  is_active = 1
+WHERE carousel_id = 1 AND sort_order BETWEEN 1 AND 3;
+UPDATE `carousel_slides` SET is_active = 0 WHERE carousel_id = 1 AND sort_order > 3;
+
 SET FOREIGN_KEY_CHECKS = 1;

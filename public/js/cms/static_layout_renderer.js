@@ -204,7 +204,7 @@ export class StaticLayoutRenderer {
               </div>
               ${asArray(data.stats).map((stat, index) => `
                 <div class="wcu__stat-card ${index === 0 ? 'wcu__stat-card--primary col-start-1 md:col-start-3 row-start-2 md:row-start-1' : 'wcu__stat-card--gradient col-start-2 md:col-start-3 row-start-2 md:row-start-2'} rounded-3xl p-3 md:p-6 flex flex-col gap-2 justify-center">
-                  <h2 class="wcu__stat-card-number flex-1 md:flex-none flex justify-center items-center md:block text-6xl md:text-7xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h2>
+                  ${String(stat.number ?? '').trim() ? `<h2 class="wcu__stat-card-number flex-1 md:flex-none flex justify-center items-center md:block text-6xl md:text-7xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h2>` : ''}
                   <div class="wcu__stat-card-content flex flex-col gap-2">
                     <p class="wcu__stat-card-title md:text-xl font-semibold">${this.editable(sectionId, `stats.${index}.title`, stat.title)}</p>
                     <p class="wcu__stat-card-description text-xs md:text-md font-normal">${this.editable(sectionId, `stats.${index}.description`, stat.description, true)}</p>
@@ -252,7 +252,7 @@ export class StaticLayoutRenderer {
                 <div class="stats__stat-card flex flex-1 flex-col items-center gap-3 md:gap-6 rounded-3xl p-3 md:p-6">
                   <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full"><i class="${escapeAttr(stat.icon || 'fa-solid fa-award')} stats__stat-card-icon ${this.iconAttrs(sectionId, `stats.${index}.icon`)}"></i></div>
                   <div class="flex flex-col gap-1 items-center">
-                    <h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h3>
+                    ${String(stat.number ?? '').trim() ? `<h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h3>` : ''}
                     <h4 class="stats__stat-card-label font-semibold">${this.editable(sectionId, `stats.${index}.label`, stat.label)}</h4>
                     <p class="stats__stat-card-description text-xs md:text-sm text-center">${this.editable(sectionId, `stats.${index}.description`, stat.description, true)}</p>
                   </div>
