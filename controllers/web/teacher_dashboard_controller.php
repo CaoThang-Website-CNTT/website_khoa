@@ -179,6 +179,41 @@ class TeacherDashboardController extends Controller
     ], layout: 'dashboard_layout');
   }
 
+  public function studentDetail(Request $request, int $batchId, int $batchStudentId)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) return $this->redirect('/');
+
+    if (!$this->_internshipBatchService->isSupervisorOfBatch($batchId, $teacher->id)) {
+      $request->session()->flashNotify('error', 'Bạn không được phân công hướng dẫn đợt thực tập này.');
+      return $this->redirect('/teacher/internship_batches');
+    }
+
+    $assignment = $this->_internshipAssignmentService->getAssignmentByBatchStudentId($batchStudentId);
+    if (!$assignment || $assignment->teacher_id != $teacher->id) {
+      $request->session()->flashNotify('error', 'Sinh viên này không do bạn hướng dẫn.');
+      return $this->redirect("/teacher/internship_batches/{$batchId}");
+    }
+
+    $studentDetail = $this->_internshipBatchService->getTeacherStudentDetail($batchStudentId);
+    if (!$studentDetail || $studentDetail['batch_id'] != $batchId) {
+      $request->session()->flashNotify('error', 'Không tìm thấy dữ liệu sinh viên.');
+      return $this->redirect("/teacher/internship_batches/{$batchId}");
+    }
+
+    $batchDetail = $this->_internshipBatchService->getBatchById($batchId);
+
+    return $this->render('teacher/internship_batches/student_detail', [
+      'teacher' => $teacher,
+      'batch' => $batchDetail,
+      'student' => $studentDetail,
+      'title' => 'Chi tiết sinh viên: ' . $studentDetail['full_name']
+    ], layout: 'dashboard_layout');
+  }
+
   public function internshipGrade(Request $request, int $batchId, int $batchStudentId)
   {
     $authUser = $request->session()->authUser();
