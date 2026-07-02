@@ -18,6 +18,11 @@ interface IInternshipWeeklyReportStore
   public function addImage(array $data): int;
   public function countSubmittedWeeks(int $batchStudentId): int;
   public function getHistoryByBatchStudentAndWeek(int $batchStudentId, int $weekNumber): array;
+  
+  // Transactions
+  public function beginTransaction(): void;
+  public function commit(): void;
+  public function rollBack(): void;
 }
 
 class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyReportStore
@@ -176,5 +181,20 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     return $result ?: [];
+  }
+
+  public function beginTransaction(): void
+  {
+    $this->db->beginTransaction();
+  }
+
+  public function commit(): void
+  {
+    $this->db->commit();
+  }
+
+  public function rollBack(): void
+  {
+    $this->db->rollBack();
   }
 }

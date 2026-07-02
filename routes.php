@@ -247,6 +247,10 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
   $router->get('/internship/{batch_id}/referral_letters/create', [StudentDashboardController::class, 'createReferralLetter']);
   $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
 
+  // Báo cáo tuần
+  $router->get('/internship/{batch_id}/weekly_reports', [StudentDashboardController::class, 'weeklyReports']);
+  $router->post('/internship/{batch_id}/weekly_reports', [StudentDashboardController::class, 'submitWeeklyReport']);
+
   // Trang danh sách giấy giới thiệu
   $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
   // Trang chi tiết giấy giới thiệu

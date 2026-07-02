@@ -9,7 +9,7 @@ use Exception;
 interface IInternshipWeeklyReportService
 {
   public function calculateWeeks(string $startAt, string $endAt): array;
-  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, array $imagesData): array;
+  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, array $imagesData, string $startAt, string $endAt): int;
   public function getStudentWeeklySummary(int $batchStudentId, string $startAt, string $endAt): array;
   public function getStudentWeeklyData(int $batchStudentId, string $startAt, string $endAt): array;
   public function getTeacherWeeklyOverview(int $batchId, int $teacherId, int $weekNumber): array;
@@ -78,12 +78,61 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     return $weeks;
   }
 
-  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, array $imagesData): array
+  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, array $imagesData, string $startAt, string $endAt): int
   {
-    // TODO: Implement logic lưu báo cáo tuần ở Phase 3.
-    // Cần cập nhật lại parameter để nhận thêm week_start và week_end từ Controller,
-    // từ đó tính toán được is_late và validate dữ liệu hợp lệ.
-    throw new Exception('Chưa được implement. Sẽ hoàn thiện ở Phase 3.');
+    $weeks = $this->calculateWeeks($startAt, $endAt);
+    $targetWeek = null;
+    foreach ($weeks as $w) {
+      if ($w['week_number'] === $weekNumber) {
+        $targetWeek = $w;
+        break;
+      }
+    }
+
+    if (!$targetWeek) {
+      throw new Exception("Tuần báo cáo không hợp lệ.");
+    }
+
+    if (!$isExempt && empty(trim((string)$content))) {
+      throw new Exception("Vui lòng nhập nội dung công việc.");
+    }
+
+    $now = new DateTime();
+    $weekEndDt = new DateTime($targetWeek['end']);
+    // Chuyển weekEndDt đến cuối ngày CN
+    $weekEndDt->setTime(23, 59, 59);
+
+    $isLate = $now > $weekEndDt;
+
+    $this->_store->beginTransaction();
+    try {
+      // Đặt is_latest = 0 cho bản ghi cũ
+      $this->_store->resetLatest($batchStudentId, $weekNumber);
+
+      $reportData = [
+        'batch_student_id' => $batchStudentId,
+        'week_number' => $weekNumber,
+        'week_start' => $targetWeek['start'],
+        'week_end' => $targetWeek['end'],
+        'content' => $isExempt ? null : $content,
+        'is_exempt' => $isExempt ? 1 : 0,
+        'is_late' => $isLate ? 1 : 0,
+        'is_latest' => 1
+      ];
+
+      $reportId = $this->_store->create($reportData);
+
+      foreach ($imagesData as $img) {
+        $img['weekly_report_id'] = $reportId;
+        $this->_store->addImage($img);
+      }
+
+      $this->_store->commit();
+      return $reportId;
+    } catch (\Throwable $e) {
+      $this->_store->rollBack();
+      throw $e;
+    }
   }
 
   public function getStudentWeeklySummary(int $batchStudentId, string $startAt, string $endAt): array

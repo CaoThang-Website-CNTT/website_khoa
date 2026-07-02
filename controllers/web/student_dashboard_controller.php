@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
-use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, WebSettingsService};
+use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, WebSettingsService, InternshipWeeklyReportService};
 use App\Core\Files\UploadedFileHandler;
 use App\Enums\BatchStatus;
 use Exception;
@@ -20,6 +20,7 @@ class StudentDashboardController extends Controller
   private InternshipSubmissionService $_submissionService;
   private ReferralLetterService $_referralLetterService;
   private WebSettingsService $_webSettingsService;
+  private InternshipWeeklyReportService $_weeklyReportService;
 
   public function __construct(
     StudentService $studentService,
@@ -29,7 +30,8 @@ class StudentDashboardController extends Controller
     CompanyService $companyService,
     InternshipSubmissionService $submissionService,
     ReferralLetterService $referralLetterService,
-    WebSettingsService $webSettingsService
+    WebSettingsService $webSettingsService,
+    InternshipWeeklyReportService $weeklyReportService
   ) {
     $this->_studentService = $studentService;
     $this->_classroomService = $classroomService;
@@ -39,6 +41,7 @@ class StudentDashboardController extends Controller
     $this->_submissionService = $submissionService;
     $this->_referralLetterService = $referralLetterService;
     $this->_webSettingsService = $webSettingsService;
+    $this->_weeklyReportService = $weeklyReportService;
   }
 
   /**
@@ -195,6 +198,16 @@ class StudentDashboardController extends Controller
     $allLetters = $this->_referralLetterService->getLettersWithCompanyByBatchStudentId((int)$dashboardData['current']['batch_student_id']);
     $recentReferralLetters = array_slice($allLetters, 0, 2);
 
+    // Lấy thông tin tóm tắt về báo cáo tuần
+    $weeklySummary = null;
+    if ($dashboardData['current'] && $dashboardData['current']['start_at'] && $dashboardData['current']['end_at']) {
+      $weeklySummary = $this->_weeklyReportService->getStudentWeeklySummary(
+        (int)$dashboardData['current']['batch_student_id'],
+        $dashboardData['current']['start_at'],
+        $dashboardData['current']['end_at']
+      );
+    }
+
     return $this->render('student/dashboard/internship', array_merge($dashboardData, [
       'student' => $student,
       'title' => 'Thông tin thực tập',
@@ -206,7 +219,8 @@ class StudentDashboardController extends Controller
       'company_warning_days' => (int)$this->_webSettingsService->getValue('internship_company_warning_days', 3),
       'report_warning_days' => (int)$this->_webSettingsService->getValue('internship_report_warning_days', 3),
       'recent_referral_letters' => $recentReferralLetters,
-      'total_referral_letters' => count($allLetters)
+      'total_referral_letters' => count($allLetters),
+      'weekly_summary' => $weeklySummary
     ]), layout: 'dashboard_layout');
   }
 
@@ -635,5 +649,132 @@ class StudentDashboardController extends Controller
       'student' => $student,
       'title' => 'Đồ án tốt nghiệp'
     ], layout: 'dashboard_layout');
+  }
+
+  public function weeklyReports(Request $request, $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
+
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+    if (!$student) {
+      return $this->redirect('/');
+    }
+
+    $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, $batch_id);
+    if (!$dashboardData['current']) {
+      $request->session()->flashNotify('error', 'Đợt thực tập không tồn tại hoặc bạn không thuộc đợt này.');
+      return $this->redirect('/student/internship');
+    }
+
+    $batchStudentId = (int)$dashboardData['current']['batch_student_id'];
+    $startAt = $dashboardData['current']['start_at'];
+    $endAt = $dashboardData['current']['end_at'];
+
+    $weeksData = $this->_weeklyReportService->getStudentWeeklyData($batchStudentId, $startAt, $endAt);
+
+    return $this->render('student/dashboard/weekly_reports', array_merge($dashboardData, [
+      'student' => $student,
+      'title' => 'Báo cáo hàng tuần',
+      'weeks_data' => $weeksData,
+      'batch_student_id' => $batchStudentId
+    ]), layout: 'dashboard_layout');
+  }
+
+  public function submitWeeklyReport(Request $request, $batch_id)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) {
+      return $this->redirect('/login');
+    }
+
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+    $dashboardData = $this->_internshipBatchService->getStudentDashboardData($student->id, $batch_id);
+
+    if (!$dashboardData['current']) {
+      $request->session()->flashNotify('error', 'Lỗi phân quyền.');
+      return $this->redirect('/student/internship');
+    }
+
+    $batchStudentId = (int)$dashboardData['current']['batch_student_id'];
+    $startAt = $dashboardData['current']['start_at'];
+    $endAt = $dashboardData['current']['end_at'];
+
+    $weekNumber = (int)$request->input('week_number');
+    $content = $request->input('content');
+    $isExempt = (bool)$request->input('is_exempt');
+
+    $maxImages = (int)$this->_webSettingsService->getValue('internship_weekly_report_max_images', 5);
+    $maxSizeMb = (float)$this->_webSettingsService->getValue('internship_weekly_report_image_max_size_mb', 5);
+    $maxSizeBytes = $maxSizeMb * 1024 * 1024;
+
+    try {
+      $imagesData = [];
+      if (!$isExempt && isset($_FILES['images'])) {
+        $files = $_FILES['images'];
+        $fileCount = is_array($files['name']) ? count(array_filter($files['name'])) : (empty($files['name']) ? 0 : 1);
+
+        if ($fileCount > $maxImages) {
+          throw new Exception("Chỉ được phép tải lên tối đa {$maxImages} ảnh.");
+        }
+
+        $subDir = 'weekly_reports/' . date('Y/m');
+        $uploadDir = BASE_PATH . '/storage/' . $subDir . '/';
+
+        for ($i = 0; $i < $fileCount; $i++) {
+          if ($files['error'][$i] === UPLOAD_ERR_NO_FILE) continue;
+
+          if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+            throw new Exception("Lỗi khi tải ảnh: " . $files['name'][$i]);
+          }
+
+          if ($files['size'][$i] > $maxSizeBytes) {
+            throw new Exception("Dung lượng ảnh vượt quá giới hạn ({$maxSizeMb}MB): " . $files['name'][$i]);
+          }
+
+          $mime = mime_content_type($files['tmp_name'][$i]);
+          if (strpos($mime, 'image/') !== 0) {
+            throw new Exception("Chỉ hỗ trợ file hình ảnh: " . $files['name'][$i]);
+          }
+
+          if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+          }
+
+          $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
+          $fileName = bin2hex(random_bytes(16)) . '.' . $ext;
+          $destPath = $uploadDir . $fileName;
+
+          if (!move_uploaded_file($files['tmp_name'][$i], $destPath)) {
+            throw new Exception("Không thể lưu file ảnh vào máy chủ.");
+          }
+
+          $imagesData[] = [
+            'original_file_name' => $files['name'][$i],
+            'mime_type' => $mime,
+            'file_path' => $subDir . '/' . $fileName,
+            'file_size' => $files['size'][$i]
+          ];
+        }
+      }
+
+      $this->_weeklyReportService->submitWeeklyReport(
+        $batchStudentId,
+        $weekNumber,
+        $content,
+        $isExempt,
+        $imagesData,
+        $startAt,
+        $endAt
+      );
+
+      $request->session()->flashNotify('success', 'Đã lưu báo cáo tuần.');
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+    }
+
+    return $this->redirect("/student/internship/{$batch_id}/weekly_reports");
   }
 }

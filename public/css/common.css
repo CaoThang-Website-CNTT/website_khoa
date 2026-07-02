@@ -1947,6 +1947,12 @@
     background: color-mix(in oklab, var(--background) 20%, transparent);
   }
 
+  .badge[data-variant="success"] {
+    border-color: var(--toast-success-border);
+    color: var(--toast-success-color);
+    background: var(--toast-success-bg);
+  }
+
   /* ==========================================================================
    DROPDOWN
    ========================================================================== */
