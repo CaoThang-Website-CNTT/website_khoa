@@ -9,15 +9,12 @@ $current = $current ?? null;
 $referralLetters = $referralLetters ?? [];
 
 $rlData = array_map(function ($rl) {
-  $statusLabel = 'Chờ xử lý';
-  $statusVariant = 'secondary';
-  if ($rl['status'] === 'printed') {
-    $statusLabel = 'Đã in';
-    $statusVariant = 'primary';
-  } elseif ($rl['status'] !== 'pending') {
-    $statusLabel = 'Đã hủy';
-    $statusVariant = 'destructive';
-  }
+  $statuses = [
+    'pending' => ['Chờ duyệt', 'secondary'], 'approved' => ['Đang xử lý', 'secondary'],
+    'completed' => ['Hoàn thành', 'primary'], 'received' => ['Đã nhận', 'primary'],
+    'rejected' => ['Từ chối', 'destructive'], 'cancelled' => ['Đã hủy', 'destructive'],
+  ];
+  [$statusLabel, $statusVariant] = $statuses[$rl['status']] ?? [$rl['status'], 'outline'];
 
   return [
     'id' => $rl['id'],
@@ -79,7 +76,7 @@ $rlData = array_map(function ($rl) {
   </template>
 
   <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
-    data-tm-filter-options='[{"value":"pending","label":"Chờ xử lý"},{"value":"printed","label":"Đã in"},{"value":"cancelled","label":"Đã hủy"}]'>
+    data-tm-filter-options='[{"value":"pending","label":"Chờ duyệt"},{"value":"approved","label":"Đang xử lý"},{"value":"completed","label":"Hoàn thành"},{"value":"received","label":"Đã nhận"},{"value":"rejected","label":"Từ chối"},{"value":"cancelled","label":"Đã hủy"}]'>
     <span class="badge" data-variant="{{ row.status_variant }}">{{ row.status_label }}</span>
   </template>
 

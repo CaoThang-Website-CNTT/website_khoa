@@ -25,6 +25,8 @@ interface IReferralLetterStore
   public function getForPrint(int $id): ?array;
   public function updatePrintInfo(int $id, array $printData): bool;
   public function getByIds(array $ids): array;
+  public function getByIdsForBatch(array $ids, int $batchId): array;
+  public function updateReceipt(int $id, array $data): bool;
 }
 
 class ReferralLetterStore extends Store implements IReferralLetterStore
@@ -82,15 +84,19 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     $sql = "
       SELECT rl.*, 
              c.name as company_name, c.tax_code as company_tax_code, c.address as company_address, c.is_verified as company_is_verified,
-             s.student_id as student_code, s.full_name as student_full_name, cl.short_name as classroom_name,
+             s.student_id as student_code, s.full_name as student_full_name, s.phone as student_phone,
+             a.email as student_email, s.full_name as student_full_name, cl.short_name as classroom_name,
              t.full_name as teacher_name,
+             ra.email as received_by_name,
              (SELECT COUNT(*) FROM referral_letter_students rls WHERE rls.referral_letter_id = rl.id) as student_count
       FROM referral_letters rl
       LEFT JOIN internship_batch_students bs ON rl.batch_student_id = bs.id
       LEFT JOIN students s ON bs.student_id = s.id
+      LEFT JOIN accounts a ON s.account_id = a.id
       LEFT JOIN classrooms cl ON s.classroom_id = cl.id
       LEFT JOIN companies c ON rl.company_id = c.id
       LEFT JOIN teachers t ON rl.teacher_id = t.id
+      LEFT JOIN accounts ra ON rl.received_by = ra.id
       WHERE rl.id IN (
         SELECT DISTINCT rls.referral_letter_id 
         FROM referral_letter_students rls 
@@ -156,6 +162,24 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
 
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return array_map(fn($item) => ReferralLetter::fromArray($item), $result);
+  }
+
+  public function getByIdsForBatch(array $ids, int $batchId): array
+  {
+    if (empty($ids)) return [];
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $sql = "
+      SELECT DISTINCT rl.*
+      FROM referral_letters rl
+      LEFT JOIN internship_batch_students owner_bs ON owner_bs.id = rl.batch_student_id
+      LEFT JOIN referral_letter_students rls ON rls.referral_letter_id = rl.id
+      LEFT JOIN internship_batch_students member_bs ON member_bs.id = rls.batch_student_id
+      WHERE rl.id IN ($placeholders)
+        AND (owner_bs.batch_id = ? OR member_bs.batch_id = ?)
+    ";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([...$ids, $batchId, $batchId]);
+    return array_map(fn($row) => ReferralLetter::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   /**
@@ -304,5 +328,20 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     $sql = "UPDATE referral_letters SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE id = :id";
     $stmt = $this->db->prepare($sql);
     return $stmt->execute($params);
+  }
+
+  public function updateReceipt(int $id, array $data): bool
+  {
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->update([
+      'status' => $data['status'],
+      'recipient_name' => $data['recipient_name'],
+      'recipient_phone' => $data['recipient_phone'],
+      'recipient_email' => $data['recipient_email'],
+      'received_at' => $data['received_at'],
+      'received_by' => $data['received_by'],
+      'updated_at' => date('Y-m-d H:i:s'),
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 }

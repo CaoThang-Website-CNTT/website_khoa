@@ -6,15 +6,12 @@
  * @var array $students
  */
 
-$statusLabel = 'Chờ xử lý';
-$statusVariant = 'secondary';
-if ($letter['status'] === 'printed') {
-  $statusLabel = 'Đã in';
-  $statusVariant = 'primary';
-} elseif ($letter['status'] !== 'pending') {
-  $statusLabel = 'Đã hủy';
-  $statusVariant = 'destructive';
-}
+$statuses = [
+  'pending' => ['Chờ duyệt', 'secondary'], 'approved' => ['Đang xử lý', 'secondary'],
+  'completed' => ['Hoàn thành', 'primary'], 'received' => ['Đã nhận', 'primary'],
+  'rejected' => ['Từ chối', 'destructive'], 'cancelled' => ['Đã hủy', 'destructive'],
+];
+[$statusLabel, $statusVariant] = $statuses[$letter['status']] ?? [$letter['status'], 'outline'];
 ?>
 <link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
 

@@ -269,13 +269,15 @@ $effectiveMetadata = $effStatus ? [
                     </div>
                     <div class="flex justify-between items-center mt-2">
                       <span class="text-xs"><?= date('d/m/Y', strtotime($rl['created_at'])) ?></span>
-                      <?php if ($rl['status'] === 'pending'): ?>
-                        <span class="badge" data-variant="secondary">Đang xử lý</span>
-                      <?php elseif ($rl['status'] === 'printed'): ?>
-                        <span class="badge" data-variant="primary">Đã in</span>
-                      <?php else: ?>
-                        <span class="badge" data-variant="destructive">Đã hủy</span>
-                      <?php endif; ?>
+                      <?php
+                        $statusMap = [
+                          'pending' => ['Chờ duyệt', 'secondary'], 'approved' => ['Đang xử lý', 'secondary'],
+                          'completed' => ['Hoàn thành', 'primary'], 'received' => ['Đã nhận', 'primary'],
+                          'rejected' => ['Từ chối', 'destructive'], 'cancelled' => ['Đã hủy', 'destructive'],
+                        ];
+                        [$label, $variant] = $statusMap[$rl['status']] ?? [$rl['status'], 'outline'];
+                      ?>
+                      <span class="badge" data-variant="<?= $variant ?>"><?= $label ?></span>
                     </div>
                   </div>
                 <?php endforeach; ?>

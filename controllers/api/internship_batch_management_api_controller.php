@@ -188,29 +188,46 @@ class InternshipBatchManagementApiController extends Controller
     $reason = $data['reason'] ?? '';
 
     if (empty($ids) || !is_array($ids)) {
-      return $this->json(['message' => 'Không có giấy giới thiệu nào được chọn.'], 422);
+      return $this->json(null, 422, 'Không có giấy giới thiệu nào được chọn.');
     }
 
     $processedBy = $request->session()->authUser()['account_id'] ?? null;
     if (!$processedBy) {
-      return $this->json(['message' => 'Lỗi xác thực người dùng.'], 401);
+      return $this->json(null, 401, 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
     }
 
     try {
       if ($action === 'reject') {
         if (empty(trim($reason))) {
-          return $this->json(['message' => 'Vui lòng nhập lý do hủy.'], 422);
+          return $this->json(null, 422, 'Vui lòng nhập lý do từ chối giấy giới thiệu.');
         }
-        $count = $this->_referralLetterService->bulkReview($ids, 'reject', trim($reason), $processedBy);
+        $count = $this->_referralLetterService->bulkReview($ids, (int)$id, 'reject', trim($reason), $processedBy);
         return $this->json(['count' => $count], 200, "Đã hủy {$count} giấy giới thiệu thành công.");
       } elseif ($action === 'approve') {
-        $count = $this->_referralLetterService->bulkReview($ids, 'approve', '', $processedBy);
+        $count = $this->_referralLetterService->bulkReview($ids, (int)$id, 'approve', '', $processedBy);
         return $this->json(['count' => $count], 200, "Duyệt {$count} yêu cầu giấy giới thiệu.");
+      } elseif ($action === 'complete') {
+        $count = $this->_referralLetterService->bulkReview($ids, (int)$id, 'complete', '', $processedBy);
+        return $this->json(['count' => $count], 200, "Đã hoàn thành {$count} giấy giới thiệu.");
       } else {
-        return $this->json(['message' => 'Thao tác không hợp lệ.'], 400);
+        return $this->json(null, 400, 'Thao tác với giấy giới thiệu không hợp lệ.');
       }
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(null, 400, $e->getMessage());
+    }
+  }
+
+  public function receiveReferralLetter($id, $letterId, Request $request)
+  {
+    $processedBy = $request->session()->authUser()['account_id'] ?? null;
+    if (!$processedBy) return $this->json(null, 401, 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+    try {
+      $success = $this->_referralLetterService->receive((int)$letterId, (int)$id, $request->json(), (int)$processedBy);
+      return $success
+        ? $this->json([], 200, 'Đã xác nhận sinh viên nhận giấy giới thiệu.')
+        : $this->json(null, 400, 'Không thể cập nhật trạng thái nhận giấy giới thiệu.');
+    } catch (Exception $e) {
+      return $this->json(null, 422, $e->getMessage());
     }
   }
 }

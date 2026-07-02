@@ -50,7 +50,7 @@ $letters = $letters ?? [];
     </template>
 
     <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
-      data-tm-filter-options='[{"value":"pending","label":"Chờ duyệt"},{"value":"approved","label":"Đã duyệt"},{"value":"printed","label":"Đã in"},{"value":"rejected","label":"Từ chối"},{"value":"cancelled","label":"Đã hủy"}]'>
+      data-tm-filter-options='[{"value":"pending","label":"Chờ duyệt"},{"value":"approved","label":"Đang xử lý"},{"value":"completed","label":"Hoàn thành"},{"value":"received","label":"Đã nhận"},{"value":"rejected","label":"Từ chối"},{"value":"cancelled","label":"Đã hủy"}]'>
       <span class="badge" data-variant="{{ row.status_variant }}">{{ row.status_label }}</span>
     </template>
 
@@ -69,10 +69,25 @@ $letters = $letters ?? [];
           data-variant="primary" data-size="sm" title="Xem trước & In">
           <i class="fa-solid fa-print"></i>
         </a>
+        <button type="button" class="btn btn-receive {{ row.status !== 'completed' ? 'hidden' : '' }}"
+          data-variant="primary" data-size="sm" data-id="{{ row.id }}" data-name="{{ row.student_full_name }}"
+          data-phone="{{ row.student_phone }}" data-email="{{ row.student_email }}" title="Xác nhận đã nhận">
+          <i class="fa-solid fa-handshake"></i>
+        </button>
       </div>
     </template>
 
     <template data-tm-pagination></template>
+  </div>
+
+  <div id="receive-modal" class="modal" tabindex="-1" data-state="closed">
+    <div class="modal__header"><h3 class="modal__title">Xác nhận sinh viên đã nhận giấy</h3><button type="button" class="modal__close" data-modal-close><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="py-4 flex flex-col gap-3">
+      <div class="field"><label class="field__label">Họ tên người nhận</label><input id="recipient_name" class="field__input" required></div>
+      <div class="field"><label class="field__label">Số điện thoại</label><input id="recipient_phone" class="field__input" type="tel" required></div>
+      <div class="field"><label class="field__label">Email</label><input id="recipient_email" class="field__input" type="email" required></div>
+    </div>
+    <div class="modal__footer"><button type="button" class="btn" data-variant="outline" data-modal-close>Hủy</button><button type="button" id="btn-confirm-receive" class="btn" data-variant="primary">Xác nhận đã nhận</button></div>
   </div>
 
 
@@ -117,11 +132,12 @@ $letters = $letters ?? [];
   <?php
   $statusMap = [
     'pending' => ['label' => 'Chờ duyệt', 'variant' => 'secondary'],
-    'printed' => ['label' => 'Đã in', 'variant' => 'primary'],
+    'completed' => ['label' => 'Hoàn thành', 'variant' => 'primary'],
+    'received' => ['label' => 'Đã nhận', 'variant' => 'primary'],
     'cancelled' => ['label' => 'Đã hủy', 'variant' => 'destructive']
   ];
-  $statusMap['approved'] = ['label' => 'Approved', 'variant' => 'primary'];
-  $statusMap['rejected'] = ['label' => 'Rejected', 'variant' => 'destructive'];
+  $statusMap['approved'] = ['label' => 'Đang xử lý', 'variant' => 'secondary'];
+  $statusMap['rejected'] = ['label' => 'Từ chối', 'variant' => 'destructive'];
   $rows = array_map(function ($rl) use ($statusMap) {
     $st = $statusMap[$rl['status']] ?? ['label' => $rl['status'], 'variant' => 'outline'];
     return [
@@ -139,12 +155,20 @@ $letters = $letters ?? [];
       'company_is_verified' => $rl['company_is_verified'],
       'company_verified_label' => $rl['company_is_verified'] == 1 ? 'Đã xác thực' : 'Chưa xác thực',
       'status' => $rl['status'],
-      'can_print' => in_array($rl['status'], ['approved', 'printed'], true),
+      'can_print' => $rl['status'] === 'approved',
+      'printed_at' => $rl['printed_at'],
       'status_label' => $st['label'],
       'status_variant' => $st['variant'],
       'cancel_reason' => $rl['cancel_reason'],
       'student_count' => $rl['student_count'] ?? 1,
-      'teacher_name' => $rl['teacher_name']
+      'teacher_name' => $rl['teacher_name'],
+      'student_phone' => $rl['student_phone'] ?? '',
+      'student_email' => $rl['student_email'] ?? '',
+      'recipient_name' => $rl['recipient_name'] ?? '',
+      'recipient_phone' => $rl['recipient_phone'] ?? '',
+      'recipient_email' => $rl['recipient_email'] ?? '',
+      'received_at' => $rl['received_at'] ?? null,
+      'received_by_name' => $rl['received_by_name'] ?? null
     ];
   }, $letters);
   echo json_encode([
@@ -158,6 +182,8 @@ $letters = $letters ?? [];
   <script>
     window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
     window.BATCH_ID = <?= json_encode($batch['id']) ?>;
+    window.ADMIN_BATCH_URL = <?= json_encode(url('admin/internship_batches/' . $batch['id'])) ?>;
+    window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;
   </script>
   <script type="module" src="<?= url('public/js/pages/referral_letters_manager.js') ?>"></script>
   <?php $layout->end() ?>
