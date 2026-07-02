@@ -208,98 +208,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Khởi tạo cho Modal đăng ký giấy giới thiệu (prefix = 'rl_')
   window.initCompanyFormLogic("rl_");
-  const uploadArea = document.getElementById("uploadArea");
-  const docTypeSelect = document.getElementById("doc_type");
-  const fileInput = document.getElementById("report_file");
-  const filePreview = document.getElementById("filePreview");
   const uploadBtn = document.getElementById("uploadBtn");
+  const fileInputs = document.querySelectorAll(".file-input");
 
-  if (uploadArea && fileInput) {
-    if (docTypeSelect) {
-      docTypeSelect.addEventListener("change", () => {
-        const type = docTypeSelect.value;
-        if (type === 'related_photo') {
-          fileInput.accept = ".jpg,.jpeg,.png,.webp,image/*";
-        } else {
-          fileInput.accept = ".pdf,application/pdf";
-        }
-        updateFilePreview();
-      });
-    }
-    uploadArea.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      uploadArea.classList.add("border-primary");
-    });
+  if (fileInputs.length > 0) {
+    const maxSize = 10 * 1024 * 1024; // 10MB
 
-    uploadArea.addEventListener("dragleave", () => {
-      uploadArea.classList.remove("border-primary");
-    });
+    const validateFiles = () => {
+      let hasFile = false;
+      let hasError = false;
 
-    uploadArea.addEventListener("drop", (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove("border-primary");
-      if (e.dataTransfer.files.length > 0) {
-        fileInput.files = e.dataTransfer.files;
-        updateFilePreview();
-      }
-    });
+      fileInputs.forEach((input) => {
+        if (input.files.length > 0) {
+          hasFile = true;
+          const file = input.files[0];
 
-    uploadArea.addEventListener("click", () => {
-      fileInput.click();
-    });
-
-    uploadArea.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        fileInput.click();
-      }
-    });
-
-    fileInput.addEventListener("change", () => {
-      updateFilePreview();
-    });
-
-    function updateFilePreview() {
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const maxSize = 50 * 1024 * 1024; // 50MB
-        if (file.size > maxSize) {
-          window.toast?.error("Lỗi", "Dung lượng file không được vượt quá 50MB");
-          fileInput.value = "";
-          filePreview.classList.add("hidden");
-          if (uploadBtn) uploadBtn.disabled = true;
-          return;
-        }
-
-        if (docTypeSelect && docTypeSelect.value) {
-          const type = docTypeSelect.value;
-          const isImage = file.type.startsWith('image/') || file.name.match(/\.(jpg|jpeg|png|webp)$/i);
-          const isPdf = file.type === 'application/pdf' || file.name.match(/\.pdf$/i);
-
-          if (type === 'related_photo' && !isImage) {
-            window.toast?.error("Lỗi", "Hình ảnh liên quan phải là định dạng JPG, PNG, WEBP");
-            fileInput.value = "";
-            filePreview.classList.add("hidden");
-            if (uploadBtn) uploadBtn.disabled = true;
-            return;
-          } else if (type !== 'related_photo' && type !== '' && !isPdf) {
-            window.toast?.error("Lỗi", "Tài liệu này yêu cầu định dạng PDF");
-            fileInput.value = "";
-            filePreview.classList.add("hidden");
-            if (uploadBtn) uploadBtn.disabled = true;
+          if (file.size > maxSize) {
+            window.toast?.error(
+              "Lỗi",
+              `File ${file.name} vượt quá dung lượng 10MB`,
+            );
+            input.value = "";
+            hasError = true;
             return;
           }
-        }
 
-        filePreview.textContent = `Đã chọn: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-        filePreview.classList.remove("hidden");
-        if (uploadBtn) {
-          uploadBtn.disabled = docTypeSelect ? !docTypeSelect.value : false;
+          const isImage =
+            file.type.startsWith("image/") ||
+            file.name.match(/\.(jpg|jpeg|png|webp)$/i);
+          const isPdf =
+            file.type === "application/pdf" || file.name.match(/\.pdf$/i);
+
+          if (input.accept.includes("image") && !isImage) {
+            window.toast?.error(
+              "Lỗi",
+              "Tài liệu này yêu cầu định dạng hình ảnh (JPG, PNG, WEBP)",
+            );
+            input.value = "";
+            hasError = true;
+          } else if (input.accept.includes(".pdf") && !isPdf) {
+            window.toast?.error("Lỗi", "Tài liệu này yêu cầu định dạng PDF");
+            input.value = "";
+            hasError = true;
+          }
         }
-      } else {
-        filePreview.classList.add("hidden");
-        if (uploadBtn) uploadBtn.disabled = true;
+      });
+
+      if (uploadBtn) {
+        // Kiểm tra required inputs
+        const requiredInputs = Array.from(fileInputs).filter((inp) =>
+          inp.hasAttribute("required"),
+        );
+        const allRequiredFilled = requiredInputs.every(
+          (inp) => inp.files.length > 0,
+        );
+
+        uploadBtn.disabled = !hasFile || hasError || !allRequiredFilled;
       }
-    }
+    };
+
+    fileInputs.forEach((input) => {
+      input.addEventListener("change", validateFiles);
+    });
   }
 });

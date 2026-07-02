@@ -299,60 +299,74 @@ class StudentDashboardController extends Controller
     }
 
     try {
-      $docType = $request->input('doc_type');
-      $allowedTypes = ['internship_report', 'evaluation_form', 'company_survey', 'related_photo'];
-      if (!in_array($docType, $allowedTypes)) {
-        throw new Exception('Loại tài liệu không hợp lệ.');
-      }
-
-      $fileHandler = new UploadedFileHandler();
-      $uploadedFile = $fileHandler->processUpload($request->file('report_file'));
-
-      if (!$uploadedFile) {
-        throw new Exception('Vui lòng chọn file báo cáo.');
-      }
-
       // Server-side validation: Kiểm tra hạn chót nộp báo cáo
       $batch = $this->_internshipBatchService->getBatchById($batch_id);
       if ($batch && $batch['end_at']) {
         $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
         $deadlineDt = (new \DateTime($batch['end_at']))->modify("+{$allowedDays} days");
         if (new \DateTime() > $deadlineDt) {
-          throw new Exception('Đã hết thời hạn nộp báo cáo thực tập.');
+          throw new Exception('Đã hết thời hạn nộp tài liệu thực tập.');
         }
       }
 
-      // Server-side validation: Kiểm tra dung lượng file
-      $maxSizeMb = (int)$this->_webSettingsService->getValue('internship_report_max_size_mb', 50);
+      $maxSizeMb = (int)$this->_webSettingsService->getValue('internship_report_max_size_mb', 10);
       $maxSizeBytes = $maxSizeMb * 1024 * 1024;
-      if ($uploadedFile->fileSize > $maxSizeBytes) {
-        throw new Exception("Dung lượng file vượt quá giới hạn cho phép ({$maxSizeMb}MB).");
-      }
-      $subDir = 'internship_submissions/' . date('Y/m'); // Chia nhỏ, quản lý file theo tháng
+
+      $fileHandler = new UploadedFileHandler();
+      $allowedFiles = [
+        'file_internship_report' => 'internship_report',
+        'file_evaluation_form' => 'evaluation_form',
+        'file_company_survey' => 'company_survey',
+        'file_related_photo' => 'related_photo'
+      ];
+
+      $hasFile = false;
+
+      $subDir = 'internship_submissions/' . date('Y/m');
       $uploadDir = BASE_PATH . '/storage/' . $subDir . '/';
-      if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
+
+      foreach ($allowedFiles as $inputName => $docType) {
+        $fileData = $request->file($inputName);
+        if ($fileData && $fileData['error'] !== UPLOAD_ERR_NO_FILE) {
+          $hasFile = true;
+          $uploadedFile = $fileHandler->processUpload($fileData);
+
+          if (!$uploadedFile) {
+            throw new Exception("Lỗi tải lên file cho loại tài liệu: {$docType}");
+          }
+          if ($uploadedFile->fileSize > $maxSizeBytes) {
+            throw new Exception("Dung lượng file vượt quá giới hạn cho phép ({$maxSizeMb}MB) ở tài liệu: {$docType}");
+          }
+
+          if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+          }
+
+          $fileName = bin2hex(random_bytes(16)) . '.' . $uploadedFile->extension;
+          $destPath = $uploadDir . $fileName;
+
+          if (!move_uploaded_file($uploadedFile->tmpPath, $destPath)) {
+            throw new Exception("Không thể lưu file {$docType} vào máy chủ.");
+          }
+
+          $mimeType = mime_content_type($destPath) ?: 'application/octet-stream';
+
+          $this->_submissionService->createTypedSubmission($batchStudentId, $docType, [
+            'storage_mode' => 'file',
+            'original_file_name' => $uploadedFile->originalName,
+            'mime_type' => $mimeType,
+            'file_path' => $subDir . '/' . $fileName,
+          ]);
+        }
       }
 
-      $fileName = bin2hex(random_bytes(16)) . '.' . $uploadedFile->extension;
-      $destPath = $uploadDir . $fileName;
-
-      if (!move_uploaded_file($uploadedFile->tmpPath, $destPath)) {
-        throw new Exception('Không thể lưu file vào máy chủ.');
+      if (!$hasFile) {
+        throw new Exception("Vui lòng chọn ít nhất 1 file để nộp.");
       }
-
-      $mimeType = mime_content_type($destPath) ?: 'application/octet-stream';
-
-      $this->_submissionService->createTypedSubmission($batchStudentId, $docType, [
-        'storage_mode' => 'file',
-        'original_file_name' => $uploadedFile->originalName,
-        'mime_type' => $mimeType,
-        'file_path' => $subDir . '/' . $fileName,
-      ]);
 
       $request->session()->flashNotify('success', 'Nộp tài liệu thành công!');
     } catch (Exception $e) {
-      $request->session()->flashNotify('error', 'Lỗi tải lên: ' . $e->getMessage());
+      $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
     }
 
     return $this->redirect("/student/internship/{$batch_id}");

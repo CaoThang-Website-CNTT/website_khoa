@@ -334,130 +334,129 @@ $effectiveMetadata = $effStatus ? [
           </div>
         </div>
 
-        <!-- Nộp tài liệu -->
-        <?php if ($effStatus === BatchStatus::ACTIVE): ?>
-          <div class="card shadow">
-            <div class="card__header">
-              <h3 class="card__title">
-                <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
-                Nộp tài liệu thực tập tốt nghiệp
-              </h3>
-              <div class="card__header-meta">
-                <?php if ($report_deadline): ?>
-                  <?php
-                  $rdDt = new \DateTime($report_deadline);
-                  $isRNear = $now >= (clone $rdDt)->modify("-{$report_warning_days} days") && $now <= $rdDt;
-                  $isRPassed = $now > $rdDt;
-                  ?>
-                  <?php if ($isRPassed): ?>
-                    <span class="badge" data-variant="destructive">
-                      <i class="fa-solid fa-lock mr-1"></i>Hết hạn nộp</span>
-                  <?php elseif ($isRNear): ?>
-                    <span class="badge" data-variant="warning">
-                      <i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hạn</span>
-                  <?php endif; ?>
-                  <p class="text-xs">Hạn chót nộp: <span class="font-semibold"><?= $rdDt->format('d/m/Y') ?></span></p>
+      <!-- Nộp tài liệu -->
+      <?php if ($effStatus === BatchStatus::ACTIVE): ?>
+        <div class="card shadow">
+          <div class="card__header">
+            <h3 class="card__title">
+              <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
+              Nộp tài liệu thực tập tốt nghiệp
+            </h3>
+            <div class="card__header-meta">
+              <?php if ($report_deadline): ?>
+                <?php
+                $rdDt = new \DateTime($report_deadline);
+                $isRNear = $now >= (clone $rdDt)->modify("-{$report_warning_days} days") && $now <= $rdDt;
+                $isRPassed = $now > $rdDt;
+                ?>
+                <?php if ($isRPassed): ?>
+                  <span class="badge" data-variant="destructive">
+                    <i class="fa-solid fa-lock mr-1"></i>Hết hạn nộp</span>
+                <?php elseif ($isRNear): ?>
+                  <span class="badge" data-variant="warning">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hạn</span>
                 <?php endif; ?>
+                <p class="text-xs">Hạn chót nộp: <span class="font-semibold"><?= $rdDt->format('d/m/Y') ?></span></p>
+              <?php endif; ?>
+            </div>
+            <p class="text-xs">Tài liệu được gửi cho giảng viên hướng dẫn để đánh giá kết quả thực tập.</p>
+          </div>
+          <hr class="separator" />
+          <div class="card__content">
+            <form action="<?= url("student/internship/{$current['id']}/upload") ?>" method="POST"
+              enctype="multipart/form-data" id="uploadForm">
+              <?= csrf_field() ?>
+              <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
+
+              <div class="mb-4 text-sm" style="color: var(--muted-foreground);">
+                Định dạng hỗ trợ: PDF (cho Báo cáo, phiếu đánh giá, khảo sát), Hình ảnh (JPG, PNG, WEBP). Dung lượng tối đa: <?= $max_file_size_mb ?>MB
               </div>
-              <p class="text-xs">Tài liệu được gửi cho giảng viên hướng dẫn để đánh giá kết quả thực tập.</p>
-            </div>
-            <hr class="separator" />
-            <div class="card__content">
-              <form action="<?= url("student/internship/{$current['id']}/upload") ?>" method="POST"
-                enctype="multipart/form-data" id="uploadForm">
-                <?= csrf_field() ?>
-                <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
 
-                <div class="field mb-3" data-field-required>
-                  <label class="field__label" for="doc_type">Loại tài liệu</label>
-                  <select name="doc_type" id="doc_type" class="field__input" required>
-                    <option value="" disabled selected>-- Chọn loại tài liệu --</option>
-                    <option value="internship_report">Báo cáo thực tập tốt nghiệp (Bắt buộc)</option>
-                    <option value="evaluation_form">Phiếu đánh giá thực tập (Bắt buộc)</option>
-                    <option value="company_survey">Phiếu khảo sát doanh nghiệp</option>
-                    <option value="related_photo">Hình ảnh liên quan khác</option>
-                  </select>
-                </div>
+              <div class="field mb-3" data-field-required>
+                <label class="field__label">Báo cáo thực tập</label>
+                <input type="file" name="file_internship_report" id="file_internship_report" class="field__input file-input" accept=".pdf" <?= empty($submissions_by_type['internship_report']) ? 'required' : '' ?>>
+              </div>
 
-                <div class="upload-area" id="uploadArea" role="button" tabindex="0"
-                  aria-label="Chọn tài liệu thực tập để tải lên" aria-describedby="uploadHelp">
-                  <div class="upload-area__icon">
-                    <i class="fa-solid fa-file-arrow-up"></i>
-                  </div>
-                  <p class="upload-area__text">Nhấn để chọn file hoặc kéo thả vào đây</p>
-                  <p class="upload-area__hint" id="uploadHelp">Gồm: báo cáo thực tập, phiếu đánh giá, nhận xét của công ty,
-                    hình ảnh liên quan.</p>
-                  <p class="upload-area__hint">Định dạng hỗ trợ: PDF (cho Báo cáo, phiếu đánh giá, khảo sát), Hình ảnh (JPG,
-                    PNG, WEBP cho Hình ảnh liên quan). Dung lượng tối đa: <?= $max_file_size_mb ?>MB</p>
-                  <input type="file" name="report_file" class="hidden" id="report_file"
-                    accept=".pdf,image/jpeg,image/png,image/webp">
-                </div>
-                <div id="filePreview" class="hidden mt-4 text-sm text-center"></div>
-                <div class="mt-4 flex justify-end">
-                  <?php if ($can_submit_report): ?>
-                    <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài
-                      liệu</button>
-                  <?php else: ?>
-                    <button type="button" class="btn" data-variant="outline" data-size="lg" disabled>Đã hết hạn nộp</button>
-                  <?php endif; ?>
-                </div>
-              </form>
-            </div>
-            <hr class="separator" />
-            <div class="card__header">
-              <h3 class="card__title">
-                <i class="fa-solid fa-clock-rotate-left mr-2"></i>
-                Lịch sử nộp
-              </h3>
-            </div>
-            <hr class="separator" />
-            <div class="card__content">
-              <div class="timeline-container">
-                <?php if (empty($submissions)): ?>
-                  <div class="empty-state">
-                    <p class="text-sm">Bạn chưa nộp lần nào. Hãy đảm bảo nộp đúng hạn.</p>
-                  </div>
+              <div class="field mb-3" data-field-required>
+                <label class="field__label">Phiếu đánh giá thực tập</label>
+                <input type="file" name="file_evaluation_form" id="file_evaluation_form" class="field__input file-input" accept=".pdf" <?= empty($submissions_by_type['evaluation_form']) ? 'required' : '' ?>>
+              </div>
+
+              <div class="field mb-3">
+                <label class="field__label">Phiếu khảo sát doanh nghiệp</label>
+                <input type="file" name="file_company_survey" id="file_company_survey" class="field__input file-input" accept=".pdf">
+              </div>
+
+              <div class="field mb-3">
+                <label class="field__label">Hình ảnh liên quan</label>
+                <input type="file" name="file_related_photo" id="file_related_photo" class="field__input file-input" accept="image/jpeg,image/png,image/webp">
+              </div>
+
+              <div class="mt-4 flex justify-end">
+                <?php if ($can_submit_report): ?>
+                  <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài
+                    liệu</button>
                 <?php else: ?>
-                  <?php foreach ($submissions as $submission): ?>
-                    <article class="timeline-item">
-                      <div class="timeline-item__indicator"></div>
-                      <time
-                        class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
-                      <div class="timeline-item__title"
-                        title="<?= htmlspecialchars($submission['original_file_name'] ?? '') ?>">
-                        <?php
-                        $typeLabels = [
-                          'internship_report' => 'Báo cáo TT',
-                          'evaluation_form' => 'Phiếu đánh giá',
-                          'company_survey' => 'Khảo sát DN',
-                          'related_photo' => 'Hình ảnh khác'
-                        ];
-                        $docType = $submission['type'] ?? 'internship_report';
-                        echo '[' . ($typeLabels[$docType] ?? 'Tài liệu') . '] ' . htmlspecialchars($submission['original_file_name'] ?? '--');
-                        ?>
-                      </div>
-                      <div class="mt-2">
-                        <?php
-                        $downloadUrl = url('/public/media/' . $submission['file_path']);
-                        if ($downloadUrl):
-                          ?>
-                          <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="outline" data-size="sm"
-                            title="Xem tài liệu">
-                            <i class="fa-solid fa-eye mr-1"></i>Xem
-                          </a>
-                        <?php else: ?>
-                          <span class="text-xs ml-2" title="File không tồn tại trên hệ thống">
-                            <i class="fa-solid fa-circle-exclamation"></i> Lỗi file
-                          </span>
-                        <?php endif; ?>
-                      </div>
-                    </article>
-                  <?php endforeach; ?>
+                  <button type="button" class="btn" data-variant="outline" data-size="lg" disabled>Đã hết hạn nộp</button>
                 <?php endif; ?>
               </div>
+            </form>
+          </div>
+          <hr class="separator" />
+          <div class="card__header">
+            <h3 class="card__title">
+              <i class="fa-solid fa-clock-rotate-left mr-2"></i>
+              Lịch sử nộp
+            </h3>
+          </div>
+          <hr class="separator" />
+          <div class="card__content">
+            <div class="timeline-container">
+              <?php if (empty($submissions)): ?>
+                <div class="empty-state">
+                  <p class="text-sm">Bạn chưa nộp lần nào. Hãy đảm bảo nộp đúng hạn.</p>
+                </div>
+              <?php else: ?>
+                <?php foreach ($submissions as $submission): ?>
+                  <article class="timeline-item">
+                    <div class="timeline-item__indicator"></div>
+                    <time
+                      class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
+                    <div class="timeline-item__title"
+                      title="<?= htmlspecialchars($submission['original_file_name'] ?? '') ?>">
+                      <?php
+                      $typeLabels = [
+                        'internship_report' => 'Báo cáo TT',
+                        'evaluation_form' => 'Phiếu đánh giá',
+                        'company_survey' => 'Khảo sát DN',
+                        'related_photo' => 'Hình ảnh khác'
+                      ];
+                      $docType = $submission['type'] ?? 'internship_report';
+                      echo '[' . ($typeLabels[$docType] ?? 'Tài liệu') . '] ' . htmlspecialchars($submission['original_file_name'] ?? '--');
+                      ?>
+                    </div>
+                    <div class="mt-2">
+                      <?php
+                      $downloadUrl = url('/public/media/' . $submission['file_path']);
+                      if ($downloadUrl):
+                      ?>
+                        <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="outline" data-size="sm"
+                          title="Xem tài liệu">
+                          <i class="fa-solid fa-eye mr-1"></i>Xem
+                        </a>
+                      <?php else: ?>
+                        <span class="text-xs ml-2" title="File không tồn tại trên hệ thống">
+                          <i class="fa-solid fa-circle-exclamation"></i> Lỗi file
+                        </span>
+                      <?php endif; ?>
+                    </div>
+                  </article>
+                <?php endforeach; ?>
+              <?php endif; ?>
             </div>
           </div>
-        <?php endif; ?>
+        </div>
+      <?php endif; ?>
 
         <!-- Thông báo & Lịch sử -->
         <div class="card shadow">
