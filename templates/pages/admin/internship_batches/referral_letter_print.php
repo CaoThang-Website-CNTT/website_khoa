@@ -38,28 +38,41 @@ $displayDocNum = $documentNumber ?: '___';
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>In Giấy Giới Thiệu - <?= htmlspecialchars($letter['company_name'] ?? '') ?></title>
   <link rel="icon" type="image/png" sizes="32x32" href="<?= url('public/favicon-32x32.png') ?>">
-  <link rel="stylesheet" href="<?= url('public/css/referral_letter_print.css') ?>">
+  <link rel="preload" as="style" href="<?= url('public/css/fonts.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/fonts.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/fontawesome/fontawesome.min.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/fontawesome/solid.min.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/block_editor.css') ?>">
+  <link rel="stylesheet" href="<?= url('public/css/referral_letter_editor.css') ?>?v=20260702-1">
 </head>
 
 <body>
-  <!-- Controls -->
-  <div class="admin-controls no-print">
-    <h3>Thiết lập in</h3>
-    <form id="printForm">
-      <label>Số công văn</label>
-      <input type="text" id="inp_document_number" value="<?= htmlspecialchars($documentNumber) ?>" placeholder="VD: 123/CĐKTCT-CTCT HSSV">
-
-      <label>Ngày bắt đầu thực tập</label>
-      <input type="date" id="inp_start_date" value="<?= $letter['internship_start_date'] ?: date('Y-m-d', strtotime($batch['start_at'])) ?>">
-
-      <label>Ngày kết thúc thực tập</label>
-      <input type="date" id="inp_end_date" value="<?= $letter['internship_end_date'] ?: date('Y-m-d', strtotime($batch['end_at'])) ?>">
-
-      <button type="submit" id="btnPrint">Lưu & In Giấy</button>
-      <button type="button" class="btn-close" onclick="window.close()">Đóng</button>
-    </form>
-    <div id="printMessage" class="print-message"></div>
-  </div>
+  <header id="be-topbar">
+    <div id="be-topbar-left"><button type="button" class="btn" data-variant="outline" data-size="md" onclick="window.close()"><i class="fa-solid fa-chevron-left"></i> Quay lại</button></div>
+    <div id="be-topbar-center">Xem trước giấy giới thiệu</div>
+    <div id="be-topbar-right">
+      <button type="button" class="btn" id="be-toggle-right" data-variant="outline" data-size="md" aria-controls="be-right" aria-expanded="true"><i class="fa-solid fa-table-columns"></i> <span>Thông tin</span></button>
+      <button type="submit" form="printForm" id="btnPrint" class="btn" data-variant="primary" data-size="md">Lưu &amp; In</button>
+    </div>
+  </header>
+  <div id="be-body">
+  <div class="be-panel__wrapper"><div class="be-panel__gap"></div><aside id="be-right" class="be-panel">
+    <div class="tabs__list be-panel__tabs-list"><button type="button" class="be-panel__tabs-trigger active">Thông tin công văn</button></div>
+    <div class="be-panel__content">
+      <form id="printForm">
+        <div class="field-group">
+          <div class="field"><label class="field__label" for="inp_document_number">Số công văn</label><input class="field__input" type="text" id="inp_document_number" value="<?= htmlspecialchars($documentNumber) ?>" placeholder="VD: 123/CĐKTCT-CTCT HSSV"></div>
+          <div class="field"><label class="field__label" for="inp_start_date">Ngày bắt đầu thực tập</label><input class="field__input" type="date" id="inp_start_date" value="<?= $letter['internship_start_date'] ?: date('Y-m-d', strtotime($batch['start_at'])) ?>"></div>
+          <div class="field"><label class="field__label" for="inp_end_date">Ngày kết thúc thực tập</label><input class="field__input" type="date" id="inp_end_date" value="<?= $letter['internship_end_date'] ?: date('Y-m-d', strtotime($batch['end_at'])) ?>"></div>
+        </div>
+      </form>
+      <div id="printMessage" class="print-message"></div>
+    </div>
+  </aside></div>
+  <main id="be-canvas-wrap"><div id="be-canvas"><div class="print-source">
 
   <!-- Page 1 -->
   <div class="print-page page-1">
@@ -148,8 +161,27 @@ $displayDocNum = $documentNumber ?: '___';
     </div>
   </div>
 
+  </div></div></main></div>
   <script>
     const API_URL = "<?= url("admin/internship_batches/{$batch['id']}/referral_letters/{$letter['id']}/print") ?>";
+
+    const panel = document.querySelector('#be-right');
+    const collapsedTrigger = document.querySelector('#be-toggle-right');
+    const setControlsCollapsed = collapsed => {
+      panel.dataset.bePanelState = collapsed ? 'collapsed' : 'expanded';
+      collapsedTrigger.setAttribute('aria-expanded', String(!collapsed));
+    };
+    collapsedTrigger.addEventListener('click', () => setControlsCollapsed(panel.dataset.bePanelState !== 'collapsed'));
+
+    const source = document.querySelector('.print-source');
+    const previewFrame = document.createElement('iframe');
+    previewFrame.className = 'print-preview-frame';
+    previewFrame.title = 'Xem trước giấy giới thiệu';
+    previewFrame.addEventListener('load', () => source.remove());
+    document.querySelector('#be-canvas').append(previewFrame);
+    previewFrame.srcdoc = `<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="<?= url('public/css/referral_letter_print.css') ?>?v=20260702-3"></head><body><main class="print-pages">${source.innerHTML}</main></body></html>`;
+
+    const previewElements = selector => previewFrame.contentDocument?.querySelectorAll(selector) || [];
 
     // Format date string to dd/mm/yyyy
     function formatDateStr(dateStr) {
@@ -162,15 +194,15 @@ $displayDocNum = $documentNumber ?: '___';
     // Dynamic UI update
     document.getElementById('inp_document_number').addEventListener('input', function(e) {
       const val = e.target.value;
-      document.querySelectorAll('.dyn-num').forEach(el => el.textContent = val || '___/CĐKTCT-CTCT HSSV');
+      previewElements('.dyn-num').forEach(el => el.textContent = val || '___');
     });
 
     document.getElementById('inp_start_date').addEventListener('change', function(e) {
-      document.querySelectorAll('.dyn-start-date').forEach(el => el.textContent = formatDateStr(e.target.value));
+      previewElements('.dyn-start-date').forEach(el => el.textContent = formatDateStr(e.target.value));
     });
 
     document.getElementById('inp_end_date').addEventListener('change', function(e) {
-      document.querySelectorAll('.dyn-end-date').forEach(el => el.textContent = formatDateStr(e.target.value));
+      previewElements('.dyn-end-date').forEach(el => el.textContent = formatDateStr(e.target.value));
     });
 
     // Form submission
@@ -200,7 +232,7 @@ $displayDocNum = $documentNumber ?: '___';
           msg.style.display = 'block';
 
           setTimeout(() => {
-            window.print();
+            previewFrame.contentWindow.print();
           }, 500);
         } else {
           alert(result.message || 'Có lỗi xảy ra');
@@ -209,7 +241,7 @@ $displayDocNum = $documentNumber ?: '___';
         alert('Lỗi kết nối');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Lưu & In Giấy';
+        btn.textContent = 'Lưu & In';
       }
     });
   </script>
