@@ -148,7 +148,7 @@ class ReferralLetterService implements IReferralLetterService
   public function reject(int $id, string $reason, int $processedBy): bool
   {
     if (trim($reason) === '')
-      throw new Exception('A rejection reason is required.');
+      throw new Exception('Vui lòng nhập lý do từ chối giấy giới thiệu.');
     return $this->review($id, ReferralLetterStatus::REJECTED, trim($reason), $processedBy);
   }
 
@@ -156,9 +156,9 @@ class ReferralLetterService implements IReferralLetterService
   {
     $letter = $this->_store->getById($id);
     if (!$letter)
-      throw new Exception('Referral letter not found.');
+      throw new Exception('Không tìm thấy giấy giới thiệu.');
     if ($letter->status !== ReferralLetterStatus::PENDING) {
-      throw new Exception('Only pending referral letters can be reviewed.');
+      throw new Exception('Chỉ giấy giới thiệu đang chờ duyệt mới có thể được duyệt hoặc từ chối.');
     }
     return $this->_store->updateStatus($id, $status, [
       'cancel_reason' => $reason ?: null,
@@ -170,7 +170,7 @@ class ReferralLetterService implements IReferralLetterService
   public function bulkReview(array $ids, int $batchId, string $action, string $reason, int $processedBy): int
   {
     if (!in_array($action, ['approve', 'reject', 'complete'], true))
-      throw new Exception('Invalid review action.');
+      throw new Exception('Thao tác xét duyệt giấy giới thiệu không hợp lệ.');
     $ids = array_values(array_unique(array_map('intval', $ids)));
     $letters = $this->_store->getByIdsForBatch($ids, $batchId);
     if (count($letters) !== count($ids)) throw new Exception('Có giấy không thuộc đợt thực tập này.');

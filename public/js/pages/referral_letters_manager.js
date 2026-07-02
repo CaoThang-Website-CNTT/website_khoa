@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiErrorMessage = (result, fallback) => {
     const topLevel = typeof result?.message === 'string' ? result.message.trim() : '';
     const nested = typeof result?.data?.message === 'string' ? result.data.message.trim() : '';
-    const genericMessages = ['Đã có lỗi xảy ra', 'Có lỗi xảy ra', 'There is an error'];
+    const genericMessages = ['Đã có lỗi xảy ra', 'Có lỗi xảy ra'];
     if (topLevel && !genericMessages.includes(topLevel)) return topLevel;
     return nested || topLevel || fallback;
   };
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         {
           id: 'reject',
-          label: 'Hủy giấy giới thiệu',
+          label: 'Từ chối giấy giới thiệu',
           icon: 'fa-solid fa-xmark',
           destructive: true,
           confirm: false,
@@ -155,9 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const reason = document.getElementById('cancel_reason_input').value.trim();
     if (!reason) {
       if (window.toast) {
-        window.toast.error('Lỗi', 'Vui lòng nhập lý do hủy.');
+        window.toast.error('Lỗi', 'Vui lòng nhập lý do từ chối.');
       } else {
-        alert('Vui lòng nhập lý do hủy.');
+        alert('Vui lòng nhập lý do từ chối.');
       }
       return;
     }
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Handle predefined cancel reasons
+  // Xử lý các lý do từ chối được gợi ý sẵn
   document.addEventListener('click', (e) => {
     const suggestionBtn = e.target.closest('.btn-cancel-suggestion');
     if (suggestionBtn) {

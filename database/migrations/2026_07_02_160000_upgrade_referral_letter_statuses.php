@@ -7,7 +7,7 @@ use App\Core\Schema\AlterBuilder;
 return new class extends BaseMigration {
   public function forward(TableBuilder $schema): void
   {
-    // Backfill before removing "printed" from the enum.
+    // Chuyển dữ liệu cũ trước khi loại bỏ giá trị "printed" khỏi enum.
     $this->updateData('referral_letters', ['status' => 'approved'], ['status' => 'printed']);
 
     $schema->alter('referral_letters', function (AlterBuilder $table) {

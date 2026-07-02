@@ -19,7 +19,7 @@ $studentCount = count($students);
 $trainingPrograms = array_unique(array_filter(array_column($students, 'training_program')));
 $trainingProgramStr = implode(', ', $trainingPrograms) ?: 'Công nghệ thông tin';
 
-// Date format
+// Định dạng ngày hiển thị trên công văn
 $now = new DateTime();
 $docDateStr = "TP.Hồ Chí Minh, ngày " . $now->format('d') . " tháng " . $now->format('m') . " năm " . $now->format('Y');
 
@@ -74,7 +74,7 @@ $displayDocNum = $documentNumber ?: '___';
   </aside></div>
   <main id="be-canvas-wrap"><div id="be-canvas"><div class="print-source">
 
-  <!-- Page 1 -->
+  <!-- Trang 1: Công văn giới thiệu -->
   <div class="print-page page-1">
     <div class="header">
       <div class="header-left">
@@ -126,7 +126,7 @@ $displayDocNum = $documentNumber ?: '___';
     </div>
   </div>
 
-  <!-- Page 2 -->
+  <!-- Trang 2: Danh sách sinh viên -->
   <div class="print-page page-2">
     <div class="page2-header">
       <div class="page2-title">DANH SÁCH SINH VIÊN THỰC TẬP TỐT NGHIỆP</div>
@@ -183,7 +183,7 @@ $displayDocNum = $documentNumber ?: '___';
 
     const previewElements = selector => previewFrame.contentDocument?.querySelectorAll(selector) || [];
 
-    // Format date string to dd/mm/yyyy
+    // Chuyển ngày sang định dạng dd/mm/yyyy
     function formatDateStr(dateStr) {
       if (!dateStr) return '';
       const parts = dateStr.split('-');
@@ -191,7 +191,7 @@ $displayDocNum = $documentNumber ?: '___';
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
-    // Dynamic UI update
+    // Đồng bộ dữ liệu nhập vào bản xem trước
     document.getElementById('inp_document_number').addEventListener('input', function(e) {
       const val = e.target.value;
       previewElements('.dyn-num').forEach(el => el.textContent = val || '___');
@@ -205,7 +205,7 @@ $displayDocNum = $documentNumber ?: '___';
       previewElements('.dyn-end-date').forEach(el => el.textContent = formatDateStr(e.target.value));
     });
 
-    // Form submission
+    // Lưu thông tin công văn trước khi in
     document.getElementById('printForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 

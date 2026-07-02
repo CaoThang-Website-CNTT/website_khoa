@@ -14,8 +14,8 @@ abstract class BaseMigration
   abstract public function back(TableBuilder $builder): void;
 
   /**
-   * Run a parameterized equality-only data update from a migration.
-   * Schema changes must still be expressed through TableBuilder/AlterBuilder.
+   * Cập nhật dữ liệu có tham số trong migration, chỉ hỗ trợ điều kiện so sánh bằng.
+   * Mọi thay đổi cấu trúc bảng vẫn phải sử dụng TableBuilder hoặc AlterBuilder.
    */
   protected function updateData(string $table, array $values, array $conditions): int
   {
@@ -30,14 +30,14 @@ abstract class BaseMigration
   {
     $identifier = '/^[A-Za-z_][A-Za-z0-9_]*$/';
     if (!preg_match($identifier, $table)) {
-      throw new InvalidArgumentException('Invalid migration table identifier.');
+      throw new InvalidArgumentException('Tên bảng trong migration không hợp lệ.');
     }
     if ($values === [] || $conditions === []) {
-      throw new InvalidArgumentException('Migration data updates require values and conditions.');
+      throw new InvalidArgumentException('Cập nhật dữ liệu trong migration phải có giá trị và điều kiện.');
     }
     foreach (array_merge(array_keys($values), array_keys($conditions)) as $column) {
       if (!is_string($column) || !preg_match($identifier, $column)) {
-        throw new InvalidArgumentException('Invalid migration column identifier.');
+        throw new InvalidArgumentException('Tên cột trong migration không hợp lệ.');
       }
     }
 

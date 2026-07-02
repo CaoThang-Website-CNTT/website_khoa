@@ -118,9 +118,9 @@ $statuses = [
           <span>Ngày đăng ký:</span>
           <span><?= date('d/m/Y H:i', strtotime($letter['created_at'])) ?></span>
         </div>
-        <?php if ($letter['status'] === 'cancelled' && !empty($letter['cancel_reason'])): ?>
+        <?php if (in_array($letter['status'], ['cancelled', 'rejected'], true) && !empty($letter['cancel_reason'])): ?>
           <div class="mt-4 p-3rounded-md">
-            <strong>Lý do hủy:</strong><br>
+            <strong><?= $letter['status'] === 'rejected' ? 'Lý do từ chối:' : 'Lý do hủy:' ?></strong><br>
             <?= nl2br(htmlspecialchars($letter['cancel_reason'])) ?>
           </div>
         <?php endif; ?>

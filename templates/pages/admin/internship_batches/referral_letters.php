@@ -24,7 +24,7 @@ $letters = $letters ?? [];
   <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true"
     data-tm-selectable="true" data-tm-id-key="id">
 
-    <!-- Checkbox column is auto prepended by table-manager -->
+    <!-- Cột checkbox được TableManager tự động thêm vào đầu bảng -->
 
     <template data-tm-col="id" data-tm-label="Id" data-tm-sortable>
       <span class="font-medium text-sm">#{{ row.id }}</span>
@@ -57,11 +57,11 @@ $letters = $letters ?? [];
     <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="120px" data-tm-align="right">
       <div class="flex gap-2 justify-end">
         <button type="button" class="btn btn-cancel {{ row.status !== 'pending' ? 'hidden' : '' }}"
-          data-variant="destructive" data-size="sm" data-id="{{ row.id }}" title="Hủy giấy">
+          data-variant="destructive" data-size="sm" data-id="{{ row.id }}" title="Từ chối giấy">
           <i class="fa-solid fa-ban"></i>
         </button>
         <button type="button" class="btn btn-approve {{ row.status !== 'pending' ? 'hidden' : '' }}"
-          data-variant="primary" data-size="sm" data-id="{{ row.id }}" title="Approve">
+          data-variant="primary" data-size="sm" data-id="{{ row.id }}" title="Duyệt giấy">
           <i class="fa-solid fa-check"></i>
         </button>
         <a href="<?= url("admin/internship_batches/{$batch['id']}/referral_letters") ?>/{{ row.id }}/print"
@@ -91,19 +91,19 @@ $letters = $letters ?? [];
   </div>
 
 
-  <!-- Modal Nhập lý do hủy -->
+  <!-- Modal nhập lý do từ chối -->
   <div id="cancel-reason-modal" class="modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
-      <h3 class="modal__title">Hủy giấy giới thiệu</h3>
+      <h3 class="modal__title">Từ chối giấy giới thiệu</h3>
       <button type="button" class="modal__close" data-modal-close>
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
     <div class="py-4">
-      <p class="mb-4">Vui lòng nhập lý do hủy cho <span id="cancel-count" class="font-bold">0</span> giấy giới thiệu đã
+      <p class="mb-4">Vui lòng nhập lý do từ chối cho <span id="cancel-count" class="font-bold">0</span> giấy giới thiệu đã
         chọn:</p>
       <div class="field" data-field-required>
-        <label class="field__label">Lý do hủy</label>
+        <label class="field__label">Lý do từ chối</label>
         <div class="flex flex-wrap gap-2 mb-2">
           <?php
           $adminCancelReasons = [
@@ -117,13 +117,13 @@ $letters = $letters ?? [];
           <?php endforeach; ?>
         </div>
         <textarea id="cancel_reason_input" class="field__input" required rows="3"
-          placeholder="Hoặc nhập lý do hủy khác..."></textarea>
+          placeholder="Hoặc nhập lý do từ chối khác..."></textarea>
       </div>
     </div>
     <div class="modal__footer">
       <button type="button" class="btn" data-size="lg" data-variant="outline" data-modal-close>Hủy bỏ</button>
       <button type="button" id="btn-confirm-cancel" class="btn" data-size="lg" data-variant="destructive">Xác nhận
-        Hủy</button>
+        từ chối</button>
     </div>
   </div>
 
@@ -147,11 +147,11 @@ $letters = $letters ?? [];
       'student_full_name' => $rl['student_full_name'],
       'student_code' => $rl['student_code'],
       'classroom_name' => $rl['classroom_name'] ?? '--',
-      'student_search' => $rl['student_full_name'] . ' ' . $rl['student_code'], // for searching
+      'student_search' => $rl['student_full_name'] . ' ' . $rl['student_code'], // Dữ liệu phục vụ tìm kiếm
       'company_name' => $rl['company_name'],
       'company_tax_code' => $rl['company_tax_code'],
       'company_address' => $rl['company_address'],
-      'company_search' => $rl['company_name'] . ' ' . $rl['company_tax_code'], // for searching
+      'company_search' => $rl['company_name'] . ' ' . $rl['company_tax_code'], // Dữ liệu phục vụ tìm kiếm
       'company_is_verified' => $rl['company_is_verified'],
       'company_verified_label' => $rl['company_is_verified'] == 1 ? 'Đã xác thực' : 'Chưa xác thực',
       'status' => $rl['status'],

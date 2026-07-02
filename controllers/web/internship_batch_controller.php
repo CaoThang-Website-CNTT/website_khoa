@@ -90,7 +90,7 @@ class InternshipBatchController extends Controller
   {
     $letter = $this->_referralLetterService->getForPrint((int) $letterId);
     if (!$letter || (int) $letter['batch_id'] !== (int) $id) {
-      return $this->json(null, 404, 'Referral letter not found in this internship program.');
+      return $this->json(null, 404, 'Không tìm thấy giấy giới thiệu trong đợt thực tập này.');
     }
     $data = $request->all();
     $overrides = [
