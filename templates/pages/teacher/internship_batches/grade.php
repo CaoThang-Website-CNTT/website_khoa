@@ -15,6 +15,7 @@ $submissions = $data['submissions'] ?? [];
 $allSubmissions = $data['all_submissions'] ?? [];
 $grade = $data['grade'] ?? null;
 $deadline = $data['deadline'] ?? null;
+$timeline = $timeline ?? [];
 
 $historyByType = [];
 foreach ($allSubmissions as $sub) {
@@ -27,6 +28,27 @@ foreach ($allSubmissions as $sub) {
 
 $companyName = $student['company_name'] ?? 'Chưa có thông tin';
 ?>
+
+<?php
+$statusIcons = [
+  'submitted' => '<i class="fa-solid fa-check-circle text-lg" style="color: var(--toast-success-color);"></i>',
+  'late'      => '<i class="fa-solid fa-triangle-exclamation text-lg" style="color: var(--toast-warning-color);"></i>',
+  'exempt'    => '<i class="fa-solid fa-circle-minus text-lg" style="color: var(--muted-foreground);"></i>',
+  'missing'   => '<i class="fa-solid fa-xmark-circle text-lg" style="color: var(--destructive);"></i>',
+  'current'   => '<i class="fa-solid fa-hourglass-half text-lg" style="color: var(--primary);"></i>',
+  'future'    => '<i class="fa-solid fa-calendar-minus text-lg" style="color: var(--primary-alt);"></i>'
+];
+
+$statusLabels = [
+  'submitted' => '<span class="badge" data-variant="success">Đã nộp</span>',
+  'late'      => '<span class="badge" data-variant="warning">Nộp muộn</span>',
+  'exempt'    => '<span class="badge" data-variant="secondary">Nghỉ</span>',
+  'missing'   => '<span class="badge" data-variant="destructive">Chưa nộp</span>',
+  'current'   => '<span class="badge" data-variant="primary">Tuần hiện tại</span>',
+  'future'    => '<span class="badge" data-variant="outline">Chưa đến</span>'
+];
+?>
+
 <link rel="stylesheet" href="<?= url('public/css/teacher_grading.css') ?>">
 
 <?php $layout->start("heading") ?>
@@ -68,6 +90,12 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
             <?php
             $isFirst = false;
           endforeach; ?>
+        <?php endif; ?>
+        
+        <?php if (!empty($timeline)): ?>
+          <button class="tab-btn <?= empty($submissions) ? 'active' : '' ?>" data-target="viewer-weekly-reports">
+            Báo cáo tuần
+          </button>
         <?php endif; ?>
       </div>
 
@@ -128,6 +156,105 @@ $companyName = $student['company_name'] ?? 'Chưa có thông tin';
             $isFirst = false;
           endforeach; ?>
         <?php endif; ?>
+
+        <?php if (!empty($timeline)): ?>
+        <div id="viewer-weekly-reports" class="viewer-pane <?= empty($submissions) ? 'active' : '' ?>">
+          <div class="h-full p-4">
+            <div class="card shadow">
+              <div class="card__header">
+                <h3 class="card__title font-semibold">
+                  <i class="fa-solid fa-list mr-2"></i>Tiến độ báo cáo tuần
+                </h3>
+              </div>
+              <hr class="separator" />
+              <div class="card__content p-4">
+                <?php
+                $reportStats = ['submitted' => 0, 'late' => 0, 'missing' => 0, 'exempt' => 0];
+                foreach ($timeline['weeks'] as $w) {
+                  if (isset($reportStats[$w['status']])) {
+                    $reportStats[$w['status']]++;
+                  }
+                }
+                ?>
+                <div class="flex flex-wrap justify-center gap-4 mb-6 p-4 rounded-lg border">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-week" style="color: var(--primary);"></i>
+                    <span class="text-sm font-medium">Tổng số: <span class="font-bold"><?= count($timeline['weeks']) ?> tuần</span></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-check-circle" style="color: var(--toast-success-color);"></i>
+                    <span class="text-sm font-medium">Đã nộp: <span class="font-bold"><?= $reportStats['submitted'] + $reportStats['late'] ?></span></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: var(--toast-warning-color);"></i>
+                    <span class="text-sm font-medium">Nộp muộn: <span class="font-bold"><?= $reportStats['late'] ?></span></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-xmark" style="color: var(--toast-error-color);"></i>
+                    <span class="text-sm font-medium">Chưa nộp: <span class="font-bold"><?= $reportStats['missing'] ?></span></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-minus" style="color: var(--muted-foreground);"></i>
+                    <span class="text-sm font-medium">Nghỉ: <span class="font-bold"><?= $reportStats['exempt'] ?></span></span>
+                  </div>
+                </div>
+
+                <div class="weekly-timeline">
+                  <?php foreach ($timeline['weeks'] as $w): ?>
+                    <div class="weekly-timeline__item">
+                      <div class="weekly-timeline__icon">
+                        <?= $statusIcons[$w['status']] ?>
+                      </div>
+                      <div class="weekly-timeline__content">
+                        <div class="flex justify-between items-center mb-1 weekly-timeline__header">
+                          <h5 class="font-semibold text-sm">
+                            Tuần <?= $w['week_number'] ?>
+                            <span class="text-xs ml-1">(<?= date('d/m', strtotime($w['start'])) ?> - <?= date('d/m', strtotime($w['end'])) ?>)</span>
+                          </h5>
+                          <div class="flex items-center gap-2">
+                            <?= $statusLabels[$w['status']] ?>
+                            <?php if ($w['report']): ?>
+                              <i class="fa-solid fa-chevron-down text-xs"></i>
+                            <?php endif; ?>
+                          </div>
+                        </div>
+
+                        <?php if ($w['report']): ?>
+                          <div class="weekly-timeline__details hidden mt-3">
+                            <div class="rounded-md p-4 text-sm border shadow-sm">
+                              <?php if (!$w['report']['is_exempt']): ?>
+                                <div class="mb-4"><?= nl2br(htmlspecialchars($w['report']['content'])) ?></div>
+
+                                <?php if (!empty($w['report']['images'])): ?>
+                                  <div class="mb-2">
+                                    <div class="text-xs font-semibold mb-2">Hình ảnh đính kèm:</div>
+                                    <div class="flex flex-wrap gap-2">
+                                      <?php foreach ($w['report']['images'] as $img): ?>
+                                        <img src="<?= url('public/media/' . $img['file_path']) ?>" alt="Đính kèm" class="object-cover border rounded-md js-lightbox-trigger weekly-timeline__img" title="<?= htmlspecialchars($img['original_file_name']) ?>">
+                                      <?php endforeach; ?>
+                                    </div>
+                                  </div>
+                                <?php endif; ?>
+                              <?php else: ?>
+                                <div class="mb-2">Không thực tập trong tuần này.</div>
+                              <?php endif; ?>
+
+                              <div class="text-xs flex items-center mt-3 pt-4">
+                                <span><i class="fa-regular fa-clock mr-1"></i> Nộp lúc: <?= date('d/m/Y H:i', strtotime($w['report']['submitted_at'])) ?></span>
+                              </div>
+                            </div>
+                          </div>
+                        <?php endif; ?>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      <?php endif; ?>
       </div>
     </div>
 

@@ -108,12 +108,12 @@
   color: var(--muted-foreground);
 }
 
-.stat-box--primary .stat-box__icon {
+.stat-box__primary .stat-box__icon {
   background: color-mix(in srgb, var(--primary), transparent 90%);
   color: var(--primary);
 }
 
-.stat-box--success .stat-box__icon {
+.stat-box__success .stat-box__icon {
   background: color-mix(in srgb, var(--chart-3), transparent 90%);
   color: var(--chart-3);
 }

@@ -23,6 +23,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Toggle timeline details
+  const timelineHeaders = document.querySelectorAll(".weekly-timeline__header");
+  timelineHeaders.forEach((header) => {
+    header.addEventListener("click", () => {
+      const details = header.nextElementSibling;
+      if (details) {
+        details.classList.toggle("hidden");
+        const icon = header.querySelector(".fa-chevron-down, .fa-chevron-up");
+        if (icon) {
+          icon.classList.toggle("fa-chevron-down");
+          icon.classList.toggle("fa-chevron-up");
+        }
+      }
+    });
+  });
+
   // Version Selector Logic
   const versionSelects = document.querySelectorAll('.js-version-select');
   versionSelects.forEach(select => {

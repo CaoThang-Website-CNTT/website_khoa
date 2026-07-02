@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
-use App\Services\{TeacherService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, InternshipGradeService};
+use App\Services\{TeacherService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, InternshipGradeService, InternshipWeeklyReportService};
 use App\Core\Files\UploadedFileHandler;
 use Exception;
 
@@ -19,6 +19,7 @@ class TeacherDashboardController extends Controller
   private InternshipSubmissionService $_submissionService;
   private ReferralLetterService $_referralLetterService;
   private InternshipGradeService $_gradeInternshipService;
+  private InternshipWeeklyReportService $_weeklyReportService;
 
   public function __construct(
     TeacherService $teacherService,
@@ -28,7 +29,8 @@ class TeacherDashboardController extends Controller
     CompanyService $companyService,
     InternshipSubmissionService $submissionService,
     ReferralLetterService $referralLetterService,
-    InternshipGradeService $gradeInternshipService
+    InternshipGradeService $gradeInternshipService,
+    InternshipWeeklyReportService $weeklyReportService
   ) {
     $this->_teacherService = $teacherService;
     $this->_classroomService = $classroomService;
@@ -38,6 +40,7 @@ class TeacherDashboardController extends Controller
     $this->_submissionService = $submissionService;
     $this->_referralLetterService = $referralLetterService;
     $this->_gradeInternshipService = $gradeInternshipService;
+    $this->_weeklyReportService = $weeklyReportService;
   }
 
   /**
@@ -237,6 +240,12 @@ class TeacherDashboardController extends Controller
     $batchDetail = $this->_internshipBatchService->getTeacherBatchDetail($batchId, $teacher->id);
     $students = $batchDetail ? $batchDetail['students'] : [];
 
+    // Lấy dữ liệu báo cáo tuần
+    $timeline = [];
+    if ($batchDetail && isset($batchDetail['batch'])) {
+      $timeline = $this->_weeklyReportService->getStudentWeeklyTimeline($batchStudentId, $batchDetail['batch']['start_at'], $batchDetail['batch']['end_at']);
+    }
+
     // Find index to navigate prev/next
     $currentIndex = -1;
     foreach ($students as $index => $s) {
@@ -254,6 +263,7 @@ class TeacherDashboardController extends Controller
       'batchId' => $batchId,
       'batchStudentId' => $batchStudentId,
       'data' => $data,
+      'timeline' => $timeline,
       'canGrade' => $canGrade,
       'prevStudentId' => $prevStudentId,
       'nextStudentId' => $nextStudentId,
@@ -304,5 +314,57 @@ class TeacherDashboardController extends Controller
     }
 
     return $this->redirect("/teacher/internship_batches/{$batchId}/grade/{$batchStudentId}");
+  }
+
+  public function weeklyReports(Request $request, int $batchId)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) return $this->redirect('/');
+
+    if (!$this->_internshipBatchService->isSupervisorOfBatch($batchId, $teacher->id)) {
+      $request->session()->flashNotify('error', 'Bạn không được phân công hướng dẫn đợt thực tập này.');
+      return $this->redirect('/teacher/internship_batches');
+    }
+
+    $batchDetail = $this->_internshipBatchService->getBatchById($batchId);
+    if (!$batchDetail) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt thực tập.');
+      return $this->redirect('/teacher/internship_batches');
+    }
+
+    // Lấy danh sách tuần thực tập
+    $weeks = $this->_weeklyReportService->calculateWeeks($batchDetail['start_at'], $batchDetail['end_at']);
+
+    // Tìm tuần hiện tại
+    $currentWeekNumber = 1;
+    $now = new \DateTime();
+    $nowStr = $now->format('Y-m-d');
+
+    foreach ($weeks as $w) {
+      if ($nowStr >= $w['start'] && $nowStr <= $w['end']) {
+        $currentWeekNumber = $w['week_number'];
+        break;
+      }
+    }
+
+    // Nếu có week trong query string thì dùng, không thì dùng tuần hiện tại
+    $weekParam = $request->query('week') ?? $currentWeekNumber;
+    $weekParam = (int)$weekParam;
+
+    $currentPage = (int)($request->query('page') ?? 1);
+
+    $data = $this->_weeklyReportService->getTeacherWeeklyOverview($batchId, $teacher->id, $weekParam, $currentPage, 1000);
+
+    return $this->render('teacher/internship_batches/weekly_reports', [
+      'teacher' => $teacher,
+      'batch' => $batchDetail,
+      'weeks_data' => $weeks,
+      'current_week' => $weekParam,
+      'reports_data' => $data,
+      'title' => 'Báo cáo hàng tuần đợt thực tập'
+    ], layout: 'dashboard_layout');
   }
 }

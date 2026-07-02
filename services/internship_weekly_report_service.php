@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Core\Pageable;
 use App\Stores\InternshipWeeklyReportStore;
 use DateTime;
 use Exception;
@@ -12,7 +13,7 @@ interface IInternshipWeeklyReportService
   public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, array $imagesData, string $startAt, string $endAt): int;
   public function getStudentWeeklySummary(int $batchStudentId, string $startAt, string $endAt): array;
   public function getStudentWeeklyData(int $batchStudentId, string $startAt, string $endAt): array;
-  public function getTeacherWeeklyOverview(int $batchId, int $teacherId, int $weekNumber): array;
+  public function getTeacherWeeklyOverview(int $batchId, int $teacherId, int $weekNumber, int $page = 1, int $limit = 15): Pageable;
   public function getStudentWeeklyTimeline(int $batchStudentId, string $startAt, string $endAt): array;
 }
 
@@ -212,9 +213,11 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     return $weeks;
   }
 
-  public function getTeacherWeeklyOverview(int $batchId, int $teacherId, int $weekNumber): array
+  public function getTeacherWeeklyOverview(int $batchId, int $teacherId, int $weekNumber, int $page = 1, int $limit = 15): Pageable
   {
-    return $this->_store->getByBatchAndTeacher($batchId, $teacherId, $weekNumber);
+    $items = $this->_store->getPaginatedByBatchAndTeacher($batchId, $teacherId, $weekNumber, $page, $limit);
+    $total = $this->_store->countByBatchAndTeacher($batchId, $teacherId, $weekNumber);
+    return new Pageable($items, $total, $limit, $page);
   }
 
   public function getStudentWeeklyTimeline(int $batchStudentId, string $startAt, string $endAt): array

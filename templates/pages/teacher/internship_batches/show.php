@@ -63,6 +63,10 @@ foreach ($classrooms as $c) {
     <i class="fa-solid fa-chevron-left"></i>
     Quay lại
   </a>
+  <a href="<?= url("teacher/internship_batches/{$batch['id']}/weekly_reports") ?>" data-variant="primary" data-size="md" class="btn ml-2">
+    <i class="fa-solid fa-calendar-week mr-2"></i>
+    Báo cáo tuần
+  </a>
   <?php $layout->end() ?>
   <div class="detail-layout">
     <!-- CỘT CHÍNH (TRÁI) -->

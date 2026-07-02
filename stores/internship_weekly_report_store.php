@@ -12,6 +12,8 @@ interface IInternshipWeeklyReportStore
   public function getLatestByBatchStudentAndWeek(int $batchStudentId, int $weekNumber): ?array;
   public function getLatestByBatchStudent(int $batchStudentId): array;
   public function getByBatchAndTeacher(int $batchId, int $teacherId, int $weekNumber): array;
+  public function getPaginatedByBatchAndTeacher(int $batchId, int $teacherId, int $weekNumber, int $page, int $limit = 15): array;
+  public function countByBatchAndTeacher(int $batchId, int $teacherId, int $weekNumber): int;
   public function create(array $data): int;
   public function resetLatest(int $batchStudentId, int $weekNumber): void;
   public function getImagesByReportId(int $reportId): array;
@@ -61,9 +63,9 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
   {
     $sql = "SELECT 
               ibs.id AS batch_student_id,
-              s.student_code,
+              s.student_id AS student_code,
               s.full_name,
-              c.name AS classroom_name,
+              c.short_name AS classroom_name,
               wr.id AS report_id,
               wr.content,
               wr.is_late,
@@ -91,6 +93,62 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
 
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $result ?: [];
+  }
+
+  public function getPaginatedByBatchAndTeacher(int $batchId, int $teacherId, int $weekNumber, int $page = 1, int $limit = 15): array
+  {
+    $offset = ($page - 1) * $limit;
+    $sql = "SELECT 
+              ibs.id AS batch_student_id,
+              s.student_id AS student_code,
+              s.full_name,
+              c.short_name AS classroom_name,
+              wr.id AS report_id,
+              wr.content,
+              wr.is_late,
+              wr.is_exempt,
+              wr.submitted_at,
+              (SELECT COUNT(*) FROM internship_weekly_report_images WHERE weekly_report_id = wr.id) AS image_count
+            FROM internship_batch_students ibs
+            JOIN students s ON s.id = ibs.student_id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            JOIN internship_assignments ia ON ia.batch_student_id = ibs.id
+            LEFT JOIN internship_weekly_reports wr 
+              ON wr.batch_student_id = ibs.id 
+              AND wr.week_number = :week_number
+              AND wr.is_latest = 1
+            WHERE ibs.batch_id = :batch_id
+              AND ia.teacher_id = :teacher_id
+            ORDER BY s.full_name ASC
+            LIMIT :limit OFFSET :offset";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':week_number', $weekNumber, PDO::PARAM_INT);
+    $stmt->bindValue(':batch_id', $batchId, PDO::PARAM_INT);
+    $stmt->bindValue(':teacher_id', $teacherId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $result ?: [];
+  }
+
+  public function countByBatchAndTeacher(int $batchId, int $teacherId, int $weekNumber): int
+  {
+    $sql = "SELECT COUNT(ibs.id)
+            FROM internship_batch_students ibs
+            JOIN internship_assignments ia ON ia.batch_student_id = ibs.id
+            WHERE ibs.batch_id = :batch_id
+              AND ia.teacher_id = :teacher_id";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+      'batch_id' => $batchId,
+      'teacher_id' => $teacherId
+    ]);
+
+    return (int)$stmt->fetchColumn();
   }
 
   public function create(array $data): int

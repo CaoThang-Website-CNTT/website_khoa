@@ -140,3 +140,82 @@
   width: auto;
   height: auto;
 }
+
+/* Timeline */
+.weekly-timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 1rem;
+}
+
+.weekly-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1.45rem;
+  width: 2px;
+  background-color: var(--border);
+  z-index: 0;
+}
+
+.weekly-timeline__item {
+  display: flex;
+  position: relative;
+  margin-bottom: 1.5rem;
+  z-index: 1;
+}
+
+.weekly-timeline__item:last-child {
+  margin-bottom: 0;
+}
+
+.weekly-timeline__icon {
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--card);
+  border-radius: 50%;
+  margin-top: 0.125rem;
+  margin-right: 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.weekly-timeline__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.weekly-timeline__header:hover {
+  opacity: 0.8;
+}
+
+.weekly-timeline__details {
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.weekly-timeline__img {
+  width: 5rem;
+  height: 5rem;
+  cursor: zoom-in;
+  transition: transform 0.2s ease-in-out;
+}
+
+.weekly-timeline__img:hover {
+  transform: scale(1.05);
+}

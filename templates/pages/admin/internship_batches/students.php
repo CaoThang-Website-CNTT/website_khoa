@@ -43,7 +43,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 
 <!-- Overall Stats -->
 <div class="assignment-stats">
-  <div class="stat-box stat-box--primary shadow-sm">
+  <div class="stat-box stat-box__primary shadow-sm">
     <div class="stat-box__icon">
       <i class="fa-solid fa-users"></i>
     </div>
@@ -53,7 +53,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
     </div>
   </div>
 
-  <div class="stat-box stat-box--success shadow-sm">
+  <div class="stat-box stat-box__success shadow-sm">
     <div class="stat-box__icon">
       <i class="fa-solid fa-user-check"></i>
     </div>
