@@ -497,6 +497,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               g.score_reason,
               g.feedback,
               g.graded_at,
+              g.grade_lock_at,
               bs.id AS batch_student_id
             FROM internship_assignments a
             JOIN internship_batch_students bs ON a.batch_student_id = bs.id
@@ -627,6 +628,10 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     // Đếm có điểm
     $sqlGrade = "SELECT COUNT(DISTINCT batch_student_id) FROM internship_grades WHERE batch_student_id IN ($inClause)";
     $stats['has_grade'] = (int)$this->db->query($sqlGrade)->fetchColumn();
+
+    // Đếm điểm đã chốt
+    $sqlLockedGrade = "SELECT COUNT(DISTINCT batch_student_id) FROM internship_grades WHERE batch_student_id IN ($inClause) AND grade_lock_at IS NOT NULL";
+    $stats['locked_grades'] = (int)$this->db->query($sqlLockedGrade)->fetchColumn();
 
     return $stats;
   }

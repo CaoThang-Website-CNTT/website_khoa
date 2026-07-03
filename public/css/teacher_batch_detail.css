@@ -89,22 +89,10 @@
   color: var(--primary);
 }
 
-.student-table__submission {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-}
-
-.student-table__filename {
+.company-truncate {
   max-width: 150px;
-  display: inline-block;
-  vertical-align: bottom;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Text status helpers sử dụng biến hệ thống */
-.text-success {
-  color: var(--chart-3);
-}
-.text-danger {
-  color: var(--destructive);
-}
