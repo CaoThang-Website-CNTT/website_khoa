@@ -6,15 +6,12 @@
  * @var array $students
  */
 
-$statusLabel = 'Chờ xử lý';
-$statusVariant = 'secondary';
-if ($letter['status'] === 'printed') {
-  $statusLabel = 'Đã in';
-  $statusVariant = 'primary';
-} elseif ($letter['status'] !== 'pending') {
-  $statusLabel = 'Đã hủy';
-  $statusVariant = 'destructive';
-}
+$statuses = [
+  'pending' => ['Chờ duyệt', 'secondary'], 'approved' => ['Đang xử lý', 'secondary'],
+  'completed' => ['Hoàn thành', 'primary'], 'received' => ['Đã nhận', 'primary'],
+  'rejected' => ['Từ chối', 'destructive'], 'cancelled' => ['Đã hủy', 'destructive'],
+];
+[$statusLabel, $statusVariant] = $statuses[$letter['status']] ?? [$letter['status'], 'outline'];
 ?>
 <link rel="stylesheet" href="<?= url('public/css/student_dashboard.css') ?>">
 
@@ -121,9 +118,9 @@ if ($letter['status'] === 'printed') {
           <span>Ngày đăng ký:</span>
           <span><?= date('d/m/Y H:i', strtotime($letter['created_at'])) ?></span>
         </div>
-        <?php if ($letter['status'] === 'cancelled' && !empty($letter['cancel_reason'])): ?>
+        <?php if (in_array($letter['status'], ['cancelled', 'rejected'], true) && !empty($letter['cancel_reason'])): ?>
           <div class="mt-4 p-3rounded-md">
-            <strong>Lý do hủy:</strong><br>
+            <strong><?= $letter['status'] === 'rejected' ? 'Lý do từ chối:' : 'Lý do hủy:' ?></strong><br>
             <?= nl2br(htmlspecialchars($letter['cancel_reason'])) ?>
           </div>
         <?php endif; ?>

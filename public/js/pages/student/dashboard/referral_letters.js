@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Handle predefined cancel reasons
+  // Xử lý các lý do hủy đăng ký được gợi ý sẵn
   document.addEventListener("click", (e) => {
     const suggestionBtn = e.target.closest(".btn-cancel-suggestion");
     if (suggestionBtn) {

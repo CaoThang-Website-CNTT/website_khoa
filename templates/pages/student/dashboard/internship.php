@@ -230,10 +230,29 @@ $effectiveMetadata = $effStatus ? [
                 </p>
               </div>
             <?php else: ?>
-              <div class="empty-state">
-                <p class="text-sm" style="color: var(--muted-foreground);">Chưa có thông tin công ty và đã hết thời gian
-                  khai báo.
-                </p>
+              <div class="space-y-3">
+                <?php foreach ($recent_referral_letters as $rl): ?>
+                  <div class="border rounded p-3 text-sm">
+                    <div class="font-bold mb-1" title="<?= htmlspecialchars($rl['company_name']) ?>">
+                      <?= htmlspecialchars($rl['company_name']) ?>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                      <span class="text-xs"><?= date('d/m/Y', strtotime($rl['created_at'])) ?></span>
+                      <?php
+                      $statusMap = [
+                        'pending' => ['Chờ duyệt', 'secondary'],
+                        'approved' => ['Đang xử lý', 'secondary'],
+                        'completed' => ['Hoàn thành', 'primary'],
+                        'received' => ['Đã nhận', 'primary'],
+                        'rejected' => ['Từ chối', 'destructive'],
+                        'cancelled' => ['Đã hủy', 'destructive'],
+                      ];
+                      [$label, $variant] = $statusMap[$rl['status']] ?? [$rl['status'], 'outline'];
+                      ?>
+                      <span class="badge" data-variant="<?= $variant ?>"><?= $label ?></span>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
               </div>
             <?php endif; ?>
           <?php endif; ?>

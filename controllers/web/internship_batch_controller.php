@@ -75,7 +75,7 @@ class InternshipBatchController extends Controller
       $request->session()->flashNotify('error', 'Không tìm thấy giấy giới thiệu');
       return $this->redirect("admin/internship_batches/$id/referral_letters");
     }
-    if ((int) $letter['batch_id'] !== (int) $id || !in_array($letter['status'], ['approved', 'printed'], true)) {
+    if ((int) $letter['batch_id'] !== (int) $id || $letter['status'] !== 'approved') {
       $request->session()->flashNotify('error', 'Giấy giới thiệu phải được duyệt trước khi in.');
       return $this->redirect("admin/internship_batches/$id/referral_letters");
     }
@@ -90,7 +90,7 @@ class InternshipBatchController extends Controller
   {
     $letter = $this->_referralLetterService->getForPrint((int) $letterId);
     if (!$letter || (int) $letter['batch_id'] !== (int) $id) {
-      return $this->json(null, 404, 'Referral letter not found in this internship program.');
+      return $this->json(null, 404, 'Không tìm thấy giấy giới thiệu trong đợt thực tập này.');
     }
     $data = $request->all();
     $overrides = [
@@ -110,6 +110,43 @@ class InternshipBatchController extends Controller
       return $this->json(null, 400, 'Có lỗi xảy ra khi cập nhật trạng thái in');
     } catch (\Exception $e) {
       return $this->json(null, 400, $e->getMessage());
+    }
+  }
+
+  public function bulkPrintReferralLetters($id, Request $request)
+  {
+    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    $ids = array_values(array_unique(array_map('intval', (array)($request->all()['ids'] ?? []))));
+    if (!$batch || !$ids) return $this->redirect("admin/internship_batches/$id/referral_letters");
+    $letters = [];
+    foreach ($ids as $letterId) {
+      $letter = $this->_referralLetterService->getForPrint($letterId);
+      if (!$letter || (int)$letter['batch_id'] !== (int)$id || $letter['status'] !== 'approved') {
+        $request->session()->flashNotify('error', 'Chỉ có thể in các giấy đang xử lý thuộc đợt này.');
+        return $this->redirect("admin/internship_batches/$id/referral_letters");
+      }
+      $letters[] = $letter;
+    }
+    $this->render('admin/internship_batches/referral_letters_bulk_print', [
+      'batch' => $batch, 'letters' => $letters, 'ids' => $ids
+    ], layout: null);
+  }
+
+  public function confirmBulkPrint($id, Request $request)
+  {
+    $data = $request->all();
+    $ids = array_values(array_unique(array_map('intval', (array)($data['ids'] ?? []))));
+    $authUser = $request->session()->authUser();
+    if (!$authUser || empty($authUser['account_id'])) return $this->json(null, 401, 'Lỗi xác thực người dùng.');
+    try {
+      $count = $this->_referralLetterService->bulkPrint($ids, (int)$id, (int)($authUser['account_id'] ?? 0), [
+        'document_number' => trim((string)($data['document_number'] ?? '')),
+        'internship_start_date' => $data['internship_start_date'] ?? null,
+        'internship_end_date' => $data['internship_end_date'] ?? null,
+      ]);
+      return $this->json(['count' => $count], 200, "Đã lưu thông tin in cho {$count} giấy giới thiệu.");
+    } catch (\Exception $e) {
+      return $this->json(null, 422, $e->getMessage());
     }
   }
 

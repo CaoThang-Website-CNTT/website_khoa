@@ -19,6 +19,11 @@ class ReferralLetter
     public ?string $printed_at = null,
     public ?int $processed_by = null,
     public ?int $cancelled_by = null,
+    public ?string $recipient_name = null,
+    public ?string $recipient_phone = null,
+    public ?string $recipient_email = null,
+    public ?string $received_at = null,
+    public ?int $received_by = null,
     public ?string $created_at = null,
     public ?string $updated_at = null
   ) {}
@@ -40,6 +45,11 @@ class ReferralLetter
       printed_at: $data['printed_at'] ?? null,
       processed_by: $data['processed_by'] ?? null,
       cancelled_by: $data['cancelled_by'] ?? null,
+      recipient_name: $data['recipient_name'] ?? null,
+      recipient_phone: $data['recipient_phone'] ?? null,
+      recipient_email: $data['recipient_email'] ?? null,
+      received_at: $data['received_at'] ?? null,
+      received_by: $data['received_by'] ?? null,
       created_at: $data['created_at'] ?? null,
       updated_at: $data['updated_at'] ?? null,
     );
