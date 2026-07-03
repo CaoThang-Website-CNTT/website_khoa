@@ -299,12 +299,15 @@ class TeacherDashboardController extends Controller
       return $this->redirect("/teacher/internship_batches/{$batchId}/grade/{$batchStudentId}");
     }
 
+    $action = $data['action'] ?? 'draft';
+
     $result = $this->_gradeInternshipService->saveGrade(
       $batchStudentId,
       (float)$data['score'],
       $data['score_reason'] ?? null,
       $data['feedback'] ?? null,
-      $teacher->id
+      $teacher->id,
+      $action
     );
 
     if ($result['success']) {
@@ -366,5 +369,34 @@ class TeacherDashboardController extends Controller
       'reports_data' => $data,
       'title' => 'Báo cáo hàng tuần đợt thực tập'
     ], layout: 'dashboard_layout');
+  }
+
+  public function publishAllGrades(Request $request, int $batchId)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->redirect('/login');
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) return $this->redirect('/');
+
+    if (!$this->_internshipBatchService->isSupervisorOfBatch($batchId, $teacher->id)) {
+      $request->session()->flashNotify('error', 'Bạn không được phân công hướng dẫn đợt thực tập này.');
+      return $this->redirect('/teacher/internship_batches');
+    }
+
+    if (!$this->_gradeInternshipService->isWithinGradingDeadline($batchId)) {
+      $request->session()->flashNotify('error', 'Đã hết thời hạn chấm/sửa điểm cho đợt thực tập này.');
+      return $this->redirect("/teacher/internship_batches/{$batchId}");
+    }
+
+    $result = $this->_gradeInternshipService->publishAllTeacherGrades($batchId, $teacher->id);
+
+    if ($result['success']) {
+      $request->session()->flashNotify('success', $result['message']);
+    } else {
+      $request->session()->flashNotify('error', $result['message']);
+    }
+
+    return $this->redirect("/teacher/internship_batches/{$batchId}");
   }
 }

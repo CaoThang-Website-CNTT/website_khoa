@@ -16,6 +16,7 @@ interface IInternshipGradeService
   public function canTeacherGrade(int $batchId, int $teacherId, int $batchStudentId): array;
   public function isWithinGradingDeadline(int $batchId): bool;
   public function getStudentGradingData(int $batchStudentId, int $teacherId): ?array;
+  public function publishAllTeacherGrades(int $batchId, int $teacherId): array;
 }
 
 class InternshipGradeService implements IInternshipGradeService
@@ -45,7 +46,7 @@ class InternshipGradeService implements IInternshipGradeService
     return $this->_gradeStore->getByBatchStudentId($batchStudentId);
   }
 
-  public function saveGrade(int $batchStudentId, float $score, ?string $scoreReason, ?string $feedback, int $teacherId): array
+  public function saveGrade(int $batchStudentId, float $score, ?string $scoreReason, ?string $feedback, int $teacherId, string $action = 'draft'): array
   {
     if ($score < 0 || $score > 10) {
       return ['success' => false, 'message' => 'Điểm phải nằm trong khoảng 0 - 10.'];
@@ -53,25 +54,35 @@ class InternshipGradeService implements IInternshipGradeService
 
     $existingGrade = $this->_gradeStore->getByBatchStudentId($batchStudentId);
 
+    $gradeLockAt = null;
+    if ($action === 'lock') {
+        $gradeLockAt = date('Y-m-d H:i:s');
+    }
+
     if ($existingGrade) {
+      if ($existingGrade['grade_lock_at'] !== null) {
+         return ['success' => false, 'message' => 'Điểm này đã được chốt, không thể thay đổi.'];
+      }
       $this->_gradeStore->update($existingGrade['id'], [
         'final_score' => $score,
         'score_reason' => $scoreReason,
         'feedback' => $feedback,
-        'graded_by' => $teacherId
+        'graded_by' => $teacherId,
+        'grade_lock_at' => $gradeLockAt
       ]);
 
-      return ['success' => true, 'message' => 'Cập nhật điểm thành công.', 'is_new' => false];
+      return ['success' => true, 'message' => $action === 'lock' ? 'Chốt điểm thành công.' : 'Cập nhật điểm thành công.', 'is_new' => false];
     } else {
       $this->_gradeStore->create([
         'batch_student_id' => $batchStudentId,
         'final_score' => $score,
         'score_reason' => $scoreReason,
         'feedback' => $feedback,
-        'graded_by' => $teacherId
+        'graded_by' => $teacherId,
+        'grade_lock_at' => $gradeLockAt
       ]);
 
-      return ['success' => true, 'message' => 'Chấm điểm thành công.', 'is_new' => true];
+      return ['success' => true, 'message' => $action === 'lock' ? 'Chốt điểm thành công.' : 'Chấm điểm thành công.', 'is_new' => true];
     }
   }
 
@@ -149,5 +160,15 @@ class InternshipGradeService implements IInternshipGradeService
       'missing_docs' => $missingDocs,
       'can_grade' => empty($missingDocs)
     ];
+  }
+
+  public function publishAllTeacherGrades(int $batchId, int $teacherId): array
+  {
+    $count = $this->_gradeStore->publishAllByTeacher($batchId, $teacherId);
+    if ($count > 0) {
+        return ['success' => true, 'message' => "Đã chốt và công bố điểm cho {$count} sinh viên."];
+    } else {
+        return ['success' => false, 'message' => "Không có sinh viên nào có điểm nháp hợp lệ để chốt."];
+    }
   }
 }

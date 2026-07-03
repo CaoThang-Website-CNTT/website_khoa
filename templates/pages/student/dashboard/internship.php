@@ -304,7 +304,7 @@ $effectiveMetadata = $effStatus ? [
         <div class="card__content">
           <div>
 
-            <?php if ($grade && isset($grade['final_score'])): ?>
+            <?php if ($grade && isset($grade['final_score']) && isset($grade['grade_lock_at']) && $grade['grade_lock_at'] !== null): ?>
               <div class="font-bold text-4xl text-center">
                 <?= $grade['final_score'] ?>
               </div>

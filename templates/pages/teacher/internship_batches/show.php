@@ -58,19 +58,25 @@ foreach ($classrooms as $c) {
   </div>
   <?php $layout->end() ?>
 
-  <?php $layout->start("actions") ?>
-  <a href="<?= url('teacher/internship_batches') ?>" data-variant="outline" data-size="md" class="btn">
-    <i class="fa-solid fa-chevron-left"></i>
-    Quay lại
-  </a>
-  <a href="<?= url("teacher/internship_batches/{$batch['id']}/weekly_reports") ?>" data-variant="primary" data-size="md" class="btn ml-2">
-    <i class="fa-solid fa-calendar-week mr-2"></i>
-    Báo cáo tuần
-  </a>
-  <?php $layout->end() ?>
-  <div class="detail-layout">
-    <!-- CỘT CHÍNH (TRÁI) -->
-    <div class="detail-layout__main">
+<?php $layout->start("actions") ?>
+<a href="<?= url('teacher/internship_batches') ?>" data-variant="outline" data-size="md" class="btn">
+  <i class="fa-solid fa-chevron-left"></i>
+  Quay lại
+</a>
+<a href="<?= url("teacher/internship_batches/{$batch['id']}/weekly_reports") ?>" data-variant="secondary" data-size="md" class="btn ml-2">
+  <i class="fa-solid fa-calendar-week mr-2"></i>
+  Báo cáo tuần
+</a>
+<form id="publishForm" action="<?= url("teacher/internship_batches/{$batch['id']}/publish_grades") ?>" method="POST" class="inline-block ml-2">
+  <?= csrf_field() ?>
+  <button type="button" data-modal-trigger="#publish-confirm-modal" class="btn" data-variant="primary" data-size="md">
+    <i class="fa-solid fa-lock mr-2"></i> Công bố điểm
+  </button>
+</form>
+<?php $layout->end() ?>
+<div class="detail-layout">
+  <!-- CỘT CHÍNH (TRÁI) -->
+  <div class="detail-layout__main">
 
       <!-- Stats Grid -->
       <div class="stats-grid">
@@ -253,38 +259,51 @@ foreach ($classrooms as $c) {
         </div>
       </div>
 
-      <!-- Thông tin thời gian -->
-      <div class="card shadow-sm">
-        <div class="card__header">
-          <h3 class="font-semibold">Thông tin khác</h3>
+    <!-- Thông tin thời gian -->
+    <div class="card shadow-sm">
+      <div class="card__header">
+        <h3 class="font-semibold">Thông tin khác</h3>
+      </div>
+      <hr class="separator">
+      <div class="card__content p-4 text-xs space-y-3">
+        <div class="flex justify-between">
+          <span>ID:</span>
+          <span class="font-medium">#<?= $batch['id'] ?></span>
         </div>
-        <hr class="separator">
-        <div class="card__content p-4 text-xs space-y-3">
-          <div class="flex justify-between">
-            <span>ID:</span>
-            <span class="font-medium">#<?= $batch['id'] ?></span>
-          </div>
-          <div class="flex justify-between">
-            <span>Ngày tạo:</span>
-            <span><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></span>
-          </div>
-          <?php if ($batch['published_at']): ?>
-            <div class="flex justify-between">
-              <span>Ngày công bố:</span>
-              <span><?= $batch['published_at'] ? date('d/m/Y H:i', strtotime($batch['published_at'])) : 'N/A' ?></span>
-            </div>
-          <?php endif; ?>
-          <?php if ($batch['closed_at']): ?>
-            <div class="flex justify-between">
-              <span>Ngày kết thúc:</span>
-              <span
-                class="text-danger"><?= $batch['closed_at'] ? date('d/m/Y H:i', strtotime($batch['closed_at'])) : 'N/A' ?></span>
-            </div>
-          <?php endif; ?>
+        <div class="flex justify-between">
+          <span>Ngày tạo:</span>
+          <span><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></span>
         </div>
+        <?php if ($batch['published_at']): ?>
+          <div class="flex justify-between">
+            <span>Ngày công bố:</span>
+            <span><?= $batch['published_at'] ? date('d/m/Y H:i', strtotime($batch['published_at'])) : 'N/A' ?></span>
+          </div>
+        <?php endif; ?>
+        <?php if ($batch['closed_at']): ?>
+          <div class="flex justify-between">
+            <span>Ngày kết thúc:</span>
+            <span
+              class="text-danger"><?= $batch['closed_at'] ? date('d/m/Y H:i', strtotime($batch['closed_at'])) : 'N/A' ?></span>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Modal: Xác nhận Công bố điểm -->
+<div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận công bố điểm</h3>
+    <p class="modal__description">Hành động này sẽ chốt và công bố <span class="font-semibold">TOÀN BỘ</span> điểm nháp hiện tại của bạn cho sinh viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?</p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button form="publishForm" data-variant="primary" class="btn" data-size="lg" type="submit">Xác nhận</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+</div>
 
   <!-- JSON Data Source cho TableManager -->
 

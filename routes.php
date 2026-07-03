@@ -273,5 +273,6 @@ $router->prefix('teacher')->middleware([VerifyAuth::class, new VerifyRole('teach
     $router->get('/{batchId}/student/{batchStudentId}', [TeacherDashboardController::class, 'studentDetail']);
     $router->get('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'internshipGrade']);
     $router->post('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'submitGrade']);
+    $router->post('/{batchId}/publish_grades', [TeacherDashboardController::class, 'publishAllGrades']);
   });
 });

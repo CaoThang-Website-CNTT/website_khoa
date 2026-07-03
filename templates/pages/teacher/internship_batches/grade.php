@@ -274,6 +274,7 @@ $statusLabels = [
         <hr class="separator" />
 
         <div class="card__content flex-1">
+          <?php $isLocked = !empty($grade['grade_lock_at']); ?>
           <form action="<?= url("teacher/internship_batches/{$batchId}/grade/{$batchStudentId}") ?>" method="POST"
             id="gradingForm">
             <?= csrf_field() ?>
@@ -281,28 +282,35 @@ $statusLabels = [
             <div class="field mb-4" data-field-required>
               <label class="field__label">Điểm tổng kết</label>
               <input type="number" name="score" class="field__input score-input" step="0.25" min="0" max="10"
-                value="<?= $grade['final_score'] ?? '' ?>" <?= !$canGrade ? 'disabled' : 'required' ?>>
+                value="<?= $grade['final_score'] ?? '' ?>" <?= (!$canGrade || $isLocked) ? 'disabled' : 'required' ?>>
             </div>
 
             <div class="field mb-4">
               <label class="field__label">Diễn giải điểm</label>
-              <textarea name="score_reason" class="field__input" rows="3" <?= !$canGrade ? 'disabled' : '' ?>
+              <textarea name="score_reason" class="field__input" rows="3" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>
                 placeholder="VD: Báo cáo: 5đ, Chuyên cần: 2đ, Điểm doanh nghiệp: 3đ"><?= htmlspecialchars($grade['score_reason'] ?? '') ?></textarea>
             </div>
 
             <div class="field mb-4">
               <label class="field__label">Nhận xét của GVHD</label>
-              <textarea name="feedback" class="field__input" rows="5" <?= !$canGrade ? 'disabled' : '' ?>><?= htmlspecialchars($grade['feedback'] ?? '') ?></textarea>
+              <textarea name="feedback" class="field__input" rows="5" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>><?= htmlspecialchars($grade['feedback'] ?? '') ?></textarea>
             </div>
           </form>
         </div>
 
-        <?php if ($canGrade): ?>
+        <?php if ($canGrade && !$isLocked): ?>
           <hr class="separator" />
           <div class="card__footer p-4">
-            <button type="submit" form="gradingForm" class="btn w-full" data-variant="primary" data-size="lg">
-              <i class="fa-solid fa-save mr-2"></i>Lưu điểm
+            <button type="submit" name="action" value="draft" form="gradingForm" class="btn w-full" data-variant="primary" data-size="lg">
+              <i class="fa-solid fa-save mr-2"></i>Lưu điểm (Nháp)
             </button>
+          </div>
+        <?php elseif ($isLocked): ?>
+          <hr class="separator" />
+          <div class="card__footer p-4">
+            <div class="alert text-center" data-variant="success">
+              <i class="fa-solid fa-circle-check mr-1"></i> Điểm đã được chốt và công bố
+            </div>
           </div>
         <?php endif; ?>
       </div>
