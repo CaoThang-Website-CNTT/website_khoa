@@ -10,7 +10,7 @@
 .tm-export-menu {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
+  right: 0;
   background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -66,14 +66,15 @@
    ========================================================================== */
 
 .export-column-modal {
-  max-width: 480px;
-  width: 90vw;
+  max-height: calc(100vh - 2rem);
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
-.export-modal__body {
-  margin: 0 -1rem;
-  padding: 0 1rem;
-  max-height: 45vh;
+.export-column-modal > .export-modal__body {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-height: none;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -87,20 +88,39 @@
 }
 
 /* "Chọn tất cả" row */
-.export-col-select-all {
+.export-selection-toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  user-select: none;
-  color: var(--foreground);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
 }
 
-.export-col-select-all:hover {
-  color: var(--primary);
+.export-selection-summary {
+  font-size: 0.875rem;
+  font-weight: var(--fw-medium);
+  color: var(--muted-foreground);
+}
+
+.export-selection-toolbar__actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.export-col-groups {
+  display: grid;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.export-col-group__title {
+  margin-bottom: 0.375rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
 }
 
 /* Grid layout cho các checkbox cột */
@@ -142,26 +162,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Export modal overlay */
-.export-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: color-mix(in oklab, black 10%, transparent);
-  backdrop-filter: blur(2px);
-  z-index: 90;
-}
-
-.export-modal-overlay[data-state="closed"] {
-  display: none;
-}
-
-.export-modal-overlay[data-state="open"] {
-  display: block;
-}
-
-/* Mode info badge */
-.export-modal__mode-info {
-  color: var(--primary);
 }

@@ -12,7 +12,6 @@ $batch = $batch ?? null;
 $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 ?>
 
-<link rel="stylesheet" href="<?= url('public/css/batch_students.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/batch_students_assignment.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/export.css') ?>">
 
@@ -30,6 +29,8 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   <i class="fa-solid fa-chevron-left"></i> Quay lại
 </a>
 
+<div id="batch-students-export-action"></div>
+
 <?php if (!$isReadOnly): ?>
   <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
     <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
@@ -42,34 +43,23 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 <?php $layout->end() ?>
 
 <!-- Overall Stats -->
-<div class="assignment-stats">
-  <div class="stat-box stat-box__primary shadow-sm">
-    <div class="stat-box__icon">
-      <i class="fa-solid fa-users"></i>
-    </div>
-    <div class="stat-box__content">
-      <span class="stat-box__label">Tổng sinh viên</span>
-      <div class="stat-box__value" id="stat-total-students">--</div>
+<div class="stats-grid assignment-stats">
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Tổng sinh viên</span>
+      <span class="stats-card__value" id="stat-total-students">--</span>
     </div>
   </div>
-
-  <div class="stat-box stat-box__success shadow-sm">
-    <div class="stat-box__icon">
-      <i class="fa-solid fa-user-check"></i>
-    </div>
-    <div class="stat-box__content">
-      <span class="stat-box__label">Đã phân công</span>
-      <div class="stat-box__value" id="stat-assigned-students">--</div>
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Đã phân công</span>
+      <span class="stats-card__value" id="stat-assigned-students">--</span>
     </div>
   </div>
-
-  <div class="stat-box shadow-sm">
-    <div class="stat-box__icon stat-box__icon--muted">
-      <i class="fa-solid fa-user-clock"></i>
-    </div>
-    <div class="stat-box__content">
-      <span class="stat-box__label">Chưa phân công</span>
-      <div class="stat-box__value" id="stat-unassigned-students">--</div>
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Chưa phân công</span>
+      <span class="stats-card__value" id="stat-unassigned-students">--</span>
     </div>
   </div>
 </div>
@@ -78,6 +68,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   <!-- CỘT CHÍNH (2/3): Thống kê tổng và Danh sách sinh viên -->
   <div class="detail-layout__main">
     <div class="card shadow-sm">
+      <div class="card__content">
       <div class="tm-container" data-tm="batch_students_table" data-tm-mode="client" data-tm-searchable="true"
         data-tm-selectable="true" data-tm-id-key="batch_student_id">
 
@@ -137,27 +128,30 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 
         <template data-tm-pagination></template>
       </div>
+      </div>
     </div>
   </div>
 
   <!-- CỘT PHỤ (1/3): Thống kê giảng viên -->
   <aside class="detail-layout__sidebar">
     <div class="card shadow-sm h-full flex flex-col">
-      <div class="card__header flex justify-between items-center">
-        <h3 class="font-bold text-lg"><i class="fa-solid fa-chalkboard-user mr-2"></i>Giảng viên <span class="badge"
+      <div class="card__header">
+        <h3 class="card__title"><i class="fa-solid fa-chalkboard-user mr-2"></i>Giảng viên <span class="badge"
             data-variant="primary" id="supervisor-count">0</span></h3>
-        <a href="<?= url('admin/internship_batches/' . $batch['id'] . '/teachers') ?>" class="btn"
+        <a href="<?= url('admin/internship_batches/' . $batch['id'] . '/teachers') ?>" class="btn card__action"
           data-variant="outline" data-size="sm" title="Quản lý giảng viên">
           <i class="fa-solid fa-up-right-from-square"></i>
         </a>
       </div>
       <hr class="separator">
+      <div class="card__content">
       <div id="supervisor-stats-container" class="supervisor-list">
         <!-- Loading state -->
         <div class="flex flex-col items-center justify-center p-8">
           <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
           <span class="text-sm">Đang tải dữ liệu...</span>
         </div>
+      </div>
       </div>
     </div>
   </aside>

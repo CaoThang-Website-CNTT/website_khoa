@@ -142,6 +142,11 @@ export class TableRenderer {
       filterCols.forEach(col => filterBar.appendChild(this.#buildFilterDropdown(col)));
       topRow.appendChild(filterBar);
     }
+
+    // Stable extension point for export and other table-level actions.
+    const actions = document.createElement('div');
+    actions.className = 'tm-toolbar-actions';
+    topRow.appendChild(actions);
     toolbar.appendChild(topRow);
 
     // Vùng hiển thị các pill bộ lọc

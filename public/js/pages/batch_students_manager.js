@@ -96,19 +96,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const isFull = sup.current_assigned >= sup.max_students;
 
       html += `
-        <div class="supervisor-card shadow-sm border" ${isFull ? "style='background: var(--muted)'" : ""}>
+        <div class="supervisor-card">
           <div class="supervisor-card__header">
             <div>
               <div class="supervisor-card__name text-sm">${sup.teacher_name}</div>
               <div class="text-xs">${sup.email || ""}</div>
             </div>
             <div class="supervisor-card__stats">
-              <span class="font-bold text-sm">${sup.current_assigned}</span>
-              <span>/${sup.max_students}</span>
+              <div><span class="font-bold text-sm">${sup.current_assigned}</span><span>/${sup.max_students}</span></div>
+              ${isFull ? '<span class="badge" data-variant="secondary">Đã đầy</span>' : ""}
             </div>
           </div>
           <div class="quota-progress">
-            <div class="quota-progress__inner ${isFull ? "quota-progress__inner--full" : ""}" 
+            <div class="quota-progress__inner"
                  style="width: ${percent}%"></div>
           </div>
         </div>`;
@@ -138,6 +138,11 @@ document.addEventListener("DOMContentLoaded", () => {
             // Đăng ký Export Excel
             const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
             ExportManager.register(tm, {
+              target: "#batch-students-export-action",
+              triggerLabel: "Export dữ liệu",
+              triggerIcon: "fa-file-excel",
+              triggerVariant: "outline",
+              triggerSize: "lg",
               source: "batch_students",
               source_id: batchId,
               endpoint: window.API_BASE_URL.replace(
@@ -150,6 +155,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.BATCH_START && window.BATCH_END
                   ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
                   : null,
+              columnGroups: [
+                { label: "Sinh viên", columns: ["student_code", "student_name", "classroom_name", "student_phone", "student_email"] },
+                { label: "Công ty", columns: ["company_name", "company_tax_code", "company_address"] },
+                { label: "Kết quả", columns: ["teacher_name", "grade_score", "grade_reason", "grade_feedback"] },
+              ],
               columnsMap: {
                 student_code: "MSSV",
                 student_name: "Họ và tên",
@@ -178,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
       actions: [
         {
           id: "assign",
-          label: "Phân công giảng viên",
+          label: "Phân công",
           icon: "fa-solid fa-user-plus",
           variant: "primary",
           onClick: ({ selectedIds }) => {
@@ -188,6 +198,22 @@ document.addEventListener("DOMContentLoaded", () => {
             renderTeacherOptions(select, null);
 
             modalHandler.open("#modal-bulk-assign");
+          },
+        },
+        {
+          id: "export-selected",
+          label: "Export đã chọn",
+          tooltip: "Export các dòng sinh viên đã chọn",
+          icon: "fa-solid fa-file-excel",
+          variant: "outline",
+          onClick: () => {
+            document
+              .querySelector('[data-tm="batch_students_table"]')
+              ?.dispatchEvent(
+                new CustomEvent("tm:export", {
+                  detail: { mode: "selected" },
+                }),
+              );
           },
         },
         {
