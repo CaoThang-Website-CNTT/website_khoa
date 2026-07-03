@@ -36,7 +36,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
     <div class="be-panel__content">
       <form id="printForm">
         <div class="field-group">
-          <div class="field" data-field-required><label class="field__label" for="inp_document_number">Số công văn dùng chung</label><input class="field__input" type="text" id="inp_document_number" value="<?= htmlspecialchars($documentNumber) ?>" required></div>
+          <div class="field"><label class="field__label" for="inp_document_number">Số công văn dùng chung</label><input class="field__input" type="text" id="inp_document_number" value="<?= htmlspecialchars($documentNumber) ?>"></div>
           <div class="field" data-field-required><label class="field__label" for="inp_start_date">Ngày bắt đầu thực tập</label><input class="field__input" type="date" id="inp_start_date" value="<?= $defaultStart ?>" required></div>
           <div class="field" data-field-required><label class="field__label" for="inp_end_date">Ngày kết thúc thực tập</label><input class="field__input" type="date" id="inp_end_date" value="<?= $defaultEnd ?>" required></div>
         </div>

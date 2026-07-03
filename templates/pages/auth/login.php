@@ -39,7 +39,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
     </form>
   </div>
   <div class="card__footer">
-    <button id="login-submit-form-btn" type="button" class="btn" data-variant="primary" data-size="lg">
+    <button id="login-submit-form-btn" type="submit" form="login-form" class="btn" data-variant="primary" data-size="lg">
       Đăng nhập
     </button>
     <a href="<?= $authLoginUrl ?>" class="btn" data-variant="outline" data-size="lg">

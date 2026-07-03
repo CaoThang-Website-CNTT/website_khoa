@@ -280,10 +280,9 @@ class ReferralLetterService implements IReferralLetterService
     $documentNumber = trim((string)($printData['document_number'] ?? ''));
     $startDate = (string)($printData['internship_start_date'] ?? '');
     $endDate = (string)($printData['internship_end_date'] ?? '');
-    if ($documentNumber === '') throw new Exception('Số công văn là bắt buộc.');
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate) || $startDate > $endDate)
       throw new Exception('Thời gian thực tập không hợp lệ.');
-    $printData['document_number'] = $documentNumber;
+    $printData['document_number'] = $documentNumber !== '' ? $documentNumber : null;
     $letters = $this->_store->getByIdsForBatch($ids, $batchId);
     if (count($letters) !== count($ids)) throw new Exception('Có giấy không thuộc đợt thực tập này.');
     foreach ($letters as $letter) {

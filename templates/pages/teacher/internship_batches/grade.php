@@ -71,7 +71,7 @@ $statusLabels = [
     <div class="detail-layout__main">
       <div class="viewer-tabs">
         <?php if (empty($submissions)): ?>
-          <button class="tab-btn active">Không có tài liệu</button>
+          <button class="tab-btn <?= empty($timeline) ? 'active' : '' ?>" data-target="viewer-empty-state">Không có tài liệu</button>
         <?php else: ?>
           <?php
           $typeLabels = [
@@ -101,10 +101,12 @@ $statusLabels = [
 
       <div class="viewer-content">
         <?php if (empty($submissions)): ?>
-          <div class="empty-state h-full flex flex-col items-center justify-center"
-            style="color: var(--muted-foreground);">
-            <i class="fa-solid fa-file-circle-xmark text-4xl mb-4"></i>
-            <p>Sinh viên chưa nộp bất kỳ tài liệu nào.</p>
+          <div id="viewer-empty-state" class="viewer-pane <?= empty($timeline) ? 'active' : '' ?>">
+            <div class="empty-state h-full flex flex-col items-center justify-center"
+              style="color: var(--muted-foreground);">
+              <i class="fa-solid fa-file-circle-xmark text-4xl mb-4"></i>
+              <p>Sinh viên chưa nộp bất kỳ tài liệu nào.</p>
+            </div>
           </div>
         <?php else: ?>
           <?php
