@@ -70,10 +70,10 @@ export class ExportManager {
     wrapper.appendChild(btnToggle);
     wrapper.appendChild(menu);
 
-    // Chèn vào target tường minh hoặc vùng actions của table.
+    // Chèn vào target tường minh hoặc hàng toolbar của table.
     const target = config.target
       ? document.querySelector(config.target)
-      : tableInstance.root.querySelector(".tm-toolbar-actions");
+      : tableInstance.root.querySelector(".tm-toolbar__top");
     if (target) {
       target.appendChild(wrapper);
     } else {
