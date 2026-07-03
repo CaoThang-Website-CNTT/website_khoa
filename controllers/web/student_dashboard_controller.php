@@ -669,6 +669,20 @@ class StudentDashboardController extends Controller
       return $this->redirect('/student/internship');
     }
 
+    $startAt = $dashboardData['current']['start_at'];
+    $nowStr = (new \DateTime())->format('Y-m-d');
+    if ($startAt) {
+      $startDt = new \DateTime($startAt);
+      $dayOfWeek = (int)$startDt->format('N');
+      if ($dayOfWeek > 1) {
+        $startDt->modify('-' . ($dayOfWeek - 1) . ' days');
+      }
+      if ($nowStr < $startDt->format('Y-m-d')) {
+        $request->session()->flashNotify('error', 'Chưa đến thời gian nộp báo cáo tuần cho đợt này.');
+        return $this->redirect("/student/internship/{$batch_id}");
+      }
+    }
+
     $batchStudentId = (int)$dashboardData['current']['batch_student_id'];
     $startAt = $dashboardData['current']['start_at'];
     $endAt = $dashboardData['current']['end_at'];
@@ -696,6 +710,20 @@ class StudentDashboardController extends Controller
     if (!$dashboardData['current']) {
       $request->session()->flashNotify('error', 'Lỗi phân quyền.');
       return $this->redirect('/student/internship');
+    }
+
+    $startAt = $dashboardData['current']['start_at'];
+    $nowStr = (new \DateTime())->format('Y-m-d');
+    if ($startAt) {
+      $startDt = new \DateTime($startAt);
+      $dayOfWeek = (int)$startDt->format('N');
+      if ($dayOfWeek > 1) {
+        $startDt->modify('-' . ($dayOfWeek - 1) . ' days');
+      }
+      if ($nowStr < $startDt->format('Y-m-d')) {
+        $request->session()->flashNotify('error', 'Chưa đến thời gian nộp báo cáo tuần cho đợt này.');
+        return $this->redirect("/student/internship/{$batch_id}");
+      }
     }
 
     $batchStudentId = (int)$dashboardData['current']['batch_student_id'];

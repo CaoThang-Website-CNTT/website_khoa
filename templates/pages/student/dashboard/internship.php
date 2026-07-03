@@ -360,7 +360,7 @@ $effectiveMetadata = $effStatus ? [
             <i class="fa-solid fa-calendar-week mr-2"></i>
             Báo cáo hàng tuần
           </h3>
-          <?php if ($current && $weekly_summary): ?>
+          <?php if ($current && $weekly_summary && $weekly_summary['current_week_status'] !== 'not_started'): ?>
             <a href="<?= url("student/internship/{$current['id']}/weekly_reports") ?>" class="btn" data-variant="primary" data-size="md">
               <i class="fa-solid fa-pen-to-square mr-1"></i> Cập nhật
             </a>
@@ -375,7 +375,11 @@ $effectiveMetadata = $effStatus ? [
                 <div class="text-xs mt-1">Tuần đã nộp</div>
               </div>
               <div class="border rounded-lg p-2 flex flex-col justify-center w-full">
-                <div class="text-sm font-medium">Hiện tại - Tuần <?= $weekly_summary['current_week'] ?? '--' ?></div>
+                <?php if (in_array($weekly_summary['current_week_status'], ['not_started', 'ended'])): ?>
+                  <div class="text-sm font-medium">Tình trạng</div>
+                <?php else: ?>
+                  <div class="text-sm font-medium">Hiện tại - Tuần <?= $weekly_summary['current_week'] ?? '--' ?></div>
+                <?php endif; ?>
                 <div class="mt-2">
                   <?php if ($weekly_summary['current_week_status'] === 'submitted'): ?>
                     <span class="badge" data-variant="primary">Đã nộp</span>
@@ -383,6 +387,10 @@ $effectiveMetadata = $effStatus ? [
                     <span class="badge" data-variant="secondary">Nghỉ</span>
                   <?php elseif ($weekly_summary['current_week_status'] === 'missing'): ?>
                     <span class="badge" data-variant="destructive">Muộn</span>
+                  <?php elseif ($weekly_summary['current_week_status'] === 'not_started'): ?>
+                    <span class="badge" data-variant="secondary">Chưa bắt đầu</span>
+                  <?php elseif ($weekly_summary['current_week_status'] === 'ended'): ?>
+                    <span class="badge" data-variant="secondary">Đã kết thúc</span>
                   <?php else: ?>
                     <span class="badge" data-variant="warning">Chưa nộp</span>
                   <?php endif; ?>
@@ -397,7 +405,7 @@ $effectiveMetadata = $effStatus ? [
 
 
       <!-- Nộp tài liệu -->
-      <?php if ($effStatus === BatchStatus::ACTIVE): ?>
+      <?php if ($effStatus !== BatchStatus::UPCOMING): ?>
         <div class="card shadow">
           <div class="card__header">
             <h3 class="card__title">

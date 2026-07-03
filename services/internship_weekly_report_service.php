@@ -148,16 +148,22 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     $now = new DateTime();
     $nowStr = $now->format('Y-m-d');
 
-    foreach ($weeks as $week) {
-      if ($nowStr >= $week['start'] && $nowStr <= $week['end']) {
-        $currentWeekNumber = $week['week_number'];
-        $report = $this->_store->getLatestByBatchStudentAndWeek($batchStudentId, $week['week_number']);
-        if ($report) {
-          $currentWeekStatus = $report['is_exempt'] ? 'exempt' : 'submitted';
-        } else {
-          $currentWeekStatus = 'current';
+    if (!empty($weeks) && $nowStr < $weeks[0]['start']) {
+      $currentWeekStatus = 'not_started';
+    } elseif (!empty($weeks) && $nowStr > end($weeks)['end']) {
+      $currentWeekStatus = 'ended';
+    } else {
+      foreach ($weeks as $week) {
+        if ($nowStr >= $week['start'] && $nowStr <= $week['end']) {
+          $currentWeekNumber = $week['week_number'];
+          $report = $this->_store->getLatestByBatchStudentAndWeek($batchStudentId, $week['week_number']);
+          if ($report) {
+            $currentWeekStatus = $report['is_exempt'] ? 'exempt' : 'submitted';
+          } else {
+            $currentWeekStatus = 'current';
+          }
+          break;
         }
-        break;
       }
     }
 
