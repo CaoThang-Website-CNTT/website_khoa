@@ -10,321 +10,336 @@ $batchStudentId = $batchStudentId ?? null;
 $data = $data ?? [];
 $canGrade = $canGrade ?? false;
 
-$student = $data['student'] ?? null;
+$student = $data['student'] ?? [];
 $submissions = $data['submissions'] ?? [];
 $allSubmissions = $data['all_submissions'] ?? [];
 $grade = $data['grade'] ?? null;
 $deadline = $data['deadline'] ?? null;
 $timeline = $timeline ?? [];
+$isLocked = !empty($grade['grade_lock_at']);
+$companyName = $student['company_name'] ?? 'Chưa có thông tin';
+$selectedScore = isset($grade['final_score']) ? number_format((float) $grade['final_score'], 2, '.', '') : '';
 
 $historyByType = [];
-foreach ($allSubmissions as $sub) {
-  $type = $sub['type'] ?? 'internship_report';
-  if (!isset($historyByType[$type])) {
-    $historyByType[$type] = [];
-  }
-  $historyByType[$type][] = $sub;
+foreach ($allSubmissions as $submission) {
+  $type = $submission['type'] ?? 'internship_report';
+  $historyByType[$type][] = $submission;
 }
 
-$companyName = $student['company_name'] ?? 'Chưa có thông tin';
-?>
-
-<?php
-$statusIcons = [
-  'submitted' => '<i class="fa-solid fa-check-circle text-lg" style="color: var(--toast-success-color);"></i>',
-  'late'      => '<i class="fa-solid fa-triangle-exclamation text-lg" style="color: var(--toast-warning-color);"></i>',
-  'exempt'    => '<i class="fa-solid fa-circle-minus text-lg" style="color: var(--muted-foreground);"></i>',
-  'missing'   => '<i class="fa-solid fa-xmark-circle text-lg" style="color: var(--destructive);"></i>',
-  'current'   => '<i class="fa-solid fa-hourglass-half text-lg" style="color: var(--primary);"></i>',
-  'future'    => '<i class="fa-solid fa-calendar-minus text-lg" style="color: var(--primary-alt);"></i>'
+$typeLabels = [
+  'internship_report' => 'Báo cáo thực tập',
+  'evaluation_form' => 'Phiếu đánh giá',
+  'company_survey' => 'Khảo sát doanh nghiệp',
+  'related_photo' => 'Hình ảnh'
 ];
 
-$statusLabels = [
-  'submitted' => '<span class="badge" data-variant="success">Đã nộp</span>',
-  'late'      => '<span class="badge" data-variant="warning">Nộp muộn</span>',
-  'exempt'    => '<span class="badge" data-variant="secondary">Nghỉ</span>',
-  'missing'   => '<span class="badge" data-variant="destructive">Chưa nộp</span>',
-  'current'   => '<span class="badge" data-variant="primary">Tuần hiện tại</span>',
-  'future'    => '<span class="badge" data-variant="outline">Chưa đến</span>'
+$statusMeta = [
+  'submitted' => ['Đã nộp', 'success'],
+  'late' => ['Nộp muộn', 'warning'],
+  'exempt' => ['Nghỉ', 'secondary'],
+  'missing' => ['Chưa nộp', 'destructive'],
+  'current' => ['Tuần hiện tại', 'primary'],
+  'future' => ['Chưa đến', 'outline']
 ];
+
+$reportStats = ['submitted' => 0, 'late' => 0, 'missing' => 0, 'exempt' => 0];
+foreach (($timeline['weeks'] ?? []) as $week) {
+  if (isset($reportStats[$week['status']])) {
+    $reportStats[$week['status']]++;
+  }
+}
 ?>
 
+<link rel="stylesheet" href="<?= url('public/css/student_weekly_reports.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/teacher_grading.css') ?>">
 
-<?php $layout->start("heading") ?>
-<h2 class="title-wrapper__title">
-  Chấm điểm: <?= htmlspecialchars($student['full_name'] ?? '') ?>
-  </h2>
-  <div class="title-wrapper__description flex items-center">
-    MSSV: <?= htmlspecialchars($student['student_code'] ?? '--') ?> - Công ty: <?= htmlspecialchars($companyName) ?>
+<?php $layout->start('heading') ?>
+<h2 class="title-wrapper__title">Chấm điểm thực tập</h2>
+<div class="title-wrapper__description flex flex-wrap items-center gap-2">
+  <span class="font-semibold"><?= htmlspecialchars($student['full_name'] ?? 'Chưa có') ?></span>
+  <span aria-hidden="true">•</span>
+  <span>MSSV: <?= htmlspecialchars($student['student_code'] ?? '--') ?></span>
+  <span aria-hidden="true">•</span>
+  <span>Công ty: <?= htmlspecialchars($companyName) ?></span>
+</div>
+<?php $layout->end() ?>
+
+<?php $layout->start('actions') ?>
+<a href="<?= url("teacher/internship_batches/{$batchId}") ?>" class="btn" data-variant="outline" data-size="md">
+  <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Quay lại
+</a>
+<?php if ($canGrade && !$isLocked): ?>
+  <button type="button" class="btn" data-variant="primary" data-size="md"
+    data-modal-trigger="#grading-confirm-modal">
+    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu điểm
+  </button>
+<?php endif; ?>
+<?php $layout->end() ?>
+
+<div class="tabs w-full" data-tabs data-tabs-id="teacher-grading" data-tabs-panel-active="evaluation">
+  <div class="tabs__list overflow-x-auto" role="tablist" aria-label="Nội dung chấm điểm">
+    <a href="#teacher-grading:evaluation" class="tabs__trigger" role="tab" aria-selected="true"
+      aria-controls="teacher-grading-panel-evaluation" data-tabs-trigger="evaluation" data-tabs-trigger-state="active"
+      tabindex="0">
+      <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Đánh giá
+    </a>
+    <a href="#teacher-grading:documents" class="tabs__trigger" role="tab" aria-selected="false"
+      aria-controls="teacher-grading-panel-documents" data-tabs-trigger="documents" data-tabs-trigger-state="idle"
+      tabindex="-1">
+      <i class="fa-solid fa-file-lines" aria-hidden="true"></i> Tài liệu
+    </a>
+    <a href="#teacher-grading:weekly" class="tabs__trigger" role="tab" aria-selected="false"
+      aria-controls="teacher-grading-panel-weekly" data-tabs-trigger="weekly" data-tabs-trigger-state="idle" tabindex="-1">
+      <i class="fa-solid fa-calendar-week" aria-hidden="true"></i> Báo cáo tuần
+    </a>
   </div>
-  <?php $layout->end() ?>
 
-  <?php $layout->start("actions") ?>
-  <a href="<?= url("teacher/internship_batches/{$batchId}") ?>" data-variant="outline" data-size="md" class="btn">
-    <i class="fa-solid fa-chevron-left"></i>
-    Quay lại
-  </a>
-  <?php $layout->end() ?>
-  <div class="detail-layout">
-    <!-- CỘT CHÍNH (TRÁI) -->
-    <div class="detail-layout__main">
-      <div class="viewer-tabs">
-        <?php if (empty($submissions)): ?>
-          <button class="tab-btn <?= empty($timeline) ? 'active' : '' ?>" data-target="viewer-empty-state">Không có tài liệu</button>
-        <?php else: ?>
-          <?php
-          $typeLabels = [
-            'internship_report' => 'Báo cáo TT',
-            'evaluation_form' => 'Phiếu đánh giá',
-            'company_survey' => 'Khảo sát DN',
-            'related_photo' => 'Ảnh khác'
-          ];
-          $isFirst = true;
-          foreach ($submissions as $sub):
-            $type = $sub['type'] ?? 'internship_report';
-            ?>
-            <button class="tab-btn <?= $isFirst ? 'active' : '' ?>" data-target="viewer-<?= $sub['id'] ?>">
-              <?= $typeLabels[$type] ?? 'Tài liệu' ?>
-            </button>
-            <?php
-            $isFirst = false;
-          endforeach; ?>
-        <?php endif; ?>
-        
-        <?php if (!empty($timeline)): ?>
-          <button class="tab-btn <?= empty($submissions) ? 'active' : '' ?>" data-target="viewer-weekly-reports">
-            Báo cáo tuần
-          </button>
-        <?php endif; ?>
+  <div id="teacher-grading-panel-evaluation" class="tabs__panel" role="tabpanel" data-tabs-panel="evaluation"
+    data-tabs-panel-state="active">
+    <div class="card shadow grading-card">
+      <div class="card__header">
+        <div>
+          <h3 class="card__title">Đánh giá kết quả thực tập</h3>
+          <p class="card__description text-sm">Chọn điểm tổng kết và ghi rõ căn cứ đánh giá của sinh viên.</p>
+        </div>
       </div>
+      <hr class="separator">
+      <div class="card__content">
+        <?php if ($isLocked): ?>
+          <div class="alert mb-4" data-variant="success">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            Điểm đã được chốt và công bố.
+          </div>
+        <?php elseif (!$canGrade): ?>
+          <div class="alert mb-4" data-variant="destructive">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            Đã hết hạn chấm điểm.
+          </div>
+        <?php elseif ($deadline): ?>
+          <div class="alert mb-4" data-variant="warning">
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
+            Hạn chấm điểm: <?= date('d/m/Y', strtotime($deadline)) ?>.
+          </div>
+        <?php endif; ?>
 
-      <div class="viewer-content">
+        <form action="<?= url("teacher/internship_batches/{$batchId}/grade/{$batchStudentId}") ?>" method="POST"
+          id="gradingForm" class="field-group">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="draft">
+
+          <div class="field" data-field-required>
+            <span class="field__label" id="score-label">Điểm tổng kết</span>
+            <button type="button" class="select w-full" data-select-id="grading-score" name="score" role="listbox"
+              aria-labelledby="score-label" data-select-placeholder="Chọn điểm"
+              data-select-default-value="<?= htmlspecialchars($selectedScore) ?>" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>>
+              <div class="select__content">
+                <?php for ($quarter = 0; $quarter <= 40; $quarter++):
+                  $scoreValue = number_format($quarter / 4, 2, '.', ''); ?>
+                  <div class="select__item" data-select-value="<?= $scoreValue ?>"><?= rtrim(rtrim($scoreValue, '0'), '.') ?></div>
+                <?php endfor; ?>
+              </div>
+            </button>
+            <p class="field__description">Thang điểm 0–10.</p>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="score_reason">Diễn giải điểm</label>
+            <textarea id="score_reason" name="score_reason" class="field__input" rows="4"
+              placeholder="Ví dụ: Báo cáo 5đ, chuyên cần 2đ, đánh giá doanh nghiệp 1,5đ"
+              <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>><?= htmlspecialchars($grade['score_reason'] ?? '') ?></textarea>
+            <p class="field__description">Nêu ngắn gọn các thành phần tạo nên điểm tổng kết.</p>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="feedback">Nhận xét của GVHD</label>
+            <textarea id="feedback" name="feedback" class="field__input" rows="6"
+              placeholder="Nhận xét về thái độ, tiến độ và kết quả thực tập"
+              <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>><?= htmlspecialchars($grade['feedback'] ?? '') ?></textarea>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="teacher-grading-panel-documents" class="tabs__panel" role="tabpanel" data-tabs-panel="documents"
+    data-tabs-panel-state="idle">
+    <div class="card shadow">
+      <div class="card__header">
+        <div>
+          <h3 class="card__title">Tài liệu thực tập</h3>
+          <p class="card__description text-sm">Xem tài liệu sinh viên đã nộp.</p>
+        </div>
+      </div>
+      <hr class="separator">
+      <div class="card__content">
         <?php if (empty($submissions)): ?>
-          <div id="viewer-empty-state" class="viewer-pane <?= empty($timeline) ? 'active' : '' ?>">
-            <div class="empty-state h-full flex flex-col items-center justify-center"
-              style="color: var(--muted-foreground);">
-              <i class="fa-solid fa-file-circle-xmark text-4xl mb-4"></i>
-              <p>Sinh viên chưa nộp bất kỳ tài liệu nào.</p>
+          <div class="empty">
+            <div class="empty__header">
+              <div class="empty__media"><i class="fa-solid fa-file-circle-xmark" aria-hidden="true"></i></div>
+              <div class="empty__title">Chưa có tài liệu</div>
+              <div class="empty__description">Sinh viên chưa nộp bất kỳ tài liệu thực tập nào.</div>
             </div>
           </div>
         <?php else: ?>
-          <?php
-          $isFirst = true;
-          foreach ($submissions as $sub):
-            $type = $sub['type'] ?? 'internship_report';
-            $history = $historyByType[$type] ?? [];
-            ?>
-            <div id="viewer-<?= $sub['id'] ?>" class="viewer-pane <?= $isFirst ? 'active' : '' ?>">
-              <?php if ($type === 'related_photo'): ?>
-                <!-- Hiển thị toàn bộ ảnh -->
-                <div class="image-gallery p-4 h-full">
-                  <?php foreach ($history as $imgSub):
-                    $imgUrl = url("api/v1/teacher/submissions/{$imgSub['id']}/preview");
-                    ?>
-                    <div class="image-gallery__item mb-6">
-                      <div class="mb-2 text-sm font-medium" style="color: var(--muted-foreground);">
-                        <i class="fa-regular fa-clock mr-1"></i> <?= date('d/m/Y H:i', strtotime($imgSub['submitted_at'])) ?>
-                        <span class="badge"
-                          data-variant="secondary"><?= htmlspecialchars($imgSub['original_file_name']) ?></span>
-                      </div>
-                      <img src="<?= $imgUrl ?>" class="js-lightbox-trigger image-gallery__img shadow-sm border"
-                        alt="<?= htmlspecialchars($imgSub['original_file_name']) ?>">
-                    </div>
-                  <?php endforeach; ?>
-                </div>
-              <?php else: ?>
-                <?php if (count($history) > 1): ?>
-                  <div class="version-selector p-2 flex items-center justify-between">
-                    <span class="text-sm font-medium" style="color: var(--muted-foreground)"><i
-                        class="fa-solid fa-clock-rotate-left mr-1"></i> Lịch sử nộp:</span>
-                    <select class="field__input js-version-select" data-target="iframe-<?= $sub['id'] ?>">
-                      <?php foreach ($history as $index => $hSub):
-                        $hUrl = url("api/v1/teacher/submissions/{$hSub['id']}/preview");
-                        ?>
-                        <option value="<?= $hUrl ?>">
-                          <?= date('d/m/Y H:i', strtotime($hSub['submitted_at'])) ?>           <?= $index === 0 ? '(Bản mới nhất)' : '' ?>
-                        </option>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
-                <?php endif; ?>
-                <iframe id="iframe-<?= $sub['id'] ?>" src="<?= url("api/v1/teacher/submissions/{$sub['id']}/preview") ?>"
-                  class="pdf-viewer" frameborder="0"
-                  style="<?= count($history) > 1 ? 'height: calc(100% - 45px);' : 'height: 100%;' ?>"></iframe>
-              <?php endif; ?>
+          <div class="tabs" data-tabs data-tabs-id="submission-viewer"
+            data-tabs-panel-active="submission-<?= (int) $submissions[0]['id'] ?>">
+            <div class="tabs__list overflow-x-auto" role="tablist" aria-label="Tài liệu đã nộp">
+              <?php foreach ($submissions as $index => $submission):
+                $submissionKey = 'submission-' . (int) $submission['id'];
+                $isActive = $index === 0; ?>
+                <a href="#submission-viewer:<?= $submissionKey ?>" class="tabs__trigger" role="tab"
+                  aria-selected="<?= $isActive ? 'true' : 'false' ?>"
+                  aria-controls="submission-viewer-panel-<?= $submissionKey ?>" data-tabs-trigger="<?= $submissionKey ?>"
+                  data-tabs-trigger-state="<?= $isActive ? 'active' : 'idle' ?>" tabindex="<?= $isActive ? '0' : '-1' ?>">
+                  <?= htmlspecialchars($typeLabels[$submission['type'] ?? 'internship_report'] ?? 'Tài liệu') ?>
+                </a>
+              <?php endforeach; ?>
             </div>
-            <?php
-            $isFirst = false;
-          endforeach; ?>
-        <?php endif; ?>
 
-        <?php if (!empty($timeline)): ?>
-        <div id="viewer-weekly-reports" class="viewer-pane <?= empty($submissions) ? 'active' : '' ?>">
-          <div class="h-full p-4">
-            <div class="card shadow">
-              <div class="card__header">
-                <h3 class="card__title font-semibold">
-                  <i class="fa-solid fa-list mr-2"></i>Tiến độ báo cáo tuần
-                </h3>
+            <?php foreach ($submissions as $index => $submission):
+              $type = $submission['type'] ?? 'internship_report';
+              $history = $historyByType[$type] ?? [];
+              $submissionKey = 'submission-' . (int) $submission['id'];
+              $isActive = $index === 0; ?>
+              <div id="submission-viewer-panel-<?= $submissionKey ?>" class="tabs__panel submission-pane"
+                role="tabpanel" data-tabs-panel="<?= $submissionKey ?>"
+                data-tabs-panel-state="<?= $isActive ? 'active' : 'idle' ?>">
+                <?php if ($type === 'related_photo'): ?>
+                  <div class="image-gallery grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                    <?php foreach ($history as $imageSubmission): ?>
+                      <figure class="card shadow-sm p-3">
+                        <img src="<?= url("api/v1/teacher/submissions/{$imageSubmission['id']}/preview") ?>"
+                          class="js-lightbox-trigger image-gallery__img" alt="<?= htmlspecialchars($imageSubmission['original_file_name']) ?>">
+                        <figcaption class="text-xs mt-2">
+                          <?= date('d/m/Y H:i', strtotime($imageSubmission['submitted_at'])) ?> ·
+                          <?= htmlspecialchars($imageSubmission['original_file_name']) ?>
+                        </figcaption>
+                      </figure>
+                    <?php endforeach; ?>
+                  </div>
+                <?php else: ?>
+                  <?php if (count($history) > 1): ?>
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 p-3 border">
+                      <label class="text-sm font-medium" for="version-<?= (int) $submission['id'] ?>">Phiên bản tài liệu</label>
+                      <select id="version-<?= (int) $submission['id'] ?>" class="field__input js-version-select md:w-fit"
+                        data-target="iframe-<?= (int) $submission['id'] ?>">
+                        <?php foreach ($history as $historyIndex => $historySubmission): ?>
+                          <option value="<?= url("api/v1/teacher/submissions/{$historySubmission['id']}/preview") ?>">
+                            <?= date('d/m/Y H:i', strtotime($historySubmission['submitted_at'])) ?><?= $historyIndex === 0 ? ' (Mới nhất)' : '' ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                  <?php endif; ?>
+                  <iframe id="iframe-<?= (int) $submission['id'] ?>"
+                    src="<?= url("api/v1/teacher/submissions/{$submission['id']}/preview") ?>" class="pdf-viewer"
+                    title="<?= htmlspecialchars($typeLabels[$type] ?? 'Tài liệu thực tập') ?>"></iframe>
+                <?php endif; ?>
               </div>
-              <hr class="separator" />
-              <div class="card__content p-4">
-                <?php
-                $reportStats = ['submitted' => 0, 'late' => 0, 'missing' => 0, 'exempt' => 0];
-                foreach ($timeline['weeks'] as $w) {
-                  if (isset($reportStats[$w['status']])) {
-                    $reportStats[$w['status']]++;
-                  }
-                }
-                ?>
-                <div class="flex flex-wrap justify-center gap-4 mb-6 p-4 rounded-lg border">
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-week" style="color: var(--primary);"></i>
-                    <span class="text-sm font-medium">Tổng số: <span class="font-bold"><?= count($timeline['weeks']) ?> tuần</span></span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-check-circle" style="color: var(--toast-success-color);"></i>
-                    <span class="text-sm font-medium">Đã nộp: <span class="font-bold"><?= $reportStats['submitted'] + $reportStats['late'] ?></span></span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-triangle-exclamation" style="color: var(--toast-warning-color);"></i>
-                    <span class="text-sm font-medium">Nộp muộn: <span class="font-bold"><?= $reportStats['late'] ?></span></span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-circle-xmark" style="color: var(--toast-error-color);"></i>
-                    <span class="text-sm font-medium">Chưa nộp: <span class="font-bold"><?= $reportStats['missing'] ?></span></span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-circle-minus" style="color: var(--muted-foreground);"></i>
-                    <span class="text-sm font-medium">Nghỉ: <span class="font-bold"><?= $reportStats['exempt'] ?></span></span>
-                  </div>
-                </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
 
-                <div class="weekly-timeline">
-                  <?php foreach ($timeline['weeks'] as $w): ?>
-                    <div class="weekly-timeline__item">
-                      <div class="weekly-timeline__icon">
-                        <?= $statusIcons[$w['status']] ?>
-                      </div>
-                      <div class="weekly-timeline__content">
-                        <div class="flex justify-between items-center mb-1 weekly-timeline__header">
-                          <h5 class="font-semibold text-sm">
-                            Tuần <?= $w['week_number'] ?>
-                            <span class="text-xs ml-1">(<?= date('d/m', strtotime($w['start'])) ?> - <?= date('d/m', strtotime($w['end'])) ?>)</span>
-                          </h5>
-                          <div class="flex items-center gap-2">
-                            <?= $statusLabels[$w['status']] ?>
-                            <?php if ($w['report']): ?>
-                              <i class="fa-solid fa-chevron-down text-xs"></i>
-                            <?php endif; ?>
-                          </div>
-                        </div>
+  <div id="teacher-grading-panel-weekly" class="tabs__panel" role="tabpanel" data-tabs-panel="weekly"
+    data-tabs-panel-state="idle">
+    <div class="card shadow">
+      <div class="card__header">
+        <div>
+          <h3 class="card__title">Tiến độ báo cáo tuần</h3>
+          <p class="card__description text-sm">Theo dõi tiến độ và mở từng tuần để xem nội dung chi tiết.</p>
+        </div>
+      </div>
+      <hr class="separator">
+      <div class="card__content">
+        <?php if (empty($timeline['weeks'])): ?>
+          <div class="empty">
+            <div class="empty__header">
+              <div class="empty__media"><i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i></div>
+              <div class="empty__title">Chưa có lịch báo cáo tuần</div>
+              <div class="empty__description">Lịch báo cáo sẽ hiển thị khi đợt thực tập có tuần báo cáo.</div>
+            </div>
+          </div>
+        <?php else: ?>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="card p-3"><span class="text-xs">Tổng số</span><strong class="block text-xl"><?= count($timeline['weeks']) ?></strong></div>
+            <div class="card p-3"><span class="text-xs">Đã nộp</span><strong class="block text-xl"><?= $reportStats['submitted'] + $reportStats['late'] ?></strong></div>
+            <div class="card p-3"><span class="text-xs">Nộp muộn</span><strong class="block text-xl"><?= $reportStats['late'] ?></strong></div>
+            <div class="card p-3"><span class="text-xs">Chưa nộp</span><strong class="block text-xl"><?= $reportStats['missing'] ?></strong></div>
+          </div>
 
-                        <?php if ($w['report']): ?>
-                          <div class="weekly-timeline__details hidden mt-3">
-                            <div class="rounded-md p-4 text-sm border shadow-sm">
-                              <?php if (!$w['report']['is_exempt']): ?>
-                                <div class="mb-4"><?= nl2br(htmlspecialchars($w['report']['content'])) ?></div>
-
-                                <?php if (!empty($w['report']['images'])): ?>
-                                  <div class="mb-2">
-                                    <div class="text-xs font-semibold mb-2">Hình ảnh đính kèm:</div>
-                                    <div class="flex flex-wrap gap-2">
-                                      <?php foreach ($w['report']['images'] as $img): ?>
-                                        <img src="<?= url('public/media/' . $img['file_path']) ?>" alt="Đính kèm" class="object-cover border rounded-md js-lightbox-trigger weekly-timeline__img" title="<?= htmlspecialchars($img['original_file_name']) ?>">
-                                      <?php endforeach; ?>
-                                    </div>
-                                  </div>
-                                <?php endif; ?>
-                              <?php else: ?>
-                                <div class="mb-2">Không thực tập trong tuần này.</div>
-                              <?php endif; ?>
-
-                              <div class="text-xs flex items-center mt-3 pt-4">
-                                <span><i class="fa-regular fa-clock mr-1"></i> Nộp lúc: <?= date('d/m/Y H:i', strtotime($w['report']['submitted_at'])) ?></span>
-                              </div>
-                            </div>
+          <div class="weekly-timeline accordion" data-accordion-type="multiple" data-accordion-collapsible>
+            <span class="step-wizard__track weekly-timeline__track" aria-hidden="true"></span>
+            <?php foreach ($timeline['weeks'] as $week):
+              [$statusLabel, $statusVariant] = $statusMeta[$week['status']] ?? [$week['status'], 'secondary'];
+              $hasReport = !empty($week['report']); ?>
+              <article class="weekly-timeline__item accordion_item" data-status="<?= htmlspecialchars($week['status']) ?>"
+                data-accordion-value="teacher-week-<?= (int) $week['week_number'] ?>" <?= !$hasReport ? 'disabled' : '' ?>>
+                <span class="step-wizard__trigger weekly-timeline__marker"
+                  data-step-wizard-state="<?= $hasReport ? 'passed' : 'upcoming' ?>" aria-hidden="true">
+                  <?= $hasReport ? '<i class="fa-solid fa-check"></i>' : (int) $week['week_number'] ?>
+                </span>
+                <button type="button" class="accordion__trigger weekly-timeline__trigger">
+                  <span class="weekly-timeline__week flex-1">
+                    <strong>Tuần <?= (int) $week['week_number'] ?></strong>
+                    <small><?= date('d/m/Y', strtotime($week['start'])) ?> – <?= date('d/m/Y', strtotime($week['end'])) ?></small>
+                  </span>
+                  <span class="weekly-timeline__meta"><span class="badge" data-variant="<?= $statusVariant ?>"><?= $statusLabel ?></span></span>
+                </button>
+                <?php if ($hasReport): ?>
+                  <div class="accordion__content weekly-timeline__content" hidden>
+                    <div class="weekly-submissions">
+                      <section class="weekly-submission">
+                        <?php if (!empty($week['report']['is_exempt'])): ?>
+                          <div class="weekly-no-activity"><strong>Không thực tập trong tuần này.</strong></div>
+                        <?php else: ?>
+                          <div class="weekly-report-copy"><?= nl2br(htmlspecialchars($week['report']['content'])) ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($week['report']['images'])): ?>
+                          <div class="weekly-attachments">
+                            <?php foreach ($week['report']['images'] as $image): ?>
+                              <a href="<?= url('public/media/' . $image['file_path']) ?>" target="_blank" rel="noopener">
+                                <img src="<?= url('public/media/' . $image['file_path']) ?>" alt="<?= htmlspecialchars($image['original_file_name']) ?>">
+                              </a>
+                            <?php endforeach; ?>
                           </div>
                         <?php endif; ?>
-                      </div>
+                        <time class="block text-xs mt-3">Nộp lúc: <?= date('d/m/Y H:i', strtotime($week['report']['submitted_at'])) ?></time>
+                      </section>
                     </div>
-                  <?php endforeach; ?>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      <?php endif; ?>
-      </div>
-    </div>
-
-    <!-- SIDEBAR -->
-    <div class="detail-layout__sidebar">
-      <div class="card shadow h-full flex flex-col">
-        <div class="card__header">
-          <h3 class="card__title">Đánh giá</h3>
-          <?php if (!$canGrade): ?>
-            <div class="mt-2 text-sm text-destructive"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Đã hết hạn
-              chấm điểm.</div>
-          <?php elseif ($deadline): ?>
-            <div class="mt-2 text-sm text-warning"><i class="fa-solid fa-clock mr-1"></i> Hạn chót:
-              <?= date('d/m/Y', strtotime($deadline)) ?></div>
-          <?php endif; ?>
-        </div>
-        <hr class="separator" />
-
-        <div class="card__content flex-1">
-          <?php $isLocked = !empty($grade['grade_lock_at']); ?>
-          <form action="<?= url("teacher/internship_batches/{$batchId}/grade/{$batchStudentId}") ?>" method="POST"
-            id="gradingForm">
-            <?= csrf_field() ?>
-
-            <div class="field mb-4" data-field-required>
-              <label class="field__label">Điểm tổng kết</label>
-              <input type="number" name="score" class="field__input score-input" step="0.25" min="0" max="10"
-                value="<?= $grade['final_score'] ?? '' ?>" <?= (!$canGrade || $isLocked) ? 'disabled' : 'required' ?>>
-            </div>
-
-            <div class="field mb-4">
-              <label class="field__label">Diễn giải điểm</label>
-              <textarea name="score_reason" class="field__input" rows="3" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>
-                placeholder="VD: Báo cáo: 5đ, Chuyên cần: 2đ, Điểm doanh nghiệp: 3đ"><?= htmlspecialchars($grade['score_reason'] ?? '') ?></textarea>
-            </div>
-
-            <div class="field mb-4">
-              <label class="field__label">Nhận xét của GVHD</label>
-              <textarea name="feedback" class="field__input" rows="5" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>><?= htmlspecialchars($grade['feedback'] ?? '') ?></textarea>
-            </div>
-          </form>
-        </div>
-
-        <?php if ($canGrade && !$isLocked): ?>
-          <hr class="separator" />
-          <div class="card__footer p-4">
-            <button type="submit" name="action" value="draft" form="gradingForm" class="btn w-full" data-variant="primary" data-size="lg">
-              <i class="fa-solid fa-save mr-2"></i>Lưu điểm (Nháp)
-            </button>
-          </div>
-        <?php elseif ($isLocked): ?>
-          <hr class="separator" />
-          <div class="card__footer p-4">
-            <div class="alert text-center" data-variant="success">
-              <i class="fa-solid fa-circle-check mr-1"></i> Điểm đã được chốt và công bố
-            </div>
+                  </div>
+                <?php endif; ?>
+              </article>
+            <?php endforeach; ?>
           </div>
         <?php endif; ?>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Lightbox Overlay -->
-  <div id="lightbox" class="lightbox-overlay hidden">
-    <div class="lightbox-close" title="Đóng"><i class="fa-solid fa-xmark"></i></div>
-    <img id="lightbox-img" src="" alt="Phóng to">
+<div class="modal" id="grading-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận lưu điểm</h3>
+    <p class="modal__description">Lưu điểm và nhận xét hiện tại cho <?= htmlspecialchars($student['full_name'] ?? 'sinh viên') ?>?</p>
   </div>
+  <div class="modal__footer">
+    <button type="button" class="btn" data-variant="outline" data-size="lg" data-modal-close>Hủy</button>
+    <button type="submit" class="btn" data-variant="primary" data-size="lg" form="gradingForm">Xác nhận lưu</button>
+  </div>
+  <button type="button" class="modal__close" data-modal-close aria-label="Đóng">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</div>
 
-  <?php $layout->start("scripts") ?>
-  <script src="<?= url('public/js/pages/teacher_grading.js') ?>" type="module"></script>
-  <?php $layout->end() ?>
+<div id="lightbox" class="lightbox-overlay hidden" role="dialog" aria-modal="true" aria-label="Xem ảnh phóng to">
+  <button type="button" class="lightbox-close" aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+  <img id="lightbox-img" src="" alt="Ảnh phóng to">
+</div>
+
+<?php $layout->start('scripts') ?>
+<script src="<?= url('public/js/accordion.js') ?>"></script>
+<script src="<?= url('public/js/pages/teacher_grading.js') ?>" type="module"></script>
+<?php $layout->end() ?>

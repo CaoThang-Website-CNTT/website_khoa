@@ -61,76 +61,67 @@ $studentsData = array_map(function ($sv) {
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<a href="<?= url("teacher/internship_batches/{$batch['id']}/weekly_reports") ?>" data-variant="secondary" data-size="md" class="btn ml-2">
+<a href="<?= url("teacher/internship_batches/{$batch['id']}/weekly_reports") ?>" data-variant="secondary" data-size="md"
+  class="btn">
   <i class="fa-solid fa-calendar-week mr-2"></i>
   Báo cáo tuần
 </a>
-<form id="publishForm" action="<?= url("teacher/internship_batches/{$batch['id']}/publish_grades") ?>" method="POST" class="inline-block ml-2">
+<form id="publishForm" action="<?= url("teacher/internship_batches/{$batch['id']}/publish_grades") ?>" method="POST"
+  class="inline-block">
   <?= csrf_field() ?>
   <button type="button" data-modal-trigger="#publish-confirm-modal" class="btn" data-variant="primary" data-size="md">
     <i class="fa-solid fa-lock mr-2"></i> Công bố điểm
   </button>
 </form>
 <?php $layout->end() ?>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Tài liệu báo cáo</span>
+      <span class="stats-card__value"><?= number_format($stats['has_submission']) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Đã có công ty</span>
+      <span class="stats-card__value"><?= number_format($stats['has_company']) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Đã nhập điểm</span>
+      <span class="stats-card__value"><?= number_format($stats['has_grade']) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Điểm đã chốt</span>
+      <span class="stats-card__value"><?= number_format($stats['locked_grades'] ?? 0) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+</div>
+
 <div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
-
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--info">
-          <i class="fa-solid fa-file-alt"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">Tài liệu báo cáo</div>
-          <div class="stat-card__value">
-            <?= number_format($stats['has_submission']) ?> <span class="text-sm font-normal"
-              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--success">
-          <i class="fa-solid fa-building"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">Đã có công ty</div>
-          <div class="stat-card__value">
-            <?= number_format($stats['has_company']) ?> <span class="text-sm font-normal"
-              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--warning">
-          <i class="fa-solid fa-star"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">Đã nhập điểm</div>
-          <div class="stat-card__value">
-            <?= number_format($stats['has_grade']) ?> <span class="text-sm font-normal"
-              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--primary">
-          <i class="fa-solid fa-check-double"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">Điểm đã chốt</div>
-          <div class="stat-card__value">
-            <?= number_format($stats['locked_grades'] ?? 0) ?> <span class="text-sm font-normal"
-              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Table Sinh Viên -->
     <div class="card shadow-sm">
@@ -139,7 +130,7 @@ $studentsData = array_map(function ($sv) {
       </div>
 
       <hr class="separator">
-      <div class="card__content p-4">
+      <div class="card__content">
         <div class="tm-container" data-tm="students_table" data-tm-mode="client" data-tm-searchable>
           <!-- Cột MSSV -->
           <template data-tm-col="student_code" data-tm-label="MSSV" data-tm-width="120px" data-tm-sortable
@@ -159,22 +150,24 @@ $studentsData = array_map(function ($sv) {
           <template data-tm-col="company_name" data-tm-label="Công ty TT" data-tm-sortable>
             <div>
               <span class="badge" data-variant="secondary" style="{{ value ? 'display:none' : '' }}">Chưa có</span>
-              <div title="{{ value }}" style="{{ value ? '' : 'display:none' }}" class="company-truncate">{{ value }}</div>
+              <div title="{{ value }}" style="{{ value ? '' : 'display:none' }}" class="company-truncate">{{ value }}
+              </div>
             </div>
           </template>
 
           <!-- Cột Tài liệu -->
           <template data-tm-col="has_submission" data-tm-label="Tài liệu TT">
-            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa nộp</span>
+            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
+              nộp</span>
             <span class="badge" data-variant="primary" style="{{ value === '1' ? '' : 'display:none' }}">Đã nộp</span>
           </template>
 
           <!-- Cột Điểm -->
           <template data-tm-col="has_grade" data-tm-label="Điểm" data-tm-width="100px" data-tm-sortable
             data-tm-align="center">
-            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa nhập</span>
-            <span class="font-bold"
-              style="{{ value === '1' ? '' : 'display:none' }}; color: {{ row.grade_color }};"
+            <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
+              nhập</span>
+            <span class="font-bold" style="{{ value === '1' ? '' : 'display:none' }}; color: {{ row.grade_color }};"
               title="{{ row.is_locked === '1' ? 'Đã chốt' : 'Bản nháp' }}">
               {{ row.grade }}
             </span>
@@ -183,8 +176,8 @@ $studentsData = array_map(function ($sv) {
           <!-- Cột Thao tác -->
           <template data-tm-col="actions" data-tm-label="Thao tác" data-tm-width="100px" data-tm-align="center">
             <div class="flex gap-2 justify-center">
-              <button class="btn btn-icon" data-variant="outline" data-size="sm" title="Xem chi tiết"
-                data-action="view" data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
+              <button class="btn btn-icon" data-variant="outline" data-size="sm" title="Xem chi tiết" data-action="view"
+                data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
                 <i class="fa-solid fa-eye"></i>
               </button>
               <button class="btn btn-icon" data-variant="{{ row.grade_btn_variant }}" data-size="sm" title="Nhập điểm"
@@ -211,7 +204,7 @@ $studentsData = array_map(function ($sv) {
         <h3 class="font-semibold">Thông tin cơ bản</h3>
       </div>
       <hr class="separator">
-      <div class="card__content p-6">
+      <div class="card__content">
         <div class="field-group">
           <div class="field" data-field-readonly>
             <label class="field__label" for="title">Tên đợt thực tập</label>
@@ -242,32 +235,34 @@ $studentsData = array_map(function ($sv) {
     </div>
 
     <!-- Thông tin thời gian -->
-    <div class="card shadow-sm">
+    <div class="metadata-card card shadow">
       <div class="card__header">
-        <h3 class="font-semibold">Thông tin khác</h3>
+        <div class="card__title">Thông tin thời gian</div>
       </div>
       <hr class="separator">
-      <div class="card__content p-4 text-xs space-y-3">
-        <div class="flex justify-between">
-          <span>ID:</span>
-          <span class="font-medium">#<?= $batch['id'] ?></span>
-        </div>
-        <div class="flex justify-between">
-          <span>Ngày tạo:</span>
-          <span><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></span>
-        </div>
+      <div class="card__content space-y-4">
+        <dl class="flex justify-between">
+          <dt>ID</dt>
+          <dd>#<?= htmlspecialchars((string) $batch['id']) ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Được tạo vào</dt>
+          <dd><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></dd>
+        </dl>
         <?php if ($batch['published_at']): ?>
-          <div class="flex justify-between">
-            <span>Ngày công bố:</span>
-            <span><?= $batch['published_at'] ? date('d/m/Y H:i', strtotime($batch['published_at'])) : 'N/A' ?></span>
-          </div>
+          <hr class="separator">
+          <dl class="flex justify-between">
+            <dt>Được công bố vào</dt>
+            <dd><?= date('d/m/Y H:i', strtotime($batch['published_at'])) ?></dd>
+          </dl>
         <?php endif; ?>
         <?php if ($batch['closed_at']): ?>
-          <div class="flex justify-between">
-            <span>Ngày kết thúc:</span>
-            <span
-              class="text-danger"><?= $batch['closed_at'] ? date('d/m/Y H:i', strtotime($batch['closed_at'])) : 'N/A' ?></span>
-          </div>
+          <hr class="separator">
+          <dl class="flex justify-between">
+            <dt>Được kết thúc vào</dt>
+            <dd class="text-danger"><?= date('d/m/Y H:i', strtotime($batch['closed_at'])) ?></dd>
+          </dl>
         <?php endif; ?>
       </div>
     </div>
@@ -278,7 +273,9 @@ $studentsData = array_map(function ($sv) {
 <div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Xác nhận công bố điểm</h3>
-    <p class="modal__description">Hành động này sẽ chốt và công bố <span class="font-semibold">TOÀN BỘ</span> điểm nháp hiện tại của bạn cho sinh viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?</p>
+    <p class="modal__description">Hành động này sẽ chốt và công bố <span class="font-semibold">TOÀN BỘ</span> điểm nháp
+      hiện tại của bạn cho sinh viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?
+    </p>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
