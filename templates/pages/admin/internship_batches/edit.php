@@ -125,14 +125,14 @@ $currentStatus = [
     <div class="detail-layout__main">
 
       <!-- Thông tin cơ bản -->
-      <div class="card shadow-sm">
-        <form id="batch-edit-form" action="<?= url('admin/internship_batches/' . $batchObj->id) ?>" method="POST">
+      <form class="card shadow-sm" id="batch-edit-form"
+        action="<?= url('admin/internship_batches/' . $batchObj->id) ?>" method="POST">
           <?= csrf_field() ?>
           <div class="card__header">
             <h3 class="font-semibold">Thông tin cơ bản</h3>
           </div>
           <hr class="separator">
-          <div class="card__content p-6">
+          <div class="card__content">
             <div class="field-group">
               <div class="field" data-field-required>
                 <label class="field__label" for="title">Tên đợt thực tập</label>
@@ -160,8 +160,7 @@ $currentStatus = [
               </div>
             </div>
           </div>
-        </form>
-      </div>
+      </form>
 
     </div>
 

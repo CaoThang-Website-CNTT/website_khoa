@@ -127,9 +127,6 @@
   margin-bottom: 1rem;
 }
 
-.internship-task[data-tabs-panel-state="idle"] {
-  display: none;
-}
 .internship-grade-state {
   display: flex;
   align-items: flex-start;

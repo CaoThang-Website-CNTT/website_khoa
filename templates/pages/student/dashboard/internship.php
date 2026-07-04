@@ -162,12 +162,12 @@ $effectiveMetadata = $effStatus ? [
         </div>
         <hr class="separator" />
         <div class="card__content">
-          <div>
+          <div class="space-y-2">
             <p><span class="font-bold">Đợt thực tập:</span> <?= htmlspecialchars($current['title'] ?? '') ?></p>
             <p><span class="font-bold">Thời gian mở đợt:</span> từ <time
                 datetime="<?= date("d/m/Y", strtotime($current['start_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['start_at']))) ?></time>
               đến <time
-                datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?>
+                datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?></time>
             </p>
 
 
@@ -338,13 +338,13 @@ $effectiveMetadata = $effStatus ? [
 
       <!-- Giấy giới thiệu -->
       <div class="card shadow internship-task" data-internship-phase="0" data-tabs-observe="internship-journey:phase-0">
-        <div class="card__header flex justify-between">
+        <div class="card__header">
           <h3 class="card__title">
             <i class="fa-solid fa-file-contract mr-2"></i>
             Giấy giới thiệu
           </h3>
           <?php if ($current): ?>
-            <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="btn"
+            <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="card__action btn"
               data-variant="primary" data-size="lg">
               <i class="fa-solid fa-plus mr-1"></i>
               Đăng ký
