@@ -525,6 +525,28 @@
    UTILITIES
    ========================================================================== */
 @layer utilities {
+  /* Motion */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(0.4rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.2s ease both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in-up {
+      animation: none;
+    }
+  }
+
   /* Display */
   .hidden {
     display: none;

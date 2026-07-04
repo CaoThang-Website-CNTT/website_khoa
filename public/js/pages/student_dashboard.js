@@ -1,8 +1,54 @@
 document.addEventListener("DOMContentLoaded", () => {
   const apiBase = window.API_BASE_URL;
 
+  const internshipTabs = document.querySelector(
+    '[data-tabs-id="internship-journey"]',
+  );
+  if (internshipTabs) {
+    const triggers = Array.from(internshipTabs.querySelectorAll("[data-tabs-trigger]"));
+    const tasks = Array.from(document.querySelectorAll("[data-internship-phase]"));
+    const heading = document.querySelector("[data-internship-phase-heading]");
+    const labels = ["Chuẩn bị", "Thực tập", "Chấm điểm & kết thúc"];
+    let selectedPhase = Number(
+      internshipTabs.dataset.tabsPanelActive?.replace("phase-", "") || 0,
+    );
+
+    const decoratePhase = (phase, animate = true) => {
+      selectedPhase = phase;
+      tasks.forEach((task) => {
+        const isVisible = Number(task.dataset.internshipPhase) === phase;
+        task.setAttribute("aria-hidden", String(!isVisible));
+        task.classList.remove("animate-fade-in-up");
+        if (isVisible && animate) {
+          requestAnimationFrame(() => task.classList.add("animate-fade-in-up"));
+        }
+      });
+      if (heading) {
+        heading.innerHTML = `<p class="internship-phase-heading__kicker">Giai đoạn ${phase + 1}/3</p><h3>${labels[phase]}</h3>`;
+      }
+    };
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener("click", () =>
+        decoratePhase(Number(trigger.dataset.tabsTrigger.replace("phase-", ""))),
+      );
+      trigger.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        let nextPhase = selectedPhase;
+        if (event.key === "ArrowLeft") nextPhase = (selectedPhase + triggers.length - 1) % triggers.length;
+        if (event.key === "ArrowRight") nextPhase = (selectedPhase + 1) % triggers.length;
+        if (event.key === "Home") nextPhase = 0;
+        if (event.key === "End") nextPhase = triggers.length - 1;
+        triggers[nextPhase].click();
+        triggers[nextPhase].focus();
+      });
+    });
+    decoratePhase(selectedPhase, false);
+  }
+
   // Khởi tạo tính năng tìm MST và autocomplete cho một tập các elements
-  window.initCompanyFormLogic = function (prefix) {
+  const initCompanyFormLogic = (prefix) => {
     const isManualToggle = document.getElementById(`${prefix}is_manual`);
     const btnCheckMST = document.getElementById(`${prefix}btnCheckMST`);
     const taxCodeInput = document.getElementById(`${prefix}tax_code`);
@@ -204,10 +250,10 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Khởi tạo cho Form công ty hiện tại (không có prefix)
-  window.initCompanyFormLogic("");
+  initCompanyFormLogic("");
 
   // Khởi tạo cho Modal đăng ký giấy giới thiệu (prefix = 'rl_')
-  window.initCompanyFormLogic("rl_");
+  initCompanyFormLogic("rl_");
   const uploadBtn = document.getElementById("uploadBtn");
   const fileInputs = document.querySelectorAll(".file-input");
 

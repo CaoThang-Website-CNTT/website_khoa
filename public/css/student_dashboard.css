@@ -2,6 +2,186 @@
    STUDENT DASHBOARD COMPONENTS
    ========================================================================== */
 
+/* Internship journey */
+.internship-overview__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.internship-phase-heading__kicker {
+  color: var(--primary);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+.internship-overview__title {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+}
+.internship-summary__item--next {
+  padding-left: 1rem;
+  border-left: 3px solid var(--primary);
+}
+
+.internship-phase-tabs {
+  margin-bottom: 1.5rem;
+}
+.internship-phase-tabs__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.internship-phase-tab {
+  display: flex;
+  min-width: 0;
+  padding: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.internship-phase-tab:hover {
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  transform: translateY(-2px);
+}
+.internship-phase-tab:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--ring) 45%, transparent);
+  outline-offset: 2px;
+}
+.internship-phase-tab[aria-selected="true"] {
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border-color: transparent;
+  box-shadow: var(--shadow-md);
+}
+.internship-phase-tab__meta {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+}
+.internship-phase-tab[data-phase-state="passed"]
+  .internship-phase-tab__meta
+  > :is(.fa-solid, .fa-regular, svg) {
+  color: var(--toast-success-color);
+}
+.internship-phase-tab[data-phase-state="active"]
+  .internship-phase-tab__meta
+  > :is(.fa-solid, .fa-regular, svg) {
+  color: var(--primary-foreground);
+}
+.internship-phase-tab__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground);
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
+  line-height: var(--leading-tight);
+}
+.internship-phase-tab__title i {
+  color: var(--primary);
+  font-size: var(--text-base);
+}
+.internship-phase-tab[data-phase-state="upcoming"]
+  :is(.fa-solid, .fa-regular, svg) {
+  color: var(--muted-foreground);
+}
+.internship-phase-tab[aria-selected="true"]
+  :is(
+    .internship-phase-tab__meta,
+    .internship-phase-tab__title,
+    .fa-solid,
+    .fa-regular,
+    svg
+  ) {
+  color: var(--primary-foreground);
+}
+.internship-phase-tab__status {
+  margin-top: auto;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+}
+.internship-phase-heading {
+  margin-bottom: 1rem;
+}
+.internship-phase-heading h3 {
+  margin-top: 0.25rem;
+  font-size: var(--text-xl);
+}
+
+.internship-task {
+  margin-bottom: 1rem;
+}
+
+.internship-task[data-tabs-panel-state="idle"] {
+  display: none;
+}
+.internship-grade-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--muted) 45%, transparent);
+}
+.internship-grade-state > i {
+  color: var(--primary);
+  font-size: 1.25rem;
+  margin-top: 0.15rem;
+}
+.internship-grade-state p {
+  margin-top: 0.25rem;
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 48rem) {
+  .internship-overview__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .internship-summary__item--next {
+    grid-column: 1 / -1;
+  }
+  .internship-phase-tabs__list {
+    grid-template-columns: 1fr;
+  }
+  .internship-phase-tab {
+    width: 100%;
+    min-height: 8rem;
+  }
+  .internship-task .card__header.flex {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .internship-task
+    :is(.card__header .btn, .card__footer .btn, form .btn[type="submit"]) {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .internship-phase-tab {
+    transition: none;
+  }
+}
+
 /* ── Upload Area ────────────────────────────────────────────────────────── */
 .upload-area {
   padding: 1.5rem 1rem;

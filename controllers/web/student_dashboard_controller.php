@@ -230,6 +230,60 @@ class StudentDashboardController extends Controller
       );
     }
 
+    // Chuẩn hóa trạng thái hành trình để view chỉ chịu trách nhiệm trình bày.
+    $now = new \DateTime();
+    $startAt = !empty($dashboardData['current']['start_at']) ? new \DateTime($dashboardData['current']['start_at']) : null;
+    $endAt = !empty($dashboardData['current']['end_at']) ? new \DateTime($dashboardData['current']['end_at']) : null;
+    $grade = $dashboardData['grade'] ?? null;
+    $isGradeLocked = !empty($grade['grade_lock_at']);
+    $hasGrade = $grade && isset($grade['final_score']);
+
+    if ($isGradeLocked || ($endAt && $now > $endAt)) {
+      $activePhase = 2;
+    } elseif ($startAt && $now >= $startAt) {
+      $activePhase = 1;
+    } else {
+      $activePhase = 0;
+    }
+
+    $phaseStates = [];
+    for ($phaseIndex = 0; $phaseIndex < 3; $phaseIndex++) {
+      $phaseStates[] = $phaseIndex < $activePhase ? 'passed' : ($phaseIndex === $activePhase ? 'active' : 'upcoming');
+    }
+
+    $submittedTypes = array_keys($dashboardData['submissions_by_type'] ?? []);
+    $requiredDocumentTypes = ['internship_report', 'evaluation_form', 'company_survey'];
+    $submittedDocumentCount = count(array_intersect($requiredDocumentTypes, $submittedTypes));
+
+    if ($activePhase === 0) {
+      $nextAction = empty($allLetters)
+        ? 'Đăng ký giấy giới thiệu thực tập và kiểm tra thông tin giảng viên hướng dẫn.'
+        : 'Theo dõi trạng thái giấy giới thiệu trước khi bắt đầu thực tập.';
+    } elseif ($activePhase === 1) {
+      if (empty($dashboardData['current']['company_name']) && $canEditCompany) {
+        $nextAction = 'Khai báo công ty thực tập trong thời hạn cho phép.';
+      } elseif ($weeklySummary && !in_array($weeklySummary['current_week_status'], ['submitted', 'exempt', 'not_started', 'ended'], true)) {
+        $nextAction = 'Cập nhật báo cáo của tuần hiện tại.';
+      } elseif ($submittedDocumentCount < count($requiredDocumentTypes)) {
+        $nextAction = 'Hoàn thiện báo cáo, phiếu đánh giá và phiếu khảo sát doanh nghiệp.';
+      } else {
+        $nextAction = 'Tiếp tục theo dõi tiến độ và hoàn thành các báo cáo còn lại.';
+      }
+    } else {
+      $nextAction = $isGradeLocked
+        ? 'Điểm đã được chốt. Kiểm tra kết quả và nhận xét của giảng viên hướng dẫn.'
+        : ($hasGrade ? 'Giảng viên đang hoàn tất và chốt điểm.' : 'Chờ giảng viên hướng dẫn chấm và chốt điểm.');
+    }
+
+    $journey = [
+      'active_phase' => $activePhase,
+      'phase_states' => $phaseStates,
+      'next_action' => $nextAction,
+      'grade_state' => $isGradeLocked ? 'locked' : ($hasGrade ? 'graded' : 'waiting'),
+      'submitted_document_count' => $submittedDocumentCount,
+      'required_document_count' => count($requiredDocumentTypes)
+    ];
+
     return $this->render('student/dashboard/internship', array_merge($dashboardData, [
       'student' => $student,
       'title' => 'Thông tin thực tập',
@@ -243,7 +297,8 @@ class StudentDashboardController extends Controller
       'report_warning_days' => (int)$this->_webSettingsService->getValue('internship_report_warning_days', 3),
       'recent_referral_letters' => $recentReferralLetters,
       'total_referral_letters' => count($allLetters),
-      'weekly_summary' => $weeklySummary
+      'weekly_summary' => $weeklySummary,
+      'journey' => $journey
     ]), layout: 'dashboard_layout');
   }
 
