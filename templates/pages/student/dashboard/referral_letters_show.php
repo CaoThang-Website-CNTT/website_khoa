@@ -8,7 +8,7 @@
 
 $statuses = [
   'pending' => ['Chờ duyệt', 'secondary'], 'approved' => ['Đang xử lý', 'secondary'],
-  'completed' => ['Hoàn thành', 'primary'], 'received' => ['Đã nhận', 'primary'],
+  'completed' => ['Hoàn thành', 'success'], 'received' => ['Đã nhận', 'success'],
   'rejected' => ['Từ chối', 'destructive'], 'cancelled' => ['Đã hủy', 'destructive'],
 ];
 [$statusLabel, $statusVariant] = $statuses[$letter['status']] ?? [$letter['status'], 'outline'];

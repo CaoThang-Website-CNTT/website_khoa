@@ -8,6 +8,7 @@ use App\Core\RequestValidator;
 use App\Services\{StudentService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, WebSettingsService, InternshipWeeklyReportService};
 use App\Core\Files\UploadedFileHandler;
 use App\Enums\BatchStatus;
+use App\Models\InternshipBatch;
 use Exception;
 
 class StudentDashboardController extends Controller
@@ -185,13 +186,34 @@ class StudentDashboardController extends Controller
     $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
     $reportDeadline = null;
     $canSubmitReport = true;
+    $cannotSubmitReason = 'Đã hết hạn nộp';
 
-    if ($dashboardData['current'] && $dashboardData['current']['end_at']) {
-      $endAtDt = new \DateTime($dashboardData['current']['end_at']);
-      $reportDeadlineDt = (clone $endAtDt)->modify("+{$allowedDays} days");
-      $reportDeadline = $reportDeadlineDt->format('Y-m-d');
-      $now = new \DateTime();
-      $canSubmitReport = ($now <= $reportDeadlineDt);
+    if ($dashboardData['current']) {
+      $batchModel = new InternshipBatch();
+      $batchModel->status = $dashboardData['current']['status'] ?? 'draft';
+      $batchModel->start_at = $dashboardData['current']['start_at'] ?? null;
+      $batchModel->end_at = $dashboardData['current']['end_at'] ?? null;
+      $effStatus = $batchModel->getEffectiveStatus();
+
+      if ($effStatus === BatchStatus::UPCOMING) {
+        $canSubmitReport = false;
+        $cannotSubmitReason = 'Đợt chưa bắt đầu';
+      } elseif ($effStatus === BatchStatus::CLOSED) {
+        $canSubmitReport = false;
+        $cannotSubmitReason = 'Đợt đã đóng';
+      }
+
+      if ($dashboardData['current']['end_at']) {
+        $endAtDt = new \DateTime($dashboardData['current']['end_at']);
+        $reportDeadlineDt = (clone $endAtDt)->modify("+{$allowedDays} days");
+        $reportDeadline = $reportDeadlineDt->format('Y-m-d');
+
+        $now = new \DateTime();
+        if ($now > $reportDeadlineDt) {
+          $canSubmitReport = false;
+          $cannotSubmitReason = 'Đã hết hạn nộp';
+        }
+      }
     }
 
     // Lấy 2 giấy giới thiệu mới nhất
@@ -215,6 +237,7 @@ class StudentDashboardController extends Controller
       'company_deadline' => $companyDeadline,
       'report_deadline' => $reportDeadline,
       'can_submit_report' => $canSubmitReport,
+      'cannot_submit_reason' => $cannotSubmitReason,
       'max_file_size_mb' => (int)$this->_webSettingsService->getValue('internship_report_max_size_mb', 50),
       'company_warning_days' => (int)$this->_webSettingsService->getValue('internship_company_warning_days', 3),
       'report_warning_days' => (int)$this->_webSettingsService->getValue('internship_report_warning_days', 3),
@@ -313,13 +336,28 @@ class StudentDashboardController extends Controller
     }
 
     try {
-      // Server-side validation: Kiểm tra hạn chót nộp báo cáo
       $batch = $this->_internshipBatchService->getBatchById($batch_id);
-      if ($batch && $batch['end_at']) {
-        $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
-        $deadlineDt = (new \DateTime($batch['end_at']))->modify("+{$allowedDays} days");
-        if (new \DateTime() > $deadlineDt) {
-          throw new Exception('Đã hết thời hạn nộp tài liệu thực tập.');
+
+      if ($batch) {
+        $batchModel = new InternshipBatch();
+        $batchModel->status = $batch['status'] ?? 'draft';
+        $batchModel->start_at = $batch['start_at'] ?? null;
+        $batchModel->end_at = $batch['end_at'] ?? null;
+        $effStatus = $batchModel->getEffectiveStatus();
+
+        if ($effStatus === BatchStatus::UPCOMING) {
+          throw new Exception('Đợt thực tập chưa bắt đầu, không thể nộp tài liệu.');
+        }
+        if ($effStatus === BatchStatus::CLOSED) {
+          throw new Exception('Đợt thực tập đã đóng, không thể nộp tài liệu.');
+        }
+
+        if ($batch['end_at']) {
+          $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
+          $deadlineDt = (new \DateTime($batch['end_at']))->modify("+{$allowedDays} days");
+          if (new \DateTime() > $deadlineDt) {
+            throw new Exception('Đã hết thời hạn nộp tài liệu thực tập.');
+          }
         }
       }
 
@@ -341,36 +379,46 @@ class StudentDashboardController extends Controller
 
       foreach ($allowedFiles as $inputName => $docType) {
         $fileData = $request->file($inputName);
-        if ($fileData && $fileData['error'] !== UPLOAD_ERR_NO_FILE) {
-          $hasFile = true;
-          $uploadedFile = $fileHandler->processUpload($fileData);
+        if ($fileData) {
+          $filesToProcess = isset($fileData['name']) ? [$fileData] : $fileData;
 
-          if (!$uploadedFile) {
-            throw new Exception("Lỗi tải lên file cho loại tài liệu: {$docType}");
-          }
-          if ($uploadedFile->fileSize > $maxSizeBytes) {
-            throw new Exception("Dung lượng file vượt quá giới hạn cho phép ({$maxSizeMb}MB) ở tài liệu: {$docType}");
+          if ($docType === 'related_photo' && count($filesToProcess) > 5) {
+            throw new Exception('Chỉ được phép chọn tối đa 5 hình ảnh liên quan.');
           }
 
-          if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+          foreach ($filesToProcess as $singleFileData) {
+            if ($singleFileData['error'] !== UPLOAD_ERR_NO_FILE) {
+              $hasFile = true;
+              $uploadedFile = $fileHandler->processUpload($singleFileData);
+
+              if (!$uploadedFile) {
+                throw new Exception("Lỗi tải lên file cho loại tài liệu: {$docType}");
+              }
+              if ($uploadedFile->fileSize > $maxSizeBytes) {
+                throw new Exception("Dung lượng file vượt quá giới hạn cho phép ({$maxSizeMb}MB) ở tài liệu: {$docType}");
+              }
+
+              if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+              }
+
+              $fileName = bin2hex(random_bytes(16)) . '.' . $uploadedFile->extension;
+              $destPath = $uploadDir . $fileName;
+
+              if (!move_uploaded_file($uploadedFile->tmpPath, $destPath)) {
+                throw new Exception("Không thể lưu file {$docType} vào máy chủ.");
+              }
+
+              $mimeType = mime_content_type($destPath) ?: 'application/octet-stream';
+
+              $this->_submissionService->createTypedSubmission($batchStudentId, $docType, [
+                'storage_mode' => 'file',
+                'original_file_name' => $uploadedFile->originalName,
+                'mime_type' => $mimeType,
+                'file_path' => $subDir . '/' . $fileName,
+              ]);
+            }
           }
-
-          $fileName = bin2hex(random_bytes(16)) . '.' . $uploadedFile->extension;
-          $destPath = $uploadDir . $fileName;
-
-          if (!move_uploaded_file($uploadedFile->tmpPath, $destPath)) {
-            throw new Exception("Không thể lưu file {$docType} vào máy chủ.");
-          }
-
-          $mimeType = mime_content_type($destPath) ?: 'application/octet-stream';
-
-          $this->_submissionService->createTypedSubmission($batchStudentId, $docType, [
-            'storage_mode' => 'file',
-            'original_file_name' => $uploadedFile->originalName,
-            'mime_type' => $mimeType,
-            'file_path' => $subDir . '/' . $fileName,
-          ]);
         }
       }
 

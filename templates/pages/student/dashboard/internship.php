@@ -242,8 +242,8 @@ $effectiveMetadata = $effStatus ? [
                       $statusMap = [
                         'pending' => ['Chờ duyệt', 'secondary'],
                         'approved' => ['Đang xử lý', 'secondary'],
-                        'completed' => ['Hoàn thành', 'primary'],
-                        'received' => ['Đã nhận', 'primary'],
+                        'completed' => ['Hoàn thành', 'success'],
+                        'received' => ['Đã nhận', 'success'],
                         'rejected' => ['Từ chối', 'destructive'],
                         'cancelled' => ['Đã hủy', 'destructive'],
                       ];
@@ -292,8 +292,8 @@ $effectiveMetadata = $effStatus ? [
                     $statusMap = [
                       'pending' => ['Chờ duyệt', 'warning'],
                       'approved' => ['Đang xử lý', 'warning'],
-                      'completed' => ['Hoàn thành', 'primary'],
-                      'received' => ['Đã nhận', 'primary'],
+                      'completed' => ['Hoàn thành', 'success'],
+                      'received' => ['Đã nhận', 'success'],
                       'rejected' => ['Từ chối', 'destructive'],
                       'cancelled' => ['Đã hủy', 'destructive'],
                     ];
@@ -471,8 +471,9 @@ $effectiveMetadata = $effStatus ? [
 
               <div class="field mb-3">
                 <label class="field__label">Hình ảnh liên quan</label>
-                <input type="file" name="file_related_photo" id="file_related_photo" class="field__input file-input"
-                  accept="image/jpeg,image/png,image/webp">
+                <input type="file" name="file_related_photo[]" id="file_related_photo" class="field__input file-input"
+                  accept="image/jpeg,image/png,image/webp" multiple>
+                <p class="field__description">Tối đa 5 ảnh</p>
               </div>
 
               <div class="mt-4 flex justify-end">
@@ -480,7 +481,7 @@ $effectiveMetadata = $effStatus ? [
                   <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài
                     liệu</button>
                 <?php else: ?>
-                  <button type="button" class="btn" data-variant="outline" data-size="lg" disabled>Đã hết hạn nộp</button>
+                  <button type="button" class="btn" data-variant="primary" data-size="lg" disabled><?= htmlspecialchars($cannot_submit_reason ?? 'Không thể nộp') ?></button>
                 <?php endif; ?>
               </div>
             </form>

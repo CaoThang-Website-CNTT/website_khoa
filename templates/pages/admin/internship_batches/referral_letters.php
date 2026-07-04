@@ -132,8 +132,8 @@ $letters = $letters ?? [];
   <?php
   $statusMap = [
     'pending' => ['label' => 'Chờ duyệt', 'variant' => 'secondary'],
-    'completed' => ['label' => 'Hoàn thành', 'variant' => 'primary'],
-    'received' => ['label' => 'Đã nhận', 'variant' => 'primary'],
+    'completed' => ['label' => 'Hoàn thành', 'variant' => 'success'],
+    'received' => ['label' => 'Đã nhận', 'variant' => 'success'],
     'cancelled' => ['label' => 'Đã hủy', 'variant' => 'destructive']
   ];
   $statusMap['approved'] = ['label' => 'Đang xử lý', 'variant' => 'secondary'];
