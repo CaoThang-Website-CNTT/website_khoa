@@ -45,6 +45,13 @@ $effectiveMetadata = $effStatus ? [
     <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
     Danh sách đợt
   </a>
+  <?php if (!empty($recent_referral_letters)): ?>
+    <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="btn" data-variant="primary"
+      data-size="md">
+      <i class="fa-solid fa-plus mr-1" aria-hidden="true"></i>
+      Đăng ký giấy giới thiệu
+    </a>
+  <?php endif; ?>
   <?php $layout->end() ?>
 <?php endif; ?>
 
@@ -260,26 +267,23 @@ $effectiveMetadata = $effStatus ? [
       </div>
 
       <!-- Giấy giới thiệu -->
-      <div class="card shadow">
-        <div class="card__header flex justify-between">
-          <h3 class="card__title">
-            <i class="fa-solid fa-file-contract mr-2"></i>
-            Giấy giới thiệu
-          </h3>
-          <?php if ($current): ?>
-            <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="btn"
-              data-variant="primary" data-size="lg">
-              <i class="fa-solid fa-plus mr-1"></i>
-              Đăng ký
-            </a>
-            <div id="internship-data" data-batch-student-id="<?= $current['batch_student_id'] ?>" class="hidden"></div>
-          <?php endif; ?>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <?php if (empty($recent_referral_letters)): ?>
-            <p class="text-sm text-center">Chưa đăng ký giấy nào.</p>
-          <?php else: ?>
+      <?php if (!empty($recent_referral_letters)): ?>
+        <div class="card shadow">
+          <div class="card__header flex justify-between">
+            <h3 class="card__title">
+              <i class="fa-solid fa-file-contract mr-2"></i>
+              Giấy giới thiệu
+            </h3>
+            <?php if ($current): ?>
+              <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" class="btn"
+                data-variant="primary" data-size="lg">
+                <i class="fa-solid fa-plus mr-1"></i>
+                Đăng ký
+              </a>
+            <?php endif; ?>
+          </div>
+          <hr class="separator" />
+          <div class="card__content">
             <div class="space-y-3">
               <?php foreach ($recent_referral_letters as $rl): ?>
                 <div class="border rounded p-3 text-sm">
@@ -290,8 +294,8 @@ $effectiveMetadata = $effStatus ? [
                     <span class="text-xs"><?= date('d/m/Y', strtotime($rl['created_at'])) ?></span>
                     <?php
                     $statusMap = [
-                      'pending' => ['Chờ duyệt', 'warning'],
-                      'approved' => ['Đang xử lý', 'warning'],
+                      'pending' => ['Chờ duyệt', 'secondary'],
+                      'approved' => ['Đang xử lý', 'secondary'],
                       'completed' => ['Hoàn thành', 'success'],
                       'received' => ['Đã nhận', 'success'],
                       'rejected' => ['Từ chối', 'destructive'],
@@ -299,22 +303,24 @@ $effectiveMetadata = $effStatus ? [
                     ];
                     [$label, $variant] = $statusMap[$rl['status']] ?? [$rl['status'], 'outline'];
                     ?>
-                    <span class="badge" data-variant="<?= $variant ?>"><?= htmlspecialchars($label) ?></span>
+                    <span class="badge" data-variant="<?= $variant ?>"><?= $label ?></span>
                   </div>
                 </div>
               <?php endforeach; ?>
             </div>
-          <?php endif; ?>
-        </div>
-        <?php if (!empty($recent_referral_letters)): ?>
+          </div>
           <div class="card__footer">
             <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>" class="btn w-full"
               data-variant="outline" data-size="sm">
               Xem tất cả (<?= $total_referral_letters ?>)
             </a>
           </div>
-        <?php endif; ?>
-      </div>
+        </div>
+      <?php endif; ?>
+      <?php if ($current): ?>
+        <div id="internship-data" data-batch-student-id="<?= $current['batch_student_id'] ?>" class="hidden"></div>
+      <?php endif; ?>
+
 
       <!-- Kết quả -->
       <div class="card shadow result-card">
@@ -326,31 +332,39 @@ $effectiveMetadata = $effStatus ? [
         </div>
         <hr class="separator" />
         <div class="card__content">
-          <div>
+          <div class="flex-1 w-full">
 
             <?php if ($grade && isset($grade['final_score']) && isset($grade['grade_lock_at']) && $grade['grade_lock_at'] !== null): ?>
               <div class="font-bold text-4xl text-center">
                 <?= $grade['final_score'] ?>
               </div>
 
-              <?php if (!empty($grade['score_reason'])): ?>
-                <hr class="separator" />
-                <p class="text-sm">
-                  <span class="font-medium" style="color: var(--muted-foreground);">Chi tiết điểm:</span>
-                  <?= nl2br(htmlspecialchars($grade['score_reason'])) ?>
-                </p>
-              <?php endif; ?>
+              <div class="flex justify-between gap-2 mt-2">
+                <?php if (!empty($grade['score_reason'])): ?>
+                  <div class="flex-1 p-2">
+                    <p>
+                      <span class="font-semibold">Chi tiết điểm:</span>
+                    </p>
+                    <p>
+                      <?= nl2br(htmlspecialchars($grade['score_reason'])) ?>
+                    </p>
+                  </div>
+                <?php endif; ?>
 
-              <?php if (!empty($grade['feedback'])): ?>
-                <hr class="separator" />
-                <div class="text-sm">
-                  <span class="font-medium" style="color: var(--muted-foreground);">Nhận xét của GV:</span>
-                  <?= nl2br(htmlspecialchars($grade['feedback'])) ?>
-                </div>
-              <?php endif; ?>
+                <?php if (!empty($grade['feedback'])): ?>
+                  <div class="flex-1 p-2" style="border-left: 1px solid var(--border)">
+                    <p>
+                      <span class="font-semibold">Nhận xét của GV:</span>
+                    </p>
+                    <p>
+                      <?= nl2br(htmlspecialchars($grade['feedback'])) ?>
+                    </p>
+                  </div>
+                <?php endif; ?>
+              </div>
 
             <?php else: ?>
-              <span style="color: var(--muted-foreground);">Chưa có điểm</span>
+              <p style="color: var(--muted-foreground);">Chưa có điểm</p>
             <?php endif; ?>
           </div>
         </div>
@@ -365,21 +379,16 @@ $effectiveMetadata = $effStatus ? [
             <i class="fa-solid fa-calendar-week mr-2"></i>
             Báo cáo hàng tuần
           </h3>
-          <?php if ($current && $weekly_summary && $weekly_summary['current_week_status'] !== 'not_started'): ?>
-            <a href="<?= url("student/internship/{$current['id']}/weekly_reports") ?>" class="btn" data-variant="primary"
-              data-size="md">
-              <i class="fa-solid fa-pen-to-square mr-1"></i> Cập nhật
-            </a>
-          <?php endif; ?>
+          <a href="<?= url("student/internship/{$current['id']}/weekly_reports") ?>" class="btn" data-variant="primary" data-size="md">
+            <i class="fa-solid fa-pen-to-square mr-1"></i> Cập nhật
+          </a>
         </div>
         <hr class="separator" />
         <div class="card__content">
           <?php if ($weekly_summary): ?>
             <div class="flex justify-between gap-4 text-center">
               <div class="border rounded-lg p-2">
-                <div class="text-2xl font-bold text-primary">
-                  <?= $weekly_summary['submitted_weeks'] ?>/<?= $weekly_summary['total_weeks'] ?>
-                </div>
+                <div class="text-2xl font-bold text-primary"><?= $weekly_summary['submitted_weeks'] ?>/<?= $weekly_summary['total_weeks'] ?></div>
                 <div class="text-xs mt-1">Tuần đã nộp</div>
               </div>
               <div class="border rounded-lg p-2 flex flex-col justify-center w-full">
@@ -413,134 +422,128 @@ $effectiveMetadata = $effStatus ? [
 
 
       <!-- Nộp tài liệu -->
-      <?php if ($effStatus !== BatchStatus::UPCOMING): ?>
-        <div class="card shadow">
-          <div class="card__header">
-            <h3 class="card__title">
-              <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
-              Nộp tài liệu thực tập tốt nghiệp
-            </h3>
-            <div class="card__header-meta">
-              <?php if ($report_deadline): ?>
-                <?php
-                $rdDt = new \DateTime($report_deadline);
-                $isRNear = $now >= (clone $rdDt)->modify("-{$report_warning_days} days") && $now <= $rdDt;
-                $isRPassed = $now > $rdDt;
-                ?>
-                <?php if ($isRPassed): ?>
-                  <span class="badge" data-variant="destructive">
-                    <i class="fa-solid fa-lock mr-1"></i>Hết hạn nộp</span>
-                <?php elseif ($isRNear): ?>
-                  <span class="badge" data-variant="warning">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hạn</span>
-                <?php endif; ?>
-                <p class="text-xs">Hạn chót nộp: <span class="font-semibold"><?= $rdDt->format('d/m/Y') ?></span></p>
+      <div class="card shadow">
+        <div class="card__header">
+          <h3 class="card__title">
+            <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
+            Nộp tài liệu thực tập tốt nghiệp
+          </h3>
+          <div class="card__header-meta">
+            <?php if ($report_deadline): ?>
+              <?php
+              $rdDt = new \DateTime($report_deadline);
+              $isRNear = $now >= (clone $rdDt)->modify("-{$report_warning_days} days") && $now <= $rdDt;
+              $isRPassed = $now > $rdDt;
+              ?>
+              <?php if ($isRPassed): ?>
+                <span class="badge" data-variant="destructive">
+                  <i class="fa-solid fa-lock mr-1"></i>Hết hạn nộp</span>
+              <?php elseif ($isRNear): ?>
+                <span class="badge" data-variant="warning">
+                  <i class="fa-solid fa-triangle-exclamation mr-1"></i>Sắp hết hạn</span>
               <?php endif; ?>
+              <p class="text-xs">Hạn chót nộp: <span class="font-semibold"><?= $rdDt->format('d/m/Y') ?></span></p>
+            <?php endif; ?>
+          </div>
+          <p class="text-xs">Tài liệu được gửi cho giảng viên hướng dẫn để đánh giá kết quả thực tập.</p>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <form action="<?= url("student/internship/{$current['id']}/upload") ?>" method="POST"
+            enctype="multipart/form-data" id="uploadForm">
+            <?= csrf_field() ?>
+            <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
+
+            <div class="mb-4 text-sm" style="color: var(--muted-foreground);">
+              Định dạng hỗ trợ: PDF (cho Báo cáo, phiếu đánh giá, khảo sát), Hình ảnh (JPG, PNG, WEBP). Dung lượng tối đa: <?= $max_file_size_mb ?>MB
             </div>
-            <p class="text-xs">Tài liệu được gửi cho giảng viên hướng dẫn để đánh giá kết quả thực tập.</p>
-          </div>
-          <hr class="separator" />
-          <div class="card__content">
-            <form action="<?= url("student/internship/{$current['id']}/upload") ?>" method="POST"
-              enctype="multipart/form-data" id="uploadForm">
-              <?= csrf_field() ?>
-              <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
 
-              <div class="mb-4 text-sm" style="color: var(--muted-foreground);">
-                Định dạng hỗ trợ: PDF (cho Báo cáo, phiếu đánh giá, khảo sát), Hình ảnh (JPG, PNG, WEBP). Dung lượng tối đa:
-                <?= $max_file_size_mb ?>MB
-              </div>
+            <div class="field mb-3" data-field-required>
+              <label class="field__label">Báo cáo thực tập</label>
+              <input type="file" name="file_internship_report" id="file_internship_report" class="field__input file-input" accept=".pdf" <?= empty($submissions_by_type['internship_report']) ? 'required' : '' ?>>
+            </div>
 
-              <div class="field mb-3" data-field-required>
-                <label class="field__label">Báo cáo thực tập</label>
-                <input type="file" name="file_internship_report" id="file_internship_report" class="field__input file-input"
-                  accept=".pdf" <?= empty($submissions_by_type['internship_report']) ? 'required' : '' ?>>
-              </div>
+            <div class="field mb-3" data-field-required>
+              <label class="field__label">Phiếu đánh giá thực tập</label>
+              <input type="file" name="file_evaluation_form" id="file_evaluation_form" class="field__input file-input" accept=".pdf" <?= empty($submissions_by_type['evaluation_form']) ? 'required' : '' ?>>
+            </div>
 
-              <div class="field mb-3" data-field-required>
-                <label class="field__label">Phiếu đánh giá thực tập</label>
-                <input type="file" name="file_evaluation_form" id="file_evaluation_form" class="field__input file-input"
-                  accept=".pdf" <?= empty($submissions_by_type['evaluation_form']) ? 'required' : '' ?>>
-              </div>
+            <div class="field mb-3">
+              <label class="field__label">Phiếu khảo sát doanh nghiệp</label>
+              <input type="file" name="file_company_survey" id="file_company_survey" class="field__input file-input" accept=".pdf">
+            </div>
 
-              <div class="field mb-3">
-                <label class="field__label">Phiếu khảo sát doanh nghiệp</label>
-                <input type="file" name="file_company_survey" id="file_company_survey" class="field__input file-input"
-                  accept=".pdf">
-              </div>
+            <div class="field mb-3">
+              <label class="field__label">Hình ảnh liên quan</label>
+              <input type="file" name="file_related_photo[]" id="file_related_photo" class="field__input file-input" accept="image/jpeg,image/png,image/webp" multiple>
+              <p class="field__description">Tối đa 5 ảnh</p>
+            </div>
 
-              <div class="field mb-3">
-                <label class="field__label">Hình ảnh liên quan</label>
-                <input type="file" name="file_related_photo[]" id="file_related_photo" class="field__input file-input"
-                  accept="image/jpeg,image/png,image/webp" multiple>
-                <p class="field__description">Tối đa 5 ảnh</p>
-              </div>
-
-              <div class="mt-4 flex justify-end">
-                <?php if ($can_submit_report): ?>
-                  <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài
-                    liệu</button>
-                <?php else: ?>
-                  <button type="button" class="btn" data-variant="primary" data-size="lg" disabled><?= htmlspecialchars($cannot_submit_reason ?? 'Không thể nộp') ?></button>
-                <?php endif; ?>
-              </div>
-            </form>
-          </div>
-          <hr class="separator" />
-          <div class="card__header">
-            <h3 class="card__title">
-              <i class="fa-solid fa-clock-rotate-left mr-2"></i>
-              Lịch sử nộp
-            </h3>
-          </div>
-          <hr class="separator" />
-          <div class="card__content">
-            <div class="timeline-container">
-              <?php if (empty($submissions)): ?>
-                <div class="empty-state">
-                  <p class="text-sm">Bạn chưa nộp lần nào. Hãy đảm bảo nộp đúng hạn.</p>
-                </div>
+            <div class="mt-4 flex justify-end">
+              <?php if ($can_submit_report): ?>
+                <button type="submit" class="btn" data-variant="primary" data-size="lg" disabled id="uploadBtn">Nộp tài liệu</button>
               <?php else: ?>
-                <?php foreach ($submissions as $submission): ?>
-                  <article class="timeline-item">
-                    <div class="timeline-item__indicator"></div>
-                    <time
-                      class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
-                    <div class="timeline-item__title" title="<?= htmlspecialchars($submission['original_file_name'] ?? '') ?>">
-                      <?php
-                      $typeLabels = [
-                        'internship_report' => 'Báo cáo TT',
-                        'evaluation_form' => 'Phiếu đánh giá',
-                        'company_survey' => 'Khảo sát DN',
-                        'related_photo' => 'Hình ảnh khác'
-                      ];
-                      $docType = $submission['type'] ?? 'internship_report';
-                      echo '[' . ($typeLabels[$docType] ?? 'Tài liệu') . '] ' . htmlspecialchars($submission['original_file_name'] ?? '--');
-                      ?>
-                    </div>
-                    <div class="mt-2">
-                      <?php
-                      $downloadUrl = url('/public/media/' . $submission['file_path']);
-                      if ($downloadUrl):
-                        ?>
-                        <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="outline" data-size="sm"
-                          title="Xem tài liệu">
-                          <i class="fa-solid fa-eye mr-1"></i>Xem
-                        </a>
-                      <?php else: ?>
-                        <span class="text-xs ml-2" title="File không tồn tại trên hệ thống">
-                          <i class="fa-solid fa-circle-exclamation"></i> Lỗi file
-                        </span>
-                      <?php endif; ?>
-                    </div>
-                  </article>
-                <?php endforeach; ?>
+                <button type="button" class="btn" data-variant="primary" data-size="lg" disabled><?= htmlspecialchars($cannot_submit_reason ?? 'Không thể nộp') ?></button>
               <?php endif; ?>
             </div>
+          </form>
+        </div>
+        <hr class="separator" />
+        <div class="card__header">
+          <h3 class="card__title">
+            <i class="fa-solid fa-clock-rotate-left mr-2"></i>
+            Lịch sử nộp
+          </h3>
+        </div>
+        <hr class="separator" />
+        <div class="card__content">
+          <div class="timeline-container">
+            <?php if (empty($submissions)): ?>
+              <div class="empty-state">
+                <p class="text-sm">Bạn chưa nộp lần nào. Hãy đảm bảo nộp đúng hạn.</p>
+              </div>
+            <?php else: ?>
+              <?php foreach ($submissions as $submission): ?>
+                <article class="timeline-item">
+                  <div class="timeline-item__indicator"></div>
+                  <time
+                    class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
+                  <div class="timeline-item__title"
+                    title="<?= htmlspecialchars($submission['original_file_name'] ?? '') ?>">
+                    <?php
+                    $typeLabels = [
+                      'internship_report' => 'Báo cáo TT',
+                      'evaluation_form' => 'Phiếu đánh giá',
+                      'company_survey' => 'Khảo sát DN',
+                      'related_photo' => 'Hình ảnh khác'
+                    ];
+                    $docType = $submission['type'] ?? 'internship_report';
+                    echo '[' . ($typeLabels[$docType] ?? 'Tài liệu') . '] ' . htmlspecialchars($submission['original_file_name'] ?? '--');
+                    ?>
+                  </div>
+                  <div class="mt-2">
+                    <?php
+                    $downloadUrl = url('/public/media/' . $submission['file_path']);
+                    if ($downloadUrl):
+                    ?>
+                      <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="outline" data-size="sm"
+                        title="Xem tài liệu">
+                        <i class="fa-solid fa-eye mr-1"></i>Xem
+                      </a>
+                    <?php else: ?>
+                      <span class="text-xs ml-2" title="File không tồn tại trên hệ thống">
+                        <i class="fa-solid fa-circle-exclamation"></i> Lỗi file
+                      </span>
+                    <?php endif; ?>
+                  </div>
+                </article>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </div>
         </div>
-      <?php endif; ?>
+      </div>
     </div>
+  </div>
   </div>
 <?php else: ?>
   <div class="card shadow py-12 text-center">
@@ -557,28 +560,26 @@ $effectiveMetadata = $effStatus ? [
 <?php $layout->start("scripts") ?>
 <?php if (!$current && !empty($batches)): ?>
   <script type="application/json" data-tm-data="student_batches_table">
-        <?= json_encode([
-          'rows' => array_map(function ($batch) {
-          $model = new InternshipBatch();
-          $model->status = $batch['status'] ?? 'draft';
-          $model->start_at = $batch['start_at'] ?? null;
-          $model->end_at = $batch['end_at'] ?? null;
-          $status = $model->getEffectiveStatus();
+    <?= json_encode(['rows' => array_map(function ($batch) {
+      $model = new InternshipBatch();
+      $model->status = $batch['status'] ?? 'draft';
+      $model->start_at = $batch['start_at'] ?? null;
+      $model->end_at = $batch['end_at'] ?? null;
+      $status = $model->getEffectiveStatus();
 
-          return [
-            'id' => $batch['id'],
-            'title' => $batch['title'] ?? 'N/A',
-            'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
-            'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
-            'effective_status' => $status,
-            'effective_status_label' => BatchStatus::getLabel($status),
-            'effective_status_variant' => BatchStatus::getVariant($status),
-            '_href' => url('student/internship/' . $batch['id']),
-            '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
-          ];
-        }, $batches)
-        ]) ?>
-      </script>
+      return [
+        'id' => $batch['id'],
+        'title' => $batch['title'] ?? 'N/A',
+        'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
+        'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
+        'effective_status' => $status,
+        'effective_status_label' => BatchStatus::getLabel($status),
+        'effective_status_variant' => BatchStatus::getVariant($status),
+        '_href' => url('student/internship/' . $batch['id']),
+        '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
+      ];
+    }, $batches)]) ?>
+  </script>
   <script>
     (() => {
       const root = document.querySelector('[data-tm="student_batches_table"]');
