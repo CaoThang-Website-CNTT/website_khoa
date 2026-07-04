@@ -151,46 +151,6 @@ $effectiveMetadata = $effStatus ? [
   </div>
   <div class="detail-layout">
     <div class="detail-layout__main">
-      <!-- Chi tiết phân công -->
-      <div class="card shadow internship-task" data-internship-phase="0" data-tabs-observe="internship-journey:phase-0"
-        id="internship-phase-0" role="tabpanel" aria-labelledby="internship-phase-tab-0">
-        <div class="card__header">
-          <h3 class="card__title">
-            <i class="fa-solid fa-circle-info mr-2"></i>
-            Chi tiết phân công
-          </h3>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
-          <div class="space-y-2">
-            <p><span class="font-bold">Đợt thực tập:</span> <?= htmlspecialchars($current['title'] ?? '') ?></p>
-            <p><span class="font-bold">Thời gian mở đợt:</span> từ <time
-                datetime="<?= date("d/m/Y", strtotime($current['start_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['start_at']))) ?></time>
-              đến <time
-                datetime="<?= date("d/m/Y", strtotime($current['end_at'])) ?>"><?= htmlspecialchars(date("d/m/Y", strtotime($current['end_at']))) ?></time>
-            </p>
-
-
-            <?php if ($supervisor): ?>
-              <hr class="separator" />
-              <p><span class="font-bold">Họ & tên GVHD:</span> <?= htmlspecialchars($supervisor->full_name) ?></p>
-              <p><span class="font-bold">Email GVHD:</span> <?= htmlspecialchars($supervisor->account->email) ?></p>
-              <p><span class="font-bold">Số điện thoại GVHD:</span> <?= htmlspecialchars($supervisor->phone) ?></p>
-            <?php else: ?>
-              <p><span class="font-bold">Giảng viên hướng dẫn:</span> Chưa phân công</p>
-            <?php endif; ?>
-
-            <?php if ($effectiveMetadata): ?>
-              <p>
-                <span class="font-bold">Trạng thái: </span>
-                <span class="badge"
-                  data-variant="<?= $effectiveMetadata['variant'] ?>"><?= $effectiveMetadata['label'] ?></span>
-              </p>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-
       <!-- Khai báo công ty -->
       <div class="card shadow internship-task" data-internship-phase="1" data-tabs-observe="internship-journey:phase-1"
         id="internship-phase-1" role="tabpanel" aria-labelledby="internship-phase-tab-1">
@@ -461,6 +421,40 @@ $effectiveMetadata = $effStatus ? [
     </div>
 
     <div class="detail-layout__sidebar">
+      <!-- Chi tiết phân công -->
+      <div class="card shadow internship-task" data-internship-phase="0" data-tabs-observe="internship-journey:phase-0"
+        id="internship-phase-0" role="tabpanel" aria-labelledby="internship-phase-tab-0">
+        <div class="card__header">
+          <h3 class="card__title">
+            <i class="fa-solid fa-circle-info mr-2"></i>
+            Chi tiết phân công
+          </h3>
+        </div>
+        <hr class="separator" />
+        <?php
+        $assignmentRows = [
+          ['label' => 'Đợt thực tập', 'value' => htmlspecialchars($current['title'] ?? '')],
+          ['label' => 'Thời gian', 'value' => date('d/m/Y', strtotime($current['start_at'])) . ' – ' . date('d/m/Y', strtotime($current['end_at']))],
+          ['label' => 'Giảng viên hướng dẫn', 'value' => $supervisor ? htmlspecialchars($supervisor->full_name) : 'Chưa phân công'],
+        ];
+        if ($supervisor) {
+          $assignmentRows[] = ['label' => 'Email GVHD', 'value' => htmlspecialchars($supervisor->account->email)];
+          $assignmentRows[] = ['label' => 'Số điện thoại GVHD', 'value' => htmlspecialchars($supervisor->phone)];
+        }
+        ?>
+        <div class="card__content space-y-4">
+          <?php foreach ($assignmentRows as $rowIndex => $row): ?>
+            <dl class="flex justify-between gap-4">
+              <dt><?= $row['label'] ?></dt>
+              <dd class="text-right font-medium"><?= $row['value'] ?></dd>
+            </dl>
+            <?php if ($rowIndex < count($assignmentRows) - 1): ?>
+              <hr class="separator">
+            <?php endif; ?>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
       <!-- Báo cáo hàng tuần -->
       <div class="card shadow internship-task" data-internship-phase="1" data-tabs-observe="internship-journey:phase-1">
         <div class="card__header flex justify-between items-center">
@@ -647,28 +641,28 @@ $effectiveMetadata = $effStatus ? [
 <?php $layout->start("scripts") ?>
 <?php if (!$current && !empty($batches)): ?>
   <script type="application/json" data-tm-data="student_batches_table">
-                    <?= json_encode([
-                      'rows' => array_map(function ($batch) {
-                      $model = new InternshipBatch();
-                      $model->status = $batch['status'] ?? 'draft';
-                      $model->start_at = $batch['start_at'] ?? null;
-                      $model->end_at = $batch['end_at'] ?? null;
-                      $status = $model->getEffectiveStatus();
+                          <?= json_encode([
+                            'rows' => array_map(function ($batch) {
+                                  $model = new InternshipBatch();
+                                  $model->status = $batch['status'] ?? 'draft';
+                                  $model->start_at = $batch['start_at'] ?? null;
+                                  $model->end_at = $batch['end_at'] ?? null;
+                                  $status = $model->getEffectiveStatus();
 
-                      return [
-                        'id' => $batch['id'],
-                        'title' => $batch['title'] ?? 'N/A',
-                        'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
-                        'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
-                        'effective_status' => $status,
-                        'effective_status_label' => BatchStatus::getLabel($status),
-                        'effective_status_variant' => BatchStatus::getVariant($status),
-                        '_href' => url('student/internship/' . $batch['id']),
-                        '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
-                      ];
-                    }, $batches)
-                    ]) ?>
-                  </script>
+                                  return [
+                                    'id' => $batch['id'],
+                                    'title' => $batch['title'] ?? 'N/A',
+                                    'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
+                                    'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
+                                    'effective_status' => $status,
+                                    'effective_status_label' => BatchStatus::getLabel($status),
+                                    'effective_status_variant' => BatchStatus::getVariant($status),
+                                    '_href' => url('student/internship/' . $batch['id']),
+                                    '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
+                                  ];
+                                }, $batches)
+                          ]) ?>
+                        </script>
   <script>
     (() => {
       const root = document.querySelector('[data-tm="student_batches_table"]');
