@@ -160,6 +160,8 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
       'week_end' => $data['week_end'],
       'content' => $data['content'] ?? null,
       'is_exempt' => $data['is_exempt'] ?? 0,
+      'no_activity_reason' => $data['no_activity_reason'] ?? null,
+      'no_activity_note' => $data['no_activity_note'] ?? null,
       'is_late' => $data['is_late'] ?? 0,
       'is_latest' => 1,
       'submitted_at' => date('Y-m-d H:i:s')
@@ -232,7 +234,8 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
       ->select('*')
       ->eq('batch_student_id', $batchStudentId)
       ->eq('week_number', $weekNumber)
-      ->order('submitted_at', ['ascending' => false]);
+      ->order('submitted_at', ['ascending' => false])
+      ->order('id', ['ascending' => false]);
 
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());

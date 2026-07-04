@@ -836,6 +836,8 @@ class StudentDashboardController extends Controller
     $weekNumber = (int)$request->input('week_number');
     $content = $request->input('content');
     $isExempt = (bool)$request->input('is_exempt');
+    $noActivityReason = $request->input('no_activity_reason');
+    $noActivityNote = $request->input('no_activity_note');
 
     $maxImages = (int)$this->_webSettingsService->getValue('internship_weekly_report_max_images', 5);
     $maxSizeMb = (float)$this->_webSettingsService->getValue('internship_weekly_report_image_max_size_mb', 5);
@@ -896,6 +898,8 @@ class StudentDashboardController extends Controller
         $weekNumber,
         $content,
         $isExempt,
+        $noActivityReason,
+        $noActivityNote,
         $imagesData,
         $startAt,
         $endAt

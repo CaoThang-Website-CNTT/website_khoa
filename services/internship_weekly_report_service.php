@@ -10,7 +10,7 @@ use Exception;
 interface IInternshipWeeklyReportService
 {
   public function calculateWeeks(string $startAt, string $endAt): array;
-  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, array $imagesData, string $startAt, string $endAt): int;
+  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, ?string $noActivityReason, ?string $noActivityNote, array $imagesData, string $startAt, string $endAt): int;
   public function getStudentWeeklySummary(int $batchStudentId, string $startAt, string $endAt): array;
   public function getStudentWeeklyData(int $batchStudentId, string $startAt, string $endAt): array;
   public function getTeacherWeeklyOverview(int $batchId, int $teacherId, int $weekNumber, int $page = 1, int $limit = 15): Pageable;
@@ -79,7 +79,7 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     return $weeks;
   }
 
-  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, array $imagesData, string $startAt, string $endAt): int
+  public function submitWeeklyReport(int $batchStudentId, int $weekNumber, ?string $content, bool $isExempt, ?string $noActivityReason, ?string $noActivityNote, array $imagesData, string $startAt, string $endAt): int
   {
     $weeks = $this->calculateWeeks($startAt, $endAt);
     $targetWeek = null;
@@ -92,6 +92,16 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
 
     if (!$targetWeek) {
       throw new Exception("Tuần báo cáo không hợp lệ.");
+    }
+
+    $today = (new DateTime())->format('Y-m-d');
+    if ($targetWeek['start'] > $today) {
+      throw new Exception("Chưa thể nộp báo cáo cho tuần chưa bắt đầu.");
+    }
+
+    $allowedReasons = ['not_started', 'company_unconfirmed', 'authorized_leave', 'internship_ended'];
+    if ($isExempt && !in_array($noActivityReason, $allowedReasons, true)) {
+      throw new Exception("Vui lòng chọn lý do tuần không có hoạt động thực tập.");
     }
 
     if (!$isExempt && empty(trim((string)$content))) {
@@ -117,6 +127,8 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
         'week_end' => $targetWeek['end'],
         'content' => $isExempt ? null : $content,
         'is_exempt' => $isExempt ? 1 : 0,
+        'no_activity_reason' => $isExempt ? $noActivityReason : null,
+        'no_activity_note' => $isExempt ? (trim((string)$noActivityNote) ?: null) : null,
         'is_late' => $isLate ? 1 : 0,
         'is_latest' => 1
       ];
@@ -141,6 +153,19 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     $weeks = $this->calculateWeeks($startAt, $endAt);
     $totalWeeks = count($weeks);
     $submittedCount = $this->_store->countSubmittedWeeks($batchStudentId);
+    $latestReports = $this->_store->getLatestByBatchStudent($batchStudentId);
+    usort($latestReports, function (array $a, array $b): int {
+      $weekOrder = (int)$b['week_number'] <=> (int)$a['week_number'];
+      return $weekOrder !== 0 ? $weekOrder : ((int)$b['id'] <=> (int)$a['id']);
+    });
+    $latestSubmission = $latestReports[0] ?? null;
+    $recentReports = array_map(function (array $report): array {
+      return [
+        'week_number' => (int)$report['week_number'],
+        'submitted_at' => $report['submitted_at'],
+        'status' => $report['is_exempt'] ? 'exempt' : ($report['is_late'] ? 'late' : 'submitted')
+      ];
+    }, array_slice($latestReports, 0, 3));
 
     $currentWeekNumber = null;
     $currentWeekStatus = 'missing';
@@ -172,7 +197,13 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
       'submitted_weeks' => $submittedCount,
       'percentage' => $totalWeeks > 0 ? round(($submittedCount / $totalWeeks) * 100) : 0,
       'current_week' => $currentWeekNumber,
-      'current_week_status' => $currentWeekStatus
+      'current_week_status' => $currentWeekStatus,
+      'latest_submission' => $latestSubmission ? [
+        'week_number' => (int)$latestSubmission['week_number'],
+        'submitted_at' => $latestSubmission['submitted_at'],
+        'status' => $latestSubmission['is_exempt'] ? 'exempt' : ($latestSubmission['is_late'] ? 'late' : 'submitted')
+      ] : null,
+      'recent_reports' => $recentReports
     ];
   }
 
@@ -195,6 +226,12 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     foreach ($weeks as &$week) {
       $wn = $week['week_number'];
       $week['report'] = $reportsMap[$wn] ?? null;
+      $history = $this->_store->getHistoryByBatchStudentAndWeek($batchStudentId, $wn);
+      foreach ($history as &$version) {
+        $version['images'] = $this->_store->getImagesByReportId((int)$version['id']);
+      }
+      unset($version);
+      $week['history'] = $history;
 
       if (isset($reportsMap[$wn])) {
         $r = $reportsMap[$wn];
