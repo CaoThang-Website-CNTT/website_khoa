@@ -127,6 +127,27 @@
   margin-bottom: 1rem;
 }
 
+.internship-weekly-history {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.internship-weekly-history__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.internship-weekly-history__item > span:first-child {
+  display: grid;
+}
+
+.internship-weekly-history__item small {
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+}
+
 .internship-grade-state {
   display: flex;
   align-items: flex-start;

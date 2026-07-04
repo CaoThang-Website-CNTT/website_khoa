@@ -469,45 +469,34 @@ $effectiveMetadata = $effStatus ? [
             Báo cáo hàng tuần
           </h3>
           <a href="<?= url("student/internship/{$current['id']}/weekly_reports") ?>" class="btn" data-variant="primary"
-            data-size="md">
-            <i class="fa-solid fa-pen-to-square mr-1"></i> Cập nhật
+            data-size="sm">
+            Báo cáo <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
           </a>
         </div>
         <hr class="separator" />
         <div class="card__content">
-          <?php if ($weekly_summary): ?>
-            <div class="flex justify-between gap-4 text-center">
-              <div class="border rounded-lg p-2">
-                <div class="text-2xl font-bold text-primary">
-                  <?= $weekly_summary['submitted_weeks'] ?>/<?= $weekly_summary['total_weeks'] ?>
+          <?php if (!empty($weekly_summary['recent_reports'])): ?>
+            <?php $reportStatusMeta = [
+              'submitted' => ['Đã nộp', 'success'],
+              'late' => ['Nộp muộn', 'warning'],
+              'exempt' => ['Không hoạt động', 'secondary']
+            ]; ?>
+            <?php $recentWeeklyReports = array_values($weekly_summary['recent_reports']); ?>
+            <div class="internship-weekly-history flex flex-col gap-2">
+              <?php foreach ($recentWeeklyReports as $reportIndex => $recentReport): ?>
+                <?php [$recentLabel, $recentVariant] = $reportStatusMeta[$recentReport['status']]; ?>
+                <div class="internship-weekly-history__item">
+                  <span><strong>Tuần
+                      <?= (int) $recentReport['week_number'] ?></strong><small><?= date('d/m/Y H:i', strtotime($recentReport['submitted_at'])) ?></small></span>
+                  <span class="badge" data-variant="<?= $recentVariant ?>"><?= $recentLabel ?></span>
                 </div>
-                <div class="text-xs mt-1">Tuần đã nộp</div>
-              </div>
-              <div class="border rounded-lg p-2 flex flex-col justify-center w-full">
-                <?php if (in_array($weekly_summary['current_week_status'], ['not_started', 'ended'])): ?>
-                  <div class="text-sm font-medium">Tình trạng</div>
-                <?php else: ?>
-                  <div class="text-sm font-medium">Hiện tại - Tuần <?= $weekly_summary['current_week'] ?? '--' ?></div>
+                <?php if ($reportIndex < count($recentWeeklyReports) - 1): ?>
+                  <hr class="separator">
                 <?php endif; ?>
-                <div class="mt-2">
-                  <?php if ($weekly_summary['current_week_status'] === 'submitted'): ?>
-                    <span class="badge" data-variant="primary">Đã nộp</span>
-                  <?php elseif ($weekly_summary['current_week_status'] === 'exempt'): ?>
-                    <span class="badge" data-variant="secondary">Nghỉ</span>
-                  <?php elseif ($weekly_summary['current_week_status'] === 'missing'): ?>
-                    <span class="badge" data-variant="destructive">Muộn</span>
-                  <?php elseif ($weekly_summary['current_week_status'] === 'not_started'): ?>
-                    <span class="badge" data-variant="secondary">Chưa bắt đầu</span>
-                  <?php elseif ($weekly_summary['current_week_status'] === 'ended'): ?>
-                    <span class="badge" data-variant="secondary">Đã kết thúc</span>
-                  <?php else: ?>
-                    <span class="badge" data-variant="warning">Chưa nộp</span>
-                  <?php endif; ?>
-                </div>
-              </div>
+              <?php endforeach; ?>
             </div>
           <?php else: ?>
-            <p class="text-sm text-center" style="color: var(--muted-foreground);">Chưa có dữ liệu báo cáo tuần.</p>
+            <p class="text-sm" style="color: var(--muted-foreground);">Chưa có báo cáo tuần nào.</p>
           <?php endif; ?>
         </div>
       </div>
@@ -658,28 +647,28 @@ $effectiveMetadata = $effStatus ? [
 <?php $layout->start("scripts") ?>
 <?php if (!$current && !empty($batches)): ?>
   <script type="application/json" data-tm-data="student_batches_table">
-        <?= json_encode([
-          'rows' => array_map(function ($batch) {
-          $model = new InternshipBatch();
-          $model->status = $batch['status'] ?? 'draft';
-          $model->start_at = $batch['start_at'] ?? null;
-          $model->end_at = $batch['end_at'] ?? null;
-          $status = $model->getEffectiveStatus();
+                    <?= json_encode([
+                      'rows' => array_map(function ($batch) {
+                      $model = new InternshipBatch();
+                      $model->status = $batch['status'] ?? 'draft';
+                      $model->start_at = $batch['start_at'] ?? null;
+                      $model->end_at = $batch['end_at'] ?? null;
+                      $status = $model->getEffectiveStatus();
 
-          return [
-            'id' => $batch['id'],
-            'title' => $batch['title'] ?? 'N/A',
-            'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
-            'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
-            'effective_status' => $status,
-            'effective_status_label' => BatchStatus::getLabel($status),
-            'effective_status_variant' => BatchStatus::getVariant($status),
-            '_href' => url('student/internship/' . $batch['id']),
-            '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
-          ];
-        }, $batches)
-        ]) ?>
-      </script>
+                      return [
+                        'id' => $batch['id'],
+                        'title' => $batch['title'] ?? 'N/A',
+                        'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
+                        'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
+                        'effective_status' => $status,
+                        'effective_status_label' => BatchStatus::getLabel($status),
+                        'effective_status_variant' => BatchStatus::getVariant($status),
+                        '_href' => url('student/internship/' . $batch['id']),
+                        '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
+                      ];
+                    }, $batches)
+                    ]) ?>
+                  </script>
   <script>
     (() => {
       const root = document.querySelector('[data-tm="student_batches_table"]');
