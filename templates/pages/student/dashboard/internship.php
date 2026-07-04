@@ -288,13 +288,18 @@ $effectiveMetadata = $effStatus ? [
                   </div>
                   <div class="flex justify-between items-center mt-2">
                     <span class="text-xs"><?= date('d/m/Y', strtotime($rl['created_at'])) ?></span>
-                    <?php if ($rl['status'] === 'pending'): ?>
-                      <span class="badge" data-variant="secondary">Đang xử lý</span>
-                    <?php elseif ($rl['status'] === 'printed'): ?>
-                      <span class="badge" data-variant="primary">Đã in</span>
-                    <?php else: ?>
-                      <span class="badge" data-variant="destructive">Đã hủy</span>
-                    <?php endif; ?>
+                    <?php
+                    $statusMap = [
+                      'pending' => ['Chờ duyệt', 'warning'],
+                      'approved' => ['Đang xử lý', 'warning'],
+                      'completed' => ['Hoàn thành', 'primary'],
+                      'received' => ['Đã nhận', 'primary'],
+                      'rejected' => ['Từ chối', 'destructive'],
+                      'cancelled' => ['Đã hủy', 'destructive'],
+                    ];
+                    [$label, $variant] = $statusMap[$rl['status']] ?? [$rl['status'], 'outline'];
+                    ?>
+                    <span class="badge" data-variant="<?= $variant ?>"><?= htmlspecialchars($label) ?></span>
                   </div>
                 </div>
               <?php endforeach; ?>
@@ -361,7 +366,8 @@ $effectiveMetadata = $effStatus ? [
             Báo cáo hàng tuần
           </h3>
           <?php if ($current && $weekly_summary && $weekly_summary['current_week_status'] !== 'not_started'): ?>
-            <a href="<?= url("student/internship/{$current['id']}/weekly_reports") ?>" class="btn" data-variant="primary" data-size="md">
+            <a href="<?= url("student/internship/{$current['id']}/weekly_reports") ?>" class="btn" data-variant="primary"
+              data-size="md">
               <i class="fa-solid fa-pen-to-square mr-1"></i> Cập nhật
             </a>
           <?php endif; ?>
@@ -371,7 +377,9 @@ $effectiveMetadata = $effStatus ? [
           <?php if ($weekly_summary): ?>
             <div class="flex justify-between gap-4 text-center">
               <div class="border rounded-lg p-2">
-                <div class="text-2xl font-bold text-primary"><?= $weekly_summary['submitted_weeks'] ?>/<?= $weekly_summary['total_weeks'] ?></div>
+                <div class="text-2xl font-bold text-primary">
+                  <?= $weekly_summary['submitted_weeks'] ?>/<?= $weekly_summary['total_weeks'] ?>
+                </div>
                 <div class="text-xs mt-1">Tuần đã nộp</div>
               </div>
               <div class="border rounded-lg p-2 flex flex-col justify-center w-full">
@@ -439,27 +447,32 @@ $effectiveMetadata = $effStatus ? [
               <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
 
               <div class="mb-4 text-sm" style="color: var(--muted-foreground);">
-                Định dạng hỗ trợ: PDF (cho Báo cáo, phiếu đánh giá, khảo sát), Hình ảnh (JPG, PNG, WEBP). Dung lượng tối đa: <?= $max_file_size_mb ?>MB
+                Định dạng hỗ trợ: PDF (cho Báo cáo, phiếu đánh giá, khảo sát), Hình ảnh (JPG, PNG, WEBP). Dung lượng tối đa:
+                <?= $max_file_size_mb ?>MB
               </div>
 
               <div class="field mb-3" data-field-required>
                 <label class="field__label">Báo cáo thực tập</label>
-                <input type="file" name="file_internship_report" id="file_internship_report" class="field__input file-input" accept=".pdf" <?= empty($submissions_by_type['internship_report']) ? 'required' : '' ?>>
+                <input type="file" name="file_internship_report" id="file_internship_report" class="field__input file-input"
+                  accept=".pdf" <?= empty($submissions_by_type['internship_report']) ? 'required' : '' ?>>
               </div>
 
               <div class="field mb-3" data-field-required>
                 <label class="field__label">Phiếu đánh giá thực tập</label>
-                <input type="file" name="file_evaluation_form" id="file_evaluation_form" class="field__input file-input" accept=".pdf" <?= empty($submissions_by_type['evaluation_form']) ? 'required' : '' ?>>
+                <input type="file" name="file_evaluation_form" id="file_evaluation_form" class="field__input file-input"
+                  accept=".pdf" <?= empty($submissions_by_type['evaluation_form']) ? 'required' : '' ?>>
               </div>
 
               <div class="field mb-3">
                 <label class="field__label">Phiếu khảo sát doanh nghiệp</label>
-                <input type="file" name="file_company_survey" id="file_company_survey" class="field__input file-input" accept=".pdf">
+                <input type="file" name="file_company_survey" id="file_company_survey" class="field__input file-input"
+                  accept=".pdf">
               </div>
 
               <div class="field mb-3">
                 <label class="field__label">Hình ảnh liên quan</label>
-                <input type="file" name="file_related_photo" id="file_related_photo" class="field__input file-input" accept="image/jpeg,image/png,image/webp">
+                <input type="file" name="file_related_photo" id="file_related_photo" class="field__input file-input"
+                  accept="image/jpeg,image/png,image/webp">
               </div>
 
               <div class="mt-4 flex justify-end">
@@ -492,8 +505,7 @@ $effectiveMetadata = $effStatus ? [
                     <div class="timeline-item__indicator"></div>
                     <time
                       class="timeline-item__time text-xs"><?= date('d/m/Y H:i', strtotime($submission['submitted_at'])) ?></time>
-                    <div class="timeline-item__title"
-                      title="<?= htmlspecialchars($submission['original_file_name'] ?? '') ?>">
+                    <div class="timeline-item__title" title="<?= htmlspecialchars($submission['original_file_name'] ?? '') ?>">
                       <?php
                       $typeLabels = [
                         'internship_report' => 'Báo cáo TT',
@@ -509,7 +521,7 @@ $effectiveMetadata = $effStatus ? [
                       <?php
                       $downloadUrl = url('/public/media/' . $submission['file_path']);
                       if ($downloadUrl):
-                      ?>
+                        ?>
                         <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="outline" data-size="sm"
                           title="Xem tài liệu">
                           <i class="fa-solid fa-eye mr-1"></i>Xem
@@ -544,26 +556,28 @@ $effectiveMetadata = $effStatus ? [
 <?php $layout->start("scripts") ?>
 <?php if (!$current && !empty($batches)): ?>
   <script type="application/json" data-tm-data="student_batches_table">
-    <?= json_encode(['rows' => array_map(function ($batch) {
-      $model = new InternshipBatch();
-      $model->status = $batch['status'] ?? 'draft';
-      $model->start_at = $batch['start_at'] ?? null;
-      $model->end_at = $batch['end_at'] ?? null;
-      $status = $model->getEffectiveStatus();
+        <?= json_encode([
+          'rows' => array_map(function ($batch) {
+          $model = new InternshipBatch();
+          $model->status = $batch['status'] ?? 'draft';
+          $model->start_at = $batch['start_at'] ?? null;
+          $model->end_at = $batch['end_at'] ?? null;
+          $status = $model->getEffectiveStatus();
 
-      return [
-        'id' => $batch['id'],
-        'title' => $batch['title'] ?? 'N/A',
-        'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
-        'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
-        'effective_status' => $status,
-        'effective_status_label' => BatchStatus::getLabel($status),
-        'effective_status_variant' => BatchStatus::getVariant($status),
-        '_href' => url('student/internship/' . $batch['id']),
-        '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
-      ];
-    }, $batches)]) ?>
-  </script>
+          return [
+            'id' => $batch['id'],
+            'title' => $batch['title'] ?? 'N/A',
+            'start_at_label' => !empty($batch['start_at']) ? date('d/m/Y', strtotime($batch['start_at'])) : 'N/A',
+            'end_at_label' => !empty($batch['end_at']) ? date('d/m/Y', strtotime($batch['end_at'])) : 'N/A',
+            'effective_status' => $status,
+            'effective_status_label' => BatchStatus::getLabel($status),
+            'effective_status_variant' => BatchStatus::getVariant($status),
+            '_href' => url('student/internship/' . $batch['id']),
+            '_label' => 'Xem chi tiết đợt thực tập ' . ($batch['title'] ?? '')
+          ];
+        }, $batches)
+        ]) ?>
+      </script>
   <script>
     (() => {
       const root = document.querySelector('[data-tm="student_batches_table"]');
