@@ -19,8 +19,7 @@ class MailService implements IMailService
 {
   private ?string $host;
   private ?int $port;
-  private ?string $username;
-  private ?string $password;
+  private array $accounts = [];
   private ?string $fromName;
   private EmailJobStore $_emailJobStore;
 
@@ -28,8 +27,18 @@ class MailService implements IMailService
   {
     $this->host = $_ENV['MAIL_HOST'] ?? 'smtp.gmail.com';
     $this->port = isset($_ENV['MAIL_PORT']) ? (int)$_ENV['MAIL_PORT'] : 465;
-    $this->username = $_ENV['MAIL_USERNAME'] ?? '';
-    $this->password = $_ENV['MAIL_PASSWORD'] ?? '';
+
+    if (!empty($_ENV['MAIL_USERNAME']) && !empty($_ENV['MAIL_PASSWORD'])) {
+      $this->accounts[] = ['username' => $_ENV['MAIL_USERNAME'], 'password' => $_ENV['MAIL_PASSWORD']];
+    }
+    if (!empty($_ENV['MAIL_USERNAME_2']) && !empty($_ENV['MAIL_PASSWORD_2'])) {
+      $this->accounts[] = ['username' => $_ENV['MAIL_USERNAME_2'], 'password' => $_ENV['MAIL_PASSWORD_2']];
+    }
+    if (!empty($_ENV['MAIL_USERNAME_3']) && !empty($_ENV['MAIL_PASSWORD_3'])) {
+      $this->accounts[] = ['username' => $_ENV['MAIL_USERNAME_3'], 'password' => $_ENV['MAIL_PASSWORD_3']];
+    }
+
+
     $this->fromName = $_ENV['MAIL_FROM_NAME'] ?? 'Khoa Công nghệ Thông tin - Trường Cao đẳng Kỹ thuật Cao Thắng';
     $this->_emailJobStore = $emailJobStore;
   }
@@ -37,21 +46,21 @@ class MailService implements IMailService
   /**
    * Khởi tạo đối tượng PHPMailer với cấu hình mặc định
    */
-  private function createMailer(): PHPMailer
+  protected function createMailer(string $username, string $password): PHPMailer
   {
     $mail = new PHPMailer(true);
     $mail->isSMTP();
     $mail->Host       = $this->host;
     $mail->SMTPAuth   = true;
-    $mail->Username   = $this->username;
-    $mail->Password   = $this->password;
+    $mail->Username   = $username;
+    $mail->Password   = $password;
     $mail->SMTPSecure = $this->port === 465 ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = $this->port;
     $mail->CharSet    = 'UTF-8';
 
     $mail->setLanguage('vi');
 
-    $mail->setFrom($this->username, $this->fromName);
+    $mail->setFrom($username, $this->fromName);
     return $mail;
   }
 
@@ -80,7 +89,7 @@ class MailService implements IMailService
     string $recipientName,
     array $details
   ): bool {
-    if (empty($this->username) || empty($this->password)) {
+    if (empty($this->accounts)) {
       // Chưa cấu hình email
       return false;
     }
@@ -90,7 +99,7 @@ class MailService implements IMailService
     }
 
     try {
-      $mail = $this->createMailer();
+      $mail = $this->createMailer($this->accounts[0]['username'], $this->accounts[0]['password']);
       $mail->addAddress($recipientEmail, $recipientName);
 
       $mail->isHTML(true);
@@ -177,7 +186,7 @@ class MailService implements IMailService
     array $assignedStudents,
     array $unassignedStudents = []
   ): bool {
-    if (empty($this->username) || empty($this->password) || empty($teacherEmail)) {
+    if (empty($this->accounts) || empty($teacherEmail)) {
       return false;
     }
 
@@ -262,30 +271,40 @@ class MailService implements IMailService
    */
   public function sendRaw(string $toEmail, ?string $toName, string $subject, string $body): bool
   {
-    if (empty($this->username) || empty($this->password) || empty($toEmail)) {
+    if (empty($this->accounts) || empty($toEmail)) {
       return false;
     }
 
-    try {
-      $mail = $this->createMailer();
-      $mail->addAddress($toEmail, $toName);
-      $mail->isHTML(true);
-      $mail->Subject = $subject;
-      $mail->Body = $body;
-      $mail->AltBody = strip_tags($body);
+    $lastException = null;
 
-      if (str_contains($body, 'cid:faculty_logo')) {
-        $logoPath = BASE_PATH . '/public/img/faculty_logo.jpg';
-        if (file_exists($logoPath)) {
-          $mail->addEmbeddedImage($logoPath, 'faculty_logo');
+    foreach ($this->accounts as $index => $account) {
+      try {
+        $mail = $this->createMailer($account['username'], $account['password']);
+        $mail->addAddress($toEmail, $toName);
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $body;
+        $mail->AltBody = strip_tags($body);
+
+        if (str_contains($body, 'cid:faculty_logo')) {
+          $logoPath = BASE_PATH . '/public/img/faculty_logo.jpg';
+          if (file_exists($logoPath)) {
+            $mail->addEmbeddedImage($logoPath, 'faculty_logo');
+          }
         }
-      }
 
-      $mail->send();
-      return true;
-    } catch (\Throwable $e) {
-      error_log("Lỗi sendRaw email: {$e->getMessage()}");
-      throw $e;
+        $mail->send();
+        return true;
+      } catch (\Throwable $e) {
+        $lastException = $e;
+        error_log("Lỗi sendRaw email với tài khoản {$account['username']}: {$e->getMessage()}");
+        // Đã lỗi, tiếp tục vòng lặp thử tài khoản tiếp theo
+        continue;
+      }
     }
+
+    // Nếu chạy hết các tài khoản mà vẫn lỗi
+    error_log("TẤT CẢ TÀI KHOẢN EMAIL ĐỀU GỬI THẤT BẠI. {$lastException->getMessage()}");
+    throw $lastException;
   }
 }
