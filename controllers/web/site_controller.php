@@ -12,6 +12,17 @@ use App\Models\Menu;
 
 class SiteController extends Controller
 {
+  public const NEWS_ALIASES = [
+    'tin-tuc/nghien-cuu-sinh-vien' => 'nghien-cuu-khoa-hoc,sinh-vien',
+    'tin-tuc/nghien-cuu-giang-vien' => 'nghien-cuu-khoa-hoc,giang-vien',
+  ];
+
+  public const NEWS_FILTER_SLUGS = [
+    'hoat-dong', 'cong-tac-giang-day', 'nghien-cuu-khoa-hoc', 'hoc-thuat',
+    'thi-dua-doan-the', 'phong-trao-ngoai-khoa', 'clb-tin-hoc', 'thong-bao',
+    'tuyen-dung',
+  ];
+
   use HasDashboardRouting;
 
   private MenuService $_menuService;
@@ -95,11 +106,23 @@ class SiteController extends Controller
     ], "site_layout");
   }
 
-  public function news_index(Request $request)
+  public function alias_news_index(Request $request)
+  {
+    $path = trim($request->path(), '/');
+    $category = self::NEWS_ALIASES[$path] ?? '';
+    return $this->news_index($request, $category, $path);
+  }
+
+  public function category_news_index(Request $request, string $slug)
+  {
+    return $this->news_index($request, $slug, 'danh-muc/' . $slug);
+  }
+
+  public function news_index(Request $request, ?string $forcedCategory = null, ?string $customPath = null)
   {
     $page = max(1, (int) $request->query('page', 1));
     $search = trim((string) $request->query('search', ''));
-    $category = trim((string) $request->query('category', $request->query('filter', '')));
+    $category = $forcedCategory ?? trim((string) $request->query('category', $request->query('filter', '')));
     $sortMode = $request->query('sort') === 'oldest' ? 'oldest' : 'newest';
     $filters = [
       'status' => 'published',
@@ -122,14 +145,17 @@ class SiteController extends Controller
 
     $allCategories = $this->_categoryService->getAllCategories();
     $categoryMap = [];
+    $urlMap = [
+      'all' => url('tin-tuc'),
+    ];
+    foreach (self::NEWS_ALIASES as $aliasPath => $catString) {
+      $urlMap[$catString] = url($aliasPath);
+    }
     foreach ($allCategories as $item) {
       $categoryMap[(string) $item->slug] = $item;
+      $urlMap[(string) $item->slug] = url('danh-muc/' . $item->slug);
     }
-    $filterSlugs = [
-      'hoat-dong', 'cong-tac-giang-day', 'nghien-cuu-khoa-hoc', 'hoc-thuat',
-      'thi-dua-doan-the', 'phong-trao-ngoai-khoa', 'clb-tin-hoc', 'thong-bao',
-      'tuyen-dung',
-    ];
+    $filterSlugs = self::NEWS_FILTER_SLUGS;
     $newsCategories = array_values(array_filter(array_map(
       fn(string $slug) => $categoryMap[$slug] ?? null,
       $filterSlugs,
@@ -140,7 +166,8 @@ class SiteController extends Controller
       if (isset($categoryMap[$slug])) $activeCategoryNames[] = $categoryMap[$slug]->name;
     }
 
-    $pageUrl = url('tin-tuc');
+    $pageCanonical = $customPath ?? 'tin-tuc';
+    $pageUrl = url($pageCanonical);
     $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
     $pageTitle = $search !== ''
       ? 'Kết quả tìm kiếm tin tức'
@@ -159,7 +186,8 @@ class SiteController extends Controller
       'settings' => $this->_settings,
       'pageTitle' => $pageTitle,
       'pageDescription' => $pageDescription,
-      'pageCanonical' => 'tin-tuc',
+      'pageCanonical' => $pageCanonical,
+      'urlMap' => $urlMap,
       'pageSeo' => [
         'og:title' => seo_title($pageTitle, $siteTitle),
         'og:description' => $pageDescription,

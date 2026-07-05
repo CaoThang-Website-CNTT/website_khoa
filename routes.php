@@ -9,8 +9,11 @@ $router->get('/', [SiteController::class, 'index']);
 $router->get('/sitemap.xml', [SitemapController::class, 'index']);
 $router->prefix('tin-tuc')->group(function (Router $router) {
   $router->get('/', [SiteController::class, 'news_index']);
+  $router->get('/nghien-cuu-sinh-vien', [SiteController::class, 'alias_news_index']);
+  $router->get('/nghien-cuu-giang-vien', [SiteController::class, 'alias_news_index']);
   $router->get('/{slug}', [SiteController::class, 'news_show']);
 });
+$router->get('/danh-muc/{slug}', [SiteController::class, 'category_news_index']);
 $router->get('/gioi-thieu', [SiteController::class, 'about']);
 $router->get('/viec-lam/doanh-nghiep', [SiteController::class, 'partners']);
 $router->get('/dao-tao', [SiteController::class, 'education']);

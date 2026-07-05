@@ -78,15 +78,15 @@ $pageJsonLd = [$breadcrumbSchema];
 
       <div class="news-filters" role="group" aria-label="Danh mục tin tức">
         <?php $allActive = $activeCategory === ''; ?>
-        <button class="btn news-filters__tag" data-variant="<?= $allActive ? 'primary' : 'outline' ?>" data-size="lg"
-          data-category="all" aria-pressed="<?= $allActive ? 'true' : 'false' ?>">Tất cả</button>
+        <a href="<?= htmlspecialchars($urlMap['all'] ?? url('tin-tuc')) ?>" class="btn news-filters__tag" data-variant="<?= $allActive ? 'primary' : 'outline' ?>" data-size="lg"
+          data-category="all" aria-pressed="<?= $allActive ? 'true' : 'false' ?>">Tất cả</a>
         <?php foreach (($newsCategories ?? []) as $categoryItem): ?>
           <?php $categoryActive = $activeCategory === $categoryItem->slug; ?>
-          <button class="btn news-filters__tag" data-variant="<?= $categoryActive ? 'primary' : 'outline' ?>"
+          <a href="<?= htmlspecialchars($urlMap[$categoryItem->slug] ?? url('danh-muc/' . $categoryItem->slug)) ?>" class="btn news-filters__tag" data-variant="<?= $categoryActive ? 'primary' : 'outline' ?>"
             data-size="lg" data-category="<?= htmlspecialchars($categoryItem->slug) ?>"
             aria-pressed="<?= $categoryActive ? 'true' : 'false' ?>">
             <?= htmlspecialchars($categoryItem->name) ?>
-          </button>
+          </a>
         <?php endforeach; ?>
       </div>
     </section>
@@ -233,6 +233,7 @@ $pageJsonLd = [$breadcrumbSchema];
     ,initialSearch: <?= json_encode($activeSearch, JSON_UNESCAPED_UNICODE) ?>
     ,initialCategory: <?= json_encode($activeCategory, JSON_UNESCAPED_UNICODE) ?>
     ,initialSort: <?= json_encode($activeSort) ?>
+    ,urlMap: <?= json_encode($urlMap ?? []) ?>
   };
 </script>
 <script src="<?= url('public/js/pages/site/news/index.js') ?>" type="module"></script>
