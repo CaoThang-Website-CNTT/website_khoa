@@ -169,6 +169,7 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
   // CMS Pages
   $router->prefix('cms-pages')->group(function ($router) {
     $router->get('/', [CmsPageController::class, 'index']);
+    $router->post('/{slug}/preview', [CmsPageController::class, 'preview']);
     $router->get('/{slug}', [CmsPageController::class, 'edit']);
     $router->post('/{slug}', [CmsPageController::class, 'update']);
     $router->post('/{slug}/publish', [CmsPageController::class, 'publish']);

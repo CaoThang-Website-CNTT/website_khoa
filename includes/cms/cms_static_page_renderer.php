@@ -10,6 +10,7 @@ final class CmsStaticPageRenderer
     private array $context = [],
     ?CmsSectionRegistry $sections = null,
     private string $pageSlug = '',
+    private bool $editorMode = false,
   ) {
     $this->_sections = $sections ?? self::defaultRegistry();
   }
@@ -23,9 +24,44 @@ final class CmsStaticPageRenderer
       if (!is_array($section)) {
         continue;
       }
-      $html .= $this->_sections->renderSection($section, $context);
+      $sectionHtml = $this->_sections->renderSection($section, $context);
+      if ($this->editorMode) {
+        $sectionId = htmlspecialchars((string) ($section['id'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $locked = !empty($section['locked']) ? ' is-locked' : '';
+        $sectionHtml = '<div class="cms-live-section' . $locked . '" data-section-id="' . $sectionId . '">' . $sectionHtml . '</div>';
+      }
+      $html .= $sectionHtml;
     }
     return $html;
+  }
+
+  public function renderPreviewDocument(array $document): string
+  {
+    $public = htmlspecialchars(url('public'), ENT_QUOTES, 'UTF-8');
+    $styles = [
+      'css/fontawesome/fontawesome.min.css',
+      'css/fontawesome/solid.min.css',
+      'css/fontawesome/regular.min.css',
+      'css/fonts.css',
+      'css/base.css',
+      'css/common.css',
+      'css/main.css',
+      'css/landing.css',
+      'css/block_preview.css',
+      'css/cms_page_editor.css',
+    ];
+    $links = implode('', array_map(
+      fn(string $file): string => '<link rel="stylesheet" href="' . $public . '/' . $file . '">',
+      $styles,
+    ));
+
+    return '<!doctype html><html lang="vi"><head><meta charset="UTF-8">'
+      . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+      . $links
+      . '<style>html,body{margin:0;min-height:0;overflow:visible;scrollbar-width:none}body::-webkit-scrollbar{display:none}</style>'
+      . '</head><body class="cms-preview-body"><main class="cms-live-page">'
+      . $this->render($document)
+      . '</main></body></html>';
   }
 
   public static function defaultRegistry(): CmsSectionRegistry

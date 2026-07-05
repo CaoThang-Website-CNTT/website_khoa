@@ -18,6 +18,7 @@ interface ICmsPageService
   public function getPageForEditing(string $slug): array;
   public function saveDraft(string $slug, array $payload): CmsPage;
   public function publish(string $slug, array $payload): CmsPage;
+  public function prepareDocument(string $slug, array $document): array;
   public function delete(int $id): void;
 }
 
@@ -246,7 +247,8 @@ class CmsPageService implements ICmsPageService
     $filtered = $this->filterDataByAllowedPaths($submittedData, $allowedPaths, $defaultData);
 
     foreach (array_keys(is_array($sectionSchema['repeaters'] ?? null) ? $sectionSchema['repeaters'] : []) as $path) {
-      if (str_contains($path, '*') || !array_key_exists($path, $submittedData)) continue;
+      if (str_contains($path, '*') || !array_key_exists($path, $submittedData))
+        continue;
       $filtered[$path] = is_array($submittedData[$path]) ? array_values($submittedData[$path]) : [];
     }
 
@@ -259,16 +261,27 @@ class CmsPageService implements ICmsPageService
     return $filtered;
   }
 
+  public function prepareDocument(string $slug, array $document): array
+  {
+    if (!$this->_schemas->hasPage($slug)) {
+      throw new \InvalidArgumentException("Trang CMS'{$slug}' chưa được đăng ký.");
+    }
+
+    return $this->normalizeDocument($slug, $document);
+  }
+
   private function validateEducationDocument(string $slug, array $document): void
   {
-    if (!in_array($slug, ['education', 'admissions', 'academic-programs', 'program-outcomes', 'curriculum'], true)) return;
+    if (!in_array($slug, ['education', 'admissions', 'academic-programs', 'program-outcomes', 'curriculum'], true))
+      return;
     $section = $document['sections'][0]['data'] ?? [];
     if (trim((string) ($section['title'] ?? '')) === '') {
       throw new \InvalidArgumentException('Tiêu đề trang đào tạo không được để trống.');
     }
 
     foreach (['cta_url' => true] as $field => $externalOnly) {
-      if (!isset($section[$field])) continue;
+      if (!isset($section[$field]))
+        continue;
       $value = trim((string) $section[$field]);
       if ($value !== '' && (!filter_var($value, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\//i', $value))) {
         throw new \InvalidArgumentException("{$field} phải là URL HTTP hoặc HTTPS hợp lệ.");
@@ -276,9 +289,11 @@ class CmsPageService implements ICmsPageService
     }
 
     foreach ($section['links'] ?? [] as $link) {
-      if (trim((string) ($link['title'] ?? '')) === '') throw new \InvalidArgumentException('Tiêu đề thẻ điều hướng không được để trống.');
+      if (trim((string) ($link['title'] ?? '')) === '')
+        throw new \InvalidArgumentException('Tiêu đề thẻ điều hướng không được để trống.');
       $url = trim((string) ($link['url'] ?? ''));
-      if ($url === '' || preg_match('/^(javascript|data):/i', $url)) throw new \InvalidArgumentException('Liên kết điều hướng không hợp lệ.');
+      if ($url === '' || preg_match('/^(javascript|data):/i', $url))
+        throw new \InvalidArgumentException('Liên kết điều hướng không hợp lệ.');
     }
 
     $programs = is_array($section['programs'] ?? null) ? $section['programs'] : [];
@@ -289,22 +304,29 @@ class CmsPageService implements ICmsPageService
     foreach ($programs as $program) {
       $key = trim((string) ($program['key'] ?? ''));
       $name = trim((string) ($program['name'] ?? ''));
-      if ($key === '' || !preg_match('/^[a-z0-9_-]+$/', $key)) throw new \InvalidArgumentException('Mã chương trình chỉ được chứa chữ thường không dấu, số, gạch ngang hoặc gạch dưới.');
-      if ($name === '') throw new \InvalidArgumentException('Tên chương trình không được để trống.');
-      if (isset($programKeys[$key])) throw new \InvalidArgumentException("Mã chương trình '{$key}' bị trùng.");
+      if ($key === '' || !preg_match('/^[a-z0-9_-]+$/', $key))
+        throw new \InvalidArgumentException('Mã chương trình chỉ được chứa chữ thường không dấu, số, gạch ngang hoặc gạch dưới.');
+      if ($name === '')
+        throw new \InvalidArgumentException('Tên chương trình không được để trống.');
+      if (isset($programKeys[$key]))
+        throw new \InvalidArgumentException("Mã chương trình '{$key}' bị trùng.");
       $programKeys[$key] = true;
 
       $semesterKeys = [];
       foreach ($program['semesters'] ?? [] as $semester) {
         $semesterKey = trim((string) ($semester['key'] ?? ''));
-        if ($semesterKey === '' || isset($semesterKeys[$semesterKey])) throw new \InvalidArgumentException("Mã học kỳ của chương trình '{$key}' phải có giá trị và không trùng.");
+        if ($semesterKey === '' || isset($semesterKeys[$semesterKey]))
+          throw new \InvalidArgumentException("Mã học kỳ của chương trình '{$key}' phải có giá trị và không trùng.");
         $semesterKeys[$semesterKey] = true;
-        if (trim((string) ($semester['name'] ?? '')) === '') throw new \InvalidArgumentException('Tên học kỳ không được để trống.');
+        if (trim((string) ($semester['name'] ?? '')) === '')
+          throw new \InvalidArgumentException('Tên học kỳ không được để trống.');
         foreach ($semester['courses'] ?? [] as $course) {
-          if (trim((string) ($course['name'] ?? '')) === '') throw new \InvalidArgumentException('Tên học phần không được để trống.');
+          if (trim((string) ($course['name'] ?? '')) === '')
+            throw new \InvalidArgumentException('Tên học phần không được để trống.');
           foreach (['credits', 'theory', 'practice'] as $numberField) {
             $value = (string) ($course[$numberField] ?? '');
-            if ($value === '' || !is_numeric($value) || (float) $value < 0) throw new \InvalidArgumentException("{$numberField} của học phần phải là số không âm.");
+            if ($value === '' || !is_numeric($value) || (float) $value < 0)
+              throw new \InvalidArgumentException("{$numberField} của học phần phải là số không âm.");
           }
         }
       }
