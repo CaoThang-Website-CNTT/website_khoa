@@ -732,15 +732,15 @@ final class CmsStaticPageRenderer
     ob_start();
     ?>
     <section class="relative"<?= $context->sectionAttributes() ?>>
-      <div class="about-thumbnail__wrapper"><img class="w-full h-full object-cover"<?= $context->imageAttributes('image') ?>
+      <div class="page-thumbnail__media"><img class="w-full h-full object-cover"<?= $context->imageAttributes('image') ?>
           src="<?= $this->e($this->asset($data['image'] ?? '')) ?>" alt=""></div>
-      <div class="about-thumbnail-content__wrapper absolute inset-0 flex justify-center items-center">
+      <div class="page-thumbnail__overlay absolute inset-0 flex justify-center items-center">
         <div class="container">
           <div class="container-wrapper">
-            <div class="about-thumbnail-content flex flex-col justify-center items-center gap-6 text-center">
+            <div class="page-thumbnail__content flex flex-col justify-center items-center gap-6 text-center">
               <span class="badge" data-variant="primary"<?= $context->textAttributes('badge') ?>><?= $this->e($data['badge'] ?? '') ?></span>
-              <div class="about-thumbnail-content__title"<?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></div>
-              <div class="about-thumbnail-content__sub-title"<?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></div>
+              <div class="page-thumbnail__title"<?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></div>
+              <div class="page-thumbnail__subtitle"<?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></div>
             </div>
           </div>
         </div>

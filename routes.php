@@ -12,6 +12,7 @@ $router->prefix('tin-tuc')->group(function (Router $router) {
   $router->get('/{slug}', [SiteController::class, 'news_show']);
 });
 $router->get('/gioi-thieu', [SiteController::class, 'about']);
+$router->get('/giang-vien', [SiteController::class, 'faculty']);
 $router->get('/viec-lam/doanh-nghiep', [SiteController::class, 'partners']);
 $router->get('/dao-tao', [SiteController::class, 'education']);
 $router->get('/dao-tao/tuyen-sinh', [SiteController::class, 'admissions']);

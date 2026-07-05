@@ -301,6 +301,7 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 (20, 1, 17, 'Portal', '/portal', 3),
 (21, 1, 2, 'Tầm nhìn & Sứ mệnh', '/gioi-thieu#tam-nhin-su-menh', 1),
 (25, 1, 2, 'Lịch sử phát triển', '/gioi-thieu#lich-su-phat-trien', 2),
+(26, 1, 2, 'Đội ngũ giảng viên', '/giang-vien', 3),
 (22, 1, NULL, 'Việc Làm', '/tin-tuc?category=tuyen-dung', 6),
 (23, 1, 22, 'Doanh Nghiệp', '/viec-lam/doanh-nghiep', 1),
 (24, 1, 22, 'Tin Tuyển Dụng', '/tin-tuc?category=tuyen-dung', 2),

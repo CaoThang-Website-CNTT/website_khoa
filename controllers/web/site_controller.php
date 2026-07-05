@@ -221,6 +221,28 @@ class SiteController extends Controller
     ], "site_layout");
   }
 
+  public function faculty(): void
+  {
+    $title = 'Đội ngũ giảng viên';
+    $description = 'Đội ngũ giảng viên Khoa Công nghệ Thông tin giàu kinh nghiệm, vững chuyên môn và tiên phong đổi mới.';
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công nghệ Thông tin';
+
+    $this->render('site/faculty', [
+      'headerMenu' => $this->_headerMenu->items,
+      'settings' => $this->_settings,
+      'pageTitle' => $title,
+      'pageDescription' => $description,
+      'pageCanonical' => 'giang-vien',
+      'pageSeo' => [
+        'og:title' => seo_title($title, $siteTitle),
+        'og:description' => $description,
+        'og:type' => 'website',
+        'og:url' => url('giang-vien'),
+        'og:site_name' => $siteTitle,
+      ],
+    ], 'site_layout');
+  }
+
   public function partners(): void
   {
     $partnerships = $this->_cmsPageService->getSectionData('landing', 'partnerships');
