@@ -103,6 +103,8 @@ class SiteController extends Controller
       'latestNewsItems' => $latestNewsItems,
       'cmsHtml' => $cmsHtml,
       'settings' => $this->_settings,
+      'pageTitle' => 'Trang chủ - Khoa CNTT',
+      'pageDescription' => 'Trang thông tin chính thức của Khoa Công nghệ Thông tin - trường Cao đẳng Kỹ thuật Cao Thắng. Cập nhật tin tức, sự kiện, thông báo và thông tin tuyển sinh mới nhất.',
     ], "site_layout");
   }
 

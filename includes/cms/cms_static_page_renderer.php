@@ -413,10 +413,12 @@ final class CmsStaticPageRenderer
               </div>
               <div class="image-wrapper carousel__image-wrapper rounded-3xl">
                 <img src="<?= $this->e(url('public/media/' . $slide->media->file_path)) ?>"
-                  alt="<?= $this->e($slide->media->alt_text ?: $slide->title) ?>" class="image carousel__image">
+                  alt="<?= $this->e($slide->media->alt_text ?: $slide->title) ?>" class="image carousel__image"
+                  <?= !isset($isFirstSlideRendered) ? 'fetchpriority="high"' : 'loading="lazy" decoding="async"' ?>>
               </div>
             <?php endif; ?>
           </div>
+          <?php $isFirstSlideRendered = true; ?>
         <?php endforeach; ?>
       </div>
       <button class="carousel__control carousel__control--prev"><i class="fa-solid fa-angle-left"></i></button>
@@ -461,7 +463,7 @@ final class CmsStaticPageRenderer
                 <div class="overflow-hidden rounded-3xl">
                   <div class="image-wrapper">
                     <img class="image w-full h-full"<?= $context->imageAttributes("items.$index.image.src") ?> src="<?= $this->e($this->asset($item['image']['src'] ?? '')) ?>"
-                      alt="<?= $this->e($item['image']['alt'] ?? '') ?>">
+                      alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async">
                   </div>
                 </div>
                 <div class="landing-about-item__card absolute z-10 rounded-3xl p-3 md:p-6 flex flex-col gap-1">
@@ -501,7 +503,7 @@ final class CmsStaticPageRenderer
             <div
               class="wcu__feature-card wcu__feature-card--large wcu-feature-container overflow-hidden relative row-start-1 col-span-2 row-span-1 md:row-span-2 rounded-3xl image-wrapper">
               <img class="wcu__feature-card-image image"<?= $context->imageAttributes('feature.image') ?> src="<?= $this->e($this->asset($feature['image'] ?? '')) ?>"
-                alt="<?= $this->e($feature['alt'] ?? '') ?>">
+                alt="<?= $this->e($feature['alt'] ?? '') ?>" loading="lazy" decoding="async">
               <div
                 class="wcu__feature-card-content absolute inset-0 flex flex-col justify-end items-start gap-2 md:gap-4 p-3 md:p-6">
                 <span class="wcu__feature-card-badge badge"
@@ -548,7 +550,7 @@ final class CmsStaticPageRenderer
             <?php foreach ($this->items($data, 'highlights') as $index => $highlight): ?>
               <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white"<?= $context->repeaterItemAttributes('highlights', $index) ?>>
                 <img class="wcu__highlight-item-image image"<?= $context->imageAttributes("highlights.$index.image") ?> src="<?= $this->e($this->asset($highlight['image'] ?? '')) ?>"
-                  alt="<?= $this->e($highlight['alt'] ?? '') ?>">
+                  alt="<?= $this->e($highlight['alt'] ?? '') ?>" loading="lazy" decoding="async">
                 <div
                   class="wcu__highlight-item-content <?= $index === 0 ? 'wcu__highlight-item-content--blue' : 'wcu__highlight-item-content--green' ?> absolute inset-0 flex flex-col justify-end items-start p-3 md:p-6">
                   <h3 class="wcu__highlight-item-title text-md md:text-2xl font-semibold mb-2"<?= $context->textAttributes("highlights.$index.title") ?>><?= $this->e($highlight['title'] ?? '') ?></h3>
@@ -666,7 +668,7 @@ final class CmsStaticPageRenderer
                   ?>
                   <a class="partnerships__item" href="<?= $this->e($url) ?>"<?= $context->linkAttributes("partners.$partnerIndex.url") ?><?= $context->repeaterItemAttributes('partners', $partnerIndex) ?> target="_blank" rel="noopener noreferrer" <?= $loop === 1 ? 'tabindex="-1"' : '' ?>
                     aria-label="<?= $this->e($name !== '' ? 'Mở website ' . $name : 'Mở website đối tác') ?>">
-                    <img class="partnerships__logo"<?= $context->imageAttributes("partners.$partnerIndex.image.src") ?> src="<?= $this->e($src) ?>" alt="<?= $this->e($alt) ?>" loading="lazy">
+                    <img class="partnerships__logo"<?= $context->imageAttributes("partners.$partnerIndex.image.src") ?> src="<?= $this->e($src) ?>" alt="<?= $this->e($alt) ?>" loading="lazy" decoding="async">
                   </a>
                 <?php endforeach; ?>
               </div>
@@ -733,7 +735,7 @@ final class CmsStaticPageRenderer
     ?>
     <section class="relative"<?= $context->sectionAttributes() ?>>
       <div class="about-thumbnail__wrapper"><img class="w-full h-full object-cover"<?= $context->imageAttributes('image') ?>
-          src="<?= $this->e($this->asset($data['image'] ?? '')) ?>" alt=""></div>
+          src="<?= $this->e($this->asset($data['image'] ?? '')) ?>" alt="" loading="lazy" decoding="async"></div>
       <div class="about-thumbnail-content__wrapper absolute inset-0 flex justify-center items-center">
         <div class="container">
           <div class="container-wrapper">
@@ -763,7 +765,7 @@ final class CmsStaticPageRenderer
               <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl">
                 <div class="history-image-wrapper image-wrapper"><img class="image w-full h-full"
                     src="<?= $this->e($this->asset($item['image']['src'] ?? '')) ?>"
-                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>"></div>
+                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async"></div>
                 <div class="history-image-wrapper__content absolute inset-0 flex flex-col justify-end gap-1">
                   <div class="text-6xl"><?= $this->e($item['year'] ?? '') ?></div>
                   <div class="text-xl"><?= $this->e($item['image']['caption'] ?? '') ?></div>
@@ -804,7 +806,7 @@ final class CmsStaticPageRenderer
                 <?= $this->bentoStyle($item) ?>>
                 <?php if ($hasImage): ?><img class="bento-grid-item__image"
                     src="<?= $this->e($this->asset($item['image']['src'])) ?>"
-                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>"><?php endif; ?>
+                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async"><?php endif; ?>
                 <div class="card__header"><span class="badge"
                     data-variant="glass"><?= $item['badge'] ?? '<i class="fa-solid fa-lock"></i>' ?></span></div>
                 <div class="card__content">
