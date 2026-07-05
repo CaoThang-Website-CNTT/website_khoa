@@ -1,6 +1,11 @@
 <?php include_once BASE_PATH . '/templates/components/news_card.php'; ?>
 
 <?php
+$newsQuery = is_array($newsQuery ?? null) ? $newsQuery : [];
+$activeSearch = (string) ($newsQuery['search'] ?? '');
+$activeCategory = (string) ($newsQuery['category'] ?? '');
+$activeSort = (string) ($newsQuery['sortMode'] ?? 'newest');
+$isFiltered = $activeSearch !== '' || $activeCategory !== '';
 $breadcrumbItems = [
   [
     '@type' => 'ListItem',
@@ -41,46 +46,48 @@ $pageJsonLd = [$breadcrumbSchema];
 
 <section class="relative container py-16">
   <div class="container-wrapper flex flex-col gap-16">
-    <section class="news-title" aria-labelledby="page-title">
-      <h1 id="page-title" class="news-title__heading">Tin tức & Sự kiện</h1>
-      <p class="news-title__subtitle">Cập nhật thông tin mới nhất từ Khoa CNTT</p>
+    <section class="section-title" aria-labelledby="page-title">
+      <h1 id="page-title" class="section-title__heading"><?= htmlspecialchars($pageTitle ?? 'Tin tức & Sự kiện') ?></h1>
+      <p class="section-title__subtitle">
+        <?= $isFiltered
+          ? htmlspecialchars('Tìm thấy ' . $allNews->getTotal() . ' bài viết phù hợp')
+          : 'Cập nhật thông tin mới nhất từ Khoa CNTT' ?>
+      </p>
     </section>
 
     <section class="news-searchbar" aria-labelledby="search-title">
       <h2 id="search-title" class="sr-only">Tìm kiếm và lọc tin tức</h2>
 
-      <div class="news-search">
+      <form class="news-search" action="<?= htmlspecialchars(url('tin-tuc')) ?>" method="get">
         <label class="flex-1 search-bar rounded-full" data-variant="alt" for="news-search-input">
           <!-- <span class="search-bar__icon" aria-hidden="true" >
             <i class="fa-solid fa-magnifying-glass" role="img" aria-hidden="true"></i>
           </span> -->
-          <input type="search" id="news-search-input" class="search-bar__input" placeholder="Tìm kiếm tin tức..."
-            autocomplete="off" autocorrect="off" aria-label="Tìm kiếm tin tức">
+          <input type="search" id="news-search-input" name="search" class="search-bar__input" placeholder="Tìm kiếm tin tức..."
+            value="<?= htmlspecialchars($activeSearch) ?>" autocomplete="off" autocorrect="off"
+            aria-label="Tìm kiếm tin tức">
         </label>
         <button class="btn news-searchbar__btn" data-variant="primary" data-size="lg" aria-label="Tìm kiếm"
           type="button">
           <i class="fa-solid fa-magnifying-glass" role="img" aria-hidden="true"></i>
           Tìm kiếm
         </button>
-      </div>
+      </form>
 
       <div class="separator"></div>
 
       <div class="news-filters" role="group" aria-label="Danh mục tin tức">
-        <button class="btn news-filters__tag" data-variant="primary" data-size="lg" data-category="all"
-          aria-pressed="true">Tất cả</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="tin-khoa"
-          aria-pressed="false">Tin khoa</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="nghien-cuu"
-          aria-pressed="false">Nghiên cứu</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="su-kien"
-          aria-pressed="false">Sự kiện</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="sinh-vien"
-          aria-pressed="false">Sinh viên</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="tuyen-dung"
-          aria-pressed="false">Tuyển dụng</button>
-        <button class="btn news-filters__tag" data-variant="outline" data-size="lg" data-category="giai-thuong"
-          aria-pressed="false">Giải thưởng</button>
+        <?php $allActive = $activeCategory === ''; ?>
+        <button class="btn news-filters__tag" data-variant="<?= $allActive ? 'primary' : 'outline' ?>" data-size="lg"
+          data-category="all" aria-pressed="<?= $allActive ? 'true' : 'false' ?>">Tất cả</button>
+        <?php foreach (($newsCategories ?? []) as $categoryItem): ?>
+          <?php $categoryActive = $activeCategory === $categoryItem->slug; ?>
+          <button class="btn news-filters__tag" data-variant="<?= $categoryActive ? 'primary' : 'outline' ?>"
+            data-size="lg" data-category="<?= htmlspecialchars($categoryItem->slug) ?>"
+            aria-pressed="<?= $categoryActive ? 'true' : 'false' ?>">
+            <?= htmlspecialchars($categoryItem->name) ?>
+          </button>
+        <?php endforeach; ?>
       </div>
     </section>
 
@@ -113,11 +120,11 @@ $pageJsonLd = [$breadcrumbSchema];
 
     <section class="news-section" aria-labelledby="all-news-title">
       <div class="news-section__header">
-        <h2 id="all-news-title" class="news-section__title">Tất cả tin tức</h2>
+        <h2 id="all-news-title" class="news-section__title"><?= $isFiltered ? 'Kết quả' : 'Tất cả tin tức' ?></h2>
         <div class="news-list__sort">
           <label for="all-news-sort-select">Sắp xếp:</label>
           <button type="button" id="all-news-sort-select" class="select" data-select-id="all-news-sort-select"
-            name="all-news-sort" role="listbox" data-select-default-value="newest">
+            name="all-news-sort" role="listbox" data-select-default-value="<?= htmlspecialchars($activeSort) ?>">
             <div class="select__content">
               <div class="select__item" data-select-value="newest">Mới nhất</div>
               <div class="select__item" data-select-value="oldest">Cũ nhất</div>
@@ -127,12 +134,16 @@ $pageJsonLd = [$breadcrumbSchema];
       </div>
 
       <div class="all-news__list" role="list" aria-live="polite">
-        <?php foreach ($allNews->getItems() as $news): ?>
-          <?php renderNewsCard($news, [
-            'variant' => 'horizontal',
-            'show_category_in_meta' => true,
-          ]); ?>
-        <?php endforeach; ?>
+        <?php if ($allNews->getItems()): ?>
+          <?php foreach ($allNews->getItems() as $news): ?>
+            <?php renderNewsCard($news, [
+              'variant' => 'horizontal',
+              'show_category_in_meta' => true,
+            ]); ?>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <p class="news-list__empty">Không có tin tức phù hợp.</p>
+        <?php endif; ?>
       </div>
 
       <div class="news-actions">
@@ -219,6 +230,9 @@ $pageJsonLd = [$breadcrumbSchema];
     page: <?= (int) $allNews->getCurrentPage() ?>,
     limit: <?= (int) $allNews->getPerPage() ?>,
     lastPage: <?= (int) $allNews->getTotalPages() ?>
+    ,initialSearch: <?= json_encode($activeSearch, JSON_UNESCAPED_UNICODE) ?>
+    ,initialCategory: <?= json_encode($activeCategory, JSON_UNESCAPED_UNICODE) ?>
+    ,initialSort: <?= json_encode($activeSort) ?>
   };
 </script>
 <script src="<?= url('public/js/pages/site/news/index.js') ?>" type="module"></script>

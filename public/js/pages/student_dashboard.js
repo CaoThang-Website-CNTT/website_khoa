@@ -1,8 +1,54 @@
 document.addEventListener("DOMContentLoaded", () => {
   const apiBase = window.API_BASE_URL;
 
+  const internshipTabs = document.querySelector(
+    '[data-tabs-id="internship-journey"]',
+  );
+  if (internshipTabs) {
+    const triggers = Array.from(internshipTabs.querySelectorAll("[data-tabs-trigger]"));
+    const tasks = Array.from(document.querySelectorAll("[data-internship-phase]"));
+    const heading = document.querySelector("[data-internship-phase-heading]");
+    const labels = ["Chuẩn bị", "Thực tập", "Chấm điểm & kết thúc"];
+    let selectedPhase = Number(
+      internshipTabs.dataset.tabsPanelActive?.replace("phase-", "") || 0,
+    );
+
+    const decoratePhase = (phase, animate = true) => {
+      selectedPhase = phase;
+      tasks.forEach((task) => {
+        const isVisible = Number(task.dataset.internshipPhase) === phase;
+        task.setAttribute("aria-hidden", String(!isVisible));
+        task.classList.remove("animate-fade-in-up");
+        if (isVisible && animate) {
+          requestAnimationFrame(() => task.classList.add("animate-fade-in-up"));
+        }
+      });
+      if (heading) {
+        heading.innerHTML = `<p class="internship-phase-heading__kicker">Giai đoạn ${phase + 1}/3</p><h3>${labels[phase]}</h3>`;
+      }
+    };
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener("click", () =>
+        decoratePhase(Number(trigger.dataset.tabsTrigger.replace("phase-", ""))),
+      );
+      trigger.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        let nextPhase = selectedPhase;
+        if (event.key === "ArrowLeft") nextPhase = (selectedPhase + triggers.length - 1) % triggers.length;
+        if (event.key === "ArrowRight") nextPhase = (selectedPhase + 1) % triggers.length;
+        if (event.key === "Home") nextPhase = 0;
+        if (event.key === "End") nextPhase = triggers.length - 1;
+        triggers[nextPhase].click();
+        triggers[nextPhase].focus();
+      });
+    });
+    decoratePhase(selectedPhase, false);
+  }
+
   // Khởi tạo tính năng tìm MST và autocomplete cho một tập các elements
-  window.initCompanyFormLogic = function (prefix) {
+  const initCompanyFormLogic = (prefix) => {
     const isManualToggle = document.getElementById(`${prefix}is_manual`);
     const btnCheckMST = document.getElementById(`${prefix}btnCheckMST`);
     const taxCodeInput = document.getElementById(`${prefix}tax_code`);
@@ -16,26 +62,72 @@ document.addEventListener("DOMContentLoaded", () => {
       `${prefix}companySuggestions`,
     );
 
+    if (companyNameInput) {
+      if (companyNameInput.dataset.companyLogicInit) return;
+      companyNameInput.dataset.companyLogicInit = "true";
+    }
+
+    // Nút clear thông tin công ty chọn từ danh sách gợi ý
+    let clearBtn;
+    if (companyNameInput && suggestionsContainer) {
+      clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      clearBtn.className = "suggestions-list__clear hidden";
+      clearBtn.title = "Bỏ chọn công ty";
+      companyNameInput.parentNode.appendChild(clearBtn);
+
+      clearBtn.addEventListener("click", () => {
+        companyNameInput.value = "";
+        companyAddressInput.value = "";
+        companyNameInput.removeAttribute("readonly");
+        companyAddressInput.removeAttribute("readonly");
+        clearBtn.classList.add("hidden");
+        if (taxCodeInput && isManualToggle && isManualToggle.checked) {
+          taxCodeInput.value = "";
+        }
+        companyNameInput.focus();
+      });
+    }
+
     if (btnCheckMST && taxCodeInput) {
       if (isManualToggle) {
-        isManualToggle.addEventListener("change", () => {
+        const updateManualState = () => {
           const isManual = isManualToggle.checked;
           if (isManual) {
             taxCodeInput.value = "";
-            taxCodeInput.setAttribute("disabled", "disabled");
+            taxCodeInput.setAttribute("readonly", "readonly");
             taxCodeInput.required = false;
             btnCheckMST.classList.add("hidden");
+            if (mstError) mstError.classList.add("hidden");
+
             companyNameInput.removeAttribute("readonly");
             companyAddressInput.removeAttribute("readonly");
-            if (mstError) mstError.classList.add("hidden");
+            companyNameInput.value = "";
+            companyAddressInput.value = "";
+            if (clearBtn) clearBtn.classList.add("hidden");
           } else {
-            taxCodeInput.removeAttribute("disabled");
+            taxCodeInput.removeAttribute("readonly");
             taxCodeInput.required = true;
             btnCheckMST.classList.remove("hidden");
+
             companyNameInput.setAttribute("readonly", "readonly");
             companyAddressInput.setAttribute("readonly", "readonly");
+            companyNameInput.value = "";
+            companyAddressInput.value = "";
+            if (clearBtn) clearBtn.classList.add("hidden");
           }
-        });
+        };
+
+        isManualToggle.addEventListener("change", updateManualState);
+        if (
+          !companyNameInput.value &&
+          !companyAddressInput.value &&
+          isManualToggle.checked
+        ) {
+          companyNameInput.removeAttribute("readonly");
+          companyAddressInput.removeAttribute("readonly");
+        }
       }
 
       btnCheckMST.addEventListener("click", async () => {
@@ -50,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mstError.classList.add("hidden");
         companyNameInput.value = "";
         companyAddressInput.value = "";
+        if (clearBtn) clearBtn.classList.add("hidden");
 
         try {
           const response = await fetch(
@@ -60,6 +153,8 @@ document.addEventListener("DOMContentLoaded", () => {
           if (result.code === "00" && result.data) {
             companyNameInput.value = result.data.name;
             companyAddressInput.value = result.data.address;
+            companyNameInput.setAttribute("readonly", "readonly");
+            companyAddressInput.setAttribute("readonly", "readonly");
           } else {
             mstError.textContent = "Không tìm thấy thông tin công ty.";
             mstError.classList.remove("hidden");
@@ -119,6 +214,10 @@ document.addEventListener("DOMContentLoaded", () => {
           div.addEventListener("click", () => {
             companyNameInput.value = company.name;
             companyAddressInput.value = company.address;
+            companyNameInput.setAttribute("readonly", "readonly");
+            companyAddressInput.setAttribute("readonly", "readonly");
+            clearBtn.classList.remove("hidden");
+
             if (company.tax_code && taxCodeInput) {
               taxCodeInput.value = company.tax_code;
             }
@@ -133,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "input",
         debounce((e) => {
           const isManual = isManualToggle?.checked;
-          if (isManual) {
+          if (isManual && !companyNameInput.hasAttribute("readonly")) {
             fetchSuggestions(e.target.value);
           }
         }, 300),
@@ -151,95 +250,172 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Khởi tạo cho Form công ty hiện tại (không có prefix)
-  window.initCompanyFormLogic("");
+  initCompanyFormLogic("");
 
   // Khởi tạo cho Modal đăng ký giấy giới thiệu (prefix = 'rl_')
-  window.initCompanyFormLogic("rl_");
-  const uploadArea = document.getElementById("uploadArea");
-  const docTypeSelect = document.getElementById("doc_type");
-  const fileInput = document.getElementById("report_file");
-  const filePreview = document.getElementById("filePreview");
+  initCompanyFormLogic("rl_");
   const uploadBtn = document.getElementById("uploadBtn");
+  const fileInputs = document.querySelectorAll(".file-input");
 
-  if (uploadArea && fileInput) {
-    if (docTypeSelect) {
-      docTypeSelect.addEventListener("change", () => {
-        const type = docTypeSelect.value;
-        if (type === 'related_photo') {
-          fileInput.accept = ".jpg,.jpeg,.png,.webp,image/*";
-        } else {
-          fileInput.accept = ".pdf,application/pdf";
-        }
-        updateFilePreview();
-      });
-    }
-    uploadArea.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      uploadArea.classList.add("border-primary");
-    });
+  if (fileInputs.length > 0) {
+    const maxSize = 10 * 1024 * 1024; // 10MB
 
-    uploadArea.addEventListener("dragleave", () => {
-      uploadArea.classList.remove("border-primary");
-    });
+    const validateFiles = () => {
+      let hasFile = false;
+      let hasError = false;
 
-    uploadArea.addEventListener("drop", (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove("border-primary");
-      if (e.dataTransfer.files.length > 0) {
-        fileInput.files = e.dataTransfer.files;
-        updateFilePreview();
-      }
-    });
-
-    uploadArea.addEventListener("click", () => {
-      fileInput.click();
-    });
-
-    fileInput.addEventListener("change", () => {
-      updateFilePreview();
-    });
-
-    function updateFilePreview() {
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const maxSize = 50 * 1024 * 1024; // 50MB
-        if (file.size > maxSize) {
-          window.toast?.error("Lỗi", "Dung lượng file không được vượt quá 50MB");
-          fileInput.value = "";
-          filePreview.classList.add("hidden");
-          if (uploadBtn) uploadBtn.disabled = true;
-          return;
-        }
-
-        if (docTypeSelect && docTypeSelect.value) {
-          const type = docTypeSelect.value;
-          const isImage = file.type.startsWith('image/') || file.name.match(/\.(jpg|jpeg|png|webp)$/i);
-          const isPdf = file.type === 'application/pdf' || file.name.match(/\.pdf$/i);
-
-          if (type === 'related_photo' && !isImage) {
-            window.toast?.error("Lỗi", "Hình ảnh liên quan phải là định dạng JPG, PNG, WEBP");
-            fileInput.value = "";
-            filePreview.classList.add("hidden");
-            if (uploadBtn) uploadBtn.disabled = true;
-            return;
-          } else if (type !== 'related_photo' && type !== '' && !isPdf) {
-            window.toast?.error("Lỗi", "Tài liệu này yêu cầu định dạng PDF");
-            fileInput.value = "";
-            filePreview.classList.add("hidden");
-            if (uploadBtn) uploadBtn.disabled = true;
+      fileInputs.forEach((input) => {
+        if (input.files.length > 0) {
+          hasFile = true;
+          
+          if (input.id === "file_related_photo" && input.files.length > 5) {
+            window.toast?.error("Ảnh không hợp lệ", "Chỉ được phép chọn tối đa 5 hình ảnh liên quan.");
+            input.value = "";
+            hasError = true;
             return;
           }
-        }
 
-        filePreview.textContent = `Đã chọn: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-        filePreview.classList.remove("hidden");
-        if (uploadBtn) {
-          uploadBtn.disabled = docTypeSelect ? !docTypeSelect.value : false;
+          for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const isRelatedPhoto = input.id === "file_related_photo";
+
+            if (file.size > maxSize) {
+              if (isRelatedPhoto) {
+                window.toast?.error("Ảnh không hợp lệ", "Dung lượng mỗi ảnh không được vượt quá 10MB.");
+              } else {
+                window.toast?.error("Lỗi", `File ${file.name} vượt quá dung lượng 10MB`);
+              }
+              input.value = "";
+              hasError = true;
+              return;
+            }
+
+            const isImage =
+              file.type.startsWith("image/") ||
+              file.name.match(/\.(jpg|jpeg|png|webp)$/i);
+            const isPdf =
+              file.type === "application/pdf" || file.name.match(/\.pdf$/i);
+
+            if (input.accept.includes("image") && !isImage) {
+              if (isRelatedPhoto) {
+                window.toast?.error("Ảnh không hợp lệ", "Chỉ hỗ trợ định dạng ảnh JPG, PNG hoặc WEBP.");
+              } else {
+                window.toast?.error("Lỗi", `Tài liệu ${file.name} yêu cầu định dạng hình ảnh (JPG, PNG, WEBP)`);
+              }
+              input.value = "";
+              hasError = true;
+              return;
+            } else if (input.accept.includes(".pdf") && !isPdf) {
+              window.toast?.error("Lỗi", `Tài liệu ${file.name} yêu cầu định dạng PDF`);
+              input.value = "";
+              hasError = true;
+              return;
+            }
+          }
         }
-      } else {
-        filePreview.classList.add("hidden");
-        if (uploadBtn) uploadBtn.disabled = true;
+      });
+
+      if (uploadBtn) {
+        // Kiểm tra required inputs
+        const requiredInputs = Array.from(fileInputs).filter((inp) =>
+          inp.hasAttribute("required"),
+        );
+        const allRequiredFilled = requiredInputs.every(
+          (inp) => inp.files.length > 0,
+        );
+
+        uploadBtn.disabled = !hasFile || hasError || !allRequiredFilled;
       }
+    };
+
+    fileInputs.forEach((input) => {
+      input.addEventListener("change", validateFiles);
+    });
+
+    const fileRelatedPhotoInput = document.getElementById("file_related_photo");
+    if (fileRelatedPhotoInput) {
+      const compressImage = async (file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = ({ target }) => {
+            const img = new Image();
+            img.onload = () => {
+              const MAX_WIDTH = 1280;
+              const MAX_HEIGHT = 1280;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height = Math.round(height * (MAX_WIDTH / width));
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width = Math.round(width * (MAX_HEIGHT / height));
+                  height = MAX_HEIGHT;
+                }
+              }
+
+              const canvas = document.createElement("canvas");
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, width, height);
+
+              canvas.toBlob(
+                (blob) => {
+                  const newFileName =
+                    file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                  const newFile = new File([blob], newFileName, {
+                    type: "image/jpeg",
+                    lastModified: Date.now(),
+                  });
+                  resolve(newFile);
+                },
+                "image/jpeg",
+                0.8,
+              );
+            };
+            img.src = target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+
+      fileRelatedPhotoInput.addEventListener("change", async (e) => {
+        const files = [...e.target.files];
+        if (files.length === 0) return;
+
+        // Bỏ qua nén nếu file quá lớn hoặc không phải ảnh
+        const isInvalid = files.some(
+          (file) =>
+            file.size > 10 * 1024 * 1024 || !file.type.startsWith("image/"),
+        );
+        if (isInvalid || files.length > 5) return;
+
+        if (uploadBtn) {
+          uploadBtn.disabled = true;
+          const oldHtml = uploadBtn.innerHTML;
+          uploadBtn.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang xử lý...';
+
+          const dataTransfer = new DataTransfer();
+          for (const file of files) {
+            try {
+              const compressedFile = await compressImage(file);
+              dataTransfer.items.add(compressedFile);
+            } catch (err) {
+              console.error("Lỗi nén ảnh:", err);
+              dataTransfer.items.add(file);
+            }
+          }
+
+          e.target.files = dataTransfer.files;
+          uploadBtn.innerHTML = oldHtml;
+          validateFiles(); // Cập nhật lại trạng thái nút upload
+        }
+      });
     }
   }
 });

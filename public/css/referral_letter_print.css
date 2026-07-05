@@ -1,0 +1,373 @@
+.print-page,
+.print-page * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Times New Roman", Times, serif !important;
+}
+@media screen {
+  body {
+    background: #e2e8f0;
+    margin: 0;
+    padding: 0;
+    display: block;
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      sans-serif;
+  }
+
+  .print-page {
+    overflow: hidden; /* Hide overflow to match printer behavior */
+    background: white;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 2cm 2cm 2cm 3cm;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1);
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+  .print-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    min-width: max-content;
+    padding: 2rem;
+  }
+  .letter-set { display: flex; flex-direction: column; gap: 1.5rem; }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0; /* Set to 0 to disable browser headers/footers */
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+  }
+  .print-page {
+    padding: 2cm 2cm 2cm 3cm; /* Apply actual margins here instead of @page */
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+    box-sizing: border-box;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+  .print-pages, .letter-set { display: block; padding: 0; }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Document typography matching standard Vietnam document formats */
+.print-page {
+  font-size: 14pt;
+  line-height: 1.5;
+  color: black;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 12pt;
+}
+.header-left {
+  width: 49%;
+}
+
+.org-name strong {
+  font-size: 11pt;
+  text-decoration: underline;
+}
+
+.republic {
+  font-weight: bold;
+  font-size: 11pt;
+}
+
+.motto {
+  text-decoration: underline;
+}
+
+.title {
+  font-style: italic;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 12pt;
+  font-weight: normal;
+}
+
+.table th,
+.table td {
+  border: 1px solid black;
+}
+
+.table tbody {
+  text-align: left;
+}
+
+.table tbody td {
+  padding-left: 16px;
+}
+
+.signature {
+  text-align: right;
+}
+
+.signature-title {
+  font-weight: bold;
+  margin-bottom: 80px;
+  margin-right: 50px;
+  font-size: 13pt;
+}
+
+.date {
+  font-style: italic;
+  text-align: right;
+  margin-top: 12px;
+}
+
+.admin-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 20;
+  width: min(22rem, calc(100vw - 2rem));
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  overflow: hidden;
+}
+
+/* Full-screen print editor chrome */
+.print-editor {
+  --print-topbar-height: 4rem;
+  --print-panel-width: 22rem;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.print-editor__topbar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 30;
+  height: var(--print-topbar-height);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+  background: var(--card);
+  color: var(--card-foreground);
+  border-bottom: 1px solid var(--border);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.print-editor__title { margin: 0; font-size: 1rem; font-weight: 600; }
+.print-editor__topbar-actions { display: flex; justify-content: flex-end; gap: .5rem; }
+.print-editor__body { height: 100vh; padding-top: var(--print-topbar-height); }
+.print-editor__canvas {
+  height: 100%;
+  margin-right: var(--print-panel-width);
+  overflow: auto;
+  padding: 2rem max(1rem, calc((100% - 210mm) / 2));
+  background: var(--muted, #e2e8f0);
+  transition: margin-right .2s ease;
+}
+.print-editor__pages { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; min-width: max-content; }
+.print-editor__right-panel {
+  position: fixed;
+  z-index: 25;
+  top: var(--print-topbar-height);
+  right: 0;
+  bottom: 0;
+  width: var(--print-panel-width);
+  background: var(--card);
+  color: var(--card-foreground);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  transition: transform .2s ease;
+}
+.print-editor--panel-collapsed .print-editor__right-panel { transform: translateX(100%); }
+.print-editor--panel-collapsed .print-editor__canvas { margin-right: 0; }
+
+.print-editor .admin-controls {
+  border-radius: 0;
+  box-shadow: none;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.print-editor .admin-controls .card__header { padding: 1.25rem; }
+.print-editor .admin-controls .card__content { padding: 0 1.25rem 1.25rem; }
+.print-editor .admin-controls .field-group { display: flex; flex-direction: column; gap: 1rem; }
+
+.admin-controls .card__header,
+.admin-controls .card__content,
+.admin-controls .card__footer {
+  padding-inline: 1rem;
+}
+
+.admin-controls .card__header {
+  grid-template-columns: 1fr auto;
+}
+
+.admin-controls__collapse {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: start;
+}
+
+.admin-controls__collapsed-trigger {
+  display: none;
+}
+
+.admin-controls[data-collapsed="true"] {
+  width: auto;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.admin-controls[data-collapsed="true"] > :not(.admin-controls__collapsed-trigger) {
+  display: none;
+}
+
+.admin-controls[data-collapsed="true"] .admin-controls__collapsed-trigger {
+  display: inline-flex;
+  width: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.admin-controls .card__content form,
+.admin-controls .field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-controls .card__footer {
+  border-top: 1px solid var(--border);
+}
+
+.admin-controls .btn {
+  width: 100%;
+}
+
+.print-message {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--success, #16a34a);
+  font-weight: bold;
+  display: none;
+}
+
+@media screen and (max-width: 900px) {
+  .print-editor { --print-panel-width: min(22rem, 90vw); }
+  .print-editor__topbar { grid-template-columns: auto 1fr auto; }
+  .print-editor__title { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .print-editor__canvas { margin-right: 0; padding: 1rem; }
+  .print-editor__right-panel { box-shadow: var(--shadow-xl); }
+  .print-editor__panel-toggle { font-size: 0; }
+  .print-editor__panel-toggle::after { content: "Panel"; font-size: .875rem; }
+}
+
+.number-wrapper {
+  margin-top: 10px;
+  font-size: 12pt;
+  font-style: italic;
+}
+
+.recipient-section {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.recipient-label {
+  display: inline-block;
+  text-align: right;
+  font-weight: bold;
+  margin-right: 20px;
+}
+
+.recipient-name {
+  text-transform: uppercase;
+}
+
+.paragraph {
+  text-indent: 1cm;
+  text-align: justify;
+}
+
+.page2-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.page2-title {
+  font-weight: bold;
+  font-size: 16pt;
+}
+
+.col-stt {
+  width: 50px;
+}
+.col-major {
+  width: 25%;
+}
+.col-dob {
+  width: 16%;
+}
+.col-address {
+  width: 30%;
+}
+
+/* Keep editor panel rules authoritative over legacy card defaults. */
+.print-editor .print-editor__right-panel {
+  top: var(--print-topbar-height);
+  right: 0;
+  bottom: 0;
+  width: var(--print-panel-width);
+  border: 0;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  overflow-y: auto;
+}
+.print-editor--panel-collapsed .print-editor__right-panel {
+  width: var(--print-panel-width);
+  border-left: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: none;
+  overflow-y: auto;
+}
+.print-editor--panel-collapsed .print-editor__right-panel > :not(.admin-controls__collapsed-trigger) { display: grid; }
+
+@media print {
+  .print-editor { height: auto; overflow: visible; }
+  .print-editor__body { height: auto; padding: 0; }
+  .print-editor__canvas { height: auto; margin: 0; padding: 0; overflow: visible; background: white; }
+  .print-editor__pages { display: block; min-width: 0; }
+}

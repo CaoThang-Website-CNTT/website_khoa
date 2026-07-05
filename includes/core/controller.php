@@ -16,9 +16,9 @@ abstract class Controller
   {
     return new JsonResponse($data, $message, $status);
   }
-  protected function redirect(string $url): never
+  protected function redirect(string $url, int $status = 302): never
   {
-    header("Location: " . url($url));
+    header("Location: " . url($url), true, $status);
     exit;
   }
 

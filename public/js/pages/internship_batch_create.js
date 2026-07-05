@@ -152,11 +152,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         state.importedStudents = data;
-        uploadStatusText.innerHTML = `<span class="text-success"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
+        uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
 
         initOrReloadTableManager();
       } catch (error) {
-        uploadStatusText.innerHTML = `<span><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
+        uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
         if (window.toast) toast.error("Lỗi Import", error.message);
 
         wrapperTableStudents.setAttribute("data-state", "closed");
@@ -237,13 +237,12 @@ document.addEventListener("DOMContentLoaded", () => {
       quotaSummaryBox.classList.remove("error");
       quotaSummaryBox.classList.add("success");
       quotaStatusIcon.classList.remove("hidden");
-      btnSubmit.removeAttribute("disabled");
     } else {
       quotaSummaryBox.classList.add("error");
       quotaSummaryBox.classList.remove("success");
       quotaStatusIcon.classList.add("hidden");
-      btnSubmit.setAttribute("disabled", "disabled");
     }
+    btnSubmit.removeAttribute("disabled");
 
     // Cập nhật progress bar cho từng GV (nếu đang ở Step 3)
     if (state.currentStep === 3) {
@@ -324,7 +323,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <input type="checkbox" class="dept-select-all" ${isAllSelected ? "checked" : ""}>
               Chọn tất cả
             </label>
-            <button type="button" class="btn-toggle-dept btn btn--icon btn--sm" data-variant="ghost">
+            <button type="button" class="btn-toggle-dept btn" data-variant="outline-alt" data-size="sm">
               <i class="fa-solid fa-chevron-up"></i>
             </button>
           </div>
@@ -468,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedIds = Object.keys(state.selectedTeachers);
       if (selectedIds.length === 0) {
         if (window.toast)
-          toast.warning("Cảnh báo", "Vui lòng chọn ít nhất 1 giảng viên.");
+          toast.warn("Cảnh báo", "Vui lòng chọn ít nhất 1 giảng viên.");
         return;
       }
 
@@ -489,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- SUBMIT ---
-  btnSubmit.addEventListener("click", async () => {
+  const doSubmitBatch = async () => {
     const payload = {
       ...state.batchData,
       students: state.importedStudents.filter((s) =>
@@ -502,8 +501,19 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
+      if (typeof ModalHandler !== "undefined" && ModalHandler.instance) {
+        ModalHandler.instance.close();
+      }
+
       btnSubmit.setAttribute("disabled", "disabled");
       btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
+      if (document.getElementById("skip-step3-confirm-btn")) {
+        document
+          .getElementById("skip-step3-confirm-btn")
+          .setAttribute("disabled", "disabled");
+        document.getElementById("skip-step3-confirm-btn").innerHTML =
+          `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
+      }
 
       const res = await fetch(apiBase, {
         method: "POST",
@@ -537,9 +547,54 @@ document.addEventListener("DOMContentLoaded", () => {
       else alert(err.message);
       btnSubmit.removeAttribute("disabled");
       btnSubmit.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Hoàn tất tạo đợt`;
-    } finally {
+      if (document.getElementById("skip-step3-confirm-btn")) {
+        document
+          .getElementById("skip-step3-confirm-btn")
+          .removeAttribute("disabled");
+        document.getElementById("skip-step3-confirm-btn").innerHTML = `Đồng ý`;
+      }
+    }
+  };
+
+  btnSubmit.addEventListener("click", () => {
+    let totalCapacity = 0;
+    Object.values(state.selectedTeachers).forEach((quota) => {
+      totalCapacity += quota;
+    });
+    const totalStudents = state.selectedStudents.size;
+
+    if (
+      totalCapacity < totalStudents ||
+      Object.keys(state.selectedTeachers).length === 0
+    ) {
+      const msg =
+        Object.keys(state.selectedTeachers).length === 0
+          ? "Bạn chưa chọn giảng viên nào. Bạn có chắc muốn tạo đợt thực tập này và phân công sau không?"
+          : "Hạn mức giảng viên hiện tại chưa đủ cho số lượng sinh viên. Bạn có chắc muốn tạo đợt thực tập này và phân công sau không?";
+
+      const confirmMsgEl = document.getElementById("skip-step3-confirm-msg");
+      if (confirmMsgEl) confirmMsgEl.textContent = msg;
+
+      if (typeof ModalHandler !== "undefined") {
+        ModalHandler.instance.open("#skip-step3-confirm-modal");
+      } else if (window.ModalHandler) {
+        window.ModalHandler.instance.open("#skip-step3-confirm-modal");
+      } else {
+        if (window.confirm(msg)) {
+          doSubmitBatch();
+        }
+      }
+    } else {
+      doSubmitBatch();
     }
   });
+
+  const confirmSkipBtn = document.getElementById("skip-step3-confirm-btn");
+  if (confirmSkipBtn) {
+    confirmSkipBtn.addEventListener("click", () => {
+      doSubmitBatch();
+    });
+  }
 
   // Init
   wizard

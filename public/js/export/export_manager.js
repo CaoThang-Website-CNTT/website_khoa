@@ -10,6 +10,13 @@ export class ExportManager {
       return;
     }
 
+    // Xóa export wrapper cũ nếu đã tồn tại để tránh duplicate
+    const existingWrapper =
+      tableInstance.root.querySelector(".tm-export-wrapper");
+    if (existingWrapper) {
+      existingWrapper.remove();
+    }
+
     const endpoint = config.endpoint || "/api/v1/export";
     const wrapper = document.createElement("div");
     wrapper.className = "tm-export-wrapper";
@@ -17,10 +24,10 @@ export class ExportManager {
     // Tạo nút toggle
     const btnToggle = document.createElement("button");
     btnToggle.className = "btn";
-    btnToggle.setAttribute("data-variant", "primary");
-    btnToggle.setAttribute("data-size", "md");
-    btnToggle.innerHTML =
-      '<i class="fa-solid fa-download"></i>Xuất Excel';
+    btnToggle.setAttribute("data-variant", config.triggerVariant || "outline");
+    btnToggle.setAttribute("data-size", config.triggerSize || "md");
+    const triggerHtml = `<i class="fa-solid ${config.triggerIcon || "fa-download"}"></i>${config.triggerLabel || "Export Excel"}<i class="fa-solid fa-chevron-down text-xs"></i>`;
+    btnToggle.innerHTML = triggerHtml;
     btnToggle.type = "button";
 
     // Tạo menu dropdown
@@ -30,24 +37,24 @@ export class ExportManager {
     const btnCurrent = document.createElement("button");
     btnCurrent.className = "tm-export-item";
     btnCurrent.title =
-      "Xuất các dòng đang hiển thị trên trang (đã áp dụng tìm kiếm/lọc/sắp xếp)";
+      "Export các dòng đang hiển thị trên trang (đã áp dụng tìm kiếm/lọc/sắp xếp)";
     btnCurrent.innerHTML =
-      '<i class="fa-solid fa-table mr-1"></i>Xuất dữ liệu đang hiển thị';
+      '<i class="fa-solid fa-table mr-1"></i>Dữ liệu đang hiển thị';
     btnCurrent.type = "button";
 
     const btnAll = document.createElement("button");
     btnAll.className = "tm-export-item";
     btnAll.title =
-      "Xuất tất cả dữ liệu (bỏ qua phân trang/tìm kiếm/lọc/sắp xếp)";
+      "Export tất cả dữ liệu (bỏ qua phân trang/tìm kiếm/lọc/sắp xếp)";
     btnAll.innerHTML =
-      '<i class="fa-solid fa-database mr-1"></i>Xuất toàn bộ dữ liệu';
+      '<i class="fa-solid fa-database mr-1"></i>Toàn bộ dữ liệu';
     btnAll.type = "button";
 
     const btnSelected = document.createElement("button");
     btnSelected.className = "tm-export-item";
-    btnSelected.title = "Chỉ xuất các dòng đã được chọn bằng checkbox";
+    btnSelected.title = "Chỉ export các dòng đã được chọn bằng checkbox";
     btnSelected.innerHTML =
-      '<i class="fa-solid fa-square-check mr-1"></i>Xuất dòng đã chọn (0)';
+      '<i class="fa-solid fa-square-check mr-1"></i>Các dòng đã chọn (0)';
     btnSelected.type = "button";
 
     menu.appendChild(btnCurrent);
@@ -63,10 +70,12 @@ export class ExportManager {
     wrapper.appendChild(btnToggle);
     wrapper.appendChild(menu);
 
-    // Chèn vào toolbar của table
-    const toolbar = tableInstance.root.querySelector(".tm-toolbar-actions");
-    if (toolbar) {
-      toolbar.appendChild(wrapper);
+    // Chèn vào target tường minh hoặc hàng toolbar của table.
+    const target = config.target
+      ? document.querySelector(config.target)
+      : tableInstance.root.querySelector(".tm-toolbar__top");
+    if (target) {
+      target.appendChild(wrapper);
     } else {
       tableInstance.root.insertBefore(wrapper, tableInstance.root.firstChild);
     }
@@ -82,7 +91,7 @@ export class ExportManager {
       // Cập nhật số lượng row đang chọn
       if (hasSelectable) {
         const selectedIds = tableInstance.getRowSelection();
-        btnSelected.innerHTML = `<i class="fa-solid fa-square-check mr-1"></i>Xuất dòng đã chọn (${selectedIds.length})`;
+        btnSelected.innerHTML = `<i class="fa-solid fa-square-check mr-1"></i>Các dòng đã chọn (${selectedIds.length})`;
       }
 
       wrapper.classList.toggle("is-open");
@@ -99,7 +108,7 @@ export class ExportManager {
 
     const getOrCreateModal = () => {
       if (modalEl) return modalEl;
-      modalEl = ExportManager.#buildColumnModal(config.columnsMap);
+      modalEl = ExportManager.#buildColumnModal(config.columnsMap, config.columnGroups);
       document.body.appendChild(modalEl);
       return modalEl;
     };
@@ -117,41 +126,26 @@ export class ExportManager {
         modal
           .querySelectorAll('.export-col-checkbox input[type="checkbox"]')
           .forEach((cb) => (cb.checked = true));
-
-        // Update "Chọn tất cả"
-        const selectAllCb = modal.querySelector("#export-select-all");
-        if (selectAllCb) selectAllCb.checked = true;
+        modal.syncSelectionSummary?.();
 
         // Hiển thị thông tin mode
         const modeLabels = {
-          current_view: "Xuất dữ liệu đang hiển thị",
-          all: "Xuất toàn bộ dữ liệu",
-          selected: "Xuất dòng đã chọn",
+          current_view: "Export dữ liệu đang hiển thị",
+          all: "Export toàn bộ dữ liệu",
+          selected: "Export dòng đã chọn",
         };
         const modeInfo = modal.querySelector(".export-modal__mode-info");
         if (modeInfo) {
           modeInfo.textContent = modeLabels[mode] || mode;
         }
 
-        // Hiện modal
-        modal.setAttribute("data-state", "open");
+        const modalHandler = ModalHandler.instance;
+        let settled = false;
 
-        // Hiện overlay
-        let overlay = document.querySelector(".export-modal-overlay");
-        if (!overlay) {
-          overlay = document.createElement("div");
-          overlay.className = "export-modal-overlay";
-          document.body.appendChild(overlay);
-        }
-        overlay.setAttribute("data-state", "open");
-
-        // Cleanup listeners on resolve/reject
         const cleanup = () => {
-          modal.setAttribute("data-state", "closed");
-          overlay.setAttribute("data-state", "closed");
           btnConfirm.removeEventListener("click", onConfirm);
           btnCancel.removeEventListener("click", onCancel);
-          overlay.removeEventListener("click", onCancel);
+          modal.removeEventListener("modal:close", onModalClose);
         };
 
         const btnConfirm = modal.querySelector(".export-modal__btn-confirm");
@@ -167,9 +161,9 @@ export class ExportManager {
 
           if (checkedKeys.length === 0) {
             if (window.toast)
-              window.toast.warning(
+              window.toast.warn(
                 "Chưa chọn cột",
-                "Vui lòng chọn ít nhất một cột để xuất.",
+                "Vui lòng chọn ít nhất một cột để export.",
               );
             return;
           }
@@ -181,18 +175,30 @@ export class ExportManager {
             mode,
           );
 
+          settled = true;
           cleanup();
+          modalHandler.close();
           resolve({ exportColumns: checkedKeys, metadata });
         };
 
         const onCancel = () => {
+          settled = true;
+          cleanup();
+          modalHandler.close();
+          reject(new Error("cancelled"));
+        };
+
+        const onModalClose = () => {
+          if (settled) return;
+          settled = true;
           cleanup();
           reject(new Error("cancelled"));
         };
 
         btnConfirm.addEventListener("click", onConfirm);
         btnCancel.addEventListener("click", onCancel);
-        overlay.addEventListener("click", onCancel);
+        modal.addEventListener("modal:close", onModalClose);
+        modalHandler.open(`#${modal.id}`);
       });
     };
 
@@ -206,7 +212,7 @@ export class ExportManager {
 
         btnToggle.classList.add("tm-export-loading");
         btnToggle.innerHTML =
-          '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang xuất...';
+          '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Đang export...';
         btnToggle.disabled = true;
 
         const state = tableInstance.getState();
@@ -267,7 +273,7 @@ export class ExportManager {
         a.remove();
 
         if (window.toast)
-          window.toast.success("Thành công", "Xuất dữ liệu thành công");
+          window.toast.success("Thành công", "Export dữ liệu thành công");
       } catch (error) {
         if (error.message === "cancelled") return;
 
@@ -279,8 +285,7 @@ export class ExportManager {
           );
       } finally {
         btnToggle.classList.remove("tm-export-loading");
-        btnToggle.innerHTML =
-          '<i class="fa-solid fa-download"></i>Xuất Excel';
+        btnToggle.innerHTML = triggerHtml;
         btnToggle.disabled = false;
       }
     };
@@ -289,6 +294,13 @@ export class ExportManager {
     btnCurrent.addEventListener("click", () => handleExport("current_view"));
     btnAll.addEventListener("click", () => handleExport("all"));
     btnSelected.addEventListener("click", () => handleExport("selected"));
+
+    tableInstance.root.addEventListener("tm:export", (event) => {
+      const mode = event.detail?.mode;
+      if (["current_view", "all", "selected"].includes(mode)) {
+        handleExport(mode);
+      }
+    });
   }
 
   /**
@@ -296,41 +308,52 @@ export class ExportManager {
    * @param {Object} columnsMap { key: label }
    * @returns {HTMLElement}
    */
-  static #buildColumnModal(columnsMap) {
+  static #buildColumnModal(columnsMap, columnGroups = null) {
     const modal = document.createElement("div");
-    modal.className = "modal export-column-modal";
+    modal.className = "modal export-column-modal detail-modal";
+    modal.id = `export-column-modal-${Math.random().toString(36).slice(2)}`;
     modal.setAttribute("data-state", "closed");
 
     const keys = Object.keys(columnsMap);
 
-    let checkboxesHtml = "";
-    keys.forEach((key) => {
-      checkboxesHtml += `
+    const checkboxHtml = (key) => `
         <label class="export-col-checkbox">
           <input type="checkbox" value="${key}" checked />
           <span>${columnsMap[key]}</span>
         </label>`;
-    });
+    const configuredGroups = Array.isArray(columnGroups) ? columnGroups : [];
+    const groupedKeys = new Set(configuredGroups.flatMap((group) => group.columns || []));
+    const remainingKeys = keys.filter((key) => !groupedKeys.has(key));
+    const groups = configuredGroups.length
+      ? [...configuredGroups, ...(remainingKeys.length ? [{ label: "Khác", columns: remainingKeys }] : [])]
+      : [{ label: "Các cột dữ liệu", columns: keys }];
+    const groupsHtml = groups.map((group) => `
+      <section class="export-col-group">
+        <h4 class="export-col-group__title">${group.label}</h4>
+        <div class="export-col-grid">
+          ${(group.columns || []).filter((key) => columnsMap[key]).map(checkboxHtml).join("")}
+        </div>
+      </section>`).join("");
 
     modal.innerHTML = `
       <div class="modal__header">
         <h3 class="modal__title">
-          <i class="fa-solid fa-columns mr-1"></i>Chọn cột xuất Excel
+          <i class="fa-solid fa-file-excel mr-1"></i>Export dữ liệu
         </h3>
         <p class="modal__description">
-          Chế độ: <strong class="export-modal__mode-info">--</strong>
+          Chế độ export: <span class="badge export-modal__mode-info" data-variant='primary'></span>
         </p>
       </div>
 
       <div class="export-modal__body">
-        <label class="export-col-select-all">
-          <input type="checkbox" id="export-select-all" checked />
-          <span>Chọn tất cả</span>
-        </label>
-        <hr class="separator" />
-        <div class="export-col-grid">
-          ${checkboxesHtml}
+        <div class="export-selection-toolbar">
+          <span class="export-selection-summary"></span>
+          <div class="export-selection-toolbar__actions">
+            <button type="button" class="btn export-select-all" data-variant="outline" data-size="sm">Chọn tất cả</button>
+            <button type="button" class="btn export-clear-all" data-variant="outline" data-size="sm">Bỏ chọn</button>
+          </div>
         </div>
+        <div class="export-col-groups">${groupsHtml}</div>
       </div>
 
       <div class="modal__footer">
@@ -338,30 +361,33 @@ export class ExportManager {
           <i class="fa-solid fa-xmark mr-1"></i>Hủy
         </button>
         <button type="button" class="btn export-modal__btn-confirm" data-variant="primary" data-size="md">
-          <i class="fa-solid fa-download"></i>Xác nhận
+          <i class="fa-solid fa-file-excel"></i>Export file
         </button>
       </div>
+
+      <button class="modal__close" type="button" aria-label="Đóng" data-modal-close><i class="fa-solid fa-xmark"></i></button>
     `;
 
-    // toggle checkall
-    const selectAllCb = modal.querySelector("#export-select-all");
     const allCheckboxes = modal.querySelectorAll(
       '.export-col-checkbox input[type="checkbox"]',
     );
 
-    selectAllCb.addEventListener("change", () => {
-      allCheckboxes.forEach((cb) => (cb.checked = selectAllCb.checked));
+    const summary = modal.querySelector(".export-selection-summary");
+    const syncSelectionSummary = () => {
+      const selected = [...allCheckboxes].filter((cb) => cb.checked).length;
+      summary.textContent = `${selected}/${allCheckboxes.length} cột đã chọn`;
+    };
+    modal.syncSelectionSummary = syncSelectionSummary;
+    modal.querySelector(".export-select-all").addEventListener("click", () => {
+      allCheckboxes.forEach((cb) => (cb.checked = true));
+      syncSelectionSummary();
     });
-
-    // Đồng bộ trạng thái checkall
-    allCheckboxes.forEach((cb) => {
-      cb.addEventListener("change", () => {
-        const allChecked = [...allCheckboxes].every((c) => c.checked);
-        const someChecked = [...allCheckboxes].some((c) => c.checked);
-        selectAllCb.checked = allChecked;
-        selectAllCb.indeterminate = !allChecked && someChecked;
-      });
+    modal.querySelector(".export-clear-all").addEventListener("click", () => {
+      allCheckboxes.forEach((cb) => (cb.checked = false));
+      syncSelectionSummary();
     });
+    allCheckboxes.forEach((cb) => cb.addEventListener("change", syncSelectionSummary));
+    syncSelectionSummary();
 
     return modal;
   }
@@ -399,9 +425,9 @@ export class ExportManager {
 
     // Dòng 3: Mô tả chế độ xuất
     const modeLabels = {
-      current_view: "Xuất dữ liệu đang hiển thị",
-      all: "Xuất toàn bộ dữ liệu",
-      selected: `Xuất ${tableInstance.getRowSelection().length} dòng đã chọn`,
+      current_view: "Export dữ liệu đang hiển thị",
+      all: "Export toàn bộ dữ liệu",
+      selected: `Export ${tableInstance.getRowSelection().length} dòng đã chọn`,
     };
     lines.push(`Chế độ: ${modeLabels[mode] || mode}`);
 

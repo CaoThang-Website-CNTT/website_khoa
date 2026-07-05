@@ -14,6 +14,7 @@ interface ICmsPageService
   public function getPage(int $id): CmsPage;
   public function getPageBySlug(string $slug): CmsPage;
   public function getPublishedPageBySlug(string $slug): ?CmsPage;
+  public function getSectionData(string $slug, string $sectionId): array;
   public function getPageForEditing(string $slug): array;
   public function saveDraft(string $slug, array $payload): CmsPage;
   public function publish(string $slug, array $payload): CmsPage;
@@ -66,6 +67,20 @@ class CmsPageService implements ICmsPageService
     return $this->_store->findPublishedBySlug($slug);
   }
 
+  public function getSectionData(string $slug, string $sectionId): array
+  {
+    $page = $this->getPublishedPageBySlug($slug) ?? $this->getPageBySlug($slug);
+    $document = $this->normalizeDocument($slug, $page->content());
+
+    foreach ($document['sections'] as $section) {
+      if (($section['id'] ?? '') === $sectionId) {
+        return is_array($section['data'] ?? null) ? $section['data'] : [];
+      }
+    }
+
+    return [];
+  }
+
   public function getPageForEditing(string $slug): array
   {
     $schema = $this->_schemas->page($slug);
@@ -108,6 +123,7 @@ class CmsPageService implements ICmsPageService
     }
 
     $document = $this->normalizeDocument($slug, $payload['content'] ?? $payload);
+    $this->validateEducationDocument($slug, $document);
     $settings = $this->normalizeSettings($payload['settings'] ?? []);
     $existing = $this->_store->findBySlug($slug);
     $now = (new \DateTime())->format('Y-m-d H:i:s');
@@ -188,7 +204,7 @@ class CmsPageService implements ICmsPageService
         'locked' => (bool) ($sectionSchema['locked'] ?? false),
         'data' => ($sectionSchema['locked'] ?? false)
           ? $defaultData
-          : $this->filterDataByAllowedPaths($submittedData, $sectionSchema['editable_fields'] ?? [], $defaultData),
+          : $this->normalizeSectionData($submittedData, $sectionSchema, $defaultData),
       ];
     }
 
@@ -346,6 +362,83 @@ class CmsPageService implements ICmsPageService
     }
 
     return $filtered;
+  }
+
+  private function normalizeSectionData(array $submittedData, array $sectionSchema, array $defaultData): array
+  {
+    $allowedPaths = $sectionSchema['editable_fields'] ?? [];
+    $variants = is_array($sectionSchema['variants'] ?? null) ? $sectionSchema['variants'] : [];
+
+    if (!empty($variants)) {
+      $allowedPaths[] = 'variant';
+    }
+
+    $filtered = $this->filterDataByAllowedPaths($submittedData, $allowedPaths, $defaultData);
+
+    foreach (array_keys(is_array($sectionSchema['repeaters'] ?? null) ? $sectionSchema['repeaters'] : []) as $path) {
+      if (str_contains($path, '*') || !array_key_exists($path, $submittedData)) continue;
+      $filtered[$path] = is_array($submittedData[$path]) ? array_values($submittedData[$path]) : [];
+    }
+
+    if (!empty($variants)) {
+      $defaultVariant = array_key_first($variants) ?: 'default';
+      $variant = trim((string) ($filtered['variant'] ?? $defaultVariant));
+      $filtered['variant'] = isset($variants[$variant]) ? $variant : $defaultVariant;
+    }
+
+    return $filtered;
+  }
+
+  private function validateEducationDocument(string $slug, array $document): void
+  {
+    if (!in_array($slug, ['education', 'admissions', 'academic-programs', 'program-outcomes', 'curriculum'], true)) return;
+    $section = $document['sections'][0]['data'] ?? [];
+    if (trim((string) ($section['title'] ?? '')) === '') {
+      throw new \InvalidArgumentException('Tiêu đề trang đào tạo không được để trống.');
+    }
+
+    foreach (['cta_url' => true] as $field => $externalOnly) {
+      if (!isset($section[$field])) continue;
+      $value = trim((string) $section[$field]);
+      if ($value !== '' && (!filter_var($value, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\//i', $value))) {
+        throw new \InvalidArgumentException("{$field} phải là URL HTTP hoặc HTTPS hợp lệ.");
+      }
+    }
+
+    foreach ($section['links'] ?? [] as $link) {
+      if (trim((string) ($link['title'] ?? '')) === '') throw new \InvalidArgumentException('Tiêu đề thẻ điều hướng không được để trống.');
+      $url = trim((string) ($link['url'] ?? ''));
+      if ($url === '' || preg_match('/^(javascript|data):/i', $url)) throw new \InvalidArgumentException('Liên kết điều hướng không hợp lệ.');
+    }
+
+    $programs = is_array($section['programs'] ?? null) ? $section['programs'] : [];
+    if (in_array($slug, ['academic-programs', 'program-outcomes', 'curriculum'], true) && !$programs) {
+      throw new \InvalidArgumentException('Trang phải có ít nhất một chương trình đào tạo.');
+    }
+    $programKeys = [];
+    foreach ($programs as $program) {
+      $key = trim((string) ($program['key'] ?? ''));
+      $name = trim((string) ($program['name'] ?? ''));
+      if ($key === '' || !preg_match('/^[a-z0-9_-]+$/', $key)) throw new \InvalidArgumentException('Mã chương trình chỉ được chứa chữ thường không dấu, số, gạch ngang hoặc gạch dưới.');
+      if ($name === '') throw new \InvalidArgumentException('Tên chương trình không được để trống.');
+      if (isset($programKeys[$key])) throw new \InvalidArgumentException("Mã chương trình '{$key}' bị trùng.");
+      $programKeys[$key] = true;
+
+      $semesterKeys = [];
+      foreach ($program['semesters'] ?? [] as $semester) {
+        $semesterKey = trim((string) ($semester['key'] ?? ''));
+        if ($semesterKey === '' || isset($semesterKeys[$semesterKey])) throw new \InvalidArgumentException("Mã học kỳ của chương trình '{$key}' phải có giá trị và không trùng.");
+        $semesterKeys[$semesterKey] = true;
+        if (trim((string) ($semester['name'] ?? '')) === '') throw new \InvalidArgumentException('Tên học kỳ không được để trống.');
+        foreach ($semester['courses'] ?? [] as $course) {
+          if (trim((string) ($course['name'] ?? '')) === '') throw new \InvalidArgumentException('Tên học phần không được để trống.');
+          foreach (['credits', 'theory', 'practice'] as $numberField) {
+            $value = (string) ($course[$numberField] ?? '');
+            if ($value === '' || !is_numeric($value) || (float) $value < 0) throw new \InvalidArgumentException("{$numberField} của học phần phải là số không âm.");
+          }
+        }
+      }
+    }
   }
 
   private function copyAllowedPath(mixed $source, mixed &$target, array $segments): void

@@ -12,6 +12,12 @@ $router->prefix('tin-tuc')->group(function (Router $router) {
   $router->get('/{slug}', [SiteController::class, 'news_show']);
 });
 $router->get('/gioi-thieu', [SiteController::class, 'about']);
+$router->get('/viec-lam/doanh-nghiep', [SiteController::class, 'partners']);
+$router->get('/dao-tao', [SiteController::class, 'education']);
+$router->get('/dao-tao/tuyen-sinh', [SiteController::class, 'admissions']);
+$router->get('/dao-tao/chuong-trinh-dao-tao', [SiteController::class, 'academicPrograms']);
+$router->get('/dao-tao/chuan-dau-ra', [SiteController::class, 'programOutcomes']);
+$router->get('/dao-tao/danh-sach-mon-hoc', [SiteController::class, 'curriculum']);
 $router->get('/lien-he', [SiteController::class, 'contact']);
 // Đăng ký route /portal để tự chuyển hướng theo role thay vì phải set cứng
 $router->get('/portal', [SiteController::class, 'portal'])->middleware([VerifyAuth::class]);
@@ -180,6 +186,10 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
 
     // Referral Letters
     $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
+    $router->post('/{id}/referral_letters/bulk-print', [InternshipBatchController::class, 'bulkPrintReferralLetters']);
+    $router->post('/{id}/referral_letters/bulk-print/confirm', [InternshipBatchController::class, 'confirmBulkPrint']);
+    $router->get('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'printReferralLetter']);
+    $router->post('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'confirmPrint']);
 
     // Students
     $router->get('/{id}/students', [InternshipBatchController::class, 'students']);
@@ -236,14 +246,19 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
   // Nộp tài liệu
   $router->post('/internship/{batch_id}/upload', [StudentDashboardController::class, 'uploadSubmission']);
   // Đăng ký giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters/create', [StudentDashboardController::class, 'createReferralLetter']);
   $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
+
+  // Báo cáo tuần
+  $router->get('/internship/{batch_id}/weekly_reports', [StudentDashboardController::class, 'weeklyReports']);
+  $router->post('/internship/{batch_id}/weekly_reports', [StudentDashboardController::class, 'submitWeeklyReport']);
 
   // Trang danh sách giấy giới thiệu
   $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
+  // Trang chi tiết giấy giới thiệu
+  $router->get('/internship/{batch_id}/referral_letters/{letter_id}', [StudentDashboardController::class, 'showReferralLetter']);
   // Hủy giấy giới thiệu
   $router->post('/internship/{batch_id}/referral_letters/{letter_id}/cancel', [StudentDashboardController::class, 'cancelReferralLetter']);
-  // Cập nhật công ty cho giấy giới thiệu (pending)
-  $router->post('/internship/{batch_id}/referral_letters/{letter_id}/update-company', [StudentDashboardController::class, 'updateReferralLetterCompany']);
 });
 
 // Teacher Dashboard
@@ -256,7 +271,10 @@ $router->prefix('teacher')->middleware([VerifyAuth::class, new VerifyRole('teach
   $router->prefix('internship_batches')->group(function ($router) {
     $router->get('/', [TeacherDashboardController::class, 'internshipIndex']);
     $router->get('/{id}', [TeacherDashboardController::class, 'internshipShow']);
+    $router->get('/{batchId}/weekly_reports', [TeacherDashboardController::class, 'weeklyReports']);
+    $router->get('/{batchId}/student/{batchStudentId}', [TeacherDashboardController::class, 'studentDetail']);
     $router->get('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'internshipGrade']);
     $router->post('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'submitGrade']);
+    $router->post('/{batchId}/publish_grades', [TeacherDashboardController::class, 'publishAllGrades']);
   });
 });

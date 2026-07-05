@@ -66,7 +66,10 @@ require_once BASE_PATH . '/models/teacher.php';
 require_once BASE_PATH . '/models/web_setting.php';
 require_once BASE_PATH . '/models/internship_batch.php';
 require_once BASE_PATH . '/models/internship_batch_student.php';
+require_once BASE_PATH . '/models/internship_weekly_report.php';
+require_once BASE_PATH . '/models/internship_weekly_report_image.php';
 require_once BASE_PATH . '/models/internship_batch_supervisor.php';
+require_once BASE_PATH . '/includes/core/enums/referral_letter_status.php';
 require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
 require_once BASE_PATH . '/models/media.php';
@@ -76,6 +79,7 @@ require_once BASE_PATH . '/models/company.php';
 require_once BASE_PATH . '/models/referral_letter.php';
 require_once BASE_PATH . '/models/ticket.php';
 require_once BASE_PATH . '/models/department.php';
+require_once BASE_PATH . '/models/referral_letter_student.php';
 
 // Editor (Post)
 require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
@@ -91,9 +95,19 @@ require_once BASE_PATH . '/includes/editor/block_validator.php';
 require_once BASE_PATH . '/includes/editor/block_renderer.php';
 
 // CMS
-require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
+require_once BASE_PATH . '/includes/cms/cms_render_context.php';
+require_once BASE_PATH . '/includes/cms/cms_section_definition_interface.php';
+require_once BASE_PATH . '/includes/cms/cms_callback_section_definition.php';
+require_once BASE_PATH . '/includes/cms/cms_section_registry.php';
+require_once BASE_PATH . '/includes/cms/education_page_defaults.php';
+require_once BASE_PATH . '/includes/cms/education_section_renderer.php';
 require_once BASE_PATH . '/includes/cms/cms_static_page_renderer.php';
-require_once BASE_PATH . '/includes/cms/cms_block_page_renderer.php';
+require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
+
+// Mail
+require_once BASE_PATH . '/includes/mail/PHPMailer/Exception.php';
+require_once BASE_PATH . '/includes/mail/PHPMailer/PHPMailer.php';
+require_once BASE_PATH . '/includes/mail/PHPMailer/SMTP.php';
 
 // Store
 require_once BASE_PATH . '/stores/account_store.php';
@@ -108,14 +122,17 @@ require_once BASE_PATH . '/stores/internship_batch_store.php';
 require_once BASE_PATH . '/stores/internship_assignment_store.php';
 require_once BASE_PATH . '/stores/internship_submission_store.php';
 require_once BASE_PATH . '/stores/internship_grade_store.php';
+require_once BASE_PATH . '/stores/internship_weekly_report_store.php';
 require_once BASE_PATH . '/stores/media_store.php';
 require_once BASE_PATH . '/stores/post_store.php';
 require_once BASE_PATH . '/stores/cms_page_store.php';
 require_once BASE_PATH . '/stores/category_post_store.php';
 require_once BASE_PATH . '/stores/company_store.php';
 require_once BASE_PATH . '/stores/referral_letter_store.php';
+require_once BASE_PATH . '/stores/referral_letter_student_store.php';
 require_once BASE_PATH . '/stores/ticket_store.php';
 require_once BASE_PATH . '/stores/department_store.php';
+require_once BASE_PATH . '/stores/email_job_store.php';
 
 // Services
 require_once BASE_PATH . '/services/account_service.php';
@@ -136,8 +153,10 @@ require_once BASE_PATH . '/services/cms_page_service.php';
 require_once BASE_PATH . '/services/company_service.php';
 require_once BASE_PATH . '/services/internship_submission_service.php';
 require_once BASE_PATH . '/services/internship_grade_service.php';
+require_once BASE_PATH . '/services/internship_weekly_report_service.php';
 require_once BASE_PATH . '/services/referral_letter_service.php';
 require_once BASE_PATH . '/services/ticket_service.php';
+require_once BASE_PATH . '/services/mail_service.php';
 
 // Controllers
 // Web
@@ -175,3 +194,4 @@ require_once BASE_PATH . '/controllers/api/company_api_controller.php';
 require_once BASE_PATH . '/controllers/api/post_api_controller.php';
 require_once BASE_PATH . '/controllers/api/teacher_dashboard_api_controller.php';
 require_once BASE_PATH . '/controllers/api/export_api_controller.php';
+require_once BASE_PATH . '/controllers/api/classroom_api_controller.php';

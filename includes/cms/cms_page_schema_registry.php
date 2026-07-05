@@ -4,6 +4,13 @@ namespace App\Cms;
 
 final class CmsPageSchemaRegistry
 {
+  private CmsSectionRegistry $_sections;
+
+  public function __construct()
+  {
+    $this->_sections = CmsStaticPageRenderer::defaultRegistry();
+  }
+
   private const PAGES = [
     'landing' => [
       'title' => 'Trang chủ',
@@ -13,54 +20,34 @@ final class CmsPageSchemaRegistry
       'layout_mode' => 'block_builder',
       'blocks' => [
         [
-          'type' => 'cms/carousel',
-          'data' => ['meta' => ['carousel_slug' => 'landing-page', 'variant' => 'standard']],
+          'id' => 'hero',
+          'type' => 'sections/landing_hero',
+          'locked' => true,
         ],
         [
-          'type' => 'cms/landing_story',
-          'data' => ['meta' => ['items' => [
-            ['number' => '01', 'eyebrow' => 'Lorem ispum gì đó ở đây', 'title' => 'Đảm bảo chất lượng đào tạo', 'description' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'image' => 'public/img/about.jpg', 'badge_value' => 'Top 1', 'badge_label' => 'Khoa CNTT tại Miền Nam', 'image_side' => 'right'],
-            ['number' => '02', 'eyebrow' => 'Lorem ispum gì đó ở đây', 'title' => 'Cơ hội Nghề nghiệp', 'description' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'image' => 'public/img/about.jpg', 'badge_value' => '98%', 'badge_label' => 'Tỷ lệ có việc làm', 'image_side' => 'left'],
-            ['number' => '03', 'eyebrow' => 'Lorem ispum gì đó ở đây', 'title' => 'Nghiên cứu Đột phá', 'description' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'image' => 'public/img/about.jpg', 'badge_value' => '50+', 'badge_label' => 'Doanh nghiệp', 'image_side' => 'right'],
-          ]]],
+          'id' => 'landing_about',
+          'type' => 'sections/landing_about',
+          'locked' => false,
         ],
         [
-          'type' => 'cms/experience_grid',
-          'data' => ['meta' => ['badge' => 'Tại sao chọn chúng tôi', 'title' => 'Trải nghiệm Khoa CNTT Cao Thắng', 'subtitle' => 'Nơi ươm mầm tài năng công nghệ thông tin, kết nối tri thức với thực tiễn', 'image' => 'public/img/about.jpg', 'feature_title' => 'Môi trường học tập hiện đại, sáng tạo', 'feature_description' => 'Trang bị phòng lab tiêu chuẩn quốc tế, thư viện số phong phú, không gian làm việc nhóm linh hoạt và hệ thống học tập trực tuyến tiên tiến.', 'stats' => [
-            ['number' => '20', 'label' => 'Năm kinh nghiệm', 'description' => 'Tiên phong trong đào tạo CNTT chất lượng cao tại TP.HCM từ năm 2003', 'variant' => 'blue'],
-            ['number' => '95%', 'label' => 'Tỷ lệ việc làm', 'description' => 'Sinh viên có việc làm trong vòng 6 tháng sau tốt nghiệp', 'variant' => 'pink'],
-          ], 'perks' => [
-            ['icon' => 'fa-solid fa-code', 'title' => 'Công nghệ tiên tiến', 'description' => 'Học tập với công nghệ mới nhất.'],
-            ['icon' => 'fa-solid fa-briefcase', 'title' => 'Cộng đồng Mạnh mẽ', 'description' => 'Kết nối sinh viên với toàn cầu.'],
-            ['icon' => 'fa-solid fa-award', 'title' => 'Chất lượng Quốc tế', 'description' => 'Chương trình đạt chuẩn ABET.'],
-            ['icon' => 'fa-solid fa-rocket', 'title' => 'Khởi nghiệp', 'description' => 'Ươm mầm ý tưởng startup.'],
-          ], 'cards' => [
-            ['title' => 'Nghiên cứu & Phát triển', 'description' => 'Tham gia các dự án nghiên cứu thực tế cùng giảng viên', 'image' => 'public/img/about.jpg', 'variant' => 'blue'],
-            ['title' => 'Hợp tác Quốc tế', 'description' => 'Cơ hội trao đổi sinh viên và học bổng du học', 'image' => 'public/img/about.jpg', 'variant' => 'green'],
-          ]]],
+          'id' => 'why_choose_us',
+          'type' => 'sections/why_choose_us',
+          'locked' => false,
         ],
         [
-          'type' => 'cms/metric_summary',
-          'data' => ['meta' => ['title' => 'Khoa CNTT Cao Thắng', 'subtitle' => 'Định hình tương lai công nghệ thông tin Việt Nam', 'metrics' => [
-            ['icon' => 'fa-solid fa-award', 'number' => '50+', 'label' => 'Giải thưởng', 'description' => 'Trong các cuộc thi lập trình'],
-            ['icon' => 'fa-solid fa-graduation-cap', 'number' => '10K+', 'label' => 'Sinh viên', 'description' => 'Tốt nghiệp thành công'],
-            ['icon' => 'fa-solid fa-briefcase', 'number' => '95%', 'label' => 'Việc làm', 'description' => 'Sau 6 tháng tốt nghiệp'],
-            ['icon' => 'fa-solid fa-earth-asia', 'number' => '20+', 'label' => 'Quốc gia', 'description' => 'Hợp tác quốc tế'],
-          ], 'cards' => [
-            ['title' => 'Chương trình Đào tạo Tiên tiến', 'items' => ['Cập nhật theo công nghệ mới nhất', 'Tích hợp chứng chỉ quốc tế', 'Thực hành dự án thực tế', 'Được quy kỹ năng mềm']],
-            ['title' => 'Phát triển Nghề nghiệp', 'items' => ['Kết nối với 100+ doanh nghiệp', 'Thực tập tại công ty hàng đầu', 'Tư vấn định hướng nghề nghiệp', 'Cơ hội việc làm cao']],
-          ]]],
+          'id' => 'stats',
+          'type' => 'sections/stats',
+          'locked' => false,
         ],
         [
-          'type' => 'cms/cta_band',
-          'data' => ['meta' => ['title' => 'Sẵn sàng bắt đầu hành trình của bạn?', 'description' => 'Gia nhập cộng đồng hơn 10.000 sinh viên và cựu sinh viên đang làm việc tại các công ty công nghệ hàng đầu', 'buttons' => [
-            ['label' => 'Đăng ký tư vấn', 'url' => '#', 'variant' => 'secondary'],
-            ['label' => 'Xem chương trình đào tạo', 'url' => '#', 'variant' => 'outline'],
-          ]]],
+          'id' => 'partnerships',
+          'type' => 'sections/partnerships',
+          'locked' => false,
         ],
         [
-          'type' => 'cms/newsfeed',
-          'data' => ['meta' => ['mode' => 'featured_latest', 'featured_count' => 4, 'latest_count' => 3, 'variant' => 'landing']],
+          'id' => 'newsfeed',
+          'type' => 'sections/newsfeed',
+          'locked' => true,
         ],
       ],
     ],
@@ -72,39 +59,89 @@ final class CmsPageSchemaRegistry
       'layout_mode' => 'block_builder',
       'blocks' => [
         [
-          'type' => 'cms/about_hero',
-          'data' => ['meta' => ['image' => 'public/img/about.jpg', 'badge' => 'Về Chúng Tôi', 'title' => 'Câu chuyện của Cao Thắng', 'subtitle' => 'Từ những ngày đầu tiên đến hôm nay, Cao Thắng không ngừng phát triển để mang đến giáo dục công nghệ chất lượng cao cho sinh viên Việt Nam']],
+          'id' => 'breadcrumbs',
+          'type' => 'sections/breadcrumbs',
+          'locked' => true,
         ],
         [
-          'type' => 'cms/timeline_story',
-          'data' => ['meta' => ['items' => [
-            ['badge' => 'Khoa Công Nghệ Thông Tin', 'title' => '27 năm đổi mới & phát triển', 'image' => 'public/img/about.jpg', 'year' => '1998', 'caption' => 'Khoa CNTT được thành lập', 'image_side' => 'left', 'timeline' => [['year' => '1998', 'description' => 'Khoa Điện Tử - Tin Học, tiền thân của khoa Công Nghệ Thông Tin được thành lập.'], ['year' => '2020', 'description' => 'Đổi tên Khoa Điện tử - Tin học thành Khoa Công nghệ thông tin.']]],
-            ['badge' => 'Trường Cao Đẳng Kỹ Thuật Cao Thắng', 'title' => '100+ năm truyền thống', 'image' => 'public/img/about.jpg', 'year' => '1906', 'caption' => 'Trường được thành lập', 'image_side' => 'right', 'timeline' => [['year' => '1906', 'description' => 'Chính thức thành lập Trường Cơ khí Á Châu.'], ['year' => '1915', 'description' => 'Chủ tịch Tôn Đức Thắng nhập học.'], ['year' => '2016', 'description' => 'Đạt chuẩn kiểm định quốc tế ABET.']]],
-          ]]],
+          'id' => 'about_hero',
+          'type' => 'sections/about_hero',
+          'locked' => false,
         ],
         [
-          'type' => 'cms/bento_showcase',
-          'data' => ['meta' => ['items' => [
-            ['type' => 'image', 'span' => 'large', 'title' => 'Thành tựu', 'badge' => 'Chứng nhận Quốc Tế', 'image' => 'public/img/about.jpg', 'description' => '30+ Quốc gia công nhận'],
-            ['type' => 'color', 'variant' => 'green', 'number' => '25+', 'title' => 'Giảng Viên', 'description' => 'Có hơn 15 năm kinh nghiệm trong việc giảng dạy'],
-            ['type' => 'color', 'variant' => 'pink', 'number' => '50+', 'title' => 'Giải Thưởng', 'description' => 'Từ chính phủ và các tổ chức kiểm định quốc tế'],
-            ['type' => 'plain', 'number' => '10+', 'title' => 'Phòng Lab hiện đại', 'description' => 'Trang bị công nghệ tiên tiến phục vụ học tập và nghiên cứu'],
-            ['type' => 'color', 'variant' => 'orange', 'number' => '100+', 'title' => 'Học bổng hằng năm', 'description' => 'Từ học bổng toàn phần đến các suất trao đổi quốc tế'],
-            ['type' => 'image', 'span' => 'tall', 'title' => 'Môi trường', 'badge' => 'Cộng đồng học tập', 'image' => 'public/img/about.jpg', 'description' => 'Năng động & sáng tạo'],
-          ]]],
+          'id' => 'vision_mission',
+          'type' => 'sections/vision_mission',
+          'locked' => false,
+        ],
+        [
+          'id' => 'history',
+          'type' => 'sections/history',
+          'locked' => false,
+        ],
+        [
+          'id' => 'bento_grid',
+          'type' => 'sections/bento_grid',
+          'locked' => false,
         ],
       ],
     ],
+    'education' => [
+      'title' => 'Đào tạo',
+      'slug' => 'education',
+      'route_path' => '/dao-tao',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [
+        ['id' => 'education_hub', 'type' => 'sections/education_hub', 'locked' => false],
+        ['id' => 'admissions', 'type' => 'sections/admissions', 'locked' => false],
+        ['id' => 'programs', 'type' => 'sections/programs', 'locked' => false],
+        ['id' => 'outcomes', 'type' => 'sections/outcomes', 'locked' => false],
+        ['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false],
+      ],
+    ],
+    /* Retired pages are kept out of the registry; legacy public routes redirect below. */
+    /* 'admissions' => [
+      'title' => 'Thông tin tuyển sinh',
+      'slug' => 'admissions',
+      'route_path' => '/dao-tao/tuyen-sinh',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'admissions', 'type' => 'sections/admissions', 'locked' => false]],
+    ],
+    'academic-programs' => [
+      'title' => 'Chương trình đào tạo',
+      'slug' => 'academic-programs',
+      'route_path' => '/dao-tao/chuong-trinh-dao-tao',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'programs', 'type' => 'sections/programs', 'locked' => false]],
+    ],
+    'program-outcomes' => [
+      'title' => 'Chuẩn đầu ra',
+      'slug' => 'program-outcomes',
+      'route_path' => '/dao-tao/chuan-dau-ra',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'outcomes', 'type' => 'sections/outcomes', 'locked' => false]],
+    ],
+    'curriculum' => [
+      'title' => 'Danh sách môn học',
+      'slug' => 'curriculum',
+      'route_path' => '/dao-tao/danh-sach-mon-hoc',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false]],
+    ], */
   ];
 
   public function allPages(): array
   {
-    return self::PAGES;
+    return array_map(fn(array $page) => $this->hydratePage($page), self::PAGES);
   }
 
   public function page(string $slug): ?array
   {
-    return self::PAGES[$slug] ?? null;
+    return isset(self::PAGES[$slug]) ? $this->hydratePage(self::PAGES[$slug]) : null;
   }
 
   public function hasPage(string $slug): bool
@@ -157,6 +194,8 @@ final class CmsPageSchemaRegistry
 
   private function sectionToDocumentNode(array $section): array
   {
+    $section = $this->hydrateSection($section);
+
     return [
       'id' => $section['id'],
       'type' => $section['type'],
@@ -165,13 +204,57 @@ final class CmsPageSchemaRegistry
     ];
   }
 
-  private function blockToDocumentNode(array $block): array
+  private function hydratePage(array $page): array
   {
-    return [
-      'id' => $block['id'] ?? bin2hex(random_bytes(8)),
-      'type' => $block['type'],
-      'version' => (int) ($block['version'] ?? 1),
-      'data' => $block['data'] ?? ['rich_text' => [], 'meta' => []],
-    ];
+    $page['sections'] = array_map(fn(array $section) => $this->hydrateSection($section), $page['sections'] ?? []);
+
+    return $page;
+  }
+
+  private function hydrateSection(array $section): array
+  {
+    $definition = $this->_sections->get((string) ($section['type'] ?? ''));
+
+    if ($definition === null) {
+      return $section + [
+        'label' => $section['id'] ?? 'Unknown section',
+        'data' => [],
+        'editable_fields' => [],
+        'variants' => [],
+      ];
+    }
+
+    $section['label'] ??= $definition->label();
+    $section['data'] = array_replace_recursive($definition->defaults(), is_array($section['data'] ?? null) ? $section['data'] : []);
+    $section['editable_fields'] ??= $definition->editableFields();
+    $section['field_labels'] = array_replace(
+      $definition->fieldLabels(),
+      is_array($section['field_labels'] ?? null) ? $section['field_labels'] : [],
+    );
+    $section['variants'] ??= $definition->variants();
+
+    if (
+      str_starts_with((string) ($section['type'] ?? ''), 'sections/education_')
+      || in_array($section['type'] ?? '', ['sections/admissions', 'sections/programs', 'sections/outcomes', 'sections/curriculum'], true)
+    ) {
+      $allRepeaters = EducationPageDefaults::repeaterBlueprints();
+      $section['repeaters'] = array_filter(
+        $allRepeaters,
+        fn(string $path): bool => self::repeaterAppliesToFields($path, $section['editable_fields'] ?? []),
+        ARRAY_FILTER_USE_KEY,
+      );
+    }
+
+    return $section;
+  }
+
+  private static function repeaterAppliesToFields(string $repeater, array $fields): bool
+  {
+    $prefix = rtrim(str_replace('.*', '', $repeater), '.');
+    foreach ($fields as $field) {
+      if ($field === $repeater || str_starts_with(str_replace('.*', '', $field), $prefix . '.'))
+        return true;
+    }
+    return false;
   }
 }

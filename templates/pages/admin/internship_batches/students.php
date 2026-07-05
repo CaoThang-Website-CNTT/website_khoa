@@ -6,10 +6,12 @@
  *
  * @var array $batch
  */
+use App\Enums\BatchStatus;
+
 $batch = $batch ?? null;
+$isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 ?>
 
-<link rel="stylesheet" href="<?= url('public/css/batch_students.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/batch_students_assignment.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/export.css') ?>">
 
@@ -27,8 +29,9 @@ $batch = $batch ?? null;
   <i class="fa-solid fa-chevron-left"></i> Quay lại
 </a>
 
-<!-- Toolbar: Phân công tự động -->
-<?php if ($batch['status'] !== 'closed'): ?>
+<div id="batch-students-export-action"></div>
+
+<?php if (!$isReadOnly): ?>
   <button type="button" id="btn-auto-shuffle" class="btn" data-variant="secondary" data-size="lg">
     <i class="fa-solid fa-shuffle"></i> Ngẫu nhiên
   </button>
@@ -40,34 +43,23 @@ $batch = $batch ?? null;
 <?php $layout->end() ?>
 
 <!-- Overall Stats -->
-<div class="assignment-stats">
-  <div class="stat-box stat-box--primary shadow-sm">
-    <div class="stat-box__icon">
-      <i class="fa-solid fa-users"></i>
-    </div>
-    <div class="stat-box__content">
-      <span class="stat-box__label">Tổng sinh viên</span>
-      <div class="stat-box__value" id="stat-total-students">--</div>
+<div class="stats-grid assignment-stats">
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Tổng sinh viên</span>
+      <span class="stats-card__value" id="stat-total-students">--</span>
     </div>
   </div>
-
-  <div class="stat-box stat-box--success shadow-sm">
-    <div class="stat-box__icon">
-      <i class="fa-solid fa-user-check"></i>
-    </div>
-    <div class="stat-box__content">
-      <span class="stat-box__label">Đã phân công</span>
-      <div class="stat-box__value" id="stat-assigned-students">--</div>
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Đã phân công</span>
+      <span class="stats-card__value" id="stat-assigned-students">--</span>
     </div>
   </div>
-
-  <div class="stat-box shadow-sm">
-    <div class="stat-box__icon stat-box__icon--muted">
-      <i class="fa-solid fa-user-clock"></i>
-    </div>
-    <div class="stat-box__content">
-      <span class="stat-box__label">Chưa phân công</span>
-      <div class="stat-box__value" id="stat-unassigned-students">--</div>
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Chưa phân công</span>
+      <span class="stats-card__value" id="stat-unassigned-students">--</span>
     </div>
   </div>
 </div>
@@ -76,6 +68,7 @@ $batch = $batch ?? null;
   <!-- CỘT CHÍNH (2/3): Thống kê tổng và Danh sách sinh viên -->
   <div class="detail-layout__main">
     <div class="card shadow-sm">
+      <div class="card__content">
       <div class="tm-container" data-tm="batch_students_table" data-tm-mode="client" data-tm-searchable="true"
         data-tm-selectable="true" data-tm-id-key="batch_student_id">
 
@@ -119,9 +112,11 @@ $batch = $batch ?? null;
             data-batch-student-id="{{ row.batch_student_id }}" data-teacher-id="{{ row.teacher_id || '' }}">
             <div class="teacher-cell__display">
               <span class="teacher-cell__name text-sm font-semibold">{{ value || 'Chưa phân công' }}</span>
-              <button type="button" class="btn-teacher-edit btn-icon" title="Sửa phân công">
-                <i class="fa-solid fa-pen text-xs"></i>
-              </button>
+              <?php if (!$isReadOnly): ?>
+                <button type="button" class="btn-teacher-edit btn-icon" title="Sửa phân công">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+              <?php endif; ?>
             </div>
             <div class="teacher-cell__editor hidden">
               <select class="teacher-cell__select field__input">
@@ -133,23 +128,30 @@ $batch = $batch ?? null;
 
         <template data-tm-pagination></template>
       </div>
+      </div>
     </div>
   </div>
 
   <!-- CỘT PHỤ (1/3): Thống kê giảng viên -->
   <aside class="detail-layout__sidebar">
     <div class="card shadow-sm h-full flex flex-col">
-      <div class="card__header flex justify-between items-center">
-        <h3 class="font-bold text-lg"><i class="fa-solid fa-chalkboard-user mr-2"></i>Giảng viên <span class="badge"
+      <div class="card__header">
+        <h3 class="card__title"><i class="fa-solid fa-chalkboard-user mr-2"></i>Giảng viên <span class="badge"
             data-variant="primary" id="supervisor-count">0</span></h3>
+        <a href="<?= url('admin/internship_batches/' . $batch['id'] . '/teachers') ?>" class="btn card__action"
+          data-variant="outline" data-size="sm" title="Quản lý giảng viên">
+          <i class="fa-solid fa-up-right-from-square"></i>
+        </a>
       </div>
       <hr class="separator">
+      <div class="card__content">
       <div id="supervisor-stats-container" class="supervisor-list">
         <!-- Loading state -->
         <div class="flex flex-col items-center justify-center p-8">
           <i class="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
           <span class="text-sm">Đang tải dữ liệu...</span>
         </div>
+      </div>
       </div>
     </div>
   </aside>
@@ -201,7 +203,7 @@ $batch = $batch ?? null;
 <div id="modal-auto-even" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Phân công đều</h3>
-    <p class="modal__description">Phân công đều số lương sinh viên cho giảng viên theo thứ tự từ trên xuống.</p>
+    <p class="modal__description">Phân công đều số lượng sinh viên cho giảng viên theo thứ tự từ trên xuống. Nếu đợt đã công bố, hệ thống sẽ gửi thông báo email cho sinh viên và giảng viên liên quan.</p>
   </div>
   <div class="modal__footer">
     <button type="button" id="btn-close-even-modal" class="btn" data-size="lg" data-variant="outline"
@@ -216,13 +218,26 @@ $batch = $batch ?? null;
 <div id="modal-auto-shuffle" class="modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Phân công ngẫu nhiên</h3>
-    <p class="modal__description">Phân công ngẫu nhiên sinh viên cho giảng viên.</p>
+    <p class="modal__description">Phân công ngẫu nhiên sinh viên cho giảng viên. Nếu đợt đã công bố, hệ thống sẽ gửi thông báo email cho sinh viên và giảng viên liên quan.</p>
   </div>
   <div class="modal__footer">
     <button type="button" id="btn-close-shuffle-modal" class="btn" data-size="lg" data-variant="outline"
       data-modal-close>Hủy</button>
     <button type="button" id="btn-confirm-auto-shuffle" class="btn" data-size="lg" data-variant="primary">Thực
       hiện</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<!-- Modal: Xác nhận thay đổi khi đợt đã công bố -->
+<div id="modal-confirm-published-assignment" class="modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận thay đổi phân công</h3>
+    <p class="modal__description">Thao tác này sẽ cập nhật phân công và gửi thông báo email cho sinh viên, giảng viên liên quan. Bạn có muốn tiếp tục?</p>
+  </div>
+  <div class="modal__footer">
+    <button type="button" id="btn-close-published-assignment" class="btn" data-size="lg" data-variant="outline" data-modal-close>Hủy</button>
+    <button type="button" id="btn-confirm-published-assignment" class="btn" data-size="lg" data-variant="primary">Tiếp tục</button>
   </div>
   <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>

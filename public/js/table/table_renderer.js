@@ -142,6 +142,7 @@ export class TableRenderer {
       filterCols.forEach(col => filterBar.appendChild(this.#buildFilterDropdown(col)));
       topRow.appendChild(filterBar);
     }
+
     toolbar.appendChild(topRow);
 
     // Vùng hiển thị các pill bộ lọc

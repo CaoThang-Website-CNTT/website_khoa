@@ -3,6 +3,8 @@
 namespace App\Stores;
 
 use App\Core\Store;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 use PDO;
 
 interface IInternshipSubmissionStore
@@ -20,9 +22,9 @@ class InternshipSubmissionStore extends Store implements IInternshipSubmissionSt
 {
   public function getById(int $id): ?array
   {
-    $sql = "SELECT * FROM internship_submissions WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')->select('*')->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
   }
@@ -30,47 +32,39 @@ class InternshipSubmissionStore extends Store implements IInternshipSubmissionSt
   public function create(array $data): int
   {
     // Đánh dấu các file nộp trước đó là đã cũ
-    $sqlReset = "UPDATE internship_submissions 
-                 SET is_latest = 0 
-                 WHERE batch_student_id = :batch_student_id";
-    $stmtReset = $this->db->prepare($sqlReset);
-    $stmtReset->execute([
-      ':batch_student_id' => $data['batch_student_id']
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')
+      ->update(['is_latest' => 0])->eq('batch_student_id', $data['batch_student_id']);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
-    $sql = "INSERT INTO internship_submissions 
-            (batch_student_id, original_file_name, storage_mode, file_path, external_url, is_latest, submitted_at) 
-            VALUES (:batch_student_id, :original_file_name, :storage_mode, :file_path, :external_url, 1, NOW())";
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':batch_student_id' => $data['batch_student_id'],
-      ':original_file_name' => $data['original_file_name'],
-      ':storage_mode' => $data['storage_mode'] ?? 'file',
-      ':file_path' => $data['file_path'] ?? null,
-      ':external_url' => $data['external_url'] ?? null
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')->insert([
+      'batch_student_id' => $data['batch_student_id'], 'original_file_name' => $data['original_file_name'],
+      'storage_mode' => $data['storage_mode'] ?? 'file', 'file_path' => $data['file_path'] ?? null,
+      'external_url' => $data['external_url'] ?? null, 'is_latest' => 1,
+      'submitted_at' => date('Y-m-d H:i:s'),
     ]);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return (int)$this->db->lastInsertId();
   }
 
   public function getLatestByBatchStudent(int $batchStudentId): ?array
   {
-    $sql = "SELECT * FROM internship_submissions 
-            WHERE batch_student_id = :batch_student_id AND is_latest = 1";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')
+      ->select('*')->eq('batch_student_id', $batchStudentId)->eq('is_latest', 1);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
   }
 
   public function getAllByBatchStudentId(int $batchStudentId): ?array
   {
-    $sql = "SELECT * FROM internship_submissions 
-            WHERE batch_student_id = :batch_student_id
-            ORDER BY submitted_at DESC";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')
+      ->select('*')->eq('batch_student_id', $batchStudentId)->order('submitted_at', ['ascending' => false]);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $result ?: null;
   }
@@ -78,41 +72,31 @@ class InternshipSubmissionStore extends Store implements IInternshipSubmissionSt
   public function createWithType(array $data): int
   {
     // Reset is_latest for the specific type
-    $sqlReset = "UPDATE internship_submissions 
-                 SET is_latest = 0 
-                 WHERE batch_student_id = :batch_student_id AND type = :type";
-    $stmtReset = $this->db->prepare($sqlReset);
-    $stmtReset->execute([
-      ':batch_student_id' => $data['batch_student_id'],
-      ':type' => $data['type']
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')->update(['is_latest' => 0])
+      ->eq('batch_student_id', $data['batch_student_id'])->eq('type', $data['type']);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     // Insert new submission
-    $sql = "INSERT INTO internship_submissions 
-            (batch_student_id, type, original_file_name, mime_type, storage_mode, file_path, external_url, is_latest, submitted_at) 
-            VALUES (:batch_student_id, :type, :original_file_name, :mime_type, :storage_mode, :file_path, :external_url, 1, NOW())";
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':batch_student_id' => $data['batch_student_id'],
-      ':type' => $data['type'],
-      ':original_file_name' => $data['original_file_name'],
-      ':mime_type' => $data['mime_type'] ?? null,
-      ':storage_mode' => $data['storage_mode'] ?? 'file',
-      ':file_path' => $data['file_path'] ?? null,
-      ':external_url' => $data['external_url'] ?? null
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')->insert([
+      'batch_student_id' => $data['batch_student_id'], 'type' => $data['type'],
+      'original_file_name' => $data['original_file_name'], 'mime_type' => $data['mime_type'] ?? null,
+      'storage_mode' => $data['storage_mode'] ?? 'file', 'file_path' => $data['file_path'] ?? null,
+      'external_url' => $data['external_url'] ?? null, 'is_latest' => 1,
+      'submitted_at' => date('Y-m-d H:i:s'),
     ]);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return (int)$this->db->lastInsertId();
   }
 
   public function getLatestByBatchStudentGroupedByType(int $batchStudentId): array
   {
-    $sql = "SELECT * FROM internship_submissions 
-            WHERE batch_student_id = :batch_student_id AND is_latest = 1
-            ORDER BY type ASC";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')
+      ->select('*')->eq('batch_student_id', $batchStudentId)->eq('is_latest', 1)->order('type');
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $result = [];
@@ -126,14 +110,11 @@ class InternshipSubmissionStore extends Store implements IInternshipSubmissionSt
 
   public function getAllByBatchStudentAndType(int $batchStudentId, string $type): array
   {
-    $sql = "SELECT * FROM internship_submissions 
-            WHERE batch_student_id = :batch_student_id AND type = :type
-            ORDER BY submitted_at DESC";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':batch_student_id' => $batchStudentId,
-      ':type' => $type
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_submissions')
+      ->select('*')->eq('batch_student_id', $batchStudentId)
+      ->eq('type', $type)->order('submitted_at', ['ascending' => false]);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $result ?: [];
   }

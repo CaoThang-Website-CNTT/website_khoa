@@ -1,0 +1,49 @@
+/* ==========================================================================
+   TEACHER WEEKLY REPORTS STYLES
+   ========================================================================== */
+
+.week-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+}
+
+.week-selector__title {
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin: 0 1rem;
+}
+
+.week-selector__btn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+}
+
+.week-selector__btn:hover:not(.disabled) {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.week-selector__btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stat-box__warning .stat-box__icon {
+  background: var(--toast-warning-bg);
+  color: var(--toast-warning-color);
+}
+
+.report-content-preview {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

@@ -257,7 +257,16 @@ INSERT INTO `categories` (`id`, `name`, `slug`, `type`, `parent_id`) VALUES
 (17, 'Cơ hội việc làm', 'co-hoi-viec-lam', 'custom', 15),
 (18, 'Sáng tạo khởi nghiệp', 'sang-tao-khoi-nghiep', 'custom', 19),
 (19, 'Góc sinh viên', 'goc-sinh-vien', 'custom', 9),
-(20, 'Tin nội bộ', 'tin-noi-bo', 'custom', 1);
+(20, 'Tin nội bộ', 'tin-noi-bo', 'custom', 1),
+(21, 'Hoạt động', 'hoat-dong', 'const', NULL),
+(22, 'Công tác giảng dạy', 'cong-tac-giang-day', 'custom', 21),
+(23, 'Nghiên cứu khoa học', 'nghien-cuu-khoa-hoc', 'custom', 21),
+(24, 'Giảng viên', 'giang-vien', 'custom', 23),
+(25, 'Học thuật', 'hoc-thuat', 'custom', 21),
+(26, 'Thi đua đoàn thể', 'thi-dua-doan-the', 'custom', 21),
+(27, 'Phong trào & Ngoại khóa', 'phong-trao-ngoai-khoa', 'custom', 21),
+(28, 'CLB Tin học', 'clb-tin-hoc', 'custom', 21),
+(29, 'Thông báo', 'thong-bao', 'const', NULL);
 
 
 -- ---------------------------------------------------------------------------- 
@@ -265,49 +274,47 @@ INSERT INTO `categories` (`id`, `name`, `slug`, `type`, `parent_id`) VALUES
 -- ---------------------------------------------------------------------------- 
 INSERT INTO `menus` (`id`, `key`, `label`, `type`) VALUES 
 (1, 'header_menu', 'Menu Chính', 'const'),
-(2, 'footer_menu', 'Menu Chân Trang', 'const'),
-(3, 'student_menu', 'Menu Sinh Viên', 'const'),
-(4, 'navbar_menu', 'Menu điều hướng', 'custom');
+(2, 'footer_menu', 'Menu Chân Trang', 'const');
 
 INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_order`) VALUES
 -- Header Menu
 (1, 1, NULL, 'Trang chủ', '/', 1),
 (2, 1, NULL, 'Giới thiệu', '/gioi-thieu', 2),
-(3, 1, NULL, 'Tuyển sinh', '/tuyen-sinh', 3),
-(4, 1, NULL, 'Đào tạo', '/dao-tao', 4),
-(5, 1, 4, 'Các ngành đào tạo', '/dao-tao/nganh-hoc', 1),
-(6, 1, 4, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 2),
-(7, 1, NULL, 'Tin tức', '/tin-tuc', 5),
-(8, 1, NULL, 'Liên hệ', '/lien-he', 6),
-(25, 1, NULL, 'Portal', '/portal', 7),
+(3, 1, NULL, 'Đào tạo', '/dao-tao', 3),
+(4, 1, 3, 'Thông tin tuyển sinh', '/dao-tao/tuyen-sinh', 1),
+(5, 1, 3, 'Chương trình đào tạo', '/dao-tao/chuong-trinh-dao-tao', 2),
+(6, 1, 5, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 1),
+(7, 1, 5, 'Danh sách môn học', '/dao-tao/danh-sach-mon-hoc', 2),
+(8, 1, NULL, 'Hoạt động', '/tin-tuc?category=hoat-dong', 4),
+(9, 1, 8, 'Công tác giảng dạy', '/tin-tuc?category=cong-tac-giang-day', 1),
+(10, 1, 8, 'Nghiên cứu khoa học', '/tin-tuc?category=nghien-cuu-khoa-hoc', 2),
+(11, 1, 10, 'Sinh viên', '/tin-tuc?category=nghien-cuu-khoa-hoc,sinh-vien', 1),
+(12, 1, 10, 'Giảng viên', '/tin-tuc?category=nghien-cuu-khoa-hoc,giang-vien', 2),
+(13, 1, 8, 'Học thuật', '/tin-tuc?category=hoc-thuat', 3),
+(14, 1, 8, 'Thi đua đoàn thể', '/tin-tuc?category=thi-dua-doan-the', 4),
+(15, 1, 8, 'Phong trào & Ngoại khóa', '/tin-tuc?category=phong-trao-ngoai-khoa', 5),
+(16, 1, 8, 'CLB Tin học', '/tin-tuc?category=clb-tin-hoc', 6),
+(17, 1, NULL, 'Sinh viên', '/tin-tuc?category=sinh-vien', 5),
+(18, 1, 17, 'E-learning', 'https://ttth-caothang.site', 1),
+(19, 1, 17, 'Thông báo', '/tin-tuc?category=thong-bao', 2),
+(20, 1, 17, 'Portal', '/portal', 3),
+(21, 1, 2, 'Tầm nhìn & Sứ mệnh', '/gioi-thieu#tam-nhin-su-menh', 1),
+(25, 1, 2, 'Lịch sử phát triển', '/gioi-thieu#lich-su-phat-trien', 2),
+(22, 1, NULL, 'Việc Làm', '/tin-tuc?category=tuyen-dung', 6),
+(23, 1, 22, 'Doanh Nghiệp', '/viec-lam/doanh-nghiep', 1),
+(24, 1, 22, 'Tin Tuyển Dụng', '/tin-tuc?category=tuyen-dung', 2),
 
 -- Footer Menu
-(9, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
-(10, 2, NULL, 'Điều khoản sử dụng', '/terms', 2),
-(11, 2, NULL, 'Sơ đồ website', '/sitemap', 3),
-
--- Student Menu (có parent_id)
-(12, 3, NULL, 'Học tập', NULL, 1),
-(13, 3, 12, 'Thời khóa biểu', '/sinhvien/thoi-khoa-bieu', 1),
-(14, 3, 12, 'Kết quả học tập', '/sinhvien/diem', 2),
-(15, 3, NULL, 'Học phí', '/sinhvien/hoc-phi', 2),
-(16, 3, NULL, 'Đăng ký học phần', '/sinhvien/dang-ky', 3),
-(17, 3, NULL, 'Biểu mẫu', '/sinhvien/bieu-mau', 4),
-
--- Navbar Menu
-(18, 4, NULL, 'Giới thiệu', '/gioi-thieu', 1),
-(19, 4, NULL, 'Tuyển sinh', '/tuyen-sinh', 2),
-(20, 4, NULL, 'Đào tạo', '/dao-tao', 3),
-(21, 4, 20, 'Các ngành đào tạo', '/dao-tao/nganh-hoc', 1),
-(22, 4, 20, 'Chuẩn đầu ra', '/dao-tao/chuan-dau-ra', 2),
-(23, 4, NULL, 'Tin tức', '/tin-tuc', 4),
-(24, 4, NULL, 'Liên hệ', '/lien-he', 5);
+(101, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
+(102, 2, NULL, 'Điều khoản sử dụng', '/terms', 2),
+(103, 2, NULL, 'Sơ đồ website', '/sitemap', 3);
 
 -- ---------------------------------------------------------------------------- 
 -- 11. BẢNG CAROUSELS & CAROUSEL_SLIDES
 -- ---------------------------------------------------------------------------- 
 INSERT INTO `carousels` (`id`, `name`, `slug`, `is_active`) VALUES 
-(1, 'Trang chủ (Landing Page)', 'landing-page', 1);
+(1, 'Trang chủ (Landing Page)', 'landing-page', 1),
+(2, 'Doanh nghiệp đối tác', 'partner-companies', 1);
 
 -- Thêm dữ liệu cho bảng carousel_slides (4 slides)
 INSERT INTO `carousel_slides` 
@@ -327,6 +334,24 @@ INSERT INTO `cms_pages` (`title`, `slug`, `route_path`, `type`, `status`, `layou
 '{}', NOW(), NOW(), NOW()),
 ('Giới thiệu', 'about', '/gioi-thieu', 'landing_page', 'published', 'section_schema',
 '{"version":1,"sections":[{"id":"breadcrumbs","type":"sections/breadcrumbs","locked":true,"data":[]},{"id":"about_hero","type":"sections/about_hero","locked":false,"data":{"image":"public/img/about.jpg","badge":"Về Chúng Tôi","title":"Câu chuyện của Cao Thắng","subtitle":"Từ những ngày đầu tiên đến hôm nay, Cao Thắng không ngừng phát triển để mang đến giáo dục công nghệ chất lượng cao cho sinh viên Việt Nam"}},{"id":"history","type":"sections/history","locked":false,"data":{"sections":[{"image":{"src":"public/img/about.jpg","alt":"Lecture hall with students","caption":"Khoa CNTT được thành lập"},"year":"1998","badge":"<i class=\\"fa-solid fa-graduation-cap\\"></i> <span class=\\"text-sm\\">Khoa Công Nghệ Thông Tin</span>","title":"27 năm đổi mới & phát triển","timeline":[{"year":"1998","description":"Khoa Điện Tử - Tin Học, tiền thân của khoa Công Nghệ Thông Tin được thành lập."},{"year":"2020","description":"Đổi tên Khoa Điện tử - Tin học thành Khoa Công nghệ thông tin."}]},{"image":{"src":"public/img/about.jpg","alt":"Lecture hall with students","caption":"Trường được thành lập"},"year":"1906","badge":"<i class=\\"fa-solid fa-building-columns\\"></i> <span class=\\"text-sm\\">Trường Cao Đẳng Kỹ Thuật Cao Thắng</span>","title":"100+ năm truyền thống","timeline":[{"year":"1906","description":"Chính thức thành lập Trường Cơ khí Á Châu (L''école des Mécaniciens Asiatiques), tiền thân của trường."},{"year":"1915","description":"Chủ tịch Tôn Đức Thắng nhập học."},{"year":"2004","description":"Chính thức đổi tên thành Trường Cao đẳng Kỹ thuật Cao Thắng."},{"year":"2016","description":"Đạt chuẩn kiểm định quốc tế ABET."}]}]}},{"id":"bento_grid","type":"sections/bento_grid","locked":false,"data":{"items":[{"badge":"<i class=\\"fa-solid fa-award\\"></i> <span>Chứng nhận Quốc Tế</span>","image":{"src":"public/img/about.jpg","alt":""},"content":"Thành tựu","footer":"<span class=\\"badge px-3 py-2 text-sm md:text-md\\" data-variant=\\"glass\\">30+ Quốc gia công nhận</span> <span class=\\"badge px-3 py-2 text-sm md:text-md\\" data-variant=\\"glass\\">Top 5 Khoa CNTT VN</span>"},{"badge":"<i class=\\"fa-solid fa-user-group\\"></i>","image":{"src":"","alt":""},"content":"25+","subContent":"Giảng Viên","footer":"Có hơn 15 năm kinh nghiệm trong việc giảng dạy"},{"badge":"<i class=\\"fa-solid fa-award\\"></i>","image":{"src":"","alt":""},"content":"50+","subContent":"Giải Thưởng","footer":"Từ chính phủ và các tổ chức kiểm định quốc tế"},{"badge":"<i class=\\"fa-solid fa-rocket\\"></i>","image":{"src":"","alt":""},"content":"10+","subContent":"Phòng Lab hiện đại","footer":"Trang bị công nghệ tiên tiến phục vụ học tập và nghiên cứu"},{"badge":"<i class=\\"fa-solid fa-graduation-cap\\"></i>","image":{"src":"","alt":""},"content":"100+","subContent":"Học bổng hàng năm","footer":"Từ học bổng toàn phần đến các suất trao đổi quốc tế"},{"badge":"<i class=\\"fa-solid fa-user-group\\"></i> <span>Cộng đồng học tập</span>","image":{"src":"public/img/about.jpg","alt":""},"content":"Môi trường","subContent":"Năng động & sáng tạo","footer":"Nhiều hoạt động, sự kiện nhằm thúc đẩy tinh thần năng nổ của Sinh Viên"},{"badge":"<i class=\\"fa-solid fa-building\\"></i>","image":{"src":"","alt":""},"content":"100+","subContent":"Doanh nghiệp đối tác","footer":"FPT, Viettel, Samsung, Google và nhiều công ty hàng đầu"},{"badge":"<i class=\\"fa-solid fa-arrow-trend-up\\"></i>","image":{"src":"","alt":""},"content":"1,000+","subContent":"Cựu sinh viên","footer":"Làm việc tại các công ty công nghệ hàng đầu toàn cầu"}]}}]}',
+'{}', NOW(), NOW(), NOW()),
+('Tầm nhìn & Sứ mệnh', 'vision-mission', '/gioi-thieu/tam-nhin-su-menh', 'about_page', 'published', 'section_schema',
+'{"version":1,"sections":[{"id":"vision_mission","type":"sections/vision_mission","locked":false,"data":{"eyebrow":"Định hướng phát triển","title":"Tầm nhìn & Sứ mệnh","introduction":"Kế thừa truyền thống đào tạo kỹ thuật của Cao Thắng, Khoa Công nghệ thông tin gắn tri thức với thực hành, đổi mới và nhu cầu của xã hội.","vision_title":"Tầm nhìn","vision":"Trở thành đơn vị đào tạo công nghệ thông tin ứng dụng vững mạnh, hiện đại và nhân văn; không ngừng nâng cao chất lượng để người học thích nghi, sáng tạo và phát triển trong môi trường công nghệ luôn thay đổi.","mission_title":"Sứ mệnh","mission":"Đào tạo nguồn nhân lực có kỷ luật, đạo đức nghề nghiệp, kiến thức vững và tay nghề tốt; kết nối đào tạo với thực tiễn doanh nghiệp, thúc đẩy nghiên cứu, đổi mới phương pháp giảng dạy và ứng dụng công nghệ phục vụ nhà trường và cộng đồng.","principles":[{"title":"Học đi đôi với hành","description":"Chú trọng năng lực thực hành, giải quyết vấn đề và khả năng đáp ứng công việc thực tế."},{"title":"Đổi mới liên tục","description":"Cập nhật chương trình, công nghệ và phương pháp giảng dạy phù hợp với sự phát triển của xã hội."},{"title":"Đồng hành cùng doanh nghiệp","description":"Mở rộng hợp tác trong đào tạo, thực tập, nghiên cứu và tạo cơ hội nghề nghiệp cho sinh viên."}],"source_note":"Nội dung được biên soạn từ tư liệu lịch sử Kỷ yếu Khoa Điện tử - Tin học; đây là bản CMS có thể tiếp tục hiệu chỉnh và phê duyệt."}}]}',
+'{}', NOW(), NOW(), NOW()),
+('Đào tạo', 'education', '/dao-tao', 'education_page', 'published', 'section_schema',
+'{"version":1,"sections":[{"id":"education_hub","type":"sections/education_hub","locked":false,"data":{"eyebrow":"Đào tạo tại Khoa Công nghệ thông tin","title":"Chọn chương trình phù hợp với bạn","description":"Khám phá thông tin tuyển sinh, định hướng từng chương trình, chuẩn đầu ra và kế hoạch học tập được công bố chính thức.","links":[{"icon":"fa-solid fa-user-graduate","title":"Thông tin tuyển sinh","description":"Tìm hiểu ngành đào tạo trước khi xem hướng dẫn đăng ký chính thức của Trường.","url":"dao-tao/tuyen-sinh","label":"Xem thông tin"},{"icon":"fa-solid fa-graduation-cap","title":"Chương trình đào tạo","description":"So sánh mục tiêu, định hướng nghề nghiệp và cấu trúc của ba chương trình.","url":"dao-tao/chuong-trinh-dao-tao","label":"Khám phá chương trình"},{"icon":"fa-solid fa-bullseye","title":"Chuẩn đầu ra","description":"Những năng lực sinh viên cần đạt khi tốt nghiệp và sau khi tham gia thị trường lao động.","url":"dao-tao/chuan-dau-ra","label":"Xem chuẩn đầu ra"},{"icon":"fa-solid fa-list-check","title":"Danh sách môn học","description":"Theo dõi các học phần theo từng học kỳ, gồm tín chỉ và thời lượng lý thuyết, thực hành.","url":"dao-tao/danh-sach-mon-hoc","label":"Xem kế hoạch học tập"}],"programs_title":"Ba chương trình, nhiều hướng phát triển","programs_description":"Các chương trình kết hợp kiến thức nền tảng với thực hành nghề nghiệp và được tổ chức trong sáu học kỳ.","programs":[{"key":"cntt","name":"Cao đẳng Công nghệ thông tin","short_name":"CNTT","summary":"Phát triển giải pháp phần mềm, web, di động, mạng máy tính và trí tuệ nhân tạo ứng dụng.","credits":"134"},{"key":"qtm","name":"Cao đẳng Quản trị mạng máy tính","short_name":"QTM","summary":"Thiết kế, triển khai, vận hành và bảo vệ hạ tầng mạng, máy chủ và dịch vụ hệ thống.","credits":"134"},{"key":"scmt","name":"Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính","short_name":"SCMT","summary":"Lắp ráp, chẩn đoán, sửa chữa phần cứng và triển khai hệ thống máy tính, thiết bị mạng.","credits":"131"}]}}]}',
+'{}', NOW(), NOW(), NOW()),
+('Thông tin tuyển sinh', 'admissions', '/dao-tao/tuyen-sinh', 'education_page', 'published', 'section_schema',
+'{"version":1,"sections":[{"id":"admissions","type":"sections/admissions","locked":false,"data":{"eyebrow":"Thông tin tuyển sinh","title":"Bắt đầu hành trình tại Cao Thắng","description":"Khoa Công nghệ thông tin đào tạo theo định hướng ứng dụng, chú trọng năng lực thực hành và khả năng thích nghi với môi trường nghề nghiệp.","notice_title":"Thông tin đăng ký chính thức","notice":"Chỉ tiêu, phương thức xét tuyển, mốc thời gian, học phí và hồ sơ được Trường Cao đẳng Kỹ thuật Cao Thắng công bố tập trung trên cổng tuyển sinh. Nội dung tại trang này giúp bạn định hướng chương trình, không thay thế thông báo tuyển sinh chính thức.","cta_label":"Đến cổng tuyển sinh Cao Thắng","cta_url":"https://caothang.edu.vn/tuyensinh/","steps_title":"Tìm chương trình phù hợp","steps":[{"title":"Khám phá chương trình","description":"Đọc mục tiêu và định hướng nghề nghiệp của từng ngành."},{"title":"Kiểm tra chuẩn đầu ra","description":"Xác định những kiến thức và kỹ năng bạn sẽ hình thành."},{"title":"Xem kế hoạch học tập","description":"Tham khảo các môn học, tín chỉ và thời lượng thực hành."},{"title":"Theo dõi thông báo chính thức","description":"Kiểm tra điều kiện và thời hạn đăng ký tại cổng tuyển sinh của Trường."}],"programs":[{"key":"cntt","name":"Cao đẳng Công nghệ thông tin","summary":"Phát triển giải pháp phần mềm, web, di động, mạng máy tính và trí tuệ nhân tạo ứng dụng."},{"key":"qtm","name":"Cao đẳng Quản trị mạng máy tính","summary":"Thiết kế, triển khai, vận hành và bảo vệ hạ tầng mạng, máy chủ và dịch vụ hệ thống."},{"key":"scmt","name":"Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính","summary":"Lắp ráp, chẩn đoán, sửa chữa phần cứng và triển khai hệ thống máy tính, thiết bị mạng."}]}}]}',
+'{}', NOW(), NOW(), NOW()),
+('Chương trình đào tạo', 'academic-programs', '/dao-tao/chuong-trinh-dao-tao', 'education_page', 'published', 'section_schema',
+'{"version":1,"sections":[{"id":"programs","type":"sections/programs","locked":false,"data":{"eyebrow":"Chương trình đào tạo","title":"Nền tảng vững, kỹ năng sát thực tế","description":"Xem mục tiêu, cấu trúc và hướng phát triển nghề nghiệp của từng chương trình.","programs":[{"key":"cntt","short_name":"CNTT","name":"Cao đẳng Công nghệ thông tin","summary":"Phát triển giải pháp phần mềm, web, di động, mạng máy tính và trí tuệ nhân tạo ứng dụng.","duration":"6 học kỳ","credits":"134","practice_ratio":"59,8%","source_year":"2026","outcomes_year":"2026","updated_at":"21/04/2026","career":"Tham gia phân tích, thiết kế, triển khai và tư vấn các giải pháp công nghệ thông tin trong cơ quan, tổ chức và doanh nghiệp.","objectives":["Là thành viên chủ chốt trong nhóm phân tích, thiết kế, triển khai, tư vấn các giải pháp và dự án công nghệ thông tin.","Hoàn thiện kỹ năng và kiến thức các lĩnh vực công nghệ thông tin thông qua việc tiếp tục học tập nâng cao trình độ.","Trở thành chuyên gia công nghệ thông tin có tinh thần đóng góp xã hội; tuân thủ đạo đức, pháp luật và nhận thức tác động của công nghệ đối với xã hội."],"outcomes":["Phân tích bài toán trong phạm vi rộng và áp dụng kiến thức cơ bản về công nghệ thông tin để xác định giải pháp.","Thiết kế và triển khai các giải pháp công nghệ thông tin đáp ứng tập hợp yêu cầu trong ngữ cảnh cho trước.","Giao tiếp hiệu quả trong môi trường làm việc chuyên nghiệp.","Nhận thức trách nhiệm nghề nghiệp và đưa ra đánh giá dựa trên các nguyên tắc pháp lý, đạo đức.","Làm việc hiệu quả với vai trò thành viên của nhóm.","Áp dụng, tích hợp và quản lý bảo mật trong lĩnh vực công nghệ thông tin để đáp ứng nhu cầu người dùng."],"specializations":["Công nghệ lập trình ứng dụng Web","Công nghệ lập trình ứng dụng Di động","Mạng máy tính","Trí tuệ nhân tạo ứng dụng"]},{"key":"qtm","short_name":"QTM","name":"Cao đẳng Quản trị mạng máy tính","summary":"Thiết kế, triển khai, vận hành và bảo vệ hạ tầng mạng, máy chủ và dịch vụ hệ thống.","duration":"6 học kỳ","credits":"134","practice_ratio":"58,5%","source_year":"2026","outcomes_year":"2026","updated_at":"27/05/2026","career":"Làm việc trong quản trị hệ thống mạng, triển khai hạ tầng, bảo mật và tư vấn giải pháp tin học hóa cho tổ chức, doanh nghiệp.","objectives":["Là nhân viên lành nghề trong công việc quản trị hệ thống mạng của tổ chức, doanh nghiệp.","Là nhân viên lành nghề trong nhóm phân tích, thiết kế và triển khai các giải pháp hạ tầng hệ thống mạng.","Là nhân viên lành nghề trong hoạt động tư vấn kỹ thuật, tư vấn giải pháp tin học hóa."],"outcomes":["Tuân thủ quy định về an toàn thông tin, bảo mật dữ liệu và đạo đức nghề nghiệp; có trách nhiệm trong công việc.","Tự học, tìm hiểu tài liệu kỹ thuật và cập nhật công nghệ mới phục vụ chuyên môn.","Giao tiếp, làm việc nhóm, trình bày vấn đề kỹ thuật và viết báo cáo chuyên môn hiệu quả.","Sử dụng các phần mềm ứng dụng phục vụ công việc chuyên môn.","Lắp ráp, cài đặt, cấu hình, bảo trì và xử lý sự cố máy tính, thiết bị mạng cơ bản.","Phân tích yêu cầu để thiết kế, triển khai, vận hành và bảo trì hệ thống mạng.","Phân tích, thiết kế, triển khai và bảo trì cơ sở dữ liệu, phần mềm, website và mạng máy tính.","Áp dụng giải pháp bảo mật và an ninh mạng cơ bản để giám sát, bảo đảm an toàn hệ thống thông tin."],"specializations":[]},{"key":"scmt","short_name":"SCMT","name":"Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính","summary":"Lắp ráp, chẩn đoán, sửa chữa phần cứng và triển khai hệ thống máy tính, thiết bị mạng.","duration":"6 học kỳ","credits":"131","practice_ratio":"59,8%","source_year":"2026","outcomes_year":"2024","updated_at":"27/05/2026","career":"Xây dựng, bảo trì và sửa chữa hệ thống máy tính; tư vấn giải pháp kỹ thuật và lựa chọn thiết bị tin học.","objectives":["Là nhân viên lành nghề trong xây dựng, bảo trì, sửa chữa hệ thống máy tính của cơ quan, tổ chức và doanh nghiệp.","Là nhân viên lành nghề trong hoạt động tư vấn giải pháp kỹ thuật và lựa chọn thiết bị tin học."],"outcomes":["Có động cơ nghề nghiệp đúng đắn, tuân thủ chuẩn mực và đạo đức nghề nghiệp, chịu trách nhiệm với công việc.","Có ý thức học tập và tự rèn luyện để nâng cao trình độ chuyên môn.","Áp dụng hiệu quả kỹ năng giao tiếp, làm việc nhóm, trình bày vấn đề kỹ thuật, quản lý thời gian và viết báo cáo.","Đọc hiểu tài liệu hướng dẫn tiếng Anh và sử dụng phần mềm văn phòng, đồ họa phục vụ công việc.","Lắp ráp, cài đặt phần mềm và xử lý các sự cố thường gặp của máy tính.","Phân tích, đánh giá, chẩn đoán sự cố; đưa ra giải pháp bảo trì, sửa chữa và thay thế phần cứng.","Phân tích yêu cầu để thiết kế, triển khai, vận hành và bảo trì hệ thống máy tính."],"specializations":[]}]}}]}',
+'{}', NOW(), NOW(), NOW()),
+('Chuẩn đầu ra', 'program-outcomes', '/dao-tao/chuan-dau-ra', 'education_page', 'published', 'section_schema',
+'{"version":1,"sections":[{"id":"outcomes","type":"sections/outcomes","locked":false,"data":{"eyebrow":"Chuẩn đầu ra","title":"Năng lực được hình thành qua chương trình","description":"Mục tiêu chương trình mô tả năng lực sau 2–3 năm làm việc; chuẩn đầu ra là những gì sinh viên có khả năng thực hiện khi tốt nghiệp.","programs":[{"key":"cntt","name":"Cao đẳng Công nghệ thông tin","short_name":"CNTT","source_year":"2026","updated_at":"27/05/2026","objectives":["Là thành viên chủ chốt trong nhóm phân tích, thiết kế, triển khai, tư vấn các giải pháp và dự án công nghệ thông tin.","Hoàn thiện kỹ năng và kiến thức các lĩnh vực công nghệ thông tin thông qua việc tiếp tục học tập nâng cao trình độ.","Trở thành chuyên gia công nghệ thông tin có tinh thần đóng góp xã hội; tuân thủ đạo đức, pháp luật và nhận thức tác động của công nghệ đối với xã hội."],"outcomes":["Phân tích bài toán trong phạm vi rộng và áp dụng kiến thức cơ bản về công nghệ thông tin để xác định giải pháp.","Thiết kế và triển khai các giải pháp công nghệ thông tin đáp ứng tập hợp yêu cầu trong ngữ cảnh cho trước.","Giao tiếp hiệu quả trong môi trường làm việc chuyên nghiệp.","Nhận thức trách nhiệm nghề nghiệp và đưa ra đánh giá dựa trên các nguyên tắc pháp lý, đạo đức.","Làm việc hiệu quả với vai trò thành viên của nhóm.","Áp dụng, tích hợp và quản lý bảo mật trong lĩnh vực công nghệ thông tin để đáp ứng nhu cầu người dùng."]},{"key":"qtm","name":"Cao đẳng Quản trị mạng máy tính","short_name":"QTM","source_year":"2026","updated_at":"27/05/2026","objectives":["Là nhân viên lành nghề trong công việc quản trị hệ thống mạng của tổ chức, doanh nghiệp.","Là nhân viên lành nghề trong nhóm phân tích, thiết kế và triển khai các giải pháp hạ tầng hệ thống mạng.","Là nhân viên lành nghề trong hoạt động tư vấn kỹ thuật, tư vấn giải pháp tin học hóa."],"outcomes":["Tuân thủ quy định về an toàn thông tin, bảo mật dữ liệu và đạo đức nghề nghiệp; có trách nhiệm trong công việc.","Tự học, tìm hiểu tài liệu kỹ thuật và cập nhật công nghệ mới phục vụ chuyên môn.","Giao tiếp, làm việc nhóm, trình bày vấn đề kỹ thuật và viết báo cáo chuyên môn hiệu quả.","Sử dụng các phần mềm ứng dụng phục vụ công việc chuyên môn.","Lắp ráp, cài đặt, cấu hình, bảo trì và xử lý sự cố máy tính, thiết bị mạng cơ bản.","Phân tích yêu cầu để thiết kế, triển khai, vận hành và bảo trì hệ thống mạng.","Phân tích, thiết kế, triển khai và bảo trì cơ sở dữ liệu, phần mềm, website và mạng máy tính.","Áp dụng giải pháp bảo mật và an ninh mạng cơ bản để giám sát, bảo đảm an toàn hệ thống thông tin."]},{"key":"scmt","name":"Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính","short_name":"SCMT","source_year":"2024","updated_at":"27/05/2026","objectives":["Là nhân viên lành nghề trong xây dựng, bảo trì, sửa chữa hệ thống máy tính của cơ quan, tổ chức và doanh nghiệp.","Là nhân viên lành nghề trong hoạt động tư vấn giải pháp kỹ thuật và lựa chọn thiết bị tin học."],"outcomes":["Có động cơ nghề nghiệp đúng đắn, tuân thủ chuẩn mực và đạo đức nghề nghiệp, chịu trách nhiệm với công việc.","Có ý thức học tập và tự rèn luyện để nâng cao trình độ chuyên môn.","Áp dụng hiệu quả kỹ năng giao tiếp, làm việc nhóm, trình bày vấn đề kỹ thuật, quản lý thời gian và viết báo cáo.","Đọc hiểu tài liệu hướng dẫn tiếng Anh và sử dụng phần mềm văn phòng, đồ họa phục vụ công việc.","Lắp ráp, cài đặt phần mềm và xử lý các sự cố thường gặp của máy tính.","Phân tích, đánh giá, chẩn đoán sự cố; đưa ra giải pháp bảo trì, sửa chữa và thay thế phần cứng.","Phân tích yêu cầu để thiết kế, triển khai, vận hành và bảo trì hệ thống máy tính."]}]}}]}',
+'{}', NOW(), NOW(), NOW()),
+('Danh sách môn học', 'curriculum', '/dao-tao/danh-sach-mon-hoc', 'education_page', 'published', 'section_schema',
+'{"version":1,"sections":[{"id":"curriculum","type":"sections/curriculum","locked":false,"data":{"eyebrow":"Danh sách môn học","title":"Kế hoạch học tập theo từng học kỳ","description":"Chọn chương trình và học kỳ để xem các học phần.","programs":[{"key":"cntt","name":"Cao đẳng Công nghệ thông tin","short_name":"CNTT","source_year":"2026","updated_at":"27/05/2026","credits":"134","semesters":[{"key":"1","name":"Học kỳ 1","courses":[{"code":"","name":"Pháp luật","credits":"2","theory":"30","practice":"0"},{"code":"","name":"Toán cao cấp","credits":"3","theory":"45","practice":"0"},{"code":"","name":"Toán rời rạc và Lý thuyết đồ thị","credits":"3","theory":"21","practice":"24"},{"code":"","name":"Phần cứng máy tính","credits":"3","theory":"30","practice":"15"},{"code":"","name":"Nhập môn lập trình","credits":"5","theory":"57","practice":"18"},{"code":"","name":"Tin học ứng dụng","credits":"3","theory":"16","practice":"29"},{"code":"","name":"Thực tập Phần cứng máy tính","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Thực tập Nhập môn lập trình","credits":"2","theory":"0","practice":"90"}]},{"key":"2","name":"Học kỳ 2","courses":[{"code":"","name":"Cơ sở dữ liệu","credits":"5","theory":"43","practice":"32"},{"code":"","name":"Cấu trúc dữ liệu và giải thuật","credits":"3","theory":"26","practice":"19"},{"code":"","name":"Mạng máy tính","credits":"3","theory":"36","practice":"9"},{"code":"","name":"Thiết kế Web","credits":"3","theory":"30","practice":"15"},{"code":"","name":"Thực tập Thiết kế Web","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Thực tập Cấu trúc dữ liệu và giải thuật","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Thực tập Mạng máy tính","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Thực tập Cơ sở dữ liệu","credits":"1","theory":"0","practice":"45"}]},{"key":"3","name":"Học kỳ 3","courses":[{"code":"","name":"Giáo dục chính trị 1","credits":"3","theory":"45","practice":"0"},{"code":"","name":"Tiếng Anh 3","credits":"5","theory":"75","practice":"0"},{"code":"","name":"Vật lý đại cương","credits":"4","theory":"45","practice":"15"},{"code":"","name":"Cơ sở dữ liệu NoSQL","credits":"2","theory":"14","practice":"16"},{"code":"","name":"Quản trị hệ thống mạng Windows","credits":"3","theory":"30","practice":"15"},{"code":"","name":"Phương pháp lập trình hướng đối tượng","credits":"3","theory":"30","practice":"15"},{"code":"","name":"Lập trình Website cơ bản","credits":"3","theory":"15","practice":"30"},{"code":"","name":"Thực tập Quản trị hệ thống mạng Windows","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Thực tập Phương pháp lập trình hướng đối tượng","credits":"1","theory":"0","practice":"45"}]},{"key":"4","name":"Học kỳ 4","courses":[{"code":"","name":"Giáo dục chính trị 2","credits":"2","theory":"30","practice":"0"},{"code":"","name":"Lập trình Windows và đồ án môn học","credits":"5","theory":"35","practice":"40"},{"code":"","name":"Thực tập Lập trình Windows","credits":"1","theory":"0","practice":"45"},{"code":"","name":"[Web/Di động] Phân tích thiết kế hệ thống thông tin","credits":"4","theory":"30","practice":"30"},{"code":"","name":"[Web/Di động/AI] Lập trình ứng dụng với Python","credits":"6","theory":"40","practice":"50"},{"code":"","name":"[Web/Di động] Lập trình ứng dụng với Nodejs","credits":"3","theory":"30","practice":"15"},{"code":"","name":"[Web/Di động] Công nghệ phần mềm","credits":"4","theory":"35","practice":"25"},{"code":"","name":"[Mạng] Lập trình Python","credits":"3","theory":"21","practice":"24"},{"code":"","name":"[Mạng] Hệ điều hành Linux","credits":"3","theory":"27","practice":"18"},{"code":"","name":"[Mạng] Dịch vụ mạng","credits":"5","theory":"39","practice":"36"},{"code":"","name":"[Mạng] Cấu hình và quản trị thiết bị mạng Cisco","credits":"6","theory":"60","practice":"30"},{"code":"","name":"[AI] Cơ sở trí tuệ nhân tạo","credits":"4","theory":"40","practice":"20"},{"code":"","name":"[AI] Trực quan hóa dữ liệu","credits":"3","theory":"20","practice":"25"}]},{"key":"5","name":"Học kỳ 5","courses":[{"code":"","name":"Tiếng Anh chuyên ngành CNTT","credits":"3","theory":"45","practice":"0"},{"code":"","name":"[Web] Kiểm thử phần mềm","credits":"4","theory":"35","practice":"25"},{"code":"","name":"[Web] Lập trình Backend","credits":"3","theory":"30","practice":"15"},{"code":"","name":"[Web] Công nghệ lập trình Web và triển khai hệ thống","credits":"6","theory":"45","practice":"45"},{"code":"","name":"[Web] Lập trình Website nâng cao","credits":"6","theory":"50","practice":"40"},{"code":"","name":"[Web] Lập trình Front End","credits":"5","theory":"45","practice":"30"},{"code":"","name":"[Di động] Kiểm thử phần mềm","credits":"4","theory":"35","practice":"25"},{"code":"","name":"[Di động] Lập trình Backend","credits":"3","theory":"30","practice":"15"},{"code":"","name":"[Di động] Lập trình ứng dụng trên thiết bị di động","credits":"6","theory":"50","practice":"40"},{"code":"","name":"[Di động] Lập trình Website nâng cao","credits":"6","theory":"45","practice":"45"},{"code":"","name":"[Di động] Công nghệ lập trình đa nền tảng","credits":"5","theory":"45","practice":"30"},{"code":"","name":"[Mạng] Thiết kế hệ thống mạng","credits":"5","theory":"37","practice":"38"},{"code":"","name":"[Mạng] Bảo mật thiết bị mạng Cisco","credits":"3","theory":"25","practice":"20"},{"code":"","name":"[Mạng] Điện toán đám mây","credits":"3","theory":"25","practice":"20"},{"code":"","name":"[Mạng] Quản lý hệ thống Web và Mail Server","credits":"3","theory":"27","practice":"18"},{"code":"","name":"[Mạng] An ninh mạng","credits":"5","theory":"39","practice":"36"},{"code":"","name":"[Mạng] Quản trị mạng Linux","credits":"5","theory":"40","practice":"35"},{"code":"","name":"[AI] Khai phá dữ liệu và ứng dụng","credits":"4","theory":"35","practice":"25"},{"code":"","name":"[AI] Công nghệ phần mềm","credits":"4","theory":"35","practice":"25"},{"code":"","name":"[AI] Lập trình Website nâng cao","credits":"6","theory":"45","practice":"45"},{"code":"","name":"[AI] Học máy","credits":"5","theory":"45","practice":"30"},{"code":"","name":"[AI] Xử lý ngôn ngữ tự nhiên và thị giác máy tính","credits":"5","theory":"50","practice":"25"}]},{"key":"6","name":"Học kỳ 6","courses":[{"code":"","name":"[Web] Đồ án lập trình Web","credits":"1","theory":"0","practice":"30"},{"code":"","name":"[Di động] Đồ án lập trình di động","credits":"1","theory":"0","practice":"30"},{"code":"","name":"[Mạng] Đồ án Quản trị hệ thống mạng","credits":"1","theory":"0","practice":"30"},{"code":"","name":"[AI] Đồ án trí tuệ nhân tạo ứng dụng","credits":"1","theory":"0","practice":"30"},{"code":"","name":"Thực tập tốt nghiệp","credits":"6","theory":"0","practice":"480"},{"code":"","name":"Đồ án tốt nghiệp","credits":"4","theory":"0","practice":"240"}]}]},{"key":"qtm","name":"Cao đẳng Quản trị mạng máy tính","short_name":"QTM","source_year":"2026","updated_at":"27/05/2026","credits":"134","semesters":[{"key":"1","name":"Học kỳ 1","courses":[{"code":"","name":"Pháp luật","credits":"2","theory":"30","practice":"0"},{"code":"","name":"Lắp ráp, cài đặt máy tính","credits":"4","theory":"45","practice":"45"},{"code":"","name":"Nhập môn lập trình","credits":"4","theory":"41","practice":"19"},{"code":"","name":"Tin học ứng dụng","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Mạng máy tính","credits":"4","theory":"41","practice":"19"},{"code":"","name":"Thực tập Mạng máy tính","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Thực tập Nhập môn lập trình","credits":"1","theory":"0","practice":"45"}]},{"key":"2","name":"Học kỳ 2","courses":[{"code":"","name":"Cơ sở dữ liệu","credits":"4","theory":"41","practice":"19"},{"code":"","name":"Kỹ thuật lập trình","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Quản trị hệ thống mạng","credits":"4","theory":"40","practice":"50"},{"code":"","name":"Đồ họa ứng dụng","credits":"5","theory":"39","practice":"51"},{"code":"","name":"Thiết kế Web","credits":"4","theory":"30","practice":"60"}]},{"key":"3","name":"Học kỳ 3","courses":[{"code":"","name":"Giáo dục chính trị 1","credits":"3","theory":"45","practice":"0"},{"code":"","name":"Tiếng Anh chuyên ngành CNTT","credits":"3","theory":"45","practice":"0"},{"code":"","name":"Cấu trúc dữ liệu và giải thuật","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Hệ quản trị cơ sở dữ liệu","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Các dịch vụ mạng","credits":"6","theory":"39","practice":"51"},{"code":"","name":"Hệ điều hành Linux","credits":"5","theory":"30","practice":"45"}]},{"key":"4","name":"Học kỳ 4","courses":[{"code":"","name":"Giáo dục chính trị 2","credits":"2","theory":"30","practice":"0"},{"code":"","name":"Tiếng Anh 3","credits":"5","theory":"75","practice":"0"},{"code":"","name":"Thiết kế và quản lý hệ thống mạng","credits":"4","theory":"39","practice":"51"},{"code":"","name":"Lập trình Web PHP","credits":"6","theory":"30","practice":"60"},{"code":"","name":"Quản lý hệ thống Web và Mail Server","credits":"3","theory":"27","practice":"18"},{"code":"","name":"Cấu hình và quản trị thiết bị mạng Cisco","credits":"4","theory":"40","practice":"50"}]},{"key":"5","name":"Học kỳ 5","courses":[{"code":"","name":"Bảo mật hệ thống mạng","credits":"3","theory":"15","practice":"30"},{"code":"","name":"Quản trị hệ thống mạng Linux","credits":"6","theory":"30","practice":"60"},{"code":"","name":"Chuyên đề CMS - mã nguồn mở","credits":"3","theory":"15","practice":"30"},{"code":"","name":"Lập trình Windows","credits":"5","theory":"50","practice":"40"},{"code":"","name":"An ninh mạng","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Điện toán đám mây","credits":"3","theory":"25","practice":"20"}]},{"key":"6","name":"Học kỳ 6","courses":[{"code":"","name":"Thực tập tốt nghiệp","credits":"7","theory":"0","practice":"560"},{"code":"","name":"Thi tốt nghiệp lý thuyết nghề","credits":"1","theory":"15","practice":"0"},{"code":"","name":"Thi tốt nghiệp thực hành nghề","credits":"1","theory":"0","practice":"35"}]}]},{"key":"scmt","name":"Cao đẳng Kỹ thuật sửa chữa, lắp ráp máy tính","short_name":"SCMT","source_year":"2026","updated_at":"27/05/2026","credits":"131","semesters":[{"key":"1","name":"Học kỳ 1","courses":[{"code":"","name":"Pháp luật","credits":"2","theory":"30","practice":"0"},{"code":"","name":"Mạng máy tính","credits":"4","theory":"41","practice":"19"},{"code":"","name":"Tin học ứng dụng","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Lắp ráp, cài đặt máy tính","credits":"4","theory":"45","practice":"45"},{"code":"","name":"Thực tập Mạng máy tính","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Điện tử cơ bản","credits":"4","theory":"56","practice":"4"},{"code":"","name":"Thực tập Điện tử cơ bản","credits":"2","theory":"0","practice":"70"}]},{"key":"2","name":"Học kỳ 2","courses":[{"code":"","name":"Nhập môn lập trình","credits":"4","theory":"41","practice":"19"},{"code":"","name":"Xử lý sự cố phần mềm máy tính","credits":"3","theory":"25","practice":"20"},{"code":"","name":"Quản trị hệ thống mạng","credits":"6","theory":"40","practice":"50"},{"code":"","name":"Sửa chữa phần cứng máy tính 1","credits":"4","theory":"42","practice":"48"},{"code":"","name":"Thực tập Nhập môn lập trình","credits":"1","theory":"0","practice":"45"},{"code":"","name":"Kỹ thuật xung số","credits":"4","theory":"56","practice":"4"},{"code":"","name":"Thực tập Hàn tay điện tử IPC","credits":"1","theory":"0","practice":"35"}]},{"key":"3","name":"Học kỳ 3","courses":[{"code":"","name":"Tiếng Anh chuyên ngành CNTT","credits":"3","theory":"45","practice":"0"},{"code":"","name":"Lập trình nhúng","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Kiến trúc máy tính","credits":"3","theory":"30","practice":"15"},{"code":"","name":"Sửa chữa phần cứng máy tính 2","credits":"4","theory":"42","practice":"48"},{"code":"","name":"Các dịch vụ mạng","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Đồ án mạch điện tử","credits":"2","theory":"0","practice":"60"},{"code":"","name":"Thực tập Vẽ và mô phỏng mạch điện tử","credits":"2","theory":"0","practice":"70"}]},{"key":"4","name":"Học kỳ 4","courses":[{"code":"","name":"Giáo dục chính trị 1","credits":"3","theory":"45","practice":"0"},{"code":"","name":"Tiếng Anh 3","credits":"5","theory":"75","practice":"0"},{"code":"","name":"Thiết kế và quản lý hệ thống mạng","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Hệ điều hành Linux","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Đồ họa ứng dụng","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Sửa chữa màn hình, máy in","credits":"3","theory":"42","practice":"3"},{"code":"","name":"Thực tập Sửa chữa màn hình, máy in","credits":"2","theory":"0","practice":"70"}]},{"key":"5","name":"Học kỳ 5","courses":[{"code":"","name":"Giáo dục chính trị 2","credits":"2","theory":"30","practice":"0"},{"code":"","name":"Cấu hình và quản trị thiết bị mạng Cisco","credits":"4","theory":"30","practice":"45"},{"code":"","name":"Chuyên đề thiết bị di động","credits":"3","theory":"25","practice":"20"},{"code":"","name":"Thiết kế mẫu","credits":"5","theory":"30","practice":"45"},{"code":"","name":"Thiết bị đầu cuối","credits":"3","theory":"42","practice":"3"},{"code":"","name":"Thực tập Thiết bị đầu cuối","credits":"2","theory":"0","practice":"70"}]},{"key":"6","name":"Học kỳ 6","courses":[{"code":"","name":"Thực tập tốt nghiệp","credits":"7","theory":"0","practice":"560"},{"code":"","name":"Thi tốt nghiệp lý thuyết nghề","credits":"1","theory":"15","practice":"0"},{"code":"","name":"Thi tốt nghiệp thực hành nghề","credits":"1","theory":"0","practice":"35"}]}]}]}}]}',
 '{}', NOW(), NOW(), NOW());
 
 -- ============================================================================
@@ -390,5 +415,166 @@ INSERT INTO `companies` (`id`, `tax_code`, `name`, `normalized_name`, `phone`, `
 (8, '0308776655', 'Công ty TNHH Linh kiện Máy tính Song Huy', 'cong ty tnhh linh kien may tinh song huy', '02839274567', 'songhuy@hardware.vn', 'https://songhuycomputer.vn', '436/1 Đường 3/2, Phường 12, Quận 10, TP.HCM', 1, 'api'),
 (9, '0316443322', 'Công ty TNHH Giải pháp ERP Toàn Cầu', 'cong ty tnhh giai phap erp toan cau', '02837718899', 'admin@erp-global.com', 'https://erp-global.com', 'Số 7 Đường số 2, KDC Him Lam, Quận 7, TP.HCM', 1, 'api'),
 (10, '0310229988', 'Công ty TNHH MTV Kỹ thuật Phần cứng và Mạng Bách Khoa', 'cong ty tnhh mtv ky thuat phan cung va mang bach khoa', '02837223344', 'bachkhoa@bk-tech.edu.vn', 'https://bk-tech.vn', 'Khu Công nghệ cao, Quận Thủ Đức, TP.HCM', 1, 'api');
+
+
+UPDATE `cms_pages` AS education
+JOIN `cms_pages` AS admissions ON admissions.slug = 'admissions'
+JOIN `cms_pages` AS programs ON programs.slug = 'academic-programs'
+JOIN `cms_pages` AS outcomes ON outcomes.slug = 'program-outcomes'
+JOIN `cms_pages` AS curriculum ON curriculum.slug = 'curriculum'
+SET education.content_json = JSON_OBJECT(
+  'version', 1,
+  'sections', JSON_ARRAY(
+    JSON_SET(JSON_EXTRACT(education.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(admissions.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(programs.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(outcomes.content_json, '$.sections[0]'), '$.locked', TRUE),
+    JSON_SET(JSON_EXTRACT(curriculum.content_json, '$.sections[0]'), '$.locked', TRUE)
+  )
+)
+WHERE education.slug = 'education';
+
+DELETE FROM `cms_pages` WHERE slug IN ('admissions', 'academic-programs', 'program-outcomes', 'curriculum');
+UPDATE `cms_pages`
+SET content_json = JSON_ARRAY_INSERT(content_json, '$.sections[2]', JSON_OBJECT(
+  'id', 'vision_mission',
+  'type', 'sections/vision_mission',
+  'locked', FALSE,
+  'data', (SELECT JSON_EXTRACT(source_page.content_json, '$.sections[0].data')
+           FROM (SELECT content_json FROM cms_pages WHERE slug = 'vision-mission' LIMIT 1) AS source_page)
+))
+WHERE slug = 'about';
+DELETE FROM `cms_pages` WHERE slug = 'vision-mission';
+UPDATE `menu_items` SET url = '/dao-tao#tuyen-sinh' WHERE url = '/dao-tao/tuyen-sinh';
+UPDATE `menu_items` SET url = '/dao-tao#chuong-trinh-dao-tao' WHERE url = '/dao-tao/chuong-trinh-dao-tao';
+UPDATE `menu_items` SET url = '/dao-tao#chuan-dau-ra' WHERE url = '/dao-tao/chuan-dau-ra';
+UPDATE `menu_items` SET url = '/dao-tao#danh-sach-mon-hoc' WHERE url = '/dao-tao/danh-sach-mon-hoc';
+
+-- Replace About-page demo claims with dated facts from the Faculty yearbook.
+UPDATE `cms_pages`
+SET content_json = JSON_SET(
+  content_json,
+  '$.sections[3].data.sections[0].title', 'Thành lập và phát triển từ năm 1998',
+  '$.sections[3].data.sections[0].timeline', JSON_ARRAY(
+    JSON_OBJECT('year', '1998', 'description', 'Khoa Điện tử - Tin học được thành lập vào tháng 8, ban đầu đào tạo hai ngành Điện tử và Tin học.'),
+    JSON_OBJECT('year', '2014', 'description', 'Olympic Tin học Cao Thắng được tổ chức lần đầu, mở đầu sân chơi học thuật thường niên cho sinh viên CNTT.'),
+    JSON_OBJECT('year', '2018', 'description', 'Đội tuyển Tin học Cao Thắng giành giải nhất đồng đội khối Cao đẳng tại Olympic Tin học Sinh viên Việt Nam, cùng nhiều giải cá nhân.'),
+    JSON_OBJECT('year', '2020', 'description', 'Khoa Điện tử - Tin học được đổi tên thành Khoa Công nghệ thông tin.')
+  ),
+  '$.sections[3].data.sections[1].title', 'Hơn một thế kỷ đào tạo kỹ thuật',
+  '$.sections[3].data.sections[1].timeline', JSON_ARRAY(
+    JSON_OBJECT('year', '1906', 'description', 'Trường Cơ khí Á Châu, tiền thân của Trường Cao đẳng Kỹ thuật Cao Thắng, được thành lập.'),
+    JSON_OBJECT('year', '1915', 'description', 'Chủ tịch Tôn Đức Thắng theo học tại trường.'),
+    JSON_OBJECT('year', '2004', 'description', 'Trường chính thức mang tên Trường Cao đẳng Kỹ thuật Cao Thắng.')
+  ),
+  '$.sections[4].data.items', JSON_ARRAY(
+    JSON_OBJECT('badge', '<i class="fa-solid fa-handshake"></i> <span>Đào tạo gắn doanh nghiệp</span>', 'image', JSON_OBJECT('src', 'public/img/about.jpg', 'alt', 'Đào tạo Công nghệ thông tin gắn kết doanh nghiệp'), 'content', 'Thực tiễn', 'subContent', 'Kết nối doanh nghiệp', 'footer', 'Bộ môn Tin học gắn đào tạo với nhu cầu thực tế và tăng cường kết nối doanh nghiệp.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-computer"></i>', 'image', JSON_OBJECT('src', '', 'alt', ''), 'content', '10+', 'subContent', 'Phòng máy & thực hành', 'footer', 'Hệ thống phòng máy và phòng thực hành phục vụ đào tạo Công nghệ thông tin.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-graduation-cap"></i>', 'image', JSON_OBJECT('src', '', 'alt', ''), 'content', '4', 'subContent', 'Chương trình đào tạo CNTT', 'footer', 'Bộ môn Tin học tổ chức bốn chương trình đào tạo thuộc lĩnh vực Công nghệ thông tin.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-users"></i>', 'image', JSON_OBJECT('src', '', 'alt', ''), 'content', '1.700+', 'subContent', 'Người học liên quan CNTT', 'footer', 'Hơn 1.700 học sinh, sinh viên theo học các chương trình liên quan đến Công nghệ thông tin.'),
+    JSON_OBJECT('badge', '<i class="fa-solid fa-trophy"></i> <span>Olympic Tin học</span>', 'image', JSON_OBJECT('src', 'public/img/about.jpg', 'alt', 'Thành tích Olympic Tin học của đội tuyển Cao Thắng'), 'content', 'Hạng nhất', 'subContent', 'Đồng đội khối Cao đẳng', 'footer', 'Đội tuyển Tin học Cao Thắng giành giải nhất đồng đội khối Cao đẳng cùng nhiều giải cá nhân.')
+  )
+)
+WHERE slug = 'about';
+
+-- Replace Landing-page placeholders with verified Khoa CNTT information.
+UPDATE `cms_pages`
+SET content_json = JSON_SET(
+  content_json,
+  '$.sections[1].data.items', JSON_ARRAY(
+    JSON_OBJECT('number', '01', 'image', JSON_OBJECT('src', './public/img/about.jpg', 'alt', 'Hoạt động của Khoa Công nghệ thông tin Cao Thắng'), 'card', JSON_OBJECT('value', '1998', 'label', 'Khởi đầu Bộ môn Tin học'), 'eyebrow', 'Hình thành & phát triển', 'title', 'Hơn hai thập kỷ đào tạo công nghệ thông tin', 'description', 'Từ Bộ môn Tin học thuộc Khoa Điện tử - Tin học, Khoa Công nghệ thông tin được tổ chức lại thành khoa chuyên ngành từ năm 2020, tập trung sâu vào đào tạo và ứng dụng CNTT.'),
+    JSON_OBJECT('number', '02', 'image', JSON_OBJECT('src', './public/img/about.jpg', 'alt', 'Sinh viên thực hành Công nghệ thông tin'), 'card', JSON_OBJECT('value', '12', 'label', 'Phòng thực hành CNTT'), 'eyebrow', 'Học đi đôi với hành', 'title', 'Không gian thực hành phục vụ kỹ năng nghề nghiệp', 'description', 'Hệ thống phòng thực hành hỗ trợ sinh viên rèn luyện lập trình, phần cứng, mạng máy tính và triển khai các sản phẩm công nghệ.'),
+    JSON_OBJECT('number', '03', 'image', JSON_OBJECT('src', './public/img/about.jpg', 'alt', 'Đội tuyển Olympic Tin học Cao Thắng'), 'card', JSON_OBJECT('value', 'Hạng nhất', 'label', 'Đồng đội khối Cao đẳng'), 'eyebrow', 'Bản lĩnh sinh viên', 'title', 'Khẳng định năng lực tại Olympic Tin học', 'description', 'Đội tuyển Tin học Cao Thắng từng giành giải nhất đồng đội khối Cao đẳng cùng nhiều giải cá nhân tại Olympic Tin học Sinh viên Việt Nam.')
+  ),
+  '$.sections[2].data', JSON_OBJECT(
+    'badge', 'Tại sao chọn Khoa CNTT Cao Thắng',
+    'title', 'Nền tảng nghề nghiệp được xây dựng từ thực hành',
+    'subtitle', 'Chương trình chuyên môn, cơ sở thực hành và hoạt động kết nối doanh nghiệp cùng hướng đến khả năng làm việc thực tế của sinh viên.',
+    'feature', JSON_OBJECT('image', 'public/img/about.jpg', 'alt', 'Sinh viên Khoa CNTT Cao Thắng học tập và thực hành', 'badge', 'Đào tạo gắn thực tiễn', 'title', 'Học qua bài tập, dự án và trải nghiệm nghề nghiệp', 'description', 'Sinh viên phát triển năng lực từ kiến thức nền tảng đến thực hành chuyên môn, đồ án, thực tập và các hoạt động học thuật của Khoa.', 'cta_label', 'Tìm hiểu chương trình', 'cta_url', '/dao-tao'),
+    'stats', JSON_ARRAY(
+      JSON_OBJECT('number', '12', 'title', 'Phòng thực hành CNTT', 'description', 'Phục vụ học tập và rèn luyện kỹ năng chuyên môn.'),
+      JSON_OBJECT('number', '30', 'title', 'Giảng viên', 'description', 'Đội ngũ phụ trách đào tạo, nghiên cứu và đồng hành cùng sinh viên.')
+    ),
+    'perks', JSON_ARRAY(
+      JSON_OBJECT('icon', 'fa-solid fa-graduation-cap', 'title', 'Ba chương trình đào tạo', 'description', 'Công nghệ thông tin, Quản trị mạng máy tính và Sửa chữa - lắp ráp máy tính.'),
+      JSON_OBJECT('icon', 'fa-solid fa-code', 'title', 'Chuyên môn rõ ràng', 'description', 'Tổ chức chuyên môn về Công nghệ phần mềm và Phần cứng - Mạng máy tính.'),
+      JSON_OBJECT('icon', 'fa-solid fa-handshake', 'title', 'Kết nối doanh nghiệp', 'description', 'Gắn đào tạo với tham quan, thực tập, tuyển dụng và nhu cầu nhân lực thực tế.'),
+      JSON_OBJECT('icon', 'fa-solid fa-trophy', 'title', 'Học thuật và thi đấu', 'description', 'Olympic Tin học và hoạt động câu lạc bộ giúp sinh viên phát triển tư duy giải quyết vấn đề.')
+    ),
+    'highlights', JSON_ARRAY(
+      JSON_OBJECT('image', 'public/img/about.jpg', 'alt', 'Sinh viên thực hiện đồ án Công nghệ thông tin', 'title', 'Đồ án và thực tập', 'description', 'Vận dụng kiến thức vào sản phẩm, nhiệm vụ và môi trường làm việc thực tế.'),
+      JSON_OBJECT('image', 'public/img/about.jpg', 'alt', 'Hoạt động kết nối doanh nghiệp của Khoa CNTT', 'title', 'Đồng hành cùng doanh nghiệp', 'description', 'Mở rộng trải nghiệm nghề nghiệp thông qua hợp tác đào tạo và tuyển dụng.')
+    )
+  ),
+  '$.sections[3].data', JSON_OBJECT(
+    'title', 'Những con số về Khoa CNTT Cao Thắng',
+    'subtitle', 'Nền tảng đào tạo được xây dựng từ chuyên môn, thực hành và hoạt động học thuật.',
+    'stats', JSON_ARRAY(
+      JSON_OBJECT('icon', 'fa-solid fa-graduation-cap', 'number', '3', 'label', 'Chương trình đào tạo', 'description', 'Ba lộ trình nghề nghiệp thuộc lĩnh vực CNTT.'),
+      JSON_OBJECT('icon', 'fa-solid fa-code-branch', 'number', '2', 'label', 'Bộ môn chuyên môn', 'description', 'Công nghệ phần mềm và Phần cứng - Mạng máy tính.'),
+      JSON_OBJECT('icon', 'fa-solid fa-trophy', 'number', '9', 'label', 'Kỳ Olympic Tin học', 'description', 'Olympic Tin học Cao Thắng đã bước sang lần tổ chức thứ 9.'),
+      JSON_OBJECT('icon', 'fa-solid fa-building-columns', 'number', '2020', 'label', 'Khoa CNTT', 'description', 'Được tổ chức lại thành khoa chuyên ngành Công nghệ thông tin.')
+    ),
+    'benefits', JSON_ARRAY(
+      JSON_OBJECT('icon', 'fa-solid fa-laptop-code', 'title', 'Đào tạo hướng đến năng lực thực hành', 'items', JSON_ARRAY('Rèn kỹ năng qua bài tập và giờ thực hành chuyên môn', 'Phát triển sản phẩm qua đồ án môn học và đồ án tốt nghiệp', 'Thực tập tốt nghiệp gắn với môi trường nghề nghiệp', 'Bổ sung kỹ năng giao tiếp, làm việc nhóm và trình bày kỹ thuật')),
+      JSON_OBJECT('icon', 'fa-solid fa-arrow-trend-up', 'title', 'Phát triển nghề nghiệp cùng doanh nghiệp', 'items', JSON_ARRAY('Tham quan và tìm hiểu môi trường làm việc', 'Tiếp cận cơ hội thực tập và tuyển dụng', 'Kết nối nhu cầu doanh nghiệp với hoạt động đào tạo', 'Rèn tư duy và bản lĩnh qua sân chơi học thuật'))
+    ),
+    'cta', JSON_OBJECT('title', 'Sẵn sàng bắt đầu hành trình công nghệ?', 'description', 'Khám phá chương trình đào tạo và chọn lộ trình phù hợp với năng lực, sở thích và định hướng nghề nghiệp của bạn.', 'buttons', JSON_ARRAY(JSON_OBJECT('label', 'Xem chương trình đào tạo', 'url', '/dao-tao', 'variant', 'outline-alt'), JSON_OBJECT('label', 'Khám phá cơ hội nghề nghiệp', 'url', '/tin-tuc?category=tuyen-dung', 'variant', 'outline')))
+  )
+)
+WHERE slug = 'landing';
+
+UPDATE `cms_pages`
+SET content_json = JSON_ARRAY_INSERT(
+  content_json,
+  '$.sections[4]',
+  JSON_OBJECT(
+    'id', 'partnerships',
+    'type', 'sections/partnerships',
+    'locked', FALSE,
+    'data', JSON_OBJECT(
+      'variant', 'default',
+      'title', 'Đối tác Doanh nghiệp',
+      'subtitle', 'Sinh viên được kết nối trực tiếp với các doanh nghiệp hàng đầu trong lĩnh vực công nghệ.',
+      'partners', JSON_ARRAY(
+        JSON_OBJECT('name', 'NVIDIA', 'url', 'https://www.nvidia.com/en-in/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/f241854894669bf5ca4b65ce5614b3d2.png', 'alt', 'NVIDIA')),
+        JSON_OBJECT('name', 'Lexar Việt Nam', 'url', 'https://www.facebook.com/Lexarviet', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/41f87152f57bd05bf848bcf01113f3b3.png', 'alt', 'Lexar Việt Nam')),
+        JSON_OBJECT('name', 'Tin học ngôi sao', 'url', 'https://tinhocngoisao.com/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/0c09c04e408300357f835dc97eb1a6e6.png', 'alt', 'Tin học ngôi sao')),
+        JSON_OBJECT('name', 'An Phát Co.,Ltd', 'url', 'https://vitinhanphat.com.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/1ae64b95ef7ddafef717166e9edabfd5.png', 'alt', 'An Phát Co.,Ltd')),
+        JSON_OBJECT('name', 'SMNET', 'url', 'https://smnet.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/20131828c2f34e5eec6dc06826cb936f.png', 'alt', 'SMNET')),
+        JSON_OBJECT('name', 'Tin học đại dương', 'url', 'https://tinhocdaiduong.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/cd22e173fe39bc2f2f1c6f756e46d78e.png', 'alt', 'Tin học đại dương')),
+        JSON_OBJECT('name', 'Nguyễn Thuận', 'url', 'https://thuancomputer.com/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/6858fbd5fab3b644b2b486587b94cda5.png', 'alt', 'Nguyễn Thuận')),
+        JSON_OBJECT('name', 'ENGENIUS', 'url', 'https://engenius.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/4846e8f8f53fd5bb49b7ecda45792660.png', 'alt', 'ENGENIUS')),
+        JSON_OBJECT('name', 'PAT GROUP / Siêu Thị Công Nghệ', 'url', 'https://www.sieuthicongnghe.com.vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/1cc65af6ae144feaa9d8ed7f66d7aee4.png', 'alt', 'PAT GROUP / Siêu Thị Công Nghệ')),
+        JSON_OBJECT('name', 'Anta6', 'url', 'https://anta6.com/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/bb134adbde2b708a630f3539ac02aa02.png', 'alt', 'Anta6')),
+        JSON_OBJECT('name', 'Waverley Software', 'url', 'https://waverleysoftware.com', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/7717dab3bbd70e2f3d31aa0cd6202ff5.png', 'alt', 'Waverley Software')),
+        JSON_OBJECT('name', 'Ryomo Vietnam Solutions Co., Ltd.', 'url', 'http://rvsc.ryomo-gr.com/vn/', 'image', JSON_OBJECT('src', 'https://cntt.caothang.edu.vn/uploads/doanh-nghiep/c31d40d21703b76e070989017e080e3d.png', 'alt', 'Ryomo Vietnam Solutions Co., Ltd.'))
+      )
+    )
+  )
+)
+WHERE slug = 'landing';
+
+UPDATE `carousel_slides`
+SET title = CASE sort_order
+    WHEN 1 THEN 'Khoa Công nghệ thông tin'
+    WHEN 2 THEN 'Tuyển sinh'
+    WHEN 3 THEN 'Olympic Tin học Cao Thắng'
+  END,
+  title_highlight = CASE sort_order
+    WHEN 1 THEN 'Học từ thực hành, trưởng thành cùng công nghệ'
+    WHEN 2 THEN 'Chọn lộ trình công nghệ phù hợp với bạn'
+    WHEN 3 THEN 'Sân chơi học thuật và bản lĩnh sinh viên'
+  END,
+  description = CASE sort_order
+    WHEN 1 THEN 'Đào tạo nguồn nhân lực công nghệ thông tin có kiến thức vững, kỹ năng nghề nghiệp và khả năng thích ứng với nhu cầu doanh nghiệp.'
+    WHEN 2 THEN 'Khám phá ba chương trình: Công nghệ thông tin, Quản trị mạng máy tính và Sửa chữa - lắp ráp máy tính.'
+    WHEN 3 THEN 'Nơi sinh viên vận dụng kiến thức, phát triển tư duy giải quyết vấn đề và làm việc với những sản phẩm thực tế.'
+  END,
+  cta_label = CASE sort_order WHEN 1 THEN 'Khám phá Khoa CNTT' WHEN 2 THEN 'Xem chương trình đào tạo' WHEN 3 THEN 'Xem tin nổi bật' END,
+  cta_url = CASE sort_order WHEN 1 THEN '/gioi-thieu' WHEN 2 THEN '/dao-tao' WHEN 3 THEN '/tin-tuc' END,
+  is_active = 1
+WHERE carousel_id = 1 AND sort_order BETWEEN 1 AND 3;
+UPDATE `carousel_slides` SET is_active = 0 WHERE carousel_id = 1 AND sort_order > 3;
 
 SET FOREIGN_KEY_CHECKS = 1;

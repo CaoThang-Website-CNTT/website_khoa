@@ -25,7 +25,7 @@ class InternshipBatchManagementApiController extends Controller
   public function getStudents($id)
   {
     try {
-      $students = $this->_batchService->getBatchStudents((int)$id);
+      $students = $this->_batchService->getBatchStudents((int) $id);
       return $this->json($students, 200);
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 500);
@@ -45,7 +45,7 @@ class InternshipBatchManagementApiController extends Controller
     }
 
     try {
-      $this->_batchService->addStudentToBatch((int)$id, (int)$studentId);
+      $this->_batchService->addStudentToBatch((int) $id, (int) $studentId);
       return $this->json([], 200, 'Thêm sinh viên thành công.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -58,7 +58,7 @@ class InternshipBatchManagementApiController extends Controller
   public function removeStudent($id, $student_id)
   {
     try {
-      $this->_batchService->removeStudentFromBatch((int)$id, (int)$student_id);
+      $this->_batchService->removeStudentFromBatch((int) $id, (int) $student_id);
       return $this->json([], 200, 'Đã xóa sinh viên khỏi đợt.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -71,7 +71,7 @@ class InternshipBatchManagementApiController extends Controller
   public function getSupervisors($id)
   {
     try {
-      $supervisors = $this->_batchService->getBatchSupervisors((int)$id);
+      $supervisors = $this->_batchService->getBatchSupervisors((int) $id);
       return $this->json($supervisors, 200);
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 500);
@@ -84,6 +84,20 @@ class InternshipBatchManagementApiController extends Controller
   public function addSupervisor($id, Request $request)
   {
     $data = $request->json();
+
+    // Hỗ trợ lưu nhiều giảng viên cùng lúc
+    if (isset($data['teachers']) && is_array($data['teachers'])) {
+      if (empty($data['teachers'])) {
+        return $this->json(['message' => 'Danh sách giảng viên rỗng.'], 422);
+      }
+
+      try {
+        $this->_batchService->addSupervisorsBulk((int) $id, $data['teachers']);
+        return $this->json([], 200, 'Thêm các giảng viên thành công.');
+      } catch (Exception $e) {
+        return $this->json(['message' => $e->getMessage()], 400);
+      }
+    }
     $teacherId = $data['teacher_id'] ?? null;
     $maxStudents = $data['max_students'] ?? 15;
 
@@ -92,7 +106,7 @@ class InternshipBatchManagementApiController extends Controller
     }
 
     try {
-      $this->_batchService->addSupervisorToBatch((int)$id, (int)$teacherId, (int)$maxStudents);
+      $this->_batchService->addSupervisorToBatch((int) $id, (int) $teacherId, (int) $maxStudents);
       return $this->json([], 200, 'Thêm giảng viên thành công.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -112,7 +126,7 @@ class InternshipBatchManagementApiController extends Controller
     }
 
     try {
-      $this->_batchService->updateSupervisorQuota((int)$id, (int)$teacher_id, (int)$newQuota);
+      $this->_batchService->updateSupervisorQuota((int) $id, (int) $teacher_id, (int) $newQuota);
       return $this->json([], 200, 'Cập nhật định mức thành công.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -125,7 +139,7 @@ class InternshipBatchManagementApiController extends Controller
   public function removeSupervisor($id, $teacher_id)
   {
     try {
-      $this->_batchService->removeSupervisorFromBatch((int)$id, (int)$teacher_id);
+      $this->_batchService->removeSupervisorFromBatch((int) $id, (int) $teacher_id);
       return $this->json([], 200, 'Đã xóa giảng viên khỏi đợt.');
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 400);
@@ -138,10 +152,10 @@ class InternshipBatchManagementApiController extends Controller
   public function searchStudents($id, Request $request)
   {
     $query = $request->query('q') ?? '';
-    $classroomId = $request->query('classroom_id') ? (int)$request->query('classroom_id') : null;
+    $classroomId = $request->query('classroom_id') ? (int) $request->query('classroom_id') : null;
 
     try {
-      $students = $this->_batchService->searchEligibleStudents((int)$id, $query, $classroomId);
+      $students = $this->_batchService->searchEligibleStudents((int) $id, $query, $classroomId);
       return $this->json($students, 200);
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 500);
@@ -156,7 +170,7 @@ class InternshipBatchManagementApiController extends Controller
     $query = $request->query('q') ?? '';
 
     try {
-      $teachers = $this->_batchService->searchEligibleTeachers((int)$id, $query);
+      $teachers = $this->_batchService->searchEligibleTeachers((int) $id, $query);
       return $this->json($teachers, 200);
     } catch (Exception $e) {
       return $this->json(['message' => $e->getMessage()], 500);
@@ -174,29 +188,46 @@ class InternshipBatchManagementApiController extends Controller
     $reason = $data['reason'] ?? '';
 
     if (empty($ids) || !is_array($ids)) {
-      return $this->json(['message' => 'Không có giấy giới thiệu nào được chọn.'], 422);
+      return $this->json(null, 422, 'Không có giấy giới thiệu nào được chọn.');
     }
 
     $processedBy = $request->session()->authUser()['account_id'] ?? null;
     if (!$processedBy) {
-      return $this->json(['message' => 'Lỗi xác thực người dùng.'], 401);
+      return $this->json(null, 401, 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
     }
 
     try {
-      if ($action === 'approve') {
-        $count = $this->_referralLetterService->bulkApprove($ids, $processedBy);
-        return $this->json(['count' => $count], 200, "Đã duyệt {$count} giấy giới thiệu thành công.");
-      } elseif ($action === 'cancel') {
+      if ($action === 'reject') {
         if (empty(trim($reason))) {
-          return $this->json(['message' => 'Vui lòng nhập lý do hủy.'], 422);
+          return $this->json(null, 422, 'Vui lòng nhập lý do từ chối giấy giới thiệu.');
         }
-        $count = $this->_referralLetterService->bulkCancel($ids, trim($reason), $processedBy);
-        return $this->json(['count' => $count], 200, "Đã hủy {$count} giấy giới thiệu thành công.");
+        $count = $this->_referralLetterService->bulkReview($ids, (int)$id, 'reject', trim($reason), $processedBy);
+        return $this->json(['count' => $count], 200, "Đã từ chối {$count} giấy giới thiệu.");
+      } elseif ($action === 'approve') {
+        $count = $this->_referralLetterService->bulkReview($ids, (int)$id, 'approve', '', $processedBy);
+        return $this->json(['count' => $count], 200, "Duyệt {$count} yêu cầu giấy giới thiệu.");
+      } elseif ($action === 'complete') {
+        $count = $this->_referralLetterService->bulkReview($ids, (int)$id, 'complete', '', $processedBy);
+        return $this->json(['count' => $count], 200, "Đã hoàn thành {$count} giấy giới thiệu.");
       } else {
-        return $this->json(['message' => 'Thao tác không hợp lệ.'], 400);
+        return $this->json(null, 400, 'Thao tác với giấy giới thiệu không hợp lệ.');
       }
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(null, 400, $e->getMessage());
+    }
+  }
+
+  public function receiveReferralLetter($id, $letterId, Request $request)
+  {
+    $processedBy = $request->session()->authUser()['account_id'] ?? null;
+    if (!$processedBy) return $this->json(null, 401, 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+    try {
+      $success = $this->_referralLetterService->receive((int)$letterId, (int)$id, $request->json(), (int)$processedBy);
+      return $success
+        ? $this->json([], 200, 'Đã xác nhận sinh viên nhận giấy giới thiệu.')
+        : $this->json(null, 400, 'Không thể cập nhật trạng thái nhận giấy giới thiệu.');
+    } catch (Exception $e) {
+      return $this->json(null, 422, $e->getMessage());
     }
   }
 }

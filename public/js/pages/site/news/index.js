@@ -13,6 +13,7 @@
     const template = document.getElementById('news-card-horizontal-template-v2');
     const featuredTemplate = document.getElementById('news-card-featured-template');
     const searchInput = document.getElementById('news-search-input');
+    const searchForm = document.querySelector('.news-search');
     const searchBtn = document.querySelector('.news-searchbar__btn');
     const filterBtns = document.querySelectorAll('.news-filters__tag');
     const sortSelect = document.getElementById('all-news-sort-select');
@@ -29,9 +30,27 @@
         order: 'desc',
       }
     });
-    state.search = '';
-    state.category = 'all';
-    state.sortMode = 'newest';
+    state.search = config.initialSearch || '';
+    state.category = config.initialCategory || 'all';
+    state.sortMode = config.initialSort === 'oldest' ? 'oldest' : 'newest';
+    state.setParam('featured', '0');
+
+    function syncFilterButtons() {
+      filterBtns.forEach(function (item) {
+        const isActive = (item.dataset.category || 'all') === state.category;
+        item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        item.dataset.variant = isActive ? 'primary' : 'outline';
+      });
+    }
+
+    function syncUrl(mode = 'push') {
+      const next = new URL(window.location.href);
+      ['search', 'category', 'sort', 'filter', 'page'].forEach((key) => next.searchParams.delete(key));
+      if (state.search) next.searchParams.set('search', state.search);
+      if (state.category !== 'all') next.searchParams.set('category', state.category);
+      if (state.sortMode === 'oldest') next.searchParams.set('sort', 'oldest');
+      window.history[mode === 'replace' ? 'replaceState' : 'pushState']({}, '', next);
+    }
 
     // Xử lý và chuẩn hóa dữ liệu bài viết
     function mapPost(post) {
@@ -124,7 +143,7 @@
       const targetPage = reset ? 1 : state.nextPage();
       state.setParams(getSortParams());
       state.setParam('search', state.search);
-      state.setParam('filter', state.category !== 'all' ? state.category : null);
+      state.setParam('category', state.category !== 'all' ? state.category : null);
 
       try {
         const payload = await requestPosts(state, { page: targetPage });
@@ -148,9 +167,10 @@
     }
 
     // Reset trạng thái và tải lại toàn bộ danh sách
-    function resetAndFetch() {
+    function resetAndFetch(options = {}) {
       state.search = searchInput?.value.trim() || '';
       state.resetPage();
+      if (options.updateHistory !== false) syncUrl(options.historyMode || 'push');
       fetchPosts({ reset: true });
       fetchFeaturedPosts();
     }
@@ -170,7 +190,7 @@
       });
 
       featuredState.setParam('search', state.search);
-      featuredState.setParam('filter', state.category !== 'all' ? state.category : null);
+      featuredState.setParam('category', state.category !== 'all' ? state.category : null);
 
       try {
         const payload = await requestPosts(featuredState);
@@ -187,19 +207,16 @@
     filterBtns.forEach(function (button) {
       button.addEventListener('click', function () {
         state.category = button.dataset.category || 'all';
-
-        filterBtns.forEach(function (item) {
-          const isActive = item === button;
-          item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-          item.dataset.variant = isActive ? 'primary' : 'outline';
-        });
-
+        syncFilterButtons();
         resetAndFetch();
       });
     });
 
     // Ô tìm kiếm (Search Input & Button)
-    searchBtn?.addEventListener('click', resetAndFetch);
+    searchForm?.addEventListener('submit', function (event) {
+      event.preventDefault();
+      resetAndFetch();
+    });
     searchInput?.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -220,5 +237,18 @@
       });
     }
 
+    window.addEventListener('popstate', function () {
+      const params = new URLSearchParams(window.location.search);
+      state.search = params.get('search') || '';
+      state.category = params.get('category') || 'all';
+      state.sortMode = params.get('sort') === 'oldest' ? 'oldest' : 'newest';
+      if (searchInput) searchInput.value = state.search;
+      syncFilterButtons();
+      state.resetPage();
+      fetchPosts({ reset: true });
+      fetchFeaturedPosts();
+    });
+
+    syncFilterButtons();
     syncLoadMore();
   });

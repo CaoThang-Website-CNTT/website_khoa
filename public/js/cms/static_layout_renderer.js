@@ -14,25 +14,46 @@ export class StaticLayoutRenderer {
 
     const data = section.data || {};
 
-    switch (section.id) {
+    switch (section.type || section.id) {
+      case 'sections/landing_hero':
       case 'hero':
         return this.renderLockedPlaceholder('Landing Carousel', 'Carousel slides đươc quản lý từ CMS editor.');
+      case 'sections/newsfeed':
       case 'newsfeed':
         return this.renderLockedPlaceholder('Newsfeed', 'Nội dung News được lấy từ Database.');
+      case 'sections/breadcrumbs':
       case 'breadcrumbs':
         return this.renderBreadcrumbsPreview();
+      case 'sections/landing_about':
       case 'landing_about':
         return this.renderLandingAbout(data, section.id);
+      case 'sections/why_choose_us':
       case 'why_choose_us':
         return this.renderWhyChooseUs(data, section.id);
+      case 'sections/stats':
       case 'stats':
         return this.renderStats(data, section.id);
+      case 'sections/partnerships':
+      case 'partnerships':
+        return this.renderPartnerships(data, section.id);
+      case 'sections/about_hero':
       case 'about_hero':
         return this.renderAboutHero(data, section.id);
+      case 'sections/history':
       case 'history':
         return this.renderHistory(data, section.id);
+      case 'sections/vision_mission':
+      case 'vision_mission':
+        return this.renderVisionMission(data, section.id);
+      case 'sections/bento_grid':
       case 'bento_grid':
         return this.renderBentoGrid(data, section.id);
+      case 'sections/education_hub':
+      case 'sections/admissions':
+      case 'sections/programs':
+      case 'sections/outcomes':
+      case 'sections/curriculum':
+        return this.renderEducation(data, section.id, section.type);
       default:
         return this.renderLockedPlaceholder(section.id, 'Section này không thể edit ở v1.');
     }
@@ -67,6 +88,13 @@ export class StaticLayoutRenderer {
   imageActiveClass(sectionId, path) {
     const active = this.getActiveState();
     return active.sectionId === sectionId && active.path === path ? ' is-active' : '';
+  }
+
+  iconAttrs(sectionId, path) {
+    if (!this.cmsDocument.isTextEditable(sectionId, path)) return '';
+    const active = this.getActiveState();
+    const activeClass = active.sectionId === sectionId && active.path === path ? ' is-active' : '';
+    return `cms-editable-icon${activeClass}" data-cms-icon-edit="true" data-section-id="${escapeAttr(sectionId)}" data-cms-path="${escapeAttr(path)}`;
   }
 
   bentoItemStyle(item) {
@@ -174,12 +202,12 @@ export class StaticLayoutRenderer {
                   <span class="wcu__feature-card-badge badge" data-variant="primary">${this.editable(sectionId, 'feature.badge', data.feature?.badge)}</span>
                   <h3 class="wcu__feature-card-title text-md md:text-3xl font-semibold">${this.editable(sectionId, 'feature.title', data.feature?.title)}</h3>
                   <p class="wcu__feature-card-description text-xs md:text-md font-normal">${this.editable(sectionId, 'feature.description', data.feature?.description, true)}</p>
-                  <span class="wcu__feature-card-link md:text-md font-normal">${this.editable(sectionId, 'feature.cta_label', data.feature?.cta_label)} <i class="fa-solid fa-lock"></i></span>
+                  <span class="wcu__feature-card-link md:text-md font-normal">${this.editable(sectionId, 'feature.cta_label', data.feature?.cta_label)} <i class="fa-solid fa-arrow-up-right-from-square"></i></span>
                 </div>
               </div>
               ${asArray(data.stats).map((stat, index) => `
                 <div class="wcu__stat-card ${index === 0 ? 'wcu__stat-card--primary col-start-1 md:col-start-3 row-start-2 md:row-start-1' : 'wcu__stat-card--gradient col-start-2 md:col-start-3 row-start-2 md:row-start-2'} rounded-3xl p-3 md:p-6 flex flex-col gap-2 justify-center">
-                  <h2 class="wcu__stat-card-number flex-1 md:flex-none flex justify-center items-center md:block text-6xl md:text-7xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h2>
+                  ${String(stat.number ?? '').trim() ? `<h2 class="wcu__stat-card-number flex-1 md:flex-none flex justify-center items-center md:block text-6xl md:text-7xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h2>` : ''}
                   <div class="wcu__stat-card-content flex flex-col gap-2">
                     <p class="wcu__stat-card-title md:text-xl font-semibold">${this.editable(sectionId, `stats.${index}.title`, stat.title)}</p>
                     <p class="wcu__stat-card-description text-xs md:text-md font-normal">${this.editable(sectionId, `stats.${index}.description`, stat.description, true)}</p>
@@ -190,7 +218,7 @@ export class StaticLayoutRenderer {
             <div class="wcu__perks-list grid grid-cols-2 grid-rows-2 md:flex justify-center items-stretch self-stretch gap-3 md:gap-6 mb-6">
               ${asArray(data.perks).map((perk, index) => `
                 <div class="wcu__perk-item flex flex-col items-start justify-start flex-1 rounded-3xl p-3 md:p-6">
-                  <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3"><i class="${escapeAttr(perk.icon || 'fa-solid fa-circle')} wcu__perk-item-icon"></i></div>
+                  <div class="wcu__perk-item-icon-wrapper flex justify-center items-center rounded-full text-4xl mb-4 p-3"><i class="${escapeAttr(perk.icon || 'fa-solid fa-circle')} wcu__perk-item-icon ${this.iconAttrs(sectionId, `perks.${index}.icon`)}"></i></div>
                   <h4 class="wcu__perk-item-title md:text-md font-semibold mb-2">${this.editable(sectionId, `perks.${index}.title`, perk.title)}</h4>
                   <p class="wcu__perk-item-description text-xs md:text-sm font-normal">${this.editable(sectionId, `perks.${index}.description`, perk.description, true)}</p>
                 </div>
@@ -225,9 +253,9 @@ export class StaticLayoutRenderer {
             <div class="stats__grid grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 gap-3 md:gap-6">
               ${asArray(data.stats).map((stat, index) => `
                 <div class="stats__stat-card flex flex-1 flex-col items-center gap-3 md:gap-6 rounded-3xl p-3 md:p-6">
-                  <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full"><i class="${escapeAttr(stat.icon || 'fa-solid fa-award')} stats__stat-card-icon"></i></div>
+                  <div class="stats__stat-card-icon-wrapper flex items-center justify-center rounded-full"><i class="${escapeAttr(stat.icon || 'fa-solid fa-award')} stats__stat-card-icon ${this.iconAttrs(sectionId, `stats.${index}.icon`)}"></i></div>
                   <div class="flex flex-col gap-1 items-center">
-                    <h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h3>
+                    ${String(stat.number ?? '').trim() ? `<h3 class="stats__stat-card-number text-3xl md:text-5xl font-bold">${this.editable(sectionId, `stats.${index}.number`, stat.number)}</h3>` : ''}
                     <h4 class="stats__stat-card-label font-semibold">${this.editable(sectionId, `stats.${index}.label`, stat.label)}</h4>
                     <p class="stats__stat-card-description text-xs md:text-sm text-center">${this.editable(sectionId, `stats.${index}.description`, stat.description, true)}</p>
                   </div>
@@ -238,7 +266,7 @@ export class StaticLayoutRenderer {
               ${asArray(data.benefits).map((benefit, index) => `
                 <div class="stats__benefit-card flex-1 flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
                   <div class="stats__benefit-card-header flex gap-2 md:gap-4 items-center">
-                    <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="${escapeAttr(benefit.icon || 'fa-solid fa-building-columns')} stats__benefit-card-icon"></i></div>
+                    <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="${escapeAttr(benefit.icon || 'fa-solid fa-building-columns')} stats__benefit-card-icon ${this.iconAttrs(sectionId, `benefits.${index}.icon`)}"></i></div>
                     <h3 class="stats__benefit-card-title text-lg md:text-2xl font-semibold">${this.editable(sectionId, `benefits.${index}.title`, benefit.title)}</h3>
                   </div>
                   <ul class="stats__benefit-card-list flex flex-col gap-2 md:gap-4">
@@ -258,6 +286,47 @@ export class StaticLayoutRenderer {
               <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
                 ${asArray(data.cta?.buttons).map((button, index) => `<span data-variant="${escapeAttr(button.variant || 'outline')}" class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full ${index === 1 ? 'bg-transparent' : ''}">${this.editable(sectionId, `cta.buttons.${index}.label`, button.label)}</span>`).join('')}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  renderPartnerships(data, sectionId) {
+    const partners = asArray(data.partners).filter((partner) => String(partner?.image?.src ?? '').trim());
+    if (!partners.length) {
+      return this.renderLockedPlaceholder('Partnerships', 'Chưa có logo đối tác để hiển thị.');
+    }
+
+    const renderGroup = (isDuplicate = false) => `
+      <div class="partnerships__group" aria-hidden="${isDuplicate ? 'true' : 'false'}">
+        ${partners.map((partner, index) => {
+          const name = String(partner?.name ?? '').trim();
+          const imagePath = `partners.${index}.image.src`;
+          const activeClass = this.imageActiveClass(sectionId, imagePath);
+          const editableClass = isDuplicate ? '' : ` cms-editable-image${activeClass}`;
+          const editableAttrs = isDuplicate ? '' : this.imageDataAttrs(sectionId, imagePath);
+          return `
+            <span class="partnerships__item" aria-label="${escapeAttr(name || 'Partner')}">
+              <img class="partnerships__logo${editableClass}" src="${escapeAttr(assetUrl(this.cmsDocument.urls, partner?.image?.src))}" alt="${escapeAttr(partner?.image?.alt || name)}" ${editableAttrs}>
+            </span>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    return `
+      <section class="partnerships relative container py-16" id="partnerships-section">
+        <div class="container-wrapper">
+          <div class="partnerships__header flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
+            <h2 class="partnerships__title section__title">${this.editable(sectionId, 'title', data.title)}</h2>
+            <p class="partnerships__subtitle section__sub-title">${this.editable(sectionId, 'subtitle', data.subtitle, true)}</p>
+          </div>
+          <div class="partnerships__viewport" aria-label="${escapeAttr(data.title || 'Đối tác doanh nghiệp')}">
+            <div class="partnerships__track">
+              ${renderGroup(false)}
+              ${renderGroup(true)}
             </div>
           </div>
         </div>
@@ -314,12 +383,53 @@ export class StaticLayoutRenderer {
     `;
   }
 
+  renderVisionMission(data, sectionId) {
+    const defaults = {
+      eyebrow: 'Định hướng phát triển', title: 'Tầm nhìn & Sứ mệnh',
+      introduction: 'Kế thừa truyền thống đào tạo kỹ thuật của Cao Thắng, Khoa Công nghệ thông tin gắn tri thức với thực hành, đổi mới và nhu cầu của xã hội.',
+      vision_title: 'Tầm nhìn',
+      vision: 'Trở thành đơn vị đào tạo công nghệ thông tin ứng dụng vững mạnh, hiện đại và nhân văn; không ngừng nâng cao chất lượng để người học thích nghi, sáng tạo và phát triển trong môi trường công nghệ luôn thay đổi.',
+      mission_title: 'Sứ mệnh',
+      mission: 'Đào tạo nguồn nhân lực có kỷ luật, đạo đức nghề nghiệp, kiến thức vững và tay nghề tốt; kết nối đào tạo với thực tiễn doanh nghiệp, thúc đẩy nghiên cứu, đổi mới phương pháp giảng dạy và ứng dụng công nghệ phục vụ nhà trường và cộng đồng.',
+      principles: [
+        { title: 'Học đi đôi với hành', description: 'Chú trọng năng lực thực hành, giải quyết vấn đề và khả năng đáp ứng công việc thực tế.' },
+        { title: 'Đổi mới liên tục', description: 'Cập nhật chương trình, công nghệ và phương pháp giảng dạy phù hợp với sự phát triển của xã hội.' },
+        { title: 'Đồng hành cùng doanh nghiệp', description: 'Mở rộng hợp tác trong đào tạo, thực tập, nghiên cứu và tạo cơ hội nghề nghiệp cho sinh viên.' }
+      ],
+      source_note: 'Nội dung được biên soạn từ tư liệu lịch sử Kỷ yếu Khoa Điện tử - Tin học; đây là bản CMS có thể tiếp tục hiệu chỉnh và phê duyệt.'
+    };
+    data = Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key,
+      data?.[key] === undefined || data[key] === '' || (Array.isArray(data[key]) && data[key].length === 0) ? value : data[key]
+    ]));
+    return `
+      <section id="tam-nhin-su-menh" class="vision-mission py-12 scroll-section">
+        <div class="container"><div class="container-wrapper">
+          <header class="flex flex-col items-center gap-2 md:gap-4 mb-8 md:mb-12 text-center">
+            <h2 class="section__title">${this.editable(sectionId, 'title', data.title)}</h2>
+            <p class="section__sub-title">${this.editable(sectionId, 'introduction', data.introduction, true)}</p>
+          </header>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 items-stretch">
+            <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+              <div class="flex gap-2 md:gap-4 items-center"><div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-eye stats__benefit-card-icon"></i></div>
+              <h3 class="text-lg md:text-2xl font-semibold">${this.editable(sectionId, 'vision_title', data.vision_title)}</h3></div>
+              <p>${this.editable(sectionId, 'vision', data.vision, true)}</p>
+            </article>
+            <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+              <div class="flex gap-2 md:gap-4 items-center"><div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-bullseye stats__benefit-card-icon"></i></div>
+              <h3 class="text-lg md:text-2xl font-semibold">${this.editable(sectionId, 'mission_title', data.mission_title)}</h3></div>
+              <p>${this.editable(sectionId, 'mission', data.mission, true)}</p>
+            </article>
+          </div>
+        </div></div>
+      </section>`;
+  }
+
   renderBentoGrid(data, sectionId) {
     return `
       <section class="py-12">
         <div class="container"><div class="container-wrapper">
           <div class="bento-grid">
-            ${asArray(data.items).map((item, index) => {
+            ${asArray(data.items).slice(0, 5).map((item, index) => {
       const hasImage = item.image?.src;
       const imagePath = `items.${index}.image.src`;
       const isImageEditable = this.cmsDocument.isImageEditable(sectionId, imagePath);
@@ -327,7 +437,7 @@ export class StaticLayoutRenderer {
       const editableAttrs = isImageEditable ? this.imageDataAttrs(sectionId, imagePath) : '';
       return `
                 <div class="card bento-grid-item${editableClass} ${hasImage ? 'bento-grid-item--has-image' : 'bento-grid-item--empty-image'}" ${editableAttrs}${this.bentoItemStyle(item)}>
-                  ${hasImage ? `<img class="bento-grid-item__image" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image.src))}" alt="">` : ''}
+                  ${hasImage ? `<img class="bento-grid-item__image" src="${escapeAttr(assetUrl(this.cmsDocument.urls, item.image.src))}" alt="${escapeAttr(item.image?.alt || '')}">` : ''}
                   <div class="card__header"><span class="badge" data-variant="glass">${item.badge || '<i class="fa-solid fa-lock"></i>'}</span></div>
                   <div class="card__content">
                     <div class="text-4xl md:text-6xl">${this.editable(sectionId, `items.${index}.content`, item.content)}</div>
@@ -342,5 +452,215 @@ export class StaticLayoutRenderer {
       </section>
     `;
   }
-}
 
+  renderEducation(data, sectionId, type) {
+    const isIntro = type === 'sections/education_hub';
+    const anchorIds = { admissions: 'tuyen-sinh', programs: 'chuong-trinh-dao-tao', outcomes: 'chuan-dau-ra', curriculum: 'danh-sach-mon-hoc' };
+    const anchorId = anchorIds[sectionId] || '';
+
+    const header = type === 'sections/admissions' ? '' : `
+        <header class="section-title mb-8"${anchorId ? ` aria-labelledby="${anchorId}-title"` : ''}>
+          <h2${anchorId ? ` id="${anchorId}-title"` : ''} class="section-title__heading">
+            ${this.editable(sectionId, 'title', data.title)}
+          </h2>
+          <p class="section-title__subtitle">${this.editable(sectionId, 'description', data.description, true)}</p>
+        </header>
+      `;
+
+    let body = '';
+    if (type === 'sections/admissions') {
+      body = `
+        <div class="stats__cta flex flex-col items-center p-3 md:p-12 rounded-3xl">
+          <h2 class="stats__cta-title text-center text-xl md:text-3xl font-semibold mb-2">${this.editable(sectionId, 'title', data.title)}</h2>
+          <p class="stats__cta-description text-center text-sm md:text-xl font-light mb-6">${this.editable(sectionId, 'description', data.description, true)}</p>
+          <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
+            <span class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full" data-variant="secondary">
+              ${this.editable(sectionId, 'cta_label', data.cta_label)}
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </span>
+          </div>
+        </div>
+      `;
+    } else if (!isIntro) {
+      body = `
+        <div class="accordion education-accordion flex flex-col gap-4">
+          ${asArray(data.programs)
+          .map((program, index) => this.renderEducationProgram(sectionId, program, index, type))
+          .join('')}
+        </div>
+      `;
+    }
+
+    if (isIntro) {
+      return `
+        <section class="my-8">
+          <div class="container">
+            <div class="container-wrapper"></div>
+          </div>
+        </section>
+      `;
+    }
+
+    return `
+      <section class="py-8 container"${anchorId ? ` id="${anchorId}"` : ''}>
+        <div class="container-wrapper">
+          ${header}
+          ${body}
+        </div>
+      </section>
+    `;
+  }
+
+  renderEducationProgram(sectionId, program, index, type) {
+    const prefix = `programs.${index}`;
+    let details = '';
+
+    if (type === 'sections/programs') {
+      details = this.renderEducationProgramDetails(sectionId, program, prefix);
+    } else if (type === 'sections/outcomes') {
+      details = this.renderEducationOutcomes(sectionId, program, prefix);
+    } else {
+      details = this.renderEducationCurriculum(sectionId, program, prefix);
+    }
+
+    return `
+      <article class="accordion_item border rounded-3xl overflow-hidden" data-state="open">
+        <h2>
+          <button class="accordion__trigger flex w-full justify-between items-center gap-4 py-6 px-5 md:px-8" type="button">
+            <span class="flex flex-col md:flex-row gap-1 md:gap-4">
+              <span class="education-program-short-name">${this.editable(sectionId, `${prefix}.short_name`, program.short_name)}</span>
+              ${this.editable(sectionId, `${prefix}.name`, program.name)}
+            </span>
+          </button>
+        </h2>
+        <div class="accordion__content p-0">
+          <div class="px-5 md:px-8 pb-8">${details}</div>
+        </div>
+      </article>
+    `;
+  }
+
+  renderEducationProgramDetails(sectionId, program, prefix) {
+    const specializations = asArray(program.specializations);
+
+    return `
+      <div class="education-facts grid grid-cols-2 md:grid-cols-3 gap-4 p-5 rounded-3xl">
+        <span><strong>${this.editable(sectionId, `${prefix}.duration`, program.duration)}</strong> Thời lượng</span>
+        <span><strong>${this.editable(sectionId, `${prefix}.credits`, program.credits)}</strong> Tín chỉ</span>
+        <span><strong>${this.editable(sectionId, `${prefix}.source_year`, program.source_year)}</strong> Áp dụng</span>
+      </div>
+      <div class="education-copy-grid grid gap-8 mt-8">
+        <div>
+          <h3>Định hướng nghề nghiệp</h3>
+          <ul><li>${this.editable(sectionId, `${prefix}.career`, program.career, true)}</li></ul>
+          <h3>Mục tiêu chương trình</h3>
+          <ol>${this.renderEducationList(sectionId, `${prefix}.objectives`, program.objectives, true)}</ol>
+        </div>
+        ${specializations.length ? `
+          <aside>
+            <h3>Các hướng chuyên môn</h3>
+            <ul>${this.renderEducationList(sectionId, `${prefix}.specializations`, specializations)}</ul>
+          </aside>
+        ` : ''}
+      </div>
+      <div class="education-inline-actions flex flex-col md:flex-row gap-3 mt-6">
+        <a class="btn rounded-full" data-variant="outline" data-size="lg" href="#chuan-dau-ra">Xem chuẩn đầu ra</a>
+        <a class="btn rounded-full" data-variant="outline" data-size="lg" href="#danh-sach-mon-hoc">Xem danh sách môn học</a>
+      </div>
+    `;
+  }
+
+  renderEducationOutcomes(sectionId, program, prefix) {
+    return `
+      ${this.renderEducationSource(sectionId, program, prefix)}
+      <div class="education-content grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+        <section>
+          <h3>Mục tiêu chương trình</h3>
+          <ol>${this.renderEducationList(sectionId, `${prefix}.objectives`, program.objectives, true)}</ol>
+        </section>
+        <section>
+          <h3>Chuẩn đầu ra</h3>
+          <ol>${this.renderEducationList(sectionId, `${prefix}.outcomes`, program.outcomes, true)}</ol>
+        </section>
+      </div>
+    `;
+  }
+
+  renderEducationCurriculum(sectionId, program, prefix) {
+    const semesters = asArray(program.semesters);
+
+    if (!semesters.length) return '<p>Chưa có học kỳ.</p>';
+
+    const semesterKey = (semester, semesterIndex) => escapeAttr(semester.key || String(semesterIndex + 1));
+    const firstSemesterKey = semesterKey(semesters[0], 0);
+    const tabsId = escapeAttr(`education-semesters-${sectionId}-${prefix.replace(/\./g, '-')}`);
+    const tabs = semesters.map((semester, semesterIndex) => `
+      <button
+        type="button"
+        data-tabs-trigger="${semesterKey(semester, semesterIndex)}"
+        data-tabs-trigger-state="${semesterIndex === 0 ? 'active' : 'idle'}"
+      >
+        <span class="badge" data-variant="${semesterIndex === 0 ? 'primary' : 'outline'}" data-size="lg">${this.editable(sectionId, `${prefix}.semesters.${semesterIndex}.name`, semester.name)}</span>
+      </button>
+    `).join('');
+    const panels = semesters.map((semester, semesterIndex) => `
+      <div
+        class="tabs__panel"
+        data-tabs-panel="${semesterKey(semester, semesterIndex)}"
+        data-tabs-panel-state="${semesterIndex === 0 ? 'active' : 'idle'}"
+      >
+        <div class="education-table-wrap w-full overflow-x-auto border rounded-3xl">
+          ${this.renderEducationCourseTable(sectionId, semester, prefix, semesterIndex)}
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      ${this.renderEducationSource(sectionId, program, prefix)}
+      <div data-tabs data-tabs-id="${tabsId}" data-tabs-panel-active="${firstSemesterKey}">
+        <div class="education-semester-tabs flex gap-2 overflow-x-auto py-5">${tabs}</div>
+        ${panels}
+      </div>
+    `;
+  }
+
+  renderEducationCourseTable(sectionId, semester, prefix, semesterIndex) {
+    const courses = asArray(semester.courses);
+    const rows = courses.length
+      ? courses.map((course, courseIndex) => {
+        const coursePath = `${prefix}.semesters.${semesterIndex}.courses.${courseIndex}`;
+        return `
+          <tr>
+            <td>${courseIndex + 1}</td>
+            <td>${this.editable(sectionId, `${coursePath}.code`, course.code)}</td>
+            <th scope="row">${this.editable(sectionId, `${coursePath}.name`, course.name)}</th>
+            <td>${this.editable(sectionId, `${coursePath}.credits`, course.credits)}</td>
+            <td>${this.editable(sectionId, `${coursePath}.theory`, course.theory)}</td>
+            <td>${this.editable(sectionId, `${coursePath}.practice`, course.practice)}</td>
+          </tr>
+        `;
+      }).join('')
+      : '<tr><td colspan="6" class="text-center">Chưa có học phần cho học kỳ này.</td></tr>';
+
+    return `
+      <table class="data-table education-course-table">
+        <thead><tr><th>STT</th><th>Mã HP</th><th>Học phần</th><th>Tín chỉ</th><th>LT</th><th>BT/TH</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  renderEducationSource(sectionId, program, prefix) {
+    return `
+      <div class="education-source flex flex-col md:flex-row justify-between gap-4 text-sm pb-4">
+        <span>Cập nhật: ${this.editable(sectionId, `${prefix}.updated_at`, program.updated_at)}</span>
+      </div>
+    `;
+  }
+
+  renderEducationList(sectionId, path, items, multiline = false) {
+    return asArray(items)
+      .map((item, index) => `<li>${this.editable(sectionId, `${path}.${index}`, item, multiline)}</li>`)
+      .join('');
+  }
+}

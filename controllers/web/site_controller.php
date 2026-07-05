@@ -7,7 +7,7 @@ use App\Core\Request;
 use App\Cms\CmsBlockPageRenderer;
 use App\Cms\CmsStaticPageRenderer;
 use App\Middlewares\Traits\HasDashboardRouting;
-use App\Services\{PostService, CarouselService, MenuService, WebSettingsService, CmsPageService};
+use App\Services\{PostService, CarouselService, MenuService, WebSettingsService, CmsPageService, CategoryService};
 use App\Editor\BlockRenderer;
 use App\Models\Menu;
 
@@ -20,6 +20,7 @@ class SiteController extends Controller
   private CarouselService $_carouselService;
   private WebSettingsService $_settingService;
   private CmsPageService $_cmsPageService;
+  private CategoryService $_categoryService;
 
   /**
    * Header Menu
@@ -50,12 +51,14 @@ class SiteController extends Controller
     PostService $postService,
     WebSettingsService $settingService,
     CmsPageService $cmsPageService,
+    CategoryService $categoryService,
   ) {
     $this->_menuService = $menuService;
     $this->_carouselService = $carouselService;
     $this->_postService = $postService;
     $this->_settingService = $settingService;
     $this->_cmsPageService = $cmsPageService;
+    $this->_categoryService = $categoryService;
 
     $this->_loadHeaderMenu();
     $this->_loadSettings();
@@ -93,25 +96,74 @@ class SiteController extends Controller
     ], "site_layout");
   }
 
-  public function news_index()
+  public function news_index(Request $request)
   {
-
-    $featuredNews = $this->_postService->getFeaturedPosts(2, true, ['status' => 'published']);
-
-    $allNews = $this->_postService->getPosts(1, 6, true, [
+    $page = max(1, (int) $request->query('page', 1));
+    $search = trim((string) $request->query('search', ''));
+    $category = trim((string) $request->query('category', $request->query('filter', '')));
+    $sortMode = $request->query('sort') === 'oldest' ? 'oldest' : 'newest';
+    $filters = [
       'status' => 'published',
-      'is_featured' => "0"
+      'search' => $search,
+      'category' => $category,
+      'sort' => 'published_at',
+      'order' => $sortMode === 'oldest' ? 'asc' : 'desc',
+    ];
+
+    $featuredPage = $this->_postService->getPosts(1, 2, true, [
+      ...$filters,
+      'is_featured' => '1',
+      'order' => 'desc',
     ]);
+    $featuredNews = $featuredPage->getItems();
+    $allNews = $this->_postService->getPosts($page, 6, true, [
+      ...$filters,
+      'is_featured' => '0',
+    ]);
+
+    $allCategories = $this->_categoryService->getAllCategories();
+    $categoryMap = [];
+    foreach ($allCategories as $item) {
+      $categoryMap[(string) $item->slug] = $item;
+    }
+    $filterSlugs = [
+      'hoat-dong',
+      'cong-tac-giang-day',
+      'nghien-cuu-khoa-hoc',
+      'hoc-thuat',
+      'thi-dua-doan-the',
+      'phong-trao-ngoai-khoa',
+      'clb-tin-hoc',
+      'thong-bao',
+      'tuyen-dung',
+    ];
+    $newsCategories = array_values(array_filter(array_map(
+      fn(string $slug) => $categoryMap[$slug] ?? null,
+      $filterSlugs,
+    )));
+
+    $activeCategoryNames = [];
+    foreach (array_filter(array_map('trim', explode(',', $category))) as $slug) {
+      if (isset($categoryMap[$slug]))
+        $activeCategoryNames[] = $categoryMap[$slug]->name;
+    }
 
     $pageUrl = url('tin-tuc');
     $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
-    $pageTitle = 'Tin tức & Sự kiện';
-    $pageDescription = 'Tin tức và sự kiện mới nhất từ Khoa Công nghệ Thông tin. Cập nhật thông tin về sinh viên, nghiên cứu, tuyển dụng và các sự kiện đặc biệt.';
+    $pageTitle = $search !== ''
+      ? 'Kết quả tìm kiếm tin tức'
+      : ($activeCategoryNames ? implode(' · ', $activeCategoryNames) : 'Tin tức & Sự kiện');
+    $pageDescription = $search !== ''
+      ? 'Kết quả tìm kiếm cho “' . $search . '” trên trang tin Khoa Công nghệ Thông tin.'
+      : 'Tin tức và sự kiện mới nhất từ Khoa Công nghệ Thông tin. Cập nhật thông tin về sinh viên, nghiên cứu và các hoạt động của Khoa.';
 
     return $this->render('site/news/index', [
       'headerMenu' => $this->_headerMenu->items,
       'featuredNews' => $featuredNews,
       'allNews' => $allNews,
+      'newsCategories' => $newsCategories,
+      'newsQuery' => compact('search', 'category', 'sortMode'),
+      'activeCategoryNames' => $activeCategoryNames,
       'settings' => $this->_settings,
       'pageTitle' => $pageTitle,
       'pageDescription' => $pageDescription,
@@ -177,6 +229,58 @@ class SiteController extends Controller
     ], "site_layout");
   }
 
+  public function partners(): void
+  {
+    $partnerships = $this->_cmsPageService->getSectionData('landing', 'partnerships');
+    $partners = array_values(array_filter(
+      is_array($partnerships['partners'] ?? null) ? $partnerships['partners'] : [],
+      static fn(mixed $partner): bool => is_array($partner) && trim((string) ($partner['name'] ?? '')) !== '',
+    ));
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+    $description = 'Các doanh nghiệp đồng hành cùng Khoa Công nghệ thông tin trong đào tạo, thực tập và tuyển dụng.';
+
+    $this->render('site/partners', [
+      'headerMenu' => $this->_headerMenu->items,
+      'partners' => $partners,
+      'settings' => $this->_settings,
+      'pageTitle' => 'Doanh nghiệp đối tác',
+      'pageDescription' => $description,
+      'pageCanonical' => 'viec-lam/doanh-nghiep',
+      'pageSeo' => [
+        'og:title' => seo_title('Doanh nghiệp đối tác', $siteTitle),
+        'og:description' => $description,
+        'og:type' => 'website',
+        'og:url' => url('viec-lam/doanh-nghiep'),
+        'og:site_name' => $siteTitle
+      ],
+    ], 'site_layout');
+  }
+
+  public function education(): void
+  {
+    $this->_renderEducationPage('education', 'Đào tạo', 'Khám phá chương trình đào tạo, chuẩn đầu ra và kế hoạch học tập của Khoa Công nghệ thông tin.', 'dao-tao');
+  }
+
+  public function admissions(): void
+  {
+    $this->redirect('dao-tao#tuyen-sinh', 301);
+  }
+
+  public function academicPrograms(): void
+  {
+    $this->redirect('dao-tao#chuong-trinh-dao-tao', 301);
+  }
+
+  public function programOutcomes(): void
+  {
+    $this->redirect('dao-tao#chuan-dau-ra', 301);
+  }
+
+  public function curriculum(): void
+  {
+    $this->redirect('dao-tao#danh-sach-mon-hoc', 301);
+  }
+
   public function portal(Request $request): void
   {
     $user = $request->session()->authUser();
@@ -215,10 +319,26 @@ class SiteController extends Controller
     $page = $this->_cmsPageService->getPublishedPageBySlug($slug)
       ?? $this->_cmsPageService->getPageBySlug($slug);
 
-    if ($page->layout_mode === 'block_builder') {
-      return (new CmsBlockPageRenderer($context))->render($page->content());
-    }
+    return (new CmsStaticPageRenderer($context, pageSlug: $slug))->render($page->content());
+  }
 
-    return (new CmsStaticPageRenderer($context))->render($page->content());
+  private function _renderEducationPage(string $slug, string $title, string $description, string $canonical): void
+  {
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+    $this->render('site/education', [
+      'headerMenu' => $this->_headerMenu->items,
+      'cmsHtml' => $this->_renderCmsPage($slug),
+      'settings' => $this->_settings,
+      'pageTitle' => $title,
+      'pageDescription' => $description,
+      'pageCanonical' => $canonical,
+      'pageSeo' => [
+        'og:title' => seo_title($title, $siteTitle),
+        'og:description' => $description,
+        'og:type' => 'website',
+        'og:url' => url($canonical),
+        'og:site_name' => $siteTitle,
+      ],
+    ], 'site_layout');
   }
 }

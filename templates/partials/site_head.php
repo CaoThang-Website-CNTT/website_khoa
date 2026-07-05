@@ -30,7 +30,7 @@ $_seoHead = [
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
-<link rel="stylesheet" href="<?= url('public/css/landing.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/landing.css') ?>?v=<?= filemtime(BASE_PATH . '/public/css/landing.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/cms_blocks.css') ?>">
 

@@ -1,18 +1,22 @@
 <?php
 
 use App\Migration\BaseMigration;
-use App\Core\Schema\TableBuilder;
+use App\Core\Schema\{TableBuilder, AlterBuilder};
 
-return new class extends BaseMigration
-{
+return new class extends BaseMigration {
   public function forward(TableBuilder $schema): void
   {
-    $db = Database::getInstance()->getConnection();
-
-
-    $db->exec("ALTER TABLE internship_batches 
-                MODIFY COLUMN class_of INT NULL COMMENT 'Nien khoa, VD: 23',
-                MODIFY COLUMN level ENUM('CĐ', 'CĐN') NULL COMMENT 'Bac hoc';");
+    $schema->alter('internship_batches', function (AlterBuilder $table) {
+      $table->modifyColumn(fn(AlterBuilder $column) => $column->int('class_of')->nullable()->comment('Nien khoa, VD: 23'));
+      $table->modifyColumn(fn(AlterBuilder $column) => $column->enum('level', ['CĐ', 'CĐN'])->nullable()->comment('Bac hoc'));
+    });
   }
-  public function back(TableBuilder $schema): void {}
+
+  public function back(TableBuilder $schema): void
+  {
+    $schema->alter('internship_batches', function (AlterBuilder $table) {
+      $table->modifyColumn(fn(AlterBuilder $column) => $column->int('class_of')->comment('Nien khoa, VD: 23'));
+      $table->modifyColumn(fn(AlterBuilder $column) => $column->enum('level', ['CĐ', 'CĐN'])->comment('Bac hoc'));
+    });
+  }
 };

@@ -25,7 +25,7 @@ class DropdownHandler {
   static VIEWPORT_MARGIN = 8;
 
   // Z-index tối thiểu - panel mở sau luôn cao hơn panel mở trước
-  static BASE_Z_INDEX = 100;
+  static BASE_Z_INDEX = 1000;
   static _zCounter = 0;
 
   static #instance = null;

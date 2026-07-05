@@ -2,6 +2,7 @@
 <script src="<?= url('/public/js/tooltip.js') ?>"></script>
 <script src="<?= url('/public/js/api_state.js') ?>"></script>
 <script src="<?= url('/public/js/tabs.js') ?>"></script>
+<script src="<?= url('/public/js/accordion.js') ?>"></script>
 <script src="<?= url('/public/js/modal.js') ?>"></script>
 <script src="<?= url('/public/js/radio.js') ?>"></script>
 <script src="<?= url('/public/js/dropdown.js') ?>"></script>

@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let supervisors = [];
   let tableData = [];
   let bulkActionsRegistered = false;
+  let isTableInitialized = false;
 
   // Modals
   const modalHandler = ModalHandler.instance;
@@ -95,19 +96,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const isFull = sup.current_assigned >= sup.max_students;
 
       html += `
-        <div class="supervisor-card shadow-sm border" ${isFull ? "style='background: var(--muted)'" : ""}>
+        <div class="supervisor-card">
           <div class="supervisor-card__header">
             <div>
               <div class="supervisor-card__name text-sm">${sup.teacher_name}</div>
               <div class="text-xs">${sup.email || ""}</div>
             </div>
             <div class="supervisor-card__stats">
-              <span class="font-bold text-sm">${sup.current_assigned}</span>
-              <span>/${sup.max_students}</span>
+              <div><span class="font-bold text-sm">${sup.current_assigned}</span><span>/${sup.max_students}</span></div>
+              ${isFull ? '<span class="badge" data-variant="secondary">Đã đầy</span>' : ""}
             </div>
           </div>
           <div class="quota-progress">
-            <div class="quota-progress__inner ${isFull ? "quota-progress__inner--full" : ""}" 
+            <div class="quota-progress__inner"
                  style="width: ${percent}%"></div>
           </div>
         </div>`;
@@ -128,35 +129,53 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(interval);
         if (tm) {
           tm.loadData(tableData);
-          attachTableEvents();
-          registerBulkActions();
-          
-          // Đăng ký Export Excel
-          const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
-          ExportManager.register(tm, {
-            source: 'batch_students',
-            source_id: batchId,
-            endpoint: window.API_BASE_URL.replace('/internship/batches', '/export'),
-            filename: `Danh-sach-sinh-vien-${batchTitle}`,
-            metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
-            metadataDateRange: window.BATCH_START && window.BATCH_END
-              ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
-              : null,
-            columnsMap: {
-              student_code: "MSSV",
-              student_name: "Họ và tên",
-              classroom_name: "Lớp",
-              student_phone: "SĐT",
-              student_email: "Email",
-              company_name: "Tên Công ty",
-              company_tax_code: "Mã số thuế",
-              company_address: "Địa chỉ",
-              teacher_name: "Giảng viên hướng dẫn",
-              grade_score: "Điểm số",
-              grade_reason: "Diễn giải điểm",
-              grade_feedback: "Nhận xét"
-            }
-          });
+
+          if (!isTableInitialized) {
+            isTableInitialized = true;
+            attachTableEvents();
+            registerBulkActions();
+
+            // Đăng ký Export Excel
+            const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
+            ExportManager.register(tm, {
+              target: "#batch-students-export-action",
+              triggerLabel: "Export dữ liệu",
+              triggerIcon: "fa-file-excel",
+              triggerVariant: "outline",
+              triggerSize: "lg",
+              source: "batch_students",
+              source_id: batchId,
+              endpoint: window.API_BASE_URL.replace(
+                "/internship/batches",
+                "/export",
+              ),
+              filename: `Danh-sach-sinh-vien-${batchTitle}`,
+              metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
+              metadataDateRange:
+                window.BATCH_START && window.BATCH_END
+                  ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
+                  : null,
+              columnGroups: [
+                { label: "Sinh viên", columns: ["student_code", "student_name", "classroom_name", "student_phone", "student_email"] },
+                { label: "Công ty", columns: ["company_name", "company_tax_code", "company_address"] },
+                { label: "Kết quả", columns: ["teacher_name", "grade_score", "grade_reason", "grade_feedback"] },
+              ],
+              columnsMap: {
+                student_code: "MSSV",
+                student_name: "Họ và tên",
+                classroom_name: "Lớp",
+                student_phone: "SĐT",
+                student_email: "Email",
+                company_name: "Tên Công ty",
+                company_tax_code: "Mã số thuế",
+                company_address: "Địa chỉ",
+                teacher_name: "Giảng viên hướng dẫn",
+                grade_score: "Điểm số",
+                grade_reason: "Diễn giải điểm",
+                grade_feedback: "Nhận xét",
+              },
+            });
+          }
         }
       }
       retries++;
@@ -164,15 +183,12 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const registerBulkActions = () => {
-    if (bulkActionsRegistered) return;
-    bulkActionsRegistered = true;
-
     TableManager.registerBulkActions("batch_students_table", {
       countLabel: count => `Đã chọn: ${count}`,
       actions: [
         {
           id: "assign",
-          label: "Phân công giảng viên",
+          label: "Phân công",
           icon: "fa-solid fa-user-plus",
           variant: "primary",
           onClick: ({ selectedIds }) => {
@@ -182,6 +198,22 @@ document.addEventListener("DOMContentLoaded", () => {
             renderTeacherOptions(select, null);
 
             modalHandler.open("#modal-bulk-assign");
+          },
+        },
+        {
+          id: "export-selected",
+          label: "Export đã chọn",
+          tooltip: "Export các dòng sinh viên đã chọn",
+          icon: "fa-solid fa-file-excel",
+          variant: "outline",
+          onClick: () => {
+            document
+              .querySelector('[data-tm="batch_students_table"]')
+              ?.dispatchEvent(
+                new CustomEvent("tm:export", {
+                  detail: { mode: "selected" },
+                }),
+              );
           },
         },
         {
@@ -292,21 +324,51 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /**
+   * Xác nhận thay đổi phân công khi đợt đã công bố
+   */
+  const confirmPublishedAssignment = () => {
+    return new Promise((resolve) => {
+      const modal = document.querySelector("#modal-confirm-published-assignment");
+      if (!modal) return resolve(true);
+
+      const btnConfirm = modal.querySelector("#btn-confirm-published-assignment");
+      const btnCancel = modal.querySelector("#btn-close-published-assignment");
+      const btnClose = modal.querySelector(".modal__close");
+
+      const cleanup = () => {
+        btnConfirm.removeEventListener("click", onConfirm);
+        btnCancel.removeEventListener("click", onCancel);
+        btnClose.removeEventListener("click", onCancel);
+      };
+
+      const onConfirm = () => {
+        cleanup();
+        modalHandler.close();
+        resolve(true);
+      };
+
+      const onCancel = () => {
+        cleanup();
+        modalHandler.close();
+        resolve(false);
+      };
+
+      btnConfirm.addEventListener("click", onConfirm);
+      btnCancel.addEventListener("click", onCancel);
+      btnClose.addEventListener("click", onCancel);
+
+      modalHandler.open("#modal-confirm-published-assignment");
+    });
+  };
+
+  /**
    * Gọi API lưu phân công
    */
   const saveAssignments = async (assignments, reason) => {
     try {
-      if (batchStatus === "published" && !reason) {
-        reason = prompt(
-          "Đợt thực tập đã công bố. Vui lòng nhập lý do thay đổi:",
-          "",
-        );
-        if (reason === null) {
-          loadData(); // Reset UI
-          return false;
-        }
-        if (!reason.trim()) {
-          toast.warning("Yêu cầu", "Lý do không được để trống.");
+      if (batchStatus === "published") {
+        const confirmed = await confirmPublishedAssignment();
+        if (!confirmed) {
           loadData();
           return false;
         }
@@ -343,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
         const row = tableData.find((r) => r.batch_student_id == sid);
         return {
@@ -366,7 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .querySelector("#btn-confirm-bulk-unassign")
     .addEventListener("click", async () => {
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
         const row = tableData.find((r) => r.batch_student_id == sid);
         return {

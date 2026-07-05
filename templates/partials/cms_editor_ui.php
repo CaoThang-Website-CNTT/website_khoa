@@ -21,6 +21,9 @@
 <button type="button" class="btn" data-size="md" data-variant="outline" data-preview-width="desktop">
   <i class="fa-solid fa-desktop"></i>
 </button>
+<button type="button" class="btn" data-size="md" data-variant="outline" data-preview-highlight>
+  <i class="fa-solid fa-highlighter"></i>
+</button>
 <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-right">
   <i class="fa-solid fa-table-columns"></i> Page settings
 </button>

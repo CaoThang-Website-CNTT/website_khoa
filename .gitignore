@@ -4,3 +4,5 @@
 docs
 .cursorrules
 /tests/**
+/tmp/**
+.agents/skills/
