@@ -1,4 +1,6 @@
+<?php $layout->start('head') ?>
 <link rel="stylesheet" href="<?= url('public/css/company_merge.css') ?>">
+<?php $layout->end() ?>
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Gộp Công ty</h2>
@@ -124,9 +126,11 @@
 
   <?php $layout->end() ?>
 
+  <?php $layout->start('scripts') ?>
   <script>
     window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
     window.MERGE_SOURCE_ID = <?= json_encode($company->id) ?>;
     window.MERGE_PREFILL_QUERY = <?= json_encode(request()->query('q') ?? '') ?>;
   </script>
   <script type="module" src="<?= url('public/js/pages/company_merge.js') ?>"></script>
+  <?php $layout->end() ?>
