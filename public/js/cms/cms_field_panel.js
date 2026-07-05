@@ -258,9 +258,9 @@ export class CmsFieldPanel {
 
     return `
       <div class="cms-repeater__item">
-        <span>${escapeHtml(this.#itemLabel(item, index))}</span>
-        <div>
-          <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+        <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+        <span class="cms-repeater__item-label">${escapeHtml(this.#itemLabel(item, index))}</span>
+        <div class="cms-repeater__actions">
           <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${actionAttributes}>
             <i class="fa-regular fa-copy"></i>
           </button>
@@ -287,6 +287,15 @@ export class CmsFieldPanel {
     };
     walk(data, 0, []);
     return paths;
+  }
+
+  openRepeaterItem(path, index) {
+    const container = this.root?.querySelector(`[data-cms-dnd-path="${cssEscape(path)}"]`);
+    const item = container?.querySelector(`:scope > [data-id="${Number(index)}"]`);
+    if (!item) return;
+    const trigger = item.querySelector(':scope .accordion__trigger');
+    if (trigger?.dataset.state !== 'open') trigger?.click();
+    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   #renderInteractiveStructure(section, schema) {
@@ -320,7 +329,7 @@ export class CmsFieldPanel {
         <div class="cms-program-item__header">
           <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
           <button type="button" class="accordion__trigger cms-program-item__trigger"><span>${escapeHtml(this.#itemLabel(item, index))}</span></button>
-          <div class="cms-program-item__actions">
+          <div class="cms-repeater__actions cms-program-item__actions">
             <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${attrs}><i class="fa-regular fa-copy"></i></button>
             <button type="button" title="Xóa" data-cms-array-action="remove" ${attrs}><i class="fa-regular fa-trash-can"></i></button>
           </div>
@@ -328,8 +337,9 @@ export class CmsFieldPanel {
         <div class="accordion__content cms-program-item__content" hidden><div class="cms-field-grid">${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')).join('')}</div></div>
       </article>`;
     }
-    return `<div class="cms-repeater__item" data-id="${index}"><span>${escapeHtml(this.#itemLabel(item, index))}</span><div>
+    return `<div class="cms-repeater__item" data-id="${index}">
       <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+      <span class="cms-repeater__item-label">${escapeHtml(this.#itemLabel(item, index))}</span><div class="cms-repeater__actions">
       <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${attrs}><i class="fa-regular fa-copy"></i></button>
       <button type="button" title="Xóa" data-cms-array-action="remove" ${attrs}><i class="fa-regular fa-trash-can"></i></button>
     </div></div>`;

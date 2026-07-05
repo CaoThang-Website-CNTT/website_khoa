@@ -111,8 +111,11 @@ export class CmsEditorManager {
     this.#bus.subscribe('field:media_select_request', (payload) => this.#onMediaSelectRequest(payload));
     this.#bus.subscribe('preview:editable_selected', (payload) => this.#onPreviewEditableSelected(payload));
     this.#bus.subscribe('preview:image_selected', (payload) => this.#onPreviewImageSelected(payload));
+    this.#bus.subscribe('preview:link_selected', (payload) => this.#onPreviewImageSelected(payload));
     this.#bus.subscribe('preview:icon_selected', (payload) => this.#onPreviewIconSelected(payload));
+    this.#bus.subscribe('preview:repeater_selected', (payload) => this.#onPreviewRepeaterSelected(payload));
     this.#bus.subscribe('preview:input', (payload) => this.#onPreviewInput(payload));
+    this.#bus.subscribe('preview:text_commit', () => this.#preview.render({ immediate: true }));
     this.#bus.subscribe('preview:error', ({ message }) => this.#showError(message));
     this.#bus.subscribe('preview:rendered', () => this.#clearError());
     this.#bus.subscribe('structure:mutate', (payload) => this.#onStructureMutate(payload));
@@ -226,6 +229,15 @@ export class CmsEditorManager {
     this.#activePath = path;
     this.#sectionNav.render(this.#activeSectionId);
     this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
+    this.#preview.markActiveEditable();
+  }
+
+  #onPreviewRepeaterSelected({ sectionId, path, index }) {
+    this.#activeSectionId = sectionId;
+    this.#activePath = null;
+    this.#sectionNav.render(this.#activeSectionId);
+    this.#fieldPanel.render(this.#activeSectionId, null);
+    this.#fieldPanel.openRepeaterItem(path, index);
     this.#preview.markActiveEditable();
   }
 

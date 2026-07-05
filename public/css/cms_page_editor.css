@@ -118,40 +118,49 @@
   transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.cms-live-section {
+[data-section-id] {
   position: relative;
   outline: 1px solid transparent;
   outline-offset: -1px;
 }
 
-.cms-live-section:hover,
-.cms-live-section.is-active {
+[data-section-id]:hover,
+[data-section-id].is-active {
   outline-color: color-mix(in oklab, var(--primary) 50%, transparent);
 }
 
-.cms-live-section.is-locked {
+[data-cms-locked="true"] {
   outline-style: dashed;
 }
 
+[data-cms-locked="true"]::after {
+  content: "\1f512  " attr(data-cms-lock-label);
+  position: absolute;
+  z-index: 20;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+  line-height: 1.25;
+  pointer-events: none;
+}
+
 .cms-editable-text {
-  display: inline;
-  color: inherit;
-  font: inherit;
-  font-size: inherit;
-  font-style: inherit;
-  font-weight: inherit;
-  letter-spacing: inherit;
-  line-height: inherit;
-  text-align: inherit;
-  text-decoration: inherit;
-  text-transform: inherit;
-  white-space: inherit;
-  word-break: inherit;
   border-radius: 0.25rem;
   cursor: text;
   outline: none;
   transition: background 100ms ease;
 }
+
+[data-inline-edit="true"] { cursor: text; outline: none; }
+[data-cms-image-edit="true"], [data-cms-icon-edit="true"], [data-cms-link-edit="true"], [data-cms-repeater-path] { cursor: pointer; }
+[data-inline-edit="true"]:hover, [data-inline-edit="true"]:focus, [data-inline-edit="true"].is-active,
+.cms-preview-body--highlight-editables [data-inline-edit="true"] { background: color-mix(in oklab, var(--primary) 10%, transparent); }
+[data-cms-image-edit="true"]:hover, [data-cms-image-edit="true"].is-active,
+.cms-preview-body--highlight-editables [data-cms-image-edit="true"] { outline: 2px solid color-mix(in oklab, var(--primary) 30%, transparent); outline-offset: -2px; }
 
 .cms-editable-text:hover,
 .cms-editable-text:focus,
@@ -236,8 +245,10 @@
 }
 
 .cms-image-field__preview {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
   width: 100%;
   aspect-ratio: 16 / 10;
   overflow: hidden;
@@ -247,9 +258,15 @@
 }
 
 .cms-image-field__preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .cms-image-field__empty {
