@@ -1,0 +1,59 @@
+.faculty-card {
+  padding: 0;
+  gap: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faculty-card:hover,
+.faculty-card:focus-visible,
+.faculty-card[aria-expanded="true"] {
+  border-color: var(--ring);
+  transform: translateY(-0.25rem);
+}
+
+.faculty-card:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.faculty-card__portrait {
+  padding: 0;
+  overflow: hidden;
+}
+
+.faculty-card__content {
+  padding: 1.25rem;
+}
+
+.faculty-card__contact {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--muted-foreground);
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faculty-card__contact :is(svg, .fa-solid, .fa-regular) {
+  color: var(--primary);
+}
+
+.faculty-card:hover .faculty-card__contact,
+.faculty-card:focus .faculty-card__contact,
+.faculty-card[aria-expanded="true"] .faculty-card__contact {
+  max-height: 6rem;
+  opacity: 1;
+}
+
+.faculty-card__contact span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faculty-card,
+  .faculty-card__contact {
+    transition: none;
+  }
+}
