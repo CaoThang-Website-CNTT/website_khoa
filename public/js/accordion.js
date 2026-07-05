@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
  * AccordionHandler
  *
  * <div class="accordion" data-accordion-type="single|multiple"
- *      data-accordion-collapsible data-accordion-default-value="item-1">
+ *      data-accordion-collapsible data-accordion-default-value="item-1"
+ *      data-accordion-icon="none">
  *   <div class="accordion_item" data-accordion-value="item-1">
  *     <button class="accordion__trigger" type="button">...</button>
  *     <div class="accordion__content">...</div>
@@ -113,7 +114,8 @@ class AccordionHandler {
     root.dataset.accordionId = rootId;
 
     let icon = item.trigger.querySelector(":scope > .accordion__icon");
-    if (!icon) {
+    const shouldInsertIcon = root.dataset.accordionIcon !== "none";
+    if (!icon && shouldInsertIcon) {
       icon = document.createElement("i");
       icon.className = "accordion__icon fa-solid fa-chevron-down";
       icon.setAttribute("aria-hidden", "true");
@@ -237,3 +239,5 @@ class AccordionHandler {
     return `${prefix}-${AccordionHandler.#idCounter}`;
   }
 }
+
+window.AccordionHandler = AccordionHandler;

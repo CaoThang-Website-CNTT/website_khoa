@@ -102,6 +102,7 @@ require_once BASE_PATH . '/includes/cms/cms_section_registry.php';
 require_once BASE_PATH . '/includes/cms/education_page_defaults.php';
 require_once BASE_PATH . '/includes/cms/education_section_renderer.php';
 require_once BASE_PATH . '/includes/cms/cms_static_page_renderer.php';
+require_once BASE_PATH . '/includes/cms/cms_page_module_loader.php';
 require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
 
 // Mail
