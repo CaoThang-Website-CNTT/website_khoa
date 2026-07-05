@@ -44,6 +44,9 @@ final class CmsStaticPageRenderer
       'css/block_preview.css',
       'css/cms_page_editor.css',
     ];
+    if ($this->pageSlug === 'faculty') {
+      $styles[] = 'css/pages/faculty.css';
+    }
     $links = implode('', array_map(
       fn(string $file): string => '<link rel="stylesheet" href="' . $public . '/' . $file . '">',
       $styles,
@@ -254,6 +257,28 @@ final class CmsStaticPageRenderer
     ));
 
     $registry->register(new CmsCallbackSectionDefinition(
+      'sections/teacher_directory',
+      'Teacher directory',
+      ['variant' => 'default', 'teachers' => []],
+      [
+        'teachers.*.name',
+        'teachers.*.role',
+        'teachers.*.phone',
+        'teachers.*.email',
+        'teachers.*.portrait.src',
+      ],
+      ['default' => 'Default'],
+      fn(array $data, CmsRenderContext $context): string => $renderer->renderTeacherDirectory($data, $context),
+      [
+        'teachers.*.name' => 'Họ tên',
+        'teachers.*.role' => 'Chức vụ / vị trí',
+        'teachers.*.phone' => 'Số điện thoại',
+        'teachers.*.email' => 'Email',
+        'teachers.*.portrait.src' => 'Ảnh chân dung',
+      ],
+    ));
+
+    $registry->register(new CmsCallbackSectionDefinition(
       'sections/history',
       'History',
       ['variant' => 'default', 'sections' => []],
@@ -428,6 +453,13 @@ final class CmsStaticPageRenderer
 
   private function renderBreadcrumbs(CmsRenderContext $context): string
   {
+    $links = [
+      ['icon' => '<i class="fa-regular fa-house"></i>', 'url' => url('/'), 'title' => 'Trang chủ'],
+      ['url' => url('/gioi-thieu'), 'title' => 'Giới Thiệu'],
+    ];
+    if ($context->pageSlug() === 'faculty') {
+      $links[] = ['url' => url('/giang-vien'), 'title' => 'Đội ngũ giảng viên'];
+    }
     ob_start();
     ?>
     <section class="site-breadcrumbs py-4"<?= $context->sectionAttributes() ?>>
@@ -435,10 +467,7 @@ final class CmsStaticPageRenderer
         <div class="container-wrapper">
           <?php
           include_once BASE_PATH . '/templates/components/breadcrumb.php';
-          renderBreadcrumb([
-            ['icon' => '<i class="fa-regular fa-house"></i>', 'url' => url('/'), 'title' => 'Trang chủ'],
-            ['url' => url('/gioi-thieu'), 'title' => 'Giới Thiệu'],
-          ]);
+          renderBreadcrumb($links);
           ?>
         </div>
       </div>
@@ -745,6 +774,49 @@ final class CmsStaticPageRenderer
           </div>
         </div>
       </div>
+    </section>
+    <?php
+    return (string) ob_get_clean();
+  }
+
+  private function renderTeacherDirectory(array $data, CmsRenderContext $context): string
+  {
+    $teachers = array_values(array_filter(
+      $this->items($data, 'teachers'),
+      static fn(mixed $teacher): bool => is_array($teacher) && trim((string) ($teacher['name'] ?? '')) !== '',
+    ));
+
+    ob_start();
+    ?>
+    <section class="faculty-directory py-12"<?= $context->sectionAttributes() ?>>
+      <div class="container"><div class="container-wrapper">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-faculty-grid>
+          <?php foreach ($teachers as $index => $teacher): ?>
+            <?php
+            $name = trim((string) ($teacher['name'] ?? ''));
+            $role = trim((string) ($teacher['role'] ?? ''));
+            $phone = trim((string) ($teacher['phone'] ?? ''));
+            $email = trim((string) ($teacher['email'] ?? ''));
+            $portrait = is_array($teacher['portrait'] ?? null) ? $teacher['portrait'] : [];
+            ?>
+            <article class="card faculty-card overflow-hidden" data-faculty-card tabindex="0" role="button" aria-expanded="false"<?= $context->repeaterItemAttributes('teachers', $index) ?>>
+              <div class="card__header faculty-card__portrait">
+                <img class="w-full h-full object-cover"<?= $context->imageAttributes("teachers.$index.portrait.src") ?> src="<?= $this->e($this->asset($portrait['src'] ?? '')) ?>" alt="<?= $this->e('Ảnh chân dung ' . $name) ?>" loading="lazy">
+              </div>
+              <div class="card__content faculty-card__content">
+                <h3 class="card__title text-xl"<?= $context->textAttributes("teachers.$index.name") ?>><?= $this->e($name) ?></h3>
+                <?php if ($role !== ''): ?><p class="card__description mt-1"<?= $context->textAttributes("teachers.$index.role") ?>><?= $this->e($role) ?></p><?php endif; ?>
+                <?php if ($phone !== '' || $email !== ''): ?>
+                  <div class="faculty-card__contact mt-4" data-faculty-contact aria-hidden="true">
+                    <?php if ($phone !== ''): ?><p class="flex items-center gap-2"><i class="fa-solid fa-phone" aria-hidden="true"></i><span<?= $context->textAttributes("teachers.$index.phone") ?>><?= $this->e($phone) ?></span></p><?php endif; ?>
+                    <?php if ($email !== ''): ?><p class="flex items-center gap-2<?= $phone !== '' ? ' mt-2' : '' ?>"><i class="fa-regular fa-envelope" aria-hidden="true"></i><span<?= $context->textAttributes("teachers.$index.email") ?>><?= $this->e($email) ?></span></p><?php endif; ?>
+                  </div>
+                <?php endif; ?>
+              </div>
+            </article>
+          <?php endforeach; ?>
+        </div>
+      </div></div>
     </section>
     <?php
     return (string) ob_get_clean();

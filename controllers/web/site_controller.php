@@ -229,6 +229,7 @@ class SiteController extends Controller
 
     $this->render('site/faculty', [
       'headerMenu' => $this->_headerMenu->items,
+      'cmsHtml' => $this->_renderCmsPage('faculty'),
       'settings' => $this->_settings,
       'pageTitle' => $title,
       'pageDescription' => $description,

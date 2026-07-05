@@ -312,7 +312,7 @@ export class CmsFieldPanel {
     const programs = pattern === 'programs';
     return `<section class="field cms-repeater${programs ? ' cms-repeater--programs' : ''}">
       <header><span class="field__label">${escapeHtml(definition.label || path)}</span><span>${items.length} mục</span></header>
-      <div class="cms-repeater__items${programs ? ' accordion' : ''}" data-cms-dnd-path="${escapedPath}"${programs ? ' data-accordion-type="multiple" data-accordion-collapsible data-accordion-icon="none"' : ''}>
+      <div class="cms-repeater__items accordion" data-cms-dnd-path="${escapedPath}" data-accordion-type="multiple" data-accordion-collapsible data-accordion-icon="none">
         ${items.map((item, index) => this.#renderInteractiveItem(section, item, index, escapedPath, pattern)).join('')}
       </div>
       <button type="button" class="btn" data-size="sm" data-variant="outline" data-cms-array-action="add" data-cms-array-path="${escapedPath}" data-cms-array-blueprint="${escapeAttr(pattern)}"><i class="fa-solid fa-plus"></i> Thêm mục</button>
@@ -337,12 +337,36 @@ export class CmsFieldPanel {
         <div class="accordion__content cms-program-item__content" hidden><div class="cms-field-grid">${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')).join('')}</div></div>
       </article>`;
     }
-    return `<div class="cms-repeater__item" data-id="${index}">
-      <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
-      <span class="cms-repeater__item-label">${escapeHtml(this.#itemLabel(item, index))}</span><div class="cms-repeater__actions">
-      <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${attrs}><i class="fa-regular fa-copy"></i></button>
-      <button type="button" title="Xóa" data-cms-array-action="remove" ${attrs}><i class="fa-regular fa-trash-can"></i></button>
-    </div></div>`;
+    const prefix = `${escapedPath}.${index}.`;
+    const textFields = this.cmsDocument.textFieldInstances(section.id)
+      .filter((field) => field.path.startsWith(prefix) && !field.path.slice(prefix.length).includes('.'));
+    const imageFields = this.cmsDocument.imageFieldInstances(section.id)
+      .filter((field) => field.path.startsWith(prefix));
+    const fields = [
+      ...textFields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')),
+      ...imageFields.map((field) => this.#renderImageField(field, '')),
+    ].join('');
+    if (!fields) {
+      return `<div class="cms-repeater__item" data-id="${index}">
+        <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+        <span class="cms-repeater__item-label">${escapeHtml(this.#itemLabel(item, index))}</span><div class="cms-repeater__actions">
+        <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${attrs}><i class="fa-regular fa-copy"></i></button>
+        <button type="button" title="Xóa" data-cms-array-action="remove" ${attrs}><i class="fa-regular fa-trash-can"></i></button>
+      </div></div>`;
+    }
+    const definition = this.cmsDocument.sectionSchema(section.id)?.repeaters?.[pattern] || {};
+    const minimumReached = Number(definition.min || 0) >= (getPath(section.data || {}, escapedPath)?.length || 0);
+    return `<article class="cms-repeater__item cms-program-item accordion_item" data-id="${index}" data-accordion-value="${escapeAttr(`${escapedPath}-${index}`)}">
+      <div class="cms-program-item__header">
+        <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+        <button type="button" class="accordion__trigger cms-program-item__trigger"><span>${escapeHtml(this.#itemLabel(item, index))}</span></button>
+        <div class="cms-repeater__actions cms-program-item__actions">
+          <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${attrs}><i class="fa-regular fa-copy"></i></button>
+          <button type="button" title="Xóa" data-cms-array-action="remove" ${attrs}${minimumReached ? ' disabled aria-disabled="true"' : ''}><i class="fa-regular fa-trash-can"></i></button>
+        </div>
+      </div>
+      <div class="accordion__content cms-program-item__content" hidden><div class="cms-field-grid">${fields}</div></div>
+    </article>`;
   }
 
   #initializeStructureWidgets() {

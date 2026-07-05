@@ -262,6 +262,8 @@ export class CmsEditorManager {
     } else if (action === 'duplicate' && items[index] !== undefined) {
       items.splice(index + 1, 0, structuredClone(items[index]));
     } else if (action === 'remove' && items[index] !== undefined) {
+      const minimum = Number(schema.repeaters?.[blueprint || path]?.min ?? 0);
+      if (items.length <= minimum) return;
       items.splice(index, 1);
     } else if (action === 'move' && index >= 0 && newIndex >= 0 && index !== newIndex) {
       const [item] = items.splice(index, 1);

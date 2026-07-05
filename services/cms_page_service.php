@@ -125,6 +125,7 @@ class CmsPageService implements ICmsPageService
 
     $document = $this->normalizeDocument($slug, $payload['content'] ?? $payload);
     $this->validateEducationDocument($slug, $document);
+    $this->validateFacultyDocument($slug, $document);
     $settings = $this->normalizeSettings($payload['settings'] ?? []);
     $existing = $this->_store->findBySlug($slug);
     $now = (new \DateTime())->format('Y-m-d H:i:s');
@@ -329,6 +330,46 @@ class CmsPageService implements ICmsPageService
               throw new \InvalidArgumentException("{$numberField} của học phần phải là số không âm.");
           }
         }
+      }
+    }
+  }
+
+  private function validateFacultyDocument(string $slug, array $document): void
+  {
+    if ($slug !== 'faculty') {
+      return;
+    }
+
+    $directory = null;
+    foreach ($document['sections'] ?? [] as $section) {
+      if (($section['id'] ?? '') === 'teacher_directory') {
+        $directory = is_array($section['data'] ?? null) ? $section['data'] : [];
+        break;
+      }
+    }
+
+    $teachers = is_array($directory['teachers'] ?? null) ? array_values($directory['teachers']) : [];
+    if ($teachers === []) {
+      throw new \InvalidArgumentException('Danh sách giảng viên phải có ít nhất một người.');
+    }
+
+    foreach ($teachers as $index => $teacher) {
+      $number = $index + 1;
+      if (!is_array($teacher) || trim((string) ($teacher['name'] ?? '')) === '') {
+        throw new \InvalidArgumentException("Giảng viên #{$number} phải có họ tên.");
+      }
+      if (trim((string) ($teacher['portrait']['src'] ?? '')) === '') {
+        throw new \InvalidArgumentException("Giảng viên #{$number} phải có ảnh chân dung.");
+      }
+
+      $phone = trim((string) ($teacher['phone'] ?? ''));
+      if ($phone !== '' && !preg_match('/^[0-9+() .-]{8,20}$/', $phone)) {
+        throw new \InvalidArgumentException("Số điện thoại của giảng viên #{$number} không hợp lệ.");
+      }
+
+      $email = trim((string) ($teacher['email'] ?? ''));
+      if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+        throw new \InvalidArgumentException("Email của giảng viên #{$number} không hợp lệ.");
       }
     }
   }

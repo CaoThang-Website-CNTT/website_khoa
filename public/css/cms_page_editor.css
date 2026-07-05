@@ -344,7 +344,7 @@
   flex-direction: row;
   gap: 0.25rem;
 }
-.cms-repeater__item button:not(.accordion__trigger) {
+.cms-repeater__actions > button {
   display: grid;
   place-items: center;
   width: 1.75rem;
@@ -355,7 +355,7 @@
   color: var(--muted-foreground);
   cursor: pointer;
 }
-.cms-repeater__item button:not(.accordion__trigger):hover {
+.cms-repeater__actions > button:hover {
   color: var(--primary);
 }
 
