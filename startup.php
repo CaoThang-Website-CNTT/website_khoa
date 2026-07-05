@@ -96,12 +96,14 @@ require_once BASE_PATH . '/includes/editor/block_renderer.php';
 
 // CMS
 require_once BASE_PATH . '/includes/cms/cms_render_context.php';
+require_once BASE_PATH . '/includes/cms/cms_editor_markup_instrumenter.php';
 require_once BASE_PATH . '/includes/cms/cms_section_definition_interface.php';
 require_once BASE_PATH . '/includes/cms/cms_callback_section_definition.php';
 require_once BASE_PATH . '/includes/cms/cms_section_registry.php';
 require_once BASE_PATH . '/includes/cms/education_page_defaults.php';
 require_once BASE_PATH . '/includes/cms/education_section_renderer.php';
 require_once BASE_PATH . '/includes/cms/cms_static_page_renderer.php';
+require_once BASE_PATH . '/includes/cms/cms_page_module_loader.php';
 require_once BASE_PATH . '/includes/cms/cms_page_schema_registry.php';
 
 // Mail

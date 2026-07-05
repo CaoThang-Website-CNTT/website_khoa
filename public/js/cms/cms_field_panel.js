@@ -5,6 +5,7 @@ export class CmsFieldPanel {
     this.bus = bus;
     this.cmsDocument = cmsDocument;
     this.root = root;
+    this.dndInstances = [];
   }
 
   init() {
@@ -26,8 +27,10 @@ export class CmsFieldPanel {
     this.root?.addEventListener('focusin', (event) => {
       const field = event.target.closest('[data-cms-path]');
       if (!field) return;
-      if (field.closest('.cms-all-fields')) return;
-      this.bus.dispatch('field:focus', { path: field.dataset.cmsPath });
+      this.bus.dispatch('field:focus', {
+        path: field.dataset.cmsPath,
+        embedded: Boolean(field.closest('.cms-structure-manager')),
+      });
     });
 
     this.root?.addEventListener('click', (event) => {
@@ -45,6 +48,7 @@ export class CmsFieldPanel {
         blueprint: structureButton.dataset.cmsArrayBlueprint,
       });
     });
+
   }
 
   render(sectionId, activePath) {
@@ -66,9 +70,10 @@ export class CmsFieldPanel {
     }
 
     if (!activePath) {
-      const structure = this.#renderStructureManager(section, schema, fields);
+      const structure = this.#renderStructureManager(section, schema);
       if (structure) {
         this.root.innerHTML = structure;
+        this.#initializeStructureWidgets();
         return;
       }
       this.root.innerHTML = variantOptions.length > 1
@@ -108,21 +113,12 @@ export class CmsFieldPanel {
     const active = activePath === field.path ? ' is-active' : '';
     const isIconField = this.#isIconPath(field.path);
 
-    if (field.control === 'textarea') {
-      return `
-        <label class="field cms-text-field${active}" for="${escapeAttr(id)}">
-          <span class="field__label">${escapeHtml(field.label)}</span>
-          <textarea id="${escapeAttr(id)}" class="field__input" rows="4" data-cms-path="${escapeAttr(field.path)}">${escapeHtml(valueText)}</textarea>
-        </label>
-      `;
-    }
-
     return `
-      <label class="field cms-text-field${active}" for="${escapeAttr(id)}">
-        <span class="field__label">${escapeHtml(field.label)}</span>
-        <input id="${escapeAttr(id)}" class="field__input" type="text" value="${escapeAttr(valueText)}" data-cms-path="${escapeAttr(field.path)}">
+      <div class="field cms-text-field${active}">
+        <label class="field__label" for="${escapeAttr(id)}">${escapeHtml(field.label)}</label>
+        <textarea id="${escapeAttr(id)}" class="field__input" rows="4" data-cms-path="${escapeAttr(field.path)}">${escapeHtml(valueText)}</textarea>
         ${isIconField ? '<p class="field__description">Enter Font Awesome classes, for example fa-solid fa-award.</p>' : ''}
-      </label>
+      </div>
     `;
   }
 
@@ -135,12 +131,12 @@ export class CmsFieldPanel {
 
     const value = section.data?.variant || options[0]?.value || 'default';
     return `
-      <label class="field cms-variant-field" for="${escapeAttr(`cms-field-${section.id}-variant`)}">
-        <span class="field__label">Variant</span>
+      <div class="field cms-variant-field">
+        <label class="field__label" for="${escapeAttr(`cms-field-${section.id}-variant`)}">Variant</label>
         <select id="${escapeAttr(`cms-field-${section.id}-variant`)}" class="field__input" data-cms-path="variant">
           ${options.map((option) => `<option value="${escapeAttr(option.value)}"${option.value === value ? ' selected' : ''}>${escapeHtml(option.label)}</option>`).join('')}
         </select>
-      </label>
+      </div>
     `;
   }
 
@@ -174,8 +170,8 @@ export class CmsFieldPanel {
     const value = this.#normalizeColor(getPath(section.data || {}, backgroundPath));
 
     return `
-      <label class="field cms-color-field" for="${escapeAttr(`cms-field-${imageField.sectionId}-${backgroundPath}`.replace(/[^a-z0-9_-]+/gi, '-'))}">
-        <span class="field__label">Background color ${Number(match[1]) + 1}</span>
+      <div class="field cms-color-field">
+        <label class="field__label" for="${escapeAttr(`cms-field-${imageField.sectionId}-${backgroundPath}`.replace(/[^a-z0-9_-]+/gi, '-'))}">Background color ${Number(match[1]) + 1}</label>
         <input
           id="${escapeAttr(`cms-field-${imageField.sectionId}-${backgroundPath}`.replace(/[^a-z0-9_-]+/gi, '-'))}"
           class="field__input"
@@ -183,7 +179,7 @@ export class CmsFieldPanel {
           value="${escapeAttr(value)}"
           data-cms-background-path="${escapeAttr(backgroundPath)}"
         >
-      </label>
+      </div>
     `;
   }
 
@@ -204,7 +200,9 @@ export class CmsFieldPanel {
     `;
   }
 
-  #renderStructureManager(section, schema, fields) {
+  #renderStructureManager(section, schema) {
+    return this.#renderInteractiveStructure(section, schema);
+    /* Legacy structure renderer retained temporarily below for compatibility. */
     const definitions = schema.repeaters || {};
     const groups = Object.entries(definitions).flatMap(([pattern, definition]) =>
       this.#expandRepeaterPattern(section.data || {}, pattern).map((path) => ({ path, pattern, definition }))
@@ -214,15 +212,6 @@ export class CmsFieldPanel {
     const repeaters = groups
       .map((group) => this.#renderRepeater(section, group))
       .join('');
-    const fieldEditor = `
-      <details class="cms-all-fields">
-        <summary>Chỉnh sửa tất cả trường dữ liệu (${fields.length})</summary>
-        <div class="cms-field-grid">
-          ${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')).join('')}
-        </div>
-      </details>
-    `;
-
     return `
       <div class="cms-structure-manager">
         <div class="cms-structure-manager__intro">
@@ -232,7 +221,6 @@ export class CmsFieldPanel {
           </p>
         </div>
         ${repeaters}
-        ${fieldEditor}
       </div>
     `;
   }
@@ -270,14 +258,9 @@ export class CmsFieldPanel {
 
     return `
       <div class="cms-repeater__item">
-        <span>${escapeHtml(this.#itemLabel(item, index))}</span>
-        <div>
-          <button type="button" title="Lên" data-cms-array-action="up" ${actionAttributes} ${index === 0 ? 'disabled' : ''}>
-            <i class="fa-solid fa-arrow-up"></i>
-          </button>
-          <button type="button" title="Xuống" data-cms-array-action="down" ${actionAttributes} ${index === itemCount - 1 ? 'disabled' : ''}>
-            <i class="fa-solid fa-arrow-down"></i>
-          </button>
+        <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+        <span class="cms-repeater__item-label">${escapeHtml(this.#itemLabel(item, index))}</span>
+        <div class="cms-repeater__actions">
           <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${actionAttributes}>
             <i class="fa-regular fa-copy"></i>
           </button>
@@ -305,6 +288,83 @@ export class CmsFieldPanel {
     walk(data, 0, []);
     return paths;
   }
+
+  openRepeaterItem(path, index) {
+    const container = this.root?.querySelector(`[data-cms-dnd-path="${cssEscape(path)}"]`);
+    const item = container?.querySelector(`:scope > [data-id="${Number(index)}"]`);
+    if (!item) return;
+    const trigger = item.querySelector(':scope .accordion__trigger');
+    if (trigger?.dataset.state !== 'open') trigger?.click();
+    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  #renderInteractiveStructure(section, schema) {
+    const groups = Object.entries(schema.repeaters || {}).flatMap(([pattern, definition]) =>
+      this.#expandRepeaterPattern(section.data || {}, pattern).map((path) => ({ path, pattern, definition }))
+    );
+    if (!groups.length) return '';
+    return `<div class="cms-structure-manager">${groups.map((group) => this.#renderInteractiveRepeater(section, group)).join('')}</div>`;
+  }
+
+  #renderInteractiveRepeater(section, { path, pattern, definition }) {
+    const items = asArray(getPath(section.data || {}, path));
+    const escapedPath = escapeAttr(path);
+    const programs = pattern === 'programs';
+    return `<section class="field cms-repeater${programs ? ' cms-repeater--programs' : ''}">
+      <header><span class="field__label">${escapeHtml(definition.label || path)}</span><span>${items.length} mục</span></header>
+      <div class="cms-repeater__items${programs ? ' accordion' : ''}" data-cms-dnd-path="${escapedPath}"${programs ? ' data-accordion-type="multiple" data-accordion-collapsible data-accordion-icon="none"' : ''}>
+        ${items.map((item, index) => this.#renderInteractiveItem(section, item, index, escapedPath, pattern)).join('')}
+      </div>
+      <button type="button" class="btn" data-size="sm" data-variant="outline" data-cms-array-action="add" data-cms-array-path="${escapedPath}" data-cms-array-blueprint="${escapeAttr(pattern)}"><i class="fa-solid fa-plus"></i> Thêm mục</button>
+    </section>`;
+  }
+
+  #renderInteractiveItem(section, item, index, escapedPath, pattern) {
+    const attrs = `data-cms-array-path="${escapedPath}" data-cms-array-index="${index}"`;
+    if (pattern === 'programs') {
+      const prefix = `programs.${index}.`;
+      const fields = this.cmsDocument.textFieldInstances(section.id)
+        .filter((field) => field.path.startsWith(prefix) && !field.path.slice(prefix.length).includes('.'));
+      return `<article class="cms-repeater__item cms-program-item accordion_item" data-id="${index}" data-accordion-value="program-${index}">
+        <div class="cms-program-item__header">
+          <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+          <button type="button" class="accordion__trigger cms-program-item__trigger"><span>${escapeHtml(this.#itemLabel(item, index))}</span></button>
+          <div class="cms-repeater__actions cms-program-item__actions">
+            <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${attrs}><i class="fa-regular fa-copy"></i></button>
+            <button type="button" title="Xóa" data-cms-array-action="remove" ${attrs}><i class="fa-regular fa-trash-can"></i></button>
+          </div>
+        </div>
+        <div class="accordion__content cms-program-item__content" hidden><div class="cms-field-grid">${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')).join('')}</div></div>
+      </article>`;
+    }
+    return `<div class="cms-repeater__item" data-id="${index}">
+      <span class="cms-repeater__drag" title="Kéo để sắp xếp" aria-label="Kéo để sắp xếp"><i class="fa-solid fa-grip-vertical"></i></span>
+      <span class="cms-repeater__item-label">${escapeHtml(this.#itemLabel(item, index))}</span><div class="cms-repeater__actions">
+      <button type="button" title="Nhân bản" data-cms-array-action="duplicate" ${attrs}><i class="fa-regular fa-copy"></i></button>
+      <button type="button" title="Xóa" data-cms-array-action="remove" ${attrs}><i class="fa-regular fa-trash-can"></i></button>
+    </div></div>`;
+  }
+
+  #initializeStructureWidgets() {
+    this.dndInstances.forEach((instance) => instance.destroy());
+    this.dndInstances = [];
+    this.root.querySelectorAll('.accordion').forEach((root) => window.AccordionHandler?.instance.register(root));
+    if (!window.DnD) return;
+    this.root.querySelectorAll('[data-cms-dnd-path]').forEach((container) => {
+      this.dndInstances.push(new window.DnD(container, {
+        handle: '.cms-repeater__drag',
+        draggable: ':scope > .cms-repeater__item',
+        filter: 'button,input,textarea,select',
+        animation: 180,
+        direction: 'vertical',
+        ghostHandle: false,
+        onEnd: ({ oldIndex, newIndex }) => {
+          if (oldIndex !== newIndex) this.bus.dispatch('structure:mutate', { action: 'move', path: container.dataset.cmsDndPath, index: oldIndex, newIndex });
+        },
+      }));
+    });
+  }
+
 
   #itemLabel(item, index) {
     if (typeof item === 'string' || typeof item === 'number') return String(item).slice(0, 70) || `Mục ${index + 1}`;

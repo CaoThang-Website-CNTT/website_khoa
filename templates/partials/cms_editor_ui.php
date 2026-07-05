@@ -8,7 +8,11 @@
 <?php $layout->end() ?>
 
 <?php $layout->start('topbar_center') ?>
-<input class="field__input be-post-title-input" type="text" value="<?= htmlspecialchars($page->title) ?>" readonly>
+<div class="field" data-field-readonly>
+  <label class="field__label sr-only" for="cms-page-title">Tiêu đề trang</label>
+  <input id="cms-page-title" class="field__input be-post-title-input" type="text"
+    value="<?= htmlspecialchars($page->title) ?>" readonly>
+</div>
 <span class="badge" data-variant="<?= $page->status === 'published' ? 'primary' : 'secondary' ?>">
   <?= htmlspecialchars($page->status) ?>
 </span>

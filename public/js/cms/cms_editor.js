@@ -111,8 +111,13 @@ export class CmsEditorManager {
     this.#bus.subscribe('field:media_select_request', (payload) => this.#onMediaSelectRequest(payload));
     this.#bus.subscribe('preview:editable_selected', (payload) => this.#onPreviewEditableSelected(payload));
     this.#bus.subscribe('preview:image_selected', (payload) => this.#onPreviewImageSelected(payload));
+    this.#bus.subscribe('preview:link_selected', (payload) => this.#onPreviewImageSelected(payload));
     this.#bus.subscribe('preview:icon_selected', (payload) => this.#onPreviewIconSelected(payload));
+    this.#bus.subscribe('preview:repeater_selected', (payload) => this.#onPreviewRepeaterSelected(payload));
     this.#bus.subscribe('preview:input', (payload) => this.#onPreviewInput(payload));
+    this.#bus.subscribe('preview:text_commit', () => this.#preview.render({ immediate: true }));
+    this.#bus.subscribe('preview:error', ({ message }) => this.#showError(message));
+    this.#bus.subscribe('preview:rendered', () => this.#clearError());
     this.#bus.subscribe('structure:mutate', (payload) => this.#onStructureMutate(payload));
 
     document.addEventListener('click', (event) => {
@@ -129,7 +134,7 @@ export class CmsEditorManager {
 
       this.#previewMode = widthTrigger.dataset.previewWidth === 'mobile' ? 'mobile' : 'desktop';
       this.#preview.setMode(this.#previewMode);
-      this.#preview.render();
+      this.#preview.render({ immediate: true });
       this.#updatePreviewModeButtons();
     });
 
@@ -176,9 +181,9 @@ export class CmsEditorManager {
     this.#preview.render();
   }
 
-  #onFieldFocus({ path }) {
+  #onFieldFocus({ path, embedded = false }) {
     this.#activePath = path;
-    this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
+    if (!embedded) this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
     this.#preview.markActiveEditable();
   }
 
@@ -227,6 +232,15 @@ export class CmsEditorManager {
     this.#preview.markActiveEditable();
   }
 
+  #onPreviewRepeaterSelected({ sectionId, path, index }) {
+    this.#activeSectionId = sectionId;
+    this.#activePath = null;
+    this.#sectionNav.render(this.#activeSectionId);
+    this.#fieldPanel.render(this.#activeSectionId, null);
+    this.#fieldPanel.openRepeaterItem(path, index);
+    this.#preview.markActiveEditable();
+  }
+
   #onPreviewInput({ sectionId, path, value }) {
     const section = this.#cmsDocument.section(sectionId);
     if (!section) return;
@@ -236,7 +250,7 @@ export class CmsEditorManager {
     this.#fieldPanel.syncValue(path, value);
   }
 
-  #onStructureMutate({ action, path, index, blueprint }) {
+  #onStructureMutate({ action, path, index, newIndex, blueprint }) {
     const section = this.#cmsDocument.section(this.#activeSectionId);
     const schema = this.#cmsDocument.sectionSchema(this.#activeSectionId);
     const items = getPath(section?.data || {}, path);
@@ -249,15 +263,14 @@ export class CmsEditorManager {
       items.splice(index + 1, 0, structuredClone(items[index]));
     } else if (action === 'remove' && items[index] !== undefined) {
       items.splice(index, 1);
-    } else if (action === 'up' && index > 0) {
-      [items[index - 1], items[index]] = [items[index], items[index - 1]];
-    } else if (action === 'down' && index >= 0 && index < items.length - 1) {
-      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+    } else if (action === 'move' && index >= 0 && newIndex >= 0 && index !== newIndex) {
+      const [item] = items.splice(index, 1);
+      items.splice(newIndex, 0, item);
     }
 
     this.#activePath = null;
     this.#fieldPanel.render(this.#activeSectionId, null);
-    this.#preview.render();
+    this.#preview.render({ immediate: true });
   }
 
   #serializeForm(event) {

@@ -7,9 +7,12 @@
  */
 
 $statuses = [
-  'pending' => ['Chờ duyệt', 'secondary'], 'approved' => ['Đang xử lý', 'secondary'],
-  'completed' => ['Hoàn thành', 'success'], 'received' => ['Đã nhận', 'success'],
-  'rejected' => ['Từ chối', 'destructive'], 'cancelled' => ['Đã hủy', 'destructive'],
+  'pending' => ['Chờ duyệt', 'secondary'],
+  'approved' => ['Đang xử lý', 'secondary'],
+  'completed' => ['Hoàn thành', 'success'],
+  'received' => ['Đã nhận', 'success'],
+  'rejected' => ['Từ chối', 'destructive'],
+  'cancelled' => ['Đã hủy', 'destructive'],
 ];
 [$statusLabel, $statusVariant] = $statuses[$letter['status']] ?? [$letter['status'], 'outline'];
 ?>
@@ -22,12 +25,14 @@ $statuses = [
 <?php $layout->end() ?>
 
 <?php $layout->start("actions") ?>
-<a href="<?= url('student/internship/' . ($current['id'] ?? '') . '/referral_letters') ?>" data-variant="outline" data-size="md" class="btn">
+<a href="<?= url('student/internship/' . ($current['id'] ?? '') . '/referral_letters') ?>" data-variant="outline"
+  data-size="md" class="btn">
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
 <?php if ($letter['status'] === 'pending'): ?>
-  <button type="button" class="btn btn-cancel" data-variant="destructive" data-size="md" data-modal-trigger="#rl_cancelModal">
+  <button type="button" class="btn btn-cancel" data-variant="destructive" data-size="md"
+    data-modal-trigger="#rl_cancelModal">
     <i class="fa-solid fa-xmark mr-2"></i> Hủy đăng ký
   </button>
 <?php endif; ?>
@@ -46,7 +51,8 @@ $statuses = [
         <div class="field mb-4" data-field-readonly>
           <label class="field__label">Mã số thuế</label>
           <div class="field__input-group">
-            <input type="text" class="field__input" value="<?= htmlspecialchars($letter['company_tax_code'] ?: 'Không có') ?>" readonly>
+            <input type="text" class="field__input"
+              value="<?= htmlspecialchars($letter['company_tax_code'] ?: 'Không có') ?>" readonly>
           </div>
         </div>
 
@@ -57,7 +63,8 @@ $statuses = [
 
         <div class="field mb-4" data-field-readonly>
           <label class="field__label">Địa chỉ</label>
-          <textarea class="field__input" rows="2" readonly><?= htmlspecialchars($letter['company_address']) ?></textarea>
+          <textarea class="field__input" rows="2"
+            readonly><?= htmlspecialchars($letter['company_address']) ?></textarea>
         </div>
       </div>
 
@@ -139,9 +146,12 @@ $statuses = [
       </button>
     </div>
     <div>
-      <form method="POST" action="<?= url("student/internship/{$current['id']}/referral_letters/{$letter['id']}/cancel") ?>" id="rl_cancelForm">
+      <form method="POST"
+        action="<?= url("student/internship/{$current['id']}/referral_letters/{$letter['id']}/cancel") ?>"
+        id="rl_cancelForm">
         <?= csrf_field() ?>
-        <p class="mb-4 text-sm">Bạn có chắc chắn muốn hủy đăng ký xin giấy giới thiệu này không? Hành động này không thể hoàn tác.</p>
+        <p class="mb-4 text-sm">Bạn có chắc chắn muốn hủy đăng ký xin giấy giới thiệu này không? Hành động này không thể
+          hoàn tác.</p>
 
         <div class="field">
           <label class="field__label">Lý do hủy (Tùy chọn)</label>

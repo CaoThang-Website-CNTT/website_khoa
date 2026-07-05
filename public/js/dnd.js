@@ -747,3 +747,6 @@ class DnD {
     return { name: g.name ?? null, pull: g.pull ?? true, put: g.put ?? true };
   }
 }
+
+window.DnD = DnD;
+window.DnDMonitor = DnDMonitor;

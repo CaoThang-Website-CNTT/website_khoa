@@ -74,8 +74,8 @@ export class CmsDocument {
     return /(^|\.)(image|src)$/.test(path) || /(^|\.)(image|src)(\.|$)/.test(path);
   }
 
-  #controlForPattern(path) {
-    return path.match(/description|subtitle|content|footer|items\.\*$/i) ? 'textarea' : 'input';
+  #controlForPattern() {
+    return 'textarea';
   }
 
   #labelForPattern(path) {

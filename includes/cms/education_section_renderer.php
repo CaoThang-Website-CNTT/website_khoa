@@ -21,9 +21,11 @@ final class EducationSectionRenderer
   {
     $breadcrumb = $context->pageSlug() === 'education' ? 'Đào tạo' : $this->e($data['title'] ?? 'Đào tạo');
     $homeUrl = $this->e(url('/'));
+    $sectionAttributes = $context->sectionAttributes();
+    $titleAttributes = $context->textAttributes('title');
 
     return <<<HTML
-      <section class="site-breadcrumbs py-4">
+      <section class="site-breadcrumbs py-4"{$sectionAttributes}>
         <div class="container">
           <div class="container-wrapper">
             <nav aria-label="breadcrumb">
@@ -33,7 +35,7 @@ final class EducationSectionRenderer
                 </li>
                 <li class="breadcrumb__separator" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></li>
                 <li class="breadcrumb__item">
-                  <span class="breadcrumb__page" aria-current="page">{$breadcrumb}</span>
+                  <span class="breadcrumb__page" aria-current="page"{$titleAttributes}>{$breadcrumb}</span>
                 </li>
               </ol>
             </nav>
@@ -62,19 +64,22 @@ final class EducationSectionRenderer
     $ctaLabel = $this->e($data['cta_label'] ?? '');
     $title = $this->e($data['title'] ?? '');
     $description = $this->e($data['description'] ?? '');
+    $titleAttributes = $context->textAttributes('title');
+    $descriptionAttributes = $context->textAttributes('description', true);
+    $ctaUrlAttributes = $context->linkAttributes('cta_url');
     $body = <<<HTML
       <div class="stats__cta flex flex-col items-center p-3 md:p-12 rounded-3xl">
-        <h2 class="stats__cta-title text-center text-xl md:text-3xl font-semibold mb-2">{$title}</h2>
-        <p class="stats__cta-description text-center text-sm md:text-xl font-light mb-6">{$description}</p>
+        <h2 class="stats__cta-title text-center text-xl md:text-3xl font-semibold mb-2"{$titleAttributes}>{$title}</h2>
+        <p class="stats__cta-description text-center text-sm md:text-xl font-light mb-6"{$descriptionAttributes}>{$description}</p>
         <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
-          <a class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full" data-variant="secondary" href="{$ctaUrl}" target="_blank" rel="noopener noreferrer">
+          <a class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full" data-variant="secondary" href="{$ctaUrl}"{$ctaUrlAttributes} target="_blank" rel="noopener noreferrer">
             {$ctaLabel} <i class="fa-solid fa-arrow-up-right-from-square"></i>
           </a>
         </div>
       </div>
       HTML;
 
-    return $this->detailSection('tuyen-sinh', $data, $body, false, false);
+    return $this->detailSection('tuyen-sinh', $data, $body, $context, false, false);
   }
 
   private function programs(array $data, CmsRenderContext $context): string
@@ -124,7 +129,7 @@ final class EducationSectionRenderer
 
       $content .= $this->accordion($program, $index, $details);
     }
-    return $this->detailSection('chuong-trinh-dao-tao', $data, $this->accordionGroup($data, $content));
+    return $this->detailSection('chuong-trinh-dao-tao', $data, $this->accordionGroup($data, $content), $context);
   }
 
   private function outcomes(array $data, CmsRenderContext $context): string
@@ -153,7 +158,7 @@ final class EducationSectionRenderer
 
       $content .= $this->accordion($program, $index, $details);
     }
-    return $this->detailSection('chuan-dau-ra', $data, $this->accordionGroup($data, $content));
+    return $this->detailSection('chuan-dau-ra', $data, $this->accordionGroup($data, $content), $context);
   }
 
   private function curriculum(array $data, CmsRenderContext $context): string
@@ -225,26 +230,29 @@ final class EducationSectionRenderer
 
       $content .= $this->accordion($program, $index, $details);
     }
-    return $this->detailSection('danh-sach-mon-hoc', $data, $this->accordionGroup($data, $content));
+    return $this->detailSection('danh-sach-mon-hoc', $data, $this->accordionGroup($data, $content), $context);
   }
 
-  private function detailSection(string $id, array $data, string $body, bool $showDescription = true, bool $showHeader = true): string
+  private function detailSection(string $id, array $data, string $body, CmsRenderContext $context, bool $showDescription = true, bool $showHeader = true): string
   {
     $sectionId = $this->e($id);
     $titleId = $this->e($id . '-title');
     $title = $this->e($data['title'] ?? '');
+    $sectionAttributes = $context->sectionAttributes();
+    $titleAttributes = $context->textAttributes('title');
+    $descriptionAttributes = $context->textAttributes('description', true);
     $description = $showDescription
-      ? '<p class="section-title__subtitle">' . $this->e($data['description'] ?? '') . '</p>'
+      ? '<p class="section-title__subtitle"' . $descriptionAttributes . '>' . $this->e($data['description'] ?? '') . '</p>'
       : '';
     $header = $showHeader ? <<<HTML
             <header class="section-title mb-8" aria-labelledby="{$titleId}">
-              <h2 id="{$titleId}" class="section-title__heading">{$title}</h2>
+              <h2 id="{$titleId}" class="section-title__heading"{$titleAttributes}>{$title}</h2>
               {$description}
             </header>
       HTML : '';
 
     return <<<HTML
-      <section class="py-8 container" id="{$sectionId}">
+      <section class="py-8 container" id="{$sectionId}"{$sectionAttributes}>
           <div class="container-wrapper">
             {$header}
             {$body}

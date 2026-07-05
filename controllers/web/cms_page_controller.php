@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Request;
+use App\Core\JsonResponse;
+use App\Cms\CmsStaticPageRenderer;
 use App\Services\CmsPageService;
 
 class CmsPageController extends Controller
@@ -75,6 +77,27 @@ class CmsPageController extends Controller
     }
 
     $this->redirect("admin/cms-pages/{$slug}");
+  }
+
+  public function preview(string $slug, Request $request): JsonResponse
+  {
+    try {
+      $payload = $request->json() ?: $this->decodeEditorPayload($request);
+      $document = $this->_cmsPageService->prepareDocument($slug, $payload['content'] ?? $payload);
+      $revision = (int) ($payload['revision'] ?? 0);
+      $renderer = new CmsStaticPageRenderer(pageSlug: $slug, editorMode: true);
+
+      return new JsonResponse([
+        'html' => $renderer->renderPreviewDocument($document),
+        'document' => $document,
+        'revision' => $revision,
+      ]);
+    } catch (\InvalidArgumentException $e) {
+      return new JsonResponse(null, $e->getMessage(), 422);
+    } catch (\Throwable $e) {
+      error_log('[CMS preview] ' . $e->getMessage());
+      return new JsonResponse(null, 'Không thể render bản xem trước.', 500);
+    }
   }
 
   private function decodeEditorPayload(Request $request): array

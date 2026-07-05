@@ -66,7 +66,8 @@ final class CmsSectionRegistry
       return '<!-- Unknown CMS section: ' . htmlspecialchars($normalized['type'], ENT_QUOTES, 'UTF-8') . ' -->';
     }
 
-    return $definition->render($normalized['data'], $context->withSectionId($normalized['id']));
+    $sectionContext = $context->withSection($normalized['id'], $normalized['locked']);
+    return $definition->render($normalized['data'], $sectionContext);
   }
 
   private function normalizeVariant(CmsSectionDefinitionInterface $definition, mixed $variant): string

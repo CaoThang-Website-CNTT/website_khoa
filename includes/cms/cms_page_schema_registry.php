@@ -5,10 +5,12 @@ namespace App\Cms;
 final class CmsPageSchemaRegistry
 {
   private CmsSectionRegistry $_sections;
+  private array $_pages;
 
   public function __construct()
   {
     $this->_sections = CmsStaticPageRenderer::defaultRegistry();
+    $this->_pages = CmsPageModuleLoader::load(BASE_PATH . '/includes/cms/pages');
   }
 
   private const PAGES = [
@@ -99,54 +101,21 @@ final class CmsPageSchemaRegistry
         ['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false],
       ],
     ],
-    /* Retired pages are kept out of the registry; legacy public routes redirect below. */
-    /* 'admissions' => [
-      'title' => 'Thông tin tuyển sinh',
-      'slug' => 'admissions',
-      'route_path' => '/dao-tao/tuyen-sinh',
-      'type' => 'education_page',
-      'layout_mode' => 'section_schema',
-      'sections' => [['id' => 'admissions', 'type' => 'sections/admissions', 'locked' => false]],
-    ],
-    'academic-programs' => [
-      'title' => 'Chương trình đào tạo',
-      'slug' => 'academic-programs',
-      'route_path' => '/dao-tao/chuong-trinh-dao-tao',
-      'type' => 'education_page',
-      'layout_mode' => 'section_schema',
-      'sections' => [['id' => 'programs', 'type' => 'sections/programs', 'locked' => false]],
-    ],
-    'program-outcomes' => [
-      'title' => 'Chuẩn đầu ra',
-      'slug' => 'program-outcomes',
-      'route_path' => '/dao-tao/chuan-dau-ra',
-      'type' => 'education_page',
-      'layout_mode' => 'section_schema',
-      'sections' => [['id' => 'outcomes', 'type' => 'sections/outcomes', 'locked' => false]],
-    ],
-    'curriculum' => [
-      'title' => 'Danh sách môn học',
-      'slug' => 'curriculum',
-      'route_path' => '/dao-tao/danh-sach-mon-hoc',
-      'type' => 'education_page',
-      'layout_mode' => 'section_schema',
-      'sections' => [['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false]],
-    ], */
   ];
 
   public function allPages(): array
   {
-    return array_map(fn(array $page) => $this->hydratePage($page), self::PAGES);
+    return array_map(fn(array $page) => $this->hydratePage($page), $this->_pages);
   }
 
   public function page(string $slug): ?array
   {
-    return isset(self::PAGES[$slug]) ? $this->hydratePage(self::PAGES[$slug]) : null;
+    return isset($this->_pages[$slug]) ? $this->hydratePage($this->_pages[$slug]) : null;
   }
 
   public function hasPage(string $slug): bool
   {
-    return isset(self::PAGES[$slug]);
+    return isset($this->_pages[$slug]);
   }
 
   public function defaultDocument(string $slug): array
@@ -223,8 +192,10 @@ final class CmsPageSchemaRegistry
     );
     $section['variants'] ??= $definition->variants();
 
-    if (str_starts_with((string) ($section['type'] ?? ''), 'sections/education_')
-      || in_array($section['type'] ?? '', ['sections/admissions', 'sections/programs', 'sections/outcomes', 'sections/curriculum'], true)) {
+    if (
+      str_starts_with((string) ($section['type'] ?? ''), 'sections/education_')
+      || in_array($section['type'] ?? '', ['sections/admissions', 'sections/programs', 'sections/outcomes', 'sections/curriculum'], true)
+    ) {
       $allRepeaters = EducationPageDefaults::repeaterBlueprints();
       $section['repeaters'] = array_filter(
         $allRepeaters,
@@ -240,7 +211,8 @@ final class CmsPageSchemaRegistry
   {
     $prefix = rtrim(str_replace('.*', '', $repeater), '.');
     foreach ($fields as $field) {
-      if ($field === $repeater || str_starts_with(str_replace('.*', '', $field), $prefix . '.')) return true;
+      if ($field === $repeater || str_starts_with(str_replace('.*', '', $field), $prefix . '.'))
+        return true;
     }
     return false;
   }

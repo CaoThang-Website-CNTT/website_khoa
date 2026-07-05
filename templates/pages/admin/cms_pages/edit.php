@@ -13,6 +13,7 @@ $pagePayload = [
     'base' => url(''),
     'public' => url('public'),
     'media' => url('public/media'),
+    'preview' => url('admin/cms-pages/' . $page->slug . '/preview'),
   ],
 ];
 ?>
