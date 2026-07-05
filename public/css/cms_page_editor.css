@@ -313,13 +313,19 @@
   background: var(--muted);
   font-size: var(--text-xs);
 }
-.cms-repeater__item > span {
+.cms-repeater__item-label {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cms-repeater__item > div {
-  border: 1px solid var(--border);
+.cms-repeater__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-direction: row;
+  gap: 0.25rem;
 }
 .cms-repeater__item button:not(.accordion__trigger) {
   display: grid;
@@ -367,11 +373,6 @@
   min-width: 0;
   white-space: normal;
   overflow-wrap: anywhere;
-}
-
-.cms-program-item__actions {
-  display: flex;
-  flex: 0 0 auto;
 }
 
 .cms-program-item__header > .cms-repeater__drag {
