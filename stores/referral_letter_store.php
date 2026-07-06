@@ -57,9 +57,9 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
 
   public function getAllByBatchStudentId(int $batchStudentId): array
   {
-    $sql = "SELECT * FROM referral_letters WHERE batch_student_id = :batch_student_id ORDER BY created_at DESC";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->select('*')
+      ->eq('batch_student_id', $batchStudentId)->order('created_at', ['ascending'=>false]);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return array_map(fn($item) => ReferralLetter::fromArray($item), $result);
   }
@@ -115,8 +115,9 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     $letter = $this->getByIdWithCompany($id);
     if (!$letter) return null;
     
-    $stmt = $this->db->prepare("SELECT * FROM referral_letter_students WHERE referral_letter_id = ? ORDER BY sort_order ASC, id ASC");
-    $stmt->execute([$id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letter_students')->select('*')
+      ->eq('referral_letter_id', $id)->order('sort_order')->order('id');
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     $letter['students'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $letter;
   }
@@ -145,8 +146,9 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     $letter = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$letter) return null;
     
-    $stmt = $this->db->prepare("SELECT * FROM referral_letter_students WHERE referral_letter_id = ? ORDER BY sort_order ASC, id ASC");
-    $stmt->execute([$id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letter_students')->select('*')
+      ->eq('referral_letter_id', $id)->order('sort_order')->order('id');
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     $letter['students'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $letter;
   }
@@ -155,10 +157,8 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
   {
     if (empty($ids)) return [];
 
-    $inClause = implode(',', array_fill(0, count($ids), '?'));
-    $sql = "SELECT * FROM referral_letters WHERE id IN ($inClause)";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($ids);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->select('*')->in('id', $ids);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
 
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return array_map(fn($item) => ReferralLetter::fromArray($item), $result);
@@ -215,6 +215,7 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
       'internship_start_date' => $referralLetter['internship_start_date'] ?? null,
       'internship_end_date' => $referralLetter['internship_end_date'] ?? null,
       'document_number' => $referralLetter['document_number'] ?? null,
+      'approver_name' => $referralLetter['approver_name'] ?? null,
       'note' => $referralLetter['note'] ?? null,
       'printed_at' => $referralLetter['printed_at'] ?? null,
       'processed_by' => $referralLetter['processed_by'] ?? null,
@@ -297,12 +298,11 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
 
   public function updateCompanyId(int $id, int $companyId): bool
   {
-    $sql = "UPDATE referral_letters SET company_id = :company_id, updated_at = NOW() WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute([
-      ':company_id' => $companyId,
-      ':id'         => $id
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->update([
+      'company_id'=>$companyId, 'updated_at'=>date('Y-m-d H:i:s')
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 
   public function updatePrintInfo(int $id, array $printData): bool
@@ -321,6 +321,10 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     if (array_key_exists('document_number', $printData)) {
       $fields[] = "document_number = :document_number";
       $params[':document_number'] = $printData['document_number'];
+    }
+    if (array_key_exists('approver_name', $printData)) {
+      $fields[] = "approver_name = :approver_name";
+      $params[':approver_name'] = $printData['approver_name'];
     }
     
     if (empty($fields)) return true;

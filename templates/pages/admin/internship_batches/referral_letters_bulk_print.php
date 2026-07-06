@@ -1,9 +1,12 @@
 <?php
 $batch = $batch ?? [];
-$letters = $letters ?? [];
+$letter = $letter ?? [];
 $ids = $ids ?? [];
 $now = new DateTime();
-$documentNumber = $letters[0]['document_number'] ?? '';
+$documentNumber = $letter['document_number'] ?? '';
+$authUser = $authUser ?? [];
+$defaultApproverName = $letter['approver_name'] ?? ($authUser['full_name'] ?? ($authUser['name'] ?? ($authUser['email'] ?? '')));
+$approverStorageKey = 'referral-letter-approver:' . (string)($authUser['account_id'] ?? 'anonymous');
 $defaultStart = date('Y-m-d', strtotime($batch['start_at']));
 $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
 ?>
@@ -27,7 +30,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
 <body>
   <header id="be-topbar">
     <div id="be-topbar-left"><button type="button" class="btn" data-variant="outline" data-size="md" onclick="window.close()"><i class="fa-solid fa-chevron-left"></i> Quay lại</button></div>
-    <div id="be-topbar-center">Xem trước <?= count($letters) ?> giấy giới thiệu</div>
+    <div id="be-topbar-center">Xem trước công văn in gộp</div>
     <div id="be-topbar-right"><button type="button" class="btn" id="be-toggle-right" data-variant="outline" data-size="md" aria-controls="be-right" aria-expanded="true"><i class="fa-solid fa-table-columns"></i> <span>Thông tin</span></button><button type="submit" form="printForm" id="btnPrint" class="btn" data-variant="primary" data-size="md">Lưu &amp; In</button></div>
   </header>
   <div id="be-body">
@@ -37,6 +40,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
       <form id="printForm">
         <div class="field-group">
           <div class="field"><label class="field__label" for="inp_document_number">Số công văn dùng chung</label><input class="field__input" type="text" id="inp_document_number" value="<?= htmlspecialchars($documentNumber) ?>"></div>
+          <div class="field" data-field-required><label class="field__label" for="inp_approver_name">Giảng viên phê duyệt</label><input class="field__input" type="text" id="inp_approver_name" value="<?= htmlspecialchars($defaultApproverName) ?>" required maxlength="255"></div>
           <div class="field" data-field-required><label class="field__label" for="inp_start_date">Ngày bắt đầu thực tập</label><input class="field__input" type="date" id="inp_start_date" value="<?= $defaultStart ?>" required></div>
           <div class="field" data-field-required><label class="field__label" for="inp_end_date">Ngày kết thúc thực tập</label><input class="field__input" type="date" id="inp_end_date" value="<?= $defaultEnd ?>" required></div>
         </div>
@@ -46,7 +50,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
   </aside></div>
   <main id="be-canvas-wrap"><div id="be-canvas"><div class="print-source">
 
-  <?php foreach ($letters as $letter):
+  <?php
     $students = $letter['students'] ?? [];
     $programs = array_unique(array_filter(array_column($students, 'training_program')));
     $program = implode(', ', $programs) ?: 'Công nghệ thông tin';
@@ -71,7 +75,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
       <p class="paragraph">Trường Cao Đẳng Kỹ Thuật Cao Thắng kính đề nghị Quý đơn vị:</p>
       <p class="paragraph">* Tạo điều kiện cho: <strong><?= count($students) ?></strong> sinh viên (danh sách đính kèm).</p>
       <p class="paragraph">* Đến thực tập sản xuất tại đơn vị theo ngành, nghề đào tạo: <strong><?= htmlspecialchars($program) ?></strong></p>
-      <p class="paragraph">* Với giáo viên hướng dẫn là Thầy/Cô: <strong><?= htmlspecialchars($letter['teacher_name'] ?? '..................................') ?></strong></p>
+      <p class="paragraph">* Với giảng viên đại diện phê duyệt là Thầy/Cô: <strong class="dyn-approver"><?= htmlspecialchars($defaultApproverName ?: '..................................') ?></strong></p>
       <p class="paragraph">* Thời gian thực tập từ ngày: <strong class="dyn-start-date"><?= date('d/m/Y', strtotime($batch['start_at'])) ?></strong> đến ngày <strong class="dyn-end-date"><?= date('d/m/Y', strtotime($batch['end_at'])) ?></strong></p>
       <p class="paragraph">* Nội dung thực tập: theo đề cương thực tập (đính kèm).</p>
       <p class="paragraph">Nhà trường cùng với giáo viên hướng dẫn có trách nhiệm giáo dục, nhắc nhở sinh viên trường chấp hành nghiêm nội quy, quy định thực tập, sản xuất tại Quý Đơn vị.</p>
@@ -90,7 +94,6 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
       <div class="signature"><div class="signature-title">TL.HIỆU TRƯỞNG</div></div>
     </div>
   </div>
-  <?php endforeach; ?>
   </div></div></main></div>
   <script>
     const ids = <?= json_encode(array_values($ids)) ?>;
@@ -110,15 +113,23 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
     document.querySelector('#be-canvas').append(previewFrame);
     previewFrame.srcdoc = `<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="<?= url('public/css/referral_letter_print.css') ?>?v=20260702-3"></head><body><main class="print-pages">${source.innerHTML}</main></body></html>`;
     const previewElements = selector => previewFrame.contentDocument?.querySelectorAll(selector) || [];
+    const approverInput = document.getElementById('inp_approver_name');
+    const approverStorageKey = <?= json_encode($approverStorageKey) ?>;
+    const storedApprover = localStorage.getItem(approverStorageKey);
+    if (storedApprover?.trim()) approverInput.value = storedApprover.trim();
+    const syncApprover = () => { const value = approverInput.value.trim(); previewElements('.dyn-approver').forEach(el => el.textContent = value || '..................................'); if (value) localStorage.setItem(approverStorageKey, value); };
+    previewFrame.addEventListener('load', syncApprover);
+    approverInput.addEventListener('input', syncApprover);
     const formatDate = value => { const p = value.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : value; };
     document.getElementById('inp_document_number').addEventListener('input', e => previewElements('.dyn-num').forEach(el => el.textContent = e.target.value || '___'));
     document.getElementById('inp_start_date').addEventListener('change', e => previewElements('.dyn-start-date').forEach(el => el.textContent = formatDate(e.target.value)));
     document.getElementById('inp_end_date').addEventListener('change', e => previewElements('.dyn-end-date').forEach(el => el.textContent = formatDate(e.target.value)));
     document.getElementById('printForm').addEventListener('submit', async e => {
-      e.preventDefault(); const btn = document.getElementById('btnPrint'); btn.disabled = true;
+      e.preventDefault(); if (!approverInput.value.trim()) { approverInput.reportValidity(); approverInput.focus(); return; } const btn = document.getElementById('btnPrint'); btn.disabled = true;
       const data = new FormData(); data.append('_token', <?= json_encode(csrf_token()) ?>);
       ids.forEach(id => data.append('ids[]', id));
       data.append('document_number', document.getElementById('inp_document_number').value);
+      data.append('approver_name', approverInput.value.trim());
       data.append('internship_start_date', document.getElementById('inp_start_date').value);
       data.append('internship_end_date', document.getElementById('inp_end_date').value);
       try { const response = await fetch(apiUrl, {method:'POST', body:data}); const result = await response.json().catch(() => ({})); if (!response.ok || !result.success) throw new Error(result.message || result.data?.message || 'Không thể in các giấy đã chọn. Chỉ giấy ở trạng thái Đang xử lý mới được in.'); previewFrame.contentWindow.print(); }

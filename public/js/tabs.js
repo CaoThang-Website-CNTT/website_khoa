@@ -28,7 +28,7 @@ class TabHandler {
       this.activate(tabs, initialKey);
 
       // Gán events cho tab triggers
-      tabs.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
+      this.getOwnedElements(tabs, "[data-tabs-trigger]").forEach(trigger => {
         trigger.addEventListener("click", e => {
           if (isNavigation) return;
 
@@ -46,6 +46,11 @@ class TabHandler {
     // Nếu cấu hình toàn cục là true, kiểm tra xem HTML có ghi đè bằng data-tabs-sync="false" không
     return this.config.syncParams && tabs.dataset.tabsSync !== "false";
   }
+
+  getOwnedElements(tabs, selector) {
+    return Array.from(tabs.querySelectorAll(selector))
+      .filter(element => element.closest('[data-tabs]') === tabs);
+  }
   /**
    * Xác định key khởi tạo - ưu tiên query param, fallback về data-active.
    * URL format: ?users=students&reports=monthly
@@ -58,8 +63,8 @@ class TabHandler {
     if (isNavigation) {
       return (
         tabs.dataset.tabsPanelActive ??
-        tabs.querySelector('[data-tabs-trigger-state="active"]')?.dataset.tabsTrigger ??
-        tabs.querySelector("[data-tabs-trigger]")?.dataset.tabsTrigger
+        this.getOwnedElements(tabs, '[data-tabs-trigger-state="active"]')[0]?.dataset.tabsTrigger ??
+        this.getOwnedElements(tabs, "[data-tabs-trigger]")[0]?.dataset.tabsTrigger
       );
     }
 
@@ -67,13 +72,13 @@ class TabHandler {
     const paramKey = params.get(tabPanelId);
 
     if (paramKey) {
-      const matched = tabs.querySelector(`[data-tabs-panel="${paramKey}"]`);
+      const matched = this.getOwnedElements(tabs, `[data-tabs-panel="${paramKey}"]`)[0];
       if (matched) return paramKey;
     }
 
     return (
       tabs.dataset.tabsPanelActive ??
-      tabs.querySelector("[data-tabs-trigger]")?.dataset.tabsTrigger
+      this.getOwnedElements(tabs, "[data-tabs-trigger]")[0]?.dataset.tabsTrigger
     );
   }
 
@@ -86,7 +91,7 @@ class TabHandler {
     const tabsId = tabs.dataset.tabsId;
 
     // Bật active trên trigger
-    tabs.querySelectorAll("[data-tabs-trigger]").forEach(trigger => {
+    this.getOwnedElements(tabs, "[data-tabs-trigger]").forEach(trigger => {
       const isActive = trigger.dataset.tabsTrigger === key;
       trigger.dataset.tabsTriggerState = isActive ? "active" : "idle";
       const badge = trigger.querySelector(":scope > .badge");
@@ -96,7 +101,7 @@ class TabHandler {
     });
 
     // Bật panel
-    tabs.querySelectorAll("[data-tabs-panel]").forEach(panel => {
+    this.getOwnedElements(tabs, "[data-tabs-panel]").forEach(panel => {
       panel.dataset.tabsPanelState = panel.dataset.tabsPanel === key ? "active" : "idle";
     });
 

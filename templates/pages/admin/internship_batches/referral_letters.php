@@ -7,8 +7,6 @@
 $batch = $batch ?? null;
 $letters = $letters ?? [];
 ?>
-<link rel="stylesheet" href="<?= url('public/css/referral_letters.css') ?>">
-
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Giấy giới thiệu</h2>
   <p class="title-wrapper__description">Quản lý và duyệt cấp giấy giới thiệu thực tập cho sinh viên đợt thực tập
@@ -54,25 +52,28 @@ $letters = $letters ?? [];
       <span class="badge" data-variant="{{ row.status_variant }}">{{ row.status_label }}</span>
     </template>
 
-    <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="120px" data-tm-align="right">
-      <div class="flex gap-2 justify-end">
-        <button type="button" class="btn btn-cancel {{ row.status !== 'pending' ? 'hidden' : '' }}"
+    <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="280px" data-tm-align="right">
+      <div class="flex gap-2 justify-end whitespace-nowrap">
+        <button type="button" class="btn btn-cancel text-xs whitespace-nowrap {{ row.status !== 'pending' ? 'hidden' : '' }}"
           data-variant="destructive" data-size="sm" data-id="{{ row.id }}" title="Từ chối giấy">
           <i class="fa-solid fa-ban"></i>
         </button>
-        <button type="button" class="btn btn-approve {{ row.status !== 'pending' ? 'hidden' : '' }}"
+        <button type="button" class="btn btn-approve text-xs whitespace-nowrap {{ row.status !== 'pending' ? 'hidden' : '' }}"
           data-variant="primary" data-size="sm" data-id="{{ row.id }}" title="Duyệt giấy">
           <i class="fa-solid fa-check"></i>
         </button>
         <a href="<?= url("admin/internship_batches/{$batch['id']}/referral_letters") ?>/{{ row.id }}/print"
-          type="button" target="_blank" class="btn btn-print {{ !row.can_print ? 'hidden' : '' }}"
+          type="button" target="_blank" class="btn btn-print text-xs whitespace-nowrap {{ !row.can_print ? 'hidden' : '' }}"
           data-variant="primary" data-size="sm" title="Xem trước & In">
           <i class="fa-solid fa-print"></i>
         </a>
-        <button type="button" class="btn btn-receive {{ row.status !== 'completed' ? 'hidden' : '' }}"
+        <button type="button" class="btn btn-complete shrink-0 text-xs whitespace-nowrap {{ !row.can_complete ? 'hidden' : '' }}" data-variant="primary" data-size="sm" data-id="{{ row.id }}" title="Xác nhận hoàn thành">
+          <i class="fa-solid fa-circle-check"></i>Hoàn thành
+        </button>
+        <button type="button" class="btn btn-receive shrink-0 text-xs whitespace-nowrap {{ row.status !== 'completed' ? 'hidden' : '' }}"
           data-variant="primary" data-size="sm" data-id="{{ row.id }}" data-name="{{ row.student_full_name }}"
           data-phone="{{ row.student_phone }}" data-email="{{ row.student_email }}" title="Xác nhận đã nhận">
-          <i class="fa-solid fa-handshake"></i>
+          <i class="fa-solid fa-handshake"></i>Xác nhận đã nhận
         </button>
       </div>
     </template>
@@ -156,6 +157,7 @@ $letters = $letters ?? [];
       'company_verified_label' => $rl['company_is_verified'] == 1 ? 'Đã xác thực' : 'Chưa xác thực',
       'status' => $rl['status'],
       'can_print' => $rl['status'] === 'approved',
+      'can_complete' => $rl['status'] === 'approved' && !empty($rl['printed_at']),
       'printed_at' => $rl['printed_at'],
       'status_label' => $st['label'],
       'status_variant' => $st['variant'],

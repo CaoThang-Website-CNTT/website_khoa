@@ -335,6 +335,9 @@ class StudentDashboardController extends Controller
       'name' => ['required', 'max:255'],
       'address' => ['required'],
       'position' => ['required', 'max:255'],
+      'company_mentor_name' => ['required', 'max:255'],
+      'company_mentor_phone' => ['required', 'max:20'],
+      'company_mentor_email' => ['required', 'email', 'max:255'],
       'internship_start_date' => ['required', 'date'],
       'internship_end_date' => ['required', 'date'],
     ];
@@ -362,6 +365,9 @@ class StudentDashboardController extends Controller
       $success = $this->_internshipBatchService->updateStudentInternshipInfo($batchStudentId, [
         'company_id' => $companyId,
         'position' => $data['position'],
+        'company_mentor_name' => trim($data['company_mentor_name']),
+        'company_mentor_phone' => trim($data['company_mentor_phone']),
+        'company_mentor_email' => trim($data['company_mentor_email']),
         'internship_start_date' => $data['internship_start_date'],
         'internship_end_date' => $data['internship_end_date'],
       ]);

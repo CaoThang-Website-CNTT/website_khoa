@@ -5,15 +5,23 @@ namespace App\Controllers\Api;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Stores\InternshipSubmissionStore;
+use App\Stores\InternshipAssignmentStore;
+use App\Stores\TeacherStore;
 
 class TeacherDashboardApiController extends Controller
 {
   private InternshipSubmissionStore $_internshipSubmissionStore;
+  private InternshipAssignmentStore $_internshipAssignmentStore;
+  private TeacherStore $_teacherStore;
 
   public function __construct(
-    InternshipSubmissionStore $internshipSubmissionStore
+    InternshipSubmissionStore $internshipSubmissionStore,
+    InternshipAssignmentStore $internshipAssignmentStore,
+    TeacherStore $teacherStore
   ) {
     $this->_internshipSubmissionStore = $internshipSubmissionStore;
+    $this->_internshipAssignmentStore = $internshipAssignmentStore;
+    $this->_teacherStore = $teacherStore;
   }
 
   public function previewSubmission(Request $request, int $submissionId)
@@ -25,10 +33,24 @@ class TeacherDashboardApiController extends Controller
       return;
     }
 
+    if (($authUser['role'] ?? '') !== 'teacher') {
+      http_response_code(403);
+      echo "Forbidden";
+      return;
+    }
+
     $submission = $this->_internshipSubmissionStore->getById($submissionId);
     if (!$submission || empty($submission['file_path'])) {
       http_response_code(404);
       echo "File không tồn tại.";
+      return;
+    }
+
+    $teacher = $this->_teacherStore->getByAccountId((int)$authUser['account_id']);
+    $assignment = $this->_internshipAssignmentStore->getAssignmentByBatchStudentId((int)$submission['batch_student_id']);
+    if (!$teacher || !$assignment || (int)$assignment->teacher_id !== (int)$teacher->id) {
+      http_response_code(403);
+      echo "Forbidden";
       return;
     }
 

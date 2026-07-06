@@ -449,7 +449,8 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function getBatchesByStudentId(int $studentId): array
   {
     $sql = "SELECT b.*, bs.status as student_status, bs.id as batch_student_id, 
-                   bs.company_id, bs.position, bs.internship_start_date, bs.internship_end_date,
+                   bs.company_id, bs.position, bs.company_mentor_name, bs.company_mentor_phone, bs.company_mentor_email,
+                   bs.internship_start_date, bs.internship_end_date,
                    c.name as company_name, c.tax_code as company_tax_code, c.address as company_address, c.phone as company_phone
             FROM internship_batches b
             JOIN internship_batch_students bs ON b.id = bs.batch_id
@@ -465,7 +466,10 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   {
     $sql = "UPDATE internship_batch_students SET 
             company_id = :company_id, 
-            position = :position, 
+            position = :position,
+            company_mentor_name = :company_mentor_name,
+            company_mentor_phone = :company_mentor_phone,
+            company_mentor_email = :company_mentor_email,
             internship_start_date = :internship_start_date, 
             internship_end_date = :internship_end_date,
             updated_at = NOW()
@@ -476,6 +480,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
       ':id' => $batchStudentId,
       ':company_id' => $data['company_id'],
       ':position' => $data['position'],
+      ':company_mentor_name' => $data['company_mentor_name'] ?? null,
+      ':company_mentor_phone' => $data['company_mentor_phone'] ?? null,
+      ':company_mentor_email' => $data['company_mentor_email'] ?? null,
       ':internship_start_date' => $data['internship_start_date'],
       ':internship_end_date' => $data['internship_end_date']
     ]);
@@ -547,6 +554,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               c.short_name AS classroom_name,
               co.name AS company_name,
               co.address AS company_address,
+              bs.company_mentor_name,
+              bs.company_mentor_phone,
+              bs.company_mentor_email,
               bs.position,
               bs.internship_start_date,
               bs.internship_end_date

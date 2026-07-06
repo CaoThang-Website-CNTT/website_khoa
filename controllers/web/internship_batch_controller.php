@@ -82,7 +82,8 @@ class InternshipBatchController extends Controller
 
     $this->render("admin/internship_batches/referral_letter_print", [
       'batch' => $batch,
-      'letter' => $letter
+      'letter' => $letter,
+      'authUser' => $request->session()->authUser() ?? []
     ], layout: null);
   }
 
@@ -97,6 +98,7 @@ class InternshipBatchController extends Controller
       'internship_start_date' => $data['internship_start_date'] ?? null,
       'internship_end_date' => $data['internship_end_date'] ?? null,
       'document_number' => $data['document_number'] ?? null,
+      'approver_name' => $data['approver_name'] ?? null,
     ];
 
     $authUser = $request->session()->authUser();
@@ -127,8 +129,22 @@ class InternshipBatchController extends Controller
       }
       $letters[] = $letter;
     }
+    $companyIds = array_unique(array_map(fn($letter) => (int)$letter['company_id'], $letters));
+    if (count($companyIds) !== 1) {
+      $request->session()->flashNotify('error', 'Chỉ có thể in gộp các giấy cùng một công ty.');
+      return $this->redirect("admin/internship_batches/$id/referral_letters");
+    }
+    $students = [];
+    $seen = [];
+    foreach ($letters as $letter) foreach (($letter['students'] ?? []) as $student) {
+      $key = !empty($student['batch_student_id']) ? 'batch:' . $student['batch_student_id'] : (!empty($student['student_id']) ? 'student:' . $student['student_id'] : 'snapshot:' . mb_strtolower(trim($student['full_name'] ?? '')) . '|' . ($student['dob'] ?? ''));
+      if (!isset($seen[$key])) { $seen[$key] = true; $students[] = $student; }
+    }
+    $mergedLetter = $letters[0];
+    $mergedLetter['students'] = $students;
     $this->render('admin/internship_batches/referral_letters_bulk_print', [
-      'batch' => $batch, 'letters' => $letters, 'ids' => $ids
+      'batch' => $batch, 'letter' => $mergedLetter, 'ids' => $ids,
+      'authUser' => $request->session()->authUser() ?? []
     ], layout: null);
   }
 
@@ -143,6 +159,7 @@ class InternshipBatchController extends Controller
         'document_number' => trim((string)($data['document_number'] ?? '')),
         'internship_start_date' => $data['internship_start_date'] ?? null,
         'internship_end_date' => $data['internship_end_date'] ?? null,
+        'approver_name' => trim((string)($data['approver_name'] ?? '')),
       ]);
       return $this->json(['count' => $count], 200, "Đã lưu thông tin in cho {$count} giấy giới thiệu.");
     } catch (\Exception $e) {

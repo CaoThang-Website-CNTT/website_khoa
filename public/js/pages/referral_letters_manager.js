@@ -79,6 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ModalHandler.instance.open('#receive-modal');
         return;
       }
+      const completeBtn = e.target.closest('.btn-complete');
+      if (completeBtn) {
+        currentSelectedIds = [completeBtn.dataset.id];
+        callBulkActionApi('complete');
+        return;
+      }
       const btn = e.target.closest('.btn-cancel');
       if (!btn) return;
 

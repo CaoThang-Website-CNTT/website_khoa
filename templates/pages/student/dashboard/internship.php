@@ -152,41 +152,27 @@ $effectiveMetadata = $effStatus ? [
   <div class="detail-layout">
     <div class="detail-layout__main">
       <!-- Khai báo công ty -->
-      <div class="card shadow internship-task" data-internship-phase="1" data-tabs-observe="internship-journey:phase-1"
+      <div class="internship-task" data-internship-phase="1" data-tabs-observe="internship-journey:phase-1"
         id="internship-phase-1" role="tabpanel" aria-labelledby="internship-phase-tab-1">
-        <div class="card__header">
-          <h3 class="card__title">
-            <i class="fa-solid fa-building mr-2"></i>
-            Thông tin công ty
-          </h3>
-          <div class="card__header-meta">
-            <?php if ($company_deadline): ?>
-              <?php
-              $deadlineDt = new \DateTime($company_deadline);
-              $now = new \DateTime();
-              $isNear = $now >= (clone $deadlineDt)->modify("-{$company_warning_days} days") && $now <= $deadlineDt;
-              $isPassed = $now > $deadlineDt;
-              ?>
-              <?php if ($isPassed): ?>
-                <span class="badge" data-variant="destructive">
-                  <i class="fa-solid fa-lock mr-1"></i> Đã hết hạn
-                </span>
-              <?php elseif ($isNear): ?>
-                <span class="badge" data-variant="warning">
-                  <i class="fa-solid fa-triangle-exclamation mr-1"></i> Sắp hết hạn
-                </span>
-              <?php endif; ?>
-              <p class="text-xs">Hạn chót khai báo: <span class="font-semibold"><?= $deadlineDt->format('d/m/Y') ?></span>
-              </p>
-            <?php endif; ?>
-          </div>
-        </div>
-        <hr class="separator" />
-        <div class="card__content">
+        <?php
+        $deadlineDt = $company_deadline ? new \DateTime($company_deadline) : null;
+        $now = new \DateTime();
+        ?>
           <?php if ($can_edit_company): ?>
             <form action="<?= url("student/internship/{$current['id']}/company") ?>" method="POST" id="companyForm">
               <?= csrf_field() ?>
               <input type="hidden" name="batch_student_id" value="<?= $current['batch_student_id'] ?>">
+
+              <div class="grid gap-4">
+              <div class="card shadow-sm">
+              <fieldset class="field__set">
+                <div class="card__header">
+                  <legend class="field__legend"><i class="fa-solid fa-building mr-2" aria-hidden="true"></i>Thông tin công ty và kỳ thực tập</legend>
+                  <p class="field__description">Khai báo doanh nghiệp, vị trí và thời gian thực tập.<?php if ($deadlineDt): ?> Hạn chót khai báo: <strong><?= $deadlineDt->format('d/m/Y') ?></strong>.<?php endif; ?></p>
+                </div>
+                <hr class="separator">
+                <div class="card__content">
+                <div class="field-group">
 
               <div class="field mb-3" data-orientation="horizontal">
                 <input type="checkbox" id="is_manual" name="is_manual" value="1" class="field__input">
@@ -229,7 +215,7 @@ $effectiveMetadata = $effStatus ? [
                   value="<?= htmlspecialchars($current['position'] ?? '') ?>" placeholder="VD: Thực tập sinh Frontend">
               </div>
 
-              <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                 <div class="field" data-field-required>
                   <label class="field__label">Từ ngày</label>
                   <input type="date" name="internship_start_date" class="field__input" required
@@ -240,6 +226,30 @@ $effectiveMetadata = $effStatus ? [
                   <input type="date" name="internship_end_date" class="field__input" required
                     value="<?= htmlspecialchars($current['internship_end_date'] ?? '') ?>">
                 </div>
+              </div>
+                </div>
+                </div>
+              </fieldset>
+              </div>
+
+              <div class="card shadow-sm">
+              <fieldset class="field__set">
+                <div class="card__header">
+                    <legend class="field__legend"><i class="fa-solid fa-user-tie mr-2" aria-hidden="true"></i>Cán bộ hướng dẫn tại doanh nghiệp</legend>
+                  <p class="field__description">Thông tin người trực tiếp phụ trách bạn trong thời gian thực tập.</p>
+                </div>
+                <hr class="separator">
+                <div class="card__content">
+                <div class="field-group">
+                <div class="field" data-field-required><label class="field__label">Họ tên</label><input type="text" name="company_mentor_name" class="field__input" required maxlength="255" value="<?= htmlspecialchars($current['company_mentor_name'] ?? '') ?>"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div class="field" data-field-required><label class="field__label">Số điện thoại</label><input type="tel" name="company_mentor_phone" class="field__input" required maxlength="20" value="<?= htmlspecialchars($current['company_mentor_phone'] ?? '') ?>"></div>
+                  <div class="field" data-field-required><label class="field__label">Email</label><input type="email" name="company_mentor_email" class="field__input" required maxlength="255" value="<?= htmlspecialchars($current['company_mentor_email'] ?? '') ?>"></div>
+                </div>
+                </div>
+                </div>
+              </fieldset>
+              </div>
               </div>
 
               <div class="flex justify-end mt-2">
@@ -293,7 +303,6 @@ $effectiveMetadata = $effStatus ? [
               </div>
             <?php endif; ?>
           <?php endif; ?>
-        </div>
       </div>
 
       <!-- Giấy giới thiệu -->
