@@ -71,30 +71,8 @@ class ProjectBatchController extends Controller
       return $this->redirect('admin/project_batches');
     }
 
-    $page = (int)$request->query('page', 1);
-    $limit = (int)$request->query('limit', 15);
-    $filter = $request->query('filter', 'all');
-    $search = $request->query('search', '');
-
-    $filters = [];
-    if ($filter !== 'all') {
-      $filters['status'] = $filter;
-    }
-    if (!empty($search)) {
-      $filters['search'] = $search;
-    }
-
-    $data = $this->_TopicService->getPaginatedByBatch((int)$id, $page, $limit, $filters);
-
-    // Count pending for badge
-    $pendingCount = $this->_TopicService->getPendingCountByBatch((int)$id);
-
     $this->render("admin/project_batches/topics", [
-      'batch' => $batch,
-      'data' => $data,
-      'filter' => $filter,
-      'search' => $search,
-      'pendingCount' => $pendingCount
+      'batch' => $batch
     ], layout: "dashboard_layout");
   }
 

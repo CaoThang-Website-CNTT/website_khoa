@@ -1,396 +1,121 @@
 <?php
 
-use App\Models\ProjectBatch;
 use App\Enums\ProjectTopicStatus;
 
 $batchObj = (object) $batch;
+$statuses = array_merge(['all' => ['label' => 'Tất cả', 'variant' => 'secondary']], ProjectTopicStatus::getMetadata());
 ?>
 
 <?php $layout->start('heading') ?>
-<h2 class="title-wrapper__title">
-  Danh sách Đề tài
-</h2>
-<p>Đợt: <?= htmlspecialchars($batchObj->title) ?></p>
+<h2 class="title-wrapper__title">Quản lý đề tài</h2>
+<p class="title-wrapper__description">Xét duyệt đề tài trong đợt <?= htmlspecialchars($batchObj->title) ?></p>
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
-<a href="<?= url("admin/project_batches/{$batchObj->id}") ?>" data-variant="outline" data-size="lg" class="btn">
-  <i class="fa-solid fa-chevron-left"></i>
+<a href="<?= url("admin/project_batches/{$batchObj->id}") ?>" class="btn" data-variant="outline" data-size="lg">
+  <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
   Quay lại
 </a>
 <?php $layout->end() ?>
 
-<?php
-$topicFilterUrl = function (string $filterKey) use ($batchObj): string {
-  $query = ['filter' => $filterKey];
-  if (isset($_GET['limit']) && $_GET['limit'] !== '') {
-    $query['limit'] = (int) $_GET['limit'];
-  }
-  return url("admin/project_batches/{$batchObj->id}/topics?" . http_build_query($query));
-};
-
-$tabsMode = 'navigation';
-$tabsId = 'topic-status-tabs';
-$activeTab = $filter ?? 'all';
-$tabs = [
-  [
-    'key' => 'all',
-    'label' => 'Tất cả',
-    'href' => $topicFilterUrl('all'),
-  ],
-  [
-    'key' => ProjectTopicStatus::PENDING,
-    'label' => 'Chờ duyệt',
-    'href' => $topicFilterUrl(ProjectTopicStatus::PENDING),
-    'badge' => $pendingCount ?? 0,
-    'badgeVariant' => 'primary',
-  ],
-  [
-    'key' => ProjectTopicStatus::APPROVED,
-    'label' => 'Đã duyệt',
-    'href' => $topicFilterUrl(ProjectTopicStatus::APPROVED),
-  ],
-  [
-    'key' => ProjectTopicStatus::REJECTED,
-    'label' => 'Từ chối',
-    'href' => $topicFilterUrl(ProjectTopicStatus::REJECTED),
-  ],
-  [
-    'key' => ProjectTopicStatus::DRAFT,
-    'label' => 'Bản nháp',
-    'href' => $topicFilterUrl(ProjectTopicStatus::DRAFT),
-  ]
-];
-?>
-
 <?php $layout->start('content') ?>
-
-<div class="tabs mb-4" data-tabs data-tabs-id="<?= htmlspecialchars($tabsId) ?>"
-  data-tabs-mode="<?= htmlspecialchars($tabsMode) ?>" data-tabs-panel-active="<?= htmlspecialchars($activeTab) ?>">
-  <div class="tabs__list" role="tablist">
-    <?php foreach ($tabs as $tab): ?>
-      <?php
-      $isActive = ($tab['key'] === $activeTab);
-      $badge = $tab['badge'] ?? null;
-      ?>
-      <a href="<?= htmlspecialchars($tab['href']) ?>" role="tab" aria-selected="<?= $isActive ? 'true' : 'false' ?>"
-        data-tabs-trigger="<?= htmlspecialchars($tab['key']) ?>"
-        data-tabs-trigger-state="<?= $isActive ? 'active' : 'idle' ?>" tabindex="<?= $isActive ? '0' : '-1' ?>"
-        class="tabs__trigger">
-        <?= htmlspecialchars($tab['label']) ?>
-        <?php if ($badge !== null && $badge > 0): ?>
-          <span class="badge" data-variant="<?= htmlspecialchars($tab['badgeVariant'] ?? 'outline') ?>">
-            <?= htmlspecialchars((string) $badge) ?>
-          </span>
-        <?php endif; ?>
-      </a>
-    <?php endforeach; ?>
-  </div>
-</div>
-
-
-
-<!-- Table Container -->
-<div class="tm-container" id="topics_table" data-tm="topics_table" data-tm-mode="server" data-tm-searchable
-  <?= (isset($filter) && $filter === ProjectTopicStatus::PENDING) ? 'data-tm-selectable="true" data-tm-id-key="id"' : '' ?>>
-
-  <template data-tm-col="title" data-tm-label="Đề tài" data-tm-sortable>
-    <div class="font-medium">{{ value }}</div>
-  </template>
-
-  <template data-tm-col="description" data-tm-label="Mô tả" data-tm-sortable>
-    <div class="font-medium line-clamp-2 mt-1" style="white-space: pre-line;" title="{{ row.description }}">{{ row.description }}</div>
-  </template>
-
-  <template data-tm-col="teacher" data-tm-label="Giảng viên" data-tm-sortable data-tm-filter-type="text">
-    <div class="font-medium text-sm">{{ value.name }}</div>
-  </template>
-
-  <template data-tm-col="max_students" data-tm-label="Số SV tối đa" data-tm-sortable></template>
-
-  <template data-tm-col="status" data-tm-label="Trạng thái">
-    <span class="badge" data-variant="{{ value.variant }}">{{ value.label }}</span>
-  </template>
-
-  <template data-tm-col="_actions" data-tm-label="Hành động" data-tm-width="150px">
-    <div class="space-x-1" data-id="{{ row.id }}">
-      <a href="{{ row.pdf_file_url ? row.pdf_file_url : 'javascript:void(0)' }}"
-        target="{{ row.pdf_file_url ? '_blank' : '_self' }}"
-        class="btn"
-        data-size="md"
-        data-variant="outline"
-        title="{{ row.pdf_file_url ? 'Xem file mô tả' : 'Chưa có file mô tả' }}"
-        style="{{ !row.pdf_file_url ? 'opacity: 0.5; pointer-events: none;' : '' }}">
-        <i class="fa-solid fa-file-pdf"></i>
-      </a>
-      <button type="button" class="btn btn-approve {{ row.status.value !== 'pending' ? 'hidden' : '' }}" data-size="md" data-variant="primary" data-id="{{ row.id }}" title="Duyệt">
-        <i class="fa-solid fa-check"></i>
-      </button>
-      <button type="button" class="btn btn-reject {{ row.status.value !== 'pending' ? 'hidden' : '' }}" data-size="md" data-id="{{ row.id }}" data-variant="destructive" title="Từ chối">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-      <span class="text-xs {{ row.status.value !== 'rejected' ? 'hidden' : '' }}" title="{{ row.reject_reason }}">Xem lý do</span>
+<div id="project-topics-page" aria-busy="true">
+  <div class="tabs mb-4" data-topic-tabs>
+    <div class="tabs__list" role="tablist" aria-label="Lọc theo trạng thái đề tài">
+      <?php foreach ($statuses as $value => $metadata): ?>
+        <button type="button" class="tabs__trigger" role="tab"
+          data-topic-status="<?= htmlspecialchars($value) ?>"
+          data-tabs-trigger-state="idle" aria-selected="false" tabindex="-1">
+          <?= htmlspecialchars($metadata['label']) ?>
+          <span class="badge" data-topic-count="<?= htmlspecialchars($value) ?>" data-variant="primary">0</span>
+        </button>
+      <?php endforeach; ?>
     </div>
-  </template>
+  </div>
 
-  <template data-tm-pagination></template>
+  <div class="alert mb-4 hidden" data-topic-error data-variant="destructive" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+    <div>
+      <div class="alert-title">Không thể tải danh sách đề tài</div>
+      <div class="alert-description" data-topic-error-message></div>
+      <button type="button" class="btn mt-2" data-variant="outline" data-size="sm" data-topic-retry>Thử lại</button>
+    </div>
+  </div>
+
+  <div class="tm-container" id="topics_table" data-tm="topics_table" data-tm-mode="server"
+    data-tm-searchable data-tm-selectable="true" data-tm-id-key="id">
+    <template data-tm-col="title" data-tm-label="Đề tài">
+      <div class="font-medium">{{ value }}</div>
+      <div class="text-sm mt-1" style="white-space: pre-line; color: var(--muted-foreground);">{{ row.description }}</div>
+    </template>
+    <template data-tm-col="teacher" data-tm-label="Giảng viên">
+      <div class="font-medium">{{ value.name }}</div>
+      <div class="text-sm" style="color: var(--muted-foreground);">{{ value.department }}</div>
+    </template>
+    <template data-tm-col="max_students" data-tm-label="Số SV tối đa"></template>
+    <template data-tm-col="status" data-tm-label="Trạng thái">
+      <span class="badge" data-variant="{{ value.variant }}">{{ value.label }}</span>
+    </template>
+    <template data-tm-col="_actions" data-tm-label="Hành động" data-tm-width="176px">
+      <div class="flex flex-nowrap gap-1" data-id="{{ row.id }}" style="white-space: nowrap;">
+        <a href="{{ row.pdf_file_url || '#' }}" class="btn {{ !row.pdf_file_url ? 'hidden' : '' }}" data-size="sm" data-variant="outline" target="_blank" rel="noopener" aria-label="Xem tệp mô tả">
+          <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+        </a>
+        <button type="button" class="btn btn-approve {{ row.status.value !== 'pending' ? 'hidden' : '' }}" data-size="sm" data-variant="primary" data-id="{{ row.id }}">Duyệt</button>
+        <button type="button" class="btn btn-reject {{ row.status.value !== 'pending' ? 'hidden' : '' }}" data-size="sm" data-variant="destructive" data-id="{{ row.id }}">Từ chối</button>
+        <button type="button" class="btn btn-reason {{ row.status.value !== 'rejected' || !row.reject_reason ? 'hidden' : '' }}" data-size="sm" data-variant="outline" data-reason="{{ row.reject_reason }}">Lý do</button>
+      </div>
+    </template>
+    <template data-tm-pagination></template>
+  </div>
 </div>
 
-<!-- Approve Modal -->
-<div class="modal" id="approve-modal" tabindex="-1" data-state="closed">
+<div class="modal" id="approve-topic-modal" tabindex="-1" data-state="closed" role="dialog" aria-modal="true" aria-labelledby="approve-topic-title">
   <div class="modal__header">
-    <h3 class="modal__title">Duyệt đề tài</h3>
-    <p class="modal__description">Bạn có chắc chắn muốn duyệt đề tài này? Đề tài đã duyệt sẽ sẵn sàng để công bố cho sinh viên đăng ký.</p>
+    <h3 class="modal__title" id="approve-topic-title">Duyệt đề tài</h3>
+    <p class="modal__description">Đề tài đã duyệt sẽ sẵn sàng để công bố cho sinh viên đăng ký.</p>
   </div>
-  <input type="hidden" id="approve-topic-id">
   <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
-    <button id="confirm-approve-btn" data-variant="primary" class="btn" data-size="lg" type="button">Duyệt đề tài</button>
+    <button type="button" class="btn" data-modal-close data-variant="outline" data-size="lg">Hủy</button>
+    <button type="button" class="btn" id="confirm-approve-topic" data-variant="primary" data-size="lg">Duyệt đề tài</button>
   </div>
-  <button class="modal__close" type="button" data-modal-close aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+  <button type="button" class="modal__close" data-modal-close aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
 </div>
 
-<!-- Reject Modal -->
-<div class="modal" id="reject-modal" tabindex="-1" data-state="closed">
+<div class="modal" id="reject-topic-modal" tabindex="-1" data-state="closed" role="dialog" aria-modal="true" aria-labelledby="reject-topic-title">
   <div class="modal__header">
-    <h3 class="modal__title">Từ chối Đề tài</h3>
-    <p class="modal__description">Vui lòng nhập lý do từ chối để giảng viên có thể chỉnh sửa.</p>
+    <h3 class="modal__title" id="reject-topic-title">Từ chối đề tài</h3>
+    <p class="modal__description">Giảng viên sẽ nhận được lý do này để chỉnh sửa đề tài.</p>
   </div>
-  <div class="modal__content space-y-4">
-    <input type="hidden" id="reject-topic-id">
+  <div class="modal__content">
     <div class="field" data-field-required>
-      <label class="field__label" for="reject-reason">Lý do từ chối</label>
-      <textarea id="reject-reason" class="field__input" rows="3" required></textarea>
+      <label class="field__label" for="reject-topic-reason">Lý do từ chối</label>
+      <textarea id="reject-topic-reason" class="field__input" rows="4" maxlength="1000" required></textarea>
+      <p class="field__error hidden" id="reject-topic-error">Vui lòng nhập lý do từ chối.</p>
     </div>
   </div>
   <div class="modal__footer">
-    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
-    <button id="confirm-reject-btn" data-variant="destructive" class="btn" data-size="lg" type="button">Từ chối</button>
+    <button type="button" class="btn" data-modal-close data-variant="outline" data-size="lg">Hủy</button>
+    <button type="button" class="btn" id="confirm-reject-topic" data-variant="destructive" data-size="lg">Từ chối</button>
   </div>
-  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+  <button type="button" class="modal__close" data-modal-close aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
 </div>
 
+<div class="modal" id="topic-reason-modal" tabindex="-1" data-state="closed" role="dialog" aria-modal="true" aria-labelledby="topic-reason-title">
+  <div class="modal__header"><h3 class="modal__title" id="topic-reason-title">Lý do từ chối</h3></div>
+  <div class="modal__content"><p data-topic-reason-text style="white-space: pre-line;"></p></div>
+  <div class="modal__footer"><button type="button" class="btn" data-modal-close data-variant="outline" data-size="lg">Đóng</button></div>
+  <button type="button" class="modal__close" data-modal-close aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+</div>
+
+<script type="application/json" id="project-topics-config"><?= json_encode([
+  'batchId' => (int) $batchObj->id,
+  'listUrl' => url("api/v1/project_batches/{$batchObj->id}/topics"),
+  'topicApiUrl' => url('api/v1/project_topics'),
+  'csrfToken' => csrf_token(),
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 <?php $layout->end() ?>
 
 <?php $layout->start('scripts') ?>
-<script>
-  window.BATCH_ID = <?= $batchObj->id ?>;
-  window.TOPIC_STATUSES = {
-    '<?= ProjectTopicStatus::DRAFT ?>': {
-      label: 'Bản nháp',
-      variant: 'secondary'
-    },
-    '<?= ProjectTopicStatus::PENDING ?>': {
-      label: 'Chờ duyệt',
-      variant: 'warning'
-    },
-    '<?= ProjectTopicStatus::APPROVED ?>': {
-      label: 'Đã duyệt',
-      variant: 'success'
-    },
-    '<?= ProjectTopicStatus::REJECTED ?>': {
-      label: 'Từ chối',
-      variant: 'destructive'
-    },
-  };
-</script>
-
-<script type="module">
-  import {
-    TableManager
-  } from '<?= url("public/js/table/index.js") ?>';
-
-  window.BATCH_ID = <?= $batchObj->id ?>;
-  const STATUSES = {
-    '<?= ProjectTopicStatus::DRAFT ?>': {
-      label: 'Bản nháp',
-      variant: 'secondary'
-    },
-    '<?= ProjectTopicStatus::PENDING ?>': {
-      label: 'Chờ duyệt',
-      variant: 'warning'
-    },
-    '<?= ProjectTopicStatus::APPROVED ?>': {
-      label: 'Đã duyệt',
-      variant: 'success'
-    },
-    '<?= ProjectTopicStatus::REJECTED ?>': {
-      label: 'Từ chối',
-      variant: 'destructive'
-    },
-  };
-
-  const tm = TableManager.get("topics_table");
-  const isPendingFilter = <?= json_encode(isset($filter) && $filter === ProjectTopicStatus::PENDING) ?>;
-  const topicApiUrl = <?= json_encode(url('api/v1/project_topics')) ?>;
-  const bulkApproveUrl = `${topicApiUrl}/bulk-approve`;
-  const csrfToken = <?= json_encode(csrf_token()) ?>;
-  const filterKey = '<?= isset($filter) ? $filter : 'all' ?>';
-  const searchVal = '<?= isset($search) ? $search : '' ?>';
-
-  if (isPendingFilter) {
-    TableManager.registerBulkActions("topics_table", {
-      countLabel: count => `Đã chọn: ${count}`,
-      actions: [{
-        id: "approve",
-        label: "Duyệt đã chọn",
-        icon: "fa-solid fa-check",
-        variant: "primary",
-        confirm: {
-          message: "Duyệt các đề tài đã chọn?"
-        },
-        onClick: ({
-          selectedIds
-        }) => {
-          fetch(bulkApproveUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-              },
-              body: JSON.stringify({
-                topic_ids: selectedIds
-              })
-            })
-            .then(async response => {
-              const res = await response.json().catch(() => null);
-              if (!response.ok || !res?.success) {
-                throw new Error(res?.message || `Không thể duyệt đề tài (HTTP ${response.status}).`);
-              }
-              return res;
-            })
-            .then(res => {
-              if (res.success) {
-                window.toast?.success('Thành công', res.message);
-                window.location.reload();
-              }
-            })
-            .catch(err => {
-              console.error(err);
-              window.toast?.error('Lỗi', 'Đã xảy ra lỗi hệ thống.');
-            });
-        },
-      }, ],
-    });
-  }
-
-  tm.root.addEventListener("tm:pagination:change", (e) => {
-    const {
-      page,
-      limit
-    } = e.detail;
-    let url = `<?= url("admin/project_batches/{$batchObj->id}/topics") ?>?filter=${filterKey}&page=${page}&limit=${limit}`;
-    if (searchVal) url += `&search=${searchVal}`;
-    window.location.href = url;
-  });
-
-  tm.root.addEventListener("tm:search", (e) => {
-    const term = e.detail.term;
-    let url = `<?= url("admin/project_batches/{$batchObj->id}/topics") ?>?filter=${filterKey}`;
-    if (term) url += `&search=${term}`;
-    window.location.href = url;
-  });
-
-  // TableManager may stop bubbling on row actions, so capture events at the table root.
-  tm.root.addEventListener('click', function(e) {
-    const approveBtn = e.target.closest('.btn-approve');
-    if (approveBtn) {
-      e.preventDefault();
-      document.getElementById('approve-topic-id').value = approveBtn.dataset.id;
-      ModalHandler.instance.open('#approve-modal');
-      return;
-    }
-
-    const rejectBtn = e.target.closest('.btn-reject');
-    if (rejectBtn) {
-      e.preventDefault();
-      document.getElementById('reject-topic-id').value = rejectBtn.dataset.id;
-      document.getElementById('reject-reason').value = '';
-      ModalHandler.instance.open('#reject-modal');
-      return;
-    }
-  }, true);
-
-  const reviewTopic = async ({ id, action, reason = null, button }) => {
-    if (!id || button.disabled) return;
-
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = 'Đang xử lý...';
-
-    try {
-      const response = await fetch(`${topicApiUrl}/${encodeURIComponent(id)}/${action}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken
-        },
-        body: reason === null ? undefined : JSON.stringify({ reason })
-      });
-      const res = await response.json().catch(() => null);
-      if (!response.ok || !res?.success) {
-        throw new Error(res?.message || `Không thể cập nhật đề tài (HTTP ${response.status}).`);
-      }
-
-      window.toast?.success('Thành công', res.message);
-      window.location.reload();
-    } catch (error) {
-      window.toast?.error('Lỗi', error.message || 'Đã xảy ra lỗi hệ thống.');
-      button.disabled = false;
-      button.textContent = originalText;
-    }
-  };
-
-  document.getElementById('confirm-approve-btn').addEventListener('click', function() {
-    reviewTopic({
-      id: document.getElementById('approve-topic-id').value,
-      action: 'approve',
-      button: this
-    });
-  });
-
-  document.getElementById('confirm-reject-btn').addEventListener('click', function() {
-    const id = document.getElementById('reject-topic-id').value;
-    const reason = document.getElementById('reject-reason').value.trim();
-    if (!reason) {
-      window.toast?.error('Thiếu thông tin', 'Vui lòng nhập lý do từ chối.');
-      document.getElementById('reject-reason').focus();
-      return;
-    }
-
-    reviewTopic({ id, action: 'reject', reason, button: this });
-  });
-
-  // Pre-fill search if it exists
-  const searchInput = tm.root.querySelector('input[type="search"]');
-  if (searchInput && searchVal) {
-    searchInput.value = searchVal;
-  }
-
-  // Load Data
-  tm.loadData(<?= json_encode([
-                'rows' => array_map(function ($topic) {
-                  return [
-                    'id' => $topic['id'],
-                    'title' => $topic['title'],
-                    'description' => $topic['description'] ?? '',
-                    'teacher' => [
-                      'name' => $topic['teacher_name'],
-                      'department' => $topic['department_name'] ?? ''
-                    ],
-                    'max_students' => $topic['max_students'],
-                    'status' => [
-                      'value' => $topic['status'],
-                      'label' => ProjectTopicStatus::getLabel($topic['status']),
-                      'variant' => ProjectTopicStatus::getVariant($topic['status'])
-                    ],
-                    'pdf_file_url' => !empty($topic['pdf_file_path']) ? url('/public/media/' . $topic['pdf_file_path']) : null,
-                    'reject_reason' => $topic['reject_reason'] ?? ''
-                  ];
-                }, $data->getItems()),
-                'total' => $data->getTotal(),
-                'page' => $data->getCurrentPage(),
-                'limit' => $data->getPerPage()
-              ]) ?>);
-</script>
+<script type="module" src="<?= url('public/js/pages/admin/project_topics.js') ?>"></script>
 <?php $layout->end() ?>

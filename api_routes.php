@@ -55,8 +55,13 @@ $router->prefix('api')->group(function ($router) {
     $router->prefix('project_batches')->group(function ($router) {
       $router->get('/teachers-available', [ProjectBatchApiController::class, 'getAvailableTeachers']);
       $router->post('/', [ProjectBatchApiController::class, 'store']);
-      $router->get('/{id}/topics', [ProjectTopicApiController::class, 'indexByBatch']);
     });
+
+    $router->prefix('project_batches')
+      ->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])
+      ->group(function ($router) {
+        $router->get('/{id}/topics', [ProjectTopicApiController::class, 'indexByBatch']);
+      });
 
     $router->prefix('project_topics')
       ->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])

@@ -21,6 +21,7 @@ interface IProjectTopicService
   public function submitTopic(int $id, int $teacherId): bool;
   public function getApprovedTopics(int $batchId): array;
   public function getPendingCountByBatch(int $batchId): int;
+  public function getStatusCountsByBatch(int $batchId): array;
 }
 
 class ProjectTopicService implements IProjectTopicService
@@ -179,6 +180,11 @@ class ProjectTopicService implements IProjectTopicService
   public function getPendingCountByBatch(int $batchId): int
   {
     return $this->_store->getPendingCountByBatch($batchId);
+  }
+
+  public function getStatusCountsByBatch(int $batchId): array
+  {
+    return $this->_store->getStatusCountsByBatch($batchId);
   }
 
   private function validateTopicPhase(int $batchId, int $teacherId): void

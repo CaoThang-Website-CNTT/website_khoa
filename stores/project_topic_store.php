@@ -17,6 +17,7 @@ interface IProjectTopicStore
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
   public function getPendingCountByBatch(int $batchId): int;
+  public function getStatusCountsByBatch(int $batchId): array;
   public function getTopicsByTeacher(int $batchId, int $teacherId): array;
   public function getApprovedTopics(int $batchId): array;
 }
@@ -168,6 +169,24 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return (int)$stmt->fetchColumn();
+  }
+
+  public function getStatusCountsByBatch(int $batchId): array
+  {
+    $sql = "SELECT status, COUNT(*) AS total
+            FROM project_topics
+            WHERE batch_id = :batch_id AND deleted_at IS NULL
+            GROUP BY status";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId]);
+
+    $counts = ['all' => 0];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+      $count = (int) $row['total'];
+      $counts[(string) $row['status']] = $count;
+      $counts['all'] += $count;
+    }
+    return $counts;
   }
 
   public function getTopicsByTeacher(int $batchId, int $teacherId): array
