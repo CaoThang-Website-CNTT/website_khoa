@@ -50,22 +50,27 @@ class StudentProjectDashboardController extends Controller
     if (!in_array($bacHoc, ['03', '04'])) {
       return [
         'isEligible' => false,
-        'reason' => 'Chỉ dành cho sinh viên hệ Cao đẳng hoặc Cao đẳng nghề (Mã bậc học 03, 04).'
+        'reason' => 'Chỉ dành cho sinh viên hệ Cao đẳng hoặc Cao đẳng nghề.'
       ];
     }
 
     if ($nganh !== '06') {
       return [
         'isEligible' => false,
-        'reason' => 'Chỉ dành cho sinh viên ngành Công nghệ thông tin (Mã ngành 06).'
+        'reason' => 'Chỉ dành cho sinh viên ngành Công nghệ thông tin.'
       ];
     }
 
-    if ($batch['class_of'] > 0 && $khoa > $batch['class_of']) {
-      return [
-        'isEligible' => false,
-        'reason' => "Đợt đồ án này chỉ dành cho sinh viên khóa {$batch['class_of']} trở về trước."
-      ];
+    $minClass = $batch['min_class_of'] ?? 0;
+    $maxClass = $batch['max_class_of'] ?? 0;
+
+    if ($minClass > 0 && $maxClass > 0) {
+      if ((int)$khoa < $minClass || (int)$khoa > $maxClass) {
+        return [
+          'isEligible' => false,
+          'reason' => "Đợt đồ án này chỉ dành cho sinh viên khóa {$minClass} đến khóa {$maxClass}."
+        ];
+      }
     }
 
     return [

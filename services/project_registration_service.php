@@ -18,7 +18,7 @@ interface IProjectRegistrationService
   public function updateGroupAspirations(int $batchId, int $studentId, array $topicIds): bool;
   public function cancelRegistration(int $batchId, int $studentId): bool;
   public function getGroupDetail(int $batchId, int $studentId): ?array;
-  public function validateStudentEligibility(string $mssv, int $classOf): bool;
+  public function validateStudentEligibility(string $mssv, int $minClass, int $maxClass): bool;
 }
 
 class ProjectRegistrationService implements IProjectRegistrationService
@@ -54,7 +54,7 @@ class ProjectRegistrationService implements IProjectRegistrationService
       throw new Exception('Không tìm thấy thông tin sinh viên đại diện.');
     }
 
-    $this->validateStudentEligibility($leader->student_id, $batch['class_of']);
+    $this->validateStudentEligibility($leader->student_id, $batch['min_class_of'] ?? 0, $batch['max_class_of'] ?? 0);
 
     if ($this->_groupStore->getGroupByStudent($batchId, $leader->id)) {
       throw new Exception('Bạn đã tham gia một nhóm trong đợt đồ án này.');
@@ -70,7 +70,7 @@ class ProjectRegistrationService implements IProjectRegistrationService
       throw new Exception("Không tìm thấy sinh viên có MSSV: $memberMssv trong hệ thống.");
     }
 
-    $this->validateStudentEligibility($member->student_id, $batch['class_of']);
+    $this->validateStudentEligibility($member->student_id, $batch['min_class_of'] ?? 0, $batch['max_class_of'] ?? 0);
 
     if ($this->_groupStore->getGroupByStudent($batchId, $member->id)) {
       throw new Exception("Sinh viên $memberMssv đã tham gia một nhóm khác.");
@@ -174,7 +174,7 @@ class ProjectRegistrationService implements IProjectRegistrationService
     return $fullGroup;
   }
 
-  public function validateStudentEligibility(string $mssv, int $classOf): bool
+  public function validateStudentEligibility(string $mssv, int $minClass, int $maxClass): bool
   {
     // Format: Level (2) + Major (2) + Year (2) + Suffix
     if (strlen($mssv) < 8) {
@@ -185,19 +185,22 @@ class ProjectRegistrationService implements IProjectRegistrationService
     $major = substr($mssv, 2, 2);
     $year = substr($mssv, 4, 2);
 
-    $batchYear = (int) substr((string)$classOf, -2);
+    $minBatchYear = (int) substr((string)$minClass, -2);
+    $maxBatchYear = (int) substr((string)$maxClass, -2);
     $studentYear = (int) $year;
 
     if (!in_array($level, ['03', '04'])) {
-      throw new Exception("Sinh viên $mssv không thuộc hệ Cao đẳng (Mã hệ $level).");
+      throw new Exception("Sinh viên $mssv không thuộc hệ Cao đẳng.");
     }
 
     if ($major !== '06') {
-      throw new Exception("Sinh viên $mssv không thuộc Khoa CNTT (Mã ngành $major).");
+      throw new Exception("Sinh viên $mssv không thuộc Khoa CNTT.");
     }
 
-    if ($studentYear > $batchYear) {
-      throw new Exception("Sinh viên $mssv (Khóa $year) không đủ điều kiện. Đợt này chỉ dành cho Khóa $batchYear trở về trước.");
+    if ($minBatchYear > 0 && $maxBatchYear > 0) {
+      if ($studentYear < $minBatchYear || $studentYear > $maxBatchYear) {
+        throw new Exception("Sinh viên $mssv (Khóa $year) không đủ điều kiện. Đợt này chỉ dành cho Khóa $minBatchYear đến Khóa $maxBatchYear.");
+      }
     }
 
     return true;

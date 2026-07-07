@@ -54,10 +54,14 @@ $wizardSteps = [
                 placeholder="Ghi chú thêm về đợt"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-3 gap-4">
               <div class="field" data-field-required>
-                <label class="field__label" for="class_of">Khóa áp dụng</label>
-                <input type="number" id="class_of" class="field__input" name="class_of" placeholder="Ví dụ: 2023" min="1" required>
+                <label class="field__label" for="min_class_of">Khóa áp dụng (Từ)</label>
+                <input type="number" id="min_class_of" class="field__input" name="min_class_of" placeholder="VD: 21" min="1" required>
+              </div>
+              <div class="field" data-field-required>
+                <label class="field__label" for="max_class_of">Khóa áp dụng (Đến)</label>
+                <input type="number" id="max_class_of" class="field__input" name="max_class_of" placeholder="VD: 23" min="1" required>
               </div>
               <div class="field" data-field-required>
                 <label class="field__label" for="max_aspirations">Số nguyện vọng tối đa</label>
@@ -148,6 +152,14 @@ $wizardSteps = [
   window.API_BASE_URL = <?= json_encode(url('api/v1/project_batches')) ?>;
   window.REDIRECT_URL = <?= json_encode(url('admin/project_batches')) ?>;
   window.BATCH_CREATE_WIZARD_STEPS = <?= json_encode($wizardSteps, JSON_UNESCAPED_UNICODE) ?>;
+
+  // Cài giá trị mặc định cho class_of min-max
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentYear = new Date().getFullYear();
+    const currentYearShort = currentYear % 100; // e.g. 26
+    document.getElementById('min_class_of').value = currentYearShort - 5;
+    document.getElementById('max_class_of').value = currentYearShort - 3;
+  });
 </script>
 <script src="<?= url('public/js/pages/project_batch_create.js') ?>" type="module"></script>
 <?php $layout->end() ?>

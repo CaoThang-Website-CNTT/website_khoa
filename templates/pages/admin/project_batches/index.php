@@ -72,7 +72,7 @@ use App\Models\ProjectBatch;
       return [
         'id' => $b->id,
         'title' => $b->title ?? 'N/A',
-        'class_of' => $b->class_of ?? 'N/A',
+        'class_of' => ($b->min_class_of ?? 'N/A') . ' - ' . ($b->max_class_of ?? 'N/A'),
         'registration_start' => $b->registration_start ? date('d/m/Y', strtotime($b->registration_start)) : 'N/A',
         'registration_end' => $b->registration_end ? date('d/m/Y', strtotime($b->registration_end)) : 'N/A',
         'status' => $b->status ?? 'draft',

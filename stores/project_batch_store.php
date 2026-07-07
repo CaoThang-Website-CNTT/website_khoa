@@ -36,7 +36,8 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
       'registration_start' => $data['registration_start'] ?? null,
       'registration_end' => $data['registration_end'] ?? null,
       'max_aspirations' => $data['max_aspirations'] ?? 3,
-      'class_of' => $data['class_of'] ?? 0,
+      'min_class_of' => $data['min_class_of'] ?? 0,
+      'max_class_of' => $data['max_class_of'] ?? 0,
       'status' => 'draft',
       'created_by' => $data['created_by'] ?? null,
     ]);
@@ -56,7 +57,8 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
       'registration_start' => $data['registration_start'] ?? null,
       'registration_end' => $data['registration_end'] ?? null,
       'max_aspirations' => $data['max_aspirations'] ?? 3,
-      'class_of' => $data['class_of'] ?? 0,
+      'min_class_of' => $data['min_class_of'] ?? 0,
+      'max_class_of' => $data['max_class_of'] ?? 0,
       'updated_at' => date('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());

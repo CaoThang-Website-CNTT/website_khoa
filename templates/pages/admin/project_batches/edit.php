@@ -147,10 +147,14 @@ $currentStatus = [
               rows="4"><?= htmlspecialchars($batchObj->description ?? '') ?></textarea>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-3 gap-4">
             <div class="field" data-field-required>
-              <label class="field__label" for="class_of">Khóa áp dụng</label>
-              <input type="number" id="class_of" class="field__input" name="class_of" value="<?= htmlspecialchars($batchObj->class_of) ?>" min="1" required>
+              <label class="field__label" for="min_class_of">Khóa áp dụng (Từ)</label>
+              <input type="number" id="min_class_of" class="field__input" name="min_class_of" value="<?= htmlspecialchars($batchObj->min_class_of) ?>" min="1" required>
+            </div>
+            <div class="field" data-field-required>
+              <label class="field__label" for="max_class_of">Khóa áp dụng (Đến)</label>
+              <input type="number" id="max_class_of" class="field__input" name="max_class_of" value="<?= htmlspecialchars($batchObj->max_class_of) ?>" min="1" required>
             </div>
             <div class="field" data-field-required>
               <label class="field__label" for="max_aspirations">Số nguyện vọng tối đa</label>

@@ -46,7 +46,7 @@ if ($canPropose):
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <p class="text-sm">Niên khóa</p>
-        <p class="font-medium"><?= htmlspecialchars($batch['class_of']) ?></p>
+        <p class="font-medium"><?= htmlspecialchars($batch['min_class_of']) ?> - <?= htmlspecialchars($batch['max_class_of']) ?></p>
       </div>
       <div>
         <p class="text-sm">Trạng thái</p>
