@@ -96,7 +96,13 @@ if ($canPropose):
         <span class="font-medium">{{ value }}</span>
       </template>
 
-      <template data-tm-col="max_students" data-tm-label="Số lượng sinh viên" data-tm-width="80px"></template>
+      <template data-tm-col="description" data-tm-label="Mô tả">
+        <div class="font-medium">
+          <div class="{{ !row.description ? 'hidden' : '' }} text-sm mt-1 line-clamp-2" style="white-space: pre-line;">{{ row.description }}</div>
+        </div>
+      </template>
+
+      <template data-tm-col="max_students" data-tm-label="Số sinh viên tối đa" data-tm-width="80px"></template>
 
       <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
         data-tm-filter-options='<?= json_encode(ProjectTopicStatus::getOptions()) ?>'>
@@ -139,6 +145,7 @@ if ($canPropose):
       return [
         'id' => $t->id,
         'title' => $t->title,
+        'description' => $t->description,
         'max_students' => $t->max_students,
         'status' => $t->status,
         'status_label' => ProjectTopicStatus::getLabel($t->status),

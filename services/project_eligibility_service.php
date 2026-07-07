@@ -65,6 +65,7 @@ class ProjectEligibilityService
     foreach ($currentStudents as $student) {
       if (isset($excelMap[$student['student_code']])) {
         $inExcel[] = $student;
+        unset($excelMap[$student['student_code']]);
       } else {
         // Kiểm tra lịch sử
         $stmtLegacy->execute([
@@ -81,10 +82,29 @@ class ProjectEligibilityService
       }
     }
 
+    $eligibleNotRegistered = [];
+    $notRegisteredStudentCodes = array_keys($excelMap);
+
+    if (!empty($notRegisteredStudentCodes)) {
+      $placeholders = implode(',', array_fill(0, count($notRegisteredStudentCodes), '?'));
+      
+      $sqlNotReg = "
+        SELECT s.id, s.student_id as student_code, s.full_name, c.short_name as classroom_name
+        FROM students s
+        LEFT JOIN classrooms c ON s.classroom_id = c.id
+        WHERE s.student_id IN ($placeholders)
+      ";
+      
+      $stmtNotReg = $db->prepare($sqlNotReg);
+      $stmtNotReg->execute($notRegisteredStudentCodes);
+      $eligibleNotRegistered = $stmtNotReg->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     return [
       'in_excel' => $inExcel,
       'legacy_eligible' => $legacyEligible,
-      'ineligible' => $ineligible
+      'ineligible' => $ineligible,
+      'eligible_not_registered' => $eligibleNotRegistered
     ];
   }
 }

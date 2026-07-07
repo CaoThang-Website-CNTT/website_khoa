@@ -31,7 +31,7 @@ $currentStatus = [
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
-<a href="<?= url("admin/project_batches/{$batchObj->id}") ?>" data-variant="outline" data-size="md" class="btn">
+<a href="<?= url("admin/project_batches") ?>" data-variant="outline" data-size="md" class="btn">
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
@@ -42,7 +42,7 @@ $currentStatus = [
 </button>
 <a href="<?= url('admin/project_batches/' . $batchObj->id . '/eligibility') ?>" data-variant="outline" data-size="md" class="btn">
   <i class="fa-solid fa-check-double"></i>
-  Xét điều kiện
+  Xét điều kiện làm đồ án
 </a>
 <?php if ($batchObj->status === ProjectBatchStatus::DRAFT): ?>
   <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal" data-variant="outline-alt"

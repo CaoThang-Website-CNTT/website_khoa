@@ -38,7 +38,7 @@ class ProjectEligibilityController extends Controller
     return $this->render('admin/project_batches/eligibility', [
       'batchObj' => (object)$batch,
       'previewData' => null
-    ]);
+    ], 'dashboard_layout');
   }
 
   public function preview(Request $request, $id)
@@ -78,7 +78,7 @@ class ProjectEligibilityController extends Controller
       return $this->render('admin/project_batches/eligibility', [
         'batchObj' => (object)$batch,
         'previewData' => $previewData
-      ]);
+      ], 'dashboard_layout');
     } catch (Exception $e) {
       $request->session()->flashNotify('error', 'Lỗi đọc file Excel: ' . $e->getMessage(), '');
       return $this->redirect('/admin/project_batches/' . $batchId . '/eligibility');

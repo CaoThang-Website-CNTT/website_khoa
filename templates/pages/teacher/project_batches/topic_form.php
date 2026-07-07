@@ -80,7 +80,7 @@ $rejectReason = $topic['reject_reason'] ?? null;
               Đã tải lên: <a class="btn" data-size="sm" data-variant="secondary" href="<?= url('storage/' . $pdfFilePath) ?>" target="_blank">Xem file</a>. Chọn file mới nếu muốn thay đổi.
             </div>
           <?php else: ?>
-            <div class="field__description">Dung lượng tối đa 10MB (Bắt buộc khi gửi duyệt).</div>
+            <div class="field__description">Dung lượng tối đa 10MB.</div>
           <?php endif; ?>
         </div>
       </div>
