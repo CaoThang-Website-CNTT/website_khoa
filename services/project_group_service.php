@@ -23,6 +23,9 @@ interface IProjectGroupService
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
   public function getAspirationsByBatch(int $batchId): array;
+  public function getAssignedGroupsByTeacher(int $batchId, int $teacherId): array;
+  public function getAssignedGroupsForPrint(int $batchId, int $teacherId, array $groupIds): array;
+  public function saveRegistrationForms(int $batchId, int $teacherId, array $forms): int;
 }
 
 class ProjectGroupService implements IProjectGroupService
@@ -265,5 +268,62 @@ class ProjectGroupService implements IProjectGroupService
 
     // Cập nhật is_eligible thành 0
     return $this->_store->updateMemberEligibility($ineligibleStudentIds, 0);
+  }
+
+  public function getAssignedGroupsByTeacher(int $batchId, int $teacherId): array
+  {
+    return $this->_store->getAssignedGroupsByTeacher($batchId, $teacherId);
+  }
+
+  public function getAssignedGroupsForPrint(int $batchId, int $teacherId, array $groupIds): array
+  {
+    return $this->_store->getAssignedGroupsForPrint($batchId, $teacherId, $groupIds);
+  }
+
+  public function saveRegistrationForms(int $batchId, int $teacherId, array $forms): int
+  {
+    if (!$forms) throw new \InvalidArgumentException('Không có phiếu nào để lưu.');
+    $ids = array_map(fn($form) => (int)($form['group_id'] ?? 0), $forms);
+    $authorized = $this->_store->getAssignedGroupsForPrint($batchId, $teacherId, $ids);
+    $authorizedIds = array_flip(array_map(fn($group) => (int)$group['id'], $authorized));
+    if (count($authorizedIds) !== count(array_unique(array_filter($ids)))) {
+      throw new \RuntimeException('Bạn không có quyền cập nhật một hoặc nhiều nhóm đã chọn.');
+    }
+
+    $sanitize = static function ($html): string {
+      $html = trim((string)$html);
+      $html = strip_tags($html, '<p><br><strong><b><em><i><ul><ol><li>');
+      $html = preg_replace('/<(\/?)(p|br|strong|b|em|i|ul|ol|li)\b[^>]*>/i', '<$1$2>', $html);
+      return $html;
+    };
+
+    $saved = 0;
+    \Database::getInstance()->transaction(function () use ($forms, $authorizedIds, $sanitize, &$saved) {
+      foreach ($forms as $form) {
+        $groupId = (int)($form['group_id'] ?? 0);
+        if (!$groupId || !isset($authorizedIds[$groupId])) continue;
+        $start = trim((string)($form['execution_start'] ?? ''));
+        $end = trim((string)($form['execution_end'] ?? ''));
+        if (($start && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) || ($end && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $end))) {
+          throw new \InvalidArgumentException('Ngày thực hiện đề tài không hợp lệ.');
+        }
+        if ($start && $end && $start > $end) {
+          throw new \InvalidArgumentException('Ngày bắt đầu không được sau ngày kết thúc.');
+        }
+        $requirements = $sanitize($form['registration_requirements'] ?? '');
+        $opinion = $sanitize($form['supervisor_opinion'] ?? '');
+        if (mb_strlen($requirements) > 60000 || mb_strlen($opinion) > 60000) {
+          throw new \InvalidArgumentException('Nội dung phiếu quá dài.');
+        }
+        $this->_store->updateRegistrationForm($groupId, [
+          'registration_requirements' => $requirements,
+          'supervisor_opinion' => $opinion,
+          'execution_start' => $start,
+          'execution_end' => $end,
+        ]);
+        $saved++;
+      }
+    });
+    return $saved;
   }
 }

@@ -23,6 +23,9 @@ if (!empty($batch['topic_proposal_start']) && !empty($batch['topic_proposal_end'
   $now = new \DateTime();
   $start = new \DateTime($batch['topic_proposal_start']);
   $end = new \DateTime($batch['topic_proposal_end']);
+  if ($end->format('H:i:s') === '00:00:00') {
+    $end->setTime(23, 59, 59);
+  }
   if ($now >= $start && $now <= $end) {
     $canPropose = true;
   }
@@ -83,6 +86,17 @@ if ($canPropose):
   </div>
 </div>
 
+<div class="tabs w-full" data-tabs data-tabs-id="teacher-project-batch" data-tabs-panel-active="topics">
+  <div class="tabs__list overflow-x-auto mb-4" role="tablist" aria-label="Nội dung đợt đồ án">
+    <button type="button" class="tabs__trigger" role="tab" aria-selected="true" data-tabs-trigger="topics" data-tabs-trigger-state="active">
+      Đề tài đã cung cấp <span class="badge ml-2" data-variant="secondary"><?= count($topics) ?></span>
+    </button>
+    <button type="button" class="tabs__trigger" role="tab" aria-selected="false" data-tabs-trigger="groups" data-tabs-trigger-state="idle" tabindex="-1">
+      Nhóm hướng dẫn <span class="badge ml-2" data-variant="secondary"><?= count($groups) ?></span>
+    </button>
+  </div>
+
+<div class="tabs__panel" role="tabpanel" data-tabs-panel="topics" data-tabs-panel-state="active">
 <div class="card shadow-sm">
   <div class="card__header">
     <h3 class="font-semibold">Danh sách đề tài</h3>
@@ -113,6 +127,12 @@ if ($canPropose):
 
       <template data-tm-col="actions" data-tm-label="" data-tm-width="120px">
         <div class="flex gap-2 justify-end">
+          {{#if row.pdf_url}}
+            <a href="{{ row.pdf_url }}" target="_blank" class="btn btn--icon" data-variant="outline" data-size="md" aria-label="Xem PDF" title="Xem PDF">
+              <i class="fa-solid fa-file-pdf"></i>
+            </a>
+          {{/if}}
+
           {{#if row.can_edit}}
             <a href="{{ row.edit_url }}" class="btn btn--icon" data-size="md" data-variant="outline" aria-label="Sửa" title="Sửa">
               <i class="fa-solid fa-pencil"></i>
@@ -124,11 +144,6 @@ if ($canPropose):
             </form>
           {{/if}}
 
-          {{#if row.pdf_url}}
-            <a href="{{ row.pdf_url }}" target="_blank" class="btn btn--icon" data-variant="outline" data-size="md" aria-label="Xem PDF" title="Xem PDF">
-              <i class="fa-solid fa-file-pdf"></i>
-            </a>
-          {{/if}}
         </div>
       </template>
 
@@ -136,6 +151,49 @@ if ($canPropose):
     </div>
   </div>
 </div>
+</div>
+
+<div class="tabs__panel" role="tabpanel" data-tabs-panel="groups" data-tabs-panel-state="idle" hidden>
+  <div class="card shadow-sm">
+    <div class="card__header">
+      <div>
+        <h3 class="font-semibold">Danh sách nhóm đang hướng dẫn</h3>
+        <p class="text-sm mt-1">Chỉ hiển thị các nhóm đã được phân vào đề tài của bạn.</p>
+      </div>
+      <button type="button" id="print-selected-groups" class="btn" data-variant="primary" data-size="md" disabled>
+        <i class="fa-solid fa-print"></i> In nhóm đã chọn
+      </button>
+    </div>
+    <hr class="separator">
+    <div class="card__content">
+      <div class="tm-container" data-tm="assigned_groups_table" data-tm-mode="client" data-tm-searchable
+        data-tm-selectable="true" data-tm-id-key="id">
+        <template data-tm-col="topic" data-tm-label="Đề tài" data-tm-sortable data-tm-filter-type="text">
+          <div class="font-medium">{{ value }}</div>
+          <button type="button" class="btn mt-2 print-topic-groups" data-variant="outline" data-size="sm" data-topic-id="{{ row.topic_id }}">
+            <i class="fa-solid fa-layer-group"></i> In tất cả nhóm đề tài
+          </button>
+        </template>
+        <template data-tm-col="members" data-tm-label="Sinh viên">
+          <div style="white-space: pre-line">{{ value }}</div>
+        </template>
+        <template data-tm-col="assigned_at" data-tm-label="Ngày phân công" data-tm-sortable></template>
+        <template data-tm-col="actions" data-tm-label="" data-tm-width="90px">
+          <a href="{{ row.print_url }}" target="_blank" class="btn btn--icon" data-variant="outline" data-size="md" aria-label="In phiếu nhóm" title="In phiếu nhóm">
+            <i class="fa-solid fa-print"></i>
+          </a>
+        </template>
+        <template data-tm-pagination></template>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<form id="registration-print-form" action="<?= url("teacher/project_batches/{$batch['id']}/registration-forms/preview") ?>" method="POST" target="_blank" class="hidden">
+  <?= csrf_field() ?>
+  <div id="registration-print-group-inputs"></div>
+</form>
 
 <?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="topics_table">
@@ -160,5 +218,57 @@ if ($canPropose):
     'page' => 1,
     'limit' => count($topics) > 0 ? count($topics) : 15
   ]) ?>
+</script>
+<script type="application/json" data-tm-data="assigned_groups_table">
+  <?= json_encode([
+    'rows' => array_map(function ($group) use ($batch) {
+      return [
+        'id' => (int)$group['id'],
+        'topic_id' => (int)$group['assigned_topic_id'],
+        'topic' => $group['assigned_topic_title'],
+        'members' => implode("\n", array_map(function ($member) {
+          return ($member['is_leader'] ? 'Nhóm trưởng: ' : '') . $member['full_name'] . ' · ' . $member['student_code'] . ' · ' . ($member['classroom_name'] ?: 'Chưa có lớp');
+        }, $group['members'] ?? [])),
+        'assigned_at' => !empty($group['assigned_at']) ? date('d/m/Y H:i', strtotime($group['assigned_at'])) : '—',
+        'print_url' => url("teacher/project_batches/{$batch['id']}/groups/{$group['id']}/registration-form"),
+        'actions' => '',
+      ];
+    }, $groups),
+    'total' => count($groups),
+    'page' => 1,
+    'limit' => count($groups) > 0 ? count($groups) : 15,
+  ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
+</script>
+<script>
+  (() => {
+    const rows = <?= json_encode(array_map(fn($group) => ['id' => (int)$group['id'], 'topic_id' => (int)$group['assigned_topic_id']], $groups)) ?>;
+    const form = document.getElementById('registration-print-form');
+    const inputs = document.getElementById('registration-print-group-inputs');
+    const bulkButton = document.getElementById('print-selected-groups');
+
+    const submitPrint = (ids) => {
+      ids = [...new Set(ids.map(Number).filter(Boolean))];
+      if (!ids.length) return;
+      inputs.replaceChildren(...ids.map(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden'; input.name = 'group_ids[]'; input.value = id;
+        return input;
+      }));
+      form.submit();
+    };
+
+    document.addEventListener('click', (event) => {
+      const topic = event.target.closest('.print-topic-groups');
+      if (topic) submitPrint(rows.filter(row => row.topic_id === Number(topic.dataset.topicId)).map(row => row.id));
+    });
+
+    const table = document.querySelector('[data-tm="assigned_groups_table"]');
+    table?.addEventListener('tm:selection-change', (event) => {
+      const ids = event.detail?.selectedIds || [];
+      bulkButton.disabled = ids.length === 0;
+      bulkButton.innerHTML = `<i class="fa-solid fa-print"></i> In nhóm đã chọn${ids.length ? ` (${ids.length})` : ''}`;
+    });
+    bulkButton?.addEventListener('click', () => submitPrint(window.TableManager?.getRowSelection('assigned_groups_table') || []));
+  })();
 </script>
 <?php $layout->end() ?>

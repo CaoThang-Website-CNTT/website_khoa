@@ -213,6 +213,7 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
 
     // Topics
     $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
+    $router->get('/{id}/teachers', [ProjectBatchController::class, 'teachers']);
 
     // Allocation 
     $router->get('/{id}/allocation', [ProjectAllocationController::class, 'index']);
@@ -326,6 +327,9 @@ $router->prefix('teacher')->middleware([VerifyAuth::class, new VerifyRole('teach
   $router->prefix('project_batches')->group(function ($router) {
     $router->get('/', [TeacherProjectDashboardController::class, 'index']);
     $router->get('/{id}', [TeacherProjectDashboardController::class, 'show']);
+    $router->get('/{id}/groups/{groupId}/registration-form', [TeacherProjectDashboardController::class, 'previewRegistrationForm']);
+    $router->post('/{id}/registration-forms/preview', [TeacherProjectDashboardController::class, 'previewRegistrationForms']);
+    $router->post('/{id}/registration-forms/save', [TeacherProjectDashboardController::class, 'saveRegistrationForms']);
     $router->get('/{id}/topics/create', [TeacherProjectDashboardController::class, 'createTopic']);
     $router->post('/{id}/topics/create', [TeacherProjectDashboardController::class, 'storeTopic']);
     $router->get('/{id}/topics/{topicId}/edit', [TeacherProjectDashboardController::class, 'editTopic']);

@@ -115,6 +115,20 @@ class ProjectBatchController extends Controller
     return $this->redirect("admin/project_batches/$id");
   }
 
+  public function teachers($id, Request $request)
+  {
+    $batch = $this->_ProjectBatchService->getBatchWithStats((int)$id);
+    if (!$batch) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt đồ án này.');
+      return $this->redirect('admin/project_batches');
+    }
+
+    $this->render('admin/project_batches/teachers', [
+      'batch' => $batch,
+      'teachers' => $this->_ProjectBatchService->getSupervisorsByBatchId((int)$id),
+    ], layout: 'dashboard_layout');
+  }
+
   public function destroy($id, Request $request)
   {
     try {

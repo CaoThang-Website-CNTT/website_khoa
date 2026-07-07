@@ -21,6 +21,7 @@ interface IProjectBatchStore
   public function getActiveBatches(): array;
   public function addSupervisors(int $batchId, array $supervisors): void;
   public function getSupervisorsByBatchId(int $batchId): array;
+  public function isTeacherAssigned(int $batchId, int $teacherId): bool;
   public function getITTeachers(): array;
 }
 
@@ -121,7 +122,6 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
             FROM project_batches pb
             JOIN project_batch_supervisors pbs ON pb.id = pbs.batch_id
             WHERE pb.deleted_at IS NULL 
-              AND pb.status != 'draft'
               AND pbs.teacher_id = :teacher_id 
               AND pbs.is_active = 1
             ORDER BY pb.created_at DESC 
@@ -147,7 +147,6 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
             FROM project_batches pb
             JOIN project_batch_supervisors pbs ON pb.id = pbs.batch_id
             WHERE pb.deleted_at IS NULL 
-              AND pb.status != 'draft'
               AND pbs.teacher_id = :teacher_id 
               AND pbs.is_active = 1";
     $stmt = $this->db->prepare($sql);
@@ -240,6 +239,15 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function isTeacherAssigned(int $batchId, int $teacherId): bool
+  {
+    $sql = "SELECT COUNT(*) FROM project_batch_supervisors
+            WHERE batch_id = :batch_id AND teacher_id = :teacher_id AND is_active = 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+    return (int)$stmt->fetchColumn() > 0;
   }
 
   public function getITTeachers(): array

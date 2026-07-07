@@ -43,7 +43,7 @@ $tabs = [
     'label' => 'Chờ duyệt',
     'href' => $topicFilterUrl(ProjectTopicStatus::PENDING),
     'badge' => $pendingCount ?? 0,
-    'badgeVariant' => 'warning',
+    'badgeVariant' => 'primary',
   ],
   [
     'key' => ProjectTopicStatus::APPROVED,
@@ -136,6 +136,20 @@ $tabs = [
   <template data-tm-pagination></template>
 </div>
 
+<!-- Approve Modal -->
+<div class="modal" id="approve-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Duyệt đề tài</h3>
+    <p class="modal__description">Bạn có chắc chắn muốn duyệt đề tài này? Đề tài đã duyệt sẽ sẵn sàng để công bố cho sinh viên đăng ký.</p>
+  </div>
+  <input type="hidden" id="approve-topic-id">
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button id="confirm-approve-btn" data-variant="primary" class="btn" data-size="lg" type="button">Duyệt đề tài</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
 <!-- Reject Modal -->
 <div class="modal" id="reject-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
@@ -208,7 +222,9 @@ $tabs = [
 
   const tm = TableManager.get("topics_table");
   const isPendingFilter = <?= json_encode(isset($filter) && $filter === ProjectTopicStatus::PENDING) ?>;
-  const bulkApproveUrl = window.appUrl + '/api/v1/project_topics/bulk-approve';
+  const topicApiUrl = <?= json_encode(url('api/v1/project_topics')) ?>;
+  const bulkApproveUrl = `${topicApiUrl}/bulk-approve`;
+  const csrfToken = <?= json_encode(csrf_token()) ?>;
   const filterKey = '<?= isset($filter) ? $filter : 'all' ?>';
   const searchVal = '<?= isset($search) ? $search : '' ?>';
 
@@ -230,24 +246,28 @@ $tabs = [
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': csrfToken
               },
               body: JSON.stringify({
                 topic_ids: selectedIds
               })
             })
-            .then(response => response.json())
+            .then(async response => {
+              const res = await response.json().catch(() => null);
+              if (!response.ok || !res?.success) {
+                throw new Error(res?.message || `Không thể duyệt đề tài (HTTP ${response.status}).`);
+              }
+              return res;
+            })
             .then(res => {
               if (res.success) {
-                Toast.success(res.message);
+                window.toast?.success('Thành công', res.message);
                 window.location.reload();
-              } else {
-                Toast.error(res.message);
               }
             })
             .catch(err => {
               console.error(err);
-              Toast.error('Đã xảy ra lỗi hệ thống.');
+              window.toast?.error('Lỗi', 'Đã xảy ra lỗi hệ thống.');
             });
         },
       }, ],
@@ -271,72 +291,74 @@ $tabs = [
     window.location.href = url;
   });
 
-  // Since tm handles rendering rows, we bind events using event delegation
-  document.addEventListener('click', function(e) {
+  // TableManager may stop bubbling on row actions, so capture events at the table root.
+  tm.root.addEventListener('click', function(e) {
     const approveBtn = e.target.closest('.btn-approve');
     if (approveBtn) {
-      if (!confirm('Bạn có chắc chắn muốn duyệt đề tài này?')) return;
-      fetch(window.appUrl + '/api/v1/project_topics/' + approveBtn.dataset.id + '/approve', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          }
-        })
-        .then(response => response.json())
-        .then(res => {
-          if (res.success) {
-            Toast.success(res.message);
-            window.location.reload();
-          } else {
-            Toast.error(res.message);
-          }
-        })
-        .catch(err => {
-          Toast.error('Đã xảy ra lỗi hệ thống.');
-        });
+      e.preventDefault();
+      document.getElementById('approve-topic-id').value = approveBtn.dataset.id;
+      ModalHandler.instance.open('#approve-modal');
       return;
     }
 
     const rejectBtn = e.target.closest('.btn-reject');
     if (rejectBtn) {
+      e.preventDefault();
       document.getElementById('reject-topic-id').value = rejectBtn.dataset.id;
       document.getElementById('reject-reason').value = '';
-      document.getElementById('reject-modal').setAttribute('data-state', 'open');
+      ModalHandler.instance.open('#reject-modal');
       return;
     }
-  });
+  }, true);
 
-  document.getElementById('confirm-reject-btn').addEventListener('click', () => {
-    const id = document.getElementById('reject-topic-id').value;
-    const reason = document.getElementById('reject-reason').value.trim();
-    if (!reason) {
-      Toast.error('Vui lòng nhập lý do từ chối.');
-      return;
-    }
+  const reviewTopic = async ({ id, action, reason = null, button }) => {
+    if (!id || button.disabled) return;
 
-    fetch(window.appUrl + '/api/v1/project_topics/' + id + '/reject', {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Đang xử lý...';
+
+    try {
+      const response = await fetch(`${topicApiUrl}/${encodeURIComponent(id)}/${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          'X-CSRF-TOKEN': csrfToken
         },
-        body: JSON.stringify({
-          reason
-        })
-      })
-      .then(response => response.json())
-      .then(res => {
-        if (res.success) {
-          Toast.success(res.message);
-          window.location.reload();
-        } else {
-          Toast.error(res.message);
-        }
-      })
-      .catch(err => {
-        Toast.error('Đã xảy ra lỗi hệ thống.');
+        body: reason === null ? undefined : JSON.stringify({ reason })
       });
+      const res = await response.json().catch(() => null);
+      if (!response.ok || !res?.success) {
+        throw new Error(res?.message || `Không thể cập nhật đề tài (HTTP ${response.status}).`);
+      }
+
+      window.toast?.success('Thành công', res.message);
+      window.location.reload();
+    } catch (error) {
+      window.toast?.error('Lỗi', error.message || 'Đã xảy ra lỗi hệ thống.');
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  };
+
+  document.getElementById('confirm-approve-btn').addEventListener('click', function() {
+    reviewTopic({
+      id: document.getElementById('approve-topic-id').value,
+      action: 'approve',
+      button: this
+    });
+  });
+
+  document.getElementById('confirm-reject-btn').addEventListener('click', function() {
+    const id = document.getElementById('reject-topic-id').value;
+    const reason = document.getElementById('reject-reason').value.trim();
+    if (!reason) {
+      window.toast?.error('Thiếu thông tin', 'Vui lòng nhập lý do từ chối.');
+      document.getElementById('reject-reason').focus();
+      return;
+    }
+
+    reviewTopic({ id, action: 'reject', reason, button: this });
   });
 
   // Pre-fill search if it exists

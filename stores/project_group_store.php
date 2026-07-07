@@ -22,6 +22,9 @@ interface IProjectGroupStore
   public function assignTopic(int $groupId, int $topicId): bool;
   public function getValidGroupsForAllocation(int $batchId): array;
   public function updateMemberEligibility(array $studentIds, int $isEligible): bool;
+  public function getAssignedGroupsByTeacher(int $batchId, int $teacherId): array;
+  public function getAssignedGroupsForPrint(int $batchId, int $teacherId, array $groupIds): array;
+  public function updateRegistrationForm(int $groupId, array $data): bool;
 }
 
 class ProjectGroupStore extends Store implements IProjectGroupStore
@@ -210,5 +213,59 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
     $stmt = $this->db->prepare($sql);
     $params = array_merge([$isEligible], $studentIds);
     return $stmt->execute($params);
+  }
+
+  public function getAssignedGroupsByTeacher(int $batchId, int $teacherId): array
+  {
+    $sql = "SELECT g.*, tt.title AS assigned_topic_title, tt.description AS topic_description,
+                   COUNT(gm.id) AS member_count,
+                   SUM(CASE WHEN gm.is_eligible = 0 THEN 1 ELSE 0 END) AS ineligible_count
+            FROM project_groups g
+            JOIN project_topics tt ON tt.id = g.assigned_topic_id
+            JOIN project_group_members gm ON gm.group_id = g.id
+            WHERE g.batch_id = :batch_id AND tt.teacher_id = :teacher_id
+            GROUP BY g.id, tt.title, tt.description
+            ORDER BY tt.title ASC, g.assigned_at ASC, g.id ASC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+    $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($groups as &$group) {
+      $group['members'] = $this->getGroupMembers((int)$group['id']);
+    }
+    return $groups;
+  }
+
+  public function getAssignedGroupsForPrint(int $batchId, int $teacherId, array $groupIds): array
+  {
+    $groupIds = array_values(array_unique(array_filter(array_map('intval', $groupIds))));
+    if (!$groupIds) return [];
+    $placeholders = implode(',', array_fill(0, count($groupIds), '?'));
+    $sql = "SELECT g.*, tt.title AS assigned_topic_title, tt.description AS topic_description,
+                   t.full_name AS teacher_name
+            FROM project_groups g
+            JOIN project_topics tt ON tt.id = g.assigned_topic_id
+            JOIN teachers t ON t.id = tt.teacher_id
+            WHERE g.batch_id = ? AND tt.teacher_id = ? AND g.id IN ($placeholders)
+            ORDER BY tt.title ASC, g.id ASC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(array_merge([$batchId, $teacherId], $groupIds));
+    $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($groups as &$group) {
+      $group['members'] = $this->getGroupMembers((int)$group['id']);
+    }
+    return $groups;
+  }
+
+  public function updateRegistrationForm(int $groupId, array $data): bool
+  {
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('project_groups')->update([
+      'registration_requirements' => $data['registration_requirements'] ?: null,
+      'supervisor_opinion' => $data['supervisor_opinion'] ?: null,
+      'execution_start' => $data['execution_start'] ?: null,
+      'execution_end' => $data['execution_end'] ?: null,
+      'updated_at' => date('Y-m-d H:i:s'),
+    ])->eq('id', $groupId);
+    $stmt = $this->db->prepare($query->toSql());
+    return $stmt->execute($query->getBindings());
   }
 }
