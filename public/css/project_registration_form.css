@@ -1,8 +1,11 @@
-.project-form-editor { margin:0; height:100vh; overflow:hidden; background:var(--muted); }
-.project-form-editor__topbar { height:4rem; display:grid; grid-template-columns:auto 1fr auto; gap:1rem; align-items:center; padding:0 1rem; background:var(--card); border-bottom:1px solid var(--border); }
-.project-form-editor__topbar strong { text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.project-form-editor__body { display:grid; grid-template-columns:minmax(18rem, 24rem) minmax(0, 1fr); height:calc(100vh - 4rem); }
-.project-form-editor__panel { overflow:auto; padding:1rem; background:var(--card); border-right:1px solid var(--border); }
+.document-editor-shell { --right-panel-width:26rem; }
+.document-editor-shell #be-canvas-wrap { overflow-x:auto; background:var(--editor-background); }
+.document-editor-shell #be-canvas { padding:2rem 0; }
+.document-editor-shell .be-canvas__content { width:100%; max-width:none; }
+.project-form-editor__panel .be-panel__content { padding:1rem 1rem 10rem; }
+.project-form-editor__panel-header { margin-bottom:1rem; }
+.project-form-editor__panel-header > strong { font-size:var(--text-lg); }
+.project-form-editor__overlay { display:none; }
 .project-form-editor__set { padding:1rem 0; border-bottom:1px solid var(--border); }
 .project-form-editor__set:first-of-type { padding-top:0; }
 .project-form-editor__set h2 { font-size:var(--text-base); font-weight:var(--fw-semibold); }
@@ -11,7 +14,13 @@
 .project-rich-toolbar button:hover, .project-rich-toolbar button:focus-visible { background:var(--accent); outline:2px solid var(--ring); }
 .project-rich-editor { min-height:8rem; max-height:18rem; overflow:auto; padding:.75rem; border:1px solid var(--input); border-radius:0 0 var(--radius-md) var(--radius-md); background:var(--background); line-height:1.5; }
 .project-rich-editor:focus { outline:2px solid var(--ring); outline-offset:-1px; }
-.project-form-editor__canvas { overflow:auto; padding:1.5rem; }
+.project-rich-editor ul { list-style-type:disc; margin:.4rem 0; padding-left:1.5rem; }
+.project-rich-editor ol { list-style-type:decimal; margin:.4rem 0; padding-left:1.5rem; }
+.project-rich-editor li { display:list-item; margin:.2rem 0; }
+.project-rich-editor :is(ul, ol) :is(ul, ol) { margin:.2rem 0; padding-left:1.5rem; }
+.project-rich-editor ul ul { list-style-type:circle; }
+.project-rich-editor ul ul ul { list-style-type:square; }
+.project-form-editor__canvas { min-width:820px; min-height:100%; }
 .project-form-editor__preview { display:block; width:100%; min-width:820px; height:100%; border:0; background:transparent; }
 
 .project-registration-page, .project-registration-page * { box-sizing:border-box; }
@@ -33,13 +42,19 @@
 .project-registration-signatures small { display:block; font-style:italic; }
 
 @media (max-width: 900px) {
-  .project-form-editor { height:auto; min-height:100vh; overflow:auto; }
-  .project-form-editor__topbar { position:sticky; top:0; z-index:5; grid-template-columns:auto auto; }
-  .project-form-editor__topbar > strong { display:none; }
-  .project-form-editor__body { display:flex; flex-direction:column; height:auto; }
-  .project-form-editor__panel { max-height:none; border-right:0; border-bottom:1px solid var(--border); }
-  .project-form-editor__canvas { min-height:75vh; padding:1rem; }
-  .project-form-editor__preview { height:75vh; }
+  .document-editor-shell #be-topbar-center { display:none; }
+  .document-editor-shell #be-topbar-right #toggle-editor-panel span { display:none; }
+  .document-editor-shell #be-canvas { padding:1rem 0; }
+  .project-form-editor__panel {
+    display:flex; position:fixed; top:var(--topbar-height); right:0; bottom:0; left:auto; z-index:100; width:min(90vw, 26rem); max-width:min(90vw, 26rem); height:auto;
+    border:0; border-left:1px solid var(--border); box-shadow:var(--shadow-xl); transform:translateX(100%); opacity:0;
+    pointer-events:none;
+  }
+  .project-form-editor__panel[data-be-panel-state="expanded"] { transform:translateX(0); opacity:1; pointer-events:auto; }
+  .document-editor-shell .be-panel__wrapper:has(.project-form-editor__panel) .be-panel__gap { width:0; }
+  .project-form-editor__overlay { position:fixed; inset:var(--topbar-height) 0 0; z-index:95; width:100%; border:0; background:rgb(0 0 0 / .45); cursor:pointer; }
+  .document-editor-shell:has(.project-form-editor__panel[data-be-panel-state="expanded"]) .project-form-editor__overlay { display:block; }
+  .document-editor-shell:has(.project-form-editor__panel[data-be-panel-state="expanded"]) #be-canvas-wrap { overflow:hidden; }
 }
 
 @media print {

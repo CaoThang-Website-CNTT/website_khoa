@@ -1,8 +1,21 @@
 (() => {
   const source = document.querySelector('.project-form-editor__source');
   const frame = document.querySelector('.project-form-editor__preview');
+  const editorRoot = document.querySelector('.document-editor-shell');
+  const editorPanel = document.getElementById('be-right');
+  const panelToggle = document.getElementById('toggle-editor-panel');
+  const panelToggleLabel = panelToggle?.querySelector('span');
+  const narrowViewport = window.matchMedia('(max-width: 900px)');
   const printCss = document.querySelector('link[href*="project_registration_form.css"]').href;
   frame.srcdoc = `<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${printCss}"></head><body><main>${source.innerHTML}</main></body></html>`;
+
+  const resizePreview = () => {
+    const documentElement = frame.contentDocument?.documentElement;
+    if (!documentElement) return;
+    documentElement.style.overflow = 'hidden';
+    frame.style.height = `${documentElement.scrollHeight}px`;
+  };
+  frame.addEventListener('load', resizePreview);
 
   const formatDate = value => {
     if (!value) return '.../.../......';
@@ -10,6 +23,34 @@
     return `${day}/${month}/${year}`;
   };
   const pagesFor = ids => ids.map(id => frame.contentDocument?.querySelector(`[data-print-group="${id}"]`)).filter(Boolean);
+  const setPanelOpen = (isOpen, { focusPanel = false } = {}) => {
+    if (!editorRoot || !editorPanel || !panelToggle) return;
+    editorPanel.dataset.bePanelState = isOpen ? 'expanded' : 'collapsed';
+    panelToggle.setAttribute('aria-expanded', String(isOpen));
+    panelToggleLabel.textContent = isOpen ? 'Ẩn chỉnh sửa' : 'Chỉnh sửa nội dung';
+    editorPanel.setAttribute('aria-hidden', String(!isOpen));
+    editorPanel.inert = !isOpen;
+    if (isOpen && focusPanel) editorPanel.querySelector('[contenteditable], input, button')?.focus();
+  };
+
+  setPanelOpen(!narrowViewport.matches);
+  panelToggle?.addEventListener('click', () => {
+    const willOpen = editorPanel.dataset.bePanelState !== 'expanded';
+    setPanelOpen(willOpen, { focusPanel: willOpen && narrowViewport.matches });
+  });
+  document.querySelectorAll('[data-close-editor-panel]').forEach(button => {
+    button.addEventListener('click', () => {
+      setPanelOpen(false);
+      panelToggle?.focus();
+    });
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || editorPanel?.dataset.bePanelState !== 'expanded') return;
+    setPanelOpen(false);
+    panelToggle?.focus();
+  });
+  narrowViewport.addEventListener('change', event => setPanelOpen(!event.matches));
+
   const syncSet = set => {
     const ids = JSON.parse(set.dataset.groupIds || '[]');
     pagesFor(ids).forEach(page => {
@@ -19,6 +60,7 @@
         target[field.matches('[contenteditable]') ? 'innerHTML' : 'textContent'] = field.type === 'date' ? formatDate(field.value) : field.innerHTML;
       });
     });
+    requestAnimationFrame(resizePreview);
   };
 
   document.addEventListener('click', event => {

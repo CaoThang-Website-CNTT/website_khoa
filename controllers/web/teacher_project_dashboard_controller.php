@@ -100,7 +100,7 @@ class TeacherProjectDashboardController extends Controller
         $this->render('teacher/project_batches/registration_form_print', [
             'batch' => $batch,
             'groups' => $groups,
-        ], layout: null);
+        ], layout: 'document_editor_layout');
     }
 
     public function previewRegistrationForm(Request $request, int $id, int $groupId)
@@ -118,7 +118,7 @@ class TeacherProjectDashboardController extends Controller
         $this->render('teacher/project_batches/registration_form_print', [
             'batch' => $batch,
             'groups' => $groups,
-        ], layout: null);
+        ], layout: 'document_editor_layout');
     }
 
     public function saveRegistrationForms(Request $request, int $id)

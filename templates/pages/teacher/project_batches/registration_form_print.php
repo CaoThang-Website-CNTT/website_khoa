@@ -19,28 +19,33 @@ foreach ($groups as $group) {
   ];
 }
 ?>
-<!doctype html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<?php $layout->start('head') ?>
   <title>Xem trước phiếu đăng ký đồ án tốt nghiệp</title>
-  <link rel="stylesheet" href="<?= url('public/css/fonts.css') ?>">
-  <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
-  <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
-  <link rel="stylesheet" href="<?= url('public/css/fontawesome/fontawesome.min.css') ?>">
-  <link rel="stylesheet" href="<?= url('public/css/fontawesome/solid.min.css') ?>">
   <link rel="stylesheet" href="<?= url('public/css/project_registration_form.css') ?>">
-</head>
-<body class="project-form-editor">
-  <header class="project-form-editor__topbar">
-    <button type="button" class="btn" data-variant="outline" data-size="md" onclick="window.close()"><i class="fa-solid fa-chevron-left"></i> Đóng</button>
-    <strong>Xem trước phiếu đăng ký đồ án tốt nghiệp</strong>
-    <button type="button" class="btn" data-variant="primary" data-size="md" id="save-print"><i class="fa-solid fa-print"></i> Lưu &amp; In</button>
-  </header>
+<?php $layout->end() ?>
 
-  <div class="project-form-editor__body">
-    <aside class="project-form-editor__panel" aria-label="Thông tin có thể chỉnh sửa">
+<?php $layout->start('topbar_left') ?>
+<button type="button" class="btn" data-variant="outline" data-size="md" onclick="window.close()"><i class="fa-solid fa-chevron-left"></i> Đóng</button>
+<?php $layout->end() ?>
+
+<?php $layout->start('topbar_center') ?>
+<strong>Xem trước phiếu đăng ký đồ án tốt nghiệp</strong>
+<?php $layout->end() ?>
+
+<?php $layout->start('topbar_right') ?>
+<button type="button" class="btn" data-variant="outline" data-size="md" id="toggle-editor-panel"
+  aria-expanded="true" aria-controls="be-right">
+  <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Ẩn chỉnh sửa</span>
+</button>
+<button type="button" class="btn" data-variant="primary" data-size="md" id="save-print"><i class="fa-solid fa-print"></i> Lưu &amp; In</button>
+<?php $layout->end() ?>
+
+<?php $layout->start('right_panel') ?>
+    <aside class="be-panel project-form-editor__panel" id="be-right" data-be-panel-state="expanded" aria-label="Thông tin có thể chỉnh sửa">
+      <div class="be-panel__content">
+      <div class="project-form-editor__panel-header">
+        <strong>Chỉnh sửa nội dung</strong>
+      </div>
       <p class="text-sm mb-4">Nội dung được lưu riêng cho từng nhóm. Các nhóm có cùng đề tài và cùng dữ liệu được chỉnh chung.</p>
       <?php foreach ($editorSets as $topicSets): ?>
         <?php foreach ($topicSets as $set): $first = $set[0]; $ids = array_map(fn($item) => (int)$item['group']['id'], $set); ?>
@@ -74,9 +79,12 @@ foreach ($groups as $group) {
         <?php endforeach; ?>
       <?php endforeach; ?>
       <p id="save-message" class="text-sm" role="status" aria-live="polite"></p>
+      </div>
     </aside>
+<?php $layout->end() ?>
 
-    <main class="project-form-editor__canvas">
+<?php $layout->start('canvas') ?>
+    <div class="project-form-editor__canvas">
       <div class="project-form-editor__source" hidden>
         <?php foreach ($groups as $group):
           $requirements = $defaultHtml($group['registration_requirements'], $group['topic_description'] ?? '');
@@ -109,9 +117,14 @@ foreach ($groups as $group) {
         <?php endforeach; ?>
       </div>
       <iframe class="project-form-editor__preview" title="Bản xem trước phiếu đăng ký"></iframe>
-    </main>
-  </div>
-  <script>window.PROJECT_FORM_SAVE_URL = <?= json_encode(url("teacher/project_batches/{$batch['id']}/registration-forms/save")) ?>; window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;</script>
-  <script src="<?= url('public/js/pages/project_registration_form.js') ?>"></script>
-</body>
-</html>
+    </div>
+<?php $layout->end() ?>
+
+<?php $layout->start('content') ?>
+<button type="button" class="project-form-editor__overlay" data-close-editor-panel aria-label="Đóng bảng chỉnh sửa" tabindex="-1"></button>
+<?php $layout->end() ?>
+
+<?php $layout->start('scripts') ?>
+<script>window.PROJECT_FORM_SAVE_URL = <?= json_encode(url("teacher/project_batches/{$batch['id']}/registration-forms/save")) ?>; window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;</script>
+<script src="<?= url('public/js/pages/project_registration_form.js') ?>"></script>
+<?php $layout->end() ?>
