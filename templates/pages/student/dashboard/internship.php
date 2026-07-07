@@ -277,6 +277,13 @@ $effectiveMetadata = $effStatus ? [
                 </p>
               </div>
             <?php else: ?>
+              <?php if (empty($recent_referral_letters)): ?>
+                <div class="card shadow-sm">
+                  <div class="card__content">
+                    <div class="empty-state"><p class="text-sm">Bạn chưa khai báo thông tin công ty thực tập.</p></div>
+                  </div>
+                </div>
+              <?php else: ?>
               <div class="space-y-3">
                 <?php foreach ($recent_referral_letters as $rl): ?>
                   <div class="border rounded p-3 text-sm">
@@ -301,6 +308,7 @@ $effectiveMetadata = $effStatus ? [
                   </div>
                 <?php endforeach; ?>
               </div>
+              <?php endif; ?>
             <?php endif; ?>
           <?php endif; ?>
       </div>

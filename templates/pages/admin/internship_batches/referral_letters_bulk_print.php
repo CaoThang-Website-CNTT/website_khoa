@@ -1,6 +1,9 @@
 <?php
 $batch = $batch ?? [];
-$letter = $letter ?? [];
+$letters = array_values($letters ?? []);
+$letter = $letters[0] ?? [];
+$isMerged = $isMerged ?? false;
+$confirmUrl = $confirmUrl ?? url("admin/internship_batches/{$batch['id']}/referral_letters/bulk-print/confirm");
 $ids = $ids ?? [];
 $now = new DateTime();
 $documentNumber = $letter['document_number'] ?? '';
@@ -30,7 +33,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
 <body>
   <header id="be-topbar">
     <div id="be-topbar-left"><button type="button" class="btn" data-variant="outline" data-size="md" onclick="window.close()"><i class="fa-solid fa-chevron-left"></i> Quay lại</button></div>
-    <div id="be-topbar-center">Xem trước công văn in gộp</div>
+    <div id="be-topbar-center"><?= $isMerged ? 'Xem trước công văn in gộp' : 'Xem trước ' . count($letters) . ' giấy giới thiệu' ?></div>
     <div id="be-topbar-right"><button type="button" class="btn" id="be-toggle-right" data-variant="outline" data-size="md" aria-controls="be-right" aria-expanded="true"><i class="fa-solid fa-table-columns"></i> <span>Thông tin</span></button><button type="submit" form="printForm" id="btnPrint" class="btn" data-variant="primary" data-size="md">Lưu &amp; In</button></div>
   </header>
   <div id="be-body">
@@ -50,7 +53,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
   </aside></div>
   <main id="be-canvas-wrap"><div id="be-canvas"><div class="print-source">
 
-  <?php
+  <?php foreach ($letters as $letter):
     $students = $letter['students'] ?? [];
     $programs = array_unique(array_filter(array_column($students, 'training_program')));
     $program = implode(', ', $programs) ?: 'Công nghệ thông tin';
@@ -94,10 +97,11 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
       <div class="signature"><div class="signature-title">TL.HIỆU TRƯỞNG</div></div>
     </div>
   </div>
+  <?php endforeach; ?>
   </div></div></main></div>
   <script>
     const ids = <?= json_encode(array_values($ids)) ?>;
-    const apiUrl = <?= json_encode(url("admin/internship_batches/{$batch['id']}/referral_letters/bulk-print/confirm")) ?>;
+    const apiUrl = <?= json_encode($confirmUrl) ?>;
     const panel = document.querySelector('#be-right');
     const collapsedTrigger = document.querySelector('#be-toggle-right');
     const setControlsCollapsed = collapsed => {

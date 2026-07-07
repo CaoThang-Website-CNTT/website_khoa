@@ -46,9 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         {
           id: 'print',
-          label: 'In giấy đã chọn',
+          label: 'In hàng loạt',
           icon: 'fa-solid fa-print',
           onClick: ({ selectedIds }) => submitBulkPrint(selectedIds),
+        },
+        {
+          id: 'merged-print',
+          label: 'In gộp',
+          icon: 'fa-solid fa-file-circle-plus',
+          onClick: ({ selectedIds }) => submitBulkPrint(selectedIds, true),
         },
         {
           id: 'complete',
@@ -96,12 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const submitBulkPrint = (ids) => {
+  const submitBulkPrint = (ids, merged = false) => {
     if (!ids.length) return;
     const form = document.createElement('form');
     form.method = 'POST';
     form.target = '_blank';
-    form.action = `${window.ADMIN_BATCH_URL}/referral_letters/bulk-print`;
+    form.action = `${window.ADMIN_BATCH_URL}/referral_letters/${merged ? 'merged-print' : 'bulk-print'}`;
     const token = document.createElement('input');
     token.type = 'hidden'; token.name = '_token'; token.value = window.CSRF_TOKEN || '';
     form.appendChild(token);

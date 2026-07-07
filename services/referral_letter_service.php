@@ -31,7 +31,7 @@ interface IReferralLetterService
   public function bulkCancel(array $ids, string $reason, int $processedBy): int;
   public function complete(int $id, int $processedBy): bool;
   public function receive(int $id, int $batchId, array $recipient, int $receivedBy): bool;
-  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData): int;
+  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData, bool $requireSameCompany = false): int;
 }
 
 class ReferralLetterService implements IReferralLetterService
@@ -274,7 +274,7 @@ class ReferralLetterService implements IReferralLetterService
     });
   }
 
-  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData): int
+  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData, bool $requireSameCompany = false): int
   {
     $ids = array_values(array_unique(array_map('intval', $ids)));
     if (empty($ids)) throw new Exception('Không có giấy giới thiệu nào được chọn.');
@@ -294,8 +294,10 @@ class ReferralLetterService implements IReferralLetterService
       if ($letter->status !== ReferralLetterStatus::APPROVED)
         throw new Exception("Giấy giới thiệu #{$letter->id} không ở trạng thái đang xử lý.");
     }
-    $companyIds = array_unique(array_map(fn($letter) => (int)$letter->company_id, $letters));
-    if (count($companyIds) !== 1) throw new Exception('Chỉ có thể in gộp các giấy cùng một công ty.');
+    if ($requireSameCompany) {
+      $companyIds = array_unique(array_map(fn($letter) => (int)$letter->company_id, $letters));
+      if (count($companyIds) !== 1) throw new Exception('Chỉ có thể in gộp các giấy cùng một công ty.');
+    }
     return Database::getInstance()->transaction(function () use ($letters, $processedBy, $printData) {
       $count = 0;
       foreach ($letters as $letter) {

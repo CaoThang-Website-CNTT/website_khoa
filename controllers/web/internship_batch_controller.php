@@ -129,6 +129,27 @@ class InternshipBatchController extends Controller
       }
       $letters[] = $letter;
     }
+    $this->render('admin/internship_batches/referral_letters_bulk_print', [
+      'batch' => $batch, 'letters' => $letters, 'ids' => $ids, 'isMerged' => false,
+      'confirmUrl' => url("admin/internship_batches/{$id}/referral_letters/bulk-print/confirm"),
+      'authUser' => $request->session()->authUser() ?? []
+    ], layout: null);
+  }
+
+  public function mergedPrintReferralLetters($id, Request $request)
+  {
+    $batch = $this->_internshipBatchService->getBatchWithStats((int)$id);
+    $ids = array_values(array_unique(array_map('intval', (array)($request->all()['ids'] ?? []))));
+    if (!$batch || !$ids) return $this->redirect("admin/internship_batches/$id/referral_letters");
+    $letters = [];
+    foreach ($ids as $letterId) {
+      $letter = $this->_referralLetterService->getForPrint($letterId);
+      if (!$letter || (int)$letter['batch_id'] !== (int)$id || $letter['status'] !== 'approved') {
+        $request->session()->flashNotify('error', 'Chỉ có thể in các giấy đang xử lý thuộc đợt này.');
+        return $this->redirect("admin/internship_batches/$id/referral_letters");
+      }
+      $letters[] = $letter;
+    }
     $companyIds = array_unique(array_map(fn($letter) => (int)$letter['company_id'], $letters));
     if (count($companyIds) !== 1) {
       $request->session()->flashNotify('error', 'Chỉ có thể in gộp các giấy cùng một công ty.');
@@ -143,12 +164,23 @@ class InternshipBatchController extends Controller
     $mergedLetter = $letters[0];
     $mergedLetter['students'] = $students;
     $this->render('admin/internship_batches/referral_letters_bulk_print', [
-      'batch' => $batch, 'letter' => $mergedLetter, 'ids' => $ids,
+      'batch' => $batch, 'letters' => [$mergedLetter], 'ids' => $ids, 'isMerged' => true,
+      'confirmUrl' => url("admin/internship_batches/{$id}/referral_letters/merged-print/confirm"),
       'authUser' => $request->session()->authUser() ?? []
     ], layout: null);
   }
 
   public function confirmBulkPrint($id, Request $request)
+  {
+    return $this->confirmMultiplePrint($id, $request, false);
+  }
+
+  public function confirmMergedPrint($id, Request $request)
+  {
+    return $this->confirmMultiplePrint($id, $request, true);
+  }
+
+  private function confirmMultiplePrint($id, Request $request, bool $requireSameCompany)
   {
     $data = $request->all();
     $ids = array_values(array_unique(array_map('intval', (array)($data['ids'] ?? []))));
@@ -160,7 +192,7 @@ class InternshipBatchController extends Controller
         'internship_start_date' => $data['internship_start_date'] ?? null,
         'internship_end_date' => $data['internship_end_date'] ?? null,
         'approver_name' => trim((string)($data['approver_name'] ?? '')),
-      ]);
+      ], $requireSameCompany);
       return $this->json(['count' => $count], 200, "Đã lưu thông tin in cho {$count} giấy giới thiệu.");
     } catch (\Exception $e) {
       return $this->json(null, 422, $e->getMessage());
