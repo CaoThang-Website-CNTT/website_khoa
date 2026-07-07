@@ -25,6 +25,7 @@ interface IStudentStore
   public function softDelete(int $id): bool;
   public function getTotalCount(): int;
   public function isStudentIdUnique(string $studentId, ?int $excludeAccountId = null): bool;
+  public function getBasicInfoByStudentCodes(array $studentCodes): array;
 }
 class StudentStore extends Store implements IStudentStore
 {
@@ -224,5 +225,22 @@ class StudentStore extends Store implements IStudentStore
 
     $stmt = $this->db->query($sql);
     return (int) $stmt->fetchColumn();
+  }
+
+  public function getBasicInfoByStudentCodes(array $studentCodes): array
+  {
+    if (empty($studentCodes)) return [];
+    
+    $placeholders = implode(',', array_fill(0, count($studentCodes), '?'));
+    $sql = "
+      SELECT s.id, s.student_id as student_code, s.full_name, c.short_name as classroom_name
+      FROM students s
+      LEFT JOIN classrooms c ON s.classroom_id = c.id
+      WHERE s.student_id IN ($placeholders)
+    ";
+    
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($studentCodes);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 }

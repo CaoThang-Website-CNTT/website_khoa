@@ -9,6 +9,8 @@ class ProjectGroup extends Model
     public ?int $batch_id = null,
     public ?int $leader_student_id = null,
     public ?int $assigned_topic_id = null,
+    public ?string $status = null,
+    public ?bool $is_admin_approved_solo = null,
     public ?string $assigned_at = null,
     public ?string $registration_requirements = null,
     public ?string $supervisor_opinion = null,

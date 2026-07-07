@@ -215,15 +215,20 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
     $router->get('/{id}/teachers', [ProjectBatchController::class, 'teachers']);
 
+    // Import Excel 
+    $router->post('/{id}/allocation/import-preview', [ProjectAllocationController::class, 'previewImport']);
+    $router->post('/{id}/allocation/import-confirm', [ProjectAllocationController::class, 'confirmImport']);
+
+    // Xử lý ngoại lệ do việc import
+    $router->post('/{id}/allocation/dissolve-group', [ProjectAllocationController::class, 'handleDissolveGroup']);
+    $router->post('/{id}/allocation/bulk-dissolve-invalid', [ProjectAllocationController::class, 'handleBulkDissolveInvalidGroups']);
+    $router->post('/{id}/allocation/approve-solo', [ProjectAllocationController::class, 'handleApproveSolo']);
+    $router->post('/{id}/allocation/replace-member', [ProjectAllocationController::class, 'handleReplaceMember']);
+
     // Allocation 
     $router->get('/{id}/allocation', [ProjectAllocationController::class, 'index']);
     $router->post('/{id}/allocation/auto', [ProjectAllocationController::class, 'autoAllocate']);
     $router->post('/{id}/allocation/manual', [ProjectAllocationController::class, 'manualAssign']);
-
-    // Eligibility
-    $router->get('/{id}/eligibility', [ProjectEligibilityController::class, 'index']);
-    $router->post('/{id}/eligibility/preview', [ProjectEligibilityController::class, 'preview']);
-    $router->post('/{id}/eligibility/confirm', [ProjectEligibilityController::class, 'confirm']);
   });
 
 

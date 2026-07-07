@@ -5,6 +5,7 @@ namespace App\Stores;
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
+use Exception;
 use PDO;
 
 interface IProjectGroupStore
@@ -15,6 +16,10 @@ interface IProjectGroupStore
   public function removeMember(int $groupId, int $studentId): bool;
   public function deleteGroup(int $groupId): bool;
   public function getGroupById(int $id): ?array;
+  public function replaceGroupMember(int $groupId, int $oldStudentId, int $newStudentId): bool;
+  public function getEligibleUnregisteredStudents(int $batchId): array;
+  public function saveEligibleStudents(int $batchId, array $studentIds): void;
+  public function getCurrentStudentsInBatch(int $batchId): array;
   public function getGroupByStudent(int $batchId, int $studentId): ?array;
   public function getGroupMembers(int $groupId): array;
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
@@ -195,8 +200,11 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
                   SELECT 1 FROM project_group_members gm 
                   WHERE gm.group_id = g.id AND (gm.is_confirmed = 0 OR gm.is_eligible = 0)
               )
-              AND (SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = g.id) = 
-                  (SELECT COALESCE(max_students, 2) FROM project_batches WHERE id = g.batch_id)
+              AND (
+                  (SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = g.id) = 2
+                  OR 
+                  ( (SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = g.id) = 1 AND g.is_admin_approved_solo = 1 )
+              )
             ORDER BY g.created_at ASC";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
@@ -215,6 +223,176 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
     return $stmt->execute($params);
   }
 
+  // --- Exception Handling ---
+
+  public function getGroupsWithIneligibleMembers(int $batchId): array
+  {
+    $sql = "SELECT DISTINCT g.* 
+            FROM project_groups g
+            JOIN project_group_members gm ON g.id = gm.group_id
+            WHERE g.batch_id = :batch_id AND gm.is_eligible = 0";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function dissolveGroup(int $groupId): bool
+  {
+    $this->db->beginTransaction();
+    try {
+      $stmt = $this->db->prepare("DELETE FROM project_groups WHERE id = ?");
+      $stmt->execute([$groupId]);
+      $this->db->commit();
+      return true;
+    } catch (Exception $e) {
+      $this->db->rollBack();
+      return false;
+    }
+  }
+
+  public function bulkDissolveInvalidGroups(int $batchId): int
+  {
+    $this->db->beginTransaction();
+    try {
+      $sql = "SELECT g.id
+              FROM project_groups g
+              WHERE g.batch_id = :batch_id
+                AND NOT EXISTS (
+                  SELECT 1 FROM project_group_members gm 
+                  WHERE gm.group_id = g.id AND gm.is_eligible = 1
+                )";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute([':batch_id' => $batchId]);
+      $groupIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+      if (empty($groupIds)) {
+        $this->db->commit();
+        return 0;
+      }
+
+      $placeholders = implode(',', array_fill(0, count($groupIds), '?'));
+      $delStmt = $this->db->prepare("DELETE FROM project_groups WHERE id IN ($placeholders)");
+      $delStmt->execute($groupIds);
+
+      $this->db->commit();
+      return count($groupIds);
+    } catch (Exception $e) {
+      $this->db->rollBack();
+      return 0;
+    }
+  }
+
+  public function updateSoloApproval(int $groupId, bool $isApproved): bool
+  {
+    $this->db->beginTransaction();
+    try {
+      $query = (new QueryBuilder(new MySQLCompiler()))->from('project_groups')->update([
+        'is_admin_approved_solo' => $isApproved ? 1 : 0
+      ])->eq('id', $groupId);
+      $stmt = $this->db->prepare($query->toSql());
+      $stmt->execute($query->getBindings());
+
+      if ($isApproved) {
+        $queryDel = (new QueryBuilder(new MySQLCompiler()))->from('project_group_members')->delete()
+          ->eq('group_id', $groupId)->eq('is_eligible', 0);
+        $stmtDel = $this->db->prepare($queryDel->toSql());
+        $stmtDel->execute($queryDel->getBindings());
+      }
+      $this->db->commit();
+      return true;
+    } catch (Exception $e) {
+      $this->db->rollBack();
+      return false;
+    }
+  }
+
+  public function replaceGroupMember(int $groupId, int $oldStudentId, int $newStudentId): bool
+  {
+    $this->db->beginTransaction();
+    try {
+      $sqlCheck = "SELECT is_leader FROM project_group_members WHERE group_id = :group_id AND student_id = :student_id";
+      $stmtCheck = $this->db->prepare($sqlCheck);
+      $stmtCheck->execute([':group_id' => $groupId, ':student_id' => $oldStudentId]);
+      $isLeader = $stmtCheck->fetchColumn();
+
+      if ($isLeader === false) {
+        $this->db->rollBack();
+        return false;
+      }
+
+      $queryDel = (new QueryBuilder(new MySQLCompiler()))->from('project_group_members')->delete()
+        ->eq('group_id', $groupId)->eq('student_id', $oldStudentId);
+      $stmtDel = $this->db->prepare($queryDel->toSql());
+      $stmtDel->execute($queryDel->getBindings());
+
+      $this->addMember($groupId, $newStudentId, (bool)$isLeader, true);
+
+      if ($isLeader) {
+        $queryUpd = (new QueryBuilder(new MySQLCompiler()))->from('project_groups')->update([
+          'leader_student_id' => $newStudentId
+        ])->eq('id', $groupId);
+        $stmtUpd = $this->db->prepare($queryUpd->toSql());
+        $stmtUpd->execute($queryUpd->getBindings());
+      }
+
+      $this->db->commit();
+      return true;
+    } catch (Exception $e) {
+      $this->db->rollBack();
+      return false;
+    }
+  }
+
+  public function getEligibleUnregisteredStudents(int $batchId): array
+  {
+    $sql = "
+      SELECT s.* 
+      FROM project_batch_eligible_students e
+      JOIN students s ON e.student_id = s.id
+      WHERE e.batch_id = :batch_id
+      AND s.id NOT IN (
+        SELECT project_group_members.student_id
+        FROM project_groups
+        JOIN project_group_members ON project_groups.id = project_group_members.group_id
+        WHERE project_groups.batch_id = :batch_id_sub
+        AND project_group_members.is_eligible = 1
+      )
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['batch_id' => $batchId, 'batch_id_sub' => $batchId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function saveEligibleStudents(int $batchId, array $studentIds): void
+  {
+    if (empty($studentIds)) return;
+    $this->db->beginTransaction();
+    try {
+      $stmtDel = $this->db->prepare("DELETE FROM project_batch_eligible_students WHERE batch_id = ?");
+      $stmtDel->execute([$batchId]);
+      $stmtIns = $this->db->prepare("INSERT IGNORE INTO project_batch_eligible_students (batch_id, student_id) VALUES (?, ?)");
+      foreach ($studentIds as $sId) {
+        $stmtIns->execute([$batchId, $sId]);
+      }
+      $this->db->commit();
+    } catch (Exception $e) {
+      $this->db->rollBack();
+      throw $e;
+    }
+  }
+
+  public function getCurrentStudentsInBatch(int $batchId): array
+  {
+    $sql = "SELECT s.* 
+            FROM students s
+            JOIN project_group_members gm ON s.id = gm.student_id
+            JOIN project_groups g ON gm.group_id = g.id
+            WHERE g.batch_id = :batch_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
   public function getAssignedGroupsByTeacher(int $batchId, int $teacherId): array
   {
     $sql = "SELECT g.*, tt.title AS assigned_topic_title, tt.description AS topic_description,

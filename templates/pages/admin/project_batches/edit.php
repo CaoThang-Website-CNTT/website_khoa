@@ -40,10 +40,6 @@ $currentStatus = [
   <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
   Lưu
 </button>
-<a href="<?= url('admin/project_batches/' . $batchObj->id . '/eligibility') ?>" data-variant="outline" data-size="md" class="btn">
-  <i class="fa-solid fa-check-double"></i>
-  Xét điều kiện làm đồ án
-</a>
 <?php if ($batchObj->status === ProjectBatchStatus::DRAFT): ?>
   <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal" data-variant="outline-alt"
     data-size="md" class="btn">
