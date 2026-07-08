@@ -33,7 +33,8 @@
 .project-registration-page p { margin:.45rem 0; }
 .project-registration-center { text-align:center; }
 .project-registration-students { margin:.35rem 0 .75rem 1.5rem; }
-.project-registration-students li { display:grid; grid-template-columns:minmax(0, 1fr) auto auto; gap:1rem; margin:.35rem 0; }
+.project-registration-students li { display:grid; grid-template-columns:minmax(0, 1fr) 10.5rem 7.5rem; gap:1rem; margin:.35rem 0; }
+.project-registration-students li > * { min-width:0; overflow-wrap:anywhere; }
 .project-registration-page [data-preview-field="registration_requirements"] { min-height:65mm; }
 .project-registration-page [data-preview-field="supervisor_opinion"] { min-height:24mm; }
 .project-registration-page [data-preview-field] p { margin:.2rem 0; }
