@@ -81,6 +81,7 @@
   <?php unset($tabs, $tabsMode, $tabsId, $activeTab, $companyFilterUrl); ?>
 
   <div class="tm-container" id="companies_table" data-tm="companies_table" data-tm-mode="server" data-tm-searchable
+    data-server-table-url="<?= url('api/v1/companies') ?>" data-server-table-filter="<?= htmlspecialchars($filter ?? 'all') ?>"
     <?= (isset($filter) && $filter === 'pending') ? 'data-tm-selectable="true" data-tm-id-key="id"' : '' ?>>
 
     <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
@@ -167,7 +168,7 @@
         limit
       } = e.detail;
       const filter = '<?= isset($filter) ? $filter : 'all' ?>';
-      window.location.href = `<?= url("admin/companies") ?>?filter=${filter}&page=${page}&limit=${limit}`;
+      window.history.replaceState({}, '', `<?= url("admin/companies") ?>?filter=${filter}&page=${page}&limit=${limit}`);
     });
 
     tm.loadData(<?= json_encode([
@@ -189,4 +190,5 @@
       'limit' => $data->getPerPage()
     ]) ?>);
   </script>
+  <script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
   <?php $layout->end(); ?>

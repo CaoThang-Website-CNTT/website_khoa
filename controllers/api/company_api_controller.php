@@ -30,6 +30,17 @@ class CompanyApiController extends Controller
     return $this->json($results);
   }
 
+  public function index(Request $request)
+  {
+    $filter = (string) $request->query('filter', 'all');
+    if (!in_array($filter, ['all', 'pending', 'verified'], true)) $filter = 'all';
+    return $this->json($this->_companyService->getCompanies(
+      max(1, (int) $request->query('page', 1)),
+      min(100, max(1, (int) $request->query('limit', 15))),
+      $filter
+    ), 200);
+  }
+
   public function searchForMerge(Request $request)
   {
     $query = trim($request->query('q', ''));

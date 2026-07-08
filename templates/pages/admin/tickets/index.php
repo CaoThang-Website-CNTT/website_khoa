@@ -6,7 +6,8 @@
 <?php $layout->end() ?>
 
 <?php $layout->start("content") ?>
-<div class="tm-container" data-tm="tickets_table" data-tm-mode="client" data-tm-searchable>
+<div class="tm-container" data-tm="tickets_table" data-tm-mode="server" data-tm-searchable
+  data-server-table-url="<?= url('api/v1/tickets') ?>">
   <!-- Cột ID -->
   <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
 
@@ -50,4 +51,5 @@
     'limit' => $data->getPerPage(),
   ]) ?>
 </script>
+<script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
 <?php $layout->end() ?>

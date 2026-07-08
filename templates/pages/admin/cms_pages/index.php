@@ -7,7 +7,8 @@
 </h2>
 <?php $layout->end() ?>
 
-<div class="tm-container" data-tm="cms_pages_table" data-tm-mode="client" data-tm-searchable>
+<div class="tm-container" data-tm="cms_pages_table" data-tm-mode="server" data-tm-searchable
+  data-server-table-url="<?= url('api/v1/cms_pages') ?>">
   <template data-tm-pagination></template>
 
   <template data-tm-col="title" data-tm-label="Trang" data-tm-sortable>
@@ -52,4 +53,5 @@
     'limit' => $data->getPerPage(),
   ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
 </script>
+<script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
 <?php $layout->end() ?>

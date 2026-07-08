@@ -13,7 +13,8 @@
   Thêm
 </a>
 <?php $layout->end() ?>
-<div class="tm-container" data-tm="media_table" data-tm-mode="client" data-tm-searchable>
+<div class="tm-container" data-tm="media_table" data-tm-mode="server" data-tm-searchable
+  data-server-table-url="<?= url('api/v1/media') ?>">
 
   <template data-tm-pagination></template>
 
@@ -59,4 +60,5 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
+<script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
 <?php $layout->end() ?>
