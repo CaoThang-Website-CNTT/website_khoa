@@ -18,6 +18,7 @@
 <?php endif; ?>
 
 <body>
+  <?php $helpSurface = 'cms'; include BASE_PATH . '/templates/components/editor_help_drawer.php'; ?>
   <?php include_once BASE_PATH . '/templates/components/preloader.php'; ?>
   <?php require_once BASE_PATH . '/templates/components/media_selector_modal.php'; ?>
 

@@ -11,3 +11,4 @@
 <script src="<?= url('/public/js/select.js') ?>"></script>
 <script src="<?= url('/public/js/media_uploader.js') ?>"></script>
 <script type="module" src="<?= url('public/js/editor/index.js') ?>"></script>
+<script src="<?= url('public/js/editor_help.js') ?>"></script>

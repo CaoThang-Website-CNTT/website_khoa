@@ -21,7 +21,7 @@ return [
       'id' => 'faculty_hero',
       'type' => 'sections/about_hero',
       'label' => 'Giới thiệu đội ngũ',
-      'locked' => true,
+      'locked' => false,
       'data' => [
         'image' => 'public/img/about.jpg',
         'badge' => 'Đội ngũ giảng viên',

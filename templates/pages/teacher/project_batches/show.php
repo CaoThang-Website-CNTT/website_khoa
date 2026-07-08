@@ -32,7 +32,7 @@ if (!empty($batch['topic_proposal_start']) && !empty($batch['topic_proposal_end'
 }
 
 if ($canPropose):
-?>
+  ?>
   <a href="<?= url("teacher/project_batches/{$batch['id']}/topics/create") ?>" class="btn" data-variant="primary"
     data-size="lg">
     <i class="fa-solid fa-plus"></i> Gửi đề tài
@@ -227,7 +227,9 @@ if ($canPropose):
       <button type="button" class="btn print-topic-groups justify-start w-full" data-variant="outline" data-size="lg"
         data-topic-id="<?= $topicId ?>">
         <i class="fa-solid fa-layer-group shrink-0"></i>
-        <span class="text-left flex-1 min-w-0"><?= htmlspecialchars($topicTitle) ?></span>
+        <span class="text-left flex-1 min-w-0">
+          <?= htmlspecialchars($topicTitle) ?>
+        </span>
       </button>
     <?php endforeach; ?>
   </div>
@@ -239,8 +241,7 @@ if ($canPropose):
   </button>
 </div>
 
-<form id="registration-print-form"
-  action="<?= url("teacher/project_batches/{$batch['id']}/registration-forms/preview") ?>" method="POST" target="_blank"
+<form id="registration-print-form" action="<?= url("teacher/project_batches/{$batch['id']}/registration-forms/preview") ?>" method="POST" target="_blank"
   class="hidden">
   <?= csrf_field() ?>
   <div id="registration-print-group-inputs"></div>
@@ -250,21 +251,21 @@ if ($canPropose):
 <script type="application/json" data-tm-data="topics_table">
   <?= json_encode([
     'rows' => array_map(function ($topic) use ($batch) {
-      $t = (object) $topic;
-      return [
-        'id' => $t->id,
-        'title' => $t->title,
-        'description' => $t->description,
-        'max_students' => $t->max_students,
-        'status' => $t->status,
-        'status_label' => ProjectTopicStatus::getLabel($t->status),
-        'status_variant' => ProjectTopicStatus::getVariant($t->status),
-        'can_edit' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]),
-        'edit_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/edit"),
-        'delete_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/delete"),
-        'pdf_url' => $t->pdf_file_path ? url("storage/" . $t->pdf_file_path) : null
-      ];
-    }, $topics),
+    $t = (object) $topic;
+    return [
+      'id' => $t->id,
+      'title' => $t->title,
+      'description' => $t->description,
+      'max_students' => $t->max_students,
+      'status' => $t->status,
+      'status_label' => ProjectTopicStatus::getLabel($t->status),
+      'status_variant' => ProjectTopicStatus::getVariant($t->status),
+      'can_edit' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]),
+      'edit_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/edit"),
+      'delete_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/delete"),
+      'pdf_url' => $t->pdf_file_path ? url("storage/" . $t->pdf_file_path) : null
+    ];
+  }, $topics),
     'total' => count($topics),
     'page' => 1,
     'limit' => count($topics) > 0 ? count($topics) : 15
@@ -278,8 +279,8 @@ if ($canPropose):
         'topic_id' => (int) $group['assigned_topic_id'],
         'topic' => $group['assigned_topic_title'],
         'members' => implode("\n", array_map(function ($member) {
-          return ($member['is_leader'] ? 'Nhóm trưởng: ' : '') . $member['full_name'] . ' · ' . $member['student_code'] . ' · ' . ($member['classroom_name'] ?: 'Chưa có lớp');
-        }, $group['members'] ?? [])),
+        return ($member['is_leader'] ? 'Nhóm trưởng: ' : '') . $member['full_name'] . ' · ' . $member['student_code'] . ' · ' . ($member['classroom_name'] ?: 'Chưa có lớp');
+      }, $group['members'] ?? [])),
         'assigned_at' => !empty($group['assigned_at']) ? date('d/m/Y H:i', strtotime($group['assigned_at'])) : '—',
         'print_url' => url("teacher/project_batches/{$batch['id']}/groups/{$group['id']}/registration-form"),
         'actions' => '',

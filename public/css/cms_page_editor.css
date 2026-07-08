@@ -133,12 +133,14 @@
   outline-style: dashed;
 }
 
-[data-cms-locked="true"]::after {
-  content: "\1f512  " attr(data-cms-lock-label);
+.cms-locked-state {
   position: absolute;
   z-index: 20;
   top: 0.5rem;
   right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-full);
   background: var(--muted);

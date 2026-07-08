@@ -95,6 +95,15 @@ export class CmsPreview {
 
   #bindFrame() {
     const doc = this.frame?.contentDocument; if (!doc) return;
+    doc.querySelectorAll('[data-cms-locked="true"]').forEach((section) => {
+      if (section.querySelector(':scope > .cms-locked-state')) return;
+      const lockedState = doc.createElement('div');
+      lockedState.className = 'cms-locked-state';
+      lockedState.setAttribute('role', 'status');
+      lockedState.innerHTML = '<i class="fa-solid fa-lock" aria-hidden="true"></i><span></span>';
+      lockedState.querySelector('span').textContent = section.dataset.cmsLockLabel || '';
+      section.prepend(lockedState);
+    });
     doc.addEventListener('click', (event) => {
       this.#stabilizeInteraction();
       if (event.target.closest('a')) event.preventDefault();
