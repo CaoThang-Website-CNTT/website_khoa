@@ -471,7 +471,9 @@ $tabs = [
           groupData.aspirations.forEach(asp => {
             const rowDiv = document.createElement('div');
             rowDiv.style.marginBottom = '0.25rem';
-            rowDiv.innerHTML = `<span class="badge" data-variant="outline-alt">NV${asp.priority}</span> ${asp.topic_title || 'Đề tài #' + asp.topic_id}`;
+            rowDiv.className = 'line-clamp-1'
+            rowDiv.title = asp.topic_title || 'Đề tài #' + asp.topic_id;
+            rowDiv.innerHTML = `<span class="badge" data-variant="outline">NV${asp.priority}</span> ${asp.topic_title || 'Đề tài #' + asp.topic_id}`;
             container.appendChild(rowDiv);
           });
           container.dataset.rendered = 'true';

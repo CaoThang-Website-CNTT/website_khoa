@@ -31,12 +31,15 @@
         <template data-tm-col="email" data-tm-label="Email" data-tm-sortable></template>
         <template data-tm-col="min_students" data-tm-label="SV tối thiểu" data-tm-sortable></template>
         <template data-tm-col="max_students" data-tm-label="SV tối đa" data-tm-sortable></template>
-        <script type="application/json" data-tm-data="project_batch_teachers"><?= json_encode([
-          'rows' => array_values($teachers),
-          'total' => count($teachers),
-          'page' => 1,
-          'limit' => max(count($teachers), 15),
-        ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+        <template data-tm-pagination></template>
+        <script type="application/json" data-tm-data="project_batch_teachers">
+          <?= json_encode([
+            'rows' => array_values($teachers),
+            'total' => count($teachers),
+            'page' => 1,
+            'limit' => max(count($teachers), 15),
+          ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>
+        </script>
       </div>
     <?php endif; ?>
   </div>

@@ -64,6 +64,10 @@ class StudentProjectDashboardController extends Controller
     $minClass = $batch['min_class_of'] ?? 0;
     $maxClass = $batch['max_class_of'] ?? 0;
 
+    // Chuẩn hóa dạng 4 số về 2 số
+    $minClass = $minClass > 99 ? $minClass % 100 : $minClass;
+    $maxClass = $maxClass > 99 ? $maxClass % 100 : $maxClass;
+
     if ($minClass > 0 && $maxClass > 0) {
       if ((int)$khoa < $minClass || (int)$khoa > $maxClass) {
         return [

@@ -95,7 +95,7 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
 
       <template data-tm-col="description" data-tm-label="Mô tả">
         <div class="font-medium">
-          <div class="{{ !row.description ? 'hidden' : '' }} text-sm mt-1 line-clamp-2" style="white-space: pre-line;">{{ row.description }}</div>
+          <div class="{{ !row.description ? 'hidden' : '' }} text-sm mt-1 line-clamp-2" style="white-space: pre-line;" title="{{ row.description }}">{{ row.description }}</div>
         </div>
       </template>
 

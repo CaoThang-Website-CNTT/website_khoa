@@ -62,6 +62,18 @@ $currentStatus = [
 <?php endif; ?>
 <?php $layout->end() ?>
 
+<?php if ($batchObj->status === ProjectBatchStatus::PUBLISHED && (empty($batchObj->registration_start) || empty($batchObj->registration_end))): ?>
+  <div class="alert" data-variant="warning">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <div class="alert-content">
+      <h3 class="alert-title font-semibold">Chưa cấu hình thời gian đăng ký đề tài</h3>
+      <p class="alert-description">
+        Đợt đồ án đã công bố nhưng chưa được thiết lập thời gian đăng ký đề tài (bắt đầu/kết thúc). Do đó, sinh viên hiện tại <span class="font-semibold">chưa thể xem đợt, xem đề tài và đăng ký</span>. Vui lòng cập nhật thời gian đăng ký.
+      </p>
+    </div>
+  </div>
+<?php endif; ?>
+
 <!-- Stats Grid -->
 <div class="stats-grid">
   <!-- Đề tài Card -->
@@ -109,7 +121,7 @@ $currentStatus = [
   <!-- Trạng thái Card -->
   <div class="card stats-card">
     <div class="card__header">
-      <span class="stats-card__label">Trạng thái</span>
+      <span class="stats-card__label">Giai đoạn</span>
       <span class="badge" data-variant="<?= $currentStatus['variant'] ?>">
         <?= $currentStatus['label'] ?>
       </span>
