@@ -20,7 +20,9 @@ require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 require_once BASE_PATH . '/includes/core/layout.php';
 // Enums
 require_once BASE_PATH . '/includes/core/enums/batch_status.php';
-
+require_once BASE_PATH . '/includes/core/enums/project_batch_status.php';
+require_once BASE_PATH . '/includes/core/enums/project_topic_status.php';
+require_once BASE_PATH . '/includes/core/enums/project_aspiration_status.php';
 // Session
 require_once BASE_PATH . '/includes/core/session/session.php';
 // Middleware
@@ -80,7 +82,11 @@ require_once BASE_PATH . '/models/referral_letter.php';
 require_once BASE_PATH . '/models/ticket.php';
 require_once BASE_PATH . '/models/department.php';
 require_once BASE_PATH . '/models/referral_letter_student.php';
-
+require_once BASE_PATH . '/models/project_batch.php';
+require_once BASE_PATH . '/models/project_topic.php';
+require_once BASE_PATH . '/models/project_group.php';
+require_once BASE_PATH . '/models/project_group_member.php';
+require_once BASE_PATH . '/models/project_aspiration.php';
 // Editor (Post)
 require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
 require_once BASE_PATH . '/includes/editor/render_result.php';
@@ -135,7 +141,10 @@ require_once BASE_PATH . '/stores/referral_letter_student_store.php';
 require_once BASE_PATH . '/stores/ticket_store.php';
 require_once BASE_PATH . '/stores/department_store.php';
 require_once BASE_PATH . '/stores/email_job_store.php';
-
+require_once BASE_PATH . '/stores/project_batch_store.php';
+require_once BASE_PATH . '/stores/project_topic_store.php';
+require_once BASE_PATH . '/stores/project_group_store.php';
+require_once BASE_PATH . '/stores/project_aspiration_store.php';
 // Services
 require_once BASE_PATH . '/services/account_service.php';
 require_once BASE_PATH . '/services/auth_service.php';
@@ -159,7 +168,12 @@ require_once BASE_PATH . '/services/internship_weekly_report_service.php';
 require_once BASE_PATH . '/services/referral_letter_service.php';
 require_once BASE_PATH . '/services/ticket_service.php';
 require_once BASE_PATH . '/services/mail_service.php';
-
+require_once BASE_PATH . '/services/project_batch_service.php';
+require_once BASE_PATH . '/services/project_topic_service.php';
+require_once BASE_PATH . '/services/project_registration_service.php';
+require_once BASE_PATH . '/services/project_group_service.php';
+require_once BASE_PATH . '/services/project_aspiration_service.php';
+require_once BASE_PATH . '/services/project_eligibility_service.php';
 // Controllers
 // Web
 require_once BASE_PATH . '/controllers/web/auth_controller.php';
@@ -179,9 +193,13 @@ require_once BASE_PATH . '/controllers/web/post_controller.php';
 require_once BASE_PATH . '/controllers/web/cms_page_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
 require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
+require_once BASE_PATH . '/controllers/web/student_project_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/company_controller.php';
 require_once BASE_PATH . '/controllers/web/teacher_dashboard_controller.php';
+require_once BASE_PATH . '/controllers/web/teacher_project_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/ticket_controller.php';
+require_once BASE_PATH . '/controllers/web/project_batch_controller.php';
+require_once BASE_PATH . '/controllers/web/project_allocation_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/account_api_controller.php';
@@ -197,3 +215,5 @@ require_once BASE_PATH . '/controllers/api/post_api_controller.php';
 require_once BASE_PATH . '/controllers/api/teacher_dashboard_api_controller.php';
 require_once BASE_PATH . '/controllers/api/export_api_controller.php';
 require_once BASE_PATH . '/controllers/api/classroom_api_controller.php';
+require_once BASE_PATH . '/controllers/api/project_batch_api_controller.php';
+require_once BASE_PATH . '/controllers/api/project_topic_api_controller.php';

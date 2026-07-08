@@ -50,6 +50,7 @@ $editorAuthors = array_map(
   </div>
 
   <div id="be-topbar-right">
+    <?php include BASE_PATH . '/templates/components/editor_help_trigger.php'; ?>
     <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-right"
       title="Ẩn/hiện panel settings">
       <i class="fa-solid fa-table-columns"></i> Cấu Hình

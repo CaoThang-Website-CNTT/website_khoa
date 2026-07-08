@@ -1,0 +1,94 @@
+.allocation-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  background-color: var(--card, #ffffff);
+}
+
+.allocation-table__head {
+  background-color: var(--table-header-bg, #f8fafc);
+  border-bottom: 2px solid var(--border, #e2e8f0);
+}
+
+.allocation-table__row {
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.allocation-table__row:hover {
+  background-color: #f1f5f9;
+}
+
+.allocation-table__row:last-child {
+  border-bottom: none;
+}
+
+.allocation-table__cell {
+  padding: 1rem 1.25rem;
+  vertical-align: top;
+}
+
+.allocation-table__cell--header {
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1.25rem;
+}
+
+.allocation-table__cell--id {
+  font-weight: 600;
+  white-space: nowrap;
+  width: 15%;
+}
+
+.allocation-table__cell--members {
+  width: 45%;
+}
+
+.allocation-table__cell--actions {
+  width: 40%;
+}
+
+/* Member Styling */
+.allocation-table__member {
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.375rem;
+  margin-bottom: 0.5rem;
+  background-color: #f8fafc;
+  color: #334155;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  transition: all 0.2s ease;
+}
+
+.allocation-table__member:last-child {
+  margin-bottom: 0;
+}
+
+.allocation-table__member:hover {
+  background-color: #f1f5f9;
+}
+
+/* Ineligible Member Modifier */
+.allocation-table__member--ineligible {
+  background-color: var(--toast-error-bg);
+  color: var(--toast-error-color);
+  border-color: var(--toast-error-border);
+}
+
+.allocation-table__member--ineligible:hover {
+  background-color: #fee2e2;
+}
+
+/* Actions Container */
+.allocation-table__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}

@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController, CmsPageController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController, CmsPageController, ProjectBatchController, ProjectAllocationController, ProjectEligibilityController, StudentProjectDashboardController, TeacherProjectDashboardController};
 use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
@@ -202,6 +202,40 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/{id}/teachers', [InternshipBatchController::class, 'teachers']);
   });
 
+  // Project Batches
+  $router->prefix('project_batches')->group(function ($router) {
+    $router->get('/', [ProjectBatchController::class, 'index']);
+    $router->get('/create', [ProjectBatchController::class, 'create']);
+    $router->post('/', [ProjectBatchController::class, 'store']);
+    $router->get('/{id}', [ProjectBatchController::class, 'show']);
+    $router->post('/{id}', [ProjectBatchController::class, 'update']);
+    $router->post('/delete/{id}', [ProjectBatchController::class, 'destroy']);
+    $router->post('/{id}/publish', [ProjectBatchController::class, 'publish']);
+    $router->post('/{id}/close', [ProjectBatchController::class, 'close']);
+
+    // Topics
+    $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
+    $router->get('/{id}/teachers', [ProjectBatchController::class, 'teachers']);
+
+    // Import Excel 
+    $router->post('/{id}/allocation/import-preview', [ProjectAllocationController::class, 'previewImport']);
+    $router->post('/{id}/allocation/import-confirm', [ProjectAllocationController::class, 'confirmImport']);
+
+    // Xử lý ngoại lệ do việc import
+    $router->post('/{id}/allocation/dissolve-group', [ProjectAllocationController::class, 'handleDissolveGroup']);
+    $router->post('/{id}/allocation/bulk-dissolve-invalid', [ProjectAllocationController::class, 'handleBulkDissolveInvalidGroups']);
+    $router->post('/{id}/allocation/approve-solo', [ProjectAllocationController::class, 'handleApproveSolo']);
+    $router->post('/{id}/allocation/replace-member', [ProjectAllocationController::class, 'handleReplaceMember']);
+
+    // Allocation 
+    $router->get('/{id}/allocation', [ProjectAllocationController::class, 'index']);
+    $router->post('/{id}/allocation/auto', [ProjectAllocationController::class, 'autoAllocate']);
+    $router->post('/{id}/allocation/manual', [ProjectAllocationController::class, 'manualAssign']);
+    $router->post('/{id}/allocation/publish', [ProjectAllocationController::class, 'publishAllocation']);
+    $router->post('/{id}/allocation/unpublish', [ProjectAllocationController::class, 'unpublishAllocation']);
+  });
+
+
   // Companies
   $router->prefix('companies')->group(function ($router) {
     $router->get('/', [CompanyController::class, 'index']);
@@ -241,7 +275,24 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
   $router->get('/internship', [StudentDashboardController::class, 'internshipRedirect']);
   $router->get('/internship/{batch_id}', [StudentDashboardController::class, 'internship']);
   // Thông tin đồ án tốt nghiệp
-  $router->get('/graduation', [StudentDashboardController::class, 'graduation']);
+  $router->prefix('project_batches')->group(function ($router) {
+    $router->get('/', [StudentProjectDashboardController::class, 'index']);
+    $router->get('/{id}', [StudentProjectDashboardController::class, 'show']);
+
+    // Quản lý nhóm
+    $router->post('/{id}/group/create', [StudentProjectDashboardController::class, 'createGroup']);
+    $router->post('/{id}/group/confirm', [StudentProjectDashboardController::class, 'confirmGroup']);
+    $router->post('/{id}/group/reject', [StudentProjectDashboardController::class, 'rejectGroup']);
+    $router->post('/{id}/group/cancel', [StudentProjectDashboardController::class, 'cancelGroupInvite']);
+
+    // Quản lý nguyện vọng
+    $router->get('/{id}/topics', [StudentProjectDashboardController::class, 'topics']);
+    $router->post('/{id}/aspirations/add', [StudentProjectDashboardController::class, 'addAspiration']);
+    $router->post('/{id}/aspirations/remove', [StudentProjectDashboardController::class, 'removeAspiration']);
+    $router->post('/{id}/aspirations/reorder', [StudentProjectDashboardController::class, 'reorderAspirations']);
+    $router->post('/{id}/aspirations/lock', [StudentProjectDashboardController::class, 'lockAspirations']);
+    $router->post('/{id}/aspirations/unlock', [StudentProjectDashboardController::class, 'unlockAspirations']);
+  });
   // Cập nhật thông tin cá nhân
   $router->post('/profile/update', [StudentDashboardController::class, 'updateProfile']);
 
@@ -280,5 +331,19 @@ $router->prefix('teacher')->middleware([VerifyAuth::class, new VerifyRole('teach
     $router->get('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'internshipGrade']);
     $router->post('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'submitGrade']);
     $router->post('/{batchId}/publish_grades', [TeacherDashboardController::class, 'publishAllGrades']);
+  });
+  // Thông tin đồ án
+  $router->prefix('project_batches')->group(function ($router) {
+    $router->get('/', [TeacherProjectDashboardController::class, 'index']);
+    $router->get('/{id}', [TeacherProjectDashboardController::class, 'show']);
+    $router->get('/{id}/groups/{groupId}/registration-form', [TeacherProjectDashboardController::class, 'previewRegistrationForm']);
+    $router->post('/{id}/registration-forms/preview', [TeacherProjectDashboardController::class, 'previewRegistrationForms']);
+    $router->post('/{id}/registration-forms/save', [TeacherProjectDashboardController::class, 'saveRegistrationForms']);
+    $router->get('/{id}/topics/create', [TeacherProjectDashboardController::class, 'createTopic']);
+    $router->post('/{id}/topics/create', [TeacherProjectDashboardController::class, 'storeTopic']);
+    $router->get('/{id}/topics/{topicId}/edit', [TeacherProjectDashboardController::class, 'editTopic']);
+    $router->post('/{id}/topics/{topicId}/edit', [TeacherProjectDashboardController::class, 'updateTopic']);
+    $router->post('/{id}/topics/{topicId}/submit', [TeacherProjectDashboardController::class, 'submitTopic']);
+    $router->post('/{id}/topics/{topicId}/delete', [TeacherProjectDashboardController::class, 'deleteTopic']);
   });
 });

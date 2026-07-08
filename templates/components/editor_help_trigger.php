@@ -1,0 +1,1 @@
+<button type="button" class="btn editor-help-trigger" data-size="md" data-variant="outline" data-editor-help-open aria-haspopup="dialog" aria-controls="editor-help-drawer"><i class="fa-regular fa-circle-question" aria-hidden="true"></i> Trợ giúp</button>

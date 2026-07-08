@@ -19,6 +19,7 @@
 <?php $layout->end() ?>
 
 <?php $layout->start('topbar_right') ?>
+<?php include BASE_PATH . '/templates/components/editor_help_trigger.php'; ?>
 <button type="button" class="btn" data-size="md" data-variant="outline" data-preview-width="mobile">
   <i class="fa-solid fa-mobile-screen"></i>
 </button>

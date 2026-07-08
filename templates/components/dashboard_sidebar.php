@@ -46,6 +46,12 @@ $menuConfig = [
             ['label' => 'Quản lý đợt', 'url' => 'admin/internship_batches'],
             ['label' => 'Quản lý công ty', 'url' => 'admin/companies'],
           ]
+        ],
+        [
+          'type' => 'link',
+          'label' => 'Đồ án tốt nghiệp',
+          'icon' => 'fa-solid fa-graduation-cap',
+          'url' => 'admin/project_batches'
         ]
       ]
     ],
@@ -89,7 +95,7 @@ $menuConfig = [
           'label' => 'Tổng Quan',
           'icon' => 'fa-solid fa-user',
           'url' => 'teacher',
-          'active' => str_contains($currentPath, 'teacher') && !str_contains($currentPath, 'teacher/internship_batches')
+          'active' => str_contains($currentPath, 'teacher') && !str_contains($currentPath, 'teacher/internship_batches') && !str_contains($currentPath, 'teacher/project_batches')
         ],
         [
           'type' => 'link',
@@ -97,6 +103,13 @@ $menuConfig = [
           'icon' => 'fa-solid fa-briefcase',
           'url' => 'teacher/internship_batches',
           'active' => str_contains($currentPath, 'teacher/internship_batches')
+        ],
+        [
+          'type' => 'link',
+          'label' => 'Đồ Án Tốt Nghiệp',
+          'icon' => 'fa-solid fa-graduation-cap',
+          'url' => 'teacher/project_batches',
+          'active' => str_contains($currentPath, 'teacher/project_batches')
         ]
       ]
     ]
@@ -110,7 +123,7 @@ $menuConfig = [
           'label' => 'Tổng Quan',
           'icon' => 'fa-solid fa-user',
           'url' => 'student',
-          'active' => str_contains($currentPath, 'student') && !str_contains($currentPath, 'student/internship') && !str_contains($currentPath, 'student/graduation')
+          'active' => str_contains($currentPath, 'student') && !str_contains($currentPath, 'student/internship') && !str_contains($currentPath, 'student/project_batches')
         ],
         [
           'type' => 'link',
@@ -123,8 +136,8 @@ $menuConfig = [
           'type' => 'link',
           'label' => 'Đồ Án Tốt Nghiệp',
           'icon' => 'fa-solid fa-graduation-cap',
-          'url' => 'student/graduation',
-          'active' => str_contains($currentPath, 'student/graduation')
+          'url' => 'student/project_batches',
+          'active' => str_contains($currentPath, 'student/project_batches')
         ]
       ]
     ]

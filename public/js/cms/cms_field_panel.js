@@ -69,6 +69,17 @@ export class CmsFieldPanel {
       return;
     }
 
+    if (section.type === 'sections/about_hero') {
+      this.root.innerHTML = `
+        <div class="cms-field-grid">
+          ${this.#renderVariantField(section, variantOptions)}
+          ${imageFields.map((field) => this.#renderImageField(field, activePath)).join('')}
+          ${fields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), activePath)).join('')}
+        </div>
+      `;
+      return;
+    }
+
     if (!activePath) {
       const structure = this.#renderStructureManager(section, schema);
       if (structure) {
@@ -84,7 +95,8 @@ export class CmsFieldPanel {
 
     const activeImageField = imageFields.find((field) => field.path === activePath);
     if (activeImageField) {
-      this.root.innerHTML = `<div class="cms-field-grid">${this.#renderVariantField(section, variantOptions)}${this.#renderImageField(activeImageField, activePath)}${this.#renderBentoBackgroundField(section, activeImageField)}</div>`;
+      const relatedUrlField = this.#relatedImageUrlField(activeImageField, fields);
+      this.root.innerHTML = `<div class="cms-field-grid">${this.#renderVariantField(section, variantOptions)}${relatedUrlField ? this.#renderTextField(relatedUrlField, getPath(section.data || {}, relatedUrlField.path), relatedUrlField.path) : ''}${this.#renderImageField(activeImageField, activePath)}${this.#renderBentoBackgroundField(section, activeImageField)}</div>`;
       return;
     }
 
@@ -124,6 +136,12 @@ export class CmsFieldPanel {
 
   #isIconPath(path) {
     return /(^|\.)icon$/.test(path);
+  }
+
+  #relatedImageUrlField(imageField, fields) {
+    const match = imageField.path.match(/^(partners\.\d+)\.image\.src$/);
+    if (!match) return null;
+    return fields.find((field) => field.path === `${match[1]}.url`) || null;
   }
 
   #renderVariantField(section, options) {

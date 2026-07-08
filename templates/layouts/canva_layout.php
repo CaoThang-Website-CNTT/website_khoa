@@ -18,6 +18,7 @@
 <?php endif; ?>
 
 <body>
+  <?php $helpSurface = 'block-editor'; include BASE_PATH . '/templates/components/editor_help_drawer.php'; ?>
   <!-- ======== Preloader =========== -->
   <?php include_once BASE_PATH . '/templates/components/preloader.php'; ?>
   <!-- ======== Preloader End =========== -->
