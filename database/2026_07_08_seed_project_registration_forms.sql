@@ -100,11 +100,11 @@ JOIN accounts a ON a.email = CONCAT('0306239', LPAD(x.n, 3, '0'), '@caothang.edu
 ON DUPLICATE KEY UPDATE full_name = VALUES(full_name), classroom_id = VALUES(classroom_id), status = VALUES(status), deleted_at = NULL, updated_at = NOW();
 
 INSERT INTO project_batches
-(title, description, topic_proposal_start, topic_proposal_end, registration_start, registration_end, max_aspirations, min_class_of, max_class_of, status, created_by, published_at, created_at, updated_at)
+(title, description, topic_proposal_start, topic_proposal_end, registration_start, registration_end, max_aspirations, min_class_of, max_class_of, status, created_by, published_at, allocation_published_at, created_at, updated_at)
 VALUES
 (@fixture_batch_title, 'Fixture hậu phân bổ dùng kiểm thử preview và in phiếu đăng ký ĐATN.',
  '2026-06-01 08:00:00', '2026-06-15 17:00:00', '2026-06-16 08:00:00', '2026-07-31 17:00:00',
- 3, 23, 23, 'published', @admin_account_id, '2026-06-16 08:00:00', NOW(), NOW());
+ 3, 23, 23, 'published', @admin_account_id, '2026-06-16 08:00:00', '2026-07-02 08:00:00', NOW(), NOW());
 SET @batch_id := LAST_INSERT_ID();
 
 INSERT INTO project_batch_supervisors (batch_id, teacher_id, min_students, max_students, is_active, created_at, updated_at)

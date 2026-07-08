@@ -295,56 +295,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- SUBMIT ---
-  const doSubmitBatch = async () => {
+  const submitBatchForm = () => {
     if (!validateStep2()) return;
 
-    const payload = {
-      ...state.batchData,
-      supervisors: Object.keys(state.selectedTeachers).map((tId) => ({
-        teacher_id: parseInt(tId),
-        min_students: state.selectedTeachers[tId].min_students,
-        max_students: state.selectedTeachers[tId].max_students,
-      })),
-    };
+    form.querySelectorAll('[data-supervisor-input]').forEach((input) => input.remove());
+    Object.entries(state.selectedTeachers).forEach(([teacherId, quotas], index) => {
+      const values = {
+        teacher_id: teacherId,
+        min_students: quotas.min_students,
+        max_students: quotas.max_students,
+      };
 
-    try {
-      btnSubmit.setAttribute("disabled", "disabled");
-      btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
-
-      const res = await fetch(apiBase, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      Object.entries(values).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = `supervisors[${index}][${key}]`;
+        input.value = String(value);
+        input.dataset.supervisorInput = '';
+        form.appendChild(input);
       });
+    });
 
-      const result = await res.json();
-      const data = result.data;
-
-      if (!res.ok) {
-        let errorMsg = result.message || "Lỗi khi tạo đợt";
-        throw new Error(errorMsg);
-      }
-
-      if (window.toast)
-        toast.success(
-          "Thành công",
-          result.message || "Đã tạo đợt đồ án thành công.",
-        );
-
-      setTimeout(() => {
-        window.location.href = window.REDIRECT_URL;
-      }, 1500);
-    } catch (err) {
-      if (window.toast) toast.error("Lỗi", err.message);
-      else alert(err.message);
-      btnSubmit.removeAttribute("disabled");
-      btnSubmit.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Hoàn tất tạo đợt`;
-    }
+    btnSubmit.setAttribute('disabled', 'disabled');
+    form.submit();
   };
 
-  btnSubmit.addEventListener("click", () => {
-    doSubmitBatch();
-  });
+  btnSubmit.addEventListener("click", submitBatchForm);
 
   // Init
   wizard

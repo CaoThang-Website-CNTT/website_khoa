@@ -274,7 +274,7 @@ $currentStatus = [
 <div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Xác nhận công bố</h3>
-    <p class="modal__description">Các đề tài đã duyệt sẽ được công bố cho sinh viên xem và đăng ký. Giảng viên phụ trách đã có thể cung cấp đề tài ngay từ giai đoạn bản nháp.</p>
+    <p class="modal__description">Giảng viên phụ trách sẽ thấy đợt và có thể soạn, lưu nháp hoặc nộp đề tài. Chỉ đề tài đã duyệt mới được hiển thị cho sinh viên khi đến thời gian đăng ký.</p>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>

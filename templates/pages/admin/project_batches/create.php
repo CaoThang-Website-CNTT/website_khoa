@@ -28,7 +28,8 @@ $wizardSteps = [
     data-step-wizard-label="Tiến trình tạo đợt đồ án" aria-live="polite">
   </div>
 
-  <form id="form-create-batch">
+  <form id="form-create-batch" action="<?= url('admin/project_batches') ?>" method="POST">
+    <?= csrf_field() ?>
     <!-- BƯỚC 1: THÔNG TIN CHUNG -->
     <div class="wizard-step" id="step-1" data-step-wizard-panel="0">
       <div class="card shadow">
@@ -150,7 +151,6 @@ $wizardSteps = [
 <?php $layout->start("scripts") ?>
 <script>
   window.API_BASE_URL = <?= json_encode(url('api/v1/project_batches')) ?>;
-  window.REDIRECT_URL = <?= json_encode(url('admin/project_batches')) ?>;
   window.BATCH_CREATE_WIZARD_STEPS = <?= json_encode($wizardSteps, JSON_UNESCAPED_UNICODE) ?>;
 
   // Cài giá trị mặc định cho class_of min-max

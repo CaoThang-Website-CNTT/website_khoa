@@ -268,7 +268,7 @@ if ($group) {
                   <div class="space-y-2">
                     <p class="text-sm font-medium">Tài liệu mô tả đề tài</p>
                     <?php if (trim($assignedTopic['description'])) { ?>
-                      <a href="<?= url('public/media/' . $assignedTopic['pdf_file_path']) ?>" target="_blank" class="btn" data-variant="secondary" data-size="md">
+                      <a href="<?= url('storage/' . ltrim($assignedTopic['pdf_file_path'], '/')) ?>" target="_blank" class="btn" data-variant="secondary" data-size="md">
                         <i class="fa-solid fa-file-pdf mr-1"></i> Xem tài liệu
                       </a>
                     <?php } else { ?>

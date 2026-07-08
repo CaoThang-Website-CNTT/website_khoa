@@ -1039,6 +1039,7 @@
   }
 
   .field[data-field-required] .field__label::after,
+  .field[data-field-conditionally-required] .field__label::after,
   .field__label:has(+ [data-field-required])::after {
     content: "*";
     margin-left: -0.25rem;
