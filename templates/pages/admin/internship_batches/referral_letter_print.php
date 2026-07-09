@@ -68,7 +68,7 @@ $approverStorageKey = 'referral-letter-approver:' . (string)($authUser['account_
       <form id="printForm">
         <div class="field-group">
           <div class="field"><label class="field__label" for="inp_document_number">Số công văn</label><input class="field__input" type="text" id="inp_document_number" value="<?= htmlspecialchars($documentNumber) ?>" placeholder="VD: 123/CĐKTCT-CTCT HSSV"></div>
-          <div class="field" data-field-required><label class="field__label" for="inp_approver_name">Giảng viên phê duyệt</label><input class="field__input" type="text" id="inp_approver_name" value="<?= htmlspecialchars($defaultApproverName) ?>" required maxlength="255"></div>
+          <div class="field" data-field-required><label class="field__label" for="inp_approver_name">Giáo viên hướng dẫn</label><input class="field__input" type="text" id="inp_approver_name" value="<?= htmlspecialchars($defaultApproverName) ?>" required maxlength="255"></div>
           <div class="field"><label class="field__label" for="inp_start_date">Ngày bắt đầu thực tập</label><input class="field__input" type="date" id="inp_start_date" value="<?= $letter['internship_start_date'] ?: date('Y-m-d', strtotime($batch['start_at'])) ?>"></div>
           <div class="field"><label class="field__label" for="inp_end_date">Ngày kết thúc thực tập</label><input class="field__input" type="date" id="inp_end_date" value="<?= $letter['internship_end_date'] ?: date('Y-m-d', strtotime($batch['end_at'])) ?>"></div>
         </div>
@@ -109,7 +109,7 @@ $approverStorageKey = 'referral-letter-approver:' . (string)($authUser['account_
 
     <p class="paragraph">* Tạo điều kiện cho: <strong><?= $studentCount ?></strong> sinh viên (danh sách đính kèm).</p>
     <p class="paragraph">* Đến thực tập sản xuất tại đơn vị theo ngành, nghề đào tạo: <strong><?= htmlspecialchars($trainingProgramStr) ?></strong></p>
-    <p class="paragraph">* Với giảng viên đại diện phê duyệt là Thầy/Cô: <strong class="dyn-approver"><?= htmlspecialchars($defaultApproverName ?: '..................................') ?></strong></p>
+    <p class="paragraph">* Với giáo viên hướng dẫn là Thầy/Cô: <strong class="dyn-approver"><?= htmlspecialchars($defaultApproverName ?: '..................................') ?></strong></p>
     <p class="paragraph">* Thời gian thực tập từ ngày: <strong class="dyn-start-date"><?= htmlspecialchars($startDateStr) ?></strong> đến ngày <strong class="dyn-end-date"><?= htmlspecialchars($endDateStr) ?></strong></p>
     <p class="paragraph">* Nội dung thực tập: theo đề cương thực tập (đính kèm).</p>
 

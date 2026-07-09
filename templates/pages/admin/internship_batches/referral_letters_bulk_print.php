@@ -78,7 +78,7 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
       <p class="paragraph">Trường Cao Đẳng Kỹ Thuật Cao Thắng kính đề nghị Quý đơn vị:</p>
       <p class="paragraph">* Tạo điều kiện cho: <strong><?= count($students) ?></strong> sinh viên (danh sách đính kèm).</p>
       <p class="paragraph">* Đến thực tập sản xuất tại đơn vị theo ngành, nghề đào tạo: <strong><?= htmlspecialchars($program) ?></strong></p>
-      <p class="paragraph">* Với giảng viên đại diện phê duyệt là Thầy/Cô: <strong class="dyn-approver"><?= htmlspecialchars($defaultApproverName ?: '..................................') ?></strong></p>
+      <p class="paragraph">* Với giáo viên hướng dẫn là Thầy/Cô: <strong class="dyn-approver"><?= htmlspecialchars($defaultApproverName ?: '..................................') ?></strong></p>
       <p class="paragraph">* Thời gian thực tập từ ngày: <strong class="dyn-start-date"><?= date('d/m/Y', strtotime($batch['start_at'])) ?></strong> đến ngày <strong class="dyn-end-date"><?= date('d/m/Y', strtotime($batch['end_at'])) ?></strong></p>
       <p class="paragraph">* Nội dung thực tập: theo đề cương thực tập (đính kèm).</p>
       <p class="paragraph">Nhà trường cùng với giáo viên hướng dẫn có trách nhiệm giáo dục, nhắc nhở sinh viên trường chấp hành nghiêm nội quy, quy định thực tập, sản xuất tại Quý Đơn vị.</p>

@@ -318,7 +318,7 @@ class ReferralLetterService implements IReferralLetterService
       throw new Exception('Giấy giới thiệu phải được duyệt trước khi in.');
     }
     $printData['approver_name'] = trim((string)($printData['approver_name'] ?? ''));
-    if ($printData['approver_name'] === '') throw new Exception('Vui lòng nhập tên giảng viên phê duyệt.');
+    if ($printData['approver_name'] === '') throw new Exception('Vui lòng nhập tên Giáo viên hướng dẫn.');
 
     return Database::getInstance()->transaction(function () use ($id, $processedBy, $printData) {
       if (!empty($printData)) {
@@ -341,7 +341,7 @@ class ReferralLetterService implements IReferralLetterService
     $startDate = (string)($printData['internship_start_date'] ?? '');
     $endDate = (string)($printData['internship_end_date'] ?? '');
     $approverName = trim((string)($printData['approver_name'] ?? ''));
-    if ($approverName === '') throw new Exception('Vui lòng nhập tên giảng viên phê duyệt.');
+    if ($approverName === '') throw new Exception('Vui lòng nhập tên Giáo viên hướng dẫn.');
     $printData['approver_name'] = $approverName;
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate) || $startDate > $endDate)
       throw new Exception('Thời gian thực tập không hợp lệ.');
