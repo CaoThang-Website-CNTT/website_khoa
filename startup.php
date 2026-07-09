@@ -141,7 +141,10 @@ require_once BASE_PATH . '/stores/referral_letter_student_store.php';
 require_once BASE_PATH . '/stores/ticket_store.php';
 require_once BASE_PATH . '/stores/department_store.php';
 require_once BASE_PATH . '/stores/email_job_store.php';
-
+require_once BASE_PATH . '/stores/project_batch_store.php';
+require_once BASE_PATH . '/stores/project_topic_store.php';
+require_once BASE_PATH . '/stores/project_group_store.php';
+require_once BASE_PATH . '/stores/project_aspiration_store.php';
 // Services
 require_once BASE_PATH . '/services/account_service.php';
 require_once BASE_PATH . '/services/auth_service.php';
