@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController, CmsPageController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController, CmsPageController, ProjectBatchController, ProjectAllocationController, ProjectEligibilityController};
 use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
@@ -199,6 +199,32 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     // Teachers
     $router->get('/{id}/teachers', [InternshipBatchController::class, 'teachers']);
   });
+
+  // Project Batches
+  $router->prefix('project_batches')->group(function ($router) {
+    $router->get('/', [ProjectBatchController::class, 'index']);
+    $router->get('/create', [ProjectBatchController::class, 'create']);
+    $router->post('/', [ProjectBatchController::class, 'store']);
+    $router->get('/{id}', [ProjectBatchController::class, 'show']);
+    $router->post('/{id}', [ProjectBatchController::class, 'update']);
+    $router->post('/delete/{id}', [ProjectBatchController::class, 'destroy']);
+    $router->post('/{id}/publish', [ProjectBatchController::class, 'publish']);
+    $router->post('/{id}/close', [ProjectBatchController::class, 'close']);
+
+    // Topics
+    $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
+
+    // Allocation 
+    $router->get('/{id}/allocation', [ProjectAllocationController::class, 'index']);
+    $router->post('/{id}/allocation/auto', [ProjectAllocationController::class, 'autoAllocate']);
+    $router->post('/{id}/allocation/manual', [ProjectAllocationController::class, 'manualAssign']);
+
+    // Eligibility
+    $router->get('/{id}/eligibility', [ProjectEligibilityController::class, 'index']);
+    $router->post('/{id}/eligibility/preview', [ProjectEligibilityController::class, 'preview']);
+    $router->post('/{id}/eligibility/confirm', [ProjectEligibilityController::class, 'confirm']);
+  });
+
 
   // Companies
   $router->prefix('companies')->group(function ($router) {

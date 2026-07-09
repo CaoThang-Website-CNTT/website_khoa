@@ -196,6 +196,9 @@ require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/company_controller.php';
 require_once BASE_PATH . '/controllers/web/teacher_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/ticket_controller.php';
+require_once BASE_PATH . '/controllers/web/project_batch_controller.php';
+require_once BASE_PATH . '/controllers/web/project_allocation_controller.php';
+require_once BASE_PATH . '/controllers/web/project_eligibility_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/account_api_controller.php';
@@ -211,3 +214,4 @@ require_once BASE_PATH . '/controllers/api/post_api_controller.php';
 require_once BASE_PATH . '/controllers/api/teacher_dashboard_api_controller.php';
 require_once BASE_PATH . '/controllers/api/export_api_controller.php';
 require_once BASE_PATH . '/controllers/api/classroom_api_controller.php';
+require_once BASE_PATH . '/controllers/api/project_batch_api_controller.php';
