@@ -60,7 +60,7 @@ class BatchStatus
     public static function getEffectiveOptions(): array
     {
         $meta = self::getMetadata();
-        $options = [['label' => 'Tất cả', 'value' => '']];
+        $options = [];
         
         $order = [self::DRAFT, self::UPCOMING, self::ACTIVE, self::ENDED, self::CLOSED];
         foreach ($order as $key) {

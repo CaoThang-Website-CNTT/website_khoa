@@ -20,7 +20,9 @@ require_once BASE_PATH . '/includes/core/schema/compiler/mysql_compiler.php';
 require_once BASE_PATH . '/includes/core/layout.php';
 // Enums
 require_once BASE_PATH . '/includes/core/enums/batch_status.php';
-
+require_once BASE_PATH . '/includes/core/enums/project_batch_status.php';
+require_once BASE_PATH . '/includes/core/enums/project_topic_status.php';
+require_once BASE_PATH . '/includes/core/enums/project_aspiration_status.php';
 // Session
 require_once BASE_PATH . '/includes/core/session/session.php';
 // Middleware
@@ -80,7 +82,11 @@ require_once BASE_PATH . '/models/referral_letter.php';
 require_once BASE_PATH . '/models/ticket.php';
 require_once BASE_PATH . '/models/department.php';
 require_once BASE_PATH . '/models/referral_letter_student.php';
-
+require_once BASE_PATH . '/models/project_batch.php';
+require_once BASE_PATH . '/models/project_topic.php';
+require_once BASE_PATH . '/models/project_group.php';
+require_once BASE_PATH . '/models/project_group_member.php';
+require_once BASE_PATH . '/models/project_aspiration.php';
 // Editor (Post)
 require_once BASE_PATH . '/includes/editor/rich_text_renderer.php';
 require_once BASE_PATH . '/includes/editor/render_result.php';
