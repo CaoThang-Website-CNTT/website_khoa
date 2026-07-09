@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Services\ProjectBatchService;
 use App\Services\ProjectTopicService;
 use App\Core\Request;
+use App\Core\ValidationException;
 use Exception;
 
 class ProjectBatchController extends Controller
@@ -36,7 +37,24 @@ class ProjectBatchController extends Controller
 
   public function store(Request $request)
   {
-    $data = $request->all();
+    try {
+      $data = $this->validate($request, [
+        'title' => ['required', 'max:255'],
+        'description' => ['nullable'],
+        'min_class_of' => ['required', 'integer'],
+        'max_class_of' => ['required', 'integer'],
+        'max_aspirations' => ['required', 'integer', 'min:1'],
+        'topic_proposal_start' => ['required', 'date'],
+        'topic_proposal_end' => ['required', 'date', 'after:topic_proposal_start'],
+        'registration_start' => ['nullable', 'date'],
+        'registration_end' => ['nullable', 'date', 'after:registration_start'],
+        'supervisors' => ['required', 'array'],
+      ]);
+    } catch (ValidationException $e) {
+      $request->session()->flashNotify('error', 'Dữ liệu không hợp lệ, vui lòng kiểm tra lại.');
+      return $this->redirect('admin/project_batches/create');
+    }
+
     $authUser = $request->session()->authUser();
     $adminId = $authUser['account_id'] ?? 0;
 
@@ -78,7 +96,23 @@ class ProjectBatchController extends Controller
 
   public function update($id, Request $request)
   {
-    $data = $request->all();
+    try {
+      $data = $this->validate($request, [
+        'title' => ['required', 'max:255'],
+        'description' => ['nullable'],
+        'min_class_of' => ['required', 'integer'],
+        'max_class_of' => ['required', 'integer'],
+        'max_aspirations' => ['required', 'integer', 'min:1'],
+        'topic_proposal_start' => ['required', 'date'],
+        'topic_proposal_end' => ['required', 'date', 'after:topic_proposal_start'],
+        'registration_start' => ['nullable', 'date'],
+        'registration_end' => ['nullable', 'date', 'after:registration_start'],
+      ]);
+    } catch (ValidationException $e) {
+      $request->session()->flashNotify('error', 'Dữ liệu không hợp lệ, vui lòng kiểm tra lại.');
+      return $this->redirect("admin/project_batches/$id");
+    }
+
     try {
       $isSuccess = $this->_ProjectBatchService->updateBatch((int) $id, $data);
       if ($isSuccess) {

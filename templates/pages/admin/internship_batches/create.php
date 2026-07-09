@@ -28,6 +28,7 @@ $wizardSteps = [
     </div>
 
     <form id="form-create-batch">
+      <?= csrf_field() ?>
       <!-- BƯỚC 1: THÔNG TIN CHUNG -->
       <div class="wizard-step" id="step-1" data-step-wizard-panel="0">
         <div class="card shadow">

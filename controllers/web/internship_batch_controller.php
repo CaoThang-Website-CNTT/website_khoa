@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Services\InternshipBatchService;
 use App\Services\ReferralLetterService;
 use App\Core\Request;
+use App\Core\ValidationException;
 
 class InternshipBatchController extends Controller
 {
@@ -89,7 +90,17 @@ class InternshipBatchController extends Controller
     if (!$letter || (int) $letter['batch_id'] !== (int) $id) {
       return $this->json(null, 404, 'Không tìm thấy giấy giới thiệu trong đợt thực tập này.');
     }
-    $data = $request->all();
+
+    try {
+      $data = $this->validate($request, [
+        'internship_start_date' => ['nullable', 'date'],
+        'internship_end_date' => ['nullable', 'date', 'after:internship_start_date'],
+        'document_number' => ['nullable', 'max:50'],
+      ]);
+    } catch (ValidationException $e) {
+      return $this->json(['errors' => $e->getErrors()], 422, 'Dữ liệu không hợp lệ.');
+    }
+
     $overrides = [
       'internship_start_date' => $data['internship_start_date'] ?? null,
       'internship_end_date' => $data['internship_end_date'] ?? null,
@@ -207,9 +218,17 @@ class InternshipBatchController extends Controller
 
   public function update($id, Request $request)
   {
-    $data = $request->all();
     try {
+      $data = $this->validate($request, [
+        'title' => ['required', 'max:255'],
+        'description' => ['nullable'],
+        'start_at' => ['required', 'date'],
+        'end_at' => ['required', 'date', 'after:start_at'],
+      ]);
       $isSuccess = $this->_internshipBatchService->updateBatch((int) $id, $data);
+    } catch (ValidationException $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+      return $this->redirect("admin/internship_batches/$id");
     } catch (\Exception $e) {
       $request->session()->flashNotify('error', $e->getMessage());
       return $this->redirect("admin/internship_batches/$id");

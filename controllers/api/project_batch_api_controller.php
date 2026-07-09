@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Core\Controller;
 use App\Core\Request;
+use App\Core\ValidationException;
 use App\Services\ProjectBatchService;
 use App\Services\ProjectGroupService;
 use Exception;
@@ -28,7 +29,22 @@ class ProjectBatchApiController extends Controller
       return $this->json(null, 401, 'Unauthorized');
     }
 
-    $data = $request->all();
+    try {
+      $data = $this->validate($request, [
+        'title' => ['required', 'max:255'],
+        'description' => ['nullable'],
+        'min_class_of' => ['required', 'integer'],
+        'max_class_of' => ['required', 'integer'],
+        'max_aspirations' => ['required', 'integer', 'min:1'],
+        'topic_proposal_start' => ['required', 'date'],
+        'topic_proposal_end' => ['required', 'date', 'after:topic_proposal_start'],
+        'registration_start' => ['nullable', 'date'],
+        'registration_end' => ['nullable', 'date', 'after:registration_start'],
+        'supervisors' => ['required', 'array'],
+      ]);
+    } catch (ValidationException $e) {
+      return $this->json(['errors' => $e->getErrors()], 422, 'Dữ liệu không hợp lệ.');
+    }
 
     try {
       $batchId = $this->_service->createBatch($data, $adminId);

@@ -159,11 +159,11 @@ $currentStatus = [
           <div class="grid grid-cols-3 gap-4">
             <div class="field" data-field-required>
               <label class="field__label" for="min_class_of">Khóa áp dụng (Từ)</label>
-              <input type="number" id="min_class_of" class="field__input" name="min_class_of" value="<?= htmlspecialchars($batchObj->min_class_of) ?>" min="1" required>
+              <input type="number" id="min_class_of" class="field__input" name="min_class_of" value="<?= htmlspecialchars($batchObj->min_class_of) ?>" min="1900" placeholder="Ví dụ: 2021" required>
             </div>
             <div class="field" data-field-required>
               <label class="field__label" for="max_class_of">Khóa áp dụng (Đến)</label>
-              <input type="number" id="max_class_of" class="field__input" name="max_class_of" value="<?= htmlspecialchars($batchObj->max_class_of) ?>" min="1" required>
+              <input type="number" id="max_class_of" class="field__input" name="max_class_of" value="<?= htmlspecialchars($batchObj->max_class_of) ?>" min="1900" placeholder="Ví dụ: 2023" required>
             </div>
             <div class="field" data-field-required>
               <label class="field__label" for="max_aspirations">Số nguyện vọng tối đa</label>

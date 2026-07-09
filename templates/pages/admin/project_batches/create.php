@@ -29,6 +29,7 @@ $wizardSteps = [
   </div>
 
   <form id="form-create-batch">
+    <?= csrf_field() ?>
     <!-- BƯỚC 1: THÔNG TIN CHUNG -->
     <div class="wizard-step" id="step-1" data-step-wizard-panel="0">
       <div class="card shadow">
@@ -57,11 +58,11 @@ $wizardSteps = [
             <div class="grid grid-cols-3 gap-4">
               <div class="field" data-field-required>
                 <label class="field__label" for="min_class_of">Khóa áp dụng (Từ)</label>
-                <input type="number" id="min_class_of" class="field__input" name="min_class_of" placeholder="VD: 21" min="1" required>
+                <input type="number" id="min_class_of" class="field__input" name="min_class_of" min="1900" placeholder="Ví dụ: 2021" required>
               </div>
               <div class="field" data-field-required>
                 <label class="field__label" for="max_class_of">Khóa áp dụng (Đến)</label>
-                <input type="number" id="max_class_of" class="field__input" name="max_class_of" placeholder="VD: 23" min="1" required>
+                <input type="number" id="max_class_of" class="field__input" name="max_class_of" min="1900" placeholder="Ví dụ: 2023" required>
               </div>
               <div class="field" data-field-required>
                 <label class="field__label" for="max_aspirations">Số nguyện vọng tối đa</label>
@@ -156,9 +157,8 @@ $wizardSteps = [
   // Cài giá trị mặc định cho class_of min-max
   document.addEventListener('DOMContentLoaded', () => {
     const currentYear = new Date().getFullYear();
-    const currentYearShort = currentYear % 100; // e.g. 26
-    document.getElementById('min_class_of').value = currentYearShort - 5;
-    document.getElementById('max_class_of').value = currentYearShort - 3;
+    document.getElementById('min_class_of').value = currentYear - 5;
+    document.getElementById('max_class_of').value = currentYear - 3;
   });
 </script>
 <script src="<?= url('public/js/pages/project_batch_create.js') ?>" type="module"></script>

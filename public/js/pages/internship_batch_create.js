@@ -127,8 +127,12 @@ document.addEventListener("DOMContentLoaded", () => {
       uploadStatusText.textContent = "Đang xử lý file...";
 
       try {
+        const csrfToken = document.querySelector('input[name="_token"]')?.value || "";
         const response = await fetch(`${apiBase}/parse-import`, {
           method: "POST",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken
+          },
           body: formData,
         });
 
@@ -515,9 +519,14 @@ document.addEventListener("DOMContentLoaded", () => {
           `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
       }
 
+      const csrfToken = document.querySelector('input[name="_token"]')?.value || "";
+
       const res = await fetch(apiBase, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken
+        },
         body: JSON.stringify(payload),
       });
 

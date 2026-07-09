@@ -27,20 +27,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // WIZARD VALIDATION
   const validateStep1 = () => {
     if (!form.reportValidity()) return false;
+
     const minClassOf = Number.parseInt(form.min_class_of.value, 10);
     const maxClassOf = Number.parseInt(form.max_class_of.value, 10);
     if (!Number.isInteger(minClassOf) || !Number.isInteger(maxClassOf) || minClassOf <= 0 || maxClassOf <= 0 || minClassOf > maxClassOf) {
-      const message = "Niên khóa bắt đầu và kết thúc phải hợp lệ; niên khóa bắt đầu không được lớn hơn niên khóa kết thúc.";
-      if (window.toast) toast.error("Lỗi", message);
-      else alert(message);
+      if (window.toast) toast.error("Lỗi", "Niên khóa bắt đầu hoặc kết thúc không hợp lệ.");
+      else alert("Niên khóa bắt đầu hoặc kết thúc không hợp lệ.");
       return false;
     }
     const propStart = new Date(form.topic_proposal_start.value);
     const propEnd = new Date(form.topic_proposal_end.value);
     if (propEnd <= propStart) {
-      if (window.toast)
-        toast.error("Lỗi", "Ngày kết thúc đề xuất phải lớn hơn ngày bắt đầu.");
-      else alert("Ngày kết thúc đề xuất phải lớn hơn ngày bắt đầu.");
+      if (window.toast) toast.error("Lỗi", "Ngày kết thúc đề xuất phải sau ngày bắt đầu.");
+      else alert("Ngày kết thúc đề xuất phải sau ngày bắt đầu.");
       return false;
     }
 
@@ -49,22 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const regEnd = new Date(form.registration_end.value);
 
       if (regEnd <= regStart) {
-        if (window.toast)
-          toast.error(
-            "Lỗi",
-            "Ngày kết thúc đăng ký phải lớn hơn ngày bắt đầu.",
-          );
-        else alert("Ngày kết thúc đăng ký phải lớn hơn ngày bắt đầu.");
+        if (window.toast) toast.error("Lỗi", "Ngày kết thúc đăng ký phải sau ngày bắt đầu.");
+        else alert("Ngày kết thúc đăng ký phải sau ngày bắt đầu.");
         return false;
       }
 
       if (propEnd > regStart) {
-        if (window.toast)
-          toast.error(
-            "Lỗi",
-            "Thời gian đề xuất phải kết thúc trước khi đăng ký.",
-          );
-        else alert("Thời gian đề xuất phải kết thúc trước khi đăng ký.");
+        if (window.toast) toast.error("Lỗi", "Đăng ký phải bắt đầu sau khi đề xuất kết thúc.");
+        else alert("Đăng ký phải bắt đầu sau khi đề xuất kết thúc.");
         return false;
       }
     }
@@ -310,10 +301,15 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       btnSubmit.setAttribute("disabled", "disabled");
       btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
+      
+      const csrfToken = document.querySelector('input[name="_token"]')?.value || "";
 
       const res = await fetch(apiBase, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken
+        },
         body: JSON.stringify(payload),
       });
 
@@ -322,6 +318,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!res.ok) {
         let errorMsg = result.message || "Lỗi khi tạo đợt";
+        if (result.data && result.data.errors) {
+          errorMsg = Object.values(result.data.errors)[0];
+        } else if (result.data && result.data.message) {
+          errorMsg = result.data.message;
+        }
         throw new Error(errorMsg);
       }
 
