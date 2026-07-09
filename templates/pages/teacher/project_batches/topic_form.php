@@ -68,8 +68,8 @@ $rejectReason = $topic['reject_reason'] ?? null;
       <div class="grid grid-cols-2 gap-4">
         <div class="field" data-field-required>
           <label for="max_students" class="field__label">Số lượng sinh viên tối đa</label>
-          <input type="number" name="max_students" id="max_students" class="field__input" required min="1" max="10"
-            value="<?= htmlspecialchars((string) $maxStudents) ?>">
+          <input type="number" name="max_students" id="max_students" class="field__input" required min="2" max="100" step="2"
+            value="<?= htmlspecialchars((int) $maxStudents) ?>">
         </div>
 
         <div class="field" data-field-conditionally-required>

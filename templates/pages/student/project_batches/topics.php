@@ -21,9 +21,11 @@ $canInteract = ($phase === 'registration' && !$isAllocationPublished);
 
 $canAddAspiration = $canInteract && $isLeader && count($aspirationTopicIds) < $maxAspirations;
 
-$topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLeader, $canAddAspiration, $currentBatch, $isLocked) {
+$index = 1;
+$topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLeader, $canAddAspiration, $currentBatch, $isLocked, &$index) {
   $isAdded = in_array($topic['id'], $aspirationTopicIds);
   return [
+    'stt' => $index++,
     'id' => $topic['id'],
     'title' => $topic['title'],
     'description' => $topic['description'],
@@ -93,8 +95,8 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
     <?php endif; ?>
 
     <div class="tm-container" data-tm="student_topics_table" data-tm-mode="client" data-tm-searchable data-tm-id-key="id">
-      <template data-tm-col="id" data-tm-label="STT" data-tm-width="5%">
-        <span class="text-center">{{ __index + 1 }}</span>
+      <template data-tm-col="stt" data-tm-label="STT" data-tm-width="5%">
+        <div class="text-center">{{ row.stt }}</div>
       </template>
 
       <template data-tm-col="title" data-tm-label="Tên đề tài" data-tm-filter-type="text">
@@ -132,13 +134,13 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
                 <?= csrf_field() ?>
                 <input type="hidden" name="topic_id" value="{{ row.id }}">
                 <button type="submit" class="btn" data-variant="primary" data-size="sm" {{ !row.can_add ? 'disabled title="Đã đủ nguyện vọng tối đa hoặc đã chốt"' : '' }}>
-                  <i class="fa-solid fa-plus"></i>Thêm nguyện vọng
+                  <i class="fa-solid fa-plus"></i>Thêm
                 </button>
               </form>
             </div>
 
             <div class="{{ row.is_leader ? 'hidden' : '' }}">
-              <button class="btn" data-variant="secondary" data-size="sm" disabled>Thêm NV</button>
+              <button class="btn" data-variant="secondary" data-size="sm" disabled>Thêm</button>
             </div>
           </div>
         </div>

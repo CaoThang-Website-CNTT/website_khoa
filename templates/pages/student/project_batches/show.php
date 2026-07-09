@@ -180,6 +180,10 @@ if ($group) {
                         <?= csrf_field() ?>
                         <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" data-confirm-msg="Bạn có chắc chắn muốn từ chối tham gia nhóm này?" data-modal-trigger="#action-confirm-modal">Từ chối</button>
                       </form>
+                    <?php else: ?>
+                      <div class="text-sm font-medium" style="color: var(--destructive);">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Đã hết hạn đăng ký, bạn không thể xác nhận tham gia / từ chối vào nhóm nữa. Nhóm này sẽ bị xem là không hợp lệ.
+                      </div>
                     <?php endif; ?>
                   </div>
                 </div>

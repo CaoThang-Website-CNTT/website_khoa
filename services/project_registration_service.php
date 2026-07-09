@@ -193,13 +193,13 @@ class ProjectRegistrationService implements IProjectRegistrationService
       throw new Exception("Sinh viên $mssv không thuộc hệ Cao đẳng.");
     }
 
-    if ($major !== '06') {
-      throw new Exception("Sinh viên $mssv không thuộc Khoa CNTT.");
+    if (!in_array($major, ['06', '68', '69'])) {
+      throw new Exception("Sinh viên $mssv không thuộc các ngành/nghề được phép đăng ký (CNTT, QTM, SCMT).");
     }
 
     if ($minBatchYear > 0 && $maxBatchYear > 0) {
       if ($studentYear < $minBatchYear || $studentYear > $maxBatchYear) {
-        throw new Exception("Sinh viên $mssv (Khóa $year) không đủ điều kiện. Đợt này chỉ dành cho Khóa $minBatchYear đến Khóa $maxBatchYear.");
+        throw new Exception("Sinh viên $mssv (Khóa $year) không đủ điều kiện. Đợt này chỉ dành cho Khóa $minClass đến Khóa $maxClass.");
       }
     }
 

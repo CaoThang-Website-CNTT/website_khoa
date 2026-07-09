@@ -63,7 +63,13 @@ $currentStatus = [
 <?php endif; ?>
 <?php $layout->end() ?>
 
-<?php if ($batchObj->status === ProjectBatchStatus::PUBLISHED && (empty($batchObj->registration_start) || empty($batchObj->registration_end))): ?>
+<?php
+// Kiểm tra thời gian đăng ký đã cấu hình hợp lệ chưa (xử lý cả trường hợp rỗng và 0000-00-00)
+$missingRegStart = empty($batchObj->registration_start) || str_starts_with($batchObj->registration_start, '0000-00-00');
+$missingRegEnd = empty($batchObj->registration_end) || str_starts_with($batchObj->registration_end, '0000-00-00');
+?>
+
+<?php if ($batchObj->status === ProjectBatchStatus::PUBLISHED && ($missingRegStart || $missingRegEnd)): ?>
   <div class="alert" data-variant="warning">
     <i class="fa-solid fa-triangle-exclamation"></i>
     <div class="alert-content">

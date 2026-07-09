@@ -48,7 +48,7 @@ $hasPreview = isset($previewData) && $previewData !== null;
       <input type="hidden" name="force" value="1">
     <?php endif; ?>
     <button type="button" class="btn btn-confirm-action" data-variant="primary" data-size="lg"
-      data-confirm-msg="<?= ($stats['unassigned'] ?? 0) > 0 ? "CẢNH BÁO: Còn {$stats['unassigned']} nhóm hợp lệ chưa được phân bổ đề tài. Nếu bạn công bố bây giờ, các nhóm này sẽ thấy kết quả là CHƯA ĐƯỢC PHÂN BỔ. Bạn có đồng ý không?" : "Công bố kết quả phân bổ? Sinh viên và giảng viên sẽ xem được thông tin phân bổ chính thức." ?>"
+      data-confirm-msg="<?= ($stats['unassigned'] ?? 0) > 0 ? "CẢNH BÁO: Còn {$stats['unassigned']} nhóm chưa được phân bổ đề tài. Nếu bạn công bố bây giờ, các nhóm này sẽ thấy kết quả là CHƯA ĐƯỢC PHÂN BỔ. Bạn có đồng ý không?" : "Công bố kết quả phân bổ? Sinh viên và giảng viên sẽ xem được thông tin phân bổ chính thức." ?>"
       data-modal-trigger="#action-confirm-modal">
       <i class="fa-solid fa-bullhorn"></i> Chốt & Công bố
     </button>
@@ -100,6 +100,35 @@ $tabs = [
         Mọi thay đổi phân bổ từ thời điểm này sẽ được cập nhật trực tiếp cho sinh viên.
         Hãy thông báo cho sinh viên bị ảnh hưởng nếu có sự thay đổi.
       </p>
+    </div>
+  </div>
+<?php endif; ?>
+
+<?php if (!$hasPreview): ?>
+  <?php
+  $inExcel = $previewData['in_excel'] ?? [];
+  $notRegistered = $previewData['eligible_not_registered'] ?? [];
+  $ineligible = $previewData['ineligible'] ?? [];
+  ?>
+  <div class="card mb-6 border">
+    <div class="card__header">
+      <h3 class="card__title text-warning"><i class="fa-solid fa-triangle-exclamation"></i> Preview Dữ Liệu Import</h3>
+      <p class="card__description">Vui lòng kiểm tra kỹ danh sách dưới đây trước khi XÁC NHẬN. Những sinh viên "Không đủ điều kiện" sẽ bị đánh dấu ở các nhóm nếu bạn XÁC NHẬN.</p>
+    </div>
+    <hr class="separator">
+    <div class="card_content px-4">
+      <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/import-confirm") ?>" method="POST" id="confirm-eligibility-form">
+        <?= csrf_field() ?>
+
+        <div class="flex gap-4 items-center">
+          <button type="submit" class="btn" data-variant="primary" data-size="lg">Xác nhận Lưu Dữ Liệu</button>
+          <div class="text-sm">
+            Đủ điều kiện (Trong file): <span class="font-semibold"><?= count($inExcel) ?></span> |
+            Chưa đăng ký: <span class="font-semibold"><?= count($notRegistered) ?></span> |
+            Bị loại: <span class="font-semibold"><?= count($ineligible) ?></span>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 <?php endif; ?>
@@ -193,35 +222,6 @@ $tabs = [
   </div>
 <?php endif; ?>
 
-<?php if ($hasPreview): ?>
-  <?php
-  $inExcel = $previewData['in_excel'] ?? [];
-  $notRegistered = $previewData['eligible_not_registered'] ?? [];
-  $ineligible = $previewData['ineligible'] ?? [];
-  ?>
-  <div class="card mb-6 border">
-    <div class="card__header">
-      <h3 class="card__title text-warning"><i class="fa-solid fa-triangle-exclamation"></i> Preview Dữ Liệu Import</h3>
-      <p class="card__description">Vui lòng kiểm tra kỹ danh sách dưới đây trước khi XÁC NHẬN. Những sinh viên "Không đủ điều kiện" sẽ bị đánh dấu ở các nhóm nếu bạn XÁC NHẬN.</p>
-    </div>
-    <hr class="separator">
-    <div class="card_content px-4">
-      <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/import-confirm") ?>" method="POST" id="confirm-eligibility-form">
-        <?= csrf_field() ?>
-
-        <div class="flex gap-4 items-center">
-          <button type="submit" class="btn" data-variant="primary" data-size="lg">Xác nhận Lưu Dữ Liệu</button>
-          <div class="text-sm">
-            Đủ điều kiện (Trong file): <span class="font-semibold"><?= count($inExcel) ?></span> |
-            Chưa đăng ký: <span class="font-semibold"><?= count($notRegistered) ?></span> |
-            Bị loại: <span class="font-semibold"><?= count($ineligible) ?></span>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-<?php endif; ?>
-
 <div class="tabs mb-4" data-tabs data-tabs-id="<?= htmlspecialchars($tabsId) ?>"
   data-tabs-mode="<?= htmlspecialchars($tabsMode) ?>" data-tabs-panel-active="<?= htmlspecialchars($activeTab) ?>">
   <div class="tabs__list" role="tablist">
@@ -286,7 +286,7 @@ $tabs = [
   </div>
   <div class="modal__content">
     <p>Hệ thống sẽ tự động phân bổ đề tài dựa trên nguyện vọng và thời điểm chốt nguyện vọng.</p>
-    <p>Lưu ý: Chỉ các nhóm ĐÃ CHỐT nguyện vọng mới được tham gia phân bổ.</p>
+    <p>Lưu ý: Chỉ các nhóm ĐÃ CHỐT nguyện vọng và các thành viên đã XÁC NHẬN VÀO NHÓM mới được tham gia phân bổ.</p>
     <div class="alert" data-variant="warning">
       <i class="fa-solid fa-triangle-exclamation"></i> Thao tác này sẽ ghi đè các phân bổ cũ!
     </div>
@@ -470,6 +470,8 @@ $tabs = [
               nameDiv.insertAdjacentHTML('beforeend', '<span class="badge ml-1" data-variant="secondary">Làm 1 mình</span>');
             } else if (m.is_leader) {
               nameDiv.insertAdjacentHTML('beforeend', '<span class="badge ml-1" data-variant="primary">Nhóm trưởng</span>');
+            } else if (!m.is_confirmed) {
+              nameDiv.insertAdjacentHTML('beforeend', '<span class="badge ml-1" data-variant="warning" title="Chưa xác nhận tham gia nhóm">Chưa xác nhận</span>');
             }
             rowDiv.appendChild(nameDiv);
 
