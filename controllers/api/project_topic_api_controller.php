@@ -50,42 +50,42 @@ class ProjectTopicApiController extends Controller
     public function approve(Request $request, $id)
     {
         $authUser = $request->session()->authUser();
-        $adminId = $authUser['account_id'] ?? 0;
+        $adminId = (int) ($authUser['account_id'] ?? 0);
 
         try {
             $this->_topicService->reviewTopic((int)$id, ProjectTopicStatus::APPROVED, null, $adminId);
-            return $this->json(['success' => true, 'message' => 'Đã duyệt đề tài thành công.']);
+            return $this->json(null, 200, 'Đã duyệt đề tài thành công.');
         } catch (Exception $e) {
-            return $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+            return $this->json(null, 400, $e->getMessage());
         }
     }
 
     public function reject(Request $request, $id)
     {
         $authUser = $request->session()->authUser();
-        $adminId = $authUser['account_id'] ?? 0;
+        $adminId = (int) ($authUser['account_id'] ?? 0);
         
         $data = $request->json();
-        $reason = $data['reason'] ?? '';
+        $reason = is_string($data['reason'] ?? null) ? trim($data['reason']) : '';
 
         try {
             $this->_topicService->reviewTopic((int)$id, ProjectTopicStatus::REJECTED, $reason, $adminId);
-            return $this->json(['success' => true, 'message' => 'Đã từ chối đề tài.']);
+            return $this->json(null, 200, 'Đã từ chối đề tài.');
         } catch (Exception $e) {
-            return $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+            return $this->json(null, 400, $e->getMessage());
         }
     }
 
     public function bulkApprove(Request $request)
     {
         $authUser = $request->session()->authUser();
-        $adminId = $authUser['account_id'] ?? 0;
+        $adminId = (int) ($authUser['account_id'] ?? 0);
 
         $data = $request->json();
         $topicIds = $data['topic_ids'] ?? [];
 
         if (empty($topicIds) || !is_array($topicIds)) {
-            return $this->json(['success' => false, 'message' => 'Danh sách đề tài không hợp lệ.'], 400);
+            return $this->json(null, 400, 'Danh sách đề tài không hợp lệ.');
         }
 
         $successCount = 0;
@@ -101,9 +101,8 @@ class ProjectTopicApiController extends Controller
         }
 
         return $this->json([
-            'success' => true,
-            'message' => "Đã duyệt thành công $successCount đề tài.",
+            'approved_count' => $successCount,
             'errors' => $errors
-        ]);
+        ], 200, "Đã duyệt thành công $successCount đề tài.");
     }
 }

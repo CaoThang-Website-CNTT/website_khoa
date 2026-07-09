@@ -27,6 +27,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // WIZARD VALIDATION
   const validateStep1 = () => {
     if (!form.reportValidity()) return false;
+    const minClassOf = Number.parseInt(form.min_class_of.value, 10);
+    const maxClassOf = Number.parseInt(form.max_class_of.value, 10);
+    if (!Number.isInteger(minClassOf) || !Number.isInteger(maxClassOf) || minClassOf <= 0 || maxClassOf <= 0 || minClassOf > maxClassOf) {
+      const message = "Niên khóa bắt đầu và kết thúc phải hợp lệ; niên khóa bắt đầu không được lớn hơn niên khóa kết thúc.";
+      if (window.toast) toast.error("Lỗi", message);
+      else alert(message);
+      return false;
+    }
     const propStart = new Date(form.topic_proposal_start.value);
     const propEnd = new Date(form.topic_proposal_end.value);
     if (propEnd <= propStart) {
@@ -65,7 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
     state.batchData = {
       title: formData.get("title"),
       description: formData.get("description"),
-      class_of: formData.get("class_of"),
+      min_class_of: minClassOf,
+      max_class_of: maxClassOf,
       max_aspirations: formData.get("max_aspirations"),
       topic_proposal_start: formData.get("topic_proposal_start"),
       topic_proposal_end: formData.get("topic_proposal_end"),
@@ -85,13 +94,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Validate quotas
     for (const [id, teacher] of Object.entries(state.selectedTeachers)) {
-      if (teacher.min_students < 0 || teacher.max_students <= 0) {
+      if (!Number.isInteger(teacher.min_students) || !Number.isInteger(teacher.max_students) || teacher.min_students < 0 || teacher.max_students < 0 || teacher.min_students % 2 !== 0 || teacher.max_students % 2 !== 0) {
         if (window.toast)
-          toast.error("Lỗi", "Số lượng sinh viên không hợp lệ (phải > 0).");
-        else alert("Số lượng sinh viên không hợp lệ (phải > 0).");
+          toast.error("Lỗi", "Số lượng sinh viên phải là số chẵn không âm; tối đa bằng 0 nghĩa là không giới hạn.");
+        else alert("Số lượng sinh viên phải là số chẵn không âm; tối đa bằng 0 nghĩa là không giới hạn.");
         return false;
       }
-      if (teacher.min_students > teacher.max_students) {
+      if (teacher.max_students !== 0 && teacher.min_students > teacher.max_students) {
         if (window.toast)
           toast.error(
             "Lỗi",
@@ -239,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
           maxInput.removeAttribute("disabled");
           state.selectedTeachers[teacher.teacher_id] = {
             min_students: parseInt(minInput.value) || 0,
-            max_students: parseInt(maxInput.value) || 20,
+            max_students: Number.parseInt(maxInput.value, 10),
           };
         } else {
           card.classList.remove("selected");
@@ -269,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
       maxInput.addEventListener("input", (e) => {
         if (checkbox.checked) {
           state.selectedTeachers[teacher.teacher_id].max_students =
-            parseInt(e.target.value) || 20;
+            Number.parseInt(e.target.value, 10);
         }
       });
     });

@@ -21,6 +21,8 @@ interface IProjectBatchService
   public function getBatchWithStats(int $id): ?array;
   public function getActiveBatches(): array;
   public function getAvailableTeachers(): array;
+  public function getSupervisorsByBatchId(int $batchId): array;
+  public function isTeacherAssigned(int $batchId, int $teacherId): bool;
 }
 
 class ProjectBatchService implements IProjectBatchService
@@ -48,10 +50,10 @@ class ProjectBatchService implements IProjectBatchService
       }
       $min = (int) $sv['min_students'];
       $max = (int) $sv['max_students'];
-      if ($min < 0 || $max <= 0) {
-        throw new Exception('Số lượng sinh viên phải lớn hơn 0.');
+      if ($min < 0 || $max < 0 || $min % 2 !== 0 || $max % 2 !== 0) {
+        throw new Exception('Số lượng sinh viên phải là số chẵn không âm; tối đa bằng 0 nghĩa là không giới hạn.');
       }
-      if ($max < $min) {
+      if ($max !== 0 && $max < $min) {
         throw new Exception('Số SV tối đa không được nhỏ hơn SV tối thiểu.');
       }
     }
@@ -87,6 +89,14 @@ class ProjectBatchService implements IProjectBatchService
     }
     if ($batch['status'] !== ProjectBatchStatus::DRAFT) {
       throw new Exception('Chỉ có đợt đồ án ở trạng thái bản nháp mới có thể công bố.');
+    }
+
+    $stats = $this->_store->getBatchStats($id);
+    if (($stats['approved_topics'] ?? 0) < 1) {
+      throw new Exception('Vui lòng duyệt ít nhất 1 đề tài trước khi công bố cho sinh viên đăng ký.');
+    }
+    if (empty($batch['registration_start']) || empty($batch['registration_end'])) {
+      throw new Exception('Vui lòng thiết lập thời gian đăng ký đề tài trước khi công bố.');
     }
 
     return $this->_store->updateStatus($id, ProjectBatchStatus::PUBLISHED, [
@@ -159,10 +169,29 @@ class ProjectBatchService implements IProjectBatchService
     return $this->_store->getITTeachers();
   }
 
+  public function getSupervisorsByBatchId(int $batchId): array
+  {
+    return $this->_store->getSupervisorsByBatchId($batchId);
+  }
+
+  public function isTeacherAssigned(int $batchId, int $teacherId): bool
+  {
+    return $this->_store->isTeacherAssigned($batchId, $teacherId);
+  }
+
   private function validateBatchDates(array $data): void
   {
     if (empty($data['title'])) {
       throw new Exception('Tiêu đề là bắt buộc.');
+    }
+
+    $minClassOf = filter_var($data['min_class_of'] ?? null, FILTER_VALIDATE_INT);
+    $maxClassOf = filter_var($data['max_class_of'] ?? null, FILTER_VALIDATE_INT);
+    if ($minClassOf === false || $maxClassOf === false || $minClassOf <= 0 || $maxClassOf <= 0) {
+      throw new Exception('Niên khóa áp dụng không hợp lệ.');
+    }
+    if ($minClassOf > $maxClassOf) {
+      throw new Exception('Niên khóa bắt đầu không được lớn hơn niên khóa kết thúc.');
     }
 
     $dates = [

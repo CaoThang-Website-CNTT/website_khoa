@@ -7,6 +7,7 @@ use App\Core\Request;
 use App\Services\TeacherService;
 use App\Services\ProjectBatchService;
 use App\Services\ProjectTopicService;
+use App\Services\ProjectGroupService;
 use App\Enums\ProjectTopicStatus;
 use App\Enums\ProjectBatchStatus;
 use Exception;
@@ -16,15 +17,18 @@ class TeacherProjectDashboardController extends Controller
     private TeacherService $_teacherService;
     private ProjectBatchService $_batchService;
     private ProjectTopicService $_topicService;
+    private ProjectGroupService $_groupService;
 
     public function __construct(
         TeacherService $teacherService,
         ProjectBatchService $batchService,
-        ProjectTopicService $topicService
+        ProjectTopicService $topicService,
+        ProjectGroupService $groupService
     ) {
         $this->_teacherService = $teacherService;
         $this->_batchService = $batchService;
         $this->_topicService = $topicService;
+        $this->_groupService = $groupService;
     }
 
     public function index(Request $request)
@@ -58,18 +62,82 @@ class TeacherProjectDashboardController extends Controller
             return $this->redirect('/teacher/project_batches');
         }
         
-        if ($batch['status'] === ProjectBatchStatus::DRAFT) {
-            $request->session()->flashNotify('error', 'Đợt đồ án chưa được công bố.');
+        if (!$this->_batchService->isTeacherAssigned($id, $teacher->id)) {
+            $request->session()->flashNotify('error', 'Bạn không được phân công phụ trách đợt đồ án này.');
             return $this->redirect('/teacher/project_batches');
         }
 
         $topics = $this->_topicService->getTopicsByTeacher($id, $teacher->id);
+        $groups = $this->_groupService->getAssignedGroupsByTeacher($id, $teacher->id);
 
         return $this->render('teacher/project_batches/show', [
             'batch' => $batch,
             'topics' => $topics,
+            'groups' => $groups,
             'title' => 'Chi tiết đợt đồ án: ' . $batch['title']
         ], layout: 'dashboard_layout');
+    }
+
+    public function previewRegistrationForms(Request $request, int $id)
+    {
+        $authUser = $request->session()->authUser();
+        $teacher = $authUser ? $this->_teacherService->getTeacherByAccountId($authUser['account_id']) : null;
+        if (!$teacher) return $this->redirect('/login');
+
+        $batch = $this->_batchService->getBatchById($id);
+        $groupIds = (array)$request->input('group_ids', []);
+        if (!$batch || !$groupIds) {
+            $request->session()->flashNotify('error', 'Vui lòng chọn ít nhất một nhóm để in.');
+            return $this->redirect("/teacher/project_batches/{$id}");
+        }
+
+        $groups = $this->_groupService->getAssignedGroupsForPrint($id, $teacher->id, $groupIds);
+        if (count($groups) !== count(array_unique(array_map('intval', $groupIds)))) {
+            $request->session()->flashNotify('error', 'Một hoặc nhiều nhóm không tồn tại hoặc không thuộc quyền hướng dẫn của bạn.');
+            return $this->redirect("/teacher/project_batches/{$id}");
+        }
+
+        $this->render('teacher/project_batches/registration_form_print', [
+            'batch' => $batch,
+            'groups' => $groups,
+        ], layout: null);
+    }
+
+    public function previewRegistrationForm(Request $request, int $id, int $groupId)
+    {
+        $authUser = $request->session()->authUser();
+        $teacher = $authUser ? $this->_teacherService->getTeacherByAccountId($authUser['account_id']) : null;
+        if (!$teacher) return $this->redirect('/login');
+
+        $batch = $this->_batchService->getBatchById($id);
+        $groups = $batch ? $this->_groupService->getAssignedGroupsForPrint($id, $teacher->id, [$groupId]) : [];
+        if (!$batch || count($groups) !== 1) {
+            $request->session()->flashNotify('error', 'Nhóm không tồn tại hoặc không thuộc quyền hướng dẫn của bạn.');
+            return $this->redirect("/teacher/project_batches/{$id}");
+        }
+        $this->render('teacher/project_batches/registration_form_print', [
+            'batch' => $batch,
+            'groups' => $groups,
+        ], layout: null);
+    }
+
+    public function saveRegistrationForms(Request $request, int $id)
+    {
+        $authUser = $request->session()->authUser();
+        $teacher = $authUser ? $this->_teacherService->getTeacherByAccountId($authUser['account_id']) : null;
+        if (!$teacher) return $this->json(null, 401, 'Phiên đăng nhập không hợp lệ.');
+
+        $forms = json_decode((string)$request->input('forms', '[]'), true);
+        if (!is_array($forms)) return $this->json(null, 422, 'Dữ liệu phiếu không hợp lệ.');
+
+        try {
+            $count = $this->_groupService->saveRegistrationForms($id, $teacher->id, $forms);
+            return $this->json(['count' => $count], 200, "Đã lưu {$count} phiếu đăng ký.");
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(null, 422, $e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->json(null, 403, $e->getMessage());
+        }
     }
 
     public function createTopic(Request $request, int $id)
@@ -78,7 +146,10 @@ class TeacherProjectDashboardController extends Controller
         $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
 
         $batch = $this->_batchService->getBatchById($id);
-        if (!$batch) return $this->redirect('/teacher/project_batches');
+        if (!$batch || !$this->_batchService->isTeacherAssigned($id, $teacher->id)) {
+            $request->session()->flashNotify('error', 'Bạn không được phân công phụ trách đợt đồ án này.');
+            return $this->redirect('/teacher/project_batches');
+        }
 
         return $this->render('teacher/project_batches/topic_form', [
             'batch' => $batch,

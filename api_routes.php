@@ -2,6 +2,7 @@
 
 use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController, ClassroomApiController, ProjectBatchApiController, ProjectTopicApiController};
 use App\Core\Router;
+use App\Middlewares\{VerifyAuth, VerifyRole};
 
 $router->prefix('api')->group(function ($router) {
   $router->prefix('v1')->group(function ($router) {
@@ -57,7 +58,9 @@ $router->prefix('api')->group(function ($router) {
       $router->get('/{id}/topics', [ProjectTopicApiController::class, 'indexByBatch']);
     });
 
-    $router->prefix('project_topics')->group(function ($router) {
+    $router->prefix('project_topics')
+      ->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])
+      ->group(function ($router) {
       $router->post('/{id}/approve', [ProjectTopicApiController::class, 'approve']);
       $router->post('/{id}/reject', [ProjectTopicApiController::class, 'reject']);
       $router->post('/bulk-approve', [ProjectTopicApiController::class, 'bulkApprove']);

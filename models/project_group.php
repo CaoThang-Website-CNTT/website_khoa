@@ -12,6 +12,10 @@ class ProjectGroup extends Model
     public ?string $status = null,
     public ?bool $is_admin_approved_solo = null,
     public ?string $assigned_at = null,
+    public ?string $registration_requirements = null,
+    public ?string $supervisor_opinion = null,
+    public ?string $execution_start = null,
+    public ?string $execution_end = null,
     public ?string $created_at = null,
     public ?string $updated_at = null,
 

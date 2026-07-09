@@ -1,0 +1,50 @@
+.project-form-editor { margin:0; height:100vh; overflow:hidden; background:var(--muted); }
+.project-form-editor__topbar { height:4rem; display:grid; grid-template-columns:auto 1fr auto; gap:1rem; align-items:center; padding:0 1rem; background:var(--card); border-bottom:1px solid var(--border); }
+.project-form-editor__topbar strong { text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.project-form-editor__body { display:grid; grid-template-columns:minmax(18rem, 24rem) minmax(0, 1fr); height:calc(100vh - 4rem); }
+.project-form-editor__panel { overflow:auto; padding:1rem; background:var(--card); border-right:1px solid var(--border); }
+.project-form-editor__set { padding:1rem 0; border-bottom:1px solid var(--border); }
+.project-form-editor__set:first-of-type { padding-top:0; }
+.project-form-editor__set h2 { font-size:var(--text-base); font-weight:var(--fw-semibold); }
+.project-rich-toolbar { display:flex; gap:.25rem; padding:.35rem; border:1px solid var(--input); border-bottom:0; border-radius:var(--radius-md) var(--radius-md) 0 0; background:var(--muted); }
+.project-rich-toolbar button { width:2rem; height:2rem; border:0; border-radius:var(--radius-sm); background:transparent; color:var(--foreground); cursor:pointer; }
+.project-rich-toolbar button:hover, .project-rich-toolbar button:focus-visible { background:var(--accent); outline:2px solid var(--ring); }
+.project-rich-editor { min-height:8rem; max-height:18rem; overflow:auto; padding:.75rem; border:1px solid var(--input); border-radius:0 0 var(--radius-md) var(--radius-md); background:var(--background); line-height:1.5; }
+.project-rich-editor:focus { outline:2px solid var(--ring); outline-offset:-1px; }
+.project-form-editor__canvas { overflow:auto; padding:1.5rem; }
+.project-form-editor__preview { display:block; width:100%; min-width:820px; height:100%; border:0; background:transparent; }
+
+.project-registration-page, .project-registration-page * { box-sizing:border-box; }
+.project-registration-page { width:215.9mm; min-height:279.4mm; padding:12.5mm 15.875mm 12mm 25.4mm; margin:0 auto 1.5rem; background:#fff; color:#000; font:13pt/1.35 "Times New Roman", Times, serif; box-shadow:var(--shadow-lg); }
+.project-registration-header { display:grid; grid-template-columns:1fr 1.15fr; gap:1rem; text-align:center; font-size:11pt; }
+.project-registration-header strong { display:block; }
+.project-registration-motto { display:inline-block; border-bottom:1px solid #000; }
+.project-registration-page h1 { margin:1.25rem 0 .25rem; text-align:center; font-size:16pt; }
+.project-registration-page h2 { margin:.75rem 0 .35rem; font-size:13pt; }
+.project-registration-page p { margin:.45rem 0; }
+.project-registration-center { text-align:center; }
+.project-registration-students { margin:.35rem 0 .75rem 1.5rem; }
+.project-registration-students li { display:grid; grid-template-columns:minmax(0, 1fr) auto auto; gap:1rem; margin:.35rem 0; }
+.project-registration-page [data-preview-field="registration_requirements"] { min-height:65mm; }
+.project-registration-page [data-preview-field="supervisor_opinion"] { min-height:24mm; }
+.project-registration-page [data-preview-field] p { margin:.2rem 0; }
+.project-registration-page [data-preview-field] ul, .project-registration-page [data-preview-field] ol { margin:.2rem 0 .2rem 1.5rem; }
+.project-registration-signatures { display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; min-height:28mm; margin-top:1rem; text-align:center; }
+.project-registration-signatures small { display:block; font-style:italic; }
+
+@media (max-width: 900px) {
+  .project-form-editor { height:auto; min-height:100vh; overflow:auto; }
+  .project-form-editor__topbar { position:sticky; top:0; z-index:5; grid-template-columns:auto auto; }
+  .project-form-editor__topbar > strong { display:none; }
+  .project-form-editor__body { display:flex; flex-direction:column; height:auto; }
+  .project-form-editor__panel { max-height:none; border-right:0; border-bottom:1px solid var(--border); }
+  .project-form-editor__canvas { min-height:75vh; padding:1rem; }
+  .project-form-editor__preview { height:75vh; }
+}
+
+@media print {
+  @page { size:Letter portrait; margin:0; }
+  body { margin:0; background:#fff; }
+  .project-registration-page { width:100%; min-height:279.4mm; margin:0; box-shadow:none; page-break-after:always; break-after:page; }
+  .project-registration-page:last-child { page-break-after:auto; break-after:auto; }
+}

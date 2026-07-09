@@ -40,10 +40,6 @@ $currentStatus = [
   <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
   Lưu
 </button>
-<a href="<?= url('admin/project_batches/' . $batchObj->id . '/eligibility') ?>" data-variant="outline" data-size="md" class="btn">
-  <i class="fa-solid fa-check-double"></i>
-  Xét điều kiện làm đồ án
-</a>
 <?php if ($batchObj->status === ProjectBatchStatus::DRAFT): ?>
   <button type="button" id="publish-btn" data-modal-trigger="#publish-confirm-modal" data-variant="outline-alt"
     data-size="md" class="btn">
@@ -97,7 +93,7 @@ $currentStatus = [
   </a>
 
   <!-- Giảng viên Card -->
-  <a href="#" class="card stats-card">
+  <a href="<?= url('admin/project_batches/' . $batchObj->id . '/teachers') ?>" class="card stats-card hover:bg-muted/50 transition-colors">
     <div class="card__header">
       <div class="flex justify-between">
         <span class="stats-card__label">Giảng viên</span>
@@ -265,7 +261,7 @@ $currentStatus = [
 <div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Xác nhận công bố</h3>
-    <p class="modal__description">Giảng viên và sinh viên sẽ có thể nhìn thấy đợt này sau khi công bố.</p>
+    <p class="modal__description">Các đề tài đã duyệt sẽ được công bố cho sinh viên xem và đăng ký. Giảng viên phụ trách đã có thể cung cấp đề tài ngay từ giai đoạn bản nháp.</p>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>

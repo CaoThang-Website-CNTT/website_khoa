@@ -36,7 +36,7 @@ class ProjectTopicService implements IProjectTopicService
 
   public function createTopic(array $data, int $teacherId): int
   {
-    $this->validateTopicPhase($data['batch_id']);
+    $this->validateTopicPhase($data['batch_id'], $teacherId);
 
     $data['teacher_id'] = $teacherId;
     if (empty($data['title'])) {
@@ -61,7 +61,7 @@ class ProjectTopicService implements IProjectTopicService
       throw new Exception('Không thể chỉnh sửa đề tài đã được duyệt.');
     }
 
-    $this->validateTopicPhase($topic['batch_id']);
+    $this->validateTopicPhase($topic['batch_id'], $teacherId);
 
     if (empty($data['title'])) {
       throw new Exception('Tên đề tài là bắt buộc.');
@@ -90,7 +90,7 @@ class ProjectTopicService implements IProjectTopicService
       throw new Exception('Không thể xóa đề tài đã được duyệt.');
     }
 
-    $this->validateTopicPhase($topic['batch_id']);
+    $this->validateTopicPhase($topic['batch_id'], $teacherId);
 
     return $this->_store->deleteTopic($id);
   }
@@ -110,7 +110,7 @@ class ProjectTopicService implements IProjectTopicService
       throw new Exception('Chỉ có thể nộp đề tài ở trạng thái nháp hoặc bị từ chối.');
     }
 
-    $this->validateTopicPhase($topic['batch_id']);
+    $this->validateTopicPhase($topic['batch_id'], $teacherId);
 
     return $this->_store->updateStatus($id, ProjectTopicStatus::PENDING, [
       'submitted_at' => date('Y-m-d H:i:s')
@@ -136,6 +136,10 @@ class ProjectTopicService implements IProjectTopicService
 
   public function reviewTopic(int $id, string $status, ?string $reason, int $adminId): bool
   {
+    if ($adminId <= 0) {
+      throw new Exception('Phiên đăng nhập không hợp lệ.');
+    }
+
     $topic = $this->_store->getById($id);
     if (!$topic) {
       throw new Exception('Không tìm thấy đề tài.');
@@ -149,15 +153,22 @@ class ProjectTopicService implements IProjectTopicService
       throw new Exception('Trạng thái duyệt không hợp lệ.');
     }
 
-    if ($status === ProjectTopicStatus::REJECTED && empty($reason)) {
+    $reason = is_string($reason) ? trim($reason) : null;
+    if ($status === ProjectTopicStatus::REJECTED && $reason === '') {
       throw new Exception('Vui lòng nhập lý do từ chối.');
     }
 
-    return $this->_store->updateStatus($id, $status, [
+    $updated = $this->_store->updateStatus($id, $status, [
       'reviewed_by' => $adminId,
       'reviewed_at' => date('Y-m-d H:i:s'),
       'reject_reason' => $reason
     ]);
+
+    if (!$updated) {
+      throw new Exception('Không thể cập nhật trạng thái đề tài.');
+    }
+
+    return true;
   }
 
   public function getApprovedTopics(int $batchId): array
@@ -170,20 +181,27 @@ class ProjectTopicService implements IProjectTopicService
     return $this->_store->getPendingCountByBatch($batchId);
   }
 
-  private function validateTopicPhase(int $batchId): void
+  private function validateTopicPhase(int $batchId, int $teacherId): void
   {
     $batch = $this->_batchStore->getById($batchId);
     if (!$batch) {
       throw new Exception('Không tìm thấy đợt đồ án.');
     }
 
-    if ($batch['status'] !== ProjectBatchStatus::PUBLISHED) {
-      throw new Exception('Đợt đồ án chưa được công bố.');
+    if (!$this->_batchStore->isTeacherAssigned($batchId, $teacherId)) {
+      throw new Exception('Bạn không được phân công phụ trách đợt đồ án này.');
+    }
+
+    if ($batch['status'] === ProjectBatchStatus::CLOSED) {
+      throw new Exception('Đợt đồ án đã kết thúc.');
     }
 
     $now = time();
     $start = strtotime((string) $batch['topic_proposal_start']);
     $end = strtotime((string) $batch['topic_proposal_end']);
+    if ($end !== false && date('H:i:s', $end) === '00:00:00') {
+      $end = strtotime('+1 day -1 second', $end);
+    }
 
     if ($now < $start || $now > $end) {
       throw new Exception('Đang ngoài thời gian đề xuất đề tài.');
