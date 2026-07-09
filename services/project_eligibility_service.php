@@ -4,8 +4,6 @@ namespace App\Services;
 
 use App\Stores\ProjectGroupStore;
 use App\Stores\StudentStore;
-use Database;
-use PDO;
 
 class ProjectEligibilityService
 {
@@ -20,7 +18,7 @@ class ProjectEligibilityService
 
   /**
    * Phân tích và phân loại danh sách sinh viên so với file Excel.
-   * Trả về mảng 3 loại: in_excel, legacy_eligible, ineligible
+   * Trả về mảng 3 loại: in_excel, ineligible, eligible_not_registered
    *
    * @param int $batchId
    * @param array $excelStudentCodes (mảng MSSV string từ file Excel)
@@ -28,20 +26,8 @@ class ProjectEligibilityService
    */
   public function previewExcelData(int $batchId, array $excelStudentCodes): array
   {
-    $db = Database::getInstance()->getConnection();
-
     // 1. Get all students currently registered in groups in this batch
-    $sqlCurrent = "
-      SELECT s.id, s.student_id as student_code, s.full_name, c.short_name as classroom_name, gm.group_id
-      FROM project_group_members gm
-      JOIN students s ON gm.student_id = s.id
-      LEFT JOIN classrooms c ON s.classroom_id = c.id
-      JOIN project_groups g ON gm.group_id = g.id
-      WHERE g.batch_id = :batch_id
-    ";
-    $stmtCurrent = $db->prepare($sqlCurrent);
-    $stmtCurrent->execute([':batch_id' => $batchId]);
-    $currentStudents = $stmtCurrent->fetchAll(PDO::FETCH_ASSOC);
+    $currentStudents = $this->_groupStore->getCurrentStudentsInBatch($batchId);
 
     $inExcel = [];
     $legacyEligible = [];
@@ -50,35 +36,15 @@ class ProjectEligibilityService
     // Optimize search
     $excelMap = array_flip($excelStudentCodes);
 
-    // Sinh viên được coi là legacy_eligible nếu từng tham gia đợt đồ án khác đợt hiện tại và có is_eligible = 1
-    $sqlLegacy = "
-      SELECT 1 
-      FROM project_group_members gm
-      JOIN project_groups g ON gm.group_id = g.id
-      WHERE gm.student_id = :student_id 
-        AND g.batch_id != :current_batch_id 
-        AND gm.is_eligible = 1
-      LIMIT 1
-    ";
-    $stmtLegacy = $db->prepare($sqlLegacy);
-
     foreach ($currentStudents as $student) {
-      if (isset($excelMap[$student['student_code']])) {
+      $code = $student['student_code'] ?? $student['student_id'] ?? null;
+      if ($code && isset($excelMap[$code])) {
+        $student['student_code'] = $code; // Ensure consistency
         $inExcel[] = $student;
-        unset($excelMap[$student['student_code']]);
+        unset($excelMap[$code]);
       } else {
-        // Kiểm tra lịch sử
-        $stmtLegacy->execute([
-          ':student_id' => $student['id'],
-          ':current_batch_id' => $batchId
-        ]);
-        $hasLegacy = $stmtLegacy->fetchColumn();
-
-        if ($hasLegacy) {
-          $legacyEligible[] = $student;
-        } else {
-          $ineligible[] = $student;
-        }
+        // Nếu không có trong file Excel thì bị loại
+        $ineligible[] = $student;
       }
     }
 
@@ -86,25 +52,43 @@ class ProjectEligibilityService
     $notRegisteredStudentCodes = array_keys($excelMap);
 
     if (!empty($notRegisteredStudentCodes)) {
-      $placeholders = implode(',', array_fill(0, count($notRegisteredStudentCodes), '?'));
-      
-      $sqlNotReg = "
-        SELECT s.id, s.student_id as student_code, s.full_name, c.short_name as classroom_name
-        FROM students s
-        LEFT JOIN classrooms c ON s.classroom_id = c.id
-        WHERE s.student_id IN ($placeholders)
-      ";
-      
-      $stmtNotReg = $db->prepare($sqlNotReg);
-      $stmtNotReg->execute($notRegisteredStudentCodes);
-      $eligibleNotRegistered = $stmtNotReg->fetchAll(PDO::FETCH_ASSOC);
+      $eligibleNotRegistered = $this->_studentStore->getBasicInfoByStudentCodes($notRegisteredStudentCodes);
     }
 
     return [
       'in_excel' => $inExcel,
-      'legacy_eligible' => $legacyEligible,
       'ineligible' => $ineligible,
       'eligible_not_registered' => $eligibleNotRegistered
     ];
+  }
+
+  /**
+   * Lưu dữ liệu đã duyệt từ Excel vào database.
+   */
+  public function processConfirmedData(int $batchId, array $previewData): void
+  {
+    // 1. Loại bỏ các sinh viên không đủ điều kiện (trong nhóm)
+    $ineligibleIds = array_column($previewData['ineligible'] ?? [], 'id');
+    if (!empty($ineligibleIds)) {
+      $this->_groupStore->updateMemberEligibility($ineligibleIds, 0);
+    }
+
+    // 2. Lưu toàn bộ sinh viên đủ điều kiện vào project_batch_eligible_students
+    // Bao gồm: in_excel, eligible_not_registered
+    $eligibleIds = [];
+
+    $inExcel = $previewData['in_excel'] ?? [];
+    foreach ($inExcel as $s) {
+      $eligibleIds[] = $s['id'];
+    }
+
+    $notRegistered = $previewData['eligible_not_registered'] ?? [];
+    foreach ($notRegistered as $s) {
+      $eligibleIds[] = $s['id'];
+    }
+
+    if (!empty($eligibleIds)) {
+      $this->_groupStore->saveEligibleStudents($batchId, $eligibleIds);
+    }
   }
 }

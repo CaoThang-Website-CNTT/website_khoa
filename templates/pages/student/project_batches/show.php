@@ -222,7 +222,7 @@ if ($group) {
                 <?php if ($isLeader): ?>
                   <form action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/unlock") ?>" method="POST" class="inline-block shrink-0">
                     <?= csrf_field() ?>
-                    <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" data-confirm-msg="CẢNH BÁO: Mở khóa sẽ làm mất lợi thế thời gian (tiebreaker) của nhóm khi hệ thống tự động phân bổ. Lần chốt sau sẽ ghi nhận thời điểm mới. Bạn có chắc chắn muốn mở khóa để sửa?" data-modal-trigger="#action-confirm-modal">
+                    <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="md" data-confirm-msg="CẢNH BÁO: Mở khóa sẽ làm mất lợi thế thời gian của nhóm khi hệ thống xét duyệt nguyện vọng. Lần chốt sau sẽ ghi nhận thời điểm mới. Bạn có chắc chắn muốn mở khóa để sửa?" data-modal-trigger="#action-confirm-modal">
                       <i class="fa-solid fa-unlock"></i> Mở khóa
                     </button>
                   </form>

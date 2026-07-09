@@ -200,7 +200,6 @@ require_once BASE_PATH . '/controllers/web/teacher_project_dashboard_controller.
 require_once BASE_PATH . '/controllers/web/ticket_controller.php';
 require_once BASE_PATH . '/controllers/web/project_batch_controller.php';
 require_once BASE_PATH . '/controllers/web/project_allocation_controller.php';
-require_once BASE_PATH . '/controllers/web/project_eligibility_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/account_api_controller.php';

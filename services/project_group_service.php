@@ -23,6 +23,13 @@ interface IProjectGroupService
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
   public function getAspirationsByBatch(int $batchId): array;
+
+  // Exception Handling
+  public function getGroupsWithIneligibleMembers(int $batchId): array;
+  public function dissolveGroup(int $groupId): bool;
+  public function updateSoloApproval(int $groupId, bool $isApproved): bool;
+  public function replaceGroupMember(int $groupId, int $oldStudentId, int $newStudentId): bool;
+  public function getEligibleUnregisteredStudents(int $batchId): array;
 }
 
 class ProjectGroupService implements IProjectGroupService
@@ -88,6 +95,38 @@ class ProjectGroupService implements IProjectGroupService
   public function removeMember(int $groupId, int $studentId): bool
   {
     return $this->_store->removeMember($groupId, $studentId);
+  }
+
+  // --- Exception Handling ---
+
+  public function getGroupsWithIneligibleMembers(int $batchId): array
+  {
+    return $this->_store->getGroupsWithIneligibleMembers($batchId);
+  }
+
+  public function dissolveGroup(int $groupId): bool
+  {
+    return $this->_store->dissolveGroup($groupId);
+  }
+
+  public function bulkDissolveInvalidGroups(int $batchId): int
+  {
+    return $this->_store->bulkDissolveInvalidGroups($batchId);
+  }
+
+  public function updateSoloApproval(int $groupId, bool $isApproved): bool
+  {
+    return $this->_store->updateSoloApproval($groupId, $isApproved);
+  }
+
+  public function replaceGroupMember(int $groupId, int $oldStudentId, int $newStudentId): bool
+  {
+    return $this->_store->replaceGroupMember($groupId, $oldStudentId, $newStudentId);
+  }
+
+  public function getEligibleUnregisteredStudents(int $batchId): array
+  {
+    return $this->_store->getEligibleUnregisteredStudents($batchId);
   }
 
   public function autoAllocateTopics(int $batchId): array
@@ -242,12 +281,18 @@ class ProjectGroupService implements IProjectGroupService
     return [
       'success' => $successCount,
       'failed' => $failedCount,
-      'message' => "Đã phân bổ thành công $successCount nhóm, $failedCount nhóm chưa có đề tài."
+      'message' => "Đã phân bổ thành công $successCount nhóm"
     ];
   }
 
   public function manualAssignTopic(int $groupId, int $topicId): bool
   {
+    // Tự động duyệt "làm 1 mình" nếu nhóm chỉ có 1 thành viên
+    $members = $this->getGroupMembers($groupId);
+    if (count($members) === 1) {
+      $this->updateSoloApproval($groupId, true);
+    }
+
     // Bypass kiểm tra slot, trực tiếp phân bổ
     return $this->_store->assignTopic($groupId, $topicId);
   }
