@@ -244,49 +244,68 @@ if ($group) {
                 <?php endif; ?>
               </div>
             <?php else: ?>
-              <div class="space-y-3">
-                <?php foreach ($aspirations as $index => $aspiration): ?>
-                  <div class="flex justify-between items-center p-3 border rounded-md">
-                    <div class="flex-1">
-                      <div class="font-medium">
-                        <span class="mr-2 font-bold">#<?= $index + 1 ?></span>
-                        <?= htmlspecialchars($aspiration['topic_title']) ?>
+              <form id="form-reorder-aspirations" action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/reorder") ?>" method="POST">
+                <?= csrf_field() ?>
+                <div id="aspirations-list" class="space-y-3">
+                  <?php foreach ($aspirations as $index => $aspiration): ?>
+                    <div class="flex justify-between items-center p-3 border rounded-md drag-item" style="background-color: var(--card);" data-id="<?= $aspiration['topic_id'] ?>">
+                      <div class="flex items-center flex-1">
+                        <?php if ($isLeader && !$isLocked && count($aspirations) > 1): ?>
+                          <i class="fa-solid fa-grip-vertical cursor-grab px-3 mr-3 handle" style="color: var(--muted-foreground);"></i>
+                        <?php endif; ?>
+                        <div>
+                          <div class="font-medium aspiration-title">
+                            <span class="mr-2 font-bold aspiration-index">#<?= $index + 1 ?></span>
+                            <?= htmlspecialchars($aspiration['topic_title']) ?>
+                          </div>
+                          <div class="text-sm mt-1" style="color: var(--muted-foreground);">
+                            GV: <?= htmlspecialchars($aspiration['teacher_name']) ?>
+                          </div>
+                        </div>
+                        <input type="hidden" name="topic_ids[]" value="<?= $aspiration['topic_id'] ?>">
                       </div>
-                      <div class="text-sm mt-1">
-                        GV: <?= htmlspecialchars($aspiration['teacher_name']) ?>
-                      </div>
+                      <?php if ($isLeader && !$isLocked): ?>
+                        <div class="ml-2">
+                          <button type="button" class="btn btn-remove-aspiration" data-variant="destructive" data-size="sm" title="Xóa nguyện vọng" data-topic-id="<?= $aspiration['topic_id'] ?>">
+                            <i class="fa-solid fa-trash-can"></i>
+                          </button>
+                        </div>
+                      <?php endif; ?>
                     </div>
-                    <?php if ($isLeader && !$isLocked): ?>
-                      <form action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/remove") ?>" method="POST" class="ml-2">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="topic_id" value="<?= $aspiration['topic_id'] ?>">
-                        <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" title="Xóa nguyện vọng" data-confirm-msg="Bạn có chắc chắn muốn xóa nguyện vọng này?" data-modal-trigger="#action-confirm-modal">
-                          <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                      </form>
-                    <?php endif; ?>
-                  </div>
-                <?php endforeach; ?>
-              </div>
-              <?php if ($isLeader && count($aspirations) > 1): ?>
-                <div class="mt-4 text-xs">
-                  * Thứ tự ưu tiên tính từ trên xuống dưới (NV 1 cao nhất). Để thay đổi, vui lòng xóa và thêm lại theo đúng thứ tự bạn muốn.
+                  <?php endforeach; ?>
                 </div>
+                <?php if ($isLeader && count($aspirations) > 1 && !$isLocked): ?>
+                  <div class="mt-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                    <div class="text-xs" style="color: var(--muted-foreground);">
+                      * Nhấn giữ <i class="fa-solid fa-grip-vertical mx-1"></i> và kéo thả để thay đổi thứ tự ưu tiên.
+                    </div>
+                    <button type="submit" class="btn hidden shrink-0" id="btn-save-order" data-variant="primary" data-size="sm">Lưu thứ tự mới</button>
+                  </div>
+                <?php endif; ?>
+              </form>
+
+              <!-- Form ẩn dùng để xóa nguyện vọng lẻ -->
+              <?php if ($isLeader && !$isLocked): ?>
+                <form id="form-remove-aspiration" action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/remove") ?>" method="POST" class="hidden">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="topic_id" id="remove_topic_id" value="">
+                </form>
               <?php endif; ?>
             <?php endif; ?>
           </div>
-          <div class="card__footer flex justify-between">
+          <hr class="separator">
+          <div class="card__footer">
             <?php if ($group): ?>
-              <a href="<?= url("student/project_batches/{$currentBatch['id']}/topics") ?>" class="btn" data-variant="secondary" data-size="md">Xem danh sách tất cả đề tài</a>
-
               <?php if ($isLeader && !empty($aspirations) && !$isLocked): ?>
-                <form action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/lock") ?>" method="POST">
+                <form action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/lock") ?>" class="w-full" method="POST">
                   <?= csrf_field() ?>
-                  <button type="button" class="btn btn-confirm-action" data-variant="primary" data-size="md" data-confirm-msg="Sau khi chốt, bạn KHÔNG THỂ thay đổi thứ tự hoặc xóa nguyện vọng. Chốt nguyện vọng càng sớm càng có lợi khi xét duyệt nguyện vọng. Bạn có chắc chắn muốn chốt?" data-modal-trigger="#action-confirm-modal">
+                  <button type="button" class="btn btn-confirm-action w-full" data-variant="primary" data-size="md" data-confirm-msg="Sau khi chốt, bạn KHÔNG THỂ thay đổi thứ tự hoặc xóa nguyện vọng. Chốt nguyện vọng càng sớm càng có lợi khi xét duyệt nguyện vọng. Bạn có chắc chắn muốn chốt?" data-modal-trigger="#action-confirm-modal">
                     <i class="fa-solid fa-lock mr-2"></i> Chốt nguyện vọng
                   </button>
                 </form>
               <?php endif; ?>
+
+              <a href="<?= url("student/project_batches/{$currentBatch['id']}/topics") ?>" class="btn" data-variant="secondary" data-size="md">Xem danh sách tất cả đề tài</a>
             <?php else: ?>
               <button class="btn" data-variant="secondary" data-size="md" disabled>Thêm NV</button>
             <?php endif; ?>
@@ -327,6 +346,26 @@ if ($group) {
       const confirmMsg = document.getElementById('action-confirm-msg');
       if (confirmMsg) confirmMsg.textContent = msg;
     }
+
+    // Nút xóa nguyện vọng lẻ (tránh lồng form)
+    const removeBtn = e.target.closest('.btn-remove-aspiration');
+    if (removeBtn) {
+      const topicId = removeBtn.getAttribute('data-topic-id');
+      document.getElementById('remove_topic_id').value = topicId;
+      currentForm = document.getElementById('form-remove-aspiration');
+
+      const confirmMsg = document.getElementById('action-confirm-msg');
+      if (confirmMsg) confirmMsg.textContent = 'Bạn có chắc chắn muốn xóa nguyện vọng này?';
+
+      // Mở modal xác nhận
+      const modal = document.getElementById('action-confirm-modal');
+      if (window.Modal) {
+        window.Modal.open(modal);
+      } else {
+        // Fallback if modal script not loaded yet
+        modal.setAttribute('data-state', 'open');
+      }
+    }
   });
 
   const confirmBtn = document.getElementById('action-confirm-btn');
@@ -337,5 +376,31 @@ if ($group) {
       }
     });
   }
+
+  // Khởi tạo kéo thả (DnD) cho danh sách nguyện vọng
+  document.addEventListener('DOMContentLoaded', () => {
+    const list = document.getElementById('aspirations-list');
+    const saveBtn = document.getElementById('btn-save-order');
+
+    if (list && saveBtn && window.DnD) {
+      DnD.create(list, {
+        handle: '.handle',
+        animation: 150,
+        ghostClass: 'opacity-50',
+        onEnd: function() {
+          // Hiện nút Lưu
+          saveBtn.classList.remove('hidden');
+          // Cập nhật lại số thứ tự hiển thị #1, #2
+          const items = list.querySelectorAll('.drag-item');
+          items.forEach((item, index) => {
+            const idxSpan = item.querySelector('.aspiration-index');
+            if (idxSpan) {
+              idxSpan.textContent = '#' + (index + 1);
+            }
+          });
+        }
+      });
+    }
+  });
 </script>
 <?php $layout->end() ?>
