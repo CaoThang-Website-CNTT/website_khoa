@@ -62,6 +62,11 @@ class TeacherProjectDashboardController extends Controller
             $request->session()->flashNotify('error', 'Không tìm thấy đợt đồ án.');
             return $this->redirect('/teacher/project_batches');
         }
+
+        if (!in_array($batch['status'], [ProjectBatchStatus::PUBLISHED, ProjectBatchStatus::CLOSED], true)) {
+            $request->session()->flashNotify('error', 'Đợt đồ án chưa được công bố.');
+            return $this->redirect('/teacher/project_batches');
+        }
         
         if (!$this->_batchService->isTeacherAssigned($id, $teacher->id)) {
             $request->session()->flashNotify('error', 'Bạn không được phân công phụ trách đợt đồ án này.');
@@ -164,6 +169,14 @@ class TeacherProjectDashboardController extends Controller
             return $this->redirect('/teacher/project_batches');
         }
 
+        if ($batch['status'] !== ProjectBatchStatus::PUBLISHED) {
+            $message = $batch['status'] === ProjectBatchStatus::CLOSED
+                ? 'Đợt đồ án đã kết thúc.'
+                : 'Đợt đồ án chưa được công bố.';
+            $request->session()->flashNotify('error', $message);
+            return $this->redirect('/teacher/project_batches');
+        }
+
         return $this->render('teacher/project_batches/topic_form', [
             'batch' => $batch,
             'title' => 'Thêm đề tài mới'
@@ -174,6 +187,19 @@ class TeacherProjectDashboardController extends Controller
     {
         $authUser = $request->session()->authUser();
         $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+
+        $batch = $this->_batchService->getBatchById($id);
+        if (!$batch || !$this->_batchService->isTeacherAssigned($id, $teacher->id)) {
+            $request->session()->flashNotify('error', 'Bạn không được phân công phụ trách đợt đồ án này.');
+            return $this->redirect('/teacher/project_batches');
+        }
+        if ($batch['status'] !== ProjectBatchStatus::PUBLISHED) {
+            $message = $batch['status'] === ProjectBatchStatus::CLOSED
+                ? 'Đợt đồ án đã kết thúc.'
+                : 'Đợt đồ án chưa được công bố.';
+            $request->session()->flashNotify('error', $message);
+            return $this->redirect('/teacher/project_batches');
+        }
 
         $data = $request->all();
         $data['batch_id'] = $id;
@@ -223,6 +249,7 @@ class TeacherProjectDashboardController extends Controller
             $data['pdf_file_path'] = $pdfPath;
         }
 
+        $topicId = null;
         try {
             $action = $data['action'] ?? 'draft';
 
@@ -244,6 +271,9 @@ class TeacherProjectDashboardController extends Controller
             $request->session()->flashNotify('success', $msg);
             return $this->redirect("/teacher/project_batches/{$id}");
         } catch (Exception $e) {
+            if ($topicId === null && $pdfPath) {
+                $this->deleteProjectTopicFile($pdfPath);
+            }
             $request->session()->flashNotify('error', $e->getMessage());
             return $this->redirect("/teacher/project_batches/{$id}/topics/create");
         }
@@ -261,6 +291,14 @@ class TeacherProjectDashboardController extends Controller
             return $this->redirect("/teacher/project_batches/{$id}");
         }
 
+        if ($batch['status'] !== ProjectBatchStatus::PUBLISHED) {
+            $message = $batch['status'] === ProjectBatchStatus::CLOSED
+                ? 'Đợt đồ án đã kết thúc.'
+                : 'Đợt đồ án chưa được công bố.';
+            $request->session()->flashNotify('error', $message);
+            return $this->redirect('/teacher/project_batches');
+        }
+
         return $this->render('teacher/project_batches/topic_form', [
             'batch' => $batch,
             'topic' => $topic,
@@ -274,9 +312,25 @@ class TeacherProjectDashboardController extends Controller
         $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
 
         $data = $request->all();
-        
+
+        $batch = $this->_batchService->getBatchById($id);
         $topic = $this->_topicService->getTopicById($topicId);
-        $pdfPath = $topic['pdf_file_path'] ?? null;
+        if (!$batch || !$topic || $topic['batch_id'] != $id || $topic['teacher_id'] != $teacher->id) {
+            $request->session()->flashNotify('error', 'Đề tài không hợp lệ hoặc không thuộc quyền quản lý của bạn.');
+            return $this->redirect("/teacher/project_batches/{$id}");
+        }
+        if ($batch['status'] !== ProjectBatchStatus::PUBLISHED) {
+            $message = $batch['status'] === ProjectBatchStatus::CLOSED
+                ? 'Đợt đồ án đã kết thúc.'
+                : 'Đợt đồ án chưa được công bố.';
+            $request->session()->flashNotify('error', $message);
+            return $this->redirect('/teacher/project_batches');
+        }
+
+        $oldPdfPath = $topic['pdf_file_path'] ?? null;
+        $pdfPath = $oldPdfPath;
+        $uploadedPdfPath = null;
+        $topicUpdated = false;
 
         if (isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] !== UPLOAD_ERR_NO_FILE) {
             if ($_FILES['pdf_file']['error'] !== UPLOAD_ERR_OK) {
@@ -311,6 +365,7 @@ class TeacherProjectDashboardController extends Controller
 
             if (move_uploaded_file($file['tmp_name'], $destPath)) {
                 $pdfPath = $subDir . '/' . $fileName;
+                $uploadedPdfPath = $pdfPath;
             } else {
                 $request->session()->flashNotify('error', "Không thể lưu file vào máy chủ.");
                 return $this->redirect("/teacher/project_batches/{$id}/topics/{$topicId}/edit");
@@ -329,6 +384,11 @@ class TeacherProjectDashboardController extends Controller
             }
 
             $this->_topicService->updateTopic($topicId, $data, $teacher->id);
+            $topicUpdated = true;
+
+            if ($uploadedPdfPath && $oldPdfPath && $oldPdfPath !== $uploadedPdfPath) {
+                $this->deleteProjectTopicFile($oldPdfPath);
+            }
             
             if ($action === 'submit') {
                 $this->_topicService->submitTopic($topicId, $teacher->id);
@@ -338,6 +398,9 @@ class TeacherProjectDashboardController extends Controller
             $request->session()->flashNotify('success', $msg);
             return $this->redirect("/teacher/project_batches/{$id}");
         } catch (Exception $e) {
+            if ($uploadedPdfPath && !$topicUpdated) {
+                $this->deleteProjectTopicFile($uploadedPdfPath);
+            }
             $request->session()->flashNotify('error', $e->getMessage());
             return $this->redirect("/teacher/project_batches/{$id}/topics/{$topicId}/edit");
         }
@@ -371,5 +434,18 @@ class TeacherProjectDashboardController extends Controller
             $request->session()->flashNotify('error', $e->getMessage());
         }
         return $this->redirect("/teacher/project_batches/{$id}");
+    }
+
+    private function deleteProjectTopicFile(string $relativePath): void
+    {
+        $normalizedPath = str_replace('\\', '/', ltrim($relativePath, '/'));
+        if (!str_starts_with($normalizedPath, 'project_topics/') || str_contains($normalizedPath, '..')) {
+            return;
+        }
+
+        $absolutePath = BASE_PATH . '/storage/' . $normalizedPath;
+        if (is_file($absolutePath)) {
+            unlink($absolutePath);
+        }
     }
 }

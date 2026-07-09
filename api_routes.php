@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController, ClassroomApiController, ProjectBatchApiController, ProjectTopicApiController};
+use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, TeacherApiController, TicketApiController, CmsPageApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController, ClassroomApiController, ProjectBatchApiController, ProjectTopicApiController};
 use App\Core\Router;
 use App\Middlewares\{VerifyAuth, VerifyRole};
 
@@ -20,6 +20,10 @@ $router->prefix('api')->group(function ($router) {
       $router->get('/{student_id}', [StudentApiController::class, 'show']);
       $router->put('/{student_id}', [StudentApiController::class, 'update']);
     });
+
+    $router->get('/teachers', [TeacherApiController::class, 'index']);
+    $router->get('/tickets', [TicketApiController::class, 'index']);
+    $router->get('/cms_pages', [CmsPageApiController::class, 'index']);
 
     $router->prefix('internship/batches')->group(function ($router) {
       $router->get('/classrooms', [InternshipBatchApiController::class, 'getClassrooms']);
@@ -112,6 +116,7 @@ $router->prefix('api')->group(function ($router) {
 
     // Companies
     $router->prefix('companies')->group(function (Router $router) {
+      $router->get('/', [CompanyApiController::class, 'index']);
       $router->get('/suggest-by-name', [CompanyApiController::class, 'suggestByName']);
       $router->get('/search-merge', [CompanyApiController::class, 'searchForMerge']);
     });

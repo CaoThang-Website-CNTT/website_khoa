@@ -136,6 +136,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
             WHERE pb.deleted_at IS NULL 
               AND pbs.teacher_id = :teacher_id 
               AND pbs.is_active = 1
+              AND pb.status IN ('published', 'closed')
             ORDER BY pb.created_at DESC 
             LIMIT :limit OFFSET :offset";
     $stmt = $this->db->prepare($sql);
@@ -160,7 +161,8 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
             JOIN project_batch_supervisors pbs ON pb.id = pbs.batch_id
             WHERE pb.deleted_at IS NULL 
               AND pbs.teacher_id = :teacher_id 
-              AND pbs.is_active = 1";
+              AND pbs.is_active = 1
+              AND pb.status IN ('published', 'closed')";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':teacher_id' => $teacherId]);
     return (int)$stmt->fetchColumn();

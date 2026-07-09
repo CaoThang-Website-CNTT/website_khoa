@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- SUBMIT ---
-  const doSubmitBatch = async () => {
+  const submitBatchForm = async () => {
     if (!validateStep2()) return;
 
     const payload = {
@@ -343,9 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  btnSubmit.addEventListener("click", () => {
-    doSubmitBatch();
-  });
+  btnSubmit.addEventListener("click", submitBatchForm);
 
   // Init
   wizard

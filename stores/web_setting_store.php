@@ -6,6 +6,8 @@ require_once BASE_PATH . '/models/web_setting.php';
 use App\Core\Store;
 use App\Models\WebSetting;
 use PDO;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 
 interface IWebSettingStore
 {
@@ -30,35 +32,38 @@ class WebSettingsStore extends Store implements IWebSettingStore
   /** @return WebSetting[] */
   public function getAllSettings(): array
   {
-    $stmt = $this->db->prepare("SELECT * FROM `web_settings` ORDER BY `group` ASC, `sort_order` ASC, `id` ASC");
-    $stmt->execute();
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->select('*')
+      ->order('group')->order('sort_order')->order('id');
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     return array_map(fn($row) => $this->hydrate($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
   /** @return WebSetting[] */
   public function getByGroup(string $group): array
   {
-    $stmt = $this->db->prepare("SELECT * FROM `web_settings` WHERE `group` = :group ORDER BY `sort_order` ASC, `id` ASC");
-    $stmt->execute([':group' => $group]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->select('*')
+      ->eq('group', $group)->order('sort_order')->order('id');
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     return array_map(fn($row) => $this->hydrate($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
   /** @return WebSetting[] */
   public function getAutoloaded(): array
   {
-    $stmt = $this->db->prepare("SELECT * FROM `web_settings` WHERE `autoload` = 1 ORDER BY `group` ASC, `sort_order` ASC");
-    $stmt->execute();
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->select('*')
+      ->eq('autoload', 1)->order('group')->order('sort_order');
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     return array_map(fn($row) => $this->hydrate($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
   public function getById(int $id): ?WebSetting
   {
-    $stmt = $this->db->prepare("SELECT * FROM `web_settings` WHERE `id` = :id");
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->select('*')->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? $this->hydrate($row) : null;
   }
   public function getByKey(string $key): ?WebSetting
   {
-    $stmt = $this->db->prepare("SELECT * FROM `web_settings` WHERE `key` = :key");
-    $stmt->execute([':key' => $key]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->select('*')->eq('key', $key);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ? $this->hydrate($row) : null;
   }
@@ -71,19 +76,13 @@ class WebSettingsStore extends Store implements IWebSettingStore
   }
   public function createSetting(array $data): int
   {
-    $stmt = $this->db->prepare("INSERT INTO `web_settings` (`key`, `group`, `type`, `value`, `default_value`, `label`, `description`, `autoload`, `is_locked`, `sort_order`) VALUES (:key, :group, :type, :value, :default_value, :label, :description, :autoload, :is_locked, :sort_order)");
-    $stmt->execute([
-      ':key' => $data['key'],
-      ':group' => $data['group'] ?? 'general',
-      ':type' => $data['type'] ?? 'string',
-      ':value' => $data['value'] ?? null,
-      ':default_value' => $data['default_value'] ?? null,
-      ':label' => $data['label'],
-      ':description' => $data['description'] ?? null,
-      ':autoload' => $data['autoload'] ?? 1,
-      ':is_locked' => $data['is_locked'] ?? 0,
-      ':sort_order' => $data['sort_order'] ?? 0,
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->insert([
+      'key'=>$data['key'], 'group'=>$data['group']??'general', 'type'=>$data['type']??'string',
+      'value'=>$data['value']??null, 'default_value'=>$data['default_value']??null, 'label'=>$data['label'],
+      'description'=>$data['description']??null, 'autoload'=>$data['autoload']??1,
+      'is_locked'=>$data['is_locked']??0, 'sort_order'=>$data['sort_order']??0,
     ]);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     return (int) $this->db->lastInsertId();
   }
   public function updateSetting(int $id, array $data): bool
@@ -91,28 +90,22 @@ class WebSettingsStore extends Store implements IWebSettingStore
     $setting = $this->getById($id);
     if ($setting === null || $setting->is_locked)
       return false;
-    $stmt = $this->db->prepare("UPDATE `web_settings` SET `key` = :key, `group` = :group, `type` = :type, `value` = :value, `default_value` = :default_value, `label` = :label, `description` = :description, `autoload` = :autoload, `sort_order` = :sort_order, `updated_by` = :updated_by, `updated_at` = NOW() WHERE `id` = :id");
-    return $stmt->execute([
-      ':key' => $data['key'],
-      ':group' => $data['group'],
-      ':type' => $data['type'],
-      ':value' => $data['value'] ?? null,
-      ':default_value' => $data['default_value'] ?? null,
-      ':label' => $data['label'],
-      ':description' => $data['description'] ?? null,
-      ':autoload' => $data['autoload'] ?? 1,
-      ':sort_order' => $data['sort_order'] ?? 0,
-      ':updated_by' => $data['updated_by'] ?? null,
-      ':id' => $id,
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->update([
+      'key'=>$data['key'], 'group'=>$data['group'], 'type'=>$data['type'], 'value'=>$data['value']??null,
+      'default_value'=>$data['default_value']??null, 'label'=>$data['label'],
+      'description'=>$data['description']??null, 'autoload'=>$data['autoload']??1,
+      'sort_order'=>$data['sort_order']??0, 'updated_by'=>$data['updated_by']??null,
+      'updated_at'=>date('Y-m-d H:i:s'),
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql()); return $stmt->execute($query->getBindings());
   }
   public function deleteSetting(int $id): bool
   {
     $setting = $this->getById($id);
     if ($setting === null || $setting->is_locked)
       return false;
-    $stmt = $this->db->prepare("DELETE FROM `web_settings` WHERE `id` = :id");
-    return $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->delete()->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql()); return $stmt->execute($query->getBindings());
   }
   public function getTotalGroupsCount(): int
   {
@@ -121,14 +114,10 @@ class WebSettingsStore extends Store implements IWebSettingStore
   }
   public function isKeyUnique(string $key, ?int $excludeId = null): bool
   {
-    $sql = "SELECT COUNT(*) FROM `web_settings` WHERE `key` = :key";
-    $params = [':key' => $key];
-    if ($excludeId) {
-      $sql .= " AND `id` != :exclude_id";
-      $params[':exclude_id'] = $excludeId;
-    }
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($params);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('web_settings')->select('COUNT(*)')->eq('key', $key);
+    if ($excludeId) $query->neq('id', $excludeId);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return $stmt->fetchColumn() == 0;
   }
   public function getAllGroups(?int $pageTo = null, ?int $limit = null): array

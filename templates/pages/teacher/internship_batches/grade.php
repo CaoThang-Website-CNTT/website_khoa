@@ -12,6 +12,7 @@ $canGrade = $canGrade ?? false;
 
 $student = $data['student'] ?? [];
 $submissions = $data['submissions'] ?? [];
+$latestSubmissions = array_values($submissions);
 $allSubmissions = $data['all_submissions'] ?? [];
 $grade = $data['grade'] ?? null;
 $deadline = $data['deadline'] ?? null;
@@ -172,7 +173,7 @@ foreach (($timeline['weeks'] ?? []) as $week) {
       </div>
       <hr class="separator">
       <div class="card__content">
-        <?php if (empty($submissions)): ?>
+        <?php if (empty($latestSubmissions)): ?>
           <div class="empty">
             <div class="empty__header">
               <div class="empty__media"><i class="fa-solid fa-file-circle-xmark" aria-hidden="true"></i></div>
@@ -182,9 +183,9 @@ foreach (($timeline['weeks'] ?? []) as $week) {
           </div>
         <?php else: ?>
           <div class="tabs" data-tabs data-tabs-id="submission-viewer"
-            data-tabs-panel-active="submission-<?= (int) $submissions[0]['id'] ?>">
+            data-tabs-panel-active="submission-<?= (int) $latestSubmissions[0]['id'] ?>">
             <div class="tabs__list overflow-x-auto" role="tablist" aria-label="Tài liệu đã nộp">
-              <?php foreach ($submissions as $index => $submission):
+              <?php foreach ($latestSubmissions as $index => $submission):
                 $submissionKey = 'submission-' . (int) $submission['id'];
                 $isActive = $index === 0; ?>
                 <a href="#submission-viewer:<?= $submissionKey ?>" class="tabs__trigger" role="tab"
@@ -196,7 +197,7 @@ foreach (($timeline['weeks'] ?? []) as $week) {
               <?php endforeach; ?>
             </div>
 
-            <?php foreach ($submissions as $index => $submission):
+            <?php foreach ($latestSubmissions as $index => $submission):
               $type = $submission['type'] ?? 'internship_report';
               $history = $historyByType[$type] ?? [];
               $submissionKey = 'submission-' . (int) $submission['id'];
@@ -234,6 +235,12 @@ foreach (($timeline['weeks'] ?? []) as $week) {
                   <iframe id="iframe-<?= (int) $submission['id'] ?>"
                     src="<?= url("api/v1/teacher/submissions/{$submission['id']}/preview") ?>" class="pdf-viewer"
                     title="<?= htmlspecialchars($typeLabels[$type] ?? 'Tài liệu thực tập') ?>"></iframe>
+                  <div class="flex justify-end mt-3">
+                    <a class="btn" data-variant="outline" data-size="sm"
+                      href="<?= url("api/v1/teacher/submissions/{$submission['id']}/preview") ?>" target="_blank" rel="noopener">
+                      <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>Mở trong tab mới
+                    </a>
+                  </div>
                 <?php endif; ?>
               </div>
             <?php endforeach; ?>

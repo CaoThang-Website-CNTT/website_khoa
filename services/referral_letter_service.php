@@ -32,7 +32,7 @@ interface IReferralLetterService
   public function bulkCancel(array $ids, string $reason, int $processedBy): int;
   public function complete(int $id, int $processedBy): bool;
   public function receive(int $id, int $batchId, array $recipient, int $receivedBy): bool;
-  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData): int;
+  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData, bool $requireSameCompany = false): int;
 }
 
 class ReferralLetterService implements IReferralLetterService
@@ -317,6 +317,8 @@ class ReferralLetterService implements IReferralLetterService
     if ($letter->status !== ReferralLetterStatus::APPROVED) {
       throw new Exception('Giấy giới thiệu phải được duyệt trước khi in.');
     }
+    $printData['approver_name'] = trim((string)($printData['approver_name'] ?? ''));
+    if ($printData['approver_name'] === '') throw new Exception('Vui lòng nhập tên giảng viên phê duyệt.');
 
     return Database::getInstance()->transaction(function () use ($id, $processedBy, $printData) {
       if (!empty($printData)) {
@@ -330,7 +332,7 @@ class ReferralLetterService implements IReferralLetterService
     });
   }
 
-  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData): int
+  public function bulkPrint(array $ids, int $batchId, int $processedBy, array $printData, bool $requireSameCompany = false): int
   {
     $ids = array_values(array_unique(array_map('intval', $ids)));
     if (empty($ids)) throw new Exception('Không có giấy giới thiệu nào được chọn.');
@@ -338,6 +340,9 @@ class ReferralLetterService implements IReferralLetterService
     $documentNumber = trim((string)($printData['document_number'] ?? ''));
     $startDate = (string)($printData['internship_start_date'] ?? '');
     $endDate = (string)($printData['internship_end_date'] ?? '');
+    $approverName = trim((string)($printData['approver_name'] ?? ''));
+    if ($approverName === '') throw new Exception('Vui lòng nhập tên giảng viên phê duyệt.');
+    $printData['approver_name'] = $approverName;
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate) || $startDate > $endDate)
       throw new Exception('Thời gian thực tập không hợp lệ.');
     $printData['document_number'] = $documentNumber !== '' ? $documentNumber : null;
@@ -346,6 +351,10 @@ class ReferralLetterService implements IReferralLetterService
     foreach ($letters as $letter) {
       if ($letter->status !== ReferralLetterStatus::APPROVED)
         throw new Exception("Giấy giới thiệu #{$letter->id} không ở trạng thái đang xử lý.");
+    }
+    if ($requireSameCompany) {
+      $companyIds = array_unique(array_map(fn($letter) => (int)$letter->company_id, $letters));
+      if (count($companyIds) !== 1) throw new Exception('Chỉ có thể in gộp các giấy cùng một công ty.');
     }
     return Database::getInstance()->transaction(function () use ($letters, $processedBy, $printData) {
       $count = 0;

@@ -28,6 +28,9 @@ $endDateStr = $letter['internship_end_date'] ? date('d/m/Y', strtotime($letter['
 
 $documentNumber = $letter['document_number'] ?? '';
 $displayDocNum = $documentNumber ?: '___';
+$authUser = $authUser ?? [];
+$defaultApproverName = $letter['approver_name'] ?? ($authUser['full_name'] ?? ($authUser['name'] ?? ($authUser['email'] ?? '')));
+$approverStorageKey = 'referral-letter-approver:' . (string)($authUser['account_id'] ?? 'anonymous');
 ?>
 
 <!DOCTYPE html>
@@ -65,6 +68,7 @@ $displayDocNum = $documentNumber ?: '___';
       <form id="printForm">
         <div class="field-group">
           <div class="field"><label class="field__label" for="inp_document_number">Số công văn</label><input class="field__input" type="text" id="inp_document_number" value="<?= htmlspecialchars($documentNumber) ?>" placeholder="VD: 123/CĐKTCT-CTCT HSSV"></div>
+          <div class="field" data-field-required><label class="field__label" for="inp_approver_name">Giảng viên phê duyệt</label><input class="field__input" type="text" id="inp_approver_name" value="<?= htmlspecialchars($defaultApproverName) ?>" required maxlength="255"></div>
           <div class="field"><label class="field__label" for="inp_start_date">Ngày bắt đầu thực tập</label><input class="field__input" type="date" id="inp_start_date" value="<?= $letter['internship_start_date'] ?: date('Y-m-d', strtotime($batch['start_at'])) ?>"></div>
           <div class="field"><label class="field__label" for="inp_end_date">Ngày kết thúc thực tập</label><input class="field__input" type="date" id="inp_end_date" value="<?= $letter['internship_end_date'] ?: date('Y-m-d', strtotime($batch['end_at'])) ?>"></div>
         </div>
@@ -105,7 +109,7 @@ $displayDocNum = $documentNumber ?: '___';
 
     <p class="paragraph">* Tạo điều kiện cho: <strong><?= $studentCount ?></strong> sinh viên (danh sách đính kèm).</p>
     <p class="paragraph">* Đến thực tập sản xuất tại đơn vị theo ngành, nghề đào tạo: <strong><?= htmlspecialchars($trainingProgramStr) ?></strong></p>
-    <p class="paragraph">* Với giáo viên hướng dẫn là Thầy/Cô: <strong><?= htmlspecialchars($letter['teacher_name'] ?? '..................................') ?></strong></p>
+    <p class="paragraph">* Với giảng viên đại diện phê duyệt là Thầy/Cô: <strong class="dyn-approver"><?= htmlspecialchars($defaultApproverName ?: '..................................') ?></strong></p>
     <p class="paragraph">* Thời gian thực tập từ ngày: <strong class="dyn-start-date"><?= htmlspecialchars($startDateStr) ?></strong> đến ngày <strong class="dyn-end-date"><?= htmlspecialchars($endDateStr) ?></strong></p>
     <p class="paragraph">* Nội dung thực tập: theo đề cương thực tập (đính kèm).</p>
 
@@ -182,6 +186,13 @@ $displayDocNum = $documentNumber ?: '___';
     previewFrame.srcdoc = `<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="<?= url('public/css/referral_letter_print.css') ?>?v=20260702-3"></head><body><main class="print-pages">${source.innerHTML}</main></body></html>`;
 
     const previewElements = selector => previewFrame.contentDocument?.querySelectorAll(selector) || [];
+    const approverInput = document.getElementById('inp_approver_name');
+    const approverStorageKey = <?= json_encode($approverStorageKey) ?>;
+    const storedApprover = localStorage.getItem(approverStorageKey);
+    if (storedApprover?.trim()) approverInput.value = storedApprover.trim();
+    const syncApprover = () => { const value = approverInput.value.trim(); previewElements('.dyn-approver').forEach(el => el.textContent = value || '..................................'); if (value) localStorage.setItem(approverStorageKey, value); };
+    previewFrame.addEventListener('load', syncApprover);
+    approverInput.addEventListener('input', syncApprover);
 
     // Chuyển ngày sang định dạng dd/mm/yyyy
     function formatDateStr(dateStr) {
@@ -208,6 +219,7 @@ $displayDocNum = $documentNumber ?: '___';
     // Lưu thông tin công văn trước khi in
     document.getElementById('printForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      if (!approverInput.value.trim()) { approverInput.reportValidity(); approverInput.focus(); return; }
 
       const btn = document.getElementById('btnPrint');
       const msg = document.getElementById('printMessage');
@@ -217,6 +229,7 @@ $displayDocNum = $documentNumber ?: '___';
       const data = new FormData();
       data.append('_token', '<?= csrf_token() ?>');
       data.append('document_number', document.getElementById('inp_document_number').value);
+      data.append('approver_name', approverInput.value.trim());
       data.append('internship_start_date', document.getElementById('inp_start_date').value);
       data.append('internship_end_date', document.getElementById('inp_end_date').value);
 

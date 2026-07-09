@@ -106,6 +106,10 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
         </template>
 
         <!-- Cột Giảng viên hướng dẫn -->
+        <template data-tm-col="company_mentor_name" data-tm-label="Cán bộ hướng dẫn DN" data-tm-filter-type="text" data-tm-sortable data-tm-width="240px">
+          <div class="flex flex-col gap-1"><span class="font-medium text-sm">{{ value || 'Chưa khai báo' }}</span><span class="text-xs">{{ row.company_mentor_phone || '' }}</span><span class="text-xs">{{ row.company_mentor_email || '' }}</span></div>
+        </template>
+
         <template data-tm-col="teacher_name" data-tm-label="Giảng viên HD" data-tm-filter-type="select"
           data-tm-filter-options='<?= json_encode($teacherOptions ?? []) ?>' data-tm-sortable data-tm-width="280px">
           <div class="teacher-cell" data-assignment-id="{{ row.assignment_id || '' }}"

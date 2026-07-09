@@ -33,18 +33,16 @@ class CompanyStore extends Store implements ICompanyStore
 {
   public function findByTaxCode(string $taxCode): ?array
   {
-    $sql = "SELECT * FROM companies WHERE tax_code = :tax_code AND deleted_at IS NULL";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':tax_code' => $taxCode]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('companies')->select('*')->eq('tax_code', $taxCode)->is('deleted_at', null);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
   }
 
   public function getById(int $id): ?Company
   {
-    $sql = "SELECT * FROM companies WHERE id = :id AND deleted_at IS NULL";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('companies')->select('*')->eq('id', $id)->is('deleted_at', null);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ? Company::fromArray($result) : null;
   }
@@ -151,23 +149,17 @@ class CompanyStore extends Store implements ICompanyStore
    */
   public function getTotalCount(string $filter = 'all'): int
   {
-    $sql = "SELECT COUNT(*) FROM `companies` WHERE `deleted_at` IS NULL";
-
-    if ($filter === 'pending') {
-      $sql .= " AND is_verified = 0";
-    } elseif ($filter === 'verified') {
-      $sql .= " AND is_verified = 1";
-    }
-
-    $stmt = $this->db->query($sql);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('companies')->select('COUNT(*)')->is('deleted_at', null);
+    if ($filter === 'pending') $query->eq('is_verified', 0);
+    elseif ($filter === 'verified') $query->eq('is_verified', 1);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     return (int) $stmt->fetchColumn();
   }
 
   public function getCountByVerified(int $isVerified): int
   {
-    $sql = "SELECT COUNT(*) FROM `companies` WHERE `deleted_at` IS NULL AND is_verified = :is_verified";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':is_verified' => $isVerified]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('companies')->select('COUNT(*)')->is('deleted_at', null)->eq('is_verified', $isVerified);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
     return (int) $stmt->fetchColumn();
   }
 
@@ -240,10 +232,10 @@ class CompanyStore extends Store implements ICompanyStore
     if (empty($ids))
       return 0;
 
-    $in = str_repeat('?,', count($ids) - 1) . '?';
-    $sql = "UPDATE companies SET is_verified = 1, updated_at = NOW() WHERE id IN ($in) AND deleted_at IS NULL";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($ids);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('companies')->update([
+      'is_verified'=>1, 'updated_at'=>date('Y-m-d H:i:s')
+    ])->in('id', $ids)->is('deleted_at', null);
+    $stmt = $this->db->prepare($query->toSql()); $stmt->execute($query->getBindings());
 
     return $stmt->rowCount();
   }
@@ -331,15 +323,10 @@ class CompanyStore extends Store implements ICompanyStore
    */
   public function softDelete($id): bool
   {
-    $sql = "
-      UPDATE `companies`
-      SET
-        `deleted_at` = NOW()
-      WHERE `id` = :id;
-    ";
-    $stmt = $this->db->prepare($sql);
-
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('companies')
+      ->update(['deleted_at'=>date('Y-m-d H:i:s')])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     if ($stmt->rowCount() === 0) {
       throw new \Exception("Không tìm thấy công ty mã: " . $id);

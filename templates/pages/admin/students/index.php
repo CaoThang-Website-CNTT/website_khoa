@@ -17,8 +17,8 @@
   Nhập
 </a>
 <?php $layout->end() ?>
-<div class="card">
-  <div class="tm-container" data-tm="students_table" data-tm-mode="client" data-tm-searchable>
+<div class="tm-container" data-tm="students_table" data-tm-mode="server" data-tm-searchable
+    data-server-table-url="<?= url('api/v1/students') ?>">
 
     <!-- Cột ID -->
     <template data-tm-col="id" data-tm-label="ID" data-tm-width="80px">#{{ value }}</template>
@@ -57,7 +57,6 @@
 
     <!-- Phân trang -->
     <template data-tm-pagination></template>
-  </div>
 </div>
 
 <!-- JSON Data Source cho TableManager -->
@@ -81,4 +80,5 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
+<script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
 <?php $layout->end() ?>

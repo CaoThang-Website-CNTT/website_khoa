@@ -72,7 +72,7 @@ $rejectReason = $topic['reject_reason'] ?? null;
             value="<?= htmlspecialchars((string) $maxStudents) ?>">
         </div>
 
-        <div class="field" data-field-required>
+        <div class="field" data-field-conditionally-required>
           <label for="pdf_file" class="field__label">Tài liệu mô tả (PDF)</label>
           <input type="file" name="pdf_file" id="pdf_file" class="field__input" accept=".pdf">
           <?php if ($pdfFilePath): ?>

@@ -343,6 +343,12 @@ class ProjectGroupService implements IProjectGroupService
 
     $sanitize = static function ($html): string {
       $html = trim((string)$html);
+      // contenteditable uses <div> for new lines in some browsers. Normalize
+      // those blocks before stripping tags so saving never joins their text.
+      $html = preg_replace('/<div\b[^>]*>/i', '<p>', $html);
+      $html = preg_replace('/<\/div\s*>/i', '</p>', $html);
+      // Preserve plain-text line breaks introduced by paste operations too.
+      $html = preg_replace('/\R/u', '<br>', $html);
       $html = strip_tags($html, '<p><br><strong><b><em><i><ul><ol><li>');
       $html = preg_replace('/<(\/?)(p|br|strong|b|em|i|ul|ol|li)\b[^>]*>/i', '<$1$2>', $html);
       return $html;

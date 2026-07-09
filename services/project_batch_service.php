@@ -93,10 +93,6 @@ class ProjectBatchService implements IProjectBatchService
       throw new Exception('Chỉ có đợt đồ án ở trạng thái bản nháp mới có thể công bố.');
     }
 
-    $stats = $this->_store->getBatchStats($id);
-    if (($stats['approved_topics'] ?? 0) < 1) {
-      throw new Exception('Vui lòng duyệt ít nhất 1 đề tài trước khi công bố cho sinh viên đăng ký.');
-    }
     if (empty($batch['registration_start']) || empty($batch['registration_end'])) {
       throw new Exception('Vui lòng thiết lập thời gian đăng ký đề tài trước khi công bố.');
     }

@@ -190,6 +190,8 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
     $router->post('/{id}/referral_letters/bulk-print', [InternshipBatchController::class, 'bulkPrintReferralLetters']);
     $router->post('/{id}/referral_letters/bulk-print/confirm', [InternshipBatchController::class, 'confirmBulkPrint']);
+    $router->post('/{id}/referral_letters/merged-print', [InternshipBatchController::class, 'mergedPrintReferralLetters']);
+    $router->post('/{id}/referral_letters/merged-print/confirm', [InternshipBatchController::class, 'confirmMergedPrint']);
     $router->get('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'printReferralLetter']);
     $router->post('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'confirmPrint']);
 

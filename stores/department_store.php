@@ -8,6 +8,8 @@ require_once BASE_PATH . '/models/department.php';
 use PDO;
 use App\Core\Store;
 use App\Models\Department;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 
 interface IDepartmentStore
 {
@@ -22,25 +24,19 @@ class DepartmentStore extends Store implements IDepartmentStore
 {
   public function getAll(): array
   {
-    $sql = "
-      SELECT * FROM `departments`
-      WHERE `deleted_at` IS NULL
-      ORDER BY `full_name` ASC
-    ";
-
-    $stmt = $this->db->query($sql);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('departments')->select('*')
+      ->is('deleted_at', null)->order('full_name');
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     return array_map(fn($row) => Department::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function getById(int $id): ?Department
   {
-    $sql = "
-      SELECT * FROM `departments`
-      WHERE `id` = :id AND `deleted_at` IS NULL
-    ";
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute(['id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('departments')->select('*')
+      ->eq('id', $id)->is('deleted_at', null);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     return $row ? Department::fromArray($row) : null;
@@ -53,15 +49,10 @@ class DepartmentStore extends Store implements IDepartmentStore
       return [];
     }
 
-    $placeholders = str_repeat('?,', count($ids) - 1) . '?';
-
-    $sql = "
-      SELECT * FROM `departments`
-      WHERE `id` IN ($placeholders) AND `deleted_at` IS NULL
-    ";
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($ids);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('departments')->select('*')
+      ->in('id', $ids)->is('deleted_at', null);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return array_map(fn($row) => Department::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }

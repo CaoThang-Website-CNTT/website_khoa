@@ -198,8 +198,16 @@ class ProjectTopicService implements IProjectTopicService
       throw new Exception('Bạn không được phân công phụ trách đợt đồ án này.');
     }
 
+    if ($batch['status'] === ProjectBatchStatus::DRAFT) {
+      throw new Exception('Đợt đồ án chưa được công bố.');
+    }
+
     if ($batch['status'] === ProjectBatchStatus::CLOSED) {
       throw new Exception('Đợt đồ án đã kết thúc.');
+    }
+
+    if ($batch['status'] !== ProjectBatchStatus::PUBLISHED) {
+      throw new Exception('Đợt đồ án không ở trạng thái cho phép đề xuất đề tài.');
     }
 
     $now = time();
