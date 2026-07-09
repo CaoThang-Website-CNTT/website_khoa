@@ -168,7 +168,12 @@ require_once BASE_PATH . '/services/internship_weekly_report_service.php';
 require_once BASE_PATH . '/services/referral_letter_service.php';
 require_once BASE_PATH . '/services/ticket_service.php';
 require_once BASE_PATH . '/services/mail_service.php';
-
+require_once BASE_PATH . '/services/project_batch_service.php';
+require_once BASE_PATH . '/services/project_topic_service.php';
+require_once BASE_PATH . '/services/project_registration_service.php';
+require_once BASE_PATH . '/services/project_group_service.php';
+require_once BASE_PATH . '/services/project_aspiration_service.php';
+require_once BASE_PATH . '/services/project_eligibility_service.php';
 // Controllers
 // Web
 require_once BASE_PATH . '/controllers/web/auth_controller.php';
