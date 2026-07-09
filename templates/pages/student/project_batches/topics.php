@@ -14,9 +14,11 @@ $pagination = $pagination ?? null;
 $aspirationTopicIds = $aspirationTopicIds ?? [];
 $maxAspirations = $maxAspirations ?? 3;
 
+$isLocked = $isLocked ?? false;
+
 $canAddAspiration = $isLeader && count($aspirationTopicIds) < $maxAspirations;
 
-$topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLeader, $canAddAspiration, $currentBatch) {
+$topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLeader, $canAddAspiration, $currentBatch, $isLocked) {
   $isAdded = in_array($topic['id'], $aspirationTopicIds);
   return [
     'id' => $topic['id'],
@@ -26,8 +28,9 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
     'pdf_file_url' => !empty($topic['pdf_file_path']) ? url('/public/media/' . $topic['pdf_file_path']) : null,
     'is_added' => $isAdded,
     'is_leader' => (bool)$isLeader,
-    'can_add' => !$isAdded && $isLeader && $canAddAspiration,
-    'add_url' => url("student/project_batches/{$currentBatch['id']}/aspirations/add")
+    'can_add' => !$isAdded && $isLeader && $canAddAspiration && !$isLocked,
+    'add_url' => url("student/project_batches/{$currentBatch['id']}/aspirations/add"),
+    'is_locked' => $isLocked
   ];
 }, $topics);
 ?>
@@ -56,7 +59,14 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
       </div>
     </div>
 
-    <?php if (!$isLeader): ?>
+    <?php if ($isLocked): ?>
+      <div class="alert mb-4" data-variant="success">
+        <i class="fa-solid fa-lock"></i>
+        <div class="alert-content">
+          <p class="alert-description">Nguyện vọng đã được chốt, không thể thêm mới.</p>
+        </div>
+      </div>
+    <?php elseif (!$isLeader): ?>
       <div class="alert mb-4" data-variant="warning">
         <i class="fa-solid fa-triangle-exclamation"></i>
         <div class="alert-content">
@@ -111,7 +121,7 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
               <form action="{{ row.add_url }}" method="POST">
                 <?= csrf_field() ?>
                 <input type="hidden" name="topic_id" value="{{ row.id }}">
-                <button type="submit" class="btn" data-variant="primary" data-size="sm" {{ !row.can_add ? 'disabled title="Đã đủ nguyện vọng tối đa"' : '' }}>
+                <button type="submit" class="btn" data-variant="primary" data-size="sm" {{ !row.can_add ? 'disabled title="Đã đủ nguyện vọng tối đa hoặc đã chốt"' : '' }}>
                   <i class="fa-solid fa-plus"></i>Thêm nguyện vọng
                 </button>
               </form>

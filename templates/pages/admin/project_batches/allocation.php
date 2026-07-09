@@ -123,8 +123,8 @@ $tabs = [
     <h3 class="modal__title">Duyệt tự động</h3>
   </div>
   <div class="modal__content">
-    <p>Thuật toán sẽ tự động phân bổ đề tài cho các nhóm hợp lệ theo thứ tự nguyện vọng.</p>
-    <p>Những nhóm không đậu đề tài nào sẽ rơi vào trạng thái "Chưa có đề tài".</p>
+    <p>Hệ thống sẽ tự động phân bổ đề tài dựa trên nguyện vọng và thời điểm chốt nguyện vọng.</p>
+    <p>Lưu ý: Chỉ các nhóm ĐÃ CHỐT nguyện vọng mới được tham gia phân bổ. Những nhóm còn lại sẽ rơi vào trạng thái "Chưa có đề tài".</p>
     <p style="color: var(--toast-warning-color)"><i class="fa-solid fa-triangle-exclamation"></i> Thao tác này sẽ ghi đè các phân bổ cũ!</p>
   </div>
   <div class="modal__footer">
@@ -221,6 +221,12 @@ $tabs = [
 
         if (groupData && groupData.aspirations && groupData.aspirations.length > 0) {
           container.innerHTML = '';
+          let isLocked = !!groupData.aspirations[0].locked_at;
+
+          if (!isLocked) {
+            container.innerHTML += '<div><span class="badge" data-variant="warning"><i class="fa-solid fa-unlock mr-1"></i> Chưa chốt</span></div>';
+          }
+
           groupData.aspirations.forEach(asp => {
             const rowDiv = document.createElement('div');
             rowDiv.style.marginBottom = '0.25rem';

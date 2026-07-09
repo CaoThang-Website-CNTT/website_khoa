@@ -168,12 +168,14 @@ class StudentProjectDashboardController extends Controller
     $groupMembers = [];
     $aspirations = [];
     $isLeader = false;
+    $isLocked = false;
 
     if ($eligibility['isEligible']) {
       $group = $this->_projectGroupService->getGroupByStudent($currentBatch['id'], $student->id);
       if ($group) {
         $groupMembers = $this->_projectGroupService->getGroupMembers($group['id']);
         $aspirations = $this->_projectAspirationService->getAspirationsByGroup($group['id']);
+        $isLocked = $this->_projectAspirationService->isLocked($group['id']);
         foreach ($groupMembers as $member) {
           if ($member['student_id'] == $student->id && $member['is_leader']) {
             $isLeader = true;
@@ -191,7 +193,8 @@ class StudentProjectDashboardController extends Controller
       'group' => $group,
       'groupMembers' => $groupMembers,
       'aspirations' => $aspirations,
-      'isLeader' => $isLeader
+      'isLeader' => $isLeader,
+      'isLocked' => $isLocked
     ], layout: 'dashboard_layout');
   }
 
@@ -230,6 +233,7 @@ class StudentProjectDashboardController extends Controller
     $topicsData = $this->_projectTopicService->getPaginatedByBatch($id, $page, 50, ['status' => 'approved']);
     $aspirations = $this->_projectAspirationService->getAspirationsByGroup($group['id']);
     $aspirationTopicIds = array_column($aspirations, 'topic_id');
+    $isLocked = $this->_projectAspirationService->isLocked($group['id']);
 
     return $this->render('student/project_batches/topics', [
       'title' => 'Đăng ký đề tài - ' . htmlspecialchars($currentBatch['title']),
@@ -241,7 +245,8 @@ class StudentProjectDashboardController extends Controller
       'topics' => $topicsData->getItems(),
       'pagination' => $topicsData,
       'aspirationTopicIds' => $aspirationTopicIds,
-      'maxAspirations' => $currentBatch['max_aspirations'] ?? 3
+      'maxAspirations' => $currentBatch['max_aspirations'] ?? 3,
+      'isLocked' => $isLocked
     ], layout: 'dashboard_layout');
   }
 
@@ -255,6 +260,11 @@ class StudentProjectDashboardController extends Controller
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
 
     if ($group && $group['leader_student_id'] == $student->id) {
+      if ($this->_projectAspirationService->isLocked($group['id'])) {
+        $request->session()->flashNotify('error', 'Nguyện vọng đã được chốt, không thể thay đổi.');
+        return $this->redirect("/student/project_batches/{$id}/topics");
+      }
+
       $topicId = (int)$request->input('topic_id');
       $aspirations = $this->_projectAspirationService->getAspirationsByGroup($group['id']);
       $maxAspirations = $this->_projectBatchService->getBatchById($id)['max_aspirations'] ?? 3;
@@ -287,6 +297,11 @@ class StudentProjectDashboardController extends Controller
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
 
     if ($group && $group['leader_student_id'] == $student->id) {
+      if ($this->_projectAspirationService->isLocked($group['id'])) {
+        $request->session()->flashNotify('error', 'Nguyện vọng đã được chốt, không thể thay đổi.');
+        return $this->redirect("/student/project_batches/{$id}");
+      }
+
       $topicId = (int)$request->input('topic_id');
       $aspirations = $this->_projectAspirationService->getAspirationsByGroup($group['id']);
       $topicIds = array_column($aspirations, 'topic_id');
@@ -308,6 +323,11 @@ class StudentProjectDashboardController extends Controller
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
 
     if ($group && $group['leader_student_id'] == $student->id) {
+      if ($this->_projectAspirationService->isLocked($group['id'])) {
+        $request->session()->flashNotify('error', 'Nguyện vọng đã được chốt, không thể thay đổi.');
+        return $this->redirect("/student/project_batches/{$id}");
+      }
+
       // Nhận 1 mảng topic_ids đã được sắp xếp từ client
       $topicIds = $request->input('topic_ids', []);
       if (!empty($topicIds) && is_array($topicIds)) {
@@ -315,6 +335,42 @@ class StudentProjectDashboardController extends Controller
         $this->_projectAspirationService->addAspirations($group['id'], array_map('intval', $topicIds));
         $request->session()->flashNotify('success', 'Đã cập nhật thứ tự nguyện vọng.');
       }
+    }
+    return $this->redirect("/student/project_batches/{$id}");
+  }
+
+  public function lockAspirations(Request $request, int $id)
+  {
+    $authUser = $request->session()->authUser();
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+    $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
+
+    if ($group && $group['leader_student_id'] == $student->id) {
+      if ($this->_projectAspirationService->lockAspirations($group['id'])) {
+        $request->session()->flashNotify('success', 'Đã chốt nguyện vọng thành công.');
+      } else {
+        $request->session()->flashNotify('error', 'Có lỗi khi chốt nguyện vọng hoặc nguyện vọng đã được chốt.');
+      }
+    } else {
+      $request->session()->flashNotify('error', 'Chỉ nhóm trưởng mới có quyền chốt nguyện vọng.');
+    }
+    return $this->redirect("/student/project_batches/{$id}");
+  }
+
+  public function unlockAspirations(Request $request, int $id)
+  {
+    $authUser = $request->session()->authUser();
+    $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
+    $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
+
+    if ($group && $group['leader_student_id'] == $student->id) {
+      if ($this->_projectAspirationService->unlockAspirations($group['id'])) {
+        $request->session()->flashNotify('success', 'Đã mở khóa nguyện vọng thành công. Lưu ý: tiebreaker của nhóm đã bị đặt lại.');
+      } else {
+        $request->session()->flashNotify('error', 'Có lỗi xảy ra hoặc nguyện vọng chưa được chốt.');
+      }
+    } else {
+      $request->session()->flashNotify('error', 'Chỉ nhóm trưởng mới có quyền mở khóa nguyện vọng.');
     }
     return $this->redirect("/student/project_batches/{$id}");
   }

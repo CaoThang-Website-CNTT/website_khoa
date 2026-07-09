@@ -11,6 +11,9 @@ interface IProjectAspirationService
   public function updateAspirationStatus(int $id, string $status): bool;
   public function updateStatusByGroupAndTopic(int $groupId, int $topicId, string $status): bool;
   public function getAspirationsByBatch(int $batchId): array;
+  public function lockAspirations(int $groupId): bool;
+  public function unlockAspirations(int $groupId): bool;
+  public function isLocked(int $groupId): bool;
 }
 
 class ProjectAspirationService implements IProjectAspirationService
@@ -45,5 +48,20 @@ class ProjectAspirationService implements IProjectAspirationService
   public function getAspirationsByBatch(int $batchId): array
   {
     return $this->_store->getAspirationsByBatch($batchId);
+  }
+
+  public function lockAspirations(int $groupId): bool
+  {
+    return $this->_store->lockAspirations($groupId);
+  }
+
+  public function unlockAspirations(int $groupId): bool
+  {
+    return $this->_store->unlockAspirations($groupId);
+  }
+
+  public function isLocked(int $groupId): bool
+  {
+    return $this->_store->isLocked($groupId);
   }
 }

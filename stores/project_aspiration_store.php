@@ -14,12 +14,19 @@ interface IProjectAspirationStore
   public function updateAspirationStatus(int $id, string $status): bool;
   public function updateStatusByGroupAndTopic(int $groupId, int $topicId, string $status): bool;
   public function getAspirationsByBatch(int $batchId): array;
+  public function lockAspirations(int $groupId): bool;
+  public function unlockAspirations(int $groupId): bool;
+  public function isLocked(int $groupId): bool;
 }
 
 class ProjectAspirationStore extends Store implements IProjectAspirationStore
 {
   public function addAspirations(int $groupId, array $topicIds): bool
   {
+    if ($this->isLocked($groupId)) {
+      throw new \RuntimeException('Nguyện vọng đã được chốt, không thể thay đổi.');
+    }
+
     try {
       $this->db->beginTransaction();
 
@@ -87,7 +94,7 @@ class ProjectAspirationStore extends Store implements IProjectAspirationStore
 
   public function getAspirationsByBatch(int $batchId): array
   {
-    $sql = "SELECT a.*, g.assigned_topic_id, g.created_at as group_created_at, tt.title as topic_title
+    $sql = "SELECT a.*, g.assigned_topic_id, g.created_at as group_created_at, tt.title as topic_title, a.locked_at
                 FROM project_aspirations a
                 JOIN project_groups g ON a.group_id = g.id
                 LEFT JOIN project_topics tt ON a.topic_id = tt.id
@@ -96,5 +103,29 @@ class ProjectAspirationStore extends Store implements IProjectAspirationStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function lockAspirations(int $groupId): bool
+  {
+    $sql = "UPDATE project_aspirations SET locked_at = NOW() WHERE group_id = :group_id AND locked_at IS NULL";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':group_id' => $groupId]);
+    return $stmt->rowCount() > 0;
+  }
+
+  public function unlockAspirations(int $groupId): bool
+  {
+    $sql = "UPDATE project_aspirations SET locked_at = NULL WHERE group_id = :group_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':group_id' => $groupId]);
+    return $stmt->rowCount() > 0;
+  }
+
+  public function isLocked(int $groupId): bool
+  {
+    $sql = "SELECT locked_at FROM project_aspirations WHERE group_id = :group_id AND locked_at IS NOT NULL LIMIT 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':group_id' => $groupId]);
+    return (bool)$stmt->fetchColumn();
   }
 }

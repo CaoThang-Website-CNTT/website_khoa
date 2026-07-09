@@ -214,6 +214,22 @@ if ($group) {
           <hr class="separator">
           <div class="card__content">
 
+            <?php if ($isLocked): ?>
+              <div class="alert mb-4 flex justify-between items-center" data-variant="success">
+                <div>
+                  <i class="fa-solid fa-lock mr-2"></i> Nguyện vọng đã được chốt. Thời điểm chốt sẽ có ảnh hưởng đến ưu tiên xét duyệt.
+                </div>
+                <?php if ($isLeader): ?>
+                  <form action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/unlock") ?>" method="POST" class="inline-block shrink-0">
+                    <?= csrf_field() ?>
+                    <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" data-confirm-msg="CẢNH BÁO: Mở khóa sẽ làm mất lợi thế thời gian (tiebreaker) của nhóm khi hệ thống tự động phân bổ. Lần chốt sau sẽ ghi nhận thời điểm mới. Bạn có chắc chắn muốn mở khóa để sửa?" data-modal-trigger="#action-confirm-modal">
+                      <i class="fa-solid fa-unlock"></i> Mở khóa
+                    </button>
+                  </form>
+                <?php endif; ?>
+              </div>
+            <?php endif; ?>
+
             <?php if (!$group): ?>
               <div class="py-8 text-center">
                 <i class="fa-solid fa-list-check text-3xl mb-3"></i>
@@ -240,7 +256,7 @@ if ($group) {
                         GV: <?= htmlspecialchars($aspiration['teacher_name']) ?>
                       </div>
                     </div>
-                    <?php if ($isLeader): ?>
+                    <?php if ($isLeader && !$isLocked): ?>
                       <form action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/remove") ?>" method="POST" class="ml-2">
                         <?= csrf_field() ?>
                         <input type="hidden" name="topic_id" value="<?= $aspiration['topic_id'] ?>">
@@ -259,9 +275,18 @@ if ($group) {
               <?php endif; ?>
             <?php endif; ?>
           </div>
-          <div class="card__footer">
+          <div class="card__footer flex justify-between">
             <?php if ($group): ?>
               <a href="<?= url("student/project_batches/{$currentBatch['id']}/topics") ?>" class="btn" data-variant="secondary" data-size="md">Xem danh sách tất cả đề tài</a>
+
+              <?php if ($isLeader && !empty($aspirations) && !$isLocked): ?>
+                <form action="<?= url("student/project_batches/{$currentBatch['id']}/aspirations/lock") ?>" method="POST">
+                  <?= csrf_field() ?>
+                  <button type="button" class="btn btn-confirm-action" data-variant="primary" data-size="md" data-confirm-msg="Sau khi chốt, bạn KHÔNG THỂ thay đổi thứ tự hoặc xóa nguyện vọng. Chốt nguyện vọng càng sớm càng có lợi khi xét duyệt nguyện vọng. Bạn có chắc chắn muốn chốt?" data-modal-trigger="#action-confirm-modal">
+                    <i class="fa-solid fa-lock mr-2"></i> Chốt nguyện vọng
+                  </button>
+                </form>
+              <?php endif; ?>
             <?php else: ?>
               <button class="btn" data-variant="secondary" data-size="md" disabled>Thêm NV</button>
             <?php endif; ?>

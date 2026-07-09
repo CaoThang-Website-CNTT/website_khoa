@@ -103,14 +103,26 @@ class ProjectGroupService implements IProjectGroupService
 
     // Group nguyện vọng theo group_id và sắp xếp theo thứ tự ưu tiên
     $aspirationsByGroup = [];
+    $lockedAtByGroup = [];
     foreach ($allAspirations as $asp) {
       $aspirationsByGroup[$asp['group_id']][] = $asp;
+      if (!empty($asp['locked_at'])) {
+        $lockedAtByGroup[$asp['group_id']] = $asp['locked_at'];
+      }
+    }
+
+    // Lọc: chỉ giữ nhóm ĐÃ CHỐT nguyện vọng
+    $groups = array_filter($groups, fn($g) => isset($lockedAtByGroup[$g['id']]));
+    $groups = array_values($groups);
+
+    if (empty($groups)) {
+      return ['success' => 0, 'failed' => 0, 'message' => 'Không có nhóm nào đã chốt nguyện vọng.'];
     }
 
     // 3. Lấy tất cả các đề tài đã được phê duyệt trong đợt này
     $allTopics = $this->_topicStore->getApprovedTopics($batchId);
 
-    // Tạo một map để theo dõi số lượng slot của từng đề tài
+    // Tạo map để theo dõi slot của từng đề tài
     $topicSlots = [];
     foreach ($allTopics as $topic) {
       $maxStudents = (int)$topic['max_students'];
@@ -121,33 +133,108 @@ class ProjectGroupService implements IProjectGroupService
       ];
     }
 
-    $successCount = 0;
-    $failedCount = 0;
+    // 4. Deferred Acceptance Algorithm
+    $proposalIndex = [];      // NV tiếp theo mà nhóm sẽ đề xuất
+    $tentative = [];           // topic_id => [group data...]
+    $freeGroupIds = [];        // Set các nhóm chưa được match
 
-    // 4. Xử lý từng nhóm
     foreach ($groups as $group) {
-      $groupId = $group['id'];
-      $aspirations = $aspirationsByGroup[$groupId] ?? [];
+      $proposalIndex[$group['id']] = 0;
+      $freeGroupIds[$group['id']] = true;
+    }
 
-      $assigned = false;
-      foreach ($aspirations as $asp) {
-        $topicId = $asp['topic_id'];
+    // Index groups by ID for quick lookup
+    $groupsById = [];
+    foreach ($groups as $group) {
+      $groupsById[$group['id']] = $group;
+    }
 
-        if (isset($topicSlots[$topicId])) {
-          $slotInfo = $topicSlots[$topicId];
-          if ($slotInfo['assigned_groups'] < $slotInfo['max_groups']) {
-            // Allocate to this topic
-            if ($this->_store->assignTopic($groupId, $topicId)) {
-              $topicSlots[$topicId]['assigned_groups']++;
-              $assigned = true;
-              $successCount++;
-              break;
-            }
+    $maxIterations = count($groups) * 10; // Safety limit
+    $iteration = 0;
+
+    while (!empty($freeGroupIds) && $iteration < $maxIterations) {
+      $iteration++;
+      $madeProgress = false;
+
+      foreach (array_keys($freeGroupIds) as $groupId) {
+        $aspirations = $aspirationsByGroup[$groupId] ?? [];
+        $idx = $proposalIndex[$groupId];
+
+        // Hết NV để đề xuất
+        if ($idx >= count($aspirations)) {
+          unset($freeGroupIds[$groupId]);
+          continue;
+        }
+
+        $topicId = $aspirations[$idx]['topic_id'];
+        $proposalIndex[$groupId]++;
+        $madeProgress = true;
+
+        // Đề tài không hợp lệ (không approved hoặc không tồn tại)
+        if (!isset($topicSlots[$topicId])) {
+          continue;
+        }
+
+        // Thêm group vào danh sách ứng viên của topic
+        if (!isset($tentative[$topicId])) {
+          $tentative[$topicId] = [];
+        }
+        $tentative[$topicId][$groupId] = $groupsById[$groupId];
+
+        // Topic giữ lại top N nhóm, reject phần còn lại
+        $available = $topicSlots[$topicId]['max_groups'] - $topicSlots[$topicId]['assigned_groups'];
+        if ($available <= 0) {
+          // Đề tài đã hết slot từ trước (assigned_groups_count đã đầy)
+          unset($tentative[$topicId][$groupId]);
+          continue;
+        }
+
+        if (count($tentative[$topicId]) > $available) {
+          // Sắp xếp theo tiebreaker: locked_at ASC, created_at ASC
+          uasort($tentative[$topicId], function ($a, $b) use ($lockedAtByGroup) {
+            $lockA = $lockedAtByGroup[$a['id']] ?? '9999-12-31';
+            $lockB = $lockedAtByGroup[$b['id']] ?? '9999-12-31';
+            if ($lockA !== $lockB) return strcmp($lockA, $lockB);
+            return strcmp($a['created_at'], $b['created_at']);
+          });
+
+          // Giữ top $available, reject phần còn lại
+          $kept = array_slice($tentative[$topicId], 0, $available, true);
+          $rejected = array_diff_key($tentative[$topicId], $kept);
+
+          $tentative[$topicId] = $kept;
+
+          foreach ($rejected as $rGroupId => $rGroup) {
+            $freeGroupIds[$rGroupId] = true; // Nhóm bị reject tiếp tục vòng sau
           }
+        }
+
+        // Nhóm đã được tạm nhận sẽ được remove khỏi free list
+        if (isset($tentative[$topicId][$groupId])) {
+          unset($freeGroupIds[$groupId]);
         }
       }
 
-      if (!$assigned) {
+      if (!$madeProgress) break;
+    }
+
+    // 5. Commit kết quả
+    $successCount = 0;
+    $failedCount = 0;
+
+    $matchedGroupIds = [];
+    foreach ($tentative as $topicId => $matchedGroups) {
+      foreach ($matchedGroups as $groupId => $group) {
+        if ($this->_store->assignTopic($groupId, $topicId)) {
+          $successCount++;
+          $matchedGroupIds[$groupId] = true;
+        }
+      }
+    }
+
+    // Đếm nhóm failed (tham gia thuật toán nhưng không match)
+    foreach ($groups as $group) {
+      if (!isset($matchedGroupIds[$group['id']])) {
         $failedCount++;
       }
     }

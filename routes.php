@@ -280,6 +280,8 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
     $router->post('/{id}/aspirations/add', [StudentProjectDashboardController::class, 'addAspiration']);
     $router->post('/{id}/aspirations/remove', [StudentProjectDashboardController::class, 'removeAspiration']);
     $router->post('/{id}/aspirations/reorder', [StudentProjectDashboardController::class, 'reorderAspirations']);
+    $router->post('/{id}/aspirations/lock', [StudentProjectDashboardController::class, 'lockAspirations']);
+    $router->post('/{id}/aspirations/unlock', [StudentProjectDashboardController::class, 'unlockAspirations']);
   });
   // Cập nhật thông tin cá nhân
   $router->post('/profile/update', [StudentDashboardController::class, 'updateProfile']);
