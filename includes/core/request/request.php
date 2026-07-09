@@ -324,6 +324,51 @@ class Request
   {
     return $this->body[$key] ?? $default;
   }
+
+  /**
+   * Lấy toàn bộ body đã được sanitize (trim chuỗi, đệ quy cho mảng lồng nhau).
+   * Dùng thay cho all() khi cần dữ liệu sạch để validate hoặc lưu DB.
+   * @return array
+   */
+  public function sanitized(): array
+  {
+    return $this->deepTrim($this->body);
+  }
+
+  /**
+   * Lấy một tập con các field từ body đã sanitize.
+   * Dùng để chống mass-assignment — chỉ nhận đúng các field mong muốn.
+   *
+   * @param array<string> $keys Danh sách key cần lấy. VD: ['title', 'start_at', 'end_at']
+   * @return array Mảng chỉ chứa các key được chỉ định, đã trim
+   */
+  public function only(array $keys): array
+  {
+    return array_intersect_key($this->sanitized(), array_flip($keys));
+  }
+
+  /**
+   * Trim đệ quy tất cả giá trị string trong mảng (kể cả mảng lồng nhau).
+   * Bỏ qua các giá trị non-string (int, bool, null, v.v.).
+   *
+   * @param array $data Mảng dữ liệu cần trim
+   * @return array Mảng đã trim
+   */
+  private function deepTrim(array $data): array
+  {
+    $result = [];
+    foreach ($data as $key => $value) {
+      if (is_string($value)) {
+        $result[$key] = trim($value);
+      } elseif (is_array($value)) {
+        $result[$key] = $this->deepTrim($value);
+      } else {
+        $result[$key] = $value;
+      }
+    }
+    return $result;
+  }
+
   public function flashOldInputs(?array $includedKeys = null, ?array $excludedKeys = null): void
   {
     $this->session->flashOldInputs(

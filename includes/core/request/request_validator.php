@@ -106,6 +106,59 @@ class RequestValidator
           }
         }
         break;
+      case 'min':
+        $min = (int) $param;
+        if ($value !== null && mb_strlen((string) $value, 'UTF-8') < $min) {
+          $this->addError($field, "Phải có ít nhất $min ký tự.");
+        }
+        break;
+      case 'numeric':
+        if ($value !== null && $value !== '' && !is_numeric($value)) {
+          $this->addError($field, "Trường này phải là số.");
+        }
+        break;
+      case 'integer':
+        if ($value !== null && $value !== '' && filter_var($value, FILTER_VALIDATE_INT) === false) {
+          $this->addError($field, "Trường này phải là số nguyên.");
+        }
+        break;
+      case 'url':
+        if ($value && !filter_var($value, FILTER_VALIDATE_URL)) {
+          $this->addError($field, "URL không hợp lệ.");
+        }
+        break;
+      case 'array':
+        if ($value !== null && !is_array($value)) {
+          $this->addError($field, "Trường này phải là một mảng.");
+        }
+        break;
+      case 'regex':
+        if ($value && !preg_match($param, (string) $value)) {
+          $this->addError($field, "Định dạng không hợp lệ.");
+        }
+        break;
+      case 'after':
+        // So sánh ngày: field hiện tại phải sau field khác. VD: 'after:start_at'
+        $otherDate = $data[$param] ?? null;
+        if ($value && $otherDate) {
+          $thisTime = strtotime((string) $value);
+          $otherTime = strtotime((string) $otherDate);
+          if ($thisTime !== false && $otherTime !== false && $thisTime <= $otherTime) {
+            $this->addError($field, "Phải sau giá trị của trường $param.");
+          }
+        }
+        break;
+      case 'before':
+        // So sánh ngày: field hiện tại phải trước field khác. VD: 'before:end_at'
+        $otherDate = $data[$param] ?? null;
+        if ($value && $otherDate) {
+          $thisTime = strtotime((string) $value);
+          $otherTime = strtotime((string) $otherDate);
+          if ($thisTime !== false && $otherTime !== false && $thisTime >= $otherTime) {
+            $this->addError($field, "Phải trước giá trị của trường $param.");
+          }
+        }
+        break;
     }
   }
 

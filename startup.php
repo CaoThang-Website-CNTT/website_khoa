@@ -40,6 +40,7 @@ require_once BASE_PATH . '/includes/core/router.php';
 // Request
 require_once BASE_PATH . '/includes/core/request/request.php';
 require_once BASE_PATH . '/includes/core/request/request_validator.php';
+require_once BASE_PATH . '/includes/core/request/validation_exception.php';
 // Response
 require_once BASE_PATH . '/includes/core/response/response.php';
 require_once BASE_PATH . '/includes/core/response/json_response.php';

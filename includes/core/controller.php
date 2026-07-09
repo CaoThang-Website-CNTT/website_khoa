@@ -52,17 +52,28 @@ abstract class Controller
       require BASE_PATH . "/templates/pages/{$template}.php";
     }
   }
+  /**
+   * Validate dữ liệu request theo rules đã định.
+   * Tự động sanitize (trim) dữ liệu trước khi validate.
+   * Nếu validate thất bại: flash errors + old inputs vào session, throw ValidationException.
+   *
+   * @param Request $request Request hiện tại
+   * @param array $rules Mảng rules. VD: ['title' => ['required', 'max:255']]
+   * @return array Dữ liệu đã sanitize, chỉ chứa các key có trong $rules (chống mass-assignment)
+   * @throws ValidationException Khi dữ liệu không hợp lệ
+   */
   protected function validate(Request $request, array $rules): array
   {
     $validator = new RequestValidator();
+    $data = $request->sanitized();
 
-    if (!$validator->validate($request->all(), $rules)) {
+    if (!$validator->validate($data, $rules)) {
       $request->session()->flashErrors($validator->getErrors());
       $request->flashOldInputs();
 
-      throw new \Exception();
+      throw new ValidationException($validator->getErrors());
     }
 
-    return array_intersect_key($request->all(), $rules);
+    return array_intersect_key($data, $rules);
   }
 }
