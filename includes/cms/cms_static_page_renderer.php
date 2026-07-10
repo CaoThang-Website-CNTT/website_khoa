@@ -51,6 +51,7 @@ final class CmsStaticPageRenderer
       fn(string $file): string => '<link rel="stylesheet" href="' . $public . '/' . $file . '">',
       $styles,
     ));
+    $scripts = '<script src="' . $public . '/js/accordion.js"></script>';
 
     return '<!doctype html><html lang="vi"><head><meta charset="UTF-8">'
       . '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -58,7 +59,7 @@ final class CmsStaticPageRenderer
       . '<style>html,body{margin:0;min-height:0;overflow:visible;scrollbar-width:none}body::-webkit-scrollbar{display:none}</style>'
       . '</head><body class="cms-preview-body"><main class="cms-live-page">'
       . $this->render($document)
-      . '</main></body></html>';
+      . '</main>' . $scripts . '</body></html>';
   }
 
   public static function defaultRegistry(): CmsSectionRegistry

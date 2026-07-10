@@ -41,6 +41,14 @@
     </span>
   </template>
 
+  <!-- Cột Nổi Bật -->
+  <template data-tm-col="is_feature" data-tm-label="Nổi Bật" data-tm-align="center" data-tm-filter-type="select"
+    data-tm-filter-options='[{"label":"Tất cả","value":""},{"label":"Nổi Bật","value":"1"},{"label":"Thường","value":"0"}]'>
+    <span class="badge" data-variant="{{ value == 1 ? 'primary' : 'secondary' }}">
+      {{ value == 1 ? 'Nổi Bật' : 'Thường' }}
+    </span>
+  </template>
+
   <!-- Cột Lượt xem -->
   <template data-tm-col="view_count" data-tm-label="Lượt xem" data-tm-align="center" data-tm-sortable></template>
 
@@ -59,13 +67,14 @@
       'slug' => $post->slug,
       'author_email' => $post->author->email ?? 'N/A',
       'status' => $post->status,
+      'is_feature' => $post->is_featured ? 1 : 0,
       'view_count' => $post->view_count,
       'created_at' => $post->created_at ? date('d/m/Y H:i', strtotime($post->created_at)) : 'N/A'
     ], $data->getItems()),
     'total' => $data->getTotal(),
     'page' => $data->getCurrentPage(),
     'limit' => $data->getPerPage()
-  ]) ?>
+  ], JSON_UNESCAPED_UNICODE) ?>
 </script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
