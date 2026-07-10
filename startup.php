@@ -217,3 +217,4 @@ require_once BASE_PATH . '/controllers/api/export_api_controller.php';
 require_once BASE_PATH . '/controllers/api/classroom_api_controller.php';
 require_once BASE_PATH . '/controllers/api/project_batch_api_controller.php';
 require_once BASE_PATH . '/controllers/api/project_topic_api_controller.php';
+require_once BASE_PATH . '/controllers/api/cms_page_api_controller.php';
