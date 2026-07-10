@@ -155,6 +155,7 @@ require_once BASE_PATH . '/services/classroom_service.php';
 require_once BASE_PATH . '/services/category_service.php';
 require_once BASE_PATH . '/services/menu_service.php';
 require_once BASE_PATH . '/services/web_setting_service.php';
+require_once BASE_PATH . '/services/ai_suggestion_service.php';
 require_once BASE_PATH . '/services/carousel_service.php';
 require_once BASE_PATH . '/services/internship_batch_service.php';
 require_once BASE_PATH . '/services/internship_assignment_service.php';
@@ -203,6 +204,7 @@ require_once BASE_PATH . '/controllers/web/project_allocation_controller.php';
 
 // Api
 require_once BASE_PATH . '/controllers/api/account_api_controller.php';
+require_once BASE_PATH . '/controllers/api/ai_suggestion_api_controller.php';
 require_once BASE_PATH . '/controllers/api/student_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_assignment_api_controller.php';
 require_once BASE_PATH . '/controllers/api/internship_batch_api_controller.php';
