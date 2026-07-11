@@ -36,6 +36,7 @@
   <!-- ========= Canva Scripts ======== -->
   <?php include_once BASE_PATH . '/templates/partials/canva_scripts.php'; ?>
   <?= $layout->yield('scripts'); ?>
+  <?= $layout->yield('script'); ?>
   <!-- ========= Canva Scripts End ======== -->
 </body>
 

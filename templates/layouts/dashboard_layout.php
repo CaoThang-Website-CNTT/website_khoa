@@ -55,6 +55,7 @@
 
   <?php include_once BASE_PATH . '/templates/partials/dashboard_scripts.php'; ?>
   <?= $layout->yield("scripts"); ?>
+  <?= $layout->yield("script"); ?>
 </body>
 
 </html>

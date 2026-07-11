@@ -13,7 +13,7 @@
   Thêm mới
 </a>
 <?php $layout->end() ?>
-<div class="tm-container" id="posts_table" data-tm="posts_table" data-tm-mode="server" data-tm-selectable
+<div class="tm-container" id="posts_table" data-tm="posts_table" data-tm-mode="server"
   data-server-table-url="<?= url('api/v1/posts') ?>" data-tm-searchable data-tm-toolbar-target="#posts-table-header">
 
   <!-- Khai báo phân trang -->

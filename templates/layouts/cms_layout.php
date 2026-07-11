@@ -64,6 +64,7 @@
 
   <?php include_once BASE_PATH . '/templates/partials/cms_scripts.php'; ?>
   <?= $layout->yield('scripts'); ?>
+  <?= $layout->yield('script'); ?>
 </body>
 
 </html>
