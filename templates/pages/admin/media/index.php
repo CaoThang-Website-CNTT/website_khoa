@@ -18,7 +18,7 @@
 
   <template data-tm-pagination></template>
 
-  <template data-tm-col="file_path" data-tm-label="Hình ảnh" data-tm-sortable data-tm-width="80px">
+  <template data-tm-col="file_url" data-tm-label="Hình ảnh" data-tm-sortable data-tm-width="80px">
     <img src="{{ value }}" alt="{{ row.alt_text }}" class="w-10 h-10 object-cover">
   </template>
 
@@ -37,7 +37,7 @@
   </template>
 
   <template data-tm-col="file_size" data-tm-label="Dung lượng" data-tm-sortable>
-    {{ value }}
+    {{ formatBytes(value) }}
   </template>
 </div>
 
@@ -48,9 +48,10 @@
       'id' => $media->id,
       'title' => $media->title ?? 'N/A',
       'file_name' => $media->file_name ?? 'N/A',
-      'file_path' => url("public/media/" . $media->file_path) ?? 'N/A',
+      'file_path' => $media->file_path ?? 'N/A',
+      'file_url' => url('public/media/' . $media->file_path) ?? 'N/A',
       'mime_type' => $media->mime_type ?? 'custom',
-      'file_size' => $media->file_size ?? 'N/A',
+      'file_size' => $media->file_size ?? 0,
       'alt_text' => $media->alt_text ?? '-',
       'created_at' => $media->created_at ?? 'N/A',
       'updated_at' => $media->updated_at ?? 'N/A',
@@ -60,5 +61,21 @@
     'limit' => $data->getPerPage()
   ]) ?>
 </script>
-<script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
+<script type="module">
+  import { TemplateEngine } from '<?= url('public/js/table/template_engine.js') ?>';
+
+  TemplateEngine.registerHelper('formatBytes', (bytes) => {
+    const size = Number(bytes);
+    if (!Number.isFinite(size) || size <= 0) return '0 B';
+
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+    const value = size / Math.pow(1024, index);
+    const decimals = index === 0 ? 0 : value >= 10 ? 1 : 2;
+
+    return `${value.toFixed(decimals).replace(/\.0+$|(\.\d*[1-9])0+$/, '$1')} ${units[index]}`;
+  });
+
+  await import('<?= url('public/js/pages/admin/server_table.js') ?>');
+</script>
 <?php $layout->end() ?>

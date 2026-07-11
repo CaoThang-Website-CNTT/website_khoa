@@ -43,6 +43,9 @@ export class TemplateEngine {
 
     return (row, value) => {
       const ctx = { ...row, value, row };
+      helperNames.forEach((name, index) => {
+        ctx[name] = helperVals[index];
+      });
       const rendered = fn(TemplateEngine.#esc, TemplateEngine.#val, ctx, ...helperVals);
       const div = document.createElement('div');
       div.innerHTML = rendered;
@@ -71,8 +74,9 @@ export class TemplateEngine {
     }
     // Fallback: eval an toàn với các khóa ctx trong scope
     try {
-      const keys = Object.keys(ctx);
-      const vals = keys.map(k => ctx[k]);
+      const scope = { ...TemplateEngine.#helpers, ...ctx };
+      const keys = Object.keys(scope);
+      const vals = keys.map(k => scope[k]);
       return new Function(...keys, `return (${expr});`)(...vals);
     } catch {
       return '';
