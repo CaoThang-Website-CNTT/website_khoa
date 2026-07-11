@@ -23,6 +23,9 @@ interface IProjectBatchStore
   public function addSupervisors(int $batchId, array $supervisors): void;
   public function getSupervisorsByBatchId(int $batchId): array;
   public function isTeacherAssigned(int $batchId, int $teacherId): bool;
+  public function addSupervisor(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
+  public function updateSupervisorCapacity(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
+  public function removeSupervisor(int $batchId, int $teacherId): void;
   public function getITTeachers(): array;
 }
 
@@ -244,7 +247,14 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
 
   public function getSupervisorsByBatchId(int $batchId): array
   {
-    $sql = "SELECT s.*, t.full_name, a.email 
+    $sql = "SELECT s.*, t.full_name, a.email,
+                   (SELECT COUNT(gm.student_id) 
+                    FROM project_group_members gm
+                    JOIN project_groups g ON gm.group_id = g.id
+                    JOIN project_topics pt ON g.assigned_topic_id = pt.id
+                    WHERE g.batch_id = s.batch_id 
+                      AND pt.teacher_id = s.teacher_id 
+                      AND gm.is_eligible = 1) as current_load
             FROM project_batch_supervisors s
             JOIN teachers t ON s.teacher_id = t.id
             LEFT JOIN accounts a ON t.account_id = a.id
@@ -253,6 +263,33 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+
+
+  public function addSupervisor(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void
+  {
+    $this->db->prepare("
+      INSERT INTO project_batch_supervisors (batch_id, teacher_id, min_students, max_students, is_active, created_at, updated_at) 
+      VALUES (?, ?, ?, ?, 1, NOW(), NOW())
+    ")->execute([$batchId, $teacherId, $minStudents, $maxStudents]);
+  }
+
+  public function updateSupervisorCapacity(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void
+  {
+    $this->db->prepare("
+      UPDATE project_batch_supervisors 
+      SET min_students = ?, max_students = ?, updated_at = NOW() 
+      WHERE batch_id = ? AND teacher_id = ?
+    ")->execute([$minStudents, $maxStudents, $batchId, $teacherId]);
+  }
+
+  public function removeSupervisor(int $batchId, int $teacherId): void
+  {
+    $this->db->prepare("
+      DELETE FROM project_batch_supervisors 
+      WHERE batch_id = ? AND teacher_id = ?
+    ")->execute([$batchId, $teacherId]);
   }
 
   public function isTeacherAssigned(int $batchId, int $teacherId): bool

@@ -158,10 +158,86 @@ class ProjectBatchController extends Controller
       return $this->redirect('admin/project_batches');
     }
 
+    $teachers = $this->_ProjectBatchService->getSupervisorsByBatchId((int)$id);
+    $allITTeachers = $this->_ProjectBatchService->getAvailableTeachers();
+
+    $assignedTeacherIds = array_column($teachers, 'teacher_id');
+    $availableTeachers = array_filter($allITTeachers, function ($t) use ($assignedTeacherIds) {
+      return !in_array($t['teacher_id'], $assignedTeacherIds);
+    });
+
     $this->render('admin/project_batches/teachers', [
       'batch' => $batch,
-      'teachers' => $this->_ProjectBatchService->getSupervisorsByBatchId((int)$id),
+      'teachers' => $teachers,
+      'availableTeachers' => $availableTeachers,
     ], layout: 'dashboard_layout');
+  }
+
+  public function addTeacher($id, Request $request)
+  {
+    try {
+      $data = $this->validate($request, [
+        'teacher_id' => ['required', 'integer'],
+        'min_students' => ['required', 'integer'],
+        'max_students' => ['required', 'integer'],
+      ]);
+    } catch (ValidationException $e) {
+      $request->session()->flashNotify('error', 'Dữ liệu không hợp lệ.');
+      return $this->redirect("admin/project_batches/$id/teachers");
+    }
+
+    try {
+      $this->_ProjectBatchService->addSupervisorToBatch((int)$id, (int)$data['teacher_id'], (int)$data['min_students'], (int)$data['max_students']);
+      $request->session()->flashNotify('success', 'Đã thêm giảng viên phụ trách.');
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+    }
+
+    return $this->redirect("admin/project_batches/$id/teachers");
+  }
+
+  public function updateTeacherCapacity($id, Request $request)
+  {
+    try {
+      $data = $this->validate($request, [
+        'teacher_id' => ['required', 'integer'],
+        'min_students' => ['required', 'integer'],
+        'max_students' => ['required', 'integer'],
+      ]);
+    } catch (ValidationException $e) {
+      $request->session()->flashNotify('error', 'Dữ liệu không hợp lệ.');
+      return $this->redirect("admin/project_batches/$id/teachers");
+    }
+
+    try {
+      $this->_ProjectBatchService->updateSupervisorCapacity((int)$id, (int)$data['teacher_id'], (int)$data['min_students'], (int)$data['max_students']);
+      $request->session()->flashNotify('success', 'Đã cập nhật chỉ tiêu sinh viên.');
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+    }
+
+    return $this->redirect("admin/project_batches/$id/teachers");
+  }
+
+  public function removeTeacher($id, Request $request)
+  {
+    try {
+      $data = $this->validate($request, [
+        'teacher_id' => ['required', 'integer'],
+      ]);
+    } catch (ValidationException $e) {
+      $request->session()->flashNotify('error', 'Dữ liệu không hợp lệ.');
+      return $this->redirect("admin/project_batches/$id/teachers");
+    }
+
+    try {
+      $this->_ProjectBatchService->removeSupervisor((int)$id, (int)$data['teacher_id']);
+      $request->session()->flashNotify('success', 'Đã loại giảng viên khỏi đợt.');
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', $e->getMessage());
+    }
+
+    return $this->redirect("admin/project_batches/$id/teachers");
   }
 
   public function destroy($id, Request $request)

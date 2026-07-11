@@ -25,6 +25,9 @@ interface IProjectBatchService
   public function getAvailableTeachers(): array;
   public function getSupervisorsByBatchId(int $batchId): array;
   public function isTeacherAssigned(int $batchId, int $teacherId): bool;
+  public function addSupervisorToBatch(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
+  public function updateSupervisorCapacity(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
+  public function removeSupervisor(int $batchId, int $teacherId): void;
 }
 
 class ProjectBatchService implements IProjectBatchService
@@ -185,6 +188,54 @@ class ProjectBatchService implements IProjectBatchService
   public function isTeacherAssigned(int $batchId, int $teacherId): bool
   {
     return $this->_store->isTeacherAssigned($batchId, $teacherId);
+  }
+
+  public function addSupervisorToBatch(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void
+  {
+    if ($minStudents < 0 || $maxStudents < 0 || $minStudents % 2 !== 0 || $maxStudents % 2 !== 0) {
+      throw new Exception('Số lượng sinh viên phải là số chẵn không âm.');
+    }
+    if ($maxStudents !== 0 && $maxStudents < $minStudents) {
+      throw new Exception('Số SV tối đa không được nhỏ hơn SV tối thiểu.');
+    }
+    if ($this->isTeacherAssigned($batchId, $teacherId)) {
+      throw new Exception('Giảng viên đã có trong danh sách phụ trách đợt này.');
+    }
+
+    $this->_store->addSupervisor($batchId, $teacherId, $minStudents, $maxStudents);
+  }
+
+  public function updateSupervisorCapacity(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void
+  {
+    if ($minStudents < 0 || $maxStudents < 0 || $minStudents % 2 !== 0 || $maxStudents % 2 !== 0) {
+      throw new Exception('Số lượng sinh viên phải là số chẵn không âm.');
+    }
+    if ($maxStudents !== 0 && $maxStudents < $minStudents) {
+      throw new Exception('Số SV tối đa không được nhỏ hơn SV tối thiểu.');
+    }
+    if (!$this->isTeacherAssigned($batchId, $teacherId)) {
+      throw new Exception('Giảng viên không có trong đợt đồ án này.');
+    }
+
+    $this->_store->updateSupervisorCapacity($batchId, $teacherId, $minStudents, $maxStudents);
+  }
+
+  public function removeSupervisor(int $batchId, int $teacherId): void
+  {
+    if (!$this->isTeacherAssigned($batchId, $teacherId)) {
+      throw new Exception('Giảng viên không có trong đợt đồ án này.');
+    }
+
+    // Backend validation just to be completely safe
+    $supervisors = $this->getSupervisorsByBatchId($batchId);
+    $target = array_filter($supervisors, fn($s) => $s['teacher_id'] == $teacherId);
+    $target = reset($target);
+
+    if ($target && isset($target['current_load']) && $target['current_load'] > 0) {
+      throw new Exception('Không thể xóa giảng viên đã được phân công nhóm sinh viên.');
+    }
+
+    $this->_store->removeSupervisor($batchId, $teacherId);
   }
 
   private function validateBatchDates(array $data): void

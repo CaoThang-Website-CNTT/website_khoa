@@ -216,7 +216,11 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     // Topics
     $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
     $router->get('/{id}/topics/{topicId}', [ProjectBatchController::class, 'topicDetail']);
+    // Teachers
     $router->get('/{id}/teachers', [ProjectBatchController::class, 'teachers']);
+    $router->post('/{id}/teachers/add', [ProjectBatchController::class, 'addTeacher']);
+    $router->post('/{id}/teachers/update-capacity', [ProjectBatchController::class, 'updateTeacherCapacity']);
+    $router->post('/{id}/teachers/remove', [ProjectBatchController::class, 'removeTeacher']);
 
     // Import Excel 
     $router->post('/{id}/allocation/import-preview', [ProjectAllocationController::class, 'previewImport']);
