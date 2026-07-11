@@ -57,11 +57,11 @@ $wizardSteps = [
 
             <div class="grid grid-cols-3 gap-4">
               <div class="field" data-field-required>
-                <label class="field__label" for="min_class_of">Khóa áp dụng (Từ)</label>
+                <label class="field__label" for="min_class_of">Niên khóa áp dụng (Từ)</label>
                 <input type="number" id="min_class_of" class="field__input" name="min_class_of" min="1900" placeholder="Ví dụ: 2021" required>
               </div>
               <div class="field" data-field-required>
-                <label class="field__label" for="max_class_of">Khóa áp dụng (Đến)</label>
+                <label class="field__label" for="max_class_of">Niên khóa áp dụng (Đến)</label>
                 <input type="number" id="max_class_of" class="field__input" name="max_class_of" min="1900" placeholder="Ví dụ: 2023" required>
               </div>
               <div class="field" data-field-required>
@@ -128,6 +128,30 @@ $wizardSteps = [
                 </div>
               </div>
 
+              <!-- BULK ACTIONS -->
+              <div class="bulk-actions-container p-4 rounded-lg border" style="border-color: var(--border);">
+                <div class="flex flex-col justify-between gap-4">
+                  <div style="cursor: pointer;">
+                    <label class="flex items-center gap-2 font-medium">
+                      <input type="checkbox" id="select-all-teachers" checked>
+                      Chọn tất cả
+                    </label>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium">Số sinh viên tối thiểu - tối đa chung:</span>
+                    <div class="field">
+                      <input type="number" id="bulk-min" class="field__input py-1 text-sm" placeholder="Min" value="0" min="0" step="2">
+                    </div>
+                    <div class="field">
+                      <input type="number" id="bulk-max" class="field__input py-1 text-sm" placeholder="Max" value="20" min="0" step="2">
+                    </div>
+                    <button type="button" id="btn-apply-bulk" class="btn" data-variant="secondary" data-size="md">
+                      Áp dụng
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div class="teacher-selection-container" id="teachers-container">
                 <span class="text-sm">Đang tải danh sách Giảng viên...</span>
               </div>
@@ -139,7 +163,7 @@ $wizardSteps = [
               <i class="fa-solid fa-chevron-left "></i> Quay lại
             </button>
             <button type="button" id="btn-submit-batch" class="btn" data-variant="primary" data-size="lg" disabled>
-              <i class="fa-solid fa-check "></i> Hoàn tất tạo đợt
+              <i class="fa-solid fa-check "></i> Hoàn tất
             </button>
           </div>
         </fieldset>

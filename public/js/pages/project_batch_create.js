@@ -143,6 +143,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error("Không thể tải danh sách GV");
       const result = await res.json();
       state.teachers = result.data || [];
+      
+      // Mặc định chọn tất cả
+      state.teachers.forEach(t => {
+        state.selectedTeachers[t.teacher_id] = { min_students: 0, max_students: 20 };
+      });
     } catch (err) {
       console.error(err);
       if (teachersContainer)
@@ -284,6 +289,73 @@ document.addEventListener("DOMContentLoaded", () => {
       renderTeachers();
     });
   }
+
+  // Bulk Actions Events
+  const selectAllCheckbox = document.getElementById("select-all-teachers");
+  const btnApplyBulk = document.getElementById("btn-apply-bulk");
+  const bulkMinInput = document.getElementById("bulk-min");
+  const bulkMaxInput = document.getElementById("bulk-max");
+
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener("change", (e) => {
+      const isChecked = e.target.checked;
+      
+      // Lấy danh sách giảng viên ĐANG hiển thị trên lưới (có thể đang filter)
+      const searchTerm = searchTeachersInput ? searchTeachersInput.value.toLowerCase().trim() : "";
+      let visibleTeachers = state.teachers;
+      if (searchTerm) {
+        visibleTeachers = state.teachers.filter(
+          (t) => t.full_name.toLowerCase().includes(searchTerm) || (t.email && t.email.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      visibleTeachers.forEach(t => {
+        if (isChecked) {
+          if (!state.selectedTeachers[t.teacher_id]) {
+            state.selectedTeachers[t.teacher_id] = {
+              min_students: parseInt(bulkMinInput?.value) || 0,
+              max_students: parseInt(bulkMaxInput?.value) || 20,
+            };
+          }
+        } else {
+          delete state.selectedTeachers[t.teacher_id];
+        }
+      });
+      
+      renderTeachers();
+    });
+  }
+
+  if (btnApplyBulk) {
+    btnApplyBulk.addEventListener("click", () => {
+      const minVal = parseInt(bulkMinInput.value) || 0;
+      const maxVal = parseInt(bulkMaxInput.value) || 0;
+
+      // Validate chung
+      if (minVal < 0 || maxVal < 0 || minVal % 2 !== 0 || maxVal % 2 !== 0) {
+        if (window.toast) toast.error("Lỗi", "Số lượng sinh viên phải là số chẵn không âm.");
+        else alert("Số lượng sinh viên phải là số chẵn không âm.");
+        return;
+      }
+      if (maxVal !== 0 && maxVal < minVal) {
+        if (window.toast) toast.error("Lỗi", "Max không được nhỏ hơn Min.");
+        else alert("Max không được nhỏ hơn Min.");
+        return;
+      }
+
+      // Cập nhật cho tất cả những GV đang được CHỌN
+      Object.keys(state.selectedTeachers).forEach(tId => {
+        state.selectedTeachers[tId].min_students = minVal;
+        state.selectedTeachers[tId].max_students = maxVal;
+      });
+
+      renderTeachers();
+      
+      if (window.toast) toast.success("Thành công", "Đã áp dụng cấu hình chung cho các giảng viên được chọn.");
+      else alert("Đã áp dụng cấu hình chung.");
+    });
+  }
+
 
   // --- SUBMIT ---
   const submitBatchForm = async () => {
