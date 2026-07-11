@@ -1,26 +1,5 @@
-<!DOCTYPE html>
-<html lang="vi">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phương thức không tồn tại (405)</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 32rem;
-      margin: 4rem auto;
-      padding: 0 1rem;
-      line-height: 1.5;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>405 - Phương thức không tồn tại</h1>
-  <p>Phương thức không tồn tại. Vui lòng tải lại trang và thử lại.</p>
-  <p><a href="javascript:history.back()">Quay lại</a> · <a
-      href="<?= htmlspecialchars(url(''), ENT_QUOTES, 'UTF-8') ?>">Trang chủ</a></p>
-</body>
-
-</html>
+<?php
+$statusCode = 405;
+$statusTitle = 'Phương thức không được hỗ trợ';
+$statusDescription = 'Yêu cầu này dùng phương thức không phù hợp. Vui lòng quay lại và thử lại.';
+require BASE_PATH . '/templates/components/status_page.php';

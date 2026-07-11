@@ -193,8 +193,8 @@
       msmPagination.style.display = 'none';
 
       try {
-        const res = await fetch(`${API_MEDIA}?${params}`);
-        const data = await res.json();
+        const res = await fetch(`${API_MEDIA}?${params}`, { headers: { 'Accept': 'application/json' } });
+        const data = await parseJsonResponse(res);
         const items = data?.data ?? [];
         const meta = data?.meta ?? {};
 
@@ -248,6 +248,7 @@
       } catch (e) {
         delete msmLoading.dataset.show;
         msmEmpty.style.display = 'flex';
+        toast.error('Không thể tải thư viện', e.message || 'Vui lòng thử lại sau.');
       }
     }
 
@@ -334,6 +335,7 @@
 
         const response = await fetch(API_MEDIA, {
           method: 'POST',
+          headers: { 'Accept': 'application/json' },
           body: formData
         });
 
@@ -387,6 +389,23 @@
     function escHtml(str) {
       if (!str) return '';
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async function parseJsonResponse(response) {
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        if (response.status === 401 || response.status === 419) {
+          throw new Error('Phiên làm việc đã hết hạn. Vui lòng tải lại trang và đăng nhập lại.');
+        }
+        throw new Error('Máy chủ trả về phản hồi không hợp lệ.');
+      }
+
+      const payload = await response.json();
+      if (!response.ok || payload?.success === false) {
+        throw new Error(payload?.message || 'Yêu cầu không thành công.');
+      }
+
+      return payload;
     }
 
     function mediaUrl(path) {
@@ -622,5 +641,51 @@
 
   .msm-footer-container[data-tabs-panel-state="active"] {
     display: flex !important;
+  }
+
+  @media (max-width: 48rem) {
+    .msm {
+      width: calc(100% - 1rem);
+      max-height: calc(100svh - 1rem);
+    }
+
+    .msm-content {
+      max-height: 62svh;
+    }
+
+    .media-modal-toolbar,
+    .msm-footer-container,
+    .msm-footer-container[data-tabs-panel-state="active"] {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .msm-search-bar__input {
+      min-width: 0;
+    }
+
+    .msm-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .msm-upload-zone {
+      padding: 1rem;
+    }
+
+    .msm-footer-container .flex {
+      width: 100%;
+      flex-wrap: wrap;
+      margin-left: 0;
+    }
+
+    .msm-footer-container .btn {
+      flex: 1 1 9rem;
+    }
+  }
+
+  @media (min-width: 48.001rem) and (max-width: 64rem) {
+    .msm-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 </style>

@@ -586,3 +586,128 @@ body {
   ) !important;
   transition: background-color 0.15s ease;
 }
+
+@media (max-width: 64rem) {
+  :root {
+    --left-panel-width: min(18rem, 86vw);
+    --right-panel-width: min(20rem, 88vw);
+  }
+
+  #be-topbar {
+    height: auto;
+    min-height: var(--topbar-height);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  #be-topbar-left,
+  #be-topbar-center,
+  #be-topbar-right {
+    min-width: 0;
+  }
+
+  #be-topbar-center {
+    order: 3;
+    width: 100%;
+  }
+
+  .be-post-title-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #be-body,
+  .be-panel {
+    height: calc(100svh - 6rem);
+  }
+
+  #be-body {
+    margin-top: 6rem;
+  }
+
+  .be-panel {
+    top: 6rem;
+  }
+
+  .be-panel__gap {
+    width: 0;
+  }
+
+  .be-panel__wrapper:has(#be-left:not([data-be-panel-state="collapsed"])) .be-panel__gap,
+  .be-panel__wrapper:has(#be-right:not([data-be-panel-state="collapsed"])) .be-panel__gap {
+    width: 0;
+  }
+
+  #be-canvas {
+    padding: 1rem 0;
+  }
+
+  .be-canvas__content {
+    max-width: 100%;
+    padding-inline: 1rem;
+  }
+
+  .be-canvas-title {
+    font-size: var(--text-3xl);
+    line-height: var(--text-3xl-line-height);
+  }
+
+  .be-canvas-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  #be-topbar .btn {
+    min-width: 2.5rem;
+  }
+
+  #be-topbar-left,
+  #be-topbar-right {
+    flex: 1 1 auto;
+  }
+
+  #be-topbar-right {
+    justify-content: flex-end;
+  }
+
+  #be-body,
+  .be-panel {
+    height: calc(100svh - 7.5rem);
+  }
+
+  #be-body {
+    margin-top: 7.5rem;
+  }
+
+  .be-panel {
+    top: 7.5rem;
+  }
+
+  .be-block-group {
+    grid-template-columns: 1fr;
+  }
+
+  .be-block-group__label {
+    grid-column: auto;
+  }
+
+  .be-image-placeholder__actions,
+  .be-image-url-input-group {
+    width: 100%;
+  }
+
+  .be-image-placeholder__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .be-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

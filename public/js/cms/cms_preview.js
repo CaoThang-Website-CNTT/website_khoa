@@ -39,7 +39,7 @@ export class CmsPreview {
         body: JSON.stringify({ content: this.cmsDocument.document, revision }),
         signal: controller.signal,
       });
-      const payload = await response.json();
+      const payload = await this.#parseJsonResponse(response);
       if (!response.ok || !payload.success) throw new Error(payload.message || 'Preview render failed.');
       if (revision !== this.revision || revision < this.appliedRevision) return;
       this.appliedRevision = revision; this.lastHtml = payload.data.html;
@@ -62,6 +62,17 @@ export class CmsPreview {
     this.frame.style.width = `${viewport.width}px`;
     this.frame.onload = () => { this.#bindFrame(); this.#observeFrameContent(); this.#applyEditableHighlights(); this.#flushPendingScroll(); this.#scheduleFrameHeightSync(); };
     this.frame.srcdoc = html; this.updateScale();
+  }
+
+  async #parseJsonResponse(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      if (response.status === 401 || response.status === 419) {
+        throw new Error('Phiên làm việc đã hết hạn. Vui lòng tải lại trang và đăng nhập lại.');
+      }
+      throw new Error('Máy chủ trả về phản hồi không hợp lệ.');
+    }
+    return response.json();
   }
 
   updateScale() {

@@ -311,12 +311,13 @@ $editorAuthors = array_map(
 </div>
 
 <?php $layout->start('scripts'); ?>
+<?php $editorJsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT; ?>
 <script>
-  window.BeEditorAuthors = <?= json_encode($editorAuthors) ?>;
+  window.BeEditorAuthors = <?= json_encode($editorAuthors, $editorJsonFlags) ?>;
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#be-post-form');
-    const initialPayload = <?= json_encode($initialPayload) ?>;
+    const initialPayload = <?= json_encode($initialPayload, $editorJsonFlags) ?>;
 
     if (initialPayload && (initialPayload.meta || (initialPayload.blocks && initialPayload.blocks.length > 0))) {
       window.BeEditor.importPayload(initialPayload);
