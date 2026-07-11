@@ -18,6 +18,59 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (tableContainer) {
+    tableContainer.addEventListener('tm:state-change', async (e) => {
+      const state = e.detail.state;
+      const tmInstance = window.TableManager?.get('referral_letters_table');
+      if (!tmInstance) return;
+
+      const page = (state.pagination?.pageIndex || 0) + 1;
+      const limit = state.pagination?.pageSize || 20;
+
+      const url = new URL(`${window.API_BASE_URL}/internship/batches/${window.BATCH_ID}/management/referral-letters`);
+      url.searchParams.set('page', page);
+      url.searchParams.set('limit', limit);
+
+      if (state.search) {
+        url.searchParams.set('search', state.search);
+      }
+
+      if (state.sort?.col) {
+        url.searchParams.set('sort', `${state.sort.col}:${state.sort.dir}`);
+      }
+
+      if (state.filters && state.filters.length > 0) {
+        state.filters.forEach((filter, index) => {
+          url.searchParams.set(`filters[${index}][col]`, filter.col);
+          url.searchParams.set(`filters[${index}][op]`, filter.op);
+          url.searchParams.set(`filters[${index}][value]`, filter.value);
+        });
+      }
+
+      try {
+        const response = await fetch(url.toString(), {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        const result = await response.json();
+        
+        if (response.ok) {
+          tmInstance.loadData({
+            rows: result.data.rows,
+            total: result.data.total,
+            page: result.data.page,
+            limit: result.data.limit
+          });
+        } else {
+          console.error("Lỗi khi tải dữ liệu:", result.message);
+          window.toast?.error('Lỗi', 'Không thể tải dữ liệu giấy giới thiệu.');
+        }
+      } catch (err) {
+        console.error("Lỗi kết nối:", err);
+        window.toast?.error('Lỗi', 'Không thể kết nối đến máy chủ.');
+      }
+    });
+
     TableManager.registerBulkActions('referral_letters_table', {
       countLabel: count => `Đã chọn: ${count}`,
       actions: [
@@ -88,6 +141,24 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('cancel_reason_input').value = '';
       ModalHandler.instance.open('#cancel-reason-modal');
     });
+
+    const initTable = () => {
+      const tm = window.TableManager?.get("referral_letters_table");
+      if (tm) {
+        const state = typeof tm.getState === 'function' ? tm.getState() : tm.state;
+        tableContainer.dispatchEvent(
+          new CustomEvent("tm:state-change", {
+            detail: {
+              reason: "init",
+              state: state
+            },
+          })
+        );
+      } else {
+        setTimeout(initTable, 50);
+      }
+    };
+    initTable();
   }
 
   const submitBulkPrint = (ids) => {

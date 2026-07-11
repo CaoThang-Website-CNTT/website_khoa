@@ -7,7 +7,6 @@
 $batch = $batch ?? null;
 $letters = $letters ?? [];
 ?>
-<link rel="stylesheet" href="<?= url('public/css/referral_letters.css') ?>">
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Giấy giới thiệu</h2>
@@ -21,7 +20,7 @@ $letters = $letters ?? [];
   </a>
   <?php $layout->end() ?>
 
-  <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="client" data-tm-searchable="true"
+  <div class="tm-container" data-tm="referral_letters_table" data-tm-mode="server" data-tm-searchable="true"
     data-tm-selectable="true" data-tm-id-key="id">
 
     <!-- Cột checkbox được TableManager tự động thêm vào đầu bảng -->
@@ -128,57 +127,7 @@ $letters = $letters ?? [];
   </div>
 
   <?php $layout->start("scripts") ?>
-  <script type="application/json" data-tm-data="referral_letters_table">
-  <?php
-  $statusMap = [
-    'pending' => ['label' => 'Chờ duyệt', 'variant' => 'secondary'],
-    'completed' => ['label' => 'Hoàn thành', 'variant' => 'success'],
-    'received' => ['label' => 'Đã nhận', 'variant' => 'success'],
-    'cancelled' => ['label' => 'Đã hủy', 'variant' => 'destructive']
-  ];
-  $statusMap['approved'] = ['label' => 'Đang xử lý', 'variant' => 'secondary'];
-  $statusMap['rejected'] = ['label' => 'Từ chối', 'variant' => 'destructive'];
-  $rows = array_map(function ($rl) use ($statusMap) {
-    $st = $statusMap[$rl['status']] ?? ['label' => $rl['status'], 'variant' => 'outline'];
-    return [
-      'id' => $rl['id'],
-      '_formatted_date' => date('d/m/Y H:i', strtotime($rl['created_at'])),
-      'created_at' => $rl['created_at'],
-      'student_full_name' => $rl['student_full_name'],
-      'student_code' => $rl['student_code'],
-      'classroom_name' => $rl['classroom_name'] ?? '--',
-      'student_search' => $rl['student_full_name'] . ' ' . $rl['student_code'], // Dữ liệu phục vụ tìm kiếm
-      'company_name' => $rl['company_name'],
-      'company_tax_code' => $rl['company_tax_code'],
-      'company_address' => $rl['company_address'],
-      'company_search' => $rl['company_name'] . ' ' . $rl['company_tax_code'], // Dữ liệu phục vụ tìm kiếm
-      'company_is_verified' => $rl['company_is_verified'],
-      'company_verified_label' => $rl['company_is_verified'] == 1 ? 'Đã xác thực' : 'Chưa xác thực',
-      'status' => $rl['status'],
-      'can_print' => $rl['status'] === 'approved',
-      'printed_at' => $rl['printed_at'],
-      'status_label' => $st['label'],
-      'status_variant' => $st['variant'],
-      'cancel_reason' => $rl['cancel_reason'],
-      'student_count' => $rl['student_count'] ?? 1,
-      'teacher_name' => $rl['teacher_name'],
-      'student_phone' => $rl['student_phone'] ?? '',
-      'student_email' => $rl['student_email'] ?? '',
-      'recipient_name' => $rl['recipient_name'] ?? '',
-      'recipient_phone' => $rl['recipient_phone'] ?? '',
-      'recipient_email' => $rl['recipient_email'] ?? '',
-      'received_at' => $rl['received_at'] ?? null,
-      'received_by_name' => $rl['received_by_name'] ?? null
-    ];
-  }, $letters);
-  echo json_encode([
-    'rows' => $rows,
-    'total' => count($rows),
-    'page' => 1,
-    'limit' => 20
-  ], JSON_UNESCAPED_UNICODE);
-  ?>
-</script>
+
   <script>
     window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
     window.BATCH_ID = <?= json_encode($batch['id']) ?>;
