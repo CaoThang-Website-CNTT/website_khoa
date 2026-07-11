@@ -392,23 +392,23 @@ class TableInstance {
   nextPage() {
     if (!this.canNextPage()) return;
     this.#state.pagination.pageIndex++;
-    this.render();
+    this.#commit('pagination');
   }
   prevPage() {
     if (!this.canPrevPage()) return;
     this.#state.pagination.pageIndex--;
-    this.render();
+    this.#commit('pagination');
   }
   setPageIndex(index) {
     const next = Math.max(0, Math.min(Number(index) || 0, this.getPageCount() - 1));
     this.#state.pagination.pageIndex = next;
-    this.render();
+    this.#commit('pagination');
   }
   setPageSize(size) {
     const nextSize = Number(size);
     this.#state.pagination.pageSize = Number.isFinite(nextSize) && nextSize > 0 ? nextSize : 20;
     this.#state.pagination.pageIndex = 0;
-    this.render();
+    this.#commit('pagination');
   }
   getVisibleRows() {
     const searchKeys = this.columns.all.filter(c => c.key !== '_checkbox').map(c => c.key);

@@ -234,6 +234,7 @@ export class ExportManager {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
           },
           body: JSON.stringify(payload),
         });

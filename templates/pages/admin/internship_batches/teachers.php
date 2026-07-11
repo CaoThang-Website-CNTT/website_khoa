@@ -172,6 +172,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   <script>
     window.API_BASE_URL = <?= json_encode(url('api/v1')) ?>;
     window.BATCH_ID = <?= json_encode($batch['id']) ?>;
+    window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;
   </script>
   <script src="<?= url('public/js/pages/batch_teachers_manager.js') ?>"></script>
   <?php $layout->end() ?>

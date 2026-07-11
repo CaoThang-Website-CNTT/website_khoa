@@ -32,26 +32,30 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   const loadData = async () => {
     try {
-      const [supRes, assRes] = await Promise.all([
+      const [supRes] = await Promise.all([
         fetch(`${apiBase}/${batchId}/supervisors`),
-        fetch(`${apiBase}/${batchId}/assignments`),
       ]);
 
-      if (!supRes.ok || !assRes.ok)
-        throw new Error("Không thể tải dữ liệu từ máy chủ.");
+      if (!supRes.ok) throw new Error("Không thể tải dữ liệu từ máy chủ.");
 
       const supData = await supRes.json();
-      const assData = await assRes.json();
 
       supervisors = supData.data || [];
-      tableData = assData.data || [];
 
-      // Cập nhật thống kê
-      renderStats();
+      // Cập nhật thống kê giảng viên
       renderSupervisorStats();
 
       // Khởi tạo/Cập nhật bảng
-      renderTable();
+      const tm = typeof TableManager !== "undefined" ? TableManager.get("batch_students_table") : null;
+      if (tm && isTableInitialized) {
+        tm.root.dispatchEvent(
+          new CustomEvent("tm:state-change", {
+            detail: { reason: "reload", state: tm.getState() },
+          }),
+        );
+      } else {
+        renderTable();
+      }
     } catch (error) {
       console.error(error);
       if (window.toast) toast.error("Lỗi", error.message);
@@ -59,23 +63,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /**
-   * Cập nhật Dashboard thống kê tổng quan
-   */
-  const renderStats = () => {
-    const total = tableData.length;
-    const assigned = tableData.filter((r) => r.teacher_id).length;
-    const unassigned = total - assigned;
-
-    statTotalStudents.textContent = total;
-    statAssignedStudents.textContent = assigned;
-    statUnassignedStudents.textContent = unassigned;
-    supervisorCountBadge.textContent = supervisors.length;
-  };
-
-  /**
    * Render danh sách giảng viên ở sidebar kèm quota
    */
   const renderSupervisorStats = () => {
+    if (supervisorCountBadge) {
+      supervisorCountBadge.textContent = supervisors.length;
+    }
+
     if (!supervisorStatsContainer) return;
 
     if (supervisors.length === 0) {
@@ -128,10 +122,71 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tm || retries > 5) {
         clearInterval(interval);
         if (tm) {
-          tm.loadData(tableData);
-
           if (!isTableInitialized) {
             isTableInitialized = true;
+
+            tm.root.addEventListener("tm:state-change", async (e) => {
+              const { reason, state } = e.detail;
+
+              if (
+                reason === "search" ||
+                reason === "filter" ||
+                reason === "sort" ||
+                reason === "pagination" ||
+                reason === "reload"
+              ) {
+                try {
+                  const url = new URL(
+                    `${apiBase}/${batchId}/assignments`,
+                    window.location.origin,
+                  );
+
+                  if (state.search)
+                    url.searchParams.set("search", `%${state.search}%`);
+                  
+                  const page = (state.pagination?.pageIndex || 0) + 1;
+                  const limit = state.pagination?.pageSize || 15;
+                  url.searchParams.set("page", page);
+                  url.searchParams.set("limit", limit);
+
+                  if (state.sort && state.sort.col) {
+                    url.searchParams.set("sort[col]", state.sort.col);
+                    url.searchParams.set("sort[dir]", state.sort.dir);
+                  }
+
+                  if (state.filters && state.filters.length > 0) {
+                    state.filters.forEach((f, i) => {
+                      url.searchParams.set(`filters[${i}][col]`, f.col);
+                      url.searchParams.set(`filters[${i}][op]`, f.op);
+                      url.searchParams.set(`filters[${i}][value]`, f.value);
+                    });
+                  }
+
+                  const response = await fetch(url);
+                  if (!response.ok)
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  const result = await response.json();
+                  const payload = result.data || {};
+
+                  tm.loadData({
+                    rows: payload.data || [],
+                    total: payload.total || 0,
+                    page: payload.page || 1,
+                    limit: payload.limit || 15,
+                  });
+                } catch (error) {
+                  console.error("Lỗi khi fetch dữ liệu:", error);
+                }
+              }
+            });
+
+            // Initial fetch
+            tm.root.dispatchEvent(
+              new CustomEvent("tm:state-change", {
+                detail: { reason: "pagination", state: tm.getState() },
+              }),
+            );
+
             attachTableEvents();
             registerBulkActions();
 
@@ -156,9 +211,33 @@ document.addEventListener("DOMContentLoaded", () => {
                   ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
                   : null,
               columnGroups: [
-                { label: "Sinh viên", columns: ["student_code", "student_name", "classroom_name", "student_phone", "student_email"] },
-                { label: "Công ty", columns: ["company_name", "company_tax_code", "company_address"] },
-                { label: "Kết quả", columns: ["teacher_name", "grade_score", "grade_reason", "grade_feedback"] },
+                {
+                  label: "Sinh viên",
+                  columns: [
+                    "student_code",
+                    "student_name",
+                    "classroom_name",
+                    "student_phone",
+                    "student_email",
+                  ],
+                },
+                {
+                  label: "Công ty",
+                  columns: [
+                    "company_name",
+                    "company_tax_code",
+                    "company_address",
+                  ],
+                },
+                {
+                  label: "Kết quả",
+                  columns: [
+                    "teacher_name",
+                    "grade_score",
+                    "grade_reason",
+                    "grade_feedback",
+                  ],
+                },
               ],
               columnsMap: {
                 student_code: "MSSV",
@@ -184,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const registerBulkActions = () => {
     TableManager.registerBulkActions("batch_students_table", {
-      countLabel: count => `Đã chọn: ${count}`,
+      countLabel: (count) => `Đã chọn: ${count}`,
       actions: [
         {
           id: "assign",
@@ -192,7 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
           icon: "fa-solid fa-user-plus",
           variant: "primary",
           onClick: ({ selectedIds }) => {
-            document.querySelector("#bulk-student-count").textContent = selectedIds.length;
+            document.querySelector("#bulk-student-count").textContent =
+              selectedIds.length;
 
             const select = document.querySelector("#bulk-teacher-select");
             renderTeacherOptions(select, null);
@@ -223,7 +303,8 @@ document.addEventListener("DOMContentLoaded", () => {
           destructive: true,
           confirm: false,
           onClick: ({ selectedIds }) => {
-            document.querySelector("#bulk-unassign-count").textContent = selectedIds.length;
+            document.querySelector("#bulk-unassign-count").textContent =
+              selectedIds.length;
             modalHandler.open("#modal-bulk-unassign");
           },
         },
@@ -328,10 +409,14 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   const confirmPublishedAssignment = () => {
     return new Promise((resolve) => {
-      const modal = document.querySelector("#modal-confirm-published-assignment");
+      const modal = document.querySelector(
+        "#modal-confirm-published-assignment",
+      );
       if (!modal) return resolve(true);
 
-      const btnConfirm = modal.querySelector("#btn-confirm-published-assignment");
+      const btnConfirm = modal.querySelector(
+        "#btn-confirm-published-assignment",
+      );
       const btnCancel = modal.querySelector("#btn-close-published-assignment");
       const btnClose = modal.querySelector(".modal__close");
 
@@ -369,14 +454,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (batchStatus === "published") {
         const confirmed = await confirmPublishedAssignment();
         if (!confirmed) {
-          loadData();
           return false;
         }
       }
 
       const res = await fetch(`${apiBase}/${batchId}/bulk-save`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": window.CSRF_TOKEN || ""
+        },
         body: JSON.stringify({
           reason: reason || "Quản trị viên cập nhật phân công.",
           assignments: assignments,
@@ -387,11 +474,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(data.message || "Lỗi khi lưu dữ liệu.");
 
       toast.success("Thành công", "Đã cập nhật phân công.");
-      await loadData();
+      setTimeout(() => window.location.reload(), 500);
       return true;
     } catch (error) {
       toast.error("Lỗi", error.message);
-      loadData();
       return false;
     }
   };
@@ -400,25 +486,30 @@ document.addEventListener("DOMContentLoaded", () => {
     .querySelector("#btn-confirm-bulk-assign")
     .addEventListener("click", async () => {
       const teacherId = document.querySelector("#bulk-teacher-select").value;
-      if (!teacherId || teacherId === "unassign") {
+      if (!teacherId) {
         alert("Vui lòng chọn một giảng viên.");
         return;
       }
 
       const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
-        const row = tableData.find((r) => r.batch_student_id == sid);
         return {
-          assignment_id: row?.assignment_id || null,
           batch_student_id: parseInt(sid),
-          new_teacher_id: parseInt(teacherId),
+          new_teacher_id: teacherId === "unassign" ? null : parseInt(teacherId),
         };
       });
 
       modalHandler.close();
-      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      TableManager.setBulkActionLoading(
+        "batch_students_table",
+        true,
+        "Đang xử lý...",
+      );
       try {
-        const saved = await saveAssignments(assignments, "Cập nhật phân công hàng loạt.");
+        const saved = await saveAssignments(
+          assignments,
+          "Cập nhật phân công hàng loạt.",
+        );
         if (saved) TableManager.clearSelection("batch_students_table");
       } finally {
         TableManager.setBulkActionLoading("batch_students_table", false);
@@ -430,18 +521,23 @@ document.addEventListener("DOMContentLoaded", () => {
     .addEventListener("click", async () => {
       const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
-        const row = tableData.find((r) => r.batch_student_id == sid);
         return {
-          assignment_id: row?.assignment_id || null,
           batch_student_id: parseInt(sid),
           new_teacher_id: null,
         };
       });
 
       modalHandler.close();
-      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      TableManager.setBulkActionLoading(
+        "batch_students_table",
+        true,
+        "Đang xử lý...",
+      );
       try {
-        const saved = await saveAssignments(assignments, "Hủy phân công hàng loạt.");
+        const saved = await saveAssignments(
+          assignments,
+          "Hủy phân công hàng loạt.",
+        );
         if (saved) TableManager.clearSelection("batch_students_table");
       } finally {
         TableManager.setBulkActionLoading("batch_students_table", false);
@@ -477,7 +573,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch(`${apiBase}/${batchId}/auto-assign`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": window.CSRF_TOKEN || ""
+        },
         body: JSON.stringify({ method }),
       });
 

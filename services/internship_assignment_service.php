@@ -8,6 +8,7 @@ require_once BASE_PATH . '/stores/internship_assignment_store.php';
 
 use App\Stores\{InternshipAssignmentStore, InternshipBatchStore};
 use App\Enums\BatchStatus;
+use App\Core\Pageable;
 use Database;
 
 interface IInternshipAssignmentService
@@ -19,6 +20,7 @@ interface IInternshipAssignmentService
   public function unassign(int $assignmentId, int $adminId, string $reason): bool;
   public function getLogsByStudent(int $batchStudentId): array;
   public function getAssignmentByBatchStudentId(int $batchStudentId);
+  public function getAssignmentsPaginated(int $batchId, int $page, int $limit, string $search, array $filters, array $sort): Pageable;
 }
 
 class InternshipAssignmentService implements IInternshipAssignmentService
@@ -238,11 +240,15 @@ class InternshipAssignmentService implements IInternshipAssignmentService
           continue;
         }
 
+        $assignment = null;
         if ($assignmentId) {
           $assignment = $this->_store->getAssignmentById($assignmentId);
-          if (!$assignment)
-            continue;
+        } elseif ($batchStudentId) {
+          $assignment = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
+        }
 
+        if ($assignment) {
+          $assignmentId = $assignment->id;
           if ($newTeacherId === null || $newTeacherId === 0) {
             // UNASSIGN
             $this->_store->logAction(
@@ -283,11 +289,8 @@ class InternshipAssignmentService implements IInternshipAssignmentService
         } else {
           if ($newTeacherId === null || $newTeacherId === 0)
             continue;
+          
           $this->validateAssignmentTarget((int) $batchStudentId, (int) $newTeacherId);
-
-          $existing = $this->_store->getAssignmentByBatchStudentId($batchStudentId);
-          if ($existing)
-            continue;
 
           $newId = $this->_store->createAssignment(
             batchStudentId: $batchStudentId,
@@ -357,6 +360,13 @@ class InternshipAssignmentService implements IInternshipAssignmentService
   public function getAssignmentByBatchStudentId(int $batchStudentId)
   {
     return $this->_store->getAssignmentByBatchStudentId($batchStudentId);
+  }
+
+  public function getAssignmentsPaginated(int $batchId, int $page, int $limit, string $search, array $filters, array $sort): Pageable
+  {
+    $data = $this->_store->getStudentsInBatchWithAssignmentPaginated($batchId, $page, $limit, $search, $filters, $sort);
+    $total = $this->_store->getTotalStudentsInBatchWithAssignmentCount($batchId, $search, $filters);
+    return new Pageable($data, $total, $limit, $page);
   }
 
   private function queueStudentNotification(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): void

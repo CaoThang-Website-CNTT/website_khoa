@@ -25,6 +25,8 @@ interface IInternshipAssignmentStore
   public function getBatchSupervisorsWithStats(int $batchId): array;
   public function getMailingDetails(int $batchStudentId, ?int $oldTeacherId, ?int $newTeacherId): array;
   public function getStudentsInBatchWithAssignment(int $batchId): array;
+  public function getStudentsInBatchWithAssignmentPaginated(int $batchId, int $page, int $limit, string $search, array $filters, array $sort): array;
+  public function getTotalStudentsInBatchWithAssignmentCount(int $batchId, string $search, array $filters): int;
   public function getUnassignedStudentsInBatch(int $batchId): array;
   public function deleteAssignment(int $assignmentId): bool;
 }
@@ -185,6 +187,175 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getStudentsInBatchWithAssignmentPaginated(int $batchId, int $page, int $limit, string $search, array $filters, array $sort): array
+  {
+    $offset = (max(1, $page) - 1) * $limit;
+
+    $sql = "SELECT 
+              bs.id as batch_student_id,
+              bs.student_id,
+              s.full_name as student_name,
+              s.student_id as student_code,
+              s.phone as student_phone,
+              c.short_name as classroom_name,
+              a.id as assignment_id,
+              a.teacher_id,
+              t.full_name as teacher_name,
+              c_info.name as company_name,
+              c_info.tax_code as company_tax_code,
+              c_info.address as company_address
+            FROM internship_batch_students bs
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN internship_assignments a ON bs.id = a.batch_student_id
+            LEFT JOIN teachers t ON a.teacher_id = t.id
+            LEFT JOIN companies c_info ON bs.company_id = c_info.id
+            WHERE bs.batch_id = :batch_id";
+
+    $params = [':batch_id' => $batchId];
+
+    if ($search !== '%' && $search !== '%%') {
+      $sql .= " AND (s.student_id LIKE :search1 OR s.full_name LIKE :search2)";
+      $params[':search1'] = $search;
+      $params[':search2'] = $search;
+    }
+
+    foreach ($filters as $index => $filter) {
+      if (!isset($filter['col']) || !isset($filter['value'])) continue;
+      $colName = $filter['col'];
+      $op = $filter['op'] ?? '=';
+      $val = $filter['value'];
+      $paramKey = ":filter_$index";
+
+      $dbCol = '';
+      if ($colName === 'student_code') $dbCol = 's.student_id';
+      elseif ($colName === 'student_name') $dbCol = 's.full_name';
+      elseif ($colName === 'classroom_name') $dbCol = 'c.short_name';
+      elseif ($colName === 'company_name') {
+        if ($val === 'unassign') {
+          $sql .= $op === '!=' ? " AND bs.company_id IS NOT NULL" : " AND bs.company_id IS NULL";
+          continue;
+        }
+        $dbCol = 'c_info.name';
+      } elseif ($colName === 'teacher_name') {
+        if ($val === 'unassign' || empty($val)) {
+          $sql .= $op === '!=' ? " AND a.teacher_id IS NOT NULL" : " AND a.teacher_id IS NULL";
+          continue;
+        }
+        $dbCol = 't.full_name';
+      } else continue;
+
+      if ($op === 'contains') {
+        $sql .= " AND $dbCol LIKE $paramKey";
+        $params[$paramKey] = "%$val%";
+      } elseif ($op === '=') {
+        $sql .= " AND $dbCol = $paramKey";
+        $params[$paramKey] = $val;
+      } elseif ($op === '!=') {
+        $sql .= " AND $dbCol != $paramKey";
+        $params[$paramKey] = $val;
+      } elseif (in_array($op, ['>', '>=', '<', '<='])) {
+        $sql .= " AND $dbCol $op $paramKey";
+        $params[$paramKey] = $val;
+      }
+    }
+
+    if (!empty($sort) && isset($sort['col']) && isset($sort['dir'])) {
+      $col = $sort['col'];
+      $dir = strtoupper($sort['dir']) === 'ASC' ? 'ASC' : 'DESC';
+      $allowedCols = [
+        'student_code' => 's.student_id',
+        'student_name' => 's.full_name',
+        'classroom_name' => 'c.short_name',
+        'company_name' => 'c_info.name',
+        'teacher_name' => 't.full_name'
+      ];
+      if (isset($allowedCols[$col])) {
+        $sql .= " ORDER BY " . $allowedCols[$col] . " $dir";
+      } else {
+        $sql .= " ORDER BY s.student_id ASC";
+      }
+    } else {
+      $sql .= " ORDER BY s.student_id ASC";
+    }
+
+    $sql .= " LIMIT :limit OFFSET :offset";
+
+    $stmt = $this->db->prepare($sql);
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getTotalStudentsInBatchWithAssignmentCount(int $batchId, string $search, array $filters): int
+  {
+    $sql = "SELECT COUNT(bs.id)
+            FROM internship_batch_students bs
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN internship_assignments a ON bs.id = a.batch_student_id
+            LEFT JOIN teachers t ON a.teacher_id = t.id
+            LEFT JOIN companies c_info ON bs.company_id = c_info.id
+            WHERE bs.batch_id = :batch_id";
+
+    $params = [':batch_id' => $batchId];
+
+    if ($search !== '%' && $search !== '%%') {
+      $sql .= " AND (s.student_id LIKE :search1 OR s.full_name LIKE :search2)";
+      $params[':search1'] = $search;
+      $params[':search2'] = $search;
+    }
+
+    foreach ($filters as $index => $filter) {
+      if (!isset($filter['col']) || !isset($filter['value'])) continue;
+      $colName = $filter['col'];
+      $op = $filter['op'] ?? '=';
+      $val = $filter['value'];
+      $paramKey = ":filter_$index";
+
+      $dbCol = '';
+      if ($colName === 'student_code') $dbCol = 's.student_id';
+      elseif ($colName === 'student_name') $dbCol = 's.full_name';
+      elseif ($colName === 'classroom_name') $dbCol = 'c.short_name';
+      elseif ($colName === 'company_name') {
+        if ($val === 'unassign') {
+          $sql .= $op === '!=' ? " AND bs.company_id IS NOT NULL" : " AND bs.company_id IS NULL";
+          continue;
+        }
+        $dbCol = 'c_info.name';
+      } elseif ($colName === 'teacher_name') {
+        if ($val === 'unassign' || empty($val)) {
+          $sql .= $op === '!=' ? " AND a.teacher_id IS NOT NULL" : " AND a.teacher_id IS NULL";
+          continue;
+        }
+        $dbCol = 't.full_name';
+      } else continue;
+
+      if ($op === 'contains') {
+        $sql .= " AND $dbCol LIKE $paramKey";
+        $params[$paramKey] = "%$val%";
+      } elseif ($op === '=') {
+        $sql .= " AND $dbCol = $paramKey";
+        $params[$paramKey] = $val;
+      } elseif ($op === '!=') {
+        $sql .= " AND $dbCol != $paramKey";
+        $params[$paramKey] = $val;
+      } elseif (in_array($op, ['>', '>=', '<', '<='])) {
+        $sql .= " AND $dbCol $op $paramKey";
+        $params[$paramKey] = $val;
+      }
+    }
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    return (int) $stmt->fetchColumn();
   }
 
   public function getUnassignedStudentsInBatch(int $batchId): array

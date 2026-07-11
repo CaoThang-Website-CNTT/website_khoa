@@ -12,8 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = new URL(window.API_CLASSROOMS_URL);
 
         if (state.search) url.searchParams.set("search", `%${state.search}%`);
-        if (state.page) url.searchParams.set("page", state.page);
-        if (state.limit) url.searchParams.set("limit", state.limit);
+        
+        const page = (state.pagination?.pageIndex || 0) + 1;
+        const limit = state.pagination?.pageSize || 20;
+        url.searchParams.set("page", page);
+        url.searchParams.set("limit", limit);
         
         if (state.sort && state.sort.col) {
           url.searchParams.set("sort[col]", state.sort.col);

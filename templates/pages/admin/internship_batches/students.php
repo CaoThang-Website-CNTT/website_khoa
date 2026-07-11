@@ -47,19 +47,19 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   <div class="card stats-card">
     <div class="card__header">
       <span class="stats-card__label">Tổng sinh viên</span>
-      <span class="stats-card__value" id="stat-total-students">--</span>
+      <span class="stats-card__value" id="stat-total-students"><?= $batch['stats']['total_students'] ?? 0 ?></span>
     </div>
   </div>
   <div class="card stats-card">
     <div class="card__header">
       <span class="stats-card__label">Đã phân công</span>
-      <span class="stats-card__value" id="stat-assigned-students">--</span>
+      <span class="stats-card__value" id="stat-assigned-students"><?= $batch['stats']['assigned_students'] ?? 0 ?></span>
     </div>
   </div>
   <div class="card stats-card">
     <div class="card__header">
       <span class="stats-card__label">Chưa phân công</span>
-      <span class="stats-card__value" id="stat-unassigned-students">--</span>
+      <span class="stats-card__value" id="stat-unassigned-students"><?= $batch['stats']['total_students'] - ($batch['stats']['assigned_students'] ?? 0) ?></span>
     </div>
   </div>
 </div>
@@ -69,7 +69,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   <div class="detail-layout__main">
     <div class="card shadow-sm">
       <div class="card__content">
-      <div class="tm-container" data-tm="batch_students_table" data-tm-mode="client" data-tm-searchable="true"
+      <div class="tm-container" data-tm="batch_students_table" data-tm-mode="server" data-tm-searchable="true"
         data-tm-selectable="true" data-tm-id-key="batch_student_id">
 
         <!-- Cột MSSV -->
@@ -250,6 +250,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   window.BATCH_START = <?= json_encode($batch['start_at'] ? date('d/m/Y', strtotime($batch['start_at'])) : '') ?>;
   window.BATCH_END = <?= json_encode($batch['end_at'] ? date('d/m/Y', strtotime($batch['end_at'])) : '') ?>;
   window.API_BASE_URL = <?= json_encode(url('api/v1/internship/batches')) ?>;
+  window.CSRF_TOKEN = <?= json_encode(csrf_token()) ?>;
 </script>
 <script type="module" src="<?= url('public/js/pages/batch_students_manager.js') ?>"></script>
 <?php $layout->end() ?>
