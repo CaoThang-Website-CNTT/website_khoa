@@ -3,6 +3,7 @@ namespace App\Controllers\Api;
 
 use App\Core\Controller;
 use App\Core\Request;
+use App\Services\AiProviderException;
 use App\Services\AiSuggestionService;
 use RuntimeException;
 use Throwable;
@@ -20,16 +21,19 @@ class AiSuggestionApiController extends Controller
       return $this->json(null, 422, 'Payload AI không hợp lệ.');
     }
 
-    if (!in_array($payload['surface'] ?? '', ['cms', 'post'], true)) {
-      return $this->json(null, 422, 'Surface AI không hợp lệ.');
+    if (($payload['surface'] ?? '') !== 'cms') {
+      return $this->json(null, 422, 'AI hiện chỉ hỗ trợ CMS.');
     }
 
-    if (trim((string) ($payload['idea'] ?? '')) === '') {
+    if (trim((string) ($payload['idea'] ?? '')) === '' || trim((string) ($payload['path'] ?? '')) === '') {
       return $this->json(null, 422, 'Vui lòng nhập ý tưởng hoặc yêu cầu.');
     }
 
     try {
       return $this->json($this->service->suggest($payload), 200, 'Đã tạo gợi ý AI.');
+    } catch (AiProviderException $e) {
+      error_log('[AI Suggestions][Provider] ' . $e->getMessage());
+      return $this->json(null, 502, $e->getMessage());
     } catch (RuntimeException $e) {
       return $this->json(null, 422, $e->getMessage());
     } catch (Throwable $e) {

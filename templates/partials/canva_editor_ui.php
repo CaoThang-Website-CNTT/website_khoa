@@ -32,12 +32,15 @@ $editorAuthors = array_map(
 <div id="be-topbar">
   <div id="be-topbar-left">
     <a href="<?= url('admin/posts') ?>" class="btn" data-size="md" data-variant="outline">
-      <i class="fa-solid fa-chevron-left"></i> Quay lại
+      <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Quay lại
     </a>
-    <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-left"
-      title="Ẩn/hiện panel block">
-      <i class="fa-solid fa-cube"></i> Blocks
-    </button>
+    <span class="tooltip" data-side="bottom" data-tooltip-gap="8">
+      <button type="button" class="btn tooltip__trigger" data-size="md" data-variant="outline" id="be-toggle-left"
+        aria-label="Blocks">
+        <i class="fa-solid fa-cube" aria-hidden="true"></i>
+      </button>
+      <span class="tooltip__content">Blocks</span>
+    </span>
   </div>
 
   <div id="be-topbar-center">
@@ -51,10 +54,13 @@ $editorAuthors = array_map(
 
   <div id="be-topbar-right">
     <?php include BASE_PATH . '/templates/components/editor_help_trigger.php'; ?>
-    <button type="button" class="btn" data-size="md" data-variant="outline" id="be-toggle-right"
-      title="Ẩn/hiện panel settings">
-      <i class="fa-solid fa-table-columns"></i> Cấu Hình
-    </button>
+    <span class="tooltip" data-side="bottom" data-tooltip-gap="10">
+      <button type="button" class="btn tooltip__trigger" data-size="md" data-variant="outline" id="be-toggle-right"
+        aria-label="Cấu hình">
+        <i class="fa-solid fa-table-columns" aria-hidden="true"></i>
+      </button>
+      <span class="tooltip__content">Cấu hình</span>
+    </span>
     <button type="button" class="btn" data-variant="primary" data-size="md" id="be-publish-btn"
       data-modal-trigger="#confirm-modal">
       Lưu
@@ -268,6 +274,8 @@ $editorAuthors = array_map(
     </div>
   </div>
 </div>
+
+<?php include BASE_PATH . '/templates/components/ai_suggestion_modal.php'; ?>
 
 <form id="be-post-form" method="POST" action="<?= $isEdit ? url("admin/posts/{$post->id}") : url("admin/posts"); ?>"
   class="hidden">
