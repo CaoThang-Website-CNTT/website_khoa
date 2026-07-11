@@ -381,6 +381,84 @@ if (confirmBtn) {
           },
         }),
       );
+
+      // Khởi tạo Export Manager
+      import("../../export/export_manager.js")
+        .then((module) => {
+          const ExportManager = module.ExportManager;
+          const slugify = (str) => {
+            return String(str)
+              .normalize('NFKD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/[đĐ]/g, 'd')
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9 -]/g, '')
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-');
+          };
+          
+          const batchTitle = window.BATCH_TITLE || `Đợt ${window.BATCH_ID}`;
+          const batchSlug = slugify(batchTitle);
+          const exportEndpoint =
+            window.API_URL_ALLOCATIONS.split("/project_batches")[0] + "/export"; // /api/v1/export
+
+          ExportManager.register(tm, {
+            target: "#project-allocations-export-action",
+            triggerLabel: "Export dữ liệu",
+            triggerIcon: "fa-file-excel",
+            triggerVariant: "outline",
+            triggerSize: "lg",
+            source: "project_allocations",
+            source_id: window.BATCH_ID,
+            endpoint: exportEndpoint,
+            filename: `danh-sach-phan-bo-de-tai-${batchSlug}`,
+            metadataTitle: `Danh sách phân bổ đề tài - ${batchTitle}`,
+            metadataDateRange: null,
+            columnGroups: [
+              {
+                label: "Nhóm & Đề tài",
+                columns: ["topic_title", "teacher_name"],
+              },
+              {
+                label: "Thành viên 1",
+                columns: ["mssv_1", "name_1", "class_1"],
+              },
+              {
+                label: "Thành viên 2",
+                columns: ["mssv_2", "name_2", "class_2"],
+              },
+            ],
+            columnsMap: {
+              topic_title: "Tên đề tài",
+              teacher_name: "Giảng viên HD",
+              mssv_1: "MSSV 1",
+              name_1: "Họ tên 1",
+              class_1: "Lớp 1",
+              mssv_2: "MSSV 2",
+              name_2: "Họ tên 2",
+              class_2: "Lớp 2",
+            },
+          });
+
+          // HACK: Bỏ dropdown, dùng nút bấm 1 chế độ để không cần sửa core
+          const wrapper = document.querySelector("#project-allocations-export-action .tm-export-wrapper");
+          if (wrapper) {
+            const btn = wrapper.querySelector(".btn");
+            const menu = wrapper.querySelector(".tm-export-menu");
+            if (btn && menu) {
+              btn.innerHTML = `<i class="fa-solid fa-file-excel mr-2"></i>Export dữ liệu`;
+              const newBtn = btn.cloneNode(true);
+              btn.replaceWith(newBtn);
+              menu.style.display = "none";
+              
+              newBtn.addEventListener("click", () => {
+                tm.root.dispatchEvent(new CustomEvent("tm:export", { detail: { mode: "all" } }));
+              });
+            }
+          }
+        })
+        .catch((err) => console.error("Lỗi tải ExportManager:", err));
     } else {
       setTimeout(initTable, 50);
     }

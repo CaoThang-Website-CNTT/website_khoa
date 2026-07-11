@@ -23,6 +23,7 @@ interface IProjectGroupService
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
   public function getAllocationStats(int $batchId): array;
   public function getAspirationsByBatch(int $batchId): array;
+  public function getExportAllocations(int $batchId, array $filters = [], ?array $sort = null, array $selectedIds = []): array;
 
   // Exception Handling
   public function getGroupsWithIneligibleMembers(int $batchId): array;
@@ -77,6 +78,47 @@ class ProjectGroupService implements IProjectGroupService
   public function getAllocationStats(int $batchId): array
   {
     return $this->_store->getAllocationStats($batchId);
+  }
+
+  public function getExportAllocations(int $batchId, array $filters = [], ?array $sort = null, array $selectedIds = []): array
+  {
+    if (!empty($selectedIds)) {
+      $filters['selected_ids'] = $selectedIds;
+    }
+    
+    // Chỉ xuất các nhóm đã được phân công đề tài
+    $filters['is_assigned'] = true;
+    
+    // Sử dụng _store->getPaginatedByBatch để lấy toàn bộ dữ liệu (không phân trang)
+    // Hoặc query riêng. getPaginatedByBatch có parameter limit. Truyền limit cực lớn để lấy hết.
+    $groups = $this->_store->getPaginatedByBatch($batchId, 1, 999999, $filters);
+    
+    $exportData = [];
+    foreach ($groups as $group) {
+      $members = $this->getGroupMembers($group['id']);
+      
+      $row = [
+        'topic_title' => $group['assigned_topic_title'] ?? 'N/A',
+        'teacher_name' => $group['assigned_teacher_name'] ?? 'N/A',
+      ];
+      
+      // Thành viên (giả định tối đa 5 thành viên để tạo đủ số cột, tuy nhiên export config bên JS sẽ tự fix số cột)
+      for ($i = 0; $i < 3; $i++) { // Hỗ trợ lên đến 3 thành viên theo chuẩn thông thường
+        if (isset($members[$i])) {
+          $row["mssv_" . ($i + 1)] = $members[$i]['student_code'] ?? $members[$i]['student_id'];
+          $row["name_" . ($i + 1)] = $members[$i]['full_name'];
+          $row["class_" . ($i + 1)] = $members[$i]['classroom_name'] ?? '';
+        } else {
+          $row["mssv_" . ($i + 1)] = '';
+          $row["name_" . ($i + 1)] = '';
+          $row["class_" . ($i + 1)] = '';
+        }
+      }
+      
+      $exportData[] = $row;
+    }
+    
+    return $exportData;
   }
 
   public function createGroup(int $batchId, int $leaderStudentId): int

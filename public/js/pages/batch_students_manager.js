@@ -191,7 +191,21 @@ document.addEventListener("DOMContentLoaded", () => {
             registerBulkActions();
 
             // Đăng ký Export Excel
+            const slugify = (str) => {
+              return String(str)
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[đĐ]/g, 'd')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+            };
+            
             const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
+            const batchSlug = slugify(batchTitle);
+            
             ExportManager.register(tm, {
               target: "#batch-students-export-action",
               triggerLabel: "Export dữ liệu",
@@ -204,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "/internship/batches",
                 "/export",
               ),
-              filename: `Danh-sach-sinh-vien-${batchTitle}`,
+              filename: `danh-sach-sinh-vien-${batchSlug}`,
               metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
               metadataDateRange:
                 window.BATCH_START && window.BATCH_END

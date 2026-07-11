@@ -7,6 +7,7 @@ $batchObj = (object) $batchObj;
 
 <?php $layout->start('head') ?>
 <link rel="stylesheet" href="<?= url('/public/css/allocation.css') ?>">
+<link rel="stylesheet" href="<?= url('/public/css/export.css') ?>">
 <?php $layout->end() ?>
 
 <?php $layout->start('heading') ?>
@@ -32,6 +33,8 @@ $hasPreview = isset($previewData) && $previewData !== null;
 <button type="button" class="btn" data-variant="secondary" data-size="lg" title="Import danh sách sinh viên đủ điều kiện làm đồ án tốt nghiệp" onclick="ModalHandler.instance.open('#import-excel-modal')">
   <i class="fa-solid fa-upload"></i> Import DSSV
 </button>
+
+<div id="project-allocations-export-action" class="inline-block"></div>
 <?php if (!empty($batchObj->allocation_published_at)): ?>
   <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/unpublish") ?>" method="POST" class="inline-block">
     <?= csrf_field() ?>
@@ -361,7 +364,9 @@ foreach ($teachers as $t) {
   window.API_URL_ALLOCATIONS = "<?= url("api/v1/project_batches/{$batchObj->id}/allocations") ?>";
   window.ALLOCATION_BASE_URL = "<?= url("admin/project_batches/{$batchObj->id}/allocation") ?>";
   window.BATCH_ID = "<?= $batchObj->id ?>";
+  window.BATCH_TITLE = <?= json_encode($batchObj->title) ?>;
   window.CSRF_FIELD = `<?= csrf_field() ?>`;
+  window.CSRF_TOKEN = "<?= csrf_token() ?>";
 </script>
 <script src="<?= url('public/js/pages/admin/project_allocations.js') ?>"></script>
 <?php $layout->end() ?>
