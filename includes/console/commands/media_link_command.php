@@ -18,7 +18,7 @@ class MediaLinkCommand extends BaseCommand
     $resolvedTarget = realpath($target);
     $resolvedLink = realpath($link);
     if ($resolvedTarget !== false && $resolvedLink !== false && $resolvedTarget === $resolvedLink) {
-      ConsoleColor::success('public/media already points to storage/media.');
+      ConsoleColor::success('public/media đã được link tới storage/media.');
       return;
     }
 
