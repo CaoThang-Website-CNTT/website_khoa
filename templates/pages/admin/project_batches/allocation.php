@@ -113,7 +113,13 @@ $tabs = [
   <div class="card mb-6 border">
     <div class="card__header">
       <h3 class="card__title text-warning"><i class="fa-solid fa-triangle-exclamation"></i> Preview Dữ Liệu Import</h3>
-      <p class="card__description">Vui lòng kiểm tra kỹ danh sách dưới đây trước khi XÁC NHẬN. Những sinh viên "Không đủ điều kiện" sẽ bị đánh dấu ở các nhóm nếu bạn XÁC NHẬN.</p>
+      <div class="card__description mt-2">
+        <p class="mb-1 text-sm">Vui lòng kiểm tra kỹ số liệu dưới đây trước khi XÁC NHẬN LƯU. Sau khi lưu:</p>
+        <ul class="pl-5 text-sm">
+          <li>Sinh viên <span class="text-sm font-semibold">Không hợp lệ</span> sẽ bị mất tư cách làm đồ án. Các nhóm chứa sinh viên này sẽ bị đưa vào danh sách 'Cần xử lý thủ công'.</li>
+          <li>Đề tài đã phân bổ của các nhóm (nếu có) vẫn được giữ nguyên để bạn tùy ý quyết định thay người hay giải tán nhóm.</li>
+        </ul>
+      </div>
     </div>
     <hr class="separator">
     <div class="card_content px-4">
@@ -124,8 +130,8 @@ $tabs = [
           <button type="submit" class="btn" data-variant="primary" data-size="lg">Xác nhận Lưu Dữ Liệu</button>
           <div class="text-sm">
             Đủ điều kiện (Trong file): <span class="font-semibold"><?= count($inExcel) ?></span> |
-            Chưa đăng ký: <span class="font-semibold"><?= count($notRegistered) ?></span> |
-            Bị loại: <span class="font-semibold"><?= count($ineligible) ?></span>
+            Đủ điều kiện nhưng chưa tạo nhóm: <span class="font-semibold"><?= count($notRegistered) ?></span> |
+            KHÔNG đủ điều kiện: <span class="font-semibold"><?= count($ineligible) ?></span>
           </div>
         </div>
       </form>
@@ -293,13 +299,13 @@ $tabs = [
 <!-- Auto Allocate Modal -->
 <div class="modal" id="auto-allocate-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h3 class="modal__title">Duyệt tự động</h3>
+    <h3 class="modal__title">Phân bổ đề tài tự động</h3>
   </div>
   <div class="modal__content">
     <p>Hệ thống sẽ tự động phân bổ đề tài dựa trên nguyện vọng và thời điểm chốt nguyện vọng.</p>
-    <p>Lưu ý: Chỉ các nhóm ĐÃ CHỐT nguyện vọng và các thành viên đã XÁC NHẬN VÀO NHÓM mới được tham gia phân bổ.</p>
-    <div class="alert" data-variant="warning">
-      <i class="fa-solid fa-triangle-exclamation"></i> Thao tác này sẽ ghi đè các phân bổ cũ!
+    <p>Lưu ý: Chỉ các nhóm ĐÃ CHỐT nguyện vọng và tất cả các thành viên đã XÁC NHẬN VÀO NHÓM mới được tham gia phân bổ.</p>
+    <div class="alert mt-2" data-variant="info">
+      <i class="fa-solid fa-circle-info"></i> Hệ thống sẽ chỉ phân bổ cho các nhóm chưa có đề tài. Các phân bổ trước đó (nếu có) sẽ được giữ nguyên.
     </div>
   </div>
   <div class="modal__footer">
@@ -350,8 +356,14 @@ $tabs = [
   </div>
   <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/import-preview") ?>" method="POST" enctype="multipart/form-data">
     <?= csrf_field() ?>
-    <div class="modal__content p-2">
-      <p>Upload file Excel danh sách sinh viên đủ điều kiện làm đồ án. Cột chứa MSSV phải nằm ở cột thứ 2 (cột B), dữ liệu bắt đầu từ dòng 2.</p>
+    <div class="modal__content p-4">
+      <p class="text-sm">Upload file Excel danh sách sinh viên đủ điều kiện làm đồ án. Cột chứa MSSV phải nằm ở cột thứ 2 (cột B), dữ liệu bắt đầu từ dòng 2.</p>
+
+      <div class="alert mt-4" data-variant="info">
+        <p class="mb-2 text-sm">Hệ thống sẽ đối chiếu file này với danh sách sinh viên đã tạo nhóm. Những ai không có tên trong file sẽ bị đánh dấu 'Không đủ điều kiện' (Nhóm của họ sẽ rơi vào trạng thái chờ xử lý).</p>
+        <p class="text-sm">Nên thực hiện bước Import này TRƯỚC khi nhấn nút 'Phân bổ tự động'.</p>
+      </div>
+
       <div class="field mt-4" data-field-required>
         <input type="file" name="excel_file" class="field__input" accept=".xlsx, .xls" required>
       </div>
@@ -410,195 +422,9 @@ $tabs = [
   </button>
 </div>
 
+<?php $layout->start('scripts') ?>
 <script>
-  function openManualAssignModal(groupId) {
-    document.getElementById('manual_group_id').value = groupId;
-    ModalHandler.instance.open('#manual-assign-modal');
-  }
-
-  function openReplaceMemberModal(groupId, oldStudentId) {
-    document.getElementById('replace_group_id').value = groupId;
-    document.getElementById('replace_old_student_id').value = oldStudentId;
-    ModalHandler.instance.open('#replace-member-modal');
-  }
-
-  // Handle action confirm modal
-  let currentForm = null;
-
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-confirm-action');
-    if (btn) {
-      currentForm = btn.closest('form');
-      const msg = btn.getAttribute('data-confirm-msg') || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
-
-      const confirmMsg = document.getElementById('action-confirm-msg');
-      if (confirmMsg) confirmMsg.textContent = msg;
-
-      const modal = document.getElementById('action-confirm-modal');
-      if (window.Modal) {
-        window.Modal.open(modal);
-      } else {
-        ModalHandler.instance.open('#action-confirm-modal');
-      }
-    }
-  });
-
-  const confirmBtn = document.getElementById('action-confirm-btn');
-  if (confirmBtn) {
-    confirmBtn.addEventListener('click', () => {
-      if (currentForm) {
-        currentForm.submit();
-      }
-    });
-  }
-
-  (() => {
-    const root = document.getElementById('allocation_table');
-    if (!root) return;
-
-    root.addEventListener('tm:render', (e) => {
-      const visibleRows = e.detail.visibleRows;
-
-      root.querySelectorAll('.members-container').forEach(container => {
-        if (container.dataset.rendered) return;
-
-        const groupId = container.dataset.groupId;
-        const groupData = visibleRows.find(r => String(r.id) === String(groupId));
-
-        if (groupData && groupData.members) {
-          container.innerHTML = '';
-
-          groupData.members.forEach(m => {
-            const rowDiv = document.createElement('div');
-            rowDiv.className = 'allocation-table__member flex flex-col';
-            if (!m.is_eligible) {
-              rowDiv.classList.add('allocation-table__member--ineligible');
-            }
-
-            const nameDiv = document.createElement('div');
-            nameDiv.innerHTML = `<span>${m.full_name} (${m.student_code})</span>`;
-            if (groupData.is_admin_approved_solo) {
-              nameDiv.insertAdjacentHTML('beforeend', '<span class="badge ml-1" data-variant="secondary">Làm 1 mình</span>');
-            } else if (m.is_leader) {
-              nameDiv.insertAdjacentHTML('beforeend', '<span class="badge ml-1" data-variant="primary">Nhóm trưởng</span>');
-            } else if (!m.is_confirmed) {
-              nameDiv.insertAdjacentHTML('beforeend', '<span class="badge ml-1" data-variant="warning" title="Chưa xác nhận tham gia nhóm">Chưa xác nhận</span>');
-            }
-            rowDiv.appendChild(nameDiv);
-
-            if (!m.is_eligible && m.phone) {
-              const phoneDiv = document.createElement('div');
-              phoneDiv.className = 'text-xs mt-1';
-              phoneDiv.innerHTML = `<i class="text-xs fa-solid fa-phone mr-1"></i> ${m.phone}`;
-              rowDiv.appendChild(phoneDiv);
-            }
-
-            container.appendChild(rowDiv);
-          });
-
-          container.dataset.rendered = 'true';
-        }
-      });
-
-      root.querySelectorAll('.aspirations-container').forEach(container => {
-        if (container.dataset.rendered) return;
-
-        const groupId = container.dataset.groupId;
-        const groupData = visibleRows.find(r => String(r.id) === String(groupId));
-
-        if (groupData && groupData.aspirations && groupData.aspirations.length > 0) {
-          container.innerHTML = '';
-          let isLocked = !!groupData.aspirations[0].locked_at;
-
-          if (!isLocked) {
-            container.innerHTML += '<div><span class="badge" data-variant="warning"><i class="fa-solid fa-unlock mr-1"></i> Chưa chốt</span></div>';
-          }
-
-          groupData.aspirations.forEach(asp => {
-            const rowDiv = document.createElement('div');
-            rowDiv.style.marginBottom = '0.25rem';
-            rowDiv.className = 'line-clamp-1'
-            rowDiv.title = asp.topic_title || 'Đề tài #' + asp.topic_id;
-            rowDiv.innerHTML = `<span class="badge" data-variant="outline">NV${asp.priority}</span> ${asp.topic_title || 'Đề tài #' + asp.topic_id}`;
-            container.appendChild(rowDiv);
-          });
-          container.dataset.rendered = 'true';
-        } else if (groupData) {
-          container.innerHTML = '<span class="text-muted italic">Chưa đăng ký</span>';
-          container.dataset.rendered = 'true';
-        }
-      });
-    });
-
-    root.addEventListener("tm:state-change", async (e) => {
-      const {
-        reason,
-        state
-      } = e.detail;
-      const tm = window.TableManager?.get("allocation_table");
-
-      if (!tm || !state.pagination) return;
-
-      const page = (state.pagination?.pageIndex || 0) + 1;
-      const limit = state.pagination?.pageSize || 15;
-
-      const url = new URL("<?= url("api/v1/project_batches/{$batchObj->id}/allocations") ?>", window.location.origin);
-      url.searchParams.set("page", page);
-      url.searchParams.set("limit", limit);
-
-      if (state.search) url.searchParams.set("search", state.search);
-
-      if (state.sort?.col) {
-        url.searchParams.set("sort[col]", state.sort.col);
-        url.searchParams.set("sort[dir]", state.sort.dir);
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has("status")) {
-        url.searchParams.set("status", urlParams.get("status"));
-      }
-
-      try {
-        const response = await fetch(url.toString());
-        const data = await response.json();
-        if (data.success) {
-          tm.loadData({
-            rows: data.data.data,
-            total: data.data.total,
-            page: data.data.page,
-            limit: data.data.limit
-          });
-        } else {
-          console.error("Lỗi API:", data.message);
-        }
-      } catch (err) {
-        console.error("Lỗi khi tải dữ liệu phân bổ:", err);
-      }
-    });
-
-    const initTable = () => {
-      const tm = window.TableManager?.get("allocation_table");
-      if (tm) {
-        const state = typeof tm.getState === 'function' ? tm.getState() : tm.state;
-        tm.root.dispatchEvent(
-          new CustomEvent("tm:state-change", {
-            detail: {
-              reason: "pagination",
-              state: state
-            },
-          }),
-        );
-      } else {
-        setTimeout(initTable, 50);
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener("DOMContentLoaded", initTable);
-    } else {
-      initTable();
-    }
-  })();
+  window.API_URL_ALLOCATIONS = "<?= url("api/v1/project_batches/{$batchObj->id}/allocations") ?>";
 </script>
-
+<script src="<?= url('public/js/pages/admin/project_allocations.js') ?>"></script>
 <?php $layout->end() ?>

@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
-require_once BASE_PATH . '/stores/project_group_store.php';
-
 use App\Stores\ProjectGroupStore;
 use App\Stores\ProjectAspirationStore;
 use App\Stores\ProjectTopicStore;
+use App\Stores\ProjectBatchStore;
 
 interface IProjectGroupService
 {
@@ -41,15 +40,18 @@ class ProjectGroupService implements IProjectGroupService
   private ProjectGroupStore $_store;
   private ProjectAspirationStore $_aspirationStore;
   private ProjectTopicStore $_topicStore;
+  private ProjectBatchStore $_batchStore;
 
   public function __construct(
     ProjectGroupStore $store,
     ProjectAspirationStore $aspirationStore,
-    ProjectTopicStore $topicStore
+    ProjectTopicStore $topicStore,
+    ProjectBatchStore $batchStore
   ) {
     $this->_store = $store;
     $this->_aspirationStore = $aspirationStore;
     $this->_topicStore = $topicStore;
+    $this->_batchStore = $batchStore;
   }
 
   public function getGroupByStudent(int $batchId, int $studentId): ?array
@@ -167,24 +169,42 @@ class ProjectGroupService implements IProjectGroupService
       return ['success' => 0, 'failed' => 0, 'message' => 'Không có nhóm nào đã chốt nguyện vọng.'];
     }
 
-    // 3. Lấy tất cả các đề tài đã được phê duyệt trong đợt này
-    $allTopics = $this->_topicStore->getApprovedTopics($batchId);
+    // 3. Lấy dữ liệu Quota Giảng viên và Đề tài
+    $supervisors = $this->_batchStore->getSupervisorsByBatchId($batchId);
+    $teacherSlots = [];
+    foreach ($supervisors as $sup) {
+      $maxStudents = (int)$sup['max_students'];
+      $maxGroups = $maxStudents === 0 ? PHP_INT_MAX : max(1, (int)floor($maxStudents / 2));
+      $teacherSlots[$sup['teacher_id']] = [
+        'max_groups' => $maxGroups,
+        'assigned_groups' => 0
+      ];
+    }
 
-    // Tạo map để theo dõi slot của từng đề tài
+    $allTopics = $this->_topicStore->getApprovedTopics($batchId);
     $topicSlots = [];
     foreach ($allTopics as $topic) {
       $maxStudents = (int)$topic['max_students'];
       $maxGroups = (int)($maxStudents / 2);
+      $assignedGroups = (int)($topic['assigned_groups_count'] ?? 0);
+      $teacherId = $topic['teacher_id'];
+
       $topicSlots[$topic['id']] = [
+        'teacher_id' => $teacherId,
         'max_groups' => max(1, $maxGroups),
-        'assigned_groups' => (int)($topic['assigned_groups_count'] ?? 0)
+        'assigned_groups' => $assignedGroups
       ];
+
+      // Cập nhật số nhóm đã gán cho giảng viên (nếu có gán thủ công từ trước)
+      if (isset($teacherSlots[$teacherId])) {
+        $teacherSlots[$teacherId]['assigned_groups'] += $assignedGroups;
+      }
     }
 
     // 4. Deferred Acceptance Algorithm
     $proposalIndex = [];      // NV tiếp theo mà nhóm sẽ đề xuất
-    $tentative = [];           // topic_id => [group data...]
-    $freeGroupIds = [];        // Set các nhóm chưa được match
+    $tentative = [];          // teacher_id => [group_id => item]
+    $freeGroupIds = [];       // Set các nhóm chưa được match
 
     foreach ($groups as $group) {
       $proposalIndex[$group['id']] = 0;
@@ -204,6 +224,7 @@ class ProjectGroupService implements IProjectGroupService
       $iteration++;
       $madeProgress = false;
 
+      // Pha 1: Nhóm chưa match đề xuất vào nguyện vọng tiếp theo
       foreach (array_keys($freeGroupIds) as $groupId) {
         $aspirations = $aspirationsByGroup[$groupId] ?? [];
         $idx = $proposalIndex[$groupId];
@@ -223,45 +244,67 @@ class ProjectGroupService implements IProjectGroupService
           continue;
         }
 
-        // Thêm group vào danh sách ứng viên của topic
-        if (!isset($tentative[$topicId])) {
-          $tentative[$topicId] = [];
-        }
-        $tentative[$topicId][$groupId] = $groupsById[$groupId];
-
-        // Topic giữ lại top N nhóm, reject phần còn lại
-        $available = $topicSlots[$topicId]['max_groups'] - $topicSlots[$topicId]['assigned_groups'];
-        if ($available <= 0) {
-          // Đề tài đã hết slot từ trước (assigned_groups_count đã đầy)
-          unset($tentative[$topicId][$groupId]);
-          continue;
+        $teacherId = $topicSlots[$topicId]['teacher_id'];
+        if (!isset($teacherSlots[$teacherId])) {
+          continue; // Giảng viên không có trong đợt này?
         }
 
-        if (count($tentative[$topicId]) > $available) {
-          // Sắp xếp theo tiebreaker: locked_at ASC, created_at ASC
-          uasort($tentative[$topicId], function ($a, $b) use ($lockedAtByGroup) {
-            $lockA = $lockedAtByGroup[$a['id']] ?? '9999-12-31';
-            $lockB = $lockedAtByGroup[$b['id']] ?? '9999-12-31';
-            if ($lockA !== $lockB) return strcmp($lockA, $lockB);
-            return strcmp($a['created_at'], $b['created_at']);
-          });
+        if (!isset($tentative[$teacherId])) {
+          $tentative[$teacherId] = [];
+        }
 
-          // Giữ top $available, reject phần còn lại
-          $kept = array_slice($tentative[$topicId], 0, $available, true);
-          $rejected = array_diff_key($tentative[$topicId], $kept);
+        // Đưa nhóm vào danh sách ứng viên của giảng viên
+        $tentative[$teacherId][$groupId] = [
+          'group' => $groupsById[$groupId],
+          'topic_id' => $topicId
+        ];
 
-          $tentative[$topicId] = $kept;
+        // Tạm thời coi như nhóm đã propose xong, chờ phản hồi của giảng viên
+        // Ta xoá nhóm khỏi freeGroupIds ngay lúc này, nếu bị reject GV sẽ nhả lại
+        unset($freeGroupIds[$groupId]);
+      }
 
-          foreach ($rejected as $rGroupId => $rGroup) {
-            $freeGroupIds[$rGroupId] = true; // Nhóm bị reject tiếp tục vòng sau
+      // Pha 2: Giảng viên duyệt danh sách ứng viên
+      foreach ($tentative as $teacherId => &$applicants) {
+        // Sắp xếp ưu tiên: chốt nguyện vọng sớm -> tạo nhóm sớm
+        uasort($applicants, function ($a, $b) use ($lockedAtByGroup) {
+          $lockA = $lockedAtByGroup[$a['group']['id']] ?? '9999-12-31';
+          $lockB = $lockedAtByGroup[$b['group']['id']] ?? '9999-12-31';
+          if ($lockA !== $lockB) return strcmp($lockA, $lockB);
+          return strcmp($a['group']['created_at'], $b['group']['created_at']);
+        });
+
+        $kept = [];
+        $rejected = [];
+        $currentTeacherAssigned = $teacherSlots[$teacherId]['assigned_groups'];
+        $teacherMaxGroups = $teacherSlots[$teacherId]['max_groups'];
+        $currentTopicAssigned = [];
+
+        foreach ($applicants as $groupId => $item) {
+          $topicId = $item['topic_id'];
+          if (!isset($currentTopicAssigned[$topicId])) {
+            $currentTopicAssigned[$topicId] = $topicSlots[$topicId]['assigned_groups'];
+          }
+          $topicMaxGroups = $topicSlots[$topicId]['max_groups'];
+
+          // Điều kiện giữ lại: Đề tài còn chỗ VÀ Giảng viên còn chỗ
+          if ($currentTopicAssigned[$topicId] < $topicMaxGroups && $currentTeacherAssigned < $teacherMaxGroups) {
+            $kept[$groupId] = $item;
+            $currentTopicAssigned[$topicId]++;
+            $currentTeacherAssigned++;
+          } else {
+            $rejected[$groupId] = $item;
           }
         }
 
-        // Nhóm đã được tạm nhận sẽ được remove khỏi free list
-        if (isset($tentative[$topicId][$groupId])) {
-          unset($freeGroupIds[$groupId]);
+        $applicants = $kept;
+
+        // Trả các nhóm bị từ chối lại danh sách tự do
+        foreach ($rejected as $groupId => $item) {
+          $freeGroupIds[$groupId] = true;
         }
       }
+      unset($applicants);
 
       if (!$madeProgress) break;
     }
@@ -271,9 +314,9 @@ class ProjectGroupService implements IProjectGroupService
     $failedCount = 0;
 
     $matchedGroupIds = [];
-    foreach ($tentative as $topicId => $matchedGroups) {
-      foreach ($matchedGroups as $groupId => $group) {
-        if ($this->_store->assignTopic($groupId, $topicId)) {
+    foreach ($tentative as $teacherId => $matchedGroups) {
+      foreach ($matchedGroups as $groupId => $item) {
+        if ($this->_store->assignTopic($groupId, $item['topic_id'])) {
           $successCount++;
           $matchedGroupIds[$groupId] = true;
         }
