@@ -8,7 +8,7 @@ class MediaLinkCommand extends BaseCommand
 {
   protected string $name = 'media-link';
   protected string $paramsDescription = '';
-  protected string $description = 'Create public/media link to storage/media';
+  protected string $description = 'Tạo public/media link tới storage/media';
 
   public function handle(array $args): void
   {
