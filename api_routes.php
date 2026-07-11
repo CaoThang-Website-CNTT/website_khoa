@@ -42,6 +42,7 @@ $router->prefix('api')->group(function ($router) {
         $router->get('/search-eligible-students', [InternshipBatchManagementApiController::class, 'searchStudents']);
         $router->get('/search-eligible-teachers', [InternshipBatchManagementApiController::class, 'searchTeachers']);
 
+        $router->get('/referral-letters', [InternshipBatchManagementApiController::class, 'getPaginatedReferralLetters']);
         $router->post('/referral-letters/bulk-action', [InternshipBatchManagementApiController::class, 'bulkActionReferralLetters']);
         $router->post('/referral-letters/{letterId}/receive', [InternshipBatchManagementApiController::class, 'receiveReferralLetter']);
       });

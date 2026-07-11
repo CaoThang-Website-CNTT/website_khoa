@@ -23,6 +23,8 @@ interface IReferralLetterStore
   public function getAllWithDetailsByBatchId(int $batchId): array;
   public function getWithStudentsByLetterId(int $id): ?array;
   public function getForPrint(int $id): ?array;
+  public function getPaginatedByBatchId(int $batchId, int $pageTo, int $limit, array $filters = [], array $sort = []): array;
+  public function getTotalCountByBatchId(int $batchId, array $filters = []): int;
   public function updatePrintInfo(int $id, array $printData): bool;
   public function getByIds(array $ids): array;
   public function getByIdsForBatch(array $ids, int $batchId): array;
@@ -245,6 +247,148 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     $stmt->execute();
 
     return array_map(fn($row) => ReferralLetter::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
+  }
+
+  private function _buildFilterSqlAndParams(array $filters): array
+  {
+    $sql = "";
+    $params = [];
+    foreach ($filters as $index => $filter) {
+      if (!isset($filter['col']) || !isset($filter['value'])) continue;
+      $colName = $filter['col'];
+      $op = $filter['op'] ?? '=';
+      $val = $filter['value'];
+      
+      if ($op === 'contains' && $val === '') continue;
+
+      if ($colName === 'student_search') {
+        if ($op === 'contains') {
+          $sql .= " AND (s.student_id LIKE :filter_s1_$index OR s.full_name LIKE :filter_s2_$index)";
+          $params[":filter_s1_$index"] = "%$val%";
+          $params[":filter_s2_$index"] = "%$val%";
+        } else if ($op === '=') {
+          $sql .= " AND (s.student_id = :filter_s1_$index OR s.full_name = :filter_s2_$index)";
+          $params[":filter_s1_$index"] = $val;
+          $params[":filter_s2_$index"] = $val;
+        }
+      } elseif ($colName === 'company_search') {
+        if ($op === 'contains') {
+          $sql .= " AND (c.tax_code LIKE :filter_c1_$index OR c.name LIKE :filter_c2_$index)";
+          $params[":filter_c1_$index"] = "%$val%";
+          $params[":filter_c2_$index"] = "%$val%";
+        } else if ($op === '=') {
+          $sql .= " AND (c.tax_code = :filter_c1_$index OR c.name = :filter_c2_$index)";
+          $params[":filter_c1_$index"] = $val;
+          $params[":filter_c2_$index"] = $val;
+        }
+      } else {
+        $paramKey = ":filter_$index";
+        $dbCol = '';
+        if ($colName === 'teacher_name') $dbCol = 't.full_name';
+        elseif ($colName === 'status') $dbCol = 'rl.status';
+        else continue;
+
+        if ($op === 'contains') {
+          $sql .= " AND $dbCol LIKE $paramKey";
+          $params[$paramKey] = "%$val%";
+        } elseif ($op === '=') {
+          $sql .= " AND $dbCol = $paramKey";
+          $params[$paramKey] = $val;
+        } elseif ($op === '!=') {
+          $sql .= " AND $dbCol != $paramKey";
+          $params[$paramKey] = $val;
+        } elseif (in_array($op, ['>', '>=', '<', '<='])) {
+          $sql .= " AND $dbCol $op $paramKey";
+          $params[$paramKey] = $val;
+        }
+      }
+    }
+    return [$sql, $params];
+  }
+
+  public function getPaginatedByBatchId(int $batchId, int $pageTo, int $limit, array $filters = [], array $sort = []): array
+  {
+    $offset = ($pageTo - 1) * $limit;
+    $params = [':batch_id1' => $batchId, ':batch_id2' => $batchId];
+    
+    $baseSql = "
+      SELECT rl.*, 
+             c.name as company_name, c.tax_code as company_tax_code, c.address as company_address, c.is_verified as company_is_verified,
+             s.student_id as student_code, s.full_name as student_full_name, s.phone as student_phone,
+             a.email as student_email, cl.short_name as classroom_name,
+             t.full_name as teacher_name,
+             ra.email as received_by_name,
+             (SELECT COUNT(*) FROM referral_letter_students rls WHERE rls.referral_letter_id = rl.id) as student_count
+      FROM referral_letters rl
+      LEFT JOIN internship_batch_students bs ON rl.batch_student_id = bs.id
+      LEFT JOIN students s ON bs.student_id = s.id
+      LEFT JOIN accounts a ON s.account_id = a.id
+      LEFT JOIN classrooms cl ON s.classroom_id = cl.id
+      LEFT JOIN companies c ON rl.company_id = c.id
+      LEFT JOIN teachers t ON rl.teacher_id = t.id
+      LEFT JOIN accounts ra ON rl.received_by = ra.id
+      WHERE (
+        rl.id IN (
+          SELECT DISTINCT rls.referral_letter_id 
+          FROM referral_letter_students rls 
+          JOIN internship_batch_students ibs ON rls.batch_student_id = ibs.id 
+          WHERE ibs.batch_id = :batch_id1
+        ) OR bs.batch_id = :batch_id2
+      )
+    ";
+
+    list($filterSql, $filterParams) = $this->_buildFilterSqlAndParams($filters);
+    $baseSql .= $filterSql;
+    $params = array_merge($params, $filterParams);
+
+    // Sorting
+    $sortCol = 'rl.created_at';
+    $sortDir = 'DESC';
+    if (!empty($sort) && isset($sort['col'])) {
+      $col = $sort['col'];
+      $dir = strtoupper($sort['dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+      if ($col === 'student_search') $sortCol = 's.full_name';
+      elseif ($col === 'company_search') $sortCol = 'c.name';
+      elseif ($col === 'teacher_name') $sortCol = 't.full_name';
+      elseif ($col === 'status') $sortCol = 'rl.status';
+      elseif ($col === 'id') $sortCol = 'rl.id';
+      $sortDir = $dir;
+    }
+    
+    $baseSql .= " ORDER BY $sortCol $sortDir LIMIT $limit OFFSET $offset";
+
+    $stmt = $this->db->prepare($baseSql);
+    $stmt->execute($params);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+  }
+
+  public function getTotalCountByBatchId(int $batchId, array $filters = []): int
+  {
+    $params = [':batch_id1' => $batchId, ':batch_id2' => $batchId];
+    $baseSql = "
+      SELECT COUNT(DISTINCT rl.id)
+      FROM referral_letters rl
+      LEFT JOIN internship_batch_students bs ON rl.batch_student_id = bs.id
+      LEFT JOIN students s ON bs.student_id = s.id
+      LEFT JOIN companies c ON rl.company_id = c.id
+      LEFT JOIN teachers t ON rl.teacher_id = t.id
+      WHERE (
+        rl.id IN (
+          SELECT DISTINCT rls.referral_letter_id 
+          FROM referral_letter_students rls 
+          JOIN internship_batch_students ibs ON rls.batch_student_id = ibs.id 
+          WHERE ibs.batch_id = :batch_id1
+        ) OR bs.batch_id = :batch_id2
+      )
+    ";
+
+    list($filterSql, $filterParams) = $this->_buildFilterSqlAndParams($filters);
+    $baseSql .= $filterSql;
+    $params = array_merge($params, $filterParams);
+
+    $stmt = $this->db->prepare($baseSql);
+    $stmt->execute($params);
+    return (int) $stmt->fetchColumn();
   }
 
   /**

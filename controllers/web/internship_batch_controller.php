@@ -54,11 +54,8 @@ class InternshipBatchController extends Controller
       return $this->redirect('admin/internship_batches');
     }
 
-    $letters = $this->_referralLetterService->getAllWithDetailsByBatchId((int) $id);
-
     $this->render("admin/internship_batches/referral_letters", [
-      'batch' => $batch,
-      'letters' => $letters
+      'batch' => $batch
     ], layout: "dashboard_layout");
   }
 

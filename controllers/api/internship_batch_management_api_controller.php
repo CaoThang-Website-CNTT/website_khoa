@@ -178,6 +178,37 @@ class InternshipBatchManagementApiController extends Controller
   }
 
   /**
+   * Lấy danh sách giấy giới thiệu có phân trang
+   */
+  public function getPaginatedReferralLetters($id, Request $request)
+  {
+    $page = (int)$request->query('page', 1);
+    $limit = (int)$request->query('limit', 20);
+    $search = $request->query('search', '');
+    $sortStr = $request->query('sort', '');
+    $filters = $request->query('filters', []);
+
+    if ($search !== '') {
+      $filters[] = ['col' => 'student_search', 'op' => 'contains', 'value' => $search];
+    }
+
+    $sort = [];
+    if ($sortStr) {
+      $parts = explode(':', $sortStr);
+      if (count($parts) === 2) {
+        $sort = ['col' => $parts[0], 'dir' => $parts[1]];
+      }
+    }
+
+    try {
+      $data = $this->_referralLetterService->getPaginatedReferralLetters((int)$id, $page, $limit, $filters, $sort);
+      return $this->json($data, 200);
+    } catch (Exception $e) {
+      return $this->json(['message' => $e->getMessage()], 500);
+    }
+  }
+
+  /**
    * Xử lý thao tác hàng loạt cho giấy giới thiệu
    */
   public function bulkActionReferralLetters($id, Request $request)
