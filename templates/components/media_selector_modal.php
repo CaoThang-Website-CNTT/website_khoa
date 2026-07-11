@@ -216,7 +216,7 @@
           <div class="card__content">
             <div class="msm-thumb">
               ${item.mime_type?.startsWith('image/')
-              ? `<img src="<?= url('public/media'); ?>/${escHtml(imgUrl)}" alt="${escHtml(item.alt_text || item.file_name)}" loading="lazy">`
+              ? `<img src="${mediaUrl(imgUrl)}" alt="${escHtml(item.alt_text || item.file_name)}" loading="lazy">`
               : `<div class="media-card__thumb-icon"><i class="fa-solid fa-file"></i></div>`
             }
             </div>
@@ -387,6 +387,18 @@
     function escHtml(str) {
       if (!str) return '';
       return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function mediaUrl(path) {
+      const raw = String(path || '').trim();
+      if (!raw) return <?= json_encode(url('public/media')) ?>;
+      if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:')) return raw;
+
+      let normalized = raw.replace(/\\/g, '/').replace(/^\/+/, '');
+      if (normalized.startsWith('public/media/')) normalized = normalized.slice('public/media/'.length);
+      if (normalized.startsWith('media/')) normalized = normalized.slice('media/'.length);
+
+      return `${<?= json_encode(url('public/media')) ?>}/${normalized}`;
     }
 
     function fmtBytes(bytes) {

@@ -211,7 +211,11 @@ export class CmsEditorManager {
     const section = this.#cmsDocument.section(this.#activeSectionId);
     if (!section || !this.#cmsDocument.isImageEditable(this.#activeSectionId, this.#activePath)) return;
 
-    setPath(section.data, this.#activePath, joinUrl(this.#cmsDocument.urls.media, media.file_path));
+    let mediaPath = String(media.file_path || '').replace(/\\/g, '/').replace(/^\/+/, '');
+    if (mediaPath.startsWith('public/media/')) mediaPath = mediaPath.slice('public/media/'.length);
+    if (mediaPath.startsWith('media/')) mediaPath = mediaPath.slice('media/'.length);
+
+    setPath(section.data, this.#activePath, joinUrl(this.#cmsDocument.urls.media, mediaPath));
     this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
     this.#preview.render();
     close?.();

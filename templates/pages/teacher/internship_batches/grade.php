@@ -307,8 +307,8 @@ foreach (($timeline['weeks'] ?? []) as $week) {
                         <?php if (!empty($week['report']['images'])): ?>
                           <div class="weekly-attachments">
                             <?php foreach ($week['report']['images'] as $image): ?>
-                              <a href="<?= url('public/media/' . $image['file_path']) ?>" target="_blank" rel="noopener">
-                                <img src="<?= url('public/media/' . $image['file_path']) ?>" alt="<?= htmlspecialchars($image['original_file_name']) ?>">
+                              <a href="<?= url('storage/' . ltrim($image['file_path'], '/')) ?>" target="_blank" rel="noopener">
+                                <img src="<?= url('storage/' . ltrim($image['file_path'], '/')) ?>" alt="<?= htmlspecialchars($image['original_file_name']) ?>">
                               </a>
                             <?php endforeach; ?>
                           </div>

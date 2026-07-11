@@ -32,11 +32,14 @@ export function assetUrl(urls, value) {
   if (/^(https?:)?\/\//.test(src) || src.startsWith('data:') || src.startsWith('/')) return src;
 
   const normalized = src.replace(/^\.\//, '').replace(/^\/+/, '');
-  if (normalized.startsWith('public/media/') || normalized.startsWith('public/')) {
-    return joinUrl(urls.base, normalized);
+  if (normalized.startsWith('public/media/')) {
+    return joinUrl(urls.media, normalized.slice('public/media/'.length));
   }
   if (normalized.startsWith('media/')) {
-    return joinUrl(urls.public, normalized);
+    return joinUrl(urls.media, normalized.slice('media/'.length));
+  }
+  if (normalized.startsWith('public/')) {
+    return joinUrl(urls.base, normalized);
   }
 
   return joinUrl(urls.public, normalized);

@@ -989,11 +989,11 @@ final class CmsStaticPageRenderer
       return $src;
     }
     $normalized = ltrim(preg_replace('/^\.\//', '', $src), '/');
-    if (str_starts_with($normalized, 'public/media/') || str_starts_with($normalized, 'public/')) {
-      return url($normalized);
+    if (str_starts_with($normalized, 'public/media/') || str_starts_with($normalized, 'media/')) {
+      return url('public/media/' . $normalized);
     }
-    if (str_starts_with($normalized, 'media/')) {
-      return url('public/' . $normalized);
+    if (str_starts_with($normalized, 'public/')) {
+      return url($normalized);
     }
     return url('public/' . $normalized);
   }

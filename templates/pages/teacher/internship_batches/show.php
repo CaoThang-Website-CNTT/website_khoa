@@ -18,7 +18,7 @@ $studentsData = array_map(function ($sv) {
     'classroom_name' => $sv['classroom_name'],
     'company_name' => $sv['company_name'],
     'submission_name' => $sv['submission_name'],
-    'submission_url' => url('public/media/' . $sv['submission_path']),
+    'submission_url' => url('storage/' . ltrim($sv['submission_path'], '/')),
     'submission_count' => (int) $sv['submission_count'],
     'grade' => $sv['grade'] !== null ? (float) $sv['grade'] : null,
     'is_locked' => $sv['grade_lock_at'] !== null ? '1' : '0',

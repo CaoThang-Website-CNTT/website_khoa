@@ -33,10 +33,14 @@ if (!function_exists('newsCardImageUrl')) {
       return $imagePath;
     }
 
-    $relativePath = ltrim($imagePath, '/\\');
-    $mediaFilePath = BASE_PATH . '/public/media/' . $relativePath;
+    $relativePath = ltrim(str_replace('\\', '/', $imagePath), '/');
+    if (str_starts_with($relativePath, 'public/media/')) {
+      $relativePath = substr($relativePath, strlen('public/media/'));
+    } elseif (str_starts_with($relativePath, 'media/')) {
+      $relativePath = substr($relativePath, strlen('media/'));
+    }
 
-    if (!is_file($mediaFilePath)) {
+    if (!is_file(BASE_PATH . '/storage/media/' . $relativePath)) {
       return newsCardFallbackImageUrl();
     }
 

@@ -364,7 +364,7 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__carouselEdit__ = {
     slideCreateUrl: <?= json_encode(url('admin/carousels/' . $carousel->id . '/slides')) ?>,
     slideBaseUrl: <?= json_encode(url('admin/carousel-slides/')) ?>,
-    mediaBaseUrl: <?= json_encode(url('public/media/')) ?>
+    mediaBaseUrl: <?= json_encode(url('public/media')) ?>
   };
 </script>
 <script src="<?= url('public/js/pages/admin/carousels/edit.js') ?>" type="module"></script>
