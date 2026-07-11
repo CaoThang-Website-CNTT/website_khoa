@@ -84,9 +84,21 @@ $tabs = [
     'label' => 'Chưa có đề tài',
     'href' => $topicFilterUrl('unassigned'),
     'badge' => $stats['unassigned'] ?? 0,
+    'badgeVariant' => 'warning',
+  ],
+  [
+    'key' => 'invalid',
+    'label' => 'Nhóm cần xử lý',
+    'href' => $topicFilterUrl('invalid'),
+    'badge' => count($incompleteGroups ?? []),
     'badgeVariant' => 'destructive',
   ]
 ];
+
+$teacherOptions = [];
+foreach ($teachers as $t) {
+  $teacherOptions[] = ['value' => $t['id'], 'label' => $t['full_name']];
+}
 ?>
 
 <?php $layout->start('content') ?>
@@ -140,125 +152,45 @@ $tabs = [
 <?php endif; ?>
 
 <?php if ($hasErrors): ?>
-  <div class="alert mb-4" data-variant="error">
-    <div class="alert__icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-    <div class="alert__content">
-      <h4 class="alert__title font-semibold">Cảnh báo: Có <?= count($incompleteGroups) ?> nhóm chứa thành viên không đủ điều kiện!</h4>
-      <p class="alert__description">Vui lòng xử lý các nhóm không hợp lệ này trước để có thể sử dụng chức năng phân bổ tự động.</p>
-    </div>
-  </div>
-
-  <div class="card border mb-4" style="border-color: var(--destructive)">
-    <div class="card__header flex items-start justify-between">
-      <div>
-        <h3 class="card__title font-semibold">Các nhóm cần xử lý</h3>
-        <p class="card__description">Các sinh viên không đủ điều kiện tham gia làm đồ án sẽ có nền màu đỏ. Bạn cần thao tác thủ công để xử lý</p>
+  <div class="alert mb-4 flex items-center justify-between" data-variant="error">
+    <div class="flex items-start">
+      <div class="alert__icon"><i class="fa-solid fa-triangle-exclamation mt-1"></i></div>
+      <div class="alert__content">
+        <h4 class="alert__title font-semibold">Cảnh báo: Có <?= count($incompleteGroups) ?> nhóm cần xử lý!</h4>
+        <p class="alert__description text-sm">Các nhóm này chứa thành viên không đủ điều kiện (hoặc chưa xác nhận). Vui lòng chuyển sang tab <span class="font-semibold text-sm">Nhóm cần xử lý</span> bên dưới để giải quyết.</p>
       </div>
-      <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/bulk-dissolve-invalid") ?>" method="POST">
-        <?= csrf_field() ?>
-        <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="destructive" data-confirm-msg="Bạn có chắc chắn muốn giải tán TẤT CẢ các nhóm có 100% thành viên không đủ điều kiện làm đồ án?" data-modal-trigger="#action-confirm-modal">
-          <i class="fa-solid fa-trash-can mr-2"></i> Giải tán hàng loạt
-        </button>
-      </form>
     </div>
-    <hr class="separator">
-    <div class="card_content" style="overflow-x: auto;">
-      <table class="allocation-table">
-        <thead class="allocation-table__head">
-          <tr class="allocation-table__row">
-            <th class="allocation-table__cell allocation-table__cell--header">STT</th>
-            <th class="allocation-table__cell allocation-table__cell--header">Thành viên</th>
-            <th class="allocation-table__cell allocation-table__cell--header">Thao tác xử lý</th>
-          </tr>
-        </thead>
-        <tbody class="allocation-table__body">
-          <?php $index = 0;
-          foreach ($incompleteGroups as $ig): ?>
-            <?php
-            $leader = $ig['members'][0] ?? null;
-            foreach ($ig['members'] ?? [] as $m) {
-              if (!empty($m['is_leader'])) {
-                $leader = $m;
-                break;
-              }
-            }
-            $groupDisplayName = $leader ? htmlspecialchars($leader['full_name'] . ' (' . $leader['student_code'] . ')') : "nhóm #" . $ig['id'];
-            ?>
-            <tr class="allocation-table__row">
-              <td class="allocation-table__cell allocation-table__cell--id"><?= ++$index ?></td>
-              <td class="allocation-table__cell allocation-table__cell--members">
-                <?php foreach ($ig['members'] ?? [] as $m): ?>
-                  <div class="allocation-table__member <?= !$m['is_eligible'] ? 'allocation-table__member--ineligible' : '' ?>">
-                    <div class="flex flex-col">
-                      <div><?= htmlspecialchars($m['full_name']) ?> (<?= $m['student_code'] ?>)</div>
-                      <?php if (!$m['is_eligible'] && !empty($m['phone'])): ?>
-                        <div class="text-xs mt-1">
-                          <i class="text-xs fa-solid fa-phone mr-1"></i> <?= htmlspecialchars($m['phone']) ?>
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  </div>
-                <?php endforeach; ?>
-              </td>
-              <td class="allocation-table__cell allocation-table__cell--actions">
-                <div class="allocation-table__actions">
-                  <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/dissolve-group") ?>" method="POST">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="group_id" value="<?= $ig['id'] ?>">
-                    <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="destructive" data-confirm-msg="Bạn có chắc chắn muốn giải tán nhóm của <?= $groupDisplayName ?>?" data-modal-trigger="#action-confirm-modal">Giải tán nhóm</button>
-                  </form>
-
-                  <?php
-                  $eligibleCount = 0;
-                  $ineligibleCount = 0;
-                  $oldStudentId = null;
-                  foreach ($ig['members'] ?? [] as $m) {
-                    if ($m['is_eligible']) {
-                      $eligibleCount++;
-                    } else {
-                      $ineligibleCount++;
-                      $oldStudentId = $m['student_id'];
-                    }
-                  }
-                  ?>
-                  <?php if ($eligibleCount == 1 && $ineligibleCount == 1): ?>
-                    <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/approve-solo") ?>" method="POST">
-                      <?= csrf_field() ?>
-                      <input type="hidden" name="group_id" value="<?= $ig['id'] ?>">
-                      <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="primary" data-confirm-msg="Xác nhận cho phép nhóm của <?= $groupDisplayName ?> làm đồ án 1 mình?" data-modal-trigger="#action-confirm-modal">Cho phép làm một mình</button>
-                    </form>
-                    <button type="button" class="btn" data-size="md" data-variant="outline" onclick="openReplaceMemberModal(<?= $ig['id'] ?>, <?= $oldStudentId ?>)">Thay thế thành viên</button>
-                  <?php endif; ?>
-                </div>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
+    <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/bulk-dissolve-invalid") ?>" method="POST" class="ml-4 flex-shrink-0">
+      <?= csrf_field() ?>
+      <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="destructive" data-confirm-msg="Bạn có chắc chắn muốn giải tán TẤT CẢ các nhóm có 100% thành viên không đủ điều kiện làm đồ án?" data-modal-trigger="#action-confirm-modal">
+        <i class="fa-solid fa-trash-can mr-2"></i> Giải tán hàng loạt
+      </button>
+    </form>
   </div>
 <?php endif; ?>
 
-<div class="tabs mb-4" data-tabs data-tabs-id="<?= htmlspecialchars($tabsId) ?>"
-  data-tabs-mode="<?= htmlspecialchars($tabsMode) ?>" data-tabs-panel-active="<?= htmlspecialchars($activeTab) ?>">
-  <div class="tabs__list" role="tablist">
-    <?php foreach ($tabs as $tab): ?>
-      <?php
-      $isActive = ($tab['key'] === $activeTab);
-      $badge = $tab['badge'] ?? null;
-      ?>
-      <a href="<?= htmlspecialchars($tab['href']) ?>" role="tab" aria-selected="<?= $isActive ? 'true' : 'false' ?>"
-        data-tabs-trigger="<?= htmlspecialchars($tab['key']) ?>"
-        data-tabs-trigger-state="<?= $isActive ? 'active' : 'idle' ?>" tabindex="<?= $isActive ? '0' : '-1' ?>"
-        class="tabs__trigger">
-        <?= htmlspecialchars($tab['label']) ?>
-        <?php if ($badge !== null && $badge > 0): ?>
-          <span class="badge" data-variant="<?= htmlspecialchars($tab['badgeVariant'] ?? 'outline') ?>">
-            <?= htmlspecialchars((string) $badge) ?>
-          </span>
-        <?php endif; ?>
-      </a>
-    <?php endforeach; ?>
+<div class="flex flex-col justify-between items-start gap-4 mb-4">
+  <div class="tabs" data-tabs data-tabs-id="<?= htmlspecialchars($tabsId) ?>"
+    data-tabs-mode="<?= htmlspecialchars($tabsMode) ?>" data-tabs-panel-active="<?= htmlspecialchars($activeTab) ?>">
+    <div class="tabs__list" role="tablist">
+      <?php foreach ($tabs as $tab): ?>
+        <?php
+        $isActive = ($tab['key'] === $activeTab);
+        $badge = $tab['badge'] ?? null;
+        ?>
+        <a href="<?= htmlspecialchars($tab['href']) ?>" role="tab" aria-selected="<?= $isActive ? 'true' : 'false' ?>"
+          data-tabs-trigger="<?= htmlspecialchars($tab['key']) ?>"
+          data-tabs-trigger-state="<?= $isActive ? 'active' : 'idle' ?>" tabindex="<?= $isActive ? '0' : '-1' ?>"
+          class="tabs__trigger">
+          <?= htmlspecialchars($tab['label']) ?>
+          <?php if ($badge !== null && $badge > 0): ?>
+            <span class="badge" data-variant="<?= htmlspecialchars($tab['badgeVariant'] ?? 'outline') ?>">
+              <?= htmlspecialchars((string) $badge) ?>
+            </span>
+          <?php endif; ?>
+        </a>
+      <?php endforeach; ?>
+    </div>
   </div>
 </div>
 
@@ -279,18 +211,20 @@ $tabs = [
   <template data-tm-col="assigned_topic_title" data-tm-label="Đề tài phân bổ" data-tm-sortable>
     <div class="{{ value ? '' : 'hidden' }}">
       <div class="font-medium">{{ value }}</div>
-      <div class="text-sm">{{ row.assigned_teacher_name }}</div>
     </div>
     <div class="{{ value ? 'hidden' : '' }}">
       <span class="badge" data-variant="destructive">Chưa phân bổ</span>
     </div>
   </template>
 
+  <?php if (!in_array($activeTab, ['unassigned', 'invalid'])): ?>
+    <template data-tm-col="teacher_id" data-tm-label="Giảng viên HD" data-tm-filter-type="select" data-tm-filter-options='<?= htmlspecialchars(json_encode($teacherOptions, JSON_UNESCAPED_UNICODE)) ?>'>
+      <div class="text-sm {{ row.assigned_teacher_name ? '' : 'text-muted italic' }}">{{ row.assigned_teacher_name || 'Chưa có' }}</div>
+    </template>
+  <?php endif; ?>
+
   <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-align="right">
-    <button type="button" class="btn" data-variant="outline" data-size="md"
-      onclick="openManualAssignModal('{{ row.id }}')">
-      <i class="fa-solid fa-pen-to-square"></i> Gán thủ công
-    </button>
+    <div class="actions-container text-right" data-group-id="{{ row.id }}"></div>
   </template>
 
   <template data-tm-pagination></template>
@@ -425,6 +359,9 @@ $tabs = [
 <?php $layout->start('scripts') ?>
 <script>
   window.API_URL_ALLOCATIONS = "<?= url("api/v1/project_batches/{$batchObj->id}/allocations") ?>";
+  window.ALLOCATION_BASE_URL = "<?= url("admin/project_batches/{$batchObj->id}/allocation") ?>";
+  window.BATCH_ID = "<?= $batchObj->id ?>";
+  window.CSRF_FIELD = `<?= csrf_field() ?>`;
 </script>
 <script src="<?= url('public/js/pages/admin/project_allocations.js') ?>"></script>
 <?php $layout->end() ?>

@@ -230,6 +230,7 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
 
     // Allocation 
     $router->get('/{id}/allocation', [ProjectAllocationController::class, 'index']);
+    $router->get('/{id}/allocation/export', [ProjectAllocationController::class, 'exportAllocation']);
     $router->post('/{id}/allocation/auto', [ProjectAllocationController::class, 'autoAllocate']);
     $router->post('/{id}/allocation/manual', [ProjectAllocationController::class, 'manualAssign']);
     $router->post('/{id}/allocation/publish', [ProjectAllocationController::class, 'publishAllocation']);

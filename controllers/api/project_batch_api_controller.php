@@ -77,6 +77,13 @@ class ProjectBatchApiController extends Controller
       $filters['is_assigned'] = true;
     } elseif ($status === 'unassigned') {
       $filters['is_assigned'] = false;
+    } elseif ($status === 'invalid') {
+      $filters['status'] = 'invalid';
+    }
+
+    $teacherId = $request->query('teacher_id');
+    if ($teacherId) {
+      $filters['teacher_id'] = (int)$teacherId;
     }
 
     $search = $request->query('search');

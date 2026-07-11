@@ -57,6 +57,8 @@ class ProjectAllocationController extends Controller
     $eligibleUnregisteredStudents = $this->_groupService->getEligibleUnregisteredStudents($batch['id']);
     $previewData = $request->session()->get('eligibility_preview_' . $batchId);
 
+    $teachers = $this->_batchService->getSupervisorsByBatchId($batch['id']);
+
     return $this->render('admin/project_batches/allocation', [
       'batchObj' => (object)$batch,
       'topics' => $topics,
@@ -68,7 +70,8 @@ class ProjectAllocationController extends Controller
       'currentFilter' => $request->query('status', 'all'),
       'incompleteGroups' => $incompleteGroups,
       'eligibleUnregisteredStudents' => $eligibleUnregisteredStudents,
-      'previewData' => $previewData
+      'previewData' => $previewData,
+      'teachers' => $teachers
     ], layout: 'dashboard_layout');
   }
 

@@ -116,9 +116,10 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
 
   public function getGroupMembers(int $groupId): array
   {
-    $sql = "SELECT gm.*, s.student_id as student_code, s.full_name, s.phone, c.short_name as classroom_name
+    $sql = "SELECT gm.*, s.student_id as student_code, s.full_name, s.phone, c.short_name as classroom_name, a.email
                 FROM project_group_members gm
                 JOIN students s ON gm.student_id = s.id
+                LEFT JOIN accounts a ON s.account_id = a.id
                 LEFT JOIN classrooms c ON s.classroom_id = c.id
                 WHERE gm.group_id = :group_id
                 ORDER BY gm.is_leader DESC, s.full_name ASC";
@@ -143,32 +144,44 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
       }
     }
 
+    if (isset($filters['status']) && $filters['status'] === 'invalid') {
+      $where[] = "EXISTS (
+          SELECT 1 FROM project_group_members gm 
+          WHERE gm.group_id = g.id AND (gm.is_eligible = 0 OR gm.is_confirmed = 0)
+      )";
+    }
+
+    if (!empty($filters['teacher_id'])) {
+      $where[] = "tt.teacher_id = :teacher_id";
+      $params[':teacher_id'] = $filters['teacher_id'];
+    }
+
     if (!empty($filters['search'])) {
-        $search = $filters['search'];
-        $where[] = "(g.id LIKE :search1 OR tt.title LIKE :search2 OR t.full_name LIKE :search3 OR EXISTS (
+      $search = $filters['search'];
+      $where[] = "(g.id LIKE :search1 OR tt.title LIKE :search2 OR t.full_name LIKE :search3 OR EXISTS (
             SELECT 1 FROM project_group_members gm 
             JOIN students s ON gm.student_id = s.id 
             WHERE gm.group_id = g.id AND (s.full_name LIKE :search4 OR s.student_id LIKE :search5)
         ))";
-        $searchTerm = "%{$search}%";
-        $params[':search1'] = $searchTerm;
-        $params[':search2'] = $searchTerm;
-        $params[':search3'] = $searchTerm;
-        $params[':search4'] = $searchTerm;
-        $params[':search5'] = $searchTerm;
+      $searchTerm = "%{$search}%";
+      $params[':search1'] = $searchTerm;
+      $params[':search2'] = $searchTerm;
+      $params[':search3'] = $searchTerm;
+      $params[':search4'] = $searchTerm;
+      $params[':search5'] = $searchTerm;
     }
 
     $whereClause = implode(' AND ', $where);
 
     $orderBy = "g.created_at DESC";
     if (!empty($filters['sort']['col'])) {
-        $col = $filters['sort']['col'];
-        $dir = strtoupper($filters['sort']['dir']) === 'ASC' ? 'ASC' : 'DESC';
-        if ($col === 'id') {
-            $orderBy = "g.id $dir";
-        } elseif ($col === 'assigned_topic_title') {
-            $orderBy = "tt.title $dir";
-        }
+      $col = $filters['sort']['col'];
+      $dir = strtoupper($filters['sort']['dir']) === 'ASC' ? 'ASC' : 'DESC';
+      if ($col === 'id') {
+        $orderBy = "g.id $dir";
+      } elseif ($col === 'assigned_topic_title') {
+        $orderBy = "tt.title $dir";
+      }
     }
 
     $sql = "SELECT g.*, tt.title as assigned_topic_title, t.full_name as assigned_teacher_name,
@@ -199,19 +212,31 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
       }
     }
 
+    if (isset($filters['status']) && $filters['status'] === 'invalid') {
+      $where[] = "EXISTS (
+          SELECT 1 FROM project_group_members gm 
+          WHERE gm.group_id = g.id AND (gm.is_eligible = 0 OR gm.is_confirmed = 0)
+      )";
+    }
+
+    if (!empty($filters['teacher_id'])) {
+      $where[] = "tt.teacher_id = :teacher_id";
+      $params[':teacher_id'] = $filters['teacher_id'];
+    }
+
     if (!empty($filters['search'])) {
-        $search = $filters['search'];
-        $where[] = "(g.id LIKE :search1 OR tt.title LIKE :search2 OR t.full_name LIKE :search3 OR EXISTS (
+      $search = $filters['search'];
+      $where[] = "(g.id LIKE :search1 OR tt.title LIKE :search2 OR t.full_name LIKE :search3 OR EXISTS (
             SELECT 1 FROM project_group_members gm 
             JOIN students s ON gm.student_id = s.id 
             WHERE gm.group_id = g.id AND (s.full_name LIKE :search4 OR s.student_id LIKE :search5)
         ))";
-        $searchTerm = "%{$search}%";
-        $params[':search1'] = $searchTerm;
-        $params[':search2'] = $searchTerm;
-        $params[':search3'] = $searchTerm;
-        $params[':search4'] = $searchTerm;
-        $params[':search5'] = $searchTerm;
+      $searchTerm = "%{$search}%";
+      $params[':search1'] = $searchTerm;
+      $params[':search2'] = $searchTerm;
+      $params[':search3'] = $searchTerm;
+      $params[':search4'] = $searchTerm;
+      $params[':search5'] = $searchTerm;
     }
 
     $whereClause = implode(' AND ', $where);

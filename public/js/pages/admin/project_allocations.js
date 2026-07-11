@@ -3,11 +3,26 @@ function openManualAssignModal(groupId) {
   ModalHandler.instance.open("#manual-assign-modal");
 }
 
-function openReplaceMemberModal(groupId, oldStudentId) {
-  document.getElementById("replace_group_id").value = groupId;
-  document.getElementById("replace_old_student_id").value = oldStudentId;
-  ModalHandler.instance.open("#replace-member-modal");
-}
+window.openReplaceMemberModal = function (groupId, oldStudentId) {
+  console.log(
+    `[DEBUG] openReplaceMemberModal called for group ${groupId}, oldStudent: ${oldStudentId}`,
+  );
+  const modal = document.getElementById("replace-member-modal");
+  if (modal) {
+    modal.querySelector("#replace_group_id").value = groupId;
+    modal.querySelector("#replace_old_student_id").value = oldStudentId;
+
+    if (typeof ModalHandler !== "undefined") {
+      ModalHandler.instance.open("#replace-member-modal");
+    } else {
+      modal.dataset.state = "open";
+    }
+  } else {
+    console.error("[DEBUG] replace-member-modal not found!");
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {});
 
 // Handle action confirm modal
 let currentForm = null;
@@ -67,33 +82,45 @@ if (confirmBtn) {
           }
 
           const nameDiv = document.createElement("div");
-          nameDiv.innerHTML = `<span>${m.full_name} (${m.student_code})</span>`;
+          nameDiv.className = "popover";
+
+          let badgesHTML = "";
           if (groupData.is_admin_approved_solo) {
-            nameDiv.insertAdjacentHTML(
-              "beforeend",
-              '<span class="badge ml-1" data-variant="secondary">Làm 1 mình</span>',
-            );
+            badgesHTML +=
+              '<span class="badge ml-1" data-variant="secondary">Làm 1 mình</span>';
           } else if (m.is_leader) {
-            nameDiv.insertAdjacentHTML(
-              "beforeend",
-              '<span class="badge ml-1" data-variant="primary">Nhóm trưởng</span>',
-            );
+            badgesHTML +=
+              '<span class="badge ml-1" data-variant="primary">Nhóm trưởng</span>';
           } else if (!m.is_confirmed) {
-            nameDiv.insertAdjacentHTML(
-              "beforeend",
-              '<span class="badge ml-1" data-variant="warning" title="Chưa xác nhận tham gia nhóm">Chưa xác nhận</span>',
-            );
+            badgesHTML +=
+              '<span class="badge ml-1" data-variant="warning" title="Chưa xác nhận tham gia nhóm">Chưa xác nhận</span>';
           }
+
+          nameDiv.innerHTML = `
+            <div class="popover__trigger flex items-center">
+              <i class="fa-solid fa-circle-info mr-2"></i>
+              <span class="font-medium">${m.full_name}</span>
+              ${badgesHTML}
+            </div>
+            <div class="popover__content" data-side="right" data-align="start">
+              <div class="text-sm font-semibold mb-2">Thông tin sinh viên</div>
+              <div class="text-sm space-y-2">
+                <div><i class="fa-solid fa-id-card w-4 text-center mr-1"></i> MSSV: <strong>${m.student_code}</strong></div>
+                <div><i class="fa-solid fa-graduation-cap w-4 text-center mr-1"></i> Lớp: <strong>${m.classroom_name || "Chưa cập nhật"}</strong></div>
+                <div><i class="fa-solid fa-phone w-4 text-center mr-1"></i> SĐT: <strong>${m.phone || "Chưa cập nhật"}</strong></div>
+                <div><i class="fa-solid fa-envelope w-4 text-center mr-1"></i> Email: <strong>${m.email || "Chưa cập nhật"}</strong></div>
+              </div>
+            </div>
+          `;
+
           rowDiv.appendChild(nameDiv);
 
-          if (!m.is_eligible && m.phone) {
-            const phoneDiv = document.createElement("div");
-            phoneDiv.className = "text-xs mt-1";
-            phoneDiv.innerHTML = `<i class="text-xs fa-solid fa-phone mr-1"></i> ${m.phone}`;
-            rowDiv.appendChild(phoneDiv);
-          }
-
           container.appendChild(rowDiv);
+
+          // Register the new popover
+          if (typeof PopoverHandler !== "undefined") {
+            PopoverHandler.instance.register(nameDiv);
+          }
         });
 
         container.dataset.rendered = "true";
@@ -114,26 +141,172 @@ if (confirmBtn) {
         groupData.aspirations.length > 0
       ) {
         container.innerHTML = "";
-        let isLocked = !!groupData.aspirations[0].locked_at;
 
-        if (!isLocked) {
-          container.innerHTML +=
-            '<div><span class="badge" data-variant="warning"><i class="fa-solid fa-unlock mr-1"></i> Chưa chốt</span></div>';
+        if (groupData.assigned_topic_id) {
+          const acceptedAsp = groupData.aspirations.find(
+            (a) => String(a.topic_id) === String(groupData.assigned_topic_id),
+          );
+          if (acceptedAsp) {
+            container.innerHTML = `<span class="badge" data-variant="success">Đạt NV${acceptedAsp.priority}</span>`;
+          } else {
+            container.innerHTML = `<span class="badge" data-variant="secondary">Phân bổ thủ công</span>`;
+          }
+        } else {
+          let isLocked = !!groupData.aspirations[0].locked_at;
+
+          if (!isLocked) {
+            container.innerHTML +=
+              '<div><span class="badge" data-variant="warning"><i class="fa-solid fa-unlock mr-1"></i> Chưa chốt</span></div>';
+          }
+
+          groupData.aspirations.forEach((asp) => {
+            const rowDiv = document.createElement("div");
+            rowDiv.style.marginBottom = "0.25rem";
+            rowDiv.className = "line-clamp-1 text-xs";
+            rowDiv.title = asp.topic_title || "Đề tài #" + asp.topic_id;
+            rowDiv.innerHTML = `<span class="badge" data-variant="outline">NV${asp.priority}</span> ${asp.topic_title || "Đề tài #" + asp.topic_id}`;
+            container.appendChild(rowDiv);
+          });
         }
-
-        groupData.aspirations.forEach((asp) => {
-          const rowDiv = document.createElement("div");
-          rowDiv.style.marginBottom = "0.25rem";
-          rowDiv.className = "line-clamp-1";
-          rowDiv.title = asp.topic_title || "Đề tài #" + asp.topic_id;
-          rowDiv.innerHTML = `<span class="badge" data-variant="outline">NV${asp.priority}</span> ${asp.topic_title || "Đề tài #" + asp.topic_id}`;
-          container.appendChild(rowDiv);
-        });
         container.dataset.rendered = "true";
       } else if (groupData) {
         container.innerHTML =
           '<span class="text-muted italic">Chưa đăng ký</span>';
         container.dataset.rendered = "true";
+      }
+    });
+
+    root.querySelectorAll(".actions-container").forEach((container) => {
+      if (container.dataset.rendered) return;
+      const groupId = container.dataset.groupId;
+      const groupData = visibleRows.find(
+        (r) => String(r.id) === String(groupId),
+      );
+      if (!groupData) return;
+
+      let isEligible = true;
+      let eligibleCount = 0;
+      let ineligibleCount = 0;
+      let oldStudentId = null;
+      let leader = null;
+
+      if (groupData.members) {
+        groupData.members.forEach((m) => {
+          if (!m.is_eligible) {
+            isEligible = false;
+            ineligibleCount++;
+            oldStudentId = m.student_id;
+          } else {
+            eligibleCount++;
+          }
+          if (m.is_leader) leader = m;
+        });
+        if (!leader && groupData.members.length > 0)
+          leader = groupData.members[0];
+      }
+
+      const groupName = leader
+        ? `${leader.full_name} (${leader.student_code})`
+        : `nhóm #${groupId}`;
+
+      let actionsHTML = `
+        <div class="dropdown" data-dropdown>
+          <button type="button" class="btn btn-icon dropdown__trigger" data-variant="secondary" data-size="md" data-dropdown-trigger data-dropdown-trigger-mode="click">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+          </button>
+          <div class="dropdown__content dropdown__content--right" data-dropdown-content>
+            <div class="dropdown__menu">
+      `;
+
+      if (isEligible) {
+        actionsHTML += `
+          <button type="button" class="dropdown__item" onclick="openManualAssignModal('${groupId}')">
+            <i class="fa-solid fa-pen-to-square w-4 text-center mr-2"></i> Gán thủ công
+          </button>
+        `;
+      } else {
+        actionsHTML += `
+          <form action="${window.ALLOCATION_BASE_URL}/dissolve-group" method="POST">
+            ${window.CSRF_FIELD || ""}
+            <input type="hidden" name="group_id" value="${groupId}">
+            <button type="button" class="dropdown__item btn-confirm-action" data-confirm-msg="Bạn có chắc chắn muốn giải tán nhóm của ${groupName}?" data-modal-trigger="#action-confirm-modal">
+              <i class="fa-solid fa-trash-can w-4 text-center mr-2"></i> Giải tán nhóm
+            </button>
+          </form>
+        `;
+
+        if (eligibleCount === 1 && ineligibleCount === 1) {
+          actionsHTML += `
+            <form action="${window.ALLOCATION_BASE_URL}/approve-solo" method="POST">
+              ${window.CSRF_FIELD || ""}
+              <input type="hidden" name="group_id" value="${groupId}">
+              <button type="button" class="dropdown__item btn-confirm-action" data-confirm-msg="Xác nhận cho phép nhóm của ${groupName} làm đồ án 1 mình?" data-modal-trigger="#action-confirm-modal">
+                <i class="fa-solid fa-user w-4 text-center mr-2"></i> Cho phép làm 1 mình
+              </button>
+            </form>
+            <button type="button" class="dropdown__item" onclick="openReplaceMemberModal(${groupId}, ${oldStudentId})">
+              <i class="fa-solid fa-user-pen w-4 text-center mr-2"></i> Thay thế thành viên
+            </button>
+          `;
+        }
+      }
+
+      actionsHTML += `
+            </div>
+          </div>
+        </div>
+      `;
+      container.innerHTML = actionsHTML;
+      container.dataset.rendered = "true";
+
+      console.log(`[DEBUG] Rendered dropdown for group ${groupId}`);
+
+      // Attach confirm event listeners for dynamically added buttons BEFORE DropdownHandler portals them to body
+      container.querySelectorAll(".btn-confirm-action").forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          console.log(
+            `[DEBUG] Clicked .btn-confirm-action for group ${groupId}`,
+            this,
+          );
+          e.preventDefault(); // Just in case
+          const msg = this.dataset.confirmMsg;
+          const modalId = this.dataset.modalTrigger;
+          const modal = document.querySelector(modalId);
+          if (modal) {
+            const msgEl = modal.querySelector("#action-confirm-msg");
+            if (msgEl) msgEl.textContent = msg;
+
+            const confirmBtn = modal.querySelector("#action-confirm-btn");
+            if (confirmBtn) {
+              const clone = confirmBtn.cloneNode(true);
+              confirmBtn.parentNode.replaceChild(clone, confirmBtn);
+              clone.addEventListener("click", () => {
+                this.closest("form").submit();
+              });
+            }
+            if (typeof ModalHandler !== "undefined") {
+              ModalHandler.instance.open(modalId);
+            } else {
+              modal.dataset.state = "open";
+            }
+          } else {
+            console.error(`[DEBUG] Modal ${modalId} not found!`);
+          }
+        });
+      });
+
+      if (typeof DropdownHandler !== "undefined") {
+        const dropdown = container.querySelector(".dropdown");
+        if (dropdown) {
+          console.log(
+            `[DEBUG] Registering dropdown for group ${groupId} with DropdownHandler`,
+          );
+          DropdownHandler.instance.register(dropdown);
+        } else {
+          console.warn(`[DEBUG] Dropdown root not found for group ${groupId}`);
+        }
+      } else {
+        console.error(`[DEBUG] DropdownHandler is undefined!`);
       }
     });
   });
@@ -152,6 +325,20 @@ if (confirmBtn) {
     url.searchParams.set("limit", limit);
 
     if (state.search) url.searchParams.set("search", state.search);
+
+    const activeTab = document.querySelector(
+      ".tabs__trigger[data-tabs-trigger-state='active']",
+    );
+    if (activeTab) {
+      const status = activeTab.dataset.tabsTrigger;
+      if (status !== "all") {
+        url.searchParams.set("status", status);
+      }
+    }
+
+    if (state.filters && state.filters.teacher_id) {
+      url.searchParams.set("teacher_id", state.filters.teacher_id);
+    }
 
     if (state.sort?.col) {
       url.searchParams.set("sort[col]", state.sort.col);
