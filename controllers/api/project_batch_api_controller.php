@@ -102,10 +102,13 @@ class ProjectBatchApiController extends Controller
         $aspirationsByGroup[$asp['group_id']][] = $asp;
       }
 
+      $index = 0;
       foreach ($groups as &$group) {
+        $group['stt'] = ($page - 1) * $limit + $index + 1;
         $members = $this->_groupService->getGroupMembers($group['id']);
         $group['members'] = $members;
         $group['aspirations'] = $aspirationsByGroup[$group['id']] ?? [];
+        $index++;
       }
 
       return $this->json([

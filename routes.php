@@ -215,6 +215,7 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
 
     // Topics
     $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
+    $router->get('/{id}/topics/{topicId}', [ProjectBatchController::class, 'topicDetail']);
     $router->get('/{id}/teachers', [ProjectBatchController::class, 'teachers']);
 
     // Import Excel 

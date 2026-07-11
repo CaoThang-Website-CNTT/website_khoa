@@ -178,7 +178,7 @@ if ($group) {
                       </form>
                       <form action="<?= url("student/project_batches/{$currentBatch['id']}/group/reject") ?>" method="POST">
                         <?= csrf_field() ?>
-                        <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" data-confirm-msg="Bạn có chắc chắn muốn từ chối tham gia nhóm này?" data-modal-trigger="#action-confirm-modal">Từ chối</button>
+                        <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" data-confirm-msg="Bạn có chắc chắn muốn từ chối tham gia nhóm của <?= htmlspecialchars($leaderName) ?>?" data-modal-trigger="#action-confirm-modal">Từ chối</button>
                       </form>
                     <?php else: ?>
                       <div class="text-sm font-medium" style="color: var(--destructive);">
@@ -214,7 +214,7 @@ if ($group) {
                           <form action="<?= url("student/project_batches/{$currentBatch['id']}/group/cancel") ?>" method="POST" class="inline-block ml-2">
                             <?= csrf_field() ?>
                             <input type="hidden" name="student_id" value="<?= $member['student_id'] ?>">
-                            <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" title="Hủy lời mời / Xóa" data-confirm-msg="Bạn có chắc chắn muốn xóa thành viên này?" data-modal-trigger="#action-confirm-modal">
+                            <button type="button" class="btn btn-confirm-action" data-variant="destructive" data-size="sm" title="Hủy lời mời / Xóa" data-confirm-msg="Bạn có chắc chắn muốn xóa thành viên <?= htmlspecialchars($member['full_name']) ?> khỏi nhóm?" data-modal-trigger="#action-confirm-modal">
                               <i class="fa-solid fa-xmark"></i>
                             </button>
                           </form>
@@ -271,8 +271,8 @@ if ($group) {
                   </div>
                   <div class="space-y-2">
                     <p class="text-sm font-medium">Tài liệu mô tả đề tài</p>
-                    <?php if (trim($assignedTopic['description'])) { ?>
-                      <a href="<?= url('storage/' . ltrim($assignedTopic['pdf_file_path'], '/')) ?>" target="_blank" class="btn" data-variant="secondary" data-size="md">
+                    <?php if (!empty(trim($assignedTopic['pdf_file_path'] ?? ''))) { ?>
+                      <a href="<?= url('storage/' . ltrim($assignedTopic['pdf_file_path'], '/')) ?>" target="_blank" rel="noopener noreferrer" class="btn" data-variant="secondary" data-size="md">
                         <i class="fa-solid fa-file-pdf mr-1"></i> Xem tài liệu
                       </a>
                     <?php } else { ?>
@@ -348,7 +348,7 @@ if ($group) {
                   <p>Bạn cần tham gia nhóm trước khi đăng ký NV.</p>
                 </div>
               <?php elseif (empty($aspirations)): ?>
-                <div class="py-8 text-center text-gray-500">
+                <div class="py-8 text-center">
                   <i class="fa-solid fa-file-circle-question text-3xl mb-3"></i>
                   <p>Nhóm chưa đăng ký nguyện vọng nào.</p>
                   <?php if ($canInteract && $isLeader): ?>
@@ -378,7 +378,7 @@ if ($group) {
                         </div>
                         <?php if ($canInteract && $isLeader && !$isLocked): ?>
                           <div class="ml-2">
-                            <button type="button" class="btn btn-remove-aspiration" data-variant="destructive" data-size="sm" title="Xóa nguyện vọng" data-topic-id="<?= $aspiration['topic_id'] ?>">
+                            <button type="button" class="btn btn-remove-aspiration" data-variant="destructive" data-size="sm" title="Xóa nguyện vọng" data-topic-id="<?= $aspiration['topic_id'] ?>" data-topic-title="<?= htmlspecialchars($aspiration['topic_title']) ?>">
                               <i class="fa-solid fa-trash-can"></i>
                             </button>
                           </div>
@@ -418,7 +418,7 @@ if ($group) {
 
                 <a href="<?= url("student/project_batches/{$currentBatch['id']}/topics") ?>" class="btn" data-variant="secondary" data-size="md">Xem danh sách tất cả đề tài</a>
               <?php else: ?>
-                <button class="btn" data-variant="secondary" data-size="md" disabled>Thêm NV</button>
+                <a href="<?= url("student/project_batches/{$currentBatch['id']}/topics") ?>" class="btn" data-variant="secondary" data-size="md">Xem danh sách tất cả đề tài</a>
               <?php endif; ?>
             </div>
           </div>
@@ -463,16 +463,17 @@ if ($group) {
     const removeBtn = e.target.closest('.btn-remove-aspiration');
     if (removeBtn) {
       const topicId = removeBtn.getAttribute('data-topic-id');
+      const topicTitle = removeBtn.getAttribute('data-topic-title');
       document.getElementById('remove_topic_id').value = topicId;
       currentForm = document.getElementById('form-remove-aspiration');
 
       const confirmMsg = document.getElementById('action-confirm-msg');
-      if (confirmMsg) confirmMsg.textContent = 'Bạn có chắc chắn muốn xóa nguyện vọng này?';
+      if (confirmMsg) confirmMsg.textContent = `Bạn có chắc chắn muốn xóa nguyện vọng "${topicTitle}"?`;
 
       // Mở modal xác nhận
       const modal = document.getElementById('action-confirm-modal');
-      if (window.Modal) {
-        window.Modal.open(modal);
+      if (typeof ModalHandler !== 'undefined') {
+        ModalHandler.instance.open('#action-confirm-modal');
       } else {
         // Fallback if modal script not loaded yet
         modal.setAttribute('data-state', 'open');

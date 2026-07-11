@@ -255,27 +255,29 @@ class StudentProjectDashboardController extends Controller
     if (!$currentBatch) return $this->redirect('/student/project_batches');
 
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
-    if (!$group) {
-      $request->session()->flashNotify('error', 'Bạn cần tham gia nhóm trước khi đăng ký nguyện vọng.');
-      return $this->redirect("/student/project_batches/{$id}");
-    }
 
     $isLeader = false;
     $isConfirmed = false;
-    $members = $this->_projectGroupService->getGroupMembers($group['id']);
-    foreach ($members as $member) {
-      if ($member['student_id'] == $student->id) {
-        $isLeader = (bool)$member['is_leader'];
-        $isConfirmed = (bool)$member['is_confirmed'];
+    $aspirationTopicIds = [];
+    $isLocked = false;
+    $aspirations = [];
+
+    if ($group) {
+      $members = $this->_projectGroupService->getGroupMembers($group['id']);
+      foreach ($members as $member) {
+        if ($member['student_id'] == $student->id) {
+          $isLeader = (bool)$member['is_leader'];
+          $isConfirmed = (bool)$member['is_confirmed'];
+        }
       }
+      $aspirations = $this->_projectAspirationService->getAspirationsByGroup($group['id']);
+      $aspirationTopicIds = array_column($aspirations, 'topic_id');
+      $isLocked = $this->_projectAspirationService->isLocked($group['id']);
     }
 
     $page = (int)$request->input('page', 1);
     // Danh sách toàn bộ đề tài đã duyệt của đợt
     $topicsData = $this->_projectTopicService->getPaginatedByBatch($id, $page, 50, ['status' => 'approved']);
-    $aspirations = $this->_projectAspirationService->getAspirationsByGroup($group['id']);
-    $aspirationTopicIds = array_column($aspirations, 'topic_id');
-    $isLocked = $this->_projectAspirationService->isLocked($group['id']);
 
     $model = new ProjectBatch(
       status: $currentBatch['status'],
@@ -297,6 +299,7 @@ class StudentProjectDashboardController extends Controller
       'isConfirmed' => $isConfirmed,
       'topics' => $topicsData->getItems(),
       'pagination' => $topicsData,
+      'aspirations' => $aspirations,
       'aspirationTopicIds' => $aspirationTopicIds,
       'maxAspirations' => $currentBatch['max_aspirations'] ?? 3,
       'isLocked' => $isLocked,
@@ -340,6 +343,8 @@ class StudentProjectDashboardController extends Controller
           $request->session()->flashNotify('error', 'Đề tài này đã có trong danh sách nguyện vọng.');
         }
       }
+    } else if (!$group) {
+      $request->session()->flashNotify('error', 'Bạn cần tham gia nhóm trước khi đăng ký nguyện vọng.');
     } else {
       $request->session()->flashNotify('error', 'Chỉ nhóm trưởng mới có quyền đăng ký nguyện vọng.');
     }
@@ -362,7 +367,8 @@ class StudentProjectDashboardController extends Controller
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->isLocked($group['id'])) {
         $request->session()->flashNotify('error', 'Nguyện vọng đã được chốt, không thể thay đổi.');
-        return $this->redirect("/student/project_batches/{$id}");
+        $redirectTo = $request->input('redirect_to') === 'topics' ? "/student/project_batches/{$id}/topics" : "/student/project_batches/{$id}";
+        return $this->redirect($redirectTo);
       }
 
       $topicId = (int)$request->input('topic_id');
@@ -373,7 +379,8 @@ class StudentProjectDashboardController extends Controller
       $this->_projectAspirationService->addAspirations($group['id'], array_values($newTopicIds));
       $request->session()->flashNotify('success', 'Đã xóa khỏi danh sách nguyện vọng.');
     }
-    return $this->redirect("/student/project_batches/{$id}");
+    $redirectTo = $request->input('redirect_to') === 'topics' ? "/student/project_batches/{$id}/topics" : "/student/project_batches/{$id}";
+    return $this->redirect($redirectTo);
   }
 
   /**
@@ -392,7 +399,8 @@ class StudentProjectDashboardController extends Controller
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->isLocked($group['id'])) {
         $request->session()->flashNotify('error', 'Nguyện vọng đã được chốt, không thể thay đổi.');
-        return $this->redirect("/student/project_batches/{$id}");
+        $redirectTo = $request->input('redirect_to') === 'topics' ? "/student/project_batches/{$id}/topics" : "/student/project_batches/{$id}";
+        return $this->redirect($redirectTo);
       }
 
       // Nhận 1 mảng topic_ids đã được sắp xếp từ client
@@ -403,7 +411,8 @@ class StudentProjectDashboardController extends Controller
         $request->session()->flashNotify('success', 'Đã cập nhật thứ tự nguyện vọng.');
       }
     }
-    return $this->redirect("/student/project_batches/{$id}");
+    $redirectTo = $request->input('redirect_to') === 'topics' ? "/student/project_batches/{$id}/topics" : "/student/project_batches/{$id}";
+    return $this->redirect($redirectTo);
   }
 
   public function lockAspirations(Request $request, int $id)
@@ -425,7 +434,8 @@ class StudentProjectDashboardController extends Controller
     } else {
       $request->session()->flashNotify('error', 'Chỉ nhóm trưởng mới có quyền chốt nguyện vọng.');
     }
-    return $this->redirect("/student/project_batches/{$id}");
+    $redirectTo = $request->input('redirect_to') === 'topics' ? "/student/project_batches/{$id}/topics" : "/student/project_batches/{$id}";
+    return $this->redirect($redirectTo);
   }
 
   public function unlockAspirations(Request $request, int $id)
@@ -447,7 +457,8 @@ class StudentProjectDashboardController extends Controller
     } else {
       $request->session()->flashNotify('error', 'Chỉ nhóm trưởng mới có quyền mở khóa nguyện vọng.');
     }
-    return $this->redirect("/student/project_batches/{$id}");
+    $redirectTo = $request->input('redirect_to') === 'topics' ? "/student/project_batches/{$id}/topics" : "/student/project_batches/{$id}";
+    return $this->redirect($redirectTo);
   }
 
   /**

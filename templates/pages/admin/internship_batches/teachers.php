@@ -86,7 +86,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
         <?php if (!$isReadOnly): ?>
           {{#if !row.assigned_count}}
           <button type="button" class="btn btn-delete-teacher" data-variant="destructive" data-size="sm"
-            title="Xóa khỏi đợt" data-teacher-id="{{ row.teacher_id }}">
+            title="Xóa khỏi đợt" data-teacher-id="{{ row.teacher_id }}" data-teacher-name="{{ row.full_name }}">
             <i class="fa-solid fa-trash"></i>
           </button>
           {{/if}}
@@ -131,7 +131,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
   <div id="modal-delete-teacher" class="modal" tabindex="-1" data-state="closed">
     <div class="modal__header">
       <h3 class="modal__title">Xóa giảng viên</h3>
-      <p class="modal__description">Bạn có chắc chắn muốn xóa giảng viên này khỏi đợt thực tập không?</p>
+      <p class="modal__description" id="delete-teacher-desc">Bạn có chắc chắn muốn xóa giảng viên này khỏi đợt thực tập không?</p>
     </div>
     <div class="modal__footer">
       <input type="hidden" id="delete-teacher-id">

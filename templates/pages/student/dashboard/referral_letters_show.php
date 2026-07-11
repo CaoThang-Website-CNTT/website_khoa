@@ -150,8 +150,7 @@ $statuses = [
         action="<?= url("student/internship/{$current['id']}/referral_letters/{$letter['id']}/cancel") ?>"
         id="rl_cancelForm">
         <?= csrf_field() ?>
-        <p class="mb-4 text-sm">Bạn có chắc chắn muốn hủy đăng ký xin giấy giới thiệu này không? Hành động này không thể
-          hoàn tác.</p>
+        <p class="mb-4 text-sm">Bạn có chắc chắn muốn hủy đăng ký xin giấy giới thiệu tới công ty <span class="font-semibold"><?= htmlspecialchars($letter['company_name']) ?></span> không? Hành động này không thể hoàn tác.</p>
 
         <div class="field">
           <label class="field__label">Lý do hủy (Tùy chọn)</label>

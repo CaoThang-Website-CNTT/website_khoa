@@ -13,6 +13,7 @@ const query = new URLSearchParams(window.location.search);
 const state = {
   status: allowedStatuses.has(query.get('status')) ? query.get('status') : 'all',
   search: (query.get('search') || '').slice(0, 200),
+  teacher_id: query.get('teacher_id') || '',
   page: Math.max(1, Number.parseInt(query.get('page') || '1', 10) || 1),
   limit: Math.min(100, Math.max(5, Number.parseInt(query.get('limit') || '15', 10) || 15)),
 };
@@ -42,6 +43,7 @@ function updateUrl(replace = false) {
   const params = new URLSearchParams();
   if (state.status !== 'all') params.set('status', state.status);
   if (state.search) params.set('search', state.search);
+  if (state.teacher_id) params.set('teacher_id', state.teacher_id);
   if (state.page > 1) params.set('page', String(state.page));
   if (state.limit !== 15) params.set('limit', String(state.limit));
   const url = `${window.location.pathname}${params.size ? `?${params}` : ''}`;
@@ -91,6 +93,7 @@ async function loadTopics({ updateHistory = false, replaceHistory = false } = {}
 
   const params = new URLSearchParams({ status: state.status, page: state.page, limit: state.limit });
   if (state.search) params.set('search', state.search);
+  if (state.teacher_id) params.set('teacher_id', state.teacher_id);
 
   try {
     const payload = await request(`${config.listUrl}?${params}`, { signal: activeRequest.signal });
@@ -142,6 +145,11 @@ table.root.addEventListener('tm:state-change', event => {
     state.search = event.detail.state.search.trim().slice(0, 200);
     state.page = 1;
     loadTopics({ updateHistory: true, replaceHistory: true });
+  } else if (event.detail.reason === 'filter') {
+    const teacherFilter = event.detail.state.filters.find(f => f.col === 'teacher');
+    state.teacher_id = teacherFilter ? teacherFilter.value : '';
+    state.page = 1;
+    loadTopics({ updateHistory: true, replaceHistory: true });
   }
 });
 
@@ -159,9 +167,15 @@ table.root.addEventListener('click', event => {
   const reason = event.target.closest('.btn-reason');
   if (approve) {
     reviewTopicId = approve.dataset.id;
+    const topicTitle = approve.dataset.title;
+    const desc = document.getElementById('approve-topic-desc');
+    if (desc) desc.innerHTML = `Bạn có chắc chắn muốn duyệt đề tài <span class="font-semibold">${topicTitle}</span>? Đề tài đã duyệt sẽ sẵn sàng để công bố cho sinh viên đăng ký.`;
     openModal('#approve-topic-modal');
   } else if (reject) {
     reviewTopicId = reject.dataset.id;
+    const topicTitle = reject.dataset.title;
+    const desc = document.getElementById('reject-topic-desc');
+    if (desc) desc.innerHTML = `Bạn có chắc chắn muốn từ chối đề tài <span class="font-semibold">${topicTitle}</span>? Giảng viên sẽ nhận được lý do này để chỉnh sửa đề tài.`;
     const reasonInput = document.getElementById('reject-topic-reason');
     const reasonError = document.getElementById('reject-topic-error');
     if (reasonInput) {
@@ -228,6 +242,7 @@ window.addEventListener('popstate', () => {
   const params = new URLSearchParams(window.location.search);
   state.status = allowedStatuses.has(params.get('status')) ? params.get('status') : 'all';
   state.search = (params.get('search') || '').slice(0, 200);
+  state.teacher_id = params.get('teacher_id') || '';
   state.page = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
   state.limit = Math.min(100, Math.max(5, Number.parseInt(params.get('limit') || '15', 10) || 15));
   loadTopics();

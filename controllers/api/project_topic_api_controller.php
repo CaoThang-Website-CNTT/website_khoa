@@ -32,6 +32,7 @@ class ProjectTopicApiController extends Controller
     $limit = min(100, max(5, (int) $request->query('limit', 15)));
     $status = trim((string) $request->query('status', 'all'));
     $search = trim((string) $request->query('search', ''));
+    $teacherId = filter_var($request->query('teacher_id'), FILTER_VALIDATE_INT);
 
     if ($status !== 'all' && !in_array($status, self::ALLOWED_STATUSES, true)) {
       return $this->json(null, 422, 'Trạng thái đề tài không hợp lệ.');
@@ -43,10 +44,18 @@ class ProjectTopicApiController extends Controller
     $filters = [];
     if ($status !== 'all') $filters['status'] = $status;
     if ($search !== '') $filters['search'] = $search;
+    if ($teacherId !== false) $filters['teacher_id'] = $teacherId;
 
     try {
       $pageable = $this->_topicService->getPaginatedByBatch((int) $batchId, $page, $limit, $filters);
-      $rows = array_map(fn(array $topic): array => $this->presentTopic($topic), $pageable->getItems());
+      $startIndex = ($page - 1) * $limit;
+      $items = $pageable->getItems();
+      $rows = [];
+      foreach ($items as $index => $topic) {
+        $presented = $this->presentTopic($topic);
+        $presented['stt'] = $startIndex + $index + 1;
+        $rows[] = $presented;
+      }
       $counts = array_merge(array_fill_keys(array_merge(['all'], self::ALLOWED_STATUSES), 0), $this->_topicService->getStatusCountsByBatch((int) $batchId));
 
       return $this->json([

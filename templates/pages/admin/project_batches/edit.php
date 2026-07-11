@@ -136,51 +136,57 @@ $missingRegEnd = empty($batchObj->registration_end) || str_starts_with($batchObj
   </div>
 </div>
 
-<div class="detail-layout">
-  <!-- CỘT CHÍNH (TRÁI) -->
-  <div class="detail-layout__main">
+<!-- Thông tin cơ bản -->
+<form class="detail-layout" id="batch-edit-form"
+  action="<?= url('admin/project_batches/' . $batchObj->id) ?>" method="POST">
+  <?= csrf_field() ?>
+  <div class="detail-layout">
+    <div class="detail-layout__main">
+      <div class="card shadow">
+        <div class="card__header">
+          <h3 class="font-semibold">Thông tin cơ bản</h3>
+        </div>
+        <hr class="separator">
+        <div class="card__content space-y-4">
+          <div class="field-group">
+            <div class="field" data-field-required>
+              <label class="field__label" for="title">Tên đợt đồ án</label>
+              <input type="text" id="title" name="title" class="field__input"
+                value="<?= htmlspecialchars($batchObj->title) ?>" required>
+            </div>
 
-    <!-- Thông tin cơ bản -->
-    <form class="card shadow-sm" id="batch-edit-form"
-      action="<?= url('admin/project_batches/' . $batchObj->id) ?>" method="POST">
-      <?= csrf_field() ?>
-      <div class="card__header">
-        <h3 class="font-semibold">Thông tin cơ bản</h3>
+            <div class="field">
+              <label class="field__label" for="description">Mô tả</label>
+              <textarea id="description" name="description" class="field__input"
+                rows="4"><?= htmlspecialchars($batchObj->description ?? '') ?></textarea>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div class="field" data-field-required>
+                <label class="field__label" for="min_class_of">Khóa áp dụng (Từ)</label>
+                <input type="number" id="min_class_of" class="field__input" name="min_class_of" value="<?= htmlspecialchars($batchObj->min_class_of) ?>" min="1900" placeholder="Ví dụ: 2021" required>
+              </div>
+              <div class="field" data-field-required>
+                <label class="field__label" for="max_class_of">Khóa áp dụng (Đến)</label>
+                <input type="number" id="max_class_of" class="field__input" name="max_class_of" value="<?= htmlspecialchars($batchObj->max_class_of) ?>" min="1900" placeholder="Ví dụ: 2023" required>
+              </div>
+              <div class="field" data-field-required>
+                <label class="field__label" for="max_aspirations">Số nguyện vọng tối đa</label>
+                <input type="number" id="max_aspirations" class="field__input" name="max_aspirations" value="<?= htmlspecialchars($batchObj->max_aspirations) ?>" min="1" required>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <hr class="separator">
-      <div class="card__content space-y-4">
-        <div class="field-group">
-          <div class="field" data-field-required>
-            <label class="field__label" for="title">Tên đợt đồ án</label>
-            <input type="text" id="title" name="title" class="field__input"
-              value="<?= htmlspecialchars($batchObj->title) ?>" required>
-          </div>
+    </div>
 
-          <div class="field">
-            <label class="field__label" for="description">Mô tả</label>
-            <textarea id="description" name="description" class="field__input"
-              rows="4"><?= htmlspecialchars($batchObj->description ?? '') ?></textarea>
-          </div>
-
-          <div class="grid grid-cols-3 gap-4">
-            <div class="field" data-field-required>
-              <label class="field__label" for="min_class_of">Khóa áp dụng (Từ)</label>
-              <input type="number" id="min_class_of" class="field__input" name="min_class_of" value="<?= htmlspecialchars($batchObj->min_class_of) ?>" min="1900" placeholder="Ví dụ: 2021" required>
-            </div>
-            <div class="field" data-field-required>
-              <label class="field__label" for="max_class_of">Khóa áp dụng (Đến)</label>
-              <input type="number" id="max_class_of" class="field__input" name="max_class_of" value="<?= htmlspecialchars($batchObj->max_class_of) ?>" min="1900" placeholder="Ví dụ: 2023" required>
-            </div>
-            <div class="field" data-field-required>
-              <label class="field__label" for="max_aspirations">Số nguyện vọng tối đa</label>
-              <input type="number" id="max_aspirations" class="field__input" name="max_aspirations" value="<?= htmlspecialchars($batchObj->max_aspirations) ?>" min="1" required>
-            </div>
-          </div>
-
-
-
-          <hr class="separator mt-4 mb-2" />
-          <h4 class="font-medium mb-4">Thời gian Đề xuất đề tài</h4>
+    <div class="detail-layout__sidebar">
+      <div class="card shadow">
+        <div class="card__header">
+          <h3 class="card__title">Thời gian Giảng viên đề xuất đề tài</h3>
+        </div>
+        <hr class="separator">
+        <div class="card__content">
           <div class="grid grid-cols-2 gap-4">
             <div class="field" data-field-required>
               <label class="field__label" for="topic_proposal_start">Bắt đầu đề xuất</label>
@@ -191,9 +197,16 @@ $missingRegEnd = empty($batchObj->registration_end) || str_starts_with($batchObj
               <input type="date" id="topic_proposal_end" class="field__input" name="topic_proposal_end" value="<?= !empty($batchObj->topic_proposal_end) ? date('Y-m-d', strtotime($batchObj->topic_proposal_end)) : '' ?>" required>
             </div>
           </div>
+        </div>
+      </div>
 
-          <hr class="separator mt-4 mb-2" />
-          <h4 class="font-medium mb-4">Thời gian Đăng ký đề tài</h4>
+      <div class="card shadow">
+        <div class="card__header">
+          <h3 class="card__title">Thời gian Sinh viên đăng ký đề tài</h3>
+          <p class="header__description">Nếu không đặt thời gian, sinh viên sẽ không thể xem, đăng ký đề tài.</p>
+        </div>
+        <hr class="separator">
+        <div class="card__content">
           <div class="grid grid-cols-2 gap-4">
             <div class="field">
               <label class="field__label" for="registration_start">Bắt đầu đăng ký</label>
@@ -204,39 +217,10 @@ $missingRegEnd = empty($batchObj->registration_end) || str_starts_with($batchObj
               <input type="date" id="registration_end" class="field__input" name="registration_end" value="<?= !empty($batchObj->registration_end) ? date('Y-m-d', strtotime($batchObj->registration_end)) : '' ?>">
             </div>
           </div>
-
         </div>
       </div>
-    </form>
-
-  </div>
-
-  <!-- SIDEBAR -->
-  <div class="detail-layout__sidebar">
-    <!-- Metadata -->
-    <div class="metadata-card card shadow">
-      <div class="card__header">
-        Thông tin
-      </div>
-      <hr class="separator">
-      <div class="card__content space-y-4">
-        <dl class="flex justify-between">
-          <dt>ID</dt>
-          <dd>
-            <?= htmlspecialchars($batchObj->id) ?>
-          </dd>
-        </dl>
-        <hr class="separator">
-        <dl class="flex justify-between">
-          <dt>Được tạo vào</dt>
-          <dd>
-            <?= htmlspecialchars($batchObj->created_at) ?>
-          </dd>
-        </dl>
-      </div>
     </div>
-  </div>
-</div>
+</form>
 
 <!-- Modals -->
 <div class="modal" id="save-confirm-modal" tabindex="-1" data-state="closed">

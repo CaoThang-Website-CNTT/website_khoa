@@ -89,8 +89,31 @@ class ProjectBatchController extends Controller
       return $this->redirect('admin/project_batches');
     }
 
+    $teachers = $this->_ProjectBatchService->getSupervisorsByBatchId((int) $id);
+
     $this->render("admin/project_batches/topics", [
-      'batch' => $batch
+      'batch' => $batch,
+      'teachers' => $teachers
+    ], layout: "dashboard_layout");
+  }
+
+  public function topicDetail($id, $topicId, Request $request)
+  {
+    $batch = $this->_ProjectBatchService->getBatchWithStats((int) $id);
+    if (!$batch) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt đồ án này');
+      return $this->redirect('admin/project_batches');
+    }
+
+    $topic = $this->_TopicService->getTopicById((int) $topicId);
+    if (!$topic || $topic['batch_id'] != $id) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đề tài hoặc đề tài không thuộc đợt đồ án này');
+      return $this->redirect("admin/project_batches/$id/topics");
+    }
+
+    $this->render("admin/project_batches/topic_detail", [
+      'batch' => $batch,
+      'topic' => $topic
     ], layout: "dashboard_layout");
   }
 

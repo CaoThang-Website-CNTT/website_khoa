@@ -104,7 +104,7 @@ $tabs = [
   </div>
 <?php endif; ?>
 
-<?php if (!$hasPreview): ?>
+<?php if ($hasPreview): ?>
   <?php
   $inExcel = $previewData['in_excel'] ?? [];
   $notRegistered = $previewData['eligible_not_registered'] ?? [];
@@ -160,15 +160,26 @@ $tabs = [
       <table class="allocation-table">
         <thead class="allocation-table__head">
           <tr class="allocation-table__row">
-            <th class="allocation-table__cell allocation-table__cell--header">Mã nhóm</th>
+            <th class="allocation-table__cell allocation-table__cell--header">STT</th>
             <th class="allocation-table__cell allocation-table__cell--header">Thành viên</th>
             <th class="allocation-table__cell allocation-table__cell--header">Thao tác xử lý</th>
           </tr>
         </thead>
         <tbody class="allocation-table__body">
-          <?php foreach ($incompleteGroups as $ig): ?>
+          <?php $index = 0;
+          foreach ($incompleteGroups as $ig): ?>
+            <?php
+            $leader = $ig['members'][0] ?? null;
+            foreach ($ig['members'] ?? [] as $m) {
+              if (!empty($m['is_leader'])) {
+                $leader = $m;
+                break;
+              }
+            }
+            $groupDisplayName = $leader ? htmlspecialchars($leader['full_name'] . ' (' . $leader['student_code'] . ')') : "nhóm #" . $ig['id'];
+            ?>
             <tr class="allocation-table__row">
-              <td class="allocation-table__cell allocation-table__cell--id">#<?= $ig['id'] ?></td>
+              <td class="allocation-table__cell allocation-table__cell--id"><?= ++$index ?></td>
               <td class="allocation-table__cell allocation-table__cell--members">
                 <?php foreach ($ig['members'] ?? [] as $m): ?>
                   <div class="allocation-table__member <?= !$m['is_eligible'] ? 'allocation-table__member--ineligible' : '' ?>">
@@ -188,7 +199,7 @@ $tabs = [
                   <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/dissolve-group") ?>" method="POST">
                     <?= csrf_field() ?>
                     <input type="hidden" name="group_id" value="<?= $ig['id'] ?>">
-                    <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="destructive" data-confirm-msg="Bạn có chắc chắn muốn giải tán nhóm này?" data-modal-trigger="#action-confirm-modal">Giải tán nhóm</button>
+                    <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="destructive" data-confirm-msg="Bạn có chắc chắn muốn giải tán nhóm của <?= $groupDisplayName ?>?" data-modal-trigger="#action-confirm-modal">Giải tán nhóm</button>
                   </form>
 
                   <?php
@@ -208,7 +219,7 @@ $tabs = [
                     <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/approve-solo") ?>" method="POST">
                       <?= csrf_field() ?>
                       <input type="hidden" name="group_id" value="<?= $ig['id'] ?>">
-                      <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="primary" data-confirm-msg="Xác nhận cho sinh viên này làm đồ án 1 mình?" data-modal-trigger="#action-confirm-modal">Cho phép làm một mình</button>
+                      <button type="button" class="btn btn-confirm-action" data-size="md" data-variant="primary" data-confirm-msg="Xác nhận cho phép nhóm của <?= $groupDisplayName ?> làm đồ án 1 mình?" data-modal-trigger="#action-confirm-modal">Cho phép làm một mình</button>
                     </form>
                     <button type="button" class="btn" data-size="md" data-variant="outline" onclick="openReplaceMemberModal(<?= $ig['id'] ?>, <?= $oldStudentId ?>)">Thay thế thành viên</button>
                   <?php endif; ?>
@@ -247,15 +258,15 @@ $tabs = [
 
 <div class="tm-container" id="allocation_table" data-tm="allocation_table" data-tm-mode="server" data-tm-searchable>
 
-  <template data-tm-col="id" data-tm-label="Mã nhóm" data-tm-sortable>
-    <div class="font-medium">#{{ value }}</div>
+  <template data-tm-col="stt" data-tm-label="STT">
+    <div class="font-medium">{{ value }}</div>
   </template>
 
   <template data-tm-col="members" data-tm-label="Thành viên">
     <div class="members-container text-sm" data-group-id="{{ row.id }}"></div>
   </template>
 
-  <template data-tm-col="aspirations" data-tm-label="Đề tài đăng ký">
+  <template data-tm-col="aspirations" data-tm-label="Nguyện vọng đề tài">
     <div class="aspirations-container text-sm" data-group-id="{{ row.id }}"></div>
   </template>
 

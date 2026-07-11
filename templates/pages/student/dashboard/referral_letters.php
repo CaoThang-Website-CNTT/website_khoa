@@ -83,7 +83,7 @@ $rlData = array_map(function ($rl) {
   <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="150px" data-tm-align="right">
     <div class="flex gap-2 justify-end">
       <button type="button" class="btn btn-cancel {{ row.status !== 'pending' ? 'hidden' : '' }}" data-variant="destructive" data-size="sm"
-        data-id="{{ row.id }}" data-modal-trigger="#rl_cancelModal">
+        data-id="{{ row.id }}" data-company-name="{{ row.company_name }}" data-modal-trigger="#rl_cancelModal">
         <i class="fa-solid fa-xmark"></i> Hủy
       </button>
       <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>/{{ row.id }}" class="btn btn-detail" data-variant="outline" data-size="sm">
@@ -110,7 +110,7 @@ $rlData = array_map(function ($rl) {
   <div>
     <form method="POST" id="rl_cancelForm">
       <?= csrf_field() ?>
-      <p class="mb-4">Bạn có chắc chắn muốn hủy giấy giới thiệu này?</p>
+      <p class="mb-4" id="rl_cancelModal_desc">Bạn có chắc chắn muốn hủy giấy giới thiệu này?</p>
       <div class="field" data-field-required>
         <label class="field__label">Lý do hủy</label>
         <div class="flex flex-wrap gap-2 mb-2">

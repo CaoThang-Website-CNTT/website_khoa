@@ -93,7 +93,12 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
   public function getById(int $id): ?array
   {
     $sql = "SELECT tt.*, t.full_name as teacher_name, t.phone as teacher_phone, a.email as teacher_email,
-                       (SELECT COUNT(*) FROM project_groups g WHERE g.assigned_topic_id = tt.id) as assigned_groups_count
+                       (SELECT COUNT(*) FROM project_groups g WHERE g.assigned_topic_id = tt.id) as assigned_groups_count,
+                       (SELECT IFNULL(SUM((SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = asp.group_id)), 0) 
+                        FROM project_aspirations asp 
+                        WHERE asp.topic_id = tt.id AND asp.priority = 1 AND asp.locked_at IS NOT NULL) as registered_students_count,
+                       (SELECT COUNT(*) FROM project_aspirations asp WHERE asp.topic_id = tt.id AND asp.priority = 1 AND asp.locked_at IS NOT NULL) as groups_nv1_count,
+                       (SELECT COUNT(DISTINCT asp.group_id) FROM project_aspirations asp WHERE asp.topic_id = tt.id AND asp.locked_at IS NOT NULL) as groups_all_nv_count
                 FROM project_topics tt
                 JOIN teachers t ON tt.teacher_id = t.id
                 LEFT JOIN accounts a ON t.account_id = a.id
@@ -119,11 +124,18 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
       $params[':search'] = '%' . $filters['search'] . '%';
       $params[':search2'] = '%' . $filters['search'] . '%';
     }
+    if (!empty($filters['teacher_id'])) {
+      $where[] = "tt.teacher_id = :teacher_id";
+      $params[':teacher_id'] = $filters['teacher_id'];
+    }
 
     $whereClause = implode(' AND ', $where);
 
     $sql = "SELECT tt.*, t.full_name as teacher_name, d.short_name as department_name,
-                       (SELECT COUNT(*) FROM project_groups g WHERE g.assigned_topic_id = tt.id) as assigned_groups_count
+                       (SELECT COUNT(*) FROM project_groups g WHERE g.assigned_topic_id = tt.id) as assigned_groups_count,
+                       (SELECT IFNULL(SUM((SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = a.group_id)), 0) 
+                        FROM project_aspirations a 
+                        WHERE a.topic_id = tt.id AND a.priority = 1 AND a.locked_at IS NOT NULL) as registered_students_count
                 FROM project_topics tt
                 JOIN teachers t ON tt.teacher_id = t.id
                 LEFT JOIN departments d ON t.department_id = d.id
@@ -149,6 +161,10 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
       $where[] = "(tt.title LIKE :search OR t.full_name LIKE :search2)";
       $params[':search'] = '%' . $filters['search'] . '%';
       $params[':search2'] = '%' . $filters['search'] . '%';
+    }
+    if (!empty($filters['teacher_id'])) {
+      $where[] = "tt.teacher_id = :teacher_id";
+      $params[':teacher_id'] = $filters['teacher_id'];
     }
 
     $whereClause = implode(' AND ', $where);

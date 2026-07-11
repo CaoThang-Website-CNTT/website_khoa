@@ -8,10 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const cancelBtn = e.target.closest('.btn-cancel');
       if (cancelBtn) {
         const id = cancelBtn.getAttribute('data-id');
+        const companyName = cancelBtn.getAttribute('data-company-name');
         const cancelForm = document.getElementById('rl_cancelForm');
         if (cancelForm) {
           cancelForm.action = `${window.__studentReferralLetters__?.baseUrl || ''}/${id}/cancel`;
         }
+        const desc = document.getElementById('rl_cancelModal_desc');
+        if (desc) desc.textContent = `Bạn có chắc chắn muốn hủy giấy giới thiệu gửi đến công ty ${companyName}?`;
       }
     });
   }
