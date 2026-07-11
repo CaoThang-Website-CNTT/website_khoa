@@ -10,6 +10,7 @@ use App\Services\ProjectTopicService;
 use App\Services\ProjectGroupService;
 use App\Enums\ProjectTopicStatus;
 use App\Enums\ProjectBatchStatus;
+use App\Models\ProjectBatch;
 use Exception;
 
 class TeacherProjectDashboardController extends Controller
@@ -68,12 +69,24 @@ class TeacherProjectDashboardController extends Controller
         }
 
         $topics = $this->_topicService->getTopicsByTeacher($id, $teacher->id);
-        $groups = $this->_groupService->getAssignedGroupsByTeacher($id, $teacher->id);
+        
+        $batchModel = new ProjectBatch(
+            status: $batch['status'] ?? 'draft',
+            topic_proposal_start: $batch['topic_proposal_start'] ?? null,
+            topic_proposal_end: $batch['topic_proposal_end'] ?? null,
+            registration_start: $batch['registration_start'] ?? null,
+            registration_end: $batch['registration_end'] ?? null,
+            allocation_published_at: $batch['allocation_published_at'] ?? null
+        );
+        $isAllocationPublished = $batchModel->isAllocationPublished();
+
+        $groups = $isAllocationPublished ? $this->_groupService->getAssignedGroupsByTeacher($id, $teacher->id) : [];
 
         return $this->render('teacher/project_batches/show', [
             'batch' => $batch,
             'topics' => $topics,
             'groups' => $groups,
+            'isAllocationPublished' => $isAllocationPublished,
             'title' => 'Chi tiết đợt đồ án: ' . $batch['title']
         ], layout: 'dashboard_layout');
     }

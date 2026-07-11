@@ -32,7 +32,7 @@ if (!empty($batch['topic_proposal_start']) && !empty($batch['topic_proposal_end'
 }
 
 if ($canPropose):
-  ?>
+?>
   <a href="<?= url("teacher/project_batches/{$batch['id']}/topics/create") ?>" class="btn" data-variant="primary"
     data-size="lg">
     <i class="fa-solid fa-plus"></i> Gửi đề tài
@@ -168,31 +168,41 @@ if ($canPropose):
           <p class="text-sm mt-1">Chỉ hiển thị các nhóm đã được phân vào đề tài của bạn.</p>
         </div>
         <div class="card__action">
-          <button type="button" class="btn" data-variant="primary" data-size="md"
-            data-modal-trigger="#print-topic-groups-modal" <?= empty($groups) ? 'disabled' : '' ?>>
-            <i class="fa-solid fa-layer-group"></i> In tất cả nhóm đề tài
-          </button>
+          <?php if ($isAllocationPublished): ?>
+            <button type="button" class="btn" data-variant="primary" data-size="md"
+              data-modal-trigger="#print-topic-groups-modal" <?= empty($groups) ? 'disabled' : '' ?>>
+              <i class="fa-solid fa-layer-group"></i> In tất cả nhóm đề tài
+            </button>
+          <?php endif; ?>
         </div>
       </div>
       <hr class="separator">
       <div class="card__content">
-        <div class="tm-container" data-tm="assigned_groups_table" data-tm-mode="client" data-tm-searchable
-          data-tm-selectable="true" data-tm-id-key="id">
-          <template data-tm-col="topic" data-tm-label="Đề tài" data-tm-sortable data-tm-filter-type="text">
-            <div class="font-medium">{{ value }}</div>
-          </template>
-          <template data-tm-col="members" data-tm-label="Sinh viên">
-            <div style="white-space: pre-line">{{ value }}</div>
-          </template>
-          <template data-tm-col="assigned_at" data-tm-label="Ngày phân công" data-tm-sortable></template>
-          <template data-tm-col="actions" data-tm-label="" data-tm-width="90px">
-            <a href="{{ row.print_url }}" target="_blank" class="btn btn--icon" data-variant="outline" data-size="md"
-              aria-label="In phiếu nhóm" title="In phiếu nhóm">
-              <i class="fa-solid fa-print"></i>
-            </a>
-          </template>
-          <template data-tm-pagination></template>
-        </div>
+        <?php if (!$isAllocationPublished): ?>
+          <div class="py-4 text-center">
+            <i class="fa-solid fa-hourglass-half text-3xl mb-3"></i>
+            <p>Đợt đồ án đang trong giai đoạn xét duyệt.</p>
+            <p>Kết quả phân công nhóm sẽ được hiển thị tại đây sau khi Khoa công bố.</p>
+          </div>
+        <?php else: ?>
+          <div class="tm-container" data-tm="assigned_groups_table" data-tm-mode="client" data-tm-searchable
+            data-tm-selectable="true" data-tm-id-key="id">
+            <template data-tm-col="topic" data-tm-label="Đề tài" data-tm-sortable data-tm-filter-type="text">
+              <div class="font-medium">{{ value }}</div>
+            </template>
+            <template data-tm-col="members" data-tm-label="Sinh viên">
+              <div style="white-space: pre-line">{{ value }}</div>
+            </template>
+            <template data-tm-col="assigned_at" data-tm-label="Ngày phân công" data-tm-sortable></template>
+            <template data-tm-col="actions" data-tm-label="" data-tm-width="90px">
+              <a href="{{ row.print_url }}" target="_blank" class="btn btn--icon" data-variant="outline" data-size="md"
+                aria-label="In phiếu nhóm" title="In phiếu nhóm">
+                <i class="fa-solid fa-print"></i>
+              </a>
+            </template>
+            <template data-tm-pagination></template>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>
@@ -240,21 +250,21 @@ if ($canPropose):
 <script type="application/json" data-tm-data="topics_table">
   <?= json_encode([
     'rows' => array_map(function ($topic) use ($batch) {
-    $t = (object) $topic;
-    return [
-      'id' => $t->id,
-      'title' => $t->title,
-      'description' => $t->description,
-      'max_students' => $t->max_students,
-      'status' => $t->status,
-      'status_label' => ProjectTopicStatus::getLabel($t->status),
-      'status_variant' => ProjectTopicStatus::getVariant($t->status),
-      'can_edit' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]),
-      'edit_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/edit"),
-      'delete_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/delete"),
-      'pdf_url' => $t->pdf_file_path ? url("storage/" . $t->pdf_file_path) : null
-    ];
-  }, $topics),
+      $t = (object) $topic;
+      return [
+        'id' => $t->id,
+        'title' => $t->title,
+        'description' => $t->description,
+        'max_students' => $t->max_students,
+        'status' => $t->status,
+        'status_label' => ProjectTopicStatus::getLabel($t->status),
+        'status_variant' => ProjectTopicStatus::getVariant($t->status),
+        'can_edit' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]),
+        'edit_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/edit"),
+        'delete_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/delete"),
+        'pdf_url' => $t->pdf_file_path ? url("storage/" . $t->pdf_file_path) : null
+      ];
+    }, $topics),
     'total' => count($topics),
     'page' => 1,
     'limit' => count($topics) > 0 ? count($topics) : 15
@@ -268,8 +278,8 @@ if ($canPropose):
         'topic_id' => (int) $group['assigned_topic_id'],
         'topic' => $group['assigned_topic_title'],
         'members' => implode("\n", array_map(function ($member) {
-        return ($member['is_leader'] ? 'Nhóm trưởng: ' : '') . $member['full_name'] . ' · ' . $member['student_code'] . ' · ' . ($member['classroom_name'] ?: 'Chưa có lớp');
-      }, $group['members'] ?? [])),
+          return ($member['is_leader'] ? 'Nhóm trưởng: ' : '') . $member['full_name'] . ' · ' . $member['student_code'] . ' · ' . ($member['classroom_name'] ?: 'Chưa có lớp');
+        }, $group['members'] ?? [])),
         'assigned_at' => !empty($group['assigned_at']) ? date('d/m/Y H:i', strtotime($group['assigned_at'])) : '—',
         'print_url' => url("teacher/project_batches/{$batch['id']}/groups/{$group['id']}/registration-form"),
         'actions' => '',
@@ -291,7 +301,9 @@ if ($canPropose):
       if (!ids.length) return;
       inputs.replaceChildren(...ids.map(id => {
         const input = document.createElement('input');
-        input.type = 'hidden'; input.name = 'group_ids[]'; input.value = id;
+        input.type = 'hidden';
+        input.name = 'group_ids[]';
+        input.value = id;
         return input;
       }));
       form.submit();
@@ -314,7 +326,9 @@ if ($canPropose):
         tooltip: 'In phiếu các nhóm đã chọn',
         icon: 'fa-solid fa-print',
         variant: 'primary',
-        onClick: ({ selectedIds }) => submitPrint(selectedIds),
+        onClick: ({
+          selectedIds
+        }) => submitPrint(selectedIds),
       }],
     });
   })();
