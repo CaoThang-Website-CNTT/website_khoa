@@ -256,12 +256,20 @@ export class TableRenderer {
 
     rules.forEach(rule => {
       const col = this.#cols.find(c => c.key === rule.col);
+      let displayValue = rule.value;
+      if (col && col.filterType === 'select' && Array.isArray(col.filterOptions)) {
+        const option = col.filterOptions.find(opt => opt.value == rule.value);
+        if (option) {
+          displayValue = option.label;
+        }
+      }
+
       const pill = document.createElement('div');
       pill.className = 'badge tm-filter-pill';
       pill.dataset.variant = 'primary';
       pill.innerHTML = `
         <span class="tm-filter-pill__text">
-          <b>${col?.label || rule.col}</b>: ${rule.value}
+          <b>${col?.label || rule.col}</b>: ${displayValue}
         </span>
         <button type="button" class="tm-filter-pill__remove" title="Xóa bộ lọc">
           <i class="fa-solid fa-xmark"></i>
