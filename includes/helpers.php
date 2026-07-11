@@ -40,6 +40,15 @@ function url(string $path = '', bool $strict = false): string
     }
     return $path;
   }
+  $normalized = ltrim(str_replace('\\', '/', $path), '/');
+  if (str_starts_with($normalized, 'public/media/')) {
+    $mediaPath = substr($normalized, strlen('public/media/'));
+    if (str_starts_with($mediaPath, 'media/')) {
+      $mediaPath = substr($mediaPath, strlen('media/'));
+    }
+    return APP_URL . 'public/media/' . $mediaPath;
+  }
+
   return APP_URL . ltrim($path, '/');
 }
 
