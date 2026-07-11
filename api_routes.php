@@ -55,6 +55,7 @@ $router->prefix('api')->group(function ($router) {
     $router->prefix('project_batches')->group(function ($router) {
       $router->get('/teachers-available', [ProjectBatchApiController::class, 'getAvailableTeachers']);
       $router->post('/', [ProjectBatchApiController::class, 'store']);
+      $router->get('/{id}/allocations', [ProjectBatchApiController::class, 'getAllocations']);
     });
 
     $router->prefix('project_batches')

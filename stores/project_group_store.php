@@ -132,6 +132,8 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
     $offset = ($page - 1) * $limit;
     $params = [':batch_id' => $batchId];
     $where = ["g.batch_id = :batch_id"];
+    $joins = "LEFT JOIN project_topics tt ON g.assigned_topic_id = tt.id
+              LEFT JOIN teachers t ON tt.teacher_id = t.id";
 
     if (isset($filters['is_assigned'])) {
       if ($filters['is_assigned']) {
@@ -141,15 +143,40 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
       }
     }
 
+    if (!empty($filters['search'])) {
+        $search = $filters['search'];
+        $where[] = "(g.id LIKE :search1 OR tt.title LIKE :search2 OR t.full_name LIKE :search3 OR EXISTS (
+            SELECT 1 FROM project_group_members gm 
+            JOIN students s ON gm.student_id = s.id 
+            WHERE gm.group_id = g.id AND (s.full_name LIKE :search4 OR s.student_id LIKE :search5)
+        ))";
+        $searchTerm = "%{$search}%";
+        $params[':search1'] = $searchTerm;
+        $params[':search2'] = $searchTerm;
+        $params[':search3'] = $searchTerm;
+        $params[':search4'] = $searchTerm;
+        $params[':search5'] = $searchTerm;
+    }
+
     $whereClause = implode(' AND ', $where);
+
+    $orderBy = "g.created_at DESC";
+    if (!empty($filters['sort']['col'])) {
+        $col = $filters['sort']['col'];
+        $dir = strtoupper($filters['sort']['dir']) === 'ASC' ? 'ASC' : 'DESC';
+        if ($col === 'id') {
+            $orderBy = "g.id $dir";
+        } elseif ($col === 'assigned_topic_title') {
+            $orderBy = "tt.title $dir";
+        }
+    }
 
     $sql = "SELECT g.*, tt.title as assigned_topic_title, t.full_name as assigned_teacher_name,
                        (SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = g.id) as member_count
                 FROM project_groups g
-                LEFT JOIN project_topics tt ON g.assigned_topic_id = tt.id
-                LEFT JOIN teachers t ON tt.teacher_id = t.id
+                $joins
                 WHERE $whereClause
-                ORDER BY g.created_at DESC 
+                ORDER BY $orderBy
                 LIMIT $limit OFFSET $offset";
 
     $stmt = $this->db->prepare($sql);
@@ -161,6 +188,8 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
   {
     $params = [':batch_id' => $batchId];
     $where = ["g.batch_id = :batch_id"];
+    $joins = "LEFT JOIN project_topics tt ON g.assigned_topic_id = tt.id
+              LEFT JOIN teachers t ON tt.teacher_id = t.id";
 
     if (isset($filters['is_assigned'])) {
       if ($filters['is_assigned']) {
@@ -170,9 +199,24 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
       }
     }
 
+    if (!empty($filters['search'])) {
+        $search = $filters['search'];
+        $where[] = "(g.id LIKE :search1 OR tt.title LIKE :search2 OR t.full_name LIKE :search3 OR EXISTS (
+            SELECT 1 FROM project_group_members gm 
+            JOIN students s ON gm.student_id = s.id 
+            WHERE gm.group_id = g.id AND (s.full_name LIKE :search4 OR s.student_id LIKE :search5)
+        ))";
+        $searchTerm = "%{$search}%";
+        $params[':search1'] = $searchTerm;
+        $params[':search2'] = $searchTerm;
+        $params[':search3'] = $searchTerm;
+        $params[':search4'] = $searchTerm;
+        $params[':search5'] = $searchTerm;
+    }
+
     $whereClause = implode(' AND ', $where);
 
-    $sql = "SELECT COUNT(*) FROM project_groups g WHERE $whereClause";
+    $sql = "SELECT COUNT(*) FROM project_groups g $joins WHERE $whereClause";
 
     $stmt = $this->db->prepare($sql);
     $stmt->execute($params);

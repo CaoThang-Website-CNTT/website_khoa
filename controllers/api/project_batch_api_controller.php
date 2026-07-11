@@ -5,22 +5,25 @@ namespace App\Controllers\Api;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Services\ProjectBatchService;
+use App\Services\ProjectGroupService;
 use Exception;
 
 class ProjectBatchApiController extends Controller
 {
   private ProjectBatchService $_service;
+  private ProjectGroupService $_groupService;
 
-  public function __construct(ProjectBatchService $service)
+  public function __construct(ProjectBatchService $service, ProjectGroupService $groupService)
   {
     $this->_service = $service;
+    $this->_groupService = $groupService;
   }
 
   public function store(Request $request)
   {
     $authUser = $request->session()->authUser();
     $adminId = $authUser['account_id'] ?? 0;
-    
+
     if (!$adminId) {
       return $this->json(null, 401, 'Unauthorized');
     }
@@ -40,6 +43,61 @@ class ProjectBatchApiController extends Controller
     try {
       $teachers = $this->_service->getAvailableTeachers();
       return $this->json($teachers, 200, 'Success');
+    } catch (Exception $e) {
+      return $this->json(null, 500, $e->getMessage());
+    }
+  }
+
+  public function getAllocations(Request $request, $id)
+  {
+    $batchId = (int)$id;
+    $page = (int)$request->query('page', 1);
+    $limit = (int)$request->query('limit', 15);
+
+    $filters = [];
+
+    $status = $request->query('status');
+    if ($status === 'assigned') {
+      $filters['is_assigned'] = true;
+    } elseif ($status === 'unassigned') {
+      $filters['is_assigned'] = false;
+    }
+
+    $search = $request->query('search');
+    if (!empty($search)) {
+      $filters['search'] = trim($search);
+    }
+
+    $sort = $request->query('sort');
+    if (is_array($sort) && !empty($sort['col'])) {
+      $filters['sort'] = [
+        'col' => $sort['col'],
+        'dir' => $sort['dir'] ?? 'DESC'
+      ];
+    }
+
+    try {
+      $groups = $this->_groupService->getPaginatedByBatch($batchId, $page, $limit, $filters);
+      $total = $this->_groupService->getTotalCountByBatch($batchId, $filters);
+      $allAspirations = $this->_groupService->getAspirationsByBatch($batchId);
+
+      $aspirationsByGroup = [];
+      foreach ($allAspirations as $asp) {
+        $aspirationsByGroup[$asp['group_id']][] = $asp;
+      }
+
+      foreach ($groups as &$group) {
+        $members = $this->_groupService->getGroupMembers($group['id']);
+        $group['members'] = $members;
+        $group['aspirations'] = $aspirationsByGroup[$group['id']] ?? [];
+      }
+
+      return $this->json([
+        'data' => $groups,
+        'total' => $total,
+        'page' => $page,
+        'limit' => $limit
+      ], 200, 'Success');
     } catch (Exception $e) {
       return $this->json(null, 500, $e->getMessage());
     }

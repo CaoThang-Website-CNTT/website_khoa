@@ -40,31 +40,7 @@ class ProjectAllocationController extends Controller
       return $this->redirect('/admin/project_batches');
     }
 
-    $page = (int)$request->query('page', 1);
-    $limit = 50;
 
-    $filters = [];
-    $status = $request->query('status');
-    if ($status === 'assigned') {
-      $filters['is_assigned'] = true;
-    } elseif ($status === 'unassigned') {
-      $filters['is_assigned'] = false;
-    }
-
-    // groups array
-    $groups = $this->_groupService->getPaginatedByBatch($batch['id'], $page, $limit, $filters);
-    $allAspirations = $this->_groupService->getAspirationsByBatch($batch['id']);
-
-    $aspirationsByGroup = [];
-    foreach ($allAspirations as $asp) {
-      $aspirationsByGroup[$asp['group_id']][] = $asp;
-    }
-
-    foreach ($groups as &$group) {
-      $members = $this->_groupService->getGroupMembers($group['id']);
-      $group['members'] = $members;
-      $group['aspirations'] = $aspirationsByGroup[$group['id']] ?? [];
-    }
 
     $totalGroups = $this->_groupService->getTotalCountByBatch($batch['id']);
     $assignedGroupsCount = $this->_groupService->getTotalCountByBatch($batch['id'], ['is_assigned' => true]);
@@ -83,7 +59,6 @@ class ProjectAllocationController extends Controller
 
     return $this->render('admin/project_batches/allocation', [
       'batchObj' => (object)$batch,
-      'groups' => $groups,
       'topics' => $topics,
       'stats' => [
         'total' => $totalGroups,

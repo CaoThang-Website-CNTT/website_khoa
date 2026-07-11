@@ -245,7 +245,7 @@ $tabs = [
   </div>
 </div>
 
-<div class="tm-container" id="allocation_table" data-tm="allocation_table" data-tm-mode="client" data-tm-searchable>
+<div class="tm-container" id="allocation_table" data-tm="allocation_table" data-tm-mode="server" data-tm-searchable>
 
   <template data-tm-col="id" data-tm-label="Mã nhóm" data-tm-sortable>
     <div class="font-medium">#{{ value }}</div>
@@ -276,9 +276,7 @@ $tabs = [
     </button>
   </template>
 
-  <script data-tm-data="allocation_table" type="application/json">
-    <?= json_encode($groups ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
-  </script>
+  <template data-tm-pagination></template>
 </div>
 
 <!-- Auto Allocate Modal -->
@@ -518,6 +516,75 @@ $tabs = [
         }
       });
     });
+
+    root.addEventListener("tm:state-change", async (e) => {
+      const {
+        reason,
+        state
+      } = e.detail;
+      const tm = window.TableManager?.get("allocation_table");
+
+      if (!tm || !state.pagination) return;
+
+      const page = (state.pagination?.pageIndex || 0) + 1;
+      const limit = state.pagination?.pageSize || 15;
+
+      const url = new URL("<?= url("api/v1/project_batches/{$batchObj->id}/allocations") ?>", window.location.origin);
+      url.searchParams.set("page", page);
+      url.searchParams.set("limit", limit);
+
+      if (state.search) url.searchParams.set("search", state.search);
+
+      if (state.sort?.col) {
+        url.searchParams.set("sort[col]", state.sort.col);
+        url.searchParams.set("sort[dir]", state.sort.dir);
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("status")) {
+        url.searchParams.set("status", urlParams.get("status"));
+      }
+
+      try {
+        const response = await fetch(url.toString());
+        const data = await response.json();
+        if (data.success) {
+          tm.loadData({
+            rows: data.data.data,
+            total: data.data.total,
+            page: data.data.page,
+            limit: data.data.limit
+          });
+        } else {
+          console.error("Lỗi API:", data.message);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu phân bổ:", err);
+      }
+    });
+
+    const initTable = () => {
+      const tm = window.TableManager?.get("allocation_table");
+      if (tm) {
+        const state = typeof tm.getState === 'function' ? tm.getState() : tm.state;
+        tm.root.dispatchEvent(
+          new CustomEvent("tm:state-change", {
+            detail: {
+              reason: "pagination",
+              state: state
+            },
+          }),
+        );
+      } else {
+        setTimeout(initTable, 50);
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener("DOMContentLoaded", initTable);
+    } else {
+      initTable();
+    }
   })();
 </script>
 
