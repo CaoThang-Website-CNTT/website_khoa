@@ -130,7 +130,8 @@ foreach (($timeline['weeks'] ?? []) as $week) {
 
           <div class="field" data-field-required>
             <span class="field__label" id="score-label">Điểm tổng kết</span>
-            <button type="button" class="select w-full" data-select-id="grading-score" name="score" role="listbox"
+            <input type="hidden" name="score" id="score-input" value="<?= htmlspecialchars($selectedScore) ?>">
+            <button type="button" class="select w-full" data-select-id="grading-score" role="listbox"
               aria-labelledby="score-label" data-select-placeholder="Chọn điểm"
               data-select-default-value="<?= htmlspecialchars($selectedScore) ?>" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>>
               <div class="select__content">

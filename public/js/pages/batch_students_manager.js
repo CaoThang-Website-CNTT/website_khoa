@@ -352,6 +352,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      const editGradeBtn = e.target.closest(".btn-edit-grade");
+      if (editGradeBtn) {
+        const studentId = editGradeBtn.dataset.id;
+        openEditGradeModal(studentId);
+        return;
+      }
+
       if (batchStatus === "closed") return;
 
       const display = e.target.closest(".teacher-cell__display");

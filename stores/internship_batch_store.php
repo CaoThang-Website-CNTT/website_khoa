@@ -613,7 +613,10 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               co.address AS company_address,
               bs.position,
               bs.internship_start_date,
-              bs.internship_end_date
+              bs.internship_end_date,
+              bs.company_mentor_name,
+              bs.company_mentor_phone,
+              bs.company_mentor_email
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN accounts a ON s.account_id = a.id

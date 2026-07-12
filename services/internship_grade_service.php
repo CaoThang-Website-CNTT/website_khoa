@@ -188,7 +188,7 @@ class InternshipGradeService implements IInternshipGradeService
         'feedback' => $feedback,
         'graded_by' => $adminId
       ]);
-      return ['success' => true, 'message' => 'Admin cập nhật điểm thành công.'];
+      return ['success' => true, 'message' => 'Cập nhật điểm thành công.'];
     } else {
       $this->_gradeStore->create([
         'batch_student_id' => $batchStudentId,

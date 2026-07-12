@@ -294,7 +294,7 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
     <input type="hidden" id="edit-grade-batch-student-id">
     <div class="field">
       <label class="field__label">Điểm số (0-10) <span class="text-danger">*</span></label>
-      <input type="number" id="edit-grade-score" class="field__input" step="0.1" min="0" max="10" required>
+      <input type="number" id="edit-grade-score" class="field__input" step="0.25" min="0" max="10" required>
     </div>
     <div class="field">
       <label class="field__label">Lý do điều chỉnh (nếu có)</label>

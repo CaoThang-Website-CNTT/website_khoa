@@ -89,7 +89,7 @@ $student = $student ?? [];
           <div class="student-detail__rows">
             <dl class="student-detail__row">
               <dt>Công ty thực tập</dt>
-              <dd><?= htmlspecialchars($student['company_name']) ?></dd>
+              <dd><?= htmlspecialchars($student['company_name'] ?? 'Chưa có') ?></dd>
             </dl>
             <hr class="separator">
             <dl class="student-detail__row">
@@ -105,11 +105,38 @@ $student = $student ?? [];
             <dl class="student-detail__row">
               <dt>Thời gian thực tập</dt>
               <dd>
-              <?php
-              $start = !empty($student['internship_start_date']) ? date('d/m/Y', strtotime($student['internship_start_date'])) : 'Chưa rõ';
-              $end = !empty($student['internship_end_date']) ? date('d/m/Y', strtotime($student['internship_end_date'])) : 'Chưa rõ';
-              echo "{$start} - {$end}";
-              ?>
+                <?php
+                $start = !empty($student['internship_start_date']) ? date('d/m/Y', strtotime($student['internship_start_date'])) : 'Chưa rõ';
+                $end = !empty($student['internship_end_date']) ? date('d/m/Y', strtotime($student['internship_end_date'])) : 'Chưa rõ';
+                echo "{$start} - {$end}";
+                ?>
+              </dd>
+            </dl>
+            <hr class="separator">
+            <dl class="student-detail__row">
+              <dt>Cán bộ hướng dẫn</dt>
+              <dd><?= htmlspecialchars($student['company_mentor_name'] ?? 'Chưa có') ?></dd>
+            </dl>
+            <hr class="separator">
+            <dl class="student-detail__row">
+              <dt>SĐT CBHD</dt>
+              <dd>
+                <?php if (!empty($student['company_mentor_phone'])): ?>
+                  <a href="tel:<?= htmlspecialchars($student['company_mentor_phone']) ?>"><?= htmlspecialchars($student['company_mentor_phone']) ?></a>
+                <?php else: ?>
+                  Chưa có
+                <?php endif; ?>
+              </dd>
+            </dl>
+            <hr class="separator">
+            <dl class="student-detail__row">
+              <dt>Email CBHD</dt>
+              <dd>
+                <?php if (!empty($student['company_mentor_email'])): ?>
+                  <a href="mailto:<?= htmlspecialchars($student['company_mentor_email']) ?>"><?= htmlspecialchars($student['company_mentor_email']) ?></a>
+                <?php else: ?>
+                  Chưa có
+                <?php endif; ?>
               </dd>
             </dl>
           </div>
@@ -117,7 +144,7 @@ $student = $student ?? [];
           <div class="student-detail__empty p-6 text-center rounded-lg border">
             <i class="fa-solid fa-building text-3xl mb-3"></i>
             <p class="font-medium">Chưa có thông tin công ty</p>
-            <p class="text-sm mt-1">Sinh viên chưa khai báo đơn vị thực tập hoặc chưa được duyệt giấy giới thiệu.</p>
+            <p class="text-sm mt-1">Sinh viên chưa khai báo đơn vị thực tập.</p>
           </div>
         <?php endif; ?>
       </div>
