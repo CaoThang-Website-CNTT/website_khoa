@@ -46,7 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
       renderSupervisorStats();
 
       // Khởi tạo/Cập nhật bảng
-      const tm = typeof TableManager !== "undefined" ? TableManager.get("batch_students_table") : null;
+      const tm =
+        typeof TableManager !== "undefined"
+          ? TableManager.get("batch_students_table")
+          : null;
       if (tm && isTableInitialized) {
         tm.root.dispatchEvent(
           new CustomEvent("tm:state-change", {
@@ -143,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                   if (state.search)
                     url.searchParams.set("search", `%${state.search}%`);
-                  
+
                   const page = (state.pagination?.pageIndex || 0) + 1;
                   const limit = state.pagination?.pageSize || 15;
                   url.searchParams.set("page", page);
@@ -193,19 +196,19 @@ document.addEventListener("DOMContentLoaded", () => {
             // Đăng ký Export Excel
             const slugify = (str) => {
               return String(str)
-                .normalize('NFKD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[đĐ]/g, 'd')
+                .normalize("NFKD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[đĐ]/g, "d")
                 .trim()
                 .toLowerCase()
-                .replace(/[^a-z0-9 -]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-');
+                .replace(/[^a-z0-9 -]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-");
             };
-            
+
             const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
             const batchSlug = slugify(batchTitle);
-            
+
             ExportManager.register(tm, {
               target: "#batch-students-export-action",
               triggerLabel: "Export dữ liệu",
@@ -487,9 +490,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const res = await fetch(`${apiBase}/${batchId}/bulk-save`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "X-CSRF-TOKEN": window.CSRF_TOKEN || ""
+          "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
         },
         body: JSON.stringify({
           reason: reason || "Quản trị viên cập nhật phân công.",
@@ -594,61 +597,80 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   // Action: Publish Grades
-  document.querySelector("#btn-publish-grades")?.addEventListener("click", () => {
-    modalHandler.open("#modal-publish-grades");
-  });
+  document
+    .querySelector("#btn-publish-grades")
+    ?.addEventListener("click", () => {
+      modalHandler.open("#modal-publish-grades");
+    });
 
-  document.querySelector("#btn-confirm-publish-grades")?.addEventListener("click", async () => {
-    try {
-      const res = await fetch(`${apiBase}/${batchId}/management/publish-grades`, {
-        method: "POST",
-        headers: { "X-CSRF-TOKEN": window.CSRF_TOKEN || "" }
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Lỗi khi công bố điểm.");
-      modalHandler.close("#modal-publish-grades");
-      toast.success("Thành công", data.message);
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (e) {
-      modalHandler.close("#modal-publish-grades");
-      toast.error("Lỗi", e.message);
-    }
-  });
+  document
+    .querySelector("#btn-confirm-publish-grades")
+    ?.addEventListener("click", async () => {
+      try {
+        const res = await fetch(
+          `${apiBase}/${batchId}/management/publish-grades`,
+          {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": window.CSRF_TOKEN || "" },
+          },
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Lỗi khi công bố điểm.");
+        modalHandler.close("#modal-publish-grades");
+        toast.success("Thành công", data.message);
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (e) {
+        modalHandler.close("#modal-publish-grades");
+        toast.error("Lỗi", e.message);
+      }
+    });
 
   // Edit grade submit
-  document.querySelector("#edit-grade-form")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const batchStudentId = document.querySelector("#edit-grade-batch-student-id").value;
-    const score = document.querySelector("#edit-grade-score").value;
-    const reason = document.querySelector("#edit-grade-reason").value;
-    const feedback = document.querySelector("#edit-grade-feedback").value;
+  document
+    .querySelector("#edit-grade-form")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const batchStudentId = document.querySelector(
+        "#edit-grade-batch-student-id",
+      ).value;
+      const score = document.querySelector("#edit-grade-score").value;
+      const reason = document.querySelector("#edit-grade-reason").value;
+      const feedback = document.querySelector("#edit-grade-feedback").value;
 
-    try {
-      const res = await fetch(`${apiBase}/${batchId}/management/students/${batchStudentId}/grade`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": window.CSRF_TOKEN || ""
-        },
-        body: JSON.stringify({ grade: score, score_reason: reason, feedback })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Lỗi khi cập nhật điểm.");
-      toast.success("Thành công", data.message);
-      modalHandler.close();
-      loadData();
-    } catch (error) {
-      toast.error("Lỗi", error.message);
-    }
-  });
+      try {
+        const res = await fetch(
+          `${apiBase}/${batchId}/management/students/${batchStudentId}/grade`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
+            },
+            body: JSON.stringify({
+              grade: score,
+              score_reason: reason,
+              feedback,
+            }),
+          },
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Lỗi khi cập nhật điểm.");
+        toast.success("Thành công", data.message);
+        modalHandler.close();
+        loadData();
+      } catch (error) {
+        toast.error("Lỗi", error.message);
+      }
+    });
 
   const showStudentDetails = (batchStudentId) => {
     const tm = TableManager.get("batch_students_table");
     const rowData = tm.data.find((r) => r.batch_student_id == batchStudentId);
     if (!rowData) return;
 
-    const fallback = '<span style="color: var(--muted-foreground);">Chưa cập nhật</span>';
-    
+    const fallback =
+      '<span style="color: var(--muted-foreground);">Chưa cập nhật</span>';
+
     const content = document.querySelector("#student-details-content");
     content.innerHTML = `
       <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
@@ -684,11 +706,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const rowData = tm.data.find((r) => r.batch_student_id == batchStudentId);
     if (!rowData) return;
 
-    document.querySelector("#edit-grade-student-name").textContent = `${rowData.student_name} - ${rowData.student_code}`;
-    document.querySelector("#edit-grade-batch-student-id").value = batchStudentId;
-    document.querySelector("#edit-grade-score").value = rowData.grade !== null ? rowData.grade : '';
-    document.querySelector("#edit-grade-reason").value = rowData.score_reason || '';
-    document.querySelector("#edit-grade-feedback").value = rowData.feedback || '';
+    document.querySelector("#edit-grade-student-name").textContent =
+      `${rowData.student_name} - ${rowData.student_code}`;
+    document.querySelector("#edit-grade-batch-student-id").value =
+      batchStudentId;
+    document.querySelector("#edit-grade-score").value =
+      rowData.grade !== null ? rowData.grade : "";
+    document.querySelector("#edit-grade-reason").value =
+      rowData.score_reason || "";
+    document.querySelector("#edit-grade-feedback").value =
+      rowData.feedback || "";
 
     modalHandler.open("#modal-edit-grade");
   };
@@ -700,9 +727,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch(`${apiBase}/${batchId}/auto-assign`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "X-CSRF-TOKEN": window.CSRF_TOKEN || ""
+          "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
         },
         body: JSON.stringify({ method }),
       });
