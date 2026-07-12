@@ -18,6 +18,7 @@ class InternshipBatch
     public ?int $created_by = null,
     public ?string $published_at = null,
     public ?string $closed_at = null,
+    public ?string $grades_published_at = null,
     public ?string $created_at = null,
     public ?string $updated_at = null,
     public ?string $deleted_at = null

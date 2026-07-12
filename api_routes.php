@@ -43,6 +43,8 @@ $router->prefix('api')->group(function ($router) {
         $router->get('/students', [InternshipBatchManagementApiController::class, 'getStudents']);
         $router->post('/students', [InternshipBatchManagementApiController::class, 'addStudent']);
         $router->delete('/students/{student_id}', [InternshipBatchManagementApiController::class, 'removeStudent']);
+        $router->post('/students/{batch_student_id}/grade', [InternshipBatchManagementApiController::class, 'adminUpdateGrade']);
+        $router->post('/publish-grades', [InternshipBatchManagementApiController::class, 'publishGrades']);
 
         $router->get('/supervisors', [InternshipBatchManagementApiController::class, 'getSupervisors']);
         $router->post('/supervisors', [InternshipBatchManagementApiController::class, 'addSupervisor']);

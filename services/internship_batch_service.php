@@ -23,6 +23,7 @@ interface IInternshipBatchService
   public function updateBatch(int $id, array $data): bool;
   public function deleteBatch(int $id): bool;
   public function publishBatch(int $id): bool;
+  public function publishGrades(int $adminId, int $batchId): bool;
   public function closeBatch(int $id): bool;
   public function getBatchStudents(int $batchId): array;
   public function getBatchSupervisors(int $batchId): array;
@@ -328,6 +329,19 @@ class InternshipBatchService implements IInternshipBatchService
     return $this->_store->updateStatus($id, BatchStatus::PUBLISHED, [
       'published_at' => date('Y-m-d H:i:s')
     ]);
+  }
+
+  public function publishGrades(int $adminId, int $batchId): bool
+  {
+    $batch = $this->_store->getById($batchId);
+    if (!$batch)
+      throw new Exception('Không tìm thấy đợt thực tập.');
+
+    if (!in_array($batch['status'], [BatchStatus::PUBLISHED, BatchStatus::CLOSED])) {
+      throw new Exception('Chỉ có đợt thực tập đang diễn ra hoặc đã kết thúc mới có thể công bố điểm.');
+    }
+
+    return $this->_store->publishBatchGrades($batchId);
   }
 
   public function closeBatch(int $id): bool

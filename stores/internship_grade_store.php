@@ -12,6 +12,7 @@ interface IInternshipGradeStore
   public function create(array $data): int;
   public function update(int $id, array $data): bool;
   public function publishAllByTeacher(int $batchId, int $teacherId): int;
+  public function hasUnlockedDraftGrades(int $batchId): bool;
 }
 
 class InternshipGradeStore extends Store implements IInternshipGradeStore
@@ -82,5 +83,18 @@ class InternshipGradeStore extends Store implements IInternshipGradeStore
     ]);
     
     return $stmt->rowCount();
+  }
+
+  public function hasUnlockedDraftGrades(int $batchId): bool
+  {
+    $sql = "SELECT 1 FROM internship_grades ig
+            JOIN internship_batch_students bs ON ig.batch_student_id = bs.id
+            WHERE bs.batch_id = :batch_id
+              AND ig.final_score IS NOT NULL 
+              AND ig.grade_lock_at IS NULL
+            LIMIT 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute(['batch_id' => $batchId]);
+    return (bool) $stmt->fetch();
   }
 }

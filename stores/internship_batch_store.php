@@ -26,6 +26,7 @@ interface IInternshipBatchStore
   public function update(int $id, array $data): bool;
   public function delete(int $id): bool;
   public function updateStatus(int $id, string $status, array $extraData = []): bool;
+  public function publishBatchGrades(int $batchId): bool;
   public function getBatchStudentsWithDetails(int $batchId): array;
   public function getBatchSupervisorsWithDetails(int $batchId): array;
   public function removeStudentFromBatch(int $batchId, int $studentId): bool;
@@ -236,7 +237,8 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
       'total_referrals' => 0,
       'pending_referrals' => 0,
       'has_submissions' => false,
-      'has_grades' => false
+      'has_grades' => false,
+      'locked_grades' => 0
     ];
 
     // Đếm sinh viên
@@ -291,6 +293,14 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $stmt->execute([':id' => $id]);
     $stats['has_grades'] = (int)$stmt->fetchColumn() > 0;
 
+    // Đếm điểm đã chốt
+    $sqlLockedGrades = "SELECT COUNT(*) FROM internship_grades g
+                        JOIN internship_batch_students bs ON g.batch_student_id = bs.id
+                        WHERE bs.batch_id = :id AND g.grade_lock_at IS NOT NULL";
+    $stmt = $this->db->prepare($sqlLockedGrades);
+    $stmt->execute([':id' => $id]);
+    $stats['locked_grades'] = (int)$stmt->fetchColumn();
+
     return $stats;
   }
 
@@ -328,13 +338,29 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     return $stmt->rowCount() > 0;
   }
 
+  public function publishBatchGrades(int $batchId): bool
+  {
+    $sql = "UPDATE internship_batches SET grades_published_at = NOW(), updated_at = NOW() WHERE id = :id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':id' => $batchId]);
+    return $stmt->rowCount() > 0;
+  }
+
   public function getBatchStudentsWithDetails(int $batchId): array
   {
     $sql = "SELECT bs.id as batch_student_id, bs.student_id, s.full_name, s.student_id as student_code, 
-                   c.short_name as classroom_name, bs.status, bs.note
+                   c.short_name as classroom_name, bs.status, bs.note,
+                   ig.final_score as grade, ig.grade_lock_at, ig.score_reason, ig.feedback,
+                   co.name as company_name, co.tax_code as company_tax_code, co.address as company_address,
+                   bs.company_mentor_name, bs.company_mentor_phone, bs.company_mentor_email,
+                   t.id as teacher_id, t.full_name as teacher_name
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN internship_grades ig ON ig.batch_student_id = bs.id
+            LEFT JOIN companies co ON bs.company_id = co.id
+            LEFT JOIN internship_assignments ia ON ia.batch_student_id = bs.id
+            LEFT JOIN teachers t ON ia.teacher_id = t.id
             WHERE bs.batch_id = :batch_id
             ORDER BY s.full_name ASC";
     $stmt = $this->db->prepare($sql);

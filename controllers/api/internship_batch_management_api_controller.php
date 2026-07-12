@@ -6,17 +6,20 @@ use App\Core\Request;
 use App\Core\Controller;
 use App\Services\InternshipBatchService;
 use App\Services\ReferralLetterService;
+use App\Services\InternshipGradeService;
 use Exception;
 
 class InternshipBatchManagementApiController extends Controller
 {
   private InternshipBatchService $_batchService;
   private ReferralLetterService $_referralLetterService;
+  private InternshipGradeService $_gradeService;
 
-  public function __construct(InternshipBatchService $batchService, ReferralLetterService $referralLetterService)
+  public function __construct(InternshipBatchService $batchService, ReferralLetterService $referralLetterService, InternshipGradeService $gradeService)
   {
     $this->_batchService = $batchService;
     $this->_referralLetterService = $referralLetterService;
+    $this->_gradeService = $gradeService;
   }
 
   /**
@@ -28,7 +31,7 @@ class InternshipBatchManagementApiController extends Controller
       $students = $this->_batchService->getBatchStudents((int) $id);
       return $this->json($students, 200);
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 500);
+      return $this->json(null, 500, $e->getMessage());
     }
   }
 
@@ -48,7 +51,7 @@ class InternshipBatchManagementApiController extends Controller
       $this->_batchService->addStudentToBatch((int) $id, (int) $studentId);
       return $this->json([], 200, 'Thêm sinh viên thành công.');
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(null, 400, $e->getMessage());
     }
   }
 
@@ -61,7 +64,45 @@ class InternshipBatchManagementApiController extends Controller
       $this->_batchService->removeStudentFromBatch((int) $id, (int) $student_id);
       return $this->json([], 200, 'Đã xóa sinh viên khỏi đợt.');
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(null, 400, $e->getMessage());
+    }
+  }
+
+  public function publishGrades($id, Request $request)
+  {
+    $adminId = $request->session()->authUser()['account_id'] ?? null;
+    if (!$adminId) return $this->json(null, 401, 'Phiên đăng nhập không hợp lệ.');
+
+    try {
+      $this->_batchService->publishGrades((int)$adminId, (int)$id);
+      return $this->json([], 200, 'Đã công bố điểm cho toàn đợt.');
+    } catch (Exception $e) {
+      return $this->json(null, 400, $e->getMessage());
+    }
+  }
+
+  public function adminUpdateGrade($id, $batch_student_id, Request $request)
+  {
+    $adminId = $request->session()->authUser()['account_id'] ?? null;
+    if (!$adminId) return $this->json(null, 401, 'Phiên đăng nhập không hợp lệ.');
+
+    $data = $request->json();
+    $score = $data['grade'] ?? null;
+    $reason = $data['score_reason'] ?? '';
+    $feedback = $data['feedback'] ?? '';
+
+    if ($score === null) {
+      return $this->json(['message' => 'Vui lòng nhập điểm số.'], 422);
+    }
+
+    try {
+      $result = $this->_gradeService->adminUpdateGrade((int)$batch_student_id, (float)$score, $reason, $feedback, (int)$adminId);
+      if ($result['success']) {
+        return $this->json([], 200, $result['message']);
+      }
+      return $this->json(['message' => $result['message']], 400);
+    } catch (Exception $e) {
+      return $this->json(null, 400, $e->getMessage());
     }
   }
 
@@ -74,7 +115,7 @@ class InternshipBatchManagementApiController extends Controller
       $supervisors = $this->_batchService->getBatchSupervisors((int) $id);
       return $this->json($supervisors, 200);
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 500);
+      return $this->json(null, 500, $e->getMessage());
     }
   }
 
@@ -95,7 +136,7 @@ class InternshipBatchManagementApiController extends Controller
         $this->_batchService->addSupervisorsBulk((int) $id, $data['teachers']);
         return $this->json([], 200, 'Thêm các giảng viên thành công.');
       } catch (Exception $e) {
-        return $this->json(['message' => $e->getMessage()], 400);
+        return $this->json(null, 400, $e->getMessage());
       }
     }
     $teacherId = $data['teacher_id'] ?? null;
@@ -109,7 +150,7 @@ class InternshipBatchManagementApiController extends Controller
       $this->_batchService->addSupervisorToBatch((int) $id, (int) $teacherId, (int) $maxStudents);
       return $this->json([], 200, 'Thêm giảng viên thành công.');
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(null, 400, $e->getMessage());
     }
   }
 
@@ -129,7 +170,7 @@ class InternshipBatchManagementApiController extends Controller
       $this->_batchService->updateSupervisorQuota((int) $id, (int) $teacher_id, (int) $newQuota);
       return $this->json([], 200, 'Cập nhật định mức thành công.');
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(null, 400, $e->getMessage());
     }
   }
 
@@ -142,7 +183,7 @@ class InternshipBatchManagementApiController extends Controller
       $this->_batchService->removeSupervisorFromBatch((int) $id, (int) $teacher_id);
       return $this->json([], 200, 'Đã xóa giảng viên khỏi đợt.');
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 400);
+      return $this->json(null, 400, $e->getMessage());
     }
   }
 
@@ -158,7 +199,7 @@ class InternshipBatchManagementApiController extends Controller
       $students = $this->_batchService->searchEligibleStudents((int) $id, $query, $classroomId);
       return $this->json($students, 200);
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 500);
+      return $this->json(null, 500, $e->getMessage());
     }
   }
 
@@ -173,7 +214,7 @@ class InternshipBatchManagementApiController extends Controller
       $teachers = $this->_batchService->searchEligibleTeachers((int) $id, $query);
       return $this->json($teachers, 200);
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 500);
+      return $this->json(null, 500, $e->getMessage());
     }
   }
 
@@ -204,7 +245,7 @@ class InternshipBatchManagementApiController extends Controller
       $data = $this->_referralLetterService->getPaginatedReferralLetters((int)$id, $page, $limit, $filters, $sort);
       return $this->json($data, 200);
     } catch (Exception $e) {
-      return $this->json(['message' => $e->getMessage()], 500);
+      return $this->json(null, 500, $e->getMessage());
     }
   }
 
