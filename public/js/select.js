@@ -223,6 +223,10 @@ class SelectHandler {
     t.setAttribute('aria-expanded', 'false');
     t.setAttribute('aria-haspopup', 'listbox');
     t.setAttribute('tabindex', disabled ? '-1' : '0');
+    const ariaLabel = root.getAttribute('aria-label');
+    if (ariaLabel) t.setAttribute('aria-label', ariaLabel);
+    const ariaLabelledby = root.getAttribute('aria-labelledby');
+    if (ariaLabelledby) t.setAttribute('aria-labelledby', ariaLabelledby);
     if (disabled) t.dataset.selectDisabled = '';
 
     const container = document.createElement('div');

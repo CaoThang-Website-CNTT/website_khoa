@@ -3,16 +3,20 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Controllers\SiteController;
 use App\Services\PostService;
+use App\Services\CategoryService;
 use SimpleXMLElement;
 
 class SitemapController extends Controller
 {
   private PostService $_postService;
+  private CategoryService $_categoryService;
 
-  public function __construct(PostService $postService)
+  public function __construct(PostService $postService, CategoryService $categoryService)
   {
     $this->_postService = $postService;
+    $this->_categoryService = $categoryService;
   }
 
   public function index()
@@ -48,6 +52,24 @@ class SitemapController extends Controller
       $urlElement->addChild('lastmod', $url['lastmod']);
       $urlElement->addChild('changefreq', $url['changefreq']);
       $urlElement->addChild('priority', $url['priority']);
+    }
+
+    $categories = $this->_categoryService->getAllCategories();
+    foreach ($categories as $cat) {
+      $urlElement = $xml->addChild('url');
+      $urlElement->addChild('loc', htmlspecialchars(url('danh-muc/' . $cat->slug), ENT_XML1, 'UTF-8'));
+      $urlElement->addChild('lastmod', $now);
+      $urlElement->addChild('changefreq', 'weekly');
+      $urlElement->addChild('priority', '0.7');
+    }
+
+    $aliasUrls = array_keys(SiteController::NEWS_ALIASES);
+    foreach ($aliasUrls as $alias) {
+      $urlElement = $xml->addChild('url');
+      $urlElement->addChild('loc', htmlspecialchars(url($alias), ENT_XML1, 'UTF-8'));
+      $urlElement->addChild('lastmod', $now);
+      $urlElement->addChild('changefreq', 'weekly');
+      $urlElement->addChild('priority', '0.7');
     }
 
     $posts = $this->_postService->getPostsForSitemap();

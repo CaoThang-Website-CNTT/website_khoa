@@ -47,8 +47,32 @@
       const next = new URL(window.location.href);
       ['search', 'category', 'sort', 'filter', 'page'].forEach((key) => next.searchParams.delete(key));
       if (state.search) next.searchParams.set('search', state.search);
-      if (state.category !== 'all') next.searchParams.set('category', state.category);
       if (state.sortMode === 'oldest') next.searchParams.set('sort', 'oldest');
+
+      // Ghi đè đường dẫn URL dựa trên danh mục đã map
+      const urlMap = config.urlMap || {};
+      const mappedUrlStr = urlMap[state.category];
+
+      if (mappedUrlStr) {
+        try {
+          const mappedUrl = new URL(mappedUrlStr, window.location.origin);
+          next.pathname = mappedUrl.pathname;
+        } catch (e) {
+          next.pathname = mappedUrlStr;
+        }
+      } else {
+        // fallback: redirect về URL gốc của trang tin tức + query ?category
+        try {
+          const mappedUrl = new URL(postDetailBaseUrl, window.location.origin);
+          next.pathname = mappedUrl.pathname;
+        } catch (e) {
+          next.pathname = postDetailBaseUrl;
+        }
+        if (state.category !== 'all') {
+          next.searchParams.set('category', state.category);
+        }
+      }
+
       window.history[mode === 'replace' ? 'replaceState' : 'pushState']({}, '', next);
     }
 
@@ -205,7 +229,8 @@
 
     // Bộ lọc danh mục (Category)
     filterBtns.forEach(function (button) {
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
         state.category = button.dataset.category || 'all';
         syncFilterButtons();
         resetAndFetch();

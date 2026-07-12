@@ -390,8 +390,8 @@ final class CmsStaticPageRenderer
   {
     ob_start();
     $carouselSlides = $context->value('carouselSlides', []);
-    ?>
-    <section class="relative" id="hero-section"<?= $context->sectionAttributes() ?>>
+?>
+    <section class="relative" id="hero-section" <?= $context->sectionAttributes() ?>>
       <div class="container">
         <?php $this->renderCarousel($carouselSlides); ?>
       </div>
@@ -403,7 +403,7 @@ final class CmsStaticPageRenderer
         </svg>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
@@ -412,7 +412,7 @@ final class CmsStaticPageRenderer
     if (empty($carouselSlides)) {
       return;
     }
-    ?>
+  ?>
     <div class="carousel" id="landingCarousel">
       <div class="carousel__inner" id="carouselInner">
         <?php foreach ($carouselSlides as $slide): ?>
@@ -439,17 +439,19 @@ final class CmsStaticPageRenderer
               </div>
               <div class="image-wrapper carousel__image-wrapper rounded-3xl">
                 <img src="<?= $this->e(url('public/media/' . $slide->media->file_path)) ?>"
-                  alt="<?= $this->e($slide->media->alt_text ?: $slide->title) ?>" class="image carousel__image">
+                  alt="<?= $this->e($slide->media->alt_text ?: $slide->title) ?>" class="image carousel__image"
+                  <?= !isset($isFirstSlideRendered) ? 'fetchpriority="high"' : 'loading="lazy" decoding="async"' ?>>
               </div>
             <?php endif; ?>
           </div>
+          <?php $isFirstSlideRendered = true; ?>
         <?php endforeach; ?>
       </div>
       <button class="carousel__control carousel__control--prev"><i class="fa-solid fa-angle-left"></i></button>
       <button class="carousel__control carousel__control--next"><i class="fa-solid fa-angle-right"></i></button>
       <div class="carousel__indicators"></div>
     </div>
-    <?php
+  <?php
   }
 
   private function renderBreadcrumbs(CmsRenderContext $context): string
@@ -462,8 +464,8 @@ final class CmsStaticPageRenderer
       $links[] = ['url' => url('/giang-vien'), 'title' => 'Đội ngũ giảng viên'];
     }
     ob_start();
-    ?>
-    <section class="site-breadcrumbs py-4"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section class="site-breadcrumbs py-4" <?= $context->sectionAttributes() ?>>
       <div class="container">
         <div class="container-wrapper">
           <?php
@@ -473,44 +475,44 @@ final class CmsStaticPageRenderer
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
   private function renderLandingAbout(array $data, CmsRenderContext $context): string
   {
     ob_start();
-    ?>
-    <section class="relative container py-16" id="landing-about-section"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section class="relative container py-16" id="landing-about-section" <?= $context->sectionAttributes() ?>>
       <h2 class="sr-only">About Us</h2>
       <div class="container-wrapper">
         <div class="landing-about-container flex flex-col gap-12 md:gap-0">
           <?php foreach ($this->items($data, 'items') as $index => $item): ?>
-            <div class="flex gap-4 md:gap-12 flex-col md:<?= $index % 2 === 0 ? 'flex-row-reverse' : 'flex-row' ?>"<?= $context->repeaterItemAttributes('items', $index) ?>>
+            <div class="flex gap-4 md:gap-12 flex-col md:<?= $index % 2 === 0 ? 'flex-row-reverse' : 'flex-row' ?>" <?= $context->repeaterItemAttributes('items', $index) ?>>
               <div class="flex-1 relative">
                 <div class="overflow-hidden rounded-3xl">
                   <div class="image-wrapper">
-                    <img class="image w-full h-full"<?= $context->imageAttributes("items.$index.image.src") ?> src="<?= $this->e($this->asset($item['image']['src'] ?? '')) ?>"
-                      alt="<?= $this->e($item['image']['alt'] ?? '') ?>">
+                    <img class="image w-full h-full" <?= $context->imageAttributes("items.$index.image.src") ?> src="<?= $this->e($this->asset($item['image']['src'] ?? '')) ?>"
+                      alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async">
                   </div>
                 </div>
                 <div class="landing-about-item__card absolute z-10 rounded-3xl p-3 md:p-6 flex flex-col gap-1">
-                  <div class="landing-about-item__card-main-content text-lg md:text-5xl"<?= $context->textAttributes("items.$index.card.value") ?>><?= $this->e($item['card']['value'] ?? '') ?></div>
-                  <div class="landing-about-item__card-sub-content md:text-sm"<?= $context->textAttributes("items.$index.card.label") ?>><?= $this->e($item['card']['label'] ?? '') ?></div>
+                  <div class="landing-about-item__card-main-content text-lg md:text-5xl" <?= $context->textAttributes("items.$index.card.value") ?>><?= $this->e($item['card']['value'] ?? '') ?></div>
+                  <div class="landing-about-item__card-sub-content md:text-sm" <?= $context->textAttributes("items.$index.card.label") ?>><?= $this->e($item['card']['label'] ?? '') ?></div>
                 </div>
               </div>
               <div class="flex-1 flex flex-col justify-center gap-4">
-                <p class="number-of-text text-7xl hidden md:block"<?= $context->textAttributes("items.$index.number") ?>><?= $this->e($item['number'] ?? '') ?></p>
-                <p class="landing-about-item__sub-title text-xs uppercase font-medium"<?= $context->textAttributes("items.$index.eyebrow") ?>><?= $this->e($item['eyebrow'] ?? '') ?></p>
-                <p class="about-item__title text-4xl"<?= $context->textAttributes("items.$index.title") ?>><?= $this->e($item['title'] ?? '') ?></p>
-                <p class="landing-about-item__content"<?= $context->textAttributes("items.$index.description", true) ?>><?= $this->e($item['description'] ?? '') ?></p>
+                <p class="number-of-text text-7xl hidden md:block" <?= $context->textAttributes("items.$index.number") ?>><?= $this->e($item['number'] ?? '') ?></p>
+                <p class="landing-about-item__sub-title text-xs uppercase font-medium" <?= $context->textAttributes("items.$index.eyebrow") ?>><?= $this->e($item['eyebrow'] ?? '') ?></p>
+                <p class="about-item__title text-4xl" <?= $context->textAttributes("items.$index.title") ?>><?= $this->e($item['title'] ?? '') ?></p>
+                <p class="landing-about-item__content" <?= $context->textAttributes("items.$index.description", true) ?>><?= $this->e($item['description'] ?? '') ?></p>
               </div>
             </div>
           <?php endforeach; ?>
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
@@ -518,20 +520,20 @@ final class CmsStaticPageRenderer
   {
     ob_start();
     $feature = is_array($data['feature'] ?? null) ? $data['feature'] : [];
-    ?>
-    <section class="wcu relative container py-16" id="why-choose-us-section"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section class="wcu relative container py-16" id="why-choose-us-section" <?= $context->sectionAttributes() ?>>
       <div class="wcu__container container-wrapper">
         <div class="wcu__header flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
-          <div class="wcu__badge section__badge px-4 py-2 rounded-3xl text-sm mb-2 md:mb-4"<?= $context->textAttributes('badge') ?>><?= $this->e($data['badge'] ?? '') ?></div>
-          <h2 class="wcu__title section__title"<?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></h2>
-          <p class="wcu__subtitle section__sub-title"<?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></p>
+          <div class="wcu__badge section__badge px-4 py-2 rounded-3xl text-sm mb-2 md:mb-4" <?= $context->textAttributes('badge') ?>><?= $this->e($data['badge'] ?? '') ?></div>
+          <h2 class="wcu__title section__title" <?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></h2>
+          <p class="wcu__subtitle section__sub-title" <?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></p>
         </div>
         <div class="wcu__content flex flex-col items-center justify-center">
           <div class="wcu__features-grid grid grid-cols-2 md:grid-cols-3 grid-rows-2 gap-3 md:gap-6 mb-6 self-stretch">
             <div
               class="wcu__feature-card wcu__feature-card--large wcu-feature-container overflow-hidden relative row-start-1 col-span-2 row-span-1 md:row-span-2 rounded-3xl image-wrapper">
-              <img class="wcu__feature-card-image image"<?= $context->imageAttributes('feature.image') ?> src="<?= $this->e($this->asset($feature['image'] ?? '')) ?>"
-                alt="<?= $this->e($feature['alt'] ?? '') ?>">
+              <img class="wcu__feature-card-image image" <?= $context->imageAttributes('feature.image') ?> src="<?= $this->e($this->asset($feature['image'] ?? '')) ?>"
+                alt="<?= $this->e($feature['alt'] ?? '') ?>" loading="lazy" decoding="async">
               <div
                 class="wcu__feature-card-content absolute inset-0 flex flex-col justify-end items-start gap-2 md:gap-4 p-3 md:p-6">
                 <span class="wcu__feature-card-badge badge"
@@ -540,7 +542,7 @@ final class CmsStaticPageRenderer
                   <?= $this->e($feature['title'] ?? '') ?></h3>
                 <p class="wcu__feature-card-description text-xs md:text-md font-normal">
                   <?= $this->e($feature['description'] ?? '') ?></p>
-                <a href="<?= $this->e($this->siteUrl($feature['cta_url'] ?? '#')) ?>"<?= $context->linkAttributes('feature.cta_url') ?>
+                <a href="<?= $this->e($this->siteUrl($feature['cta_url'] ?? '#')) ?>" <?= $context->linkAttributes('feature.cta_url') ?>
                   class="wcu__feature-card-link md:text-md font-normal"><?= $this->e($feature['cta_label'] ?? '') ?> <i
                     class="fa-solid fa-arrow-up-right-from-square"></i></a>
               </div>
@@ -576,13 +578,13 @@ final class CmsStaticPageRenderer
           </div>
           <div class="wcu__highlights-list self-stretch grid grid-rows-2 md:grid-rows-1 md:grid-cols-2 gap-3 md:gap-6">
             <?php foreach ($this->items($data, 'highlights') as $index => $highlight): ?>
-              <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white"<?= $context->repeaterItemAttributes('highlights', $index) ?>>
-                <img class="wcu__highlight-item-image image"<?= $context->imageAttributes("highlights.$index.image") ?> src="<?= $this->e($this->asset($highlight['image'] ?? '')) ?>"
-                  alt="<?= $this->e($highlight['alt'] ?? '') ?>">
+              <div class="wcu__highlight-item flex-1 overflow-hidden relative rounded-3xl image-wrapper text-white" <?= $context->repeaterItemAttributes('highlights', $index) ?>>
+                <img class="wcu__highlight-item-image image" <?= $context->imageAttributes("highlights.$index.image") ?> src="<?= $this->e($this->asset($highlight['image'] ?? '')) ?>"
+                  alt="<?= $this->e($highlight['alt'] ?? '') ?>" loading="lazy" decoding="async">
                 <div
                   class="wcu__highlight-item-content <?= $index === 0 ? 'wcu__highlight-item-content--blue' : 'wcu__highlight-item-content--green' ?> absolute inset-0 flex flex-col justify-end items-start p-3 md:p-6">
-                  <h3 class="wcu__highlight-item-title text-md md:text-2xl font-semibold mb-2"<?= $context->textAttributes("highlights.$index.title") ?>><?= $this->e($highlight['title'] ?? '') ?></h3>
-                  <p class="wcu__highlight-item-description text-xs md:text-sm font-normal"<?= $context->textAttributes("highlights.$index.description", true) ?>><?= $this->e($highlight['description'] ?? '') ?></p>
+                  <h3 class="wcu__highlight-item-title text-md md:text-2xl font-semibold mb-2" <?= $context->textAttributes("highlights.$index.title") ?>><?= $this->e($highlight['title'] ?? '') ?></h3>
+                  <p class="wcu__highlight-item-description text-xs md:text-sm font-normal" <?= $context->textAttributes("highlights.$index.description", true) ?>><?= $this->e($highlight['description'] ?? '') ?></p>
                 </div>
               </div>
             <?php endforeach; ?>
@@ -590,7 +592,7 @@ final class CmsStaticPageRenderer
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
@@ -598,12 +600,12 @@ final class CmsStaticPageRenderer
   {
     ob_start();
     $cta = is_array($data['cta'] ?? null) ? $data['cta'] : [];
-    ?>
-    <section class="relative container py-16" id="stats-section"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section class="relative container py-16" id="stats-section" <?= $context->sectionAttributes() ?>>
       <div class="container-wrapper">
         <div class="flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
-          <h2 class="section__title"<?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></h2>
-          <p class="section__sub-title"<?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></p>
+          <h2 class="section__title" <?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></h2>
+          <p class="section__sub-title" <?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></p>
         </div>
         <div class="flex flex-col items-stretch justify-center gap-3 md:gap-6">
           <div class="stats__grid grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 gap-3 md:gap-6">
@@ -651,7 +653,7 @@ final class CmsStaticPageRenderer
               <?= $this->e($cta['description'] ?? '') ?></p>
             <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
               <?php foreach ($this->items($cta, 'buttons') as $index => $button): ?>
-                <a href="<?= $this->e($this->siteUrl($button['url'] ?? '#')) ?>"<?= $context->linkAttributes("cta.buttons.$index.url") ?><?= $context->repeaterItemAttributes('cta.buttons', $index) ?>
+                <a href="<?= $this->e($this->siteUrl($button['url'] ?? '#')) ?>" <?= $context->linkAttributes("cta.buttons.$index.url") ?><?= $context->repeaterItemAttributes('cta.buttons', $index) ?>
                   data-variant="<?= $this->e($button['variant'] ?? 'outline') ?>"
                   class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full <?= $index === 1 ? 'bg-transparent' : '' ?>"><?= $this->e($button['label'] ?? '') ?></a>
               <?php endforeach; ?>
@@ -660,7 +662,7 @@ final class CmsStaticPageRenderer
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
@@ -676,12 +678,12 @@ final class CmsStaticPageRenderer
     }
 
     ob_start();
-    ?>
-    <section class="partnerships relative container py-16" id="partnerships-section"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section class="partnerships relative container py-16" id="partnerships-section" <?= $context->sectionAttributes() ?>>
       <div class="container-wrapper">
         <div class="partnerships__header flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
-          <h2 class="partnerships__title section__title"<?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></h2>
-          <p class="partnerships__subtitle section__sub-title"<?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></p>
+          <h2 class="partnerships__title section__title" <?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></h2>
+          <p class="partnerships__subtitle section__sub-title" <?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></p>
         </div>
         <div class="partnerships__viewport" aria-label="<?= $this->e($data['title'] ?? 'Đối tác doanh nghiệp') ?>">
           <div class="partnerships__track">
@@ -694,9 +696,9 @@ final class CmsStaticPageRenderer
                   $src = $this->asset($partner['image']['src'] ?? '');
                   $alt = trim((string) ($partner['image']['alt'] ?? $name));
                   ?>
-                  <a class="partnerships__item" href="<?= $this->e($url) ?>"<?= $context->linkAttributes("partners.$partnerIndex.url") ?><?= $context->repeaterItemAttributes('partners', $partnerIndex) ?> target="_blank" rel="noopener noreferrer" <?= $loop === 1 ? 'tabindex="-1"' : '' ?>
+                  <a class="partnerships__item" href="<?= $this->e($url) ?>" <?= $context->linkAttributes("partners.$partnerIndex.url") ?><?= $context->repeaterItemAttributes('partners', $partnerIndex) ?> target="_blank" rel="noopener noreferrer" <?= $loop === 1 ? 'tabindex="-1"' : '' ?>
                     aria-label="<?= $this->e($name !== '' ? 'Mở website ' . $name : 'Mở website đối tác') ?>">
-                    <img class="partnerships__logo"<?= $context->imageAttributes("partners.$partnerIndex.image.src") ?> src="<?= $this->e($src) ?>" alt="<?= $this->e($alt) ?>" loading="lazy">
+                    <img class="partnerships__logo" <?= $context->imageAttributes("partners.$partnerIndex.image.src") ?> src="<?= $this->e($src) ?>" alt="<?= $this->e($alt) ?>" loading="lazy" decoding="async">
                   </a>
                 <?php endforeach; ?>
               </div>
@@ -705,7 +707,7 @@ final class CmsStaticPageRenderer
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
@@ -715,8 +717,8 @@ final class CmsStaticPageRenderer
     ob_start();
     $featuredNews = $context->value('featuredNews', []);
     $latestNewsItems = $context->value('latestNewsItems', []);
-    ?>
-    <section class="relative container py-16" id="newsfeed-section"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section class="relative container py-16" id="newsfeed-section" <?= $context->sectionAttributes() ?>>
       <div class="container-wrapper">
         <div class="flex flex-col justify-center items-center gap-2 md:gap-4 mb-8 md:mb-12">
           <h2 class="section__title">Tin tức &amp; Sự kiện</h2>
@@ -753,30 +755,30 @@ final class CmsStaticPageRenderer
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
   private function renderAboutHero(array $data, CmsRenderContext $context): string
   {
     ob_start();
-    ?>
-    <section class="relative"<?= $context->sectionAttributes() ?>>
-      <div class="page-thumbnail__media"><img class="w-full h-full object-cover"<?= $context->imageAttributes('image') ?>
+  ?>
+    <section class="relative" <?= $context->sectionAttributes() ?>>
+      <div class="page-thumbnail__media"><img class="w-full h-full object-cover" <?= $context->imageAttributes('image') ?>
           src="<?= $this->e($this->asset($data['image'] ?? '')) ?>" alt=""></div>
       <div class="page-thumbnail__overlay absolute inset-0 flex justify-center items-center">
         <div class="container">
           <div class="container-wrapper">
             <div class="page-thumbnail__content flex flex-col justify-center items-center gap-6 text-center">
-              <span class="badge" data-variant="primary"<?= $context->textAttributes('badge') ?>><?= $this->e($data['badge'] ?? '') ?></span>
-              <div class="page-thumbnail__title"<?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></div>
-              <div class="page-thumbnail__subtitle"<?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></div>
+              <span class="badge" data-variant="primary" <?= $context->textAttributes('badge') ?>><?= $this->e($data['badge'] ?? '') ?></span>
+              <div class="page-thumbnail__title" <?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></div>
+              <div class="page-thumbnail__subtitle" <?= $context->textAttributes('subtitle', true) ?>><?= $this->e($data['subtitle'] ?? '') ?></div>
             </div>
           </div>
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
@@ -788,46 +790,52 @@ final class CmsStaticPageRenderer
     ));
 
     ob_start();
-    ?>
-    <section class="faculty-directory py-12"<?= $context->sectionAttributes() ?>>
-      <div class="container"><div class="container-wrapper">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-faculty-grid>
-          <?php foreach ($teachers as $index => $teacher): ?>
-            <?php
-            $name = trim((string) ($teacher['name'] ?? ''));
-            $role = trim((string) ($teacher['role'] ?? ''));
-            $phone = trim((string) ($teacher['phone'] ?? ''));
-            $email = trim((string) ($teacher['email'] ?? ''));
-            $portrait = is_array($teacher['portrait'] ?? null) ? $teacher['portrait'] : [];
-            ?>
-            <article class="card faculty-card overflow-hidden" data-faculty-card tabindex="0" role="button" aria-expanded="false"<?= $context->repeaterItemAttributes('teachers', $index) ?>>
-              <div class="card__header faculty-card__portrait">
-                <img class="w-full h-full object-cover"<?= $context->imageAttributes("teachers.$index.portrait.src") ?> src="<?= $this->e($this->asset($portrait['src'] ?? '')) ?>" alt="<?= $this->e('Ảnh chân dung ' . $name) ?>" loading="lazy">
-              </div>
-              <div class="card__content faculty-card__content">
-                <h3 class="card__title text-xl"<?= $context->textAttributes("teachers.$index.name") ?>><?= $this->e($name) ?></h3>
-                <?php if ($role !== ''): ?><p class="card__description mt-1"<?= $context->textAttributes("teachers.$index.role") ?>><?= $this->e($role) ?></p><?php endif; ?>
-                <?php if ($phone !== '' || $email !== ''): ?>
-                  <div class="faculty-card__contact mt-4" data-faculty-contact aria-hidden="true">
-                    <?php if ($phone !== ''): ?><p class="flex items-center gap-2"><i class="fa-solid fa-phone" aria-hidden="true"></i><span<?= $context->textAttributes("teachers.$index.phone") ?>><?= $this->e($phone) ?></span></p><?php endif; ?>
-                    <?php if ($email !== ''): ?><p class="flex items-center gap-2<?= $phone !== '' ? ' mt-2' : '' ?>"><i class="fa-regular fa-envelope" aria-hidden="true"></i><span<?= $context->textAttributes("teachers.$index.email") ?>><?= $this->e($email) ?></span></p><?php endif; ?>
-                  </div>
-                <?php endif; ?>
-              </div>
-            </article>
-          <?php endforeach; ?>
+  ?>
+    <section class="faculty-directory py-12" <?= $context->sectionAttributes() ?>>
+      <div class="container">
+        <div class="container-wrapper">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-faculty-grid>
+            <?php foreach ($teachers as $index => $teacher): ?>
+              <?php
+              $name = trim((string) ($teacher['name'] ?? ''));
+              $role = trim((string) ($teacher['role'] ?? ''));
+              $phone = trim((string) ($teacher['phone'] ?? ''));
+              $email = trim((string) ($teacher['email'] ?? ''));
+              $portrait = is_array($teacher['portrait'] ?? null) ? $teacher['portrait'] : [];
+              ?>
+              <article class="card faculty-card overflow-hidden" data-faculty-card tabindex="0" role="button" aria-expanded="false" <?= $context->repeaterItemAttributes('teachers', $index) ?>>
+                <div class="card__header faculty-card__portrait">
+                  <img class="w-full h-full object-cover" <?= $context->imageAttributes("teachers.$index.portrait.src") ?> src="<?= $this->e($this->asset($portrait['src'] ?? '')) ?>" alt="<?= $this->e('Ảnh chân dung ' . $name) ?>" loading="lazy">
+                </div>
+                <div class="card__content faculty-card__content">
+                  <h3 class="card__title text-xl" <?= $context->textAttributes("teachers.$index.name") ?>><?= $this->e($name) ?></h3>
+                  <?php if ($role !== ''): ?><p class="card__description mt-1" <?= $context->textAttributes("teachers.$index.role") ?>><?= $this->e($role) ?></p><?php endif; ?>
+                  <?php if ($phone !== '' || $email !== ''): ?>
+                    <div class="faculty-card__contact mt-4" data-faculty-contact aria-hidden="true">
+                      <?php if ($phone !== ''): ?><p class="flex items-center gap-2"><i class="fa-solid fa-phone" aria-hidden="true"></i>
+                          <span<?= $context->textAttributes("teachers.$index.phone") ?>><?= $this->e($phone) ?></span>
+                        </p><?php endif; ?>
+                      <?php if ($email !== ''): ?><p class="flex items-center gap-2<?= $phone !== '' ? ' mt-2' : '' ?>"><i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                          <span<?= $context->textAttributes("teachers.$index.email") ?>><?= $this->e($email) ?></span>
+                        </p><?php endif; ?>
+                    </div>
+                  <?php endif; ?>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
         </div>
-      </div></div>
+      </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
   private function renderHistory(array $data, CmsRenderContext $context): string
   {
     ob_start();
-    ?>
-    <section id="lich-su-phat-trien" class="py-12 scroll-section"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section id="lich-su-phat-trien" class="py-12 scroll-section" <?= $context->sectionAttributes() ?>>
       <div class="container">
         <div class="container-wrapper flex flex-col gap-16">
           <?php foreach ($this->items($data, 'sections') as $index => $item): ?>
@@ -836,7 +844,7 @@ final class CmsStaticPageRenderer
               <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl">
                 <div class="history-image-wrapper image-wrapper"><img class="image w-full h-full"
                     src="<?= $this->e($this->asset($item['image']['src'] ?? '')) ?>"
-                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>"></div>
+                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async"></div>
                 <div class="history-image-wrapper__content absolute inset-0 flex flex-col justify-end gap-1">
                   <div class="text-6xl"><?= $this->e($item['year'] ?? '') ?></div>
                   <div class="text-xl"><?= $this->e($item['image']['caption'] ?? '') ?></div>
@@ -849,7 +857,8 @@ final class CmsStaticPageRenderer
                   <?php foreach ($this->items($item, 'timeline') as $timeline): ?>
                     <div class="history-content-timeline__item"><span
                         class="history-content-timeline__item-year"><?= $this->e($timeline['year'] ?? '') ?>:</span>
-                      <span><?= $this->e($timeline['description'] ?? '') ?></span></div>
+                      <span><?= $this->e($timeline['description'] ?? '') ?></span>
+                    </div>
                   <?php endforeach; ?>
                 </div>
               </div>
@@ -858,15 +867,15 @@ final class CmsStaticPageRenderer
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
   private function renderBentoGrid(array $data, CmsRenderContext $context): string
   {
     ob_start();
-    ?>
-    <section class="py-12"<?= $context->sectionAttributes() ?>>
+  ?>
+    <section class="py-12" <?= $context->sectionAttributes() ?>>
       <div class="container">
         <div class="container-wrapper">
           <div class="bento-grid">
@@ -877,7 +886,7 @@ final class CmsStaticPageRenderer
                 <?= $this->bentoStyle($item) ?>>
                 <?php if ($hasImage): ?><img class="bento-grid-item__image"
                     src="<?= $this->e($this->asset($item['image']['src'])) ?>"
-                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>"><?php endif; ?>
+                    alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async"><?php endif; ?>
                 <div class="card__header"><span class="badge"
                     data-variant="glass"><?= $item['badge'] ?? '<i class="fa-solid fa-lock"></i>' ?></span></div>
                 <div class="card__content">
@@ -891,7 +900,7 @@ final class CmsStaticPageRenderer
         </div>
       </div>
     </section>
-    <?php
+  <?php
     return (string) ob_get_clean();
   }
 
@@ -902,31 +911,33 @@ final class CmsStaticPageRenderer
       if (!isset($data[$key]) || $data[$key] === '' || $data[$key] === []) $data[$key] = $value;
     }
     ob_start(); ?>
-    <section id="tam-nhin-su-menh" class="vision-mission py-12 scroll-section"<?= $context->sectionAttributes() ?>>
-      <div class="container"><div class="container-wrapper">
-        <header class="flex flex-col items-center gap-2 md:gap-4 mb-8 md:mb-12 text-center">
-          <h2 class="section__title"><?= $this->e($data['title'] ?? '') ?></h2>
-          <p class="section__sub-title"><?= $this->e($data['introduction'] ?? '') ?></p>
-        </header>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 items-stretch">
-          <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
-            <div class="flex gap-2 md:gap-4 items-center">
-              <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-eye stats__benefit-card-icon" aria-hidden="true"></i></div>
-              <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['vision_title'] ?? 'Tầm nhìn') ?></h3>
-            </div>
-            <p><?= $this->e($data['vision'] ?? '') ?></p>
-          </article>
-          <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
-            <div class="flex gap-2 md:gap-4 items-center">
-              <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-bullseye stats__benefit-card-icon" aria-hidden="true"></i></div>
-              <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['mission_title'] ?? 'Sứ mệnh') ?></h3>
-            </div>
-            <p><?= $this->e($data['mission'] ?? '') ?></p>
-          </article>
+    <section id="tam-nhin-su-menh" class="vision-mission py-12 scroll-section" <?= $context->sectionAttributes() ?>>
+      <div class="container">
+        <div class="container-wrapper">
+          <header class="flex flex-col items-center gap-2 md:gap-4 mb-8 md:mb-12 text-center">
+            <h2 class="section__title"><?= $this->e($data['title'] ?? '') ?></h2>
+            <p class="section__sub-title"><?= $this->e($data['introduction'] ?? '') ?></p>
+          </header>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 items-stretch">
+            <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+              <div class="flex gap-2 md:gap-4 items-center">
+                <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-eye stats__benefit-card-icon" aria-hidden="true"></i></div>
+                <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['vision_title'] ?? 'Tầm nhìn') ?></h3>
+              </div>
+              <p><?= $this->e($data['vision'] ?? '') ?></p>
+            </article>
+            <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
+              <div class="flex gap-2 md:gap-4 items-center">
+                <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-bullseye stats__benefit-card-icon" aria-hidden="true"></i></div>
+                <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['mission_title'] ?? 'Sứ mệnh') ?></h3>
+              </div>
+              <p><?= $this->e($data['mission'] ?? '') ?></p>
+            </article>
+          </div>
         </div>
-      </div></div>
+      </div>
     </section>
-    <?php return (string) ob_get_clean();
+<?php return (string) ob_get_clean();
   }
 
   private static function visionMissionDefaults(): array

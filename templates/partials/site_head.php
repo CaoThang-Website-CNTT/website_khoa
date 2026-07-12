@@ -22,10 +22,10 @@ $_seoHead = [
 <link rel="preload" as="style" href="<?= url('public/css/base.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/main.css') ?>">
 <link rel="preload" as="style" href="<?= url('public/css/landing.css') ?>">
-<link rel="stylesheet" href="<?= url('public/css/fontawesome/fontawesome.min.css') ?>">
-<link rel="stylesheet" href="<?= url('public/css/fontawesome/solid.min.css') ?>">
-<link rel="stylesheet" href="<?= url('public/css/fontawesome/regular.min.css') ?>">
-<link rel="stylesheet" href="<?= url('public/css/fontawesome/brands.min.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/fontawesome.min.css') ?>" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/solid.min.css') ?>" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/regular.min.css') ?>" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="<?= url('public/css/fontawesome/brands.min.css') ?>" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="<?= url('public/css/fonts.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/base.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/common.css') ?>">
@@ -33,7 +33,7 @@ $_seoHead = [
 <link rel="stylesheet" href="<?= url('public/css/landing.css') ?>?v=<?= filemtime(BASE_PATH . '/public/css/landing.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
 
-<script src="<?= url('/public/js/toast.js') ?>"></script>
+<script defer src="<?= url('/public/js/toast.js') ?>"></script>
 
 <script>
   // Khởi tạo toast

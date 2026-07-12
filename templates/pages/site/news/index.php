@@ -78,15 +78,15 @@ $pageJsonLd = [$breadcrumbSchema];
 
       <div class="news-filters" role="group" aria-label="Danh mục tin tức">
         <?php $allActive = $activeCategory === ''; ?>
-        <button class="btn news-filters__tag" data-variant="<?= $allActive ? 'primary' : 'outline' ?>" data-size="lg"
-          data-category="all" aria-pressed="<?= $allActive ? 'true' : 'false' ?>">Tất cả</button>
+        <a href="<?= htmlspecialchars($urlMap['all'] ?? url('tin-tuc')) ?>" class="btn news-filters__tag" data-variant="<?= $allActive ? 'primary' : 'outline' ?>" data-size="lg"
+          data-category="all" role="button" aria-pressed="<?= $allActive ? 'true' : 'false' ?>">Tất cả</a>
         <?php foreach (($newsCategories ?? []) as $categoryItem): ?>
           <?php $categoryActive = $activeCategory === $categoryItem->slug; ?>
-          <button class="btn news-filters__tag" data-variant="<?= $categoryActive ? 'primary' : 'outline' ?>"
-            data-size="lg" data-category="<?= htmlspecialchars($categoryItem->slug) ?>"
+          <a href="<?= htmlspecialchars($urlMap[$categoryItem->slug] ?? url('danh-muc/' . $categoryItem->slug)) ?>" class="btn news-filters__tag" data-variant="<?= $categoryActive ? 'primary' : 'outline' ?>"
+            data-size="lg" data-category="<?= htmlspecialchars($categoryItem->slug) ?>" role="button"
             aria-pressed="<?= $categoryActive ? 'true' : 'false' ?>">
             <?= htmlspecialchars($categoryItem->name) ?>
-          </button>
+          </a>
         <?php endforeach; ?>
       </div>
     </section>
@@ -122,14 +122,14 @@ $pageJsonLd = [$breadcrumbSchema];
       <div class="news-section__header">
         <h2 id="all-news-title" class="news-section__title"><?= $isFiltered ? 'Kết quả' : 'Tất cả tin tức' ?></h2>
         <div class="news-list__sort">
-          <label for="all-news-sort-select">Sắp xếp:</label>
-          <button type="button" id="all-news-sort-select" class="select" data-select-id="all-news-sort-select"
-            name="all-news-sort" role="listbox" data-select-default-value="<?= htmlspecialchars($activeSort) ?>">
+          <label id="all-news-sort-label">Sắp xếp:</label>
+          <div id="all-news-sort-select" class="select" data-select-id="all-news-sort-select"
+            name="all-news-sort" aria-labelledby="all-news-sort-label" data-select-default-value="<?= htmlspecialchars($activeSort) ?>">
             <div class="select__content">
               <div class="select__item" data-select-value="newest">Mới nhất</div>
               <div class="select__item" data-select-value="oldest">Cũ nhất</div>
             </div>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -233,6 +233,7 @@ $pageJsonLd = [$breadcrumbSchema];
     ,initialSearch: <?= json_encode($activeSearch, JSON_UNESCAPED_UNICODE) ?>
     ,initialCategory: <?= json_encode($activeCategory, JSON_UNESCAPED_UNICODE) ?>
     ,initialSort: <?= json_encode($activeSort) ?>
+    ,urlMap: <?= json_encode($urlMap ?? []) ?>
   };
 </script>
 <script src="<?= url('public/js/pages/site/news/index.js') ?>?v=<?= filemtime(BASE_PATH . '/public/js/pages/site/news/index.js') ?>" type="module"></script>
