@@ -175,13 +175,18 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
               t.full_name as teacher_name,
               c_info.name as company_name,
               c_info.tax_code as company_tax_code,
-              c_info.address as company_address
+              c_info.address as company_address,
+              ig.final_score as grade,
+              ig.grade_lock_at,
+              ig.score_reason,
+              ig.feedback
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
             LEFT JOIN internship_assignments a ON bs.id = a.batch_student_id
             LEFT JOIN teachers t ON a.teacher_id = t.id
             LEFT JOIN companies c_info ON bs.company_id = c_info.id
+            LEFT JOIN internship_grades ig ON bs.id = ig.batch_student_id
             WHERE bs.batch_id = :batch_id";
 
     $stmt = $this->db->prepare($sql);
@@ -205,13 +210,18 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
               t.full_name as teacher_name,
               c_info.name as company_name,
               c_info.tax_code as company_tax_code,
-              c_info.address as company_address
+              c_info.address as company_address,
+              ig.final_score as grade,
+              ig.grade_lock_at,
+              ig.score_reason,
+              ig.feedback
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
             LEFT JOIN internship_assignments a ON bs.id = a.batch_student_id
             LEFT JOIN teachers t ON a.teacher_id = t.id
             LEFT JOIN companies c_info ON bs.company_id = c_info.id
+            LEFT JOIN internship_grades ig ON bs.id = ig.batch_student_id
             WHERE bs.batch_id = :batch_id";
 
     $params = [':batch_id' => $batchId];

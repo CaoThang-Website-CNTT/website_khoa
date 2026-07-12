@@ -50,4 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Sync Score Select to Hidden Input
+  const scoreSelect = document.querySelector('[data-select-id="grading-score"]');
+  const scoreInput = document.querySelector('#score-input');
+  if (scoreSelect && scoreInput) {
+    scoreSelect.addEventListener('select:change', (e) => {
+      scoreInput.value = e.detail.value || '';
+    });
+  }
 });

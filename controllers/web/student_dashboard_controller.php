@@ -234,11 +234,24 @@ class StudentDashboardController extends Controller
     $now = new \DateTime();
     $startAt = !empty($dashboardData['current']['start_at']) ? new \DateTime($dashboardData['current']['start_at']) : null;
     $endAt = !empty($dashboardData['current']['end_at']) ? new \DateTime($dashboardData['current']['end_at']) : null;
-    $grade = $dashboardData['grade'] ?? null;
+    
+    $isGradesPublished = !empty($dashboardData['current']['grades_published_at']);
+    $rawGrade = $dashboardData['grade'] ?? null;
+    $rawIsGradeLocked = !empty($rawGrade['grade_lock_at']);
+    $rawHasGrade = $rawGrade && isset($rawGrade['final_score']);
+    
+    // Chỉ đưa $grade ra view nếu đã công bố
+    if (!$isGradesPublished) {
+      $dashboardData['grade'] = null; 
+      $grade = null;
+    } else {
+      $grade = $rawGrade;
+    }
+
     $isGradeLocked = !empty($grade['grade_lock_at']);
     $hasGrade = $grade && isset($grade['final_score']);
 
-    if ($isGradeLocked || ($endAt && $now > $endAt)) {
+    if ($rawIsGradeLocked || ($endAt && $now > $endAt)) {
       $activePhase = 2;
     } elseif ($startAt && $now >= $startAt) {
       $activePhase = 1;
@@ -270,16 +283,30 @@ class StudentDashboardController extends Controller
         $nextAction = 'Tiếp tục theo dõi tiến độ và hoàn thành các báo cáo còn lại.';
       }
     } else {
-      $nextAction = $isGradeLocked
-        ? 'Điểm đã được chốt. Kiểm tra kết quả và nhận xét của giảng viên hướng dẫn.'
-        : ($hasGrade ? 'Giảng viên đang hoàn tất và chốt điểm.' : 'Chờ giảng viên hướng dẫn chấm và chốt điểm.');
+      if ($isGradesPublished) {
+        $nextAction = $isGradeLocked
+          ? 'Điểm đã được công bố. Kiểm tra kết quả và nhận xét của giảng viên hướng dẫn.'
+          : ($hasGrade ? 'Giảng viên đang hoàn tất và chốt điểm.' : 'Chờ giảng viên hướng dẫn chấm điểm.');
+        $gradeState = $isGradeLocked ? 'locked' : ($hasGrade ? 'graded' : 'waiting');
+      } else {
+        if ($rawIsGradeLocked) {
+          $nextAction = 'Điểm đã được giảng viên chốt. Chờ Khoa công bố điểm chính thức.';
+          $gradeState = 'graded';
+        } elseif ($rawHasGrade) {
+          $nextAction = 'Giảng viên đang chấm điểm. Chờ Khoa công bố điểm chính thức.';
+          $gradeState = 'graded';
+        } else {
+          $nextAction = 'Chờ giảng viên chấm điểm và Khoa công bố điểm.';
+          $gradeState = 'waiting';
+        }
+      }
     }
 
     $journey = [
       'active_phase' => $activePhase,
       'phase_states' => $phaseStates,
       'next_action' => $nextAction,
-      'grade_state' => $isGradeLocked ? 'locked' : ($hasGrade ? 'graded' : 'waiting'),
+      'grade_state' => $gradeState ?? 'waiting',
       'submitted_document_count' => $submittedDocumentCount,
       'required_document_count' => count($requiredDocumentTypes)
     ];

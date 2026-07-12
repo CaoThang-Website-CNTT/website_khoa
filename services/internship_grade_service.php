@@ -16,7 +16,8 @@ interface IInternshipGradeService
   public function canTeacherGrade(int $batchId, int $teacherId, int $batchStudentId): array;
   public function isWithinGradingDeadline(int $batchId): bool;
   public function getStudentGradingData(int $batchStudentId, int $teacherId): ?array;
-  public function publishAllTeacherGrades(int $batchId, int $teacherId): array;
+  public function lockAllTeacherGrades(int $batchId, int $teacherId): array;
+  public function adminUpdateGrade(int $batchStudentId, float $score, ?string $scoreReason, ?string $feedback, int $adminId): array;
 }
 
 class InternshipGradeService implements IInternshipGradeService
@@ -162,13 +163,42 @@ class InternshipGradeService implements IInternshipGradeService
     ];
   }
 
-  public function publishAllTeacherGrades(int $batchId, int $teacherId): array
+  public function lockAllTeacherGrades(int $batchId, int $teacherId): array
   {
     $count = $this->_gradeStore->publishAllByTeacher($batchId, $teacherId);
     if ($count > 0) {
-        return ['success' => true, 'message' => "Đã chốt và công bố điểm cho {$count} sinh viên."];
+        return ['success' => true, 'message' => "Đã chốt và nộp điểm về Khoa cho {$count} sinh viên."];
     } else {
         return ['success' => false, 'message' => "Không có sinh viên nào có điểm nháp hợp lệ để chốt."];
+    }
+  }
+
+  public function adminUpdateGrade(int $batchStudentId, float $score, ?string $scoreReason, ?string $feedback, int $adminId): array
+  {
+    if ($score < 0 || $score > 10) {
+      return ['success' => false, 'message' => 'Điểm phải nằm trong khoảng 0 - 10.'];
+    }
+
+    $existingGrade = $this->_gradeStore->getByBatchStudentId($batchStudentId);
+
+    if ($existingGrade) {
+      $this->_gradeStore->update($existingGrade['id'], [
+        'final_score' => $score,
+        'score_reason' => $scoreReason,
+        'feedback' => $feedback,
+        'graded_by' => $adminId
+      ]);
+      return ['success' => true, 'message' => 'Admin cập nhật điểm thành công.'];
+    } else {
+      $this->_gradeStore->create([
+        'batch_student_id' => $batchStudentId,
+        'final_score' => $score,
+        'score_reason' => $scoreReason,
+        'feedback' => $feedback,
+        'graded_by' => $adminId,
+        'grade_lock_at' => date('Y-m-d H:i:s')
+      ]);
+      return ['success' => true, 'message' => 'Admin chấm điểm thành công.'];
     }
   }
 }

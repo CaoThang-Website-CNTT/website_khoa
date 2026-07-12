@@ -342,6 +342,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Xử lý click để bật editor
     tableRoot.addEventListener("click", (e) => {
+      const viewDetailsBtn = e.target.closest(".btn-view-details");
+      if (viewDetailsBtn) {
+        const studentId = viewDetailsBtn.dataset.id;
+        showStudentDetails(studentId);
+        return;
+      }
+
       if (batchStatus === "closed") return;
 
       const display = e.target.closest(".teacher-cell__display");
@@ -585,6 +592,102 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", async () => {
       await performAutoAssign("auto_even");
     });
+
+  // Action: Publish Grades
+  document.querySelector("#btn-publish-grades")?.addEventListener("click", async () => {
+    if (!confirm("Bạn có chắc chắn muốn công bố tất cả điểm đã chốt của đợt thực tập này? Sinh viên sẽ có thể xem điểm của mình.")) return;
+    
+    try {
+      const res = await fetch(`${apiBase}/${batchId}/management/publish-grades`, {
+        method: "POST",
+        headers: { "X-CSRF-TOKEN": window.CSRF_TOKEN || "" }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Lỗi khi công bố điểm.");
+      toast.success("Thành công", data.message);
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+      toast.error("Lỗi", e.message);
+    }
+  });
+
+  // Edit grade submit
+  document.querySelector("#edit-grade-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const batchStudentId = document.querySelector("#edit-grade-batch-student-id").value;
+    const score = document.querySelector("#edit-grade-score").value;
+    const reason = document.querySelector("#edit-grade-reason").value;
+    const feedback = document.querySelector("#edit-grade-feedback").value;
+
+    try {
+      const res = await fetch(`${apiBase}/${batchId}/management/students/${batchStudentId}/grade`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": window.CSRF_TOKEN || ""
+        },
+        body: JSON.stringify({ grade: score, score_reason: reason, feedback })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Lỗi khi cập nhật điểm.");
+      toast.success("Thành công", data.message);
+      modalHandler.close();
+      loadData();
+    } catch (error) {
+      toast.error("Lỗi", error.message);
+    }
+  });
+
+  const showStudentDetails = (batchStudentId) => {
+    const tm = TableManager.get("batch_students_table");
+    const rowData = tm.data.find((r) => r.batch_student_id == batchStudentId);
+    if (!rowData) return;
+
+    const fallback = '<span style="color: var(--muted-foreground);">Chưa cập nhật</span>';
+    
+    const content = document.querySelector("#student-details-content");
+    content.innerHTML = `
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Công ty:</span>
+        <span class="col-span-2 font-medium">${rowData.company_name || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Địa chỉ:</span>
+        <span class="col-span-2">${rowData.company_address || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Mã số thuế:</span>
+        <span class="col-span-2">${rowData.company_tax_code || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">CBHD Doanh nghiệp:</span>
+        <span class="col-span-2 font-medium">${rowData.company_mentor_name || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">SĐT CBHD:</span>
+        <span class="col-span-2">${rowData.company_mentor_phone || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Email CBHD:</span>
+        <span class="col-span-2">${rowData.company_mentor_email || fallback}</span>
+      </div>
+    `;
+    modalHandler.open("#modal-student-details");
+  };
+
+  const openEditGradeModal = (batchStudentId) => {
+    const tm = TableManager.get("batch_students_table");
+    const rowData = tm.data.find((r) => r.batch_student_id == batchStudentId);
+    if (!rowData) return;
+
+    document.querySelector("#edit-grade-student-name").textContent = `${rowData.student_name} - ${rowData.student_code}`;
+    document.querySelector("#edit-grade-batch-student-id").value = batchStudentId;
+    document.querySelector("#edit-grade-score").value = rowData.grade !== null ? rowData.grade : '';
+    document.querySelector("#edit-grade-reason").value = rowData.score_reason || '';
+    document.querySelector("#edit-grade-feedback").value = rowData.feedback || '';
+
+    modalHandler.open("#modal-edit-grade");
+  };
 
   /**
    * Helper thực hiện API phân công tự động
