@@ -87,10 +87,27 @@ class TeacherProjectDashboardController extends Controller
 
         $groups = $isAllocationPublished ? $this->_groupService->getAssignedGroupsByTeacher($id, $teacher->id) : [];
 
+        $supervisorInfo = $this->_batchService->getSupervisorInfo($id, $teacher->id) ?? ['min_students' => 0, 'max_students' => 0];
+
+        $topicStats = [
+            'total' => count($topics),
+            'approved' => count(array_filter($topics, fn($t) => $t['status'] === ProjectTopicStatus::APPROVED)),
+            'capacity' => array_sum(array_map(fn($t) => $t['status'] === ProjectTopicStatus::APPROVED ? (int)($t['max_students'] ?? 0) : 0, $topics))
+        ];
+
+        $groupStats = [
+            'total_groups' => count($groups),
+            'total_students' => array_sum(array_column($groups, 'member_count')),
+            'ineligible_students' => array_sum(array_column($groups, 'ineligible_count'))
+        ];
+
         return $this->render('teacher/project_batches/show', [
             'batch' => $batch,
             'topics' => $topics,
             'groups' => $groups,
+            'supervisorInfo' => $supervisorInfo,
+            'topicStats' => $topicStats,
+            'groupStats' => $groupStats,
             'isAllocationPublished' => $isAllocationPublished,
             'title' => 'Chi tiết đợt đồ án: ' . $batch['title']
         ], layout: 'dashboard_layout');

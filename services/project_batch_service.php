@@ -28,6 +28,7 @@ interface IProjectBatchService
   public function addSupervisorToBatch(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
   public function updateSupervisorCapacity(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
   public function removeSupervisor(int $batchId, int $teacherId): void;
+  public function getSupervisorInfo(int $batchId, int $teacherId): ?array;
 }
 
 class ProjectBatchService implements IProjectBatchService
@@ -236,6 +237,11 @@ class ProjectBatchService implements IProjectBatchService
     }
 
     $this->_store->removeSupervisor($batchId, $teacherId);
+  }
+
+  public function getSupervisorInfo(int $batchId, int $teacherId): ?array
+  {
+    return $this->_store->getSupervisorInfo($batchId, $teacherId);
   }
 
   private function validateBatchDates(array $data): void

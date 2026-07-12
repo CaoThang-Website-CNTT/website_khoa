@@ -26,6 +26,7 @@ interface IProjectBatchStore
   public function addSupervisor(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
   public function updateSupervisorCapacity(int $batchId, int $teacherId, int $minStudents, int $maxStudents): void;
   public function removeSupervisor(int $batchId, int $teacherId): void;
+  public function getSupervisorInfo(int $batchId, int $teacherId): ?array;
   public function getITTeachers(): array;
 }
 
@@ -290,6 +291,16 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
       DELETE FROM project_batch_supervisors 
       WHERE batch_id = ? AND teacher_id = ?
     ")->execute([$batchId, $teacherId]);
+  }
+
+  public function getSupervisorInfo(int $batchId, int $teacherId): ?array
+  {
+    $sql = "SELECT * FROM project_batch_supervisors
+            WHERE batch_id = :batch_id AND teacher_id = :teacher_id AND is_active = 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result ?: null;
   }
 
   public function isTeacherAssigned(int $batchId, int $teacherId): bool

@@ -208,7 +208,10 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
   public function getTopicsByTeacher(int $batchId, int $teacherId): array
   {
     $sql = "SELECT tt.*, 
-                       (SELECT COUNT(*) FROM project_groups g WHERE g.assigned_topic_id = tt.id) as assigned_groups_count
+                       (SELECT COUNT(*) FROM project_groups g WHERE g.assigned_topic_id = tt.id) as assigned_groups_count,
+                       (SELECT IFNULL(SUM((SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = a.group_id)), 0) 
+                        FROM project_aspirations a 
+                        WHERE a.topic_id = tt.id AND a.priority = 1 AND a.locked_at IS NOT NULL) as registered_students_nv1
                 FROM project_topics tt
                 WHERE tt.batch_id = :batch_id AND tt.teacher_id = :teacher_id AND tt.deleted_at IS NULL
                 ORDER BY tt.created_at DESC";

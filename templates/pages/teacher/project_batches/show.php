@@ -5,6 +5,10 @@ use App\Enums\ProjectTopicStatus;
 use App\Models\ProjectBatch;
 ?>
 
+<?php $layout->start("head") ?>
+<link rel="stylesheet" href="<?= url('/public/css/allocation.css') ?>">
+<?php $layout->end() ?>
+
 <?php $layout->start("heading") ?>
 <h2 class="title-wrapper__title">
   Chi tiết đợt: <?= htmlspecialchars($batch['title']) ?>
@@ -32,7 +36,7 @@ if (!empty($batch['topic_proposal_start']) && !empty($batch['topic_proposal_end'
 }
 
 if ($canPropose):
-  ?>
+?>
   <a href="<?= url("teacher/project_batches/{$batch['id']}/topics/create") ?>" class="btn" data-variant="primary"
     data-size="lg">
     <i class="fa-solid fa-plus"></i> Gửi đề tài
@@ -41,7 +45,7 @@ if ($canPropose):
 <?php $layout->end() ?>
 
 <?php $layout->start('content') ?>
-<div class="card mb-6">
+<div class="card">
   <div class="card__header">
     <legend class="card__title field__legend">Thông tin đợt đồ án</legend>
   </div>
@@ -90,6 +94,40 @@ if ($canPropose):
   </div>
 </div>
 
+<div class="stats-grid assignment-stats">
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Đề tài được duyệt</span>
+      <span class="stats-card__value"><?= $topicStats['approved'] ?> / <?= $topicStats['total'] ?></span>
+    </div>
+  </div>
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Tổng sức chứa đề tài</span>
+      <span class="stats-card__value"><?= $topicStats['capacity'] ?> SV</span>
+    </div>
+  </div>
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Nhóm đang hướng dẫn</span>
+      <span class="stats-card__value"><?= $groupStats['total_groups'] ?></span>
+    </div>
+  </div>
+  <div class="card stats-card <?= $groupStats['ineligible_students'] > 0 ? 'border-destructive' : '' ?>">
+    <div class="card__header">
+      <span class="stats-card__label">SV đang hướng dẫn / Chỉ tiêu</span>
+      <span class="stats-card__value <?= $groupStats['ineligible_students'] > 0 ? 'text-destructive' : '' ?>">
+        <?= $groupStats['total_students'] ?> / <?= $supervisorInfo['max_students'] ?>
+      </span>
+    </div>
+    <?php if ($groupStats['ineligible_students'] > 0): ?>
+      <div class="text-sm mt-2 font-medium" style="color: var(--destructive);">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Có <?= $groupStats['ineligible_students'] ?> SV không đủ điều kiện
+      </div>
+    <?php endif; ?>
+  </div>
+</div>
+
 <div class="tabs w-full" data-tabs data-tabs-id="teacher-project-batch" data-tabs-panel-active="topics">
   <div class="tabs__list overflow-x-auto mb-4" role="tablist" aria-label="Nội dung đợt đồ án">
     <button type="button" class="tabs__trigger" role="tab" aria-selected="true" data-tabs-trigger="topics"
@@ -106,24 +144,26 @@ if ($canPropose):
     <div class="card shadow-sm">
       <div class="card__header">
         <h3 class="font-semibold">Danh sách đề tài</h3>
+        <p class="card__description">Cột "Số SV đăng ký" thể hiện số lượng sinh viên đã chọn đề tài này làm nguyện vọng 1.</p>
       </div>
 
       <hr class="separator">
       <div class="card__content">
         <div class="tm-container" data-tm="topics_table" data-tm-mode="client" data-tm-searchable>
 
+          <template data-tm-col="stt" data-tm-label="STT" data-tm-width="60px">
+            <span class="text-sm font-medium">{{ row.stt }}</span>
+          </template>
+
           <template data-tm-col="title" data-tm-label="Tên đề tài" data-tm-sortable data-tm-filter-type="text">
             <span class="font-medium">{{ value }}</span>
           </template>
 
-          <template data-tm-col="description" data-tm-label="Mô tả">
-            <div class="font-medium">
-              <div class="{{ !row.description ? 'hidden' : '' }} text-sm mt-1 line-clamp-2"
-                style="white-space: pre-line;">{{ row.description }}</div>
-            </div>
-          </template>
-
           <template data-tm-col="max_students" data-tm-label="Số sinh viên tối đa" data-tm-width="80px"></template>
+
+          <template data-tm-col="registered_students_nv1" data-tm-label="Số SV đăng ký" data-tm-width="120px" data-tm-sortable>
+            <span class="font-medium">{{ row.registered_students_nv1 }}</span>
+          </template>
 
           <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
             data-tm-filter-options='<?= json_encode(ProjectTopicStatus::getOptions()) ?>'>
@@ -132,21 +172,21 @@ if ($canPropose):
             </span>
           </template>
 
-          <template data-tm-col="actions" data-tm-label="" data-tm-width="120px">
+          <template data-tm-col="actions" data-tm-label="Thao tác" data-tm-width="120px">
             <div class="flex gap-2 justify-end">
               <a href="{{ row.pdf_url }}" target="_blank" class="btn btn--icon" data-variant="outline" data-size="md"
                 aria-label="Xem PDF" title="Xem PDF">
                 <i class="fa-solid fa-file-pdf"></i>
               </a>
 
-              <a href="{{ row.edit_url }}" class="btn btn--icon" data-size="md" data-variant="outline" aria-label="Sửa"
+              <a href="{{ row.edit_url }}" class="btn btn--icon" style="{{ row.action_class }}" data-size="md" data-variant="outline" aria-label="Sửa"
                 title="Sửa">
                 <i class="fa-solid fa-pencil"></i>
               </a>
-              <form action="{{ row.delete_url }}" method="POST" class="inline-block"
-                onsubmit="return confirm('Bạn có chắc chắn muốn xóa đề tài này không?');">
-                <button type="submit" class="btn btn--icon" data-variant="destructive" data-size="md" aria-label="Xóa"
-                  title="Xóa">
+              <form action="{{ row.delete_url }}" method="POST" class="inline-block" style="{{ row.action_class }}">
+                <?= csrf_field() ?>
+                <button type="button" class="btn btn--icon btn-confirm-action" data-variant="destructive" data-size="md" aria-label="Xóa"
+                  title="Xóa" data-modal-trigger="#action-confirm-modal" data-confirm-msg="Xác nhận xóa đề tài: {{ row.title }}?">
                   <i class="fa-solid fa-trash"></i>
                 </button>
               </form>
@@ -191,9 +231,8 @@ if ($canPropose):
               <div class="font-medium">{{ value }}</div>
             </template>
             <template data-tm-col="members" data-tm-label="Sinh viên">
-              <div style="white-space: pre-line">{{ value }}</div>
+              <div class="members-container text-sm flex flex-col gap-1" data-group-id="{{ row.id }}"></div>
             </template>
-            <template data-tm-col="assigned_at" data-tm-label="Ngày phân công" data-tm-sortable></template>
             <template data-tm-col="actions" data-tm-label="" data-tm-width="90px">
               <a href="{{ row.print_url }}" target="_blank" class="btn btn--icon" data-variant="outline" data-size="md"
                 aria-label="In phiếu nhóm" title="In phiếu nhóm">
@@ -206,6 +245,23 @@ if ($canPropose):
       </div>
     </div>
   </div>
+</div>
+
+<!-- Modal xác nhận thao tác -->
+<div class="modal" id="action-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận thao tác</h3>
+    <p class="modal__description" id="action-confirm-msg">
+      Bạn có chắc chắn muốn thực hiện thao tác này?
+    </p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" data-size="md" class="btn" type="button">Hủy</button>
+    <button id="action-confirm-btn" data-variant="primary" data-size="md" class="btn" type="button">Chắc chắn</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close>
+    <i class="fa-solid fa-xmark"></i>
+  </button>
 </div>
 
 <div class="modal" id="print-topic-groups-modal" tabindex="-1" data-state="closed"
@@ -250,22 +306,25 @@ if ($canPropose):
 <?php $layout->start("scripts") ?>
 <script type="application/json" data-tm-data="topics_table">
   <?= json_encode([
-    'rows' => array_map(function ($topic) use ($batch) {
-    $t = (object) $topic;
-    return [
-      'id' => $t->id,
-      'title' => $t->title,
-      'description' => $t->description,
-      'max_students' => $t->max_students,
-      'status' => $t->status,
-      'status_label' => ProjectTopicStatus::getLabel($t->status),
-      'status_variant' => ProjectTopicStatus::getVariant($t->status),
-      'can_edit' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]),
-      'edit_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/edit"),
-      'delete_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/delete"),
-      'pdf_url' => $t->pdf_file_path ? url("storage/" . $t->pdf_file_path) : null
-    ];
-  }, $topics),
+    'rows' => array_map(function ($index, $topic) use ($batch) {
+      $t = (object) $topic;
+      return [
+        'stt' => $index + 1,
+        'id' => $t->id,
+        'title' => $t->title,
+        'description' => $t->description,
+        'max_students' => $t->max_students,
+        'registered_students_nv1' => $t->registered_students_nv1 ?? 0,
+        'status' => $t->status,
+        'status_label' => ProjectTopicStatus::getLabel($t->status),
+        'status_variant' => ProjectTopicStatus::getVariant($t->status),
+        'can_edit' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]),
+        'action_class' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]) ? '' : 'display: none !important;',
+        'edit_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/edit"),
+        'delete_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/delete"),
+        'pdf_url' => $t->pdf_file_path ? url("storage/" . $t->pdf_file_path) : null
+      ];
+    }, array_keys($topics), array_values($topics)),
     'total' => count($topics),
     'page' => 1,
     'limit' => count($topics) > 0 ? count($topics) : 15
@@ -278,10 +337,19 @@ if ($canPropose):
         'id' => (int) $group['id'],
         'topic_id' => (int) $group['assigned_topic_id'],
         'topic' => $group['assigned_topic_title'],
-        'members' => implode("\n", array_map(function ($member) {
-        return ($member['is_leader'] ? 'Nhóm trưởng: ' : '') . $member['full_name'] . ' · ' . $member['student_code'] . ' · ' . ($member['classroom_name'] ?: 'Chưa có lớp');
-      }, $group['members'] ?? [])),
-        'assigned_at' => !empty($group['assigned_at']) ? date('d/m/Y H:i', strtotime($group['assigned_at'])) : '—',
+        'is_admin_approved_solo' => (bool)$group['is_admin_approved_solo'],
+        'members' => array_map(function ($member) {
+          return [
+            'is_leader' => (bool)$member['is_leader'],
+            'is_confirmed' => (bool)$member['is_confirmed'],
+            'is_eligible' => (bool)$member['is_eligible'],
+            'full_name' => $member['full_name'],
+            'student_code' => $member['student_code'],
+            'classroom_name' => $member['classroom_name'] ?: 'Chưa có lớp',
+            'phone' => $member['phone'] ?? null,
+            'email' => $member['email'] ?? null,
+          ];
+        }, $group['members'] ?? []),
         'print_url' => url("teacher/project_batches/{$batch['id']}/groups/{$group['id']}/registration-form"),
         'actions' => '',
       ];
@@ -293,6 +361,63 @@ if ($canPropose):
 </script>
 <script>
   (() => {
+    const tableRoot = document.querySelector('[data-tm="assigned_groups_table"]');
+    if (tableRoot) {
+      tableRoot.addEventListener('tm:render', (e) => {
+        const visibleRows = e.detail.visibleRows;
+        tableRoot.querySelectorAll('.members-container').forEach(container => {
+          if (container.dataset.rendered) return;
+          const groupId = container.dataset.groupId;
+          const groupData = visibleRows.find(r => String(r.id) === String(groupId));
+          if (groupData && groupData.members) {
+            container.innerHTML = '';
+            groupData.members.forEach(m => {
+              const rowDiv = document.createElement('div');
+              rowDiv.className = 'allocation-table__member flex flex-col';
+              if (!m.is_eligible) {
+                rowDiv.classList.add('allocation-table__member--ineligible');
+              }
+              const nameDiv = document.createElement('div');
+              nameDiv.className = 'popover';
+              let badgesHTML = '';
+              if (groupData.is_admin_approved_solo) {
+                badgesHTML += '<span class="badge ml-1" data-variant="secondary">Làm 1 mình</span>';
+              } else if (m.is_leader) {
+                badgesHTML += '<span class="badge ml-1" data-variant="primary">Nhóm trưởng</span>';
+              } else if (!m.is_confirmed) {
+                badgesHTML += '<span class="badge ml-1" data-variant="warning" title="Chưa xác nhận tham gia nhóm">Chưa xác nhận</span>';
+              }
+              nameDiv.innerHTML = `
+                <div class="popover__trigger flex items-center">
+                  <i class="fa-solid fa-circle-info mr-2 text-muted"></i>
+                  <span class="font-medium">${m.full_name}</span>
+                  ${badgesHTML}
+                </div>
+                <div class="popover__content" data-side="right" data-align="start">
+                  <div class="text-sm font-semibold mb-2">Thông tin sinh viên</div>
+                  <div class="text-sm space-y-2">
+                    <div><i class="fa-solid fa-id-card w-4 text-center mr-1"></i> MSSV: <strong>${m.student_code}</strong></div>
+                    <div><i class="fa-solid fa-graduation-cap w-4 text-center mr-1"></i> Lớp: <strong>${m.classroom_name}</strong></div>
+                    <div><i class="fa-solid fa-phone w-4 text-center mr-1"></i> SĐT: <strong>${m.phone || "Chưa cập nhật"}</strong></div>
+                    <div><i class="fa-solid fa-envelope w-4 text-center mr-1"></i> Email: <strong>${m.email || "Chưa cập nhật"}</strong></div>
+                  </div>
+                </div>
+              `;
+              rowDiv.appendChild(nameDiv);
+              container.appendChild(rowDiv);
+              if (typeof PopoverHandler !== 'undefined') {
+                PopoverHandler.instance.register(nameDiv);
+              }
+            });
+            container.dataset.rendered = 'true';
+          }
+        });
+      });
+    }
+  })();
+
+  window.addEventListener('DOMContentLoaded', () => {
+
     const rows = <?= json_encode(array_map(fn($group) => ['id' => (int) $group['id'], 'topic_id' => (int) $group['assigned_topic_id']], $groups)) ?>;
     const form = document.getElementById('registration-print-form');
     const inputs = document.getElementById('registration-print-group-inputs');
@@ -332,6 +457,22 @@ if ($canPropose):
         }) => submitPrint(selectedIds),
       }],
     });
-  })();
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-confirm-action");
+      if (btn) {
+        const msg = btn.getAttribute("data-confirm-msg") || "Bạn có chắc chắn muốn thực hiện thao tác này?";
+        document.getElementById("action-confirm-msg").textContent = msg;
+
+        const form = btn.closest("form");
+        const confirmBtn = document.getElementById("action-confirm-btn");
+        if (confirmBtn) {
+          confirmBtn.onclick = () => {
+            if (form) form.submit();
+          };
+        }
+      }
+    });
+  });
 </script>
 <?php $layout->end() ?>
