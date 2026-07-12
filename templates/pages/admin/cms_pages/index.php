@@ -21,13 +21,9 @@
     <span class="text-sm font-medium">{{ value }}</span>
   </template>
 
-  <template data-tm-col="layout_mode" data-tm-label="Layout">
-    <span class="badge" data-variant="secondary">{{ value }}</span>
-  </template>
-
   <template data-tm-col="status" data-tm-label="Trạng thái">
     <span class="badge" data-variant="{{ value === 'published' ? 'primary' : 'secondary' }}">
-      {{ value }}
+      {{ value === 'published' ? 'Đã xuất bản' : 'Bản nháp' }}
     </span>
   </template>
 
@@ -44,7 +40,6 @@
       'route_path' => $page->route_path,
       'type' => $page->type,
       'status' => $page->status,
-      'layout_mode' => $page->layout_mode,
       'updated_at' => $page->updated_at,
       'actions' => '',
     ], $data->getItems()),

@@ -15,6 +15,7 @@ require_once __DIR__ . '/startup.php';
 
 use App\Core\Request;
 use App\Core\Router;
+use App\Core\Response;
 use App\Core\Pipeline;
 use App\Core\Middleware\{StartSession, VerifyCsrfToken};
 
@@ -38,6 +39,10 @@ try {
     ->send($request)
     ->through($globalMiddlewares)
     ->then($dispatchToRouter);
+
+  if ($response instanceof Response) {
+    $response->send();
+  }
 
   echo $response;
 

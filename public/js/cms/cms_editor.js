@@ -138,6 +138,16 @@ export class CmsEditorManager {
       this.#updatePreviewModeButtons();
     });
 
+    document.addEventListener('dropdown:select', (event) => {
+      const widthTrigger = event.detail?.item?.closest?.('[data-preview-width]');
+      if (!widthTrigger) return;
+
+      this.#previewMode = widthTrigger.dataset.previewWidth === 'mobile' ? 'mobile' : 'desktop';
+      this.#preview.setMode(this.#previewMode);
+      this.#preview.render({ immediate: true });
+      this.#updatePreviewModeButtons();
+    });
+
     document.querySelector('#be-toggle-left')?.addEventListener('click', () => this.#togglePanel('#be-left'));
     document.querySelector('#be-toggle-right')?.addEventListener('click', () => this.#togglePanel('#be-right'));
     this.#form?.addEventListener('submit', (event) => this.#serializeForm(event));
@@ -201,7 +211,11 @@ export class CmsEditorManager {
     const section = this.#cmsDocument.section(this.#activeSectionId);
     if (!section || !this.#cmsDocument.isImageEditable(this.#activeSectionId, this.#activePath)) return;
 
-    setPath(section.data, this.#activePath, joinUrl(this.#cmsDocument.urls.media, media.file_path));
+    let mediaPath = String(media.file_path || '').replace(/\\/g, '/').replace(/^\/+/, '');
+    if (mediaPath.startsWith('public/media/')) mediaPath = mediaPath.slice('public/media/'.length);
+    if (mediaPath.startsWith('media/')) mediaPath = mediaPath.slice('media/'.length);
+
+    setPath(section.data, this.#activePath, joinUrl(this.#cmsDocument.urls.media, mediaPath));
     this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
     this.#preview.render();
     close?.();
@@ -294,7 +308,19 @@ export class CmsEditorManager {
 
   #updatePreviewModeButtons() {
     document.querySelectorAll('[data-preview-width]').forEach((button) => {
-      button.dataset.variant = button.dataset.previewWidth === this.#previewMode ? 'primary' : 'outline';
+      if (button.classList.contains('btn')) {
+        button.dataset.variant = button.dataset.previewWidth === this.#previewMode ? 'primary' : 'outline';
+      }
+      button.toggleAttribute('data-highlighted', button.dataset.previewWidth === this.#previewMode);
+    });
+
+    document.querySelectorAll('[data-preview-viewport-trigger]').forEach((button) => {
+      button.dataset.variant = 'primary';
+      button.setAttribute('aria-label', this.#previewMode === 'mobile' ? 'Chế độ xem: Mobile' : 'Chế độ xem: Desktop');
+      const icon = button.querySelector('[data-preview-viewport-icon]');
+      if (icon) {
+        icon.className = this.#previewMode === 'mobile' ? 'fa-solid fa-mobile-screen' : 'fa-solid fa-desktop';
+      }
     });
   }
 
@@ -322,4 +348,38 @@ export class CmsEditorManager {
     this.#errorBox.textContent = '';
     this.#errorBox.classList.remove('is-visible');
   }
+
+  getAiContext() {
+    return {
+      page: this.#cmsDocument.page,
+      schema: this.#cmsDocument.schema,
+      document: this.#cmsDocument.document,
+      activeSectionId: this.#activeSectionId,
+      activePath: this.#activePath,
+    };
+  }
+
+  getAiFieldContext(path) {
+    const section = this.#cmsDocument.section(this.#activeSectionId);
+    const field = this.#cmsDocument.textFieldInstances(this.#activeSectionId)
+      .find((item) => item.path === path);
+    return {
+      surface: 'cms', section_id: this.#activeSectionId, path,
+      field_label: field?.label || path,
+      current_value: getPath(section?.data || {}, path) ?? '',
+      context: this.getAiContext(),
+    };
+  }
+
+  applyAiSuggestion(path, value) {
+    const section = this.#cmsDocument.section(this.#activeSectionId);
+    if (!section || !this.#cmsDocument.isTextEditable(this.#activeSectionId, path)) return false;
+    setPath(section.data, path, String(value ?? ''));
+    this.#activePath = path;
+    this.#fieldPanel.render(this.#activeSectionId, path);
+    this.#fieldPanel.syncValue(path, String(value ?? ''));
+    this.#preview.render();
+    return true;
+  }
+
 }

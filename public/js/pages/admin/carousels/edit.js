@@ -128,7 +128,10 @@
       // Cập nhật thumbnail preview
       const slideImg   = document.querySelector('#slide-media-img');
       const slideEmpty = document.querySelector('#slide-media-empty');
-      const mediaUrl   = `${window.__carouselEdit__?.mediaBaseUrl || ''}/${media.file_path}`;
+      let mediaPath = String(media.file_path || '').replace(/\\/g, '/').replace(/^\/+/, '');
+      if (mediaPath.startsWith('public/media/')) mediaPath = mediaPath.slice('public/media/'.length);
+      if (mediaPath.startsWith('media/')) mediaPath = mediaPath.slice('media/'.length);
+      const mediaUrl   = `${(window.__carouselEdit__?.mediaBaseUrl || '').replace(/\/$/, '')}/${mediaPath}`;
 
       slideImg.src      = mediaUrl;
       slideImg.alt      = media.alt_text || '';

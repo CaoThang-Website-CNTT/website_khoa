@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, TeacherApiController, TicketApiController, CmsPageApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController, ClassroomApiController, ProjectBatchApiController, ProjectTopicApiController};
+use App\Controllers\Api\{AccountApiController, AiSuggestionApiController, MediaApiController, StudentApiController, TeacherApiController, TicketApiController, CmsPageApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController, ClassroomApiController, ProjectBatchApiController, ProjectTopicApiController};
 use App\Core\Router;
 use App\Middlewares\{VerifyAuth, VerifyRole};
 
@@ -24,6 +24,12 @@ $router->prefix('api')->group(function ($router) {
     $router->get('/teachers', [TeacherApiController::class, 'index']);
     $router->get('/tickets', [TicketApiController::class, 'index']);
     $router->get('/cms_pages', [CmsPageApiController::class, 'index']);
+
+    $router->prefix('ai')
+      ->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])
+      ->group(function ($router) {
+        $router->post('/editor-suggestions', [AiSuggestionApiController::class, 'editorSuggestions']);
+      });
 
     $router->prefix('internship/batches')->group(function ($router) {
       $router->get('/classrooms', [InternshipBatchApiController::class, 'getClassrooms']);

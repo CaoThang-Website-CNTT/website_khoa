@@ -1,6 +1,7 @@
 .prettierignore
 .env.**
 /storage/**
+/public/media/
 docs
 .cursorrules
 /tests/**

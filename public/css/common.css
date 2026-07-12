@@ -672,7 +672,7 @@
 
   .tooltip__content[data-state="open"] {
     opacity: 1;
-    transform: translate(0, -0.5rem) scale(1);
+    transform: translate(0, 0) scale(1);
   }
 
   .tooltip__content[data-state="closed"] {
@@ -686,6 +686,10 @@
     transform-origin: bottom center;
   }
 
+  .tooltip__content[data-side="top"][data-state="open"] {
+    transform: translateY(-0.375rem) scale(1);
+  }
+
   .tooltip__content[data-side="top"]::after {
     left: 50%;
     bottom: -0.2rem;
@@ -695,6 +699,10 @@
   .tooltip__content[data-side="bottom"] {
     --tooltip-exit-y: -0.25rem;
     transform-origin: top center;
+  }
+
+  .tooltip__content[data-side="bottom"][data-state="open"] {
+    transform: translateY(0.375rem) scale(1);
   }
 
   .tooltip__content[data-side="bottom"]::after {
@@ -708,6 +716,10 @@
     transform-origin: right center;
   }
 
+  .tooltip__content[data-side="left"][data-state="open"] {
+    transform: translateX(-0.375rem) scale(1);
+  }
+
   .tooltip__content[data-side="left"]::after {
     top: 50%;
     right: -0.2rem;
@@ -717,6 +729,10 @@
   .tooltip__content[data-side="right"] {
     --tooltip-exit-x: -0.25rem;
     transform-origin: left center;
+  }
+
+  .tooltip__content[data-side="right"][data-state="open"] {
+    transform: translateX(0.375rem) scale(1);
   }
 
   .tooltip__content[data-side="right"]::after {

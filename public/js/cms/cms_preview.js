@@ -7,6 +7,7 @@ export class CmsPreview {
     this.mode = 'desktop'; this.scale = 1; this.frame = null; this.resizeObserver = null;
     this.pendingScrollSectionId = null; this.highlightEditables = false;
     this.revision = 0; this.appliedRevision = 0; this.timer = null; this.controller = null; this.lastHtml = '';
+    this.frameResizeObserver = null; this.frameMutationObserver = null; this.heightSyncFrame = null; this.heightSyncTimer = null;
   }
 
   init() {
@@ -38,7 +39,7 @@ export class CmsPreview {
         body: JSON.stringify({ content: this.cmsDocument.document, revision }),
         signal: controller.signal,
       });
-      const payload = await response.json();
+      const payload = await this.#parseJsonResponse(response);
       if (!response.ok || !payload.success) throw new Error(payload.message || 'Preview render failed.');
       if (revision !== this.revision || revision < this.appliedRevision) return;
       this.appliedRevision = revision; this.lastHtml = payload.data.html;
@@ -59,8 +60,19 @@ export class CmsPreview {
       this.frame = this.root.querySelector('iframe');
     }
     this.frame.style.width = `${viewport.width}px`;
-    this.frame.onload = () => { this.#bindFrame(); this.#applyEditableHighlights(); this.#flushPendingScroll(); requestAnimationFrame(() => this.#syncFrameHeight()); };
+    this.frame.onload = () => { this.#bindFrame(); this.#observeFrameContent(); this.#applyEditableHighlights(); this.#flushPendingScroll(); this.#scheduleFrameHeightSync(); };
     this.frame.srcdoc = html; this.updateScale();
+  }
+
+  async #parseJsonResponse(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      if (response.status === 401 || response.status === 419) {
+        throw new Error('Phiên làm việc đã hết hạn. Vui lòng tải lại trang và đăng nhập lại.');
+      }
+      throw new Error('Máy chủ trả về phản hồi không hợp lệ.');
+    }
+    return response.json();
   }
 
   updateScale() {
@@ -140,6 +152,51 @@ export class CmsPreview {
     this.markActiveEditable();
   }
 
+  #observeFrameContent() {
+    this.#disconnectFrameObservers();
+    const doc = this.frame?.contentDocument; if (!doc) return;
+    const observedNodes = [doc.documentElement, doc.body, doc.querySelector('.cms-live-page')].filter(Boolean);
+
+    if (this.frame?.contentWindow?.ResizeObserver) {
+      this.frameResizeObserver = new this.frame.contentWindow.ResizeObserver(() => this.#scheduleFrameHeightSync());
+      observedNodes.forEach((node) => this.frameResizeObserver.observe(node));
+    }
+
+    if (this.frame?.contentWindow?.MutationObserver && doc.body) {
+      this.frameMutationObserver = new this.frame.contentWindow.MutationObserver(() => this.#scheduleFrameHeightSync(240));
+      this.frameMutationObserver.observe(doc.body, {
+        attributes: true,
+        attributeFilter: ['class', 'data-state', 'hidden', 'style', 'aria-expanded'],
+        childList: true,
+        subtree: true,
+      });
+    }
+  }
+
+  #disconnectFrameObservers() {
+    this.frameResizeObserver?.disconnect();
+    this.frameMutationObserver?.disconnect();
+    this.frameResizeObserver = null;
+    this.frameMutationObserver = null;
+    if (this.heightSyncFrame) {
+      cancelAnimationFrame(this.heightSyncFrame);
+      this.heightSyncFrame = null;
+    }
+    clearTimeout(this.heightSyncTimer);
+    this.heightSyncTimer = null;
+  }
+
+  #scheduleFrameHeightSync(delay = 0) {
+    if (this.heightSyncFrame) cancelAnimationFrame(this.heightSyncFrame);
+    this.heightSyncFrame = requestAnimationFrame(() => {
+      this.heightSyncFrame = null;
+      this.#syncFrameHeight();
+    });
+
+    clearTimeout(this.heightSyncTimer);
+    if (delay > 0) this.heightSyncTimer = window.setTimeout(() => this.#syncFrameHeight(), delay);
+  }
+
   #stabilizeInteraction() {
     clearTimeout(this.timer);
     this.timer = null;
@@ -152,7 +209,12 @@ export class CmsPreview {
 
   #syncFrameHeight() {
     if (!this.frame || !this.root) return; const doc = this.frame.contentDocument; if (!doc) return;
-    const height = Math.max(CMS_VIEWPORTS[this.mode].height, doc.documentElement.scrollHeight, doc.body?.scrollHeight || 0);
+    const content = doc.querySelector('.cms-live-page');
+    const contentRect = content?.getBoundingClientRect();
+    const contentHeight = content
+      ? Math.max(content.scrollHeight, content.offsetHeight, contentRect?.height || 0, contentRect?.bottom || 0)
+      : 0;
+    const height = Math.max(1, Math.ceil(contentHeight || doc.body?.scrollHeight || doc.documentElement.scrollHeight || 0));
     this.frame.style.height = `${height}px`; this.root.style.setProperty('--cms-preview-height', `${height * this.scale}px`);
   }
 }

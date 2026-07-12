@@ -239,6 +239,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
   window.__errors__ = <?= json_encode($errors) ?>;
   window.__old__ = <?= json_encode($old_input) ?>;
 </script>
-<script>window.__carouselCreate__ = { mediaBaseUrl: <?= json_encode(url('public/media/')) ?> };</script>
+<script>window.__carouselCreate__ = { mediaBaseUrl: <?= json_encode(url('public/media')) ?> };</script>
 <script src="<?= url('public/js/pages/admin/carousels/create.js') ?>" type="module"></script>
 <?php $layout->end() ?>

@@ -25,6 +25,7 @@ class SiteController extends Controller
    * Header Menu
    */
   private ?Menu $_headerMenu = null;
+  private ?Menu $_footerMenu = null;
 
   /**
    * Settings được load một lần tại constructor và tái sử dụng cho mọi method.
@@ -87,6 +88,7 @@ class SiteController extends Controller
 
     return $this->render('site/landing', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'carouselSlides' => $carouselSlides,
       'featuredNews' => $featuredNews,
       'latestNewsItems' => $latestNewsItems,
@@ -151,6 +153,7 @@ class SiteController extends Controller
 
     return $this->render('site/news/index', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'featuredNews' => $featuredNews,
       'allNews' => $allNews,
       'newsCategories' => $newsCategories,
@@ -188,6 +191,7 @@ class SiteController extends Controller
 
     return $this->render('site/news/detail', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'news' => $news,
       'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'] ?? [],
       'detail' => $result,
@@ -216,6 +220,7 @@ class SiteController extends Controller
 
     return $this->render('site/about', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'cmsHtml' => $cmsHtml,
       'settings' => $this->_settings,
     ], "site_layout");
@@ -229,6 +234,7 @@ class SiteController extends Controller
 
     $this->render('site/faculty', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'cmsHtml' => $this->_renderCmsPage('faculty'),
       'settings' => $this->_settings,
       'pageTitle' => $title,
@@ -256,6 +262,7 @@ class SiteController extends Controller
 
     $this->render('site/partners', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'partners' => $partners,
       'settings' => $this->_settings,
       'pageTitle' => 'Doanh nghiệp đối tác',
@@ -308,6 +315,7 @@ class SiteController extends Controller
   private function _loadHeaderMenu(): void
   {
     $this->_headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+    $this->_footerMenu = $this->_menuService->getMenuByKeyWithItems('footer_menu');
   }
 
   /**
@@ -337,6 +345,7 @@ class SiteController extends Controller
     $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
     $this->render('site/education', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'cmsHtml' => $this->_renderCmsPage($slug),
       'settings' => $this->_settings,
       'pageTitle' => $title,

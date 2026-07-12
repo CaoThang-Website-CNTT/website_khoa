@@ -79,8 +79,10 @@ export class ImageBlock extends EditorBlock {
       this.data.meta.alt = media.alt_text || media.title || '';
 
       // Xử lý URL theo cấu trúc bạn yêu cầu
-      const mediaBase = (window.PUBLIC_MEDIA_BASE || `${location.origin}/public`).replace(/\/$/, '');
-      const filePath = media.file_path.replace(/^\//, '');
+      const mediaBase = (window.PUBLIC_MEDIA_BASE || `${location.origin}/public/media`).replace(/\/$/, '');
+      let filePath = media.file_path.replace(/\\/g, '/').replace(/^\//, '');
+      if (filePath.startsWith('public/media/')) filePath = filePath.slice('public/media/'.length);
+      if (filePath.startsWith('media/')) filePath = filePath.slice('media/'.length);
       this.data.meta.url = `${mediaBase}/${filePath}`;
 
       this.bus?.dispatch('block:updated', { block: this });

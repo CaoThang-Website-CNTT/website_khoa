@@ -260,6 +260,18 @@ class Request
     return strtolower($this->header('x-requested-with', '')) === 'xmlhttprequest';
   }
 
+  public function expectsJson(): bool
+  {
+    $accept = strtolower((string) $this->header('accept', ''));
+    $contentType = strtolower((string) $this->header('content-type', ''));
+    $path = $this->path();
+
+    return $this->isAjax()
+      || str_starts_with($path, '/api/')
+      || str_contains($accept, 'application/json')
+      || str_contains($contentType, 'application/json');
+  }
+
   /**
    * Đọc và parse JSON body từ request (thường dùng với fetch/axios)
    * Kết quả được cache lại để tránh đọc php://input nhiều lần

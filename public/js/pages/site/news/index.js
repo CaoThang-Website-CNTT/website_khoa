@@ -223,6 +223,9 @@
         resetAndFetch();
       }
     });
+    searchBtn?.addEventListener('click', function () {
+      resetAndFetch();
+    });
 
     // Thay đổi kiểu sắp xếp (Sort Select)
     sortSelect?.addEventListener('select:change', function (event) {

@@ -130,6 +130,9 @@ export class CmsFieldPanel {
         <label class="field__label" for="${escapeAttr(id)}">${escapeHtml(field.label)}</label>
         <textarea id="${escapeAttr(id)}" class="field__input" rows="4" data-cms-path="${escapeAttr(field.path)}">${escapeHtml(valueText)}</textarea>
         ${isIconField ? '<p class="field__description">Enter Font Awesome classes, for example fa-solid fa-award.</p>' : ''}
+        <div class="cms-ai-suggestion" data-cms-ai-suggestion="${escapeAttr(field.path)}">
+          <button type="button" class="btn" data-size="md" data-variant="outline" data-modal-trigger="#cms-ai-suggestion-modal" data-cms-ai-suggest="${escapeAttr(field.path)}"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AI đề xuất</button>
+        </div>
       </div>
     `;
   }
