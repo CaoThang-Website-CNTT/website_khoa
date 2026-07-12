@@ -540,7 +540,7 @@ final class CmsStaticPageRenderer
                   <?= $this->e($feature['title'] ?? '') ?></h3>
                 <p class="wcu__feature-card-description text-xs md:text-md font-normal">
                   <?= $this->e($feature['description'] ?? '') ?></p>
-                <a href="<?= $this->e($feature['cta_url'] ?? '#') ?>"<?= $context->linkAttributes('feature.cta_url') ?>
+                <a href="<?= $this->e($this->siteUrl($feature['cta_url'] ?? '#')) ?>"<?= $context->linkAttributes('feature.cta_url') ?>
                   class="wcu__feature-card-link md:text-md font-normal"><?= $this->e($feature['cta_label'] ?? '') ?> <i
                     class="fa-solid fa-arrow-up-right-from-square"></i></a>
               </div>
@@ -651,7 +651,7 @@ final class CmsStaticPageRenderer
               <?= $this->e($cta['description'] ?? '') ?></p>
             <div class="stats__cta-buttons flex flex-col w-full md:w-fit md:flex-row gap-2 md:gap-4">
               <?php foreach ($this->items($cta, 'buttons') as $index => $button): ?>
-                <a href="<?= $this->e($button['url'] ?? '#') ?>"<?= $context->linkAttributes("cta.buttons.$index.url") ?><?= $context->repeaterItemAttributes('cta.buttons', $index) ?>
+                <a href="<?= $this->e($this->siteUrl($button['url'] ?? '#')) ?>"<?= $context->linkAttributes("cta.buttons.$index.url") ?><?= $context->repeaterItemAttributes('cta.buttons', $index) ?>
                   data-variant="<?= $this->e($button['variant'] ?? 'outline') ?>"
                   class="stats__cta-button stats__cta-button--secondary flex items-center px-8 py-4 btn bouncy-btn rounded-full <?= $index === 1 ? 'bg-transparent' : '' ?>"><?= $this->e($button['label'] ?? '') ?></a>
               <?php endforeach; ?>
@@ -1007,6 +1007,20 @@ final class CmsStaticPageRenderer
   {
     $value = trim((string) $value);
     return filter_var($value, FILTER_VALIDATE_URL) && preg_match('/^https?:\/\//i', $value) ? $value : '#';
+  }
+
+  private function siteUrl(mixed $value): string
+  {
+    $value = trim((string) $value);
+    if ($value === '' || $value === '#') {
+      return '#';
+    }
+
+    if (preg_match('/^https?:\/\//i', $value)) {
+      return $value;
+    }
+
+    return url($value);
   }
 
   private function e(mixed $value): string

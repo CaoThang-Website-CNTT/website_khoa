@@ -21,7 +21,11 @@ class SitemapController extends Controller
     $cacheFile = $cacheDir . '/sitemap.xml';
     $cacheTtl = isset($_ENV['SITEMAP_CACHE_TTL']) ? (int)$_ENV['SITEMAP_CACHE_TTL'] : 86400; // 24 hours
 
-    if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
+    if (
+      file_exists($cacheFile)
+      && (time() - filemtime($cacheFile)) < $cacheTtl
+      && !str_contains((string) file_get_contents($cacheFile), url('lien-he'))
+    ) {
       header('Content-Type: application/xml; charset=UTF-8');
       readfile($cacheFile);
       exit;
@@ -35,8 +39,7 @@ class SitemapController extends Controller
       ['loc' => url('tin-tuc'), 'lastmod' => $now, 'changefreq' => 'daily', 'priority' => '0.8'],
       ['loc' => url('gioi-thieu'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.6'],
       ['loc' => url('viec-lam/doanh-nghiep'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.6'],
-      ['loc' => url('dao-tao'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.8'],
-      ['loc' => url('lien-he'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.6']
+      ['loc' => url('dao-tao'), 'lastmod' => $now, 'changefreq' => 'monthly', 'priority' => '0.8']
     ];
 
     foreach ($staticUrls as $url) {

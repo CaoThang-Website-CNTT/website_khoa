@@ -235,5 +235,5 @@ $pageJsonLd = [$breadcrumbSchema];
     ,initialSort: <?= json_encode($activeSort) ?>
   };
 </script>
-<script src="<?= url('public/js/pages/site/news/index.js') ?>" type="module"></script>
+<script src="<?= url('public/js/pages/site/news/index.js') ?>?v=<?= filemtime(BASE_PATH . '/public/js/pages/site/news/index.js') ?>" type="module"></script>
 <?php $layout->end() ?>

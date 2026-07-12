@@ -192,6 +192,7 @@ require_once BASE_PATH . '/controllers/web/carousel_controller.php';
 require_once BASE_PATH . '/controllers/web/media_controller.php';
 require_once BASE_PATH . '/controllers/web/post_controller.php';
 require_once BASE_PATH . '/controllers/web/cms_page_controller.php';
+require_once BASE_PATH . '/controllers/web/sitemap_controller.php';
 require_once BASE_PATH . '/controllers/web/internship_batch_controller.php';
 require_once BASE_PATH . '/controllers/web/student_dashboard_controller.php';
 require_once BASE_PATH . '/controllers/web/student_project_dashboard_controller.php';
