@@ -21,6 +21,7 @@ interface IProjectGroupService
   public function kickIneligibleMembers(int $batchId, array $ineligibleStudentIds): bool;
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
+  public function getStudentsInOtherActiveBatches(int $currentBatchId, array $studentIds): array;
   public function getAllocationStats(int $batchId): array;
   public function getAspirationsByBatch(int $batchId): array;
   public function getExportAllocations(int $batchId, array $filters = [], ?array $sort = null, array $selectedIds = []): array;
@@ -68,6 +69,11 @@ class ProjectGroupService implements IProjectGroupService
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array
   {
     return $this->_store->getPaginatedByBatch($batchId, $page, $limit, $filters);
+  }
+
+  public function getStudentsInOtherActiveBatches(int $currentBatchId, array $studentIds): array
+  {
+    return $this->_store->getStudentsInOtherActiveBatches($currentBatchId, $studentIds);
   }
 
   public function getTotalCountByBatch(int $batchId, array $filters = []): int

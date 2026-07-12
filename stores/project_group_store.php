@@ -453,6 +453,37 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
+  public function getStudentsInOtherActiveBatches(int $currentBatchId, array $studentIds): array
+  {
+    if (empty($studentIds)) return [];
+
+    $inClause = implode(',', array_fill(0, count($studentIds), '?'));
+    $sql = "
+      SELECT DISTINCT s.id as student_id, s.full_name, s.student_code
+      FROM students s
+      WHERE s.id IN ($inClause)
+      AND (
+        EXISTS (
+          SELECT 1 FROM project_batch_eligible_students e
+          JOIN project_batches b ON e.batch_id = b.id
+          WHERE e.student_id = s.id AND b.id != ? AND b.status != 'closed'
+        )
+        OR EXISTS (
+          SELECT 1 FROM project_group_members m
+          JOIN project_groups g ON m.group_id = g.id
+          JOIN project_batches b ON g.batch_id = b.id
+          WHERE m.student_id = s.id AND b.id != ? AND b.status != 'closed'
+        )
+      )
+    ";
+
+    $params = array_merge($studentIds, [$currentBatchId, $currentBatchId]);
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  }
+
   public function saveEligibleStudents(int $batchId, array $studentIds): void
   {
     if (empty($studentIds)) return;

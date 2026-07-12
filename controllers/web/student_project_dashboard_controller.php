@@ -77,6 +77,20 @@ class StudentProjectDashboardController extends Controller
       }
     }
 
+    // Bổ sung kiểm tra sinh viên có đang tham gia đợt đồ án khác chưa đóng
+    if (($_ENV['APP_ENV']) !== 'local') {
+      $student = $this->_studentService->getStudentByStudentId($studentId);
+      if ($student) {
+        $activeBatchStudents = $this->_projectGroupService->getStudentsInOtherActiveBatches($batch['id'], [$student->id]);
+        if (!empty($activeBatchStudents)) {
+          return [
+            'isEligible' => false,
+            'reason' => 'Bạn đang tham gia một đợt đồ án khác chưa kết thúc.'
+          ];
+        }
+      }
+    }
+
     return [
       'isEligible' => true,
       'reason' => ''

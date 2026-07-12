@@ -88,6 +88,19 @@ class ProjectEligibilityService
     }
 
     if (!empty($eligibleIds)) {
+      if (($_ENV['APP_ENV']) !== 'local') {
+        $activeBatchStudents = $this->_groupStore->getStudentsInOtherActiveBatches($batchId, $eligibleIds);
+        if (!empty($activeBatchStudents)) {
+          $errorMsg = 'Có ' . count($activeBatchStudents) . ' sinh viên đang tham gia đợt đồ án khác chưa đóng: ';
+          $studentNames = array_map(fn($s) => $s['full_name'] . ' (' . $s['student_code'] . ')', array_slice($activeBatchStudents, 0, 3));
+          $errorMsg .= implode(', ', $studentNames);
+          if (count($activeBatchStudents) > 3) {
+            $errorMsg .= ' và ' . (count($activeBatchStudents) - 3) . ' sinh viên khác.';
+          }
+          throw new \Exception($errorMsg);
+        }
+      }
+
       $this->_groupStore->saveEligibleStudents($batchId, $eligibleIds);
     }
   }
