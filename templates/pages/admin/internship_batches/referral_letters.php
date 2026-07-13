@@ -133,7 +133,7 @@ $letters = $letters ?? [];
   $statusMap = [
     'pending' => ['label' => 'Chờ duyệt', 'variant' => 'secondary'],
     'completed' => ['label' => 'Hoàn thành', 'variant' => 'primary'],
-    'received' => ['label' => 'Đã nhận', 'variant' => 'primary'],
+    'received' => ['label' => 'Đã nhận', 'variant' => 'success'],
     'cancelled' => ['label' => 'Đã hủy', 'variant' => 'destructive']
   ];
   $statusMap['approved'] = ['label' => 'Đang xử lý', 'variant' => 'secondary'];
