@@ -1000,13 +1000,21 @@ final class CmsStaticPageRenderer
       return $src;
     }
     $normalized = ltrim(preg_replace('/^\.\//', '', $src), '/');
-    if (str_starts_with($normalized, 'public/media/') || str_starts_with($normalized, 'media/')) {
-      return url('public/media/' . $normalized);
+    if (str_starts_with($normalized, 'public/media/')) {
+      return $this->mediaAssetUrl(substr($normalized, strlen('public/media/')));
+    }
+    if (str_starts_with($normalized, 'media/')) {
+      return $this->mediaAssetUrl(substr($normalized, strlen('media/')));
     }
     if (str_starts_with($normalized, 'public/')) {
       return url($normalized);
     }
     return url('public/' . $normalized);
+  }
+
+  private function mediaAssetUrl(string $path): string
+  {
+    return url('public/media/' . ltrim($path, '/'));
   }
 
   private function items(array $data, string $key): array
