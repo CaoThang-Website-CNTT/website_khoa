@@ -103,6 +103,34 @@ class ProjectAllocationController extends Controller
     return $this->redirect('/admin/project_batches/' . $batchId . '/allocation');
   }
 
+  public function randomAllocate(Request $request, $id)
+  {
+    $batchId = $id;
+    if (!$request->isMethod('POST')) {
+      return $this->redirect('/admin/project_batches/' . $batchId . '/allocation');
+    }
+
+    $batch = $this->_batchService->getBatchById((int)$batchId);
+    if (!$batch) {
+      $request->session()->flashNotify('error', 'Không tìm thấy đợt đồ án.');
+      return $this->redirect('/admin/project_batches');
+    }
+
+    if ($batch['status'] !== ProjectBatchStatus::PUBLISHED) {
+      $request->session()->flashNotify('error', 'Đợt đồ án chưa công bố hoặc đã kết thúc.');
+      return $this->redirect('/admin/project_batches/' . $batchId . '/allocation');
+    }
+
+    try {
+      $result = $this->_groupService->randomAllocateTopics((int)$batchId);
+      $request->session()->flashNotify('success', $result['message']);
+    } catch (Exception $e) {
+      $request->session()->flashNotify('error', 'Lỗi khi phân bổ ngẫu nhiên: ' . $e->getMessage());
+    }
+
+    return $this->redirect('/admin/project_batches/' . $batchId . '/allocation');
+  }
+
   public function manualAssign(Request $request, $id)
   {
     $batchId = $id;

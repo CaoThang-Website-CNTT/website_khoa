@@ -44,8 +44,13 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
 ?>
 
 <?php $layout->start("heading") ?>
-<h2 class="title-wrapper__title">Danh sách đề tài</h2>
-<p class="title-wrapper__description">Chọn đề tài và thêm vào danh sách nguyện vọng (Tối đa <?= $maxAspirations ?> đề tài).</p>
+<div>
+  <h2 class="title-wrapper__title">Danh sách đề tài</h2>
+  <p class="title-wrapper__description">Chọn đề tài và thêm vào danh sách nguyện vọng (Tối đa <?= $maxAspirations ?> đề tài).</p>
+  <div class="alert mt-2" data-variant="info">
+    <i class="fa-solid fa-circle-info mr-2"></i> Lưu ý: Nếu nhóm trượt tất cả nguyện vọng đã đăng ký, hệ thống sẽ phân bổ ngẫu nhiên vào các đề tài còn trống.
+  </div>
+</div>
 <?php $layout->end() ?>
 
 <?php $layout->start("actions") ?>

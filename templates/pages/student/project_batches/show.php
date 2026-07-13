@@ -264,8 +264,26 @@ if ($group) {
               <div class="card__content">
                 <div class="space-y-3">
                   <div>
-                    <p class="text-sm font-medium">Tên đề tài</p>
-                    <div class="font-semibold">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium">Tên đề tài</p>
+                      <?php
+                      $isAspiration = false;
+                      $assignedPriority = null;
+                      foreach ($aspirations ?? [] as $idx => $asp) {
+                        if ($asp['topic_id'] == $assignedTopic['id']) {
+                          $isAspiration = true;
+                          $assignedPriority = $idx + 1;
+                          break;
+                        }
+                      }
+                      ?>
+                      <?php if ($isAspiration): ?>
+                        <span class="badge" data-variant="success">Đạt Nguyện vọng <?= $assignedPriority ?></span>
+                      <?php else: ?>
+                        <span class="badge" data-variant="warning">Ngoài nguyện vọng</span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="font-semibold mt-1">
                       <?= htmlspecialchars($assignedTopic['title']) ?>
                     </div>
                   </div>
@@ -325,6 +343,10 @@ if ($group) {
             </div>
             <hr class="separator">
             <div class="card__content">
+
+              <div class="alert mb-2" data-variant="info">
+                <i class="fa-solid fa-circle-info mr-2"></i> Lưu ý: Nếu nhóm trượt tất cả nguyện vọng đã đăng ký, hệ thống sẽ phân bổ ngẫu nhiên vào các đề tài còn trống.
+              </div>
 
               <?php if ($isLocked): ?>
                 <div class="alert mb-4 flex justify-between items-center" data-variant="success">

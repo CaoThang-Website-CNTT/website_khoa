@@ -30,6 +30,10 @@ $hasPreview = isset($previewData) && $previewData !== null;
   <i class="fa-solid fa-wand-magic-sparkles"></i>
   Phân bổ tự động
 </button>
+<button type="button" class="btn" data-variant="outline" data-size="lg" onclick="ModalHandler.instance.open('#random-allocate-modal')" <?= $hasErrors ? 'disabled' : '' ?> title="Phân bổ ngẫu nhiên cho các nhóm chưa có đề tài">
+  <i class="fa-solid fa-shuffle"></i>
+  Phân bổ ngẫu nhiên
+</button>
 <button type="button" class="btn" data-variant="secondary" data-size="lg" title="Import danh sách sinh viên đủ điều kiện làm đồ án tốt nghiệp" onclick="ModalHandler.instance.open('#import-excel-modal')">
   <i class="fa-solid fa-upload"></i> Import DSSV
 </button>
@@ -247,6 +251,27 @@ foreach ($teachers as $t) {
   </div>
   <div class="modal__footer">
     <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/auto") ?>" method="POST" class="flex justify-end gap-2">
+      <?= csrf_field() ?>
+      <button data-modal-close type="button" class="btn" data-variant="outline" data-size="lg">Hủy</button>
+      <button type="submit" class="btn" data-variant="primary" data-size="lg">Tiến hành</button>
+    </form>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<!-- Random Allocate Modal -->
+<div class="modal" id="random-allocate-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Phân bổ ngẫu nhiên</h3>
+  </div>
+  <div class="modal__content">
+    <p>Hệ thống sẽ tự động phân bổ <span class="font-semibold">ngẫu nhiên</span> các nhóm chưa có đề tài vào các đề tài còn trống.</p>
+    <div class="alert mt-2" data-variant="info">
+      <i class="fa-solid fa-circle-info"></i> Nên chạy "Phân bổ tự động" trước, sau đó mới dùng tính năng này để xử lý các nhóm còn lại.
+    </div>
+  </div>
+  <div class="modal__footer">
+    <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/random") ?>" method="POST" class="flex justify-end gap-2">
       <?= csrf_field() ?>
       <button data-modal-close type="button" class="btn" data-variant="outline" data-size="lg">Hủy</button>
       <button type="submit" class="btn" data-variant="primary" data-size="lg">Tiến hành</button>

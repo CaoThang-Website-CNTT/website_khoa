@@ -185,7 +185,8 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
     }
 
     $sql = "SELECT g.*, tt.title as assigned_topic_title, t.full_name as assigned_teacher_name,
-                       (SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = g.id) as member_count
+                       (SELECT COUNT(*) FROM project_group_members gm WHERE gm.group_id = g.id) as member_count,
+                       (SELECT pa.priority FROM project_aspirations pa WHERE pa.group_id = g.id AND pa.topic_id = g.assigned_topic_id LIMIT 1) as assigned_priority
                 FROM project_groups g
                 $joins
                 WHERE $whereClause
