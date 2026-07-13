@@ -66,6 +66,7 @@ use App\Models\ProjectBatch;
       $batchModel->topic_proposal_end = $b->topic_proposal_end ?? null;
       $batchModel->registration_start = $b->registration_start ?? null;
       $batchModel->registration_end = $b->registration_end ?? null;
+      $batchModel->allocation_published_at = $b->allocation_published_at ?? null;
 
       $effPhase = $batchModel->getEffectivePhase();
 

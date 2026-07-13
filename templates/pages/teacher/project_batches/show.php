@@ -63,6 +63,7 @@ if ($canPropose):
         $batchModel->topic_proposal_end = $batch['topic_proposal_end'] ?? null;
         $batchModel->registration_start = $batch['registration_start'] ?? null;
         $batchModel->registration_end = $batch['registration_end'] ?? null;
+        $batchModel->allocation_published_at = $batch['allocation_published_at'] ?? null;
         $effectiveStatus = $batchModel->getEffectivePhase();
         ?>
         <span class="badge" data-variant="<?= ProjectBatchStatus::getVariant($effectiveStatus) ?>">

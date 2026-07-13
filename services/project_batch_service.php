@@ -13,6 +13,8 @@ interface IProjectBatchService
   public function createBatch(array $data, int $adminId): int;
   public function updateBatch(int $id, array $data): bool;
   public function publishBatch(int $id): bool;
+  public function setAllocationPublished(int $id): void;
+  public function unpublishAllocation(int $id): void;
   public function closeBatch(int $id): bool;
   public function deleteBatch(int $id): bool;
   public function getBatches(int $page, int $limit = 15): Pageable;
@@ -102,6 +104,16 @@ class ProjectBatchService implements IProjectBatchService
     return $this->_store->updateStatus($id, ProjectBatchStatus::PUBLISHED, [
       'published_at' => date('Y-m-d H:i:s')
     ]);
+  }
+
+  public function setAllocationPublished(int $batchId): void
+  {
+    $this->_store->updateAllocationPublishedAt($batchId, date('Y-m-d H:i:s'));
+  }
+
+  public function unpublishAllocation(int $batchId): void
+  {
+    $this->_store->updateAllocationPublishedAt($batchId, null);
   }
 
   public function closeBatch(int $id): bool

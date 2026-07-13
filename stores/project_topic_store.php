@@ -92,7 +92,7 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
 
   public function getById(int $id): ?array
   {
-    $sql = "SELECT tt.*, t.full_name as teacher_name, a.email as teacher_email,
+    $sql = "SELECT tt.*, t.full_name as teacher_name, t.phone as teacher_phone, a.email as teacher_email,
                        (SELECT COUNT(*) FROM project_groups g WHERE g.assigned_topic_id = tt.id) as assigned_groups_count
                 FROM project_topics tt
                 JOIN teachers t ON tt.teacher_id = t.id

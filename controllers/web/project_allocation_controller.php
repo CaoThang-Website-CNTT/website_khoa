@@ -142,7 +142,12 @@ class ProjectAllocationController extends Controller
 
     try {
       $this->_groupService->manualAssignTopic($groupId, $topicId);
-      $request->session()->flashNotify('success', 'Gán đề tài thành công.');
+      $batch = $this->_batchService->getBatchById((int)$batchId);
+      if (!empty($batch['allocation_published_at'])) {
+        $request->session()->flashNotify('success', 'Đã phân bổ thành công. Sinh viên sẽ nhìn thấy kết quả ngay lập tức.');
+      } else {
+        $request->session()->flashNotify('success', 'Gán đề tài thành công.');
+      }
     } catch (Exception $e) {
       $request->session()->flashNotify('error', 'Lỗi: ' . $e->getMessage());
     }
@@ -197,6 +202,11 @@ class ProjectAllocationController extends Controller
       $this->_eligibilityService->processConfirmedData((int)$batchId, $previewData);
       $request->session()->forget('eligibility_preview_' . $batchId);
       $request->session()->flashNotify('success', 'Import danh sách sinh viên đủ điều kiện thành công!');
+
+      $batch = $this->_batchService->getBatchById((int)$batchId);
+      if (!empty($batch['allocation_published_at'])) {
+        $request->session()->flashNotify('warning', 'Lưu ý: Đợt này đã công bố kết quả cho sinh viên. Các nhóm bị ảnh hưởng cần được xử lý thủ công và thông báo cho họ.');
+      }
     } catch (Exception $e) {
       $request->session()->flashNotify('error', 'Lỗi khi import: ' . $e->getMessage(), '');
     }
@@ -258,5 +268,40 @@ class ProjectAllocationController extends Controller
         $request->session()->flashNotify('error', 'Lỗi khi thay thế thành viên.');
     }
     return $this->redirect('/admin/project_batches/' . $id . '/allocation');
+  }
+
+  public function publishAllocation(Request $request, $id)
+  {
+    $batchId = $id;
+    $batch = $this->_batchService->getBatchById((int)$batchId);
+    if (!$batch) return $this->redirect('/admin/project_batches');
+
+    // Pre-check: Đếm nhóm hợp lệ chưa có đề tài
+    $stats = $this->_groupService->getAllocationStats((int)$batchId);
+    $orphanCount = $stats['unassigned'] ?? 0;
+
+    if ($orphanCount > 0 && !$request->input('force')) {
+      $request->session()->flashNotify(
+        'warning',
+        "Có {$orphanCount} nhóm chưa được phân công đề tài. Cần bấm lại để xác nhận."
+      );
+      return $this->redirect("/admin/project_batches/{$batchId}/allocation");
+    }
+
+    // Set cờ đã công bố phân công
+    $this->_batchService->setAllocationPublished((int)$batchId);
+    $request->session()->flashNotify('success', 'Đã công bố kết quả phân bổ cho sinh viên và giảng viên.');
+    return $this->redirect("/admin/project_batches/{$batchId}/allocation");
+  }
+
+  public function unpublishAllocation(Request $request, $id)
+  {
+    $batchId = $id;
+    $batch = $this->_batchService->getBatchById((int)$batchId);
+    if (!$batch) return $this->redirect('/admin/project_batches');
+
+    $this->_batchService->unpublishAllocation((int)$batchId);
+    $request->session()->flashNotify('success', 'Đã thu hồi kết quả phân bổ. Sinh viên và Giảng viên sẽ không còn xem được kết quả.');
+    return $this->redirect("/admin/project_batches/{$batchId}/allocation");
   }
 }

@@ -21,15 +21,26 @@ class ProjectBatch extends Model
     public ?int $created_by = null,
     public ?string $published_at = null,
     public ?string $closed_at = null,
+    public ?string $allocation_published_at = null,
     public ?string $created_at = null,
     public ?string $updated_at = null,
     public ?string $deleted_at = null
   ) {}
 
+  public function isAllocationPublished(): bool
+  {
+    return $this->allocation_published_at !== null;
+  }
+
   public function getEffectivePhase(): string
   {
     if ($this->status === ProjectBatchStatus::DRAFT) return ProjectBatchStatus::DRAFT;
     if ($this->status === ProjectBatchStatus::CLOSED) return ProjectBatchStatus::CLOSED;
+
+    // Nếu đã chốt phân bổ, giai đoạn sẽ là đã phân công (bất kể thời gian đăng ký đã kết thúc hay chưa)
+    if ($this->allocation_published_at !== null) {
+      return ProjectBatchStatus::ALLOCATED;
+    }
 
     $now = time();
     $proposalStart = $this->topic_proposal_start ? strtotime($this->topic_proposal_start) : 0;

@@ -13,6 +13,7 @@ $batchModel->topic_proposal_start = $batchObj->topic_proposal_start ?? null;
 $batchModel->topic_proposal_end = $batchObj->topic_proposal_end ?? null;
 $batchModel->registration_start = $batchObj->registration_start ?? null;
 $batchModel->registration_end = $batchObj->registration_end ?? null;
+$batchModel->allocation_published_at = $batchObj->allocation_published_at ?? null;
 
 $effStatus = $batchModel->getEffectivePhase();
 

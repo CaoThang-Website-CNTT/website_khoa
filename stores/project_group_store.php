@@ -24,6 +24,7 @@ interface IProjectGroupStore
   public function getGroupMembers(int $groupId): array;
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
+  public function getAllocationStats(int $batchId): array;
   public function assignTopic(int $groupId, int $topicId): bool;
   public function getValidGroupsForAllocation(int $batchId): array;
   public function updateMemberEligibility(array $studentIds, int $isEligible): bool;
@@ -176,6 +177,25 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
     $stmt = $this->db->prepare($sql);
     $stmt->execute($params);
     return (int)$stmt->fetchColumn();
+  }
+
+  public function getAllocationStats(int $batchId): array
+  {
+    $sql = "SELECT 
+              COUNT(*) as total,
+              SUM(CASE WHEN assigned_topic_id IS NOT NULL THEN 1 ELSE 0 END) as assigned,
+              SUM(CASE WHEN assigned_topic_id IS NULL THEN 1 ELSE 0 END) as unassigned
+            FROM project_groups 
+            WHERE batch_id = :batch_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return [
+      'total' => (int)($result['total'] ?? 0),
+      'assigned' => (int)($result['assigned'] ?? 0),
+      'unassigned' => (int)($result['unassigned'] ?? 0),
+    ];
   }
 
   public function assignTopic(int $groupId, int $topicId): bool

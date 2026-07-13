@@ -15,8 +15,11 @@ $aspirationTopicIds = $aspirationTopicIds ?? [];
 $maxAspirations = $maxAspirations ?? 3;
 
 $isLocked = $isLocked ?? false;
+$phase = $phase ?? 'upcoming';
+$isAllocationPublished = $isAllocationPublished ?? false;
+$canInteract = ($phase === 'registration' && !$isAllocationPublished);
 
-$canAddAspiration = $isLeader && count($aspirationTopicIds) < $maxAspirations;
+$canAddAspiration = $canInteract && $isLeader && count($aspirationTopicIds) < $maxAspirations;
 
 $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLeader, $canAddAspiration, $currentBatch, $isLocked) {
   $isAdded = in_array($topic['id'], $aspirationTopicIds);
@@ -28,7 +31,7 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
     'pdf_file_url' => !empty($topic['pdf_file_path']) ? url('/public/media/' . $topic['pdf_file_path']) : null,
     'is_added' => $isAdded,
     'is_leader' => (bool)$isLeader,
-    'can_add' => !$isAdded && $isLeader && $canAddAspiration && !$isLocked,
+    'can_add' => !$isAdded && $isLeader && $canAddAspiration && !$isLocked && $canInteract,
     'add_url' => url("student/project_batches/{$currentBatch['id']}/aspirations/add"),
     'is_locked' => $isLocked
   ];
@@ -64,6 +67,13 @@ $topicsDataMapped = array_map(function ($topic) use ($aspirationTopicIds, $isLea
         <i class="fa-solid fa-lock"></i>
         <div class="alert-content">
           <p class="alert-description">Nguyện vọng đã được chốt, không thể thêm mới.</p>
+        </div>
+      </div>
+    <?php elseif (!$canInteract): ?>
+      <div class="alert mb-4" data-variant="warning">
+        <i class="fa-solid fa-clock"></i>
+        <div class="alert-content">
+          <p class="alert-description">Đã hết thời gian đăng ký và chỉnh sửa nguyện vọng.</p>
         </div>
       </div>
     <?php elseif (!$isLeader): ?>

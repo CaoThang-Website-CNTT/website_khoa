@@ -11,6 +11,7 @@ interface IProjectBatchStore
 {
   public function createBatch(array $data): int;
   public function updateBatch(int $id, array $data): bool;
+  public function updateAllocationPublishedAt(int $id, ?string $time): bool;
   public function updateStatus(int $id, string $status, array $extraData = []): bool;
   public function deleteBatch(int $id): bool;
   public function getById(int $id): ?array;
@@ -60,6 +61,17 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
       'max_aspirations' => $data['max_aspirations'] ?? 3,
       'min_class_of' => $data['min_class_of'] ?? 0,
       'max_class_of' => $data['max_class_of'] ?? 0,
+      'updated_at' => date('Y-m-d H:i:s'),
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->rowCount() > 0;
+  }
+
+  public function updateAllocationPublishedAt(int $id, ?string $time): bool
+  {
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('project_batches')->update([
+      'allocation_published_at' => $time,
       'updated_at' => date('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());

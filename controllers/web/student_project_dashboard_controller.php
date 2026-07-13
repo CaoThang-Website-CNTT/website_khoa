@@ -83,6 +83,34 @@ class StudentProjectDashboardController extends Controller
     ];
   }
 
+  private function requireRegistrationPhase(Request $request, int $batchId): ?string
+  {
+    $batch = $this->_projectBatchService->getBatchById($batchId);
+    if (!$batch) return "/student/project_batches";
+
+    $model = new ProjectBatch(
+      status: $batch['status'],
+      topic_proposal_start: $batch['topic_proposal_start'],
+      topic_proposal_end: $batch['topic_proposal_end'],
+      registration_start: $batch['registration_start'],
+      registration_end: $batch['registration_end'],
+      allocation_published_at: $batch['allocation_published_at'] ?? null
+    );
+
+    if ($model->isAllocationPublished()) {
+      $request->session()->flashNotify('error', 'Đợt đồ án đã công bố kết quả, không thể thay đổi.');
+      return "/student/project_batches/{$batchId}";
+    }
+
+    $phase = $model->getEffectivePhase();
+    if ($phase !== ProjectBatchStatus::REGISTRATION) {
+      $request->session()->flashNotify('error', 'Đã hết thời gian đăng ký và chỉnh sửa.');
+      return "/student/project_batches/{$batchId}";
+    }
+
+    return null;
+  }
+
   /**
    * Danh sách các đợt đồ án
    * 
@@ -110,12 +138,13 @@ class StudentProjectDashboardController extends Controller
         topic_proposal_start: $batchData['topic_proposal_start'],
         topic_proposal_end: $batchData['topic_proposal_end'],
         registration_start: $batchData['registration_start'],
-        registration_end: $batchData['registration_end']
+        registration_end: $batchData['registration_end'],
+        allocation_published_at: $batchData['allocation_published_at'] ?? null
       );
 
       $phase = $model->getEffectivePhase();
-      // Sinh viên chỉ xem được khi đã tới giai đoạn đăng ký (registration) hoặc sau đó (reviewing)
-      if (in_array($phase, [ProjectBatchStatus::REGISTRATION, ProjectBatchStatus::REVIEWING, ProjectBatchStatus::CLOSED])) {
+      // Sinh viên chỉ xem được khi đã tới giai đoạn đăng ký (registration) hoặc sau đó (reviewing, allocated)
+      if (in_array($phase, [ProjectBatchStatus::REGISTRATION, ProjectBatchStatus::REVIEWING, ProjectBatchStatus::ALLOCATED, ProjectBatchStatus::CLOSED])) {
         $visibleBatches[] = $batchData;
       }
     }
@@ -157,11 +186,12 @@ class StudentProjectDashboardController extends Controller
       topic_proposal_start: $currentBatch['topic_proposal_start'],
       topic_proposal_end: $currentBatch['topic_proposal_end'],
       registration_start: $currentBatch['registration_start'],
-      registration_end: $currentBatch['registration_end']
+      registration_end: $currentBatch['registration_end'],
+      allocation_published_at: $currentBatch['allocation_published_at'] ?? null
     );
 
     $phase = $model->getEffectivePhase();
-    if (!in_array($phase, [ProjectBatchStatus::REGISTRATION, ProjectBatchStatus::REVIEWING, ProjectBatchStatus::CLOSED])) {
+    if (!in_array($phase, [ProjectBatchStatus::REGISTRATION, ProjectBatchStatus::REVIEWING, ProjectBatchStatus::ALLOCATED, ProjectBatchStatus::CLOSED])) {
       $request->session()->flashNotify('error', 'Đợt đồ án này chưa mở cho sinh viên tham gia.');
       return $this->redirect('/student/project_batches');
     }
@@ -173,6 +203,8 @@ class StudentProjectDashboardController extends Controller
     $aspirations = [];
     $isLeader = false;
     $isLocked = false;
+    $assignedTopic = null;
+    $isAllocationPublished = $model->isAllocationPublished();
 
     if ($eligibility['isEligible']) {
       $group = $this->_projectGroupService->getGroupByStudent($currentBatch['id'], $student->id);
@@ -184,6 +216,9 @@ class StudentProjectDashboardController extends Controller
           if ($member['student_id'] == $student->id && $member['is_leader']) {
             $isLeader = true;
           }
+        }
+        if (!empty($group['assigned_topic_id'])) {
+          $assignedTopic = $this->_projectTopicService->getTopicById($group['assigned_topic_id']);
         }
       }
     }
@@ -198,7 +233,10 @@ class StudentProjectDashboardController extends Controller
       'groupMembers' => $groupMembers,
       'aspirations' => $aspirations,
       'isLeader' => $isLeader,
-      'isLocked' => $isLocked
+      'isLocked' => $isLocked,
+      'phase' => $phase,
+      'isAllocationPublished' => $isAllocationPublished,
+      'assignedTopic' => $assignedTopic
     ], layout: 'dashboard_layout');
   }
 
@@ -239,6 +277,17 @@ class StudentProjectDashboardController extends Controller
     $aspirationTopicIds = array_column($aspirations, 'topic_id');
     $isLocked = $this->_projectAspirationService->isLocked($group['id']);
 
+    $model = new ProjectBatch(
+      status: $currentBatch['status'],
+      topic_proposal_start: $currentBatch['topic_proposal_start'],
+      topic_proposal_end: $currentBatch['topic_proposal_end'],
+      registration_start: $currentBatch['registration_start'],
+      registration_end: $currentBatch['registration_end'],
+      allocation_published_at: $currentBatch['allocation_published_at'] ?? null
+    );
+    $phase = $model->getEffectivePhase();
+    $isAllocationPublished = $model->isAllocationPublished();
+
     return $this->render('student/project_batches/topics', [
       'title' => 'Đăng ký đề tài - ' . htmlspecialchars($currentBatch['title']),
       'student' => $student,
@@ -250,7 +299,9 @@ class StudentProjectDashboardController extends Controller
       'pagination' => $topicsData,
       'aspirationTopicIds' => $aspirationTopicIds,
       'maxAspirations' => $currentBatch['max_aspirations'] ?? 3,
-      'isLocked' => $isLocked
+      'isLocked' => $isLocked,
+      'phase' => $phase,
+      'isAllocationPublished' => $isAllocationPublished
     ], layout: 'dashboard_layout');
   }
 
@@ -262,6 +313,10 @@ class StudentProjectDashboardController extends Controller
     $authUser = $request->session()->authUser();
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
+
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
 
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->isLocked($group['id'])) {
@@ -300,6 +355,10 @@ class StudentProjectDashboardController extends Controller
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
 
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
+
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->isLocked($group['id'])) {
         $request->session()->flashNotify('error', 'Nguyện vọng đã được chốt, không thể thay đổi.');
@@ -326,6 +385,10 @@ class StudentProjectDashboardController extends Controller
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
 
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
+
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->isLocked($group['id'])) {
         $request->session()->flashNotify('error', 'Nguyện vọng đã được chốt, không thể thay đổi.');
@@ -349,6 +412,10 @@ class StudentProjectDashboardController extends Controller
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
 
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
+
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->lockAspirations($group['id'])) {
         $request->session()->flashNotify('success', 'Đã chốt nguyện vọng thành công.');
@@ -366,6 +433,10 @@ class StudentProjectDashboardController extends Controller
     $authUser = $request->session()->authUser();
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
+
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
 
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->unlockAspirations($group['id'])) {
@@ -392,6 +463,10 @@ class StudentProjectDashboardController extends Controller
 
     $currentBatch = $this->_projectBatchService->getBatchById($id);
     if (!$currentBatch) return $this->redirect('/student/project_batches');
+
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
 
     $existingGroup = $this->_projectGroupService->getGroupByStudent($id, $student->id);
     $maxStudents = $currentBatch['max_students'] ?? 2;
@@ -462,6 +537,10 @@ class StudentProjectDashboardController extends Controller
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
 
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
+
     if ($group) {
       $this->_projectGroupService->confirmMember($group['id'], $student->id);
       $request->session()->flashNotify('success', 'Bạn đã gia nhập nhóm thành công.');
@@ -477,6 +556,10 @@ class StudentProjectDashboardController extends Controller
     $authUser = $request->session()->authUser();
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
+
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
 
     if ($group && $group['leader_student_id'] != $student->id) {
       $this->_projectGroupService->removeMember($group['id'], $student->id);
@@ -494,6 +577,10 @@ class StudentProjectDashboardController extends Controller
     $authUser = $request->session()->authUser();
     $student = $this->_studentService->getStudentByAccountId($authUser['account_id']);
     $group = $this->_projectGroupService->getGroupByStudent($id, $student->id);
+
+    if ($errorRedirect = $this->requireRegistrationPhase($request, $id)) {
+      return $this->redirect($errorRedirect);
+    }
 
     if ($group && $group['leader_student_id'] == $student->id) {
       $memberIdToRemove = (int)$request->input('student_id');

@@ -32,6 +32,28 @@ $hasPreview = isset($previewData) && $previewData !== null;
 <button type="button" class="btn" data-variant="secondary" data-size="lg" title="Import danh sách sinh viên đủ điều kiện làm đồ án tốt nghiệp" onclick="ModalHandler.instance.open('#import-excel-modal')">
   <i class="fa-solid fa-upload"></i> Import DSSV
 </button>
+<?php if (!empty($batchObj->allocation_published_at)): ?>
+  <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/unpublish") ?>" method="POST" class="inline-block">
+    <?= csrf_field() ?>
+    <button type="button" class="btn btn-confirm-action" data-variant="outline" data-size="lg"
+      data-confirm-msg="Thu hồi kết quả phân bổ? Sinh viên và giảng viên sẽ không còn xem được kết quả cho đến khi bạn công bố lại."
+      data-modal-trigger="#action-confirm-modal">
+      <i class="fa-solid fa-eye-slash"></i> Thu hồi
+    </button>
+  </form>
+<?php else: ?>
+  <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/publish") ?>" method="POST" class="inline-block">
+    <?= csrf_field() ?>
+    <?php if (($stats['unassigned'] ?? 0) > 0): ?>
+      <input type="hidden" name="force" value="1">
+    <?php endif; ?>
+    <button type="button" class="btn btn-confirm-action" data-variant="primary" data-size="lg"
+      data-confirm-msg="<?= ($stats['unassigned'] ?? 0) > 0 ? "CẢNH BÁO: Còn {$stats['unassigned']} nhóm hợp lệ chưa được phân bổ đề tài. Nếu bạn công bố bây giờ, các nhóm này sẽ thấy kết quả là CHƯA ĐƯỢC PHÂN BỔ. Bạn có đồng ý không?" : "Công bố kết quả phân bổ? Sinh viên và giảng viên sẽ xem được thông tin phân bổ chính thức." ?>"
+      data-modal-trigger="#action-confirm-modal">
+      <i class="fa-solid fa-bullhorn"></i> Chốt & Công bố
+    </button>
+  </form>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <?php
@@ -68,6 +90,19 @@ $tabs = [
 ?>
 
 <?php $layout->start('content') ?>
+
+<?php if (!empty($batchObj->allocation_published_at)): ?>
+  <div class="alert mb-4" data-variant="warning">
+    <div class="alert__icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="alert__content">
+      <h3 class="alert__title font-semibold">Đã công bố kết quả cho sinh viên lúc <span class="font-bold"><?= date('H:i d/m/Y', strtotime($batchObj->allocation_published_at)) ?></span></h3>
+      <p class="alert__description">
+        Mọi thay đổi phân bổ từ thời điểm này sẽ được cập nhật trực tiếp cho sinh viên.
+        Hãy thông báo cho sinh viên bị ảnh hưởng nếu có sự thay đổi.
+      </p>
+    </div>
+  </div>
+<?php endif; ?>
 
 <?php if ($hasErrors): ?>
   <div class="alert mb-4" data-variant="error">

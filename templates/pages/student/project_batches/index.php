@@ -57,6 +57,7 @@ $batches = $batches ?? [];
         $model->topic_proposal_end = $batch['topic_proposal_end'] ?? null;
         $model->registration_start = $batch['registration_start'] ?? null;
         $model->registration_end = $batch['registration_end'] ?? null;
+        $model->allocation_published_at = $batch['allocation_published_at'] ?? null;
         $status = $model->getEffectivePhase();
 
         return [

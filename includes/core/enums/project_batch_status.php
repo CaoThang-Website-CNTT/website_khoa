@@ -14,6 +14,7 @@ class ProjectBatchStatus
   public const TOPIC_PROPOSAL = 'topic_proposal';
   public const REGISTRATION = 'registration';
   public const REVIEWING = 'reviewing';
+  public const ALLOCATED = 'allocated';
 
   public static function getMetadata(): array
   {
@@ -45,6 +46,10 @@ class ProjectBatchStatus
       self::REVIEWING => [
         'label' => 'Đang xét duyệt',
         'variant' => 'warning'
+      ],
+      self::ALLOCATED => [
+        'label' => 'Có kết quả phân công',
+        'variant' => 'success'
       ]
     ];
   }
@@ -64,7 +69,7 @@ class ProjectBatchStatus
     $meta = self::getMetadata();
     $options = [];
 
-    $order = [self::DRAFT, self::UPCOMING, self::TOPIC_PROPOSAL, self::REGISTRATION, self::REVIEWING, self::CLOSED];
+    $order = [self::DRAFT, self::UPCOMING, self::TOPIC_PROPOSAL, self::REGISTRATION, self::REVIEWING, self::ALLOCATED, self::CLOSED];
     foreach ($order as $key) {
       if (isset($meta[$key])) {
         $options[] = [

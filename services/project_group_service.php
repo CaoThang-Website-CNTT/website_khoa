@@ -22,6 +22,7 @@ interface IProjectGroupService
   public function kickIneligibleMembers(int $batchId, array $ineligibleStudentIds): bool;
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
+  public function getAllocationStats(int $batchId): array;
   public function getAspirationsByBatch(int $batchId): array;
 
   // Exception Handling
@@ -69,6 +70,11 @@ class ProjectGroupService implements IProjectGroupService
   public function getTotalCountByBatch(int $batchId, array $filters = []): int
   {
     return $this->_store->getTotalCountByBatch($batchId, $filters);
+  }
+
+  public function getAllocationStats(int $batchId): array
+  {
+    return $this->_store->getAllocationStats($batchId);
   }
 
   public function createGroup(int $batchId, int $leaderStudentId): int
