@@ -389,7 +389,7 @@ class TeacherDashboardController extends Controller
       return $this->redirect("/teacher/internship_batches/{$batchId}");
     }
 
-    $result = $this->_gradeInternshipService->publishAllTeacherGrades($batchId, $teacher->id);
+    $result = $this->_gradeInternshipService->lockAllTeacherGrades($batchId, $teacher->id);
 
     if ($result['success']) {
       $request->session()->flashNotify('success', $result['message']);

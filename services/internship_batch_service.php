@@ -341,6 +341,10 @@ class InternshipBatchService implements IInternshipBatchService
       throw new Exception('Chỉ có đợt thực tập đang diễn ra hoặc đã kết thúc mới có thể công bố điểm.');
     }
 
+    if ($this->_gradeStore->hasUnlockedDraftGrades($batchId)) {
+      throw new Exception('Không thể công bố điểm vì vẫn còn điểm nháp chưa được chốt.');
+    }
+
     return $this->_store->publishBatchGrades($batchId);
   }
 

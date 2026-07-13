@@ -70,7 +70,7 @@ $studentsData = array_map(function ($sv) {
   class="inline-block">
   <?= csrf_field() ?>
   <button type="button" data-modal-trigger="#publish-confirm-modal" class="btn" data-variant="primary" data-size="md">
-    <i class="fa-solid fa-lock mr-2"></i> Công bố điểm
+    <i class="fa-solid fa-lock mr-2"></i> Nộp điểm
   </button>
 </form>
 <?php $layout->end() ?>
@@ -269,12 +269,12 @@ $studentsData = array_map(function ($sv) {
   </div>
 </div>
 
-<!-- Modal: Xác nhận Công bố điểm -->
+<!-- Modal: Xác nhận nộp điểm -->
 <div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h3 class="modal__title">Xác nhận công bố điểm</h3>
-    <p class="modal__description">Hành động này sẽ chốt và công bố <span class="font-semibold">TOÀN BỘ</span> điểm nháp
-      hiện tại của bạn cho sinh viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?
+    <h3 class="modal__title">Xác nhận nộp điểm</h3>
+    <p class="modal__description">Hành động này sẽ chốt và gửi <span class="font-semibold">TOÀN BỘ</span> điểm nháp
+      hiện tại của bạn cho quản trị viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?
     </p>
   </div>
   <div class="modal__footer">
