@@ -215,8 +215,8 @@ INSERT INTO `web_settings` (`key`, `group`, `group_label`, `type`, `value`, `lab
 ('contact_hotline', 'contact', 'Contact', 'string', '028 3821 2360', 'Hotline'),
 ('contact_email', 'contact', 'Contact', 'email', 'phongdaotao@caothang.edu.vn', 'Email hỗ trợ'),
 ('address_main', 'contact', 'Contact', 'text', '65 Huỳnh Thúc Kháng, Phường Bến Nghé, Quận 1, TP.HCM', 'Địa chỉ'),
-('social_facebook', 'social', 'Social', 'url', 'https://facebook.com/caothang.edu.vn', 'Facebook'),
-('social_youtube', 'social', 'Social', 'url', 'https://youtube.com/caothang', 'Youtube'),
+('social_facebook', 'social', 'Social', 'url', 'https://www.facebook.com/cntt.caothang/', 'Facebook'),
+('social_youtube', 'social', 'Social', 'url', 'https://www.youtube.com/@khoacongnghethongtintruong9586/videos', 'Youtube'),
 ('seo_meta_desc', 'seo', 'SEO', 'text', 'Trường Cao đẳng Kỹ thuật Cao Thắng - Đào tạo chất lượng cao', 'SEO Description'),
 ('seo_meta_keywords', 'seo', 'SEO', 'text', 'cao thang, cntt, ô tô, cơ khí, kế toán', 'SEO Keywords'),
 ('maintenance_mode', 'system', 'System', 'bool', '0', 'Bảo trì hệ thống'),
@@ -232,7 +232,8 @@ INSERT INTO `web_settings` (`key`, `group`, `group_label`, `type`, `value`, `lab
 ('internship_company_warning_days', 'internship', 'Thực tập tốt nghiệp', 'int', '3', 'Thời gian cảnh báo khai báo công ty (ngày)'),
 ('internship_report_warning_days', 'internship', 'Thực tập tốt nghiệp', 'int', '3', 'Thời gian cảnh báo nộp báo cáo (ngày)'),
 ('internship_grading_deadline_weeks', 'internship', 'Thực tập tốt nghiệp', 'int', '2', 'Thời hạn chấm điểm (tuần)'),
-('internship_weekly_report_late_days', 'internship', 'Thực tập tốt nghiệp', 'int', '7', 'Hạn nộp bù báo cáo tuần (ngày)');
+('internship_weekly_report_late_days', 'internship', 'Thực tập tốt nghiệp', 'int', '7', 'Hạn nộp bù báo cáo tuần (ngày)'),
+('social_tiktok', 'social', 'Social', 'url', 'https://www.tiktok.com/@cntt.ckc', 'TikTok');
 
 
 -- ---------------------------------------------------------------------------- 
@@ -307,9 +308,20 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `label`, `url`, `sort_or
 (24, 1, 22, 'Tin Tuyển Dụng', '/danh-muc/tuyen-dung', 2),
 
 -- Footer Menu
-(101, 2, NULL, 'Chính sách bảo mật', '/privacy', 1),
-(102, 2, NULL, 'Điều khoản sử dụng', '/terms', 2),
-(103, 2, NULL, 'Sơ đồ website', '/sitemap', 3);
+(105, 2, NULL, 'Liên kết nhanh', '#', 1),
+(106, 2, NULL, 'Chương trình đào tạo', '#', 2),
+(107, 2, 105, 'Trang chủ', '/', 1),
+(108, 2, 105, 'Giới thiệu', '/gioi-thieu', 2),
+(109, 2, 105, 'Đội ngũ giảng viên', '/giang-vien', 3),
+(110, 2, 105, 'Tin tức & Sự kiện', '/tin-tuc', 4),
+(111, 2, 105, 'Sinh viên', '/danh-muc/sinh-vien', 5),
+(112, 2, 105, 'Việc làm', '/danh-muc/tuyen-dung', 6),
+(113, 2, 106, 'Đào tạo', '/dao-tao', 1),
+(114, 2, 106, 'Thông tin tuyển sinh', '/dao-tao#tuyen-sinh', 2),
+(115, 2, 106, 'Chương trình đào tạo', '/dao-tao#chuong-trinh-dao-tao', 3),
+(116, 2, 106, 'Chuẩn đầu ra', '/dao-tao#chuan-dau-ra', 4),
+(117, 2, 106, 'Danh sách môn học', '/dao-tao#danh-sach-mon-hoc', 5),
+(118, 2, 106, 'Doanh nghiệp đối tác', '/viec-lam/doanh-nghiep', 6);
 
 -- ---------------------------------------------------------------------------- 
 -- 11. BẢNG CAROUSELS & CAROUSEL_SLIDES
