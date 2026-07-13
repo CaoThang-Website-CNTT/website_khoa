@@ -105,7 +105,11 @@ class MediaService implements IMediaService
       throw new \RuntimeException("Media #{$mediaId} không tồn tại.");
     }
 
-    $absolutePath = $this->_storageRoot . '/' . ltrim($media->file_path, '/');
+    $normalizedPath = ltrim(str_replace('\\', '/', $media->file_path), '/');
+    if (str_starts_with($normalizedPath, 'media/')) {
+      $normalizedPath = substr($normalizedPath, strlen('media/'));
+    }
+    $absolutePath = $this->_storageRoot . '/media/' . $normalizedPath;
 
     if (file_exists($absolutePath) && !unlink($absolutePath)) {
       throw new \RuntimeException("Không thể xóa file vật lý: {$absolutePath}");
@@ -124,8 +128,8 @@ class MediaService implements IMediaService
    */
   private function processAndSave(string $sourcePath, string $originalName, ?string $compressMode, bool $isUploadedFile): array
   {
-    $relativDir = 'media/' . date('Y/m');
-    $absoluteDir = $this->_storageRoot . '/' . ltrim($relativDir, '/');
+    $relativeDir = date('Y/m');
+    $absoluteDir = $this->_storageRoot . '/media/' . $relativeDir;
 
     if (!is_dir($absoluteDir) && !mkdir($absoluteDir, 0755, recursive: true)) {
       throw new \RuntimeException("Không thể tạo thư mục lưu trữ: {$absoluteDir}");
@@ -140,7 +144,7 @@ class MediaService implements IMediaService
       $variant = $this->_imageProcessor->processSingle($sourcePath, $absoluteDir, $baseFilename, $compressMode);
 
       if ($variant !== null) {
-        $relativePath = $relativDir . '/' . basename($variant->relativePath);
+        $relativePath = $relativeDir . '/' . basename($variant->relativePath);
         $absolutePath = $absoluteDir . '/' . basename($variant->relativePath);
         
         $imageInfo = @getimagesize($absolutePath);
@@ -160,7 +164,7 @@ class MediaService implements IMediaService
     $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION)) ?: 'bin';
     $fileName = $baseFilename . '.' . $extension;
     $absolutePath = $absoluteDir . '/' . $fileName;
-    $relativePath = $relativDir . '/' . $fileName;
+    $relativePath = $relativeDir . '/' . $fileName;
 
     if ($isUploadedFile) {
       if (!move_uploaded_file($sourcePath, $absolutePath)) {

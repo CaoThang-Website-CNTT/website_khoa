@@ -4,7 +4,7 @@ $email = htmlspecialchars($settings['contact_email'] ?? '');
 $phone = htmlspecialchars($settings['contact_hotline'] ?? '');
 $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin');
 ?>
-<header>
+<header class="site-header">
 
   <!-- BANNER: START -->
   <div class="banner hidden md:flex py-2">
@@ -27,7 +27,6 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
     </div>
   </div>
   <!-- BANNER: END -->
-</header>
 
 <!-- MAIN-HEADER: START -->
 <div class="main-header z-50 shadow">
@@ -74,12 +73,6 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
   ?>
 
   <?php if ($headerMode === "full") {
-    require_once BASE_PATH . '/templates/components/site_nav.php';
-    renderNav($headerMenu ?? null);
-  }
-  ?>
-
-  <?php if ($headerMode === "full") {
     require_once BASE_PATH . '/templates/components/mobile_menu.php';
     renderMobileMenu($headerMenu ?? []);
   }
@@ -87,3 +80,10 @@ $siteName = htmlspecialchars($settings['site_title'] ?? 'Khoa Công Nghệ Thôn
 
 </div>
 <!-- MAIN-HEADER: END -->
+</header>
+
+<?php if ($headerMode === "full") {
+  require_once BASE_PATH . '/templates/components/site_nav.php';
+  renderNav($headerMenu ?? null);
+}
+?>

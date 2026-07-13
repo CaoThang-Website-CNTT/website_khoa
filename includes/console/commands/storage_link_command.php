@@ -61,7 +61,7 @@ class StorageLinkCommand extends BaseCommand
       }
 
       // Tạo symlink
-      if (!symlink($targetAbsolute, $linkAbsolute)) {
+      if (!$this->createDirectoryLink($targetAbsolute, $linkAbsolute)) {
         $lastError = error_get_last();
         $errorMsg = $lastError['message'] ?? 'Không rõ nguyên nhân';
         ConsoleColor::error("Lỗi khi tạo symlink: {$errorMsg}");
@@ -133,10 +133,42 @@ class StorageLinkCommand extends BaseCommand
     echo "\n  " . ConsoleColor::colorText("CÚ PHÁP:", ConsoleColor::YELLOW) . "\n";
     echo "    php ctsdk.php storage-link <storage_path> <public_path>\n\n";
     echo "  " . ConsoleColor::colorText("VÍ DỤ:", ConsoleColor::YELLOW) . "\n";
+    echo "    php ctsdk.php storage-link storage/media public/media\n";
     echo "    php ctsdk.php storage-link storage public/storage\n";
     echo "    php ctsdk.php storage-link includes/core/storage public/storage\n\n";
     echo "  " . ConsoleColor::colorText("GIẢI THÍCH:", ConsoleColor::CYAN) . "\n";
     echo "    - storage_path : Đường dẫn tương đối hoặc tuyệt đối của thư mục gốc (target)\n";
     echo "    - public_path  : Đường dẫn tương đối hoặc tuyệt đối của liên kết ảo (link)\n\n";
+  }
+
+  private function createDirectoryLink(string $targetAbsolute, string $linkAbsolute): bool
+  {
+    if (@symlink($targetAbsolute, $linkAbsolute)) {
+      return true;
+    }
+
+    $lastError = error_get_last();
+    $errorMsg = $lastError['message'] ?? 'Unknown reason';
+
+    if (PHP_OS_FAMILY !== 'Windows') {
+      ConsoleColor::error("Could not create symlink: {$errorMsg}");
+      return false;
+    }
+
+    echo "  " . ConsoleColor::colorText("[!] Symlink failed:", ConsoleColor::YELLOW) . " {$errorMsg}\n";
+    echo "  " . ConsoleColor::colorText("-> Trying Windows directory junction...", ConsoleColor::GRAY) . "\n";
+
+    $command = 'cmd /c mklink /J ' . escapeshellarg($linkAbsolute) . ' ' . escapeshellarg($targetAbsolute);
+    exec($command, $output, $exitCode);
+
+    if ($exitCode !== 0 || !is_dir($linkAbsolute)) {
+      ConsoleColor::error("Could not create junction. Run the terminal as Administrator or enable Windows Developer Mode.");
+      if (!empty($output)) {
+        echo implode("\n", $output) . "\n";
+      }
+      return false;
+    }
+
+    return true;
   }
 }

@@ -5,10 +5,12 @@ namespace App\Cms;
 final class CmsPageSchemaRegistry
 {
   private CmsSectionRegistry $_sections;
+  private array $_pages;
 
   public function __construct()
   {
     $this->_sections = CmsStaticPageRenderer::defaultRegistry();
+    $this->_pages = CmsPageModuleLoader::load(BASE_PATH . '/includes/cms/pages');
   }
 
   private const PAGES = [
@@ -40,6 +42,11 @@ final class CmsPageSchemaRegistry
           'locked' => false,
         ],
         [
+          'id' => 'partnerships',
+          'type' => 'sections/partnerships',
+          'locked' => false,
+        ],
+        [
           'id' => 'newsfeed',
           'type' => 'sections/newsfeed',
           'locked' => true,
@@ -64,6 +71,11 @@ final class CmsPageSchemaRegistry
           'locked' => false,
         ],
         [
+          'id' => 'vision_mission',
+          'type' => 'sections/vision_mission',
+          'locked' => false,
+        ],
+        [
           'id' => 'history',
           'type' => 'sections/history',
           'locked' => false,
@@ -75,21 +87,35 @@ final class CmsPageSchemaRegistry
         ],
       ],
     ],
+    'education' => [
+      'title' => 'Đào tạo',
+      'slug' => 'education',
+      'route_path' => '/dao-tao',
+      'type' => 'education_page',
+      'layout_mode' => 'section_schema',
+      'sections' => [
+        ['id' => 'education_hub', 'type' => 'sections/education_hub', 'locked' => false],
+        ['id' => 'admissions', 'type' => 'sections/admissions', 'locked' => false],
+        ['id' => 'programs', 'type' => 'sections/programs', 'locked' => false],
+        ['id' => 'outcomes', 'type' => 'sections/outcomes', 'locked' => false],
+        ['id' => 'curriculum', 'type' => 'sections/curriculum', 'locked' => false],
+      ],
+    ],
   ];
 
   public function allPages(): array
   {
-    return array_map(fn(array $page) => $this->hydratePage($page), self::PAGES);
+    return array_map(fn(array $page) => $this->hydratePage($page), $this->_pages);
   }
 
   public function page(string $slug): ?array
   {
-    return isset(self::PAGES[$slug]) ? $this->hydratePage(self::PAGES[$slug]) : null;
+    return isset($this->_pages[$slug]) ? $this->hydratePage($this->_pages[$slug]) : null;
   }
 
   public function hasPage(string $slug): bool
   {
-    return isset(self::PAGES[$slug]);
+    return isset($this->_pages[$slug]);
   }
 
   public function defaultDocument(string $slug): array
@@ -166,6 +192,28 @@ final class CmsPageSchemaRegistry
     );
     $section['variants'] ??= $definition->variants();
 
+    if (
+      str_starts_with((string) ($section['type'] ?? ''), 'sections/education_')
+      || in_array($section['type'] ?? '', ['sections/admissions', 'sections/programs', 'sections/outcomes', 'sections/curriculum'], true)
+    ) {
+      $allRepeaters = EducationPageDefaults::repeaterBlueprints();
+      $section['repeaters'] = array_filter(
+        $allRepeaters,
+        fn(string $path): bool => self::repeaterAppliesToFields($path, $section['editable_fields'] ?? []),
+        ARRAY_FILTER_USE_KEY,
+      );
+    }
+
     return $section;
+  }
+
+  private static function repeaterAppliesToFields(string $repeater, array $fields): bool
+  {
+    $prefix = rtrim(str_replace('.*', '', $repeater), '.');
+    foreach ($fields as $field) {
+      if ($field === $repeater || str_starts_with(str_replace('.*', '', $field), $prefix . '.'))
+        return true;
+    }
+    return false;
   }
 }

@@ -48,6 +48,18 @@ class SelectHandler {
     this._renderTriggerState(inst);
   }
 
+  setValue(id, value, { emit = true } = {}) {
+    const inst = this._instances.get(id);
+    if (!inst || inst.isMultiple) return;
+    const normalized = value == null ? null : String(value);
+    const item = inst.items.find(candidate => candidate.dataset.selectValue === normalized);
+    inst.selected.clear();
+    if (item && !item.dataset.selectDisabled) inst.selected.add(normalized);
+    this._syncSelection(inst);
+    this._renderTriggerState(inst);
+    if (emit) this._dispatch(inst);
+  }
+
   /* ── Lifecycle & Registry ───────────────────────────────────── */
   init() {
     document.querySelectorAll('.select:not([data-select-initialized])').forEach(el => this._initRoot(el));
@@ -211,6 +223,10 @@ class SelectHandler {
     t.setAttribute('aria-expanded', 'false');
     t.setAttribute('aria-haspopup', 'listbox');
     t.setAttribute('tabindex', disabled ? '-1' : '0');
+    const ariaLabel = root.getAttribute('aria-label');
+    if (ariaLabel) t.setAttribute('aria-label', ariaLabel);
+    const ariaLabelledby = root.getAttribute('aria-labelledby');
+    if (ariaLabelledby) t.setAttribute('aria-labelledby', ariaLabelledby);
     if (disabled) t.dataset.selectDisabled = '';
 
     const container = document.createElement('div');
@@ -463,3 +479,5 @@ class SelectHandler {
     return (this.#portal = portal);
   }
 }
+
+window.SelectHandler = SelectHandler;

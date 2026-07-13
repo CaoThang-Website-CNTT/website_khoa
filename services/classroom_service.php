@@ -15,7 +15,7 @@ interface IClassroomService
 {
   /** @return Classroom[] */
   public function getAllClassrooms(): array;
-  public function getClassroomsPaginated(int $page, int $limit = 15): Pageable;
+  public function getClassroomsPaginated(int $page, int $limit = 15, string $search = '%', array $filters = [], array $sort = []): Pageable;
   public function getClassroomById(int $id): ?Classroom;
   public function createClassroom(array $data): ?Classroom;
   public function updateClassroom(int $id, array $data): bool;
@@ -42,18 +42,16 @@ class ClassroomService implements IClassroomService
   /** @return Classroom[] */
   public function getAllClassrooms(): array
   {
-    return $this->_classroomStore->getAll();
-  }
-  public function getClassroomsPaginated(int $page, int $limit = 15): Pageable
-  {
-    $classrooms = $this->_classroomStore->getPaginated($page, $limit);
+    $classrooms = $this->_classroomStore->getAll();
 
-    // Eager load Major, Specialization
     $majorIds = array_filter(array_column($classrooms, 'major_id'));
     $specializationIds = array_filter(array_column($classrooms, 'specialization_id'));
 
     $majorMap = array_column($this->_classroomStore->getByMajorIds($majorIds), null, 'id');
     $specializationMap = array_column($this->_classroomStore->getBySpecializationIds(array_values($specializationIds)), null, 'id');
+
+    $classroomIds = array_filter(array_map(fn($c) => $c->id, $classrooms));
+    $studentCountMap = $this->_classroomStore->getStudentCountByClassroomIds($classroomIds);
 
     foreach ($classrooms as $classroom) {
       if ($classroom->major_id && isset($majorMap[$classroom->major_id])) {
@@ -62,9 +60,38 @@ class ClassroomService implements IClassroomService
       if ($classroom->specialization_id && isset($specializationMap[$classroom->specialization_id])) {
         $classroom->specialization = $specializationMap[$classroom->specialization_id];
       }
+      $classroom->student_count = $studentCountMap[$classroom->id] ?? 0;
     }
 
-    $total = $this->_classroomStore->getTotalCount();
+    return $classrooms;
+  }
+  public function getClassroomsPaginated(int $page, int $limit = 15, string $search = '%', array $filters = [], array $sort = []): Pageable
+  {
+    $classrooms = $this->_classroomStore->getPaginated($page, $limit, $search, $filters, $sort);
+
+    // Eager load Major, Specialization
+    $majorIds = array_filter(array_column($classrooms, 'major_id'));
+    $specializationIds = array_filter(array_column($classrooms, 'specialization_id'));
+
+    $majorMap = array_column($this->_classroomStore->getByMajorIds($majorIds), null, 'id');
+    $specializationMap = array_column($this->_classroomStore->getBySpecializationIds(array_values($specializationIds)), null, 'id');
+
+    // Eager load student count
+    $classroomIds = array_filter(array_map(fn($c) => $c->id, $classrooms));
+    $studentCountMap = $this->_classroomStore->getStudentCountByClassroomIds($classroomIds);
+
+    foreach ($classrooms as $classroom) {
+      if ($classroom->major_id && isset($majorMap[$classroom->major_id])) {
+        $classroom->major = $majorMap[$classroom->major_id];
+      }
+      if ($classroom->specialization_id && isset($specializationMap[$classroom->specialization_id])) {
+        $classroom->specialization = $specializationMap[$classroom->specialization_id];
+      }
+      $classroom->student_count = $studentCountMap[$classroom->id] ?? 0;
+    }
+
+    $total = $this->_classroomStore->getTotalCount($search, $filters);
+
     return new Pageable($classrooms, $total, $limit, $page);
   }
   public function getClassroomById(int $id): ?Classroom
@@ -192,7 +219,7 @@ class ClassroomService implements IClassroomService
     if (empty($level) || empty($year) || empty($shortName)) {
       return null;
     }
-    if (strlen($year) !== 4 || !is_numeric($year)) {
+    if (strlen($year) !== 2 || !is_numeric($year)) {
       return null;
     }
     $letter = substr(preg_replace('/[^A-Z]/', '', $letter), 0, 1);

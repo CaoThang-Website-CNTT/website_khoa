@@ -45,7 +45,11 @@ class MySQLCompiler extends BaseSQLCompiler
 
     // Handle 'table.column'
     if (str_contains($value, '.')) {
-      return implode('.', array_map(fn($p) => "`$p`", explode('.', $value)));
+      $parts = explode('.', $value);
+      return implode('.', array_map(
+        fn($part) => $part === '*' ? '*' : "`$part`",
+        $parts
+      ));
     }
 
     return "`$value`";

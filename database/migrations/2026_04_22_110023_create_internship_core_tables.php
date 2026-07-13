@@ -15,7 +15,7 @@ return new class extends BaseMigration {
       $table->enum('level', ['CĐ', 'CĐN'])->comment('Bac hoc');
       $table->dateTime('start_at');
       $table->dateTime('end_at');
-      $table->enum('status', ['draft', 'public', 'closed'])->default('draft');
+      $table->enum('status', ['draft', 'published', 'closed'])->default('draft');
 
       $table->bigInt('created_by')->unsigned()->nullable();
       $table->timestamp('published_at')->nullable();
@@ -125,7 +125,6 @@ return new class extends BaseMigration {
 
       $table->bigInt('batch_student_id')->unsigned();
       $table->bigInt('teacher_id')->unsigned();
-      $table->enum('status', ['draft', 'published'])->default('draft');
       $table->enum('assignment_method', ['manual', 'auto_even', 'auto_shuffle'])->default('manual');
       $table->timestamp('assigned_at')->default('CURRENT_TIMESTAMP');
       $table->bigInt('assigned_by')->unsigned()->nullable();
@@ -147,8 +146,7 @@ return new class extends BaseMigration {
         ->on('accounts')
         ->onDelete('set null');
 
-      $table->index(['teacher_id', 'status'], 'idx_assign_teacher_status');
-      $table->index(['batch_student_id', 'status'], 'idx_assign_student_status');
+      $table->index('teacher_id', 'idx_assign_teacher');
       $table->unique('batch_student_id', 'uq_assign_student');
     });
 

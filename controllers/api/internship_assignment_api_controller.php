@@ -25,11 +25,40 @@ class InternshipAssignmentApiController extends Controller
   /**
    * Lấy danh sách sinh viên kèm thông tin phân công (nếu có) của đợt
    */
-  public function getAssignments($id)
+  public function getAssignments($id, Request $request)
   {
+    $page = (int) $request->query('page', 1);
+    $limit = (int) $request->query('limit', 15);
+    $search = $request->query("search", '%');
+
+    $filters = [];
+    $rawFilters = $request->query('filters');
+    if (is_array($rawFilters)) {
+      foreach ($rawFilters as $f) {
+        if (isset($f['col']) && isset($f['op']) && isset($f['value'])) {
+          $filters[] = $f;
+        }
+      }
+    }
+
+    $sort = [];
+    $rawSort = $request->query('sort');
+    if (is_array($rawSort) && isset($rawSort['col']) && isset($rawSort['dir'])) {
+      $sort = [
+        'col' => $rawSort['col'],
+        'dir' => $rawSort['dir']
+      ];
+    }
+
     try {
-      $assignments = $this->_assignmentStore->getStudentsInBatchWithAssignment((int) $id);
-      return $this->json($assignments, 200);
+      $pageable = $this->_assignmentService->getAssignmentsPaginated((int) $id, $page, $limit, $search, $filters, $sort);
+
+      return $this->json([
+        'data' => $pageable->getItems(),
+        'total' => $pageable->getTotal(),
+        'page' => $pageable->getCurrentPage(),
+        'limit' => $pageable->getPerPage()
+      ], 200);
     } catch (Exception $e) {
       return $this->json(['message' => 'Lỗi khi tải danh sách phân công: ' . $e->getMessage()], 500);
     }
@@ -65,8 +94,9 @@ class InternshipAssignmentApiController extends Controller
     }
 
     try {
-      // TODO: Get admin ID from Auth logic, using mock ID 1 for now
-      $adminId = 1;
+      $adminId = (int) ($request->session()->authUser()['account_id'] ?? 0);
+      if ($adminId < 1)
+        return $this->json(['message' => 'Chưa xác thực.'], 401);
 
       $assignedCount = $this->_assignmentService->autoAssign((int) $id, $data['method'], $adminId);
       return $this->json(['assigned_count' => $assignedCount], 200, 'Đã phân công tự động thành công ' . $assignedCount . ' sinh viên.');
@@ -97,8 +127,9 @@ class InternshipAssignmentApiController extends Controller
     }
 
     try {
-      // TODO: Get admin ID from Auth logic, using mock ID 1 for now
-      $adminId = 1;
+      $adminId = (int) ($request->session()->authUser()['account_id'] ?? 0);
+      if ($adminId < 1)
+        return $this->json(['message' => 'Chưa xác thực.'], 401);
 
       $this->_assignmentService->bulkSave(
         (int) $id,

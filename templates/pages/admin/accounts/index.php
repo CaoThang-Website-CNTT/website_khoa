@@ -15,7 +15,7 @@
 <?php $layout->end(); ?>
 
 <div class="tm-container" data-tm="accounts" data-tm-id-key="id" data-tm-mode="server" data-tm-selectable
-  data-tm-searchable>
+  data-tm-searchable data-server-table-url="<?= url('api/v1/accounts') ?>">
 
   <!-- Khai báo phân trang -->
   <template data-tm-pagination></template>
@@ -49,7 +49,7 @@
     const { reason, state } = e.detail;
     console.log(`State thay đổi: ${reason}`, state);
 
-    if (reason === "search") {
+    if (false && reason === "search") {
       try {
         const url = new URL("http://localhost/website_khoa/api/v1/accounts");
 
@@ -92,7 +92,7 @@
     const queryState = ApiResultState.fromLocation();
     const search = queryState.getParam('filter[search]', '');
     const searchQuery = search ? `&filter[search]=${encodeURIComponent(search)}` : '';
-    window.location.href = `<?= url("admin/accounts") ?>?page=${page}&limit=${limit}${searchQuery}`;
+    window.history.replaceState({}, '', `<?= url("admin/accounts") ?>?page=${page}&limit=${limit}${searchQuery}`);
   });
 
   tm.loadData(
@@ -109,4 +109,5 @@
     ]) ?>
   );
 </script>
+<script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
 <?php $layout->end() ?>

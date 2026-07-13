@@ -6,11 +6,17 @@ $layout->start("scripts"); ?>
     batchId: <?= json_encode($current['id'] ?? null) ?>,
     baseUrl: <?= json_encode(url('student/internship/' . ($current['id'] ?? '') . '/referral_letters')) ?>,
     currentStudent: {
+      batchStudentId: <?= json_encode($batch_student_id) ?>,
       fullName: <?= json_encode($student->full_name ?? '') ?>,
       dob: <?= json_encode($student->dob ?? '') ?>,
       address: <?= json_encode($student->address ?? '') ?>,
       majorName: <?= json_encode($majorName) ?>
-    }
+    },
+    roster: <?= json_encode(array_values(array_map(fn($item) => [
+      'batchStudentId' => $item['batch_student_id'],
+      'fullName' => $item['full_name'],
+      'studentCode' => $item['student_code'],
+    ], $batch_students ?? [])), JSON_UNESCAPED_UNICODE) ?>
   };
 </script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>
@@ -74,12 +80,20 @@ $layout->start("scripts"); ?>
     <hr class="my-6" />
 
     <div class="mb-4">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <label class="field__label mb-0 font-semibold">Danh sách nhóm sinh viên thực tập</label>
-          <div class="text-sm mt-1">Thêm các sinh viên thực tập chung công ty vào chung một nhóm để xuất chung 1 giấy giới thiệu. Tối đa 15 sinh viên.</div>
-        </div>
-        <button type="button" class="btn shrink-0" data-variant="secondary" data-size="sm" id="rl_btnAddStudent">
+      <div>
+        <label class="field__label mb-0 font-semibold">Danh sách nhóm sinh viên thực tập</label>
+        <div class="text-sm mt-1">Thêm các sinh viên thực tập chung công ty vào chung một nhóm để xuất chung 1 giấy giới thiệu. Tối đa 15 sinh viên.</div>
+      </div>
+      <div class="flex justify-between items-center my-4 gap-2">
+        <select id="rl_rosterStudent" class="field__input">
+          <option value="">-- Chọn sinh viên trong đợt --</option>
+          <?php foreach (($batch_students ?? []) as $rosterStudent): ?>
+            <?php if ((int)$rosterStudent['batch_student_id'] !== (int)$batch_student_id): ?>
+              <option value="<?= (int)$rosterStudent['batch_student_id'] ?>"><?= htmlspecialchars($rosterStudent['student_code'] . ' - ' . $rosterStudent['full_name']) ?></option>
+            <?php endif; ?>
+          <?php endforeach; ?>
+        </select>
+        <button type="button" class="btn shrink-0" data-variant="secondary" data-size="md" id="rl_btnAddStudent">
           <i class="fa-solid fa-plus mr-1"></i> Thêm sinh viên
         </button>
       </div>

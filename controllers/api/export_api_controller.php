@@ -5,15 +5,20 @@ namespace App\Controllers\Api;
 use App\Core\Controller;
 
 use App\Services\InternshipBatchService;
+use App\Services\ProjectGroupService;
 use App\Core\Files\XlsxWriter;
 
 class ExportApiController extends Controller
 {
   private InternshipBatchService $_internshipBatchService;
+  private ProjectGroupService $_projectGroupService;
 
-  public function __construct(InternshipBatchService $internshipBatchService)
-  {
+  public function __construct(
+    InternshipBatchService $internshipBatchService,
+    ProjectGroupService $projectGroupService
+  ) {
     $this->_internshipBatchService = $internshipBatchService;
+    $this->_projectGroupService = $projectGroupService;
   }
 
   /**
@@ -76,6 +81,18 @@ class ExportApiController extends Controller
           return $this->json(null, 400, 'Missing source_id for batch_students')->send();
         }
         $data = $this->_internshipBatchService->getExportBatchStudents(
+          $sourceId,
+          $mode === 'all' ? [] : $filters,
+          $mode === 'all' ? null : $sort,
+          $mode === 'selected' ? $selectedIds : []
+        );
+        break;
+
+      case 'project_allocations':
+        if ($sourceId <= 0) {
+          return $this->json(null, 400, 'Missing source_id for project_allocations')->send();
+        }
+        $data = $this->_projectGroupService->getExportAllocations(
           $sourceId,
           $mode === 'all' ? [] : $filters,
           $mode === 'all' ? null : $sort,

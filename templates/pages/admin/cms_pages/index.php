@@ -7,7 +7,8 @@
 </h2>
 <?php $layout->end() ?>
 
-<div class="tm-container" data-tm="cms_pages_table" data-tm-mode="client" data-tm-searchable>
+<div class="tm-container" data-tm="cms_pages_table" data-tm-mode="server" data-tm-searchable
+  data-server-table-url="<?= url('api/v1/cms_pages') ?>">
   <template data-tm-pagination></template>
 
   <template data-tm-col="title" data-tm-label="Trang" data-tm-sortable>
@@ -20,13 +21,9 @@
     <span class="text-sm font-medium">{{ value }}</span>
   </template>
 
-  <template data-tm-col="layout_mode" data-tm-label="Layout">
-    <span class="badge" data-variant="secondary">{{ value }}</span>
-  </template>
-
   <template data-tm-col="status" data-tm-label="Trạng thái">
     <span class="badge" data-variant="{{ value === 'published' ? 'primary' : 'secondary' }}">
-      {{ value }}
+      {{ value === 'published' ? 'Đã xuất bản' : 'Bản nháp' }}
     </span>
   </template>
 
@@ -43,7 +40,6 @@
       'route_path' => $page->route_path,
       'type' => $page->type,
       'status' => $page->status,
-      'layout_mode' => $page->layout_mode,
       'updated_at' => $page->updated_at,
       'actions' => '',
     ], $data->getItems()),
@@ -52,4 +48,5 @@
     'limit' => $data->getPerPage(),
   ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>
 </script>
+<script type="module" src="<?= url('public/js/pages/admin/server_table.js') ?>"></script>
 <?php $layout->end() ?>

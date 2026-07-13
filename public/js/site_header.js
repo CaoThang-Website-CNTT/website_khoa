@@ -11,8 +11,19 @@
     const searchClose = document.querySelector('[data-mobile-search-close]');
     const searchPanel = document.querySelector('[data-mobile-search]');
     const searchInput = document.getElementById('mobile-search-input');
+    const desktopSearchInput = document.getElementById('search-input');
     const menuToggle = document.querySelector('[data-mobile-menu-toggle]');
     const menuPanel = document.querySelector('[data-mobile-menu]');
+
+    function submitSiteSearch(input) {
+      const query = input?.value.trim() || '';
+      if (!query) return;
+
+      const baseUrl = document.querySelector('.site-header__brand')?.href || window.location.href;
+      const target = new URL('tin-tuc', baseUrl);
+      target.searchParams.set('search', query);
+      window.location.href = target.toString();
+    }
 
     function closeSearch() {
       setExpanded(searchToggle, searchPanel, false);
@@ -34,6 +45,15 @@
     });
 
     searchClose?.addEventListener('click', closeSearch);
+
+    [desktopSearchInput, searchInput].forEach(function (input) {
+      input?.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          submitSiteSearch(input);
+        }
+      });
+    });
 
     menuToggle?.addEventListener('click', function () {
       const nextOpen = menuPanel?.hidden !== false;

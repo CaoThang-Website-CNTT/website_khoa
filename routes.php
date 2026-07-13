@@ -1,6 +1,6 @@
 <?php
 
-use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController, CmsPageController};
+use App\Controllers\{AccountController, AuthController, DashboardController, MenuController, SiteController, StudentController, StudentImportController, TeacherController, CategoryController, WebSettingsController, CarouselController, ClassroomController, PostController, MediaController, InternshipBatchController, StudentDashboardController, CompanyController, TeacherDashboardController, TicketController, SitemapController, CmsPageController, ProjectBatchController, ProjectAllocationController, ProjectEligibilityController, StudentProjectDashboardController, TeacherProjectDashboardController};
 use App\Middlewares\{GuestMiddleware, VerifyAuth, VerifyRole};
 use App\Core\Router;
 
@@ -9,10 +9,19 @@ $router->get('/', [SiteController::class, 'index']);
 $router->get('/sitemap.xml', [SitemapController::class, 'index']);
 $router->prefix('tin-tuc')->group(function (Router $router) {
   $router->get('/', [SiteController::class, 'news_index']);
+  $router->get('/nghien-cuu-sinh-vien', [SiteController::class, 'alias_news_index']);
+  $router->get('/nghien-cuu-giang-vien', [SiteController::class, 'alias_news_index']);
   $router->get('/{slug}', [SiteController::class, 'news_show']);
 });
+$router->get('/danh-muc/{slug}', [SiteController::class, 'category_news_index']);
 $router->get('/gioi-thieu', [SiteController::class, 'about']);
-$router->get('/lien-he', [SiteController::class, 'contact']);
+$router->get('/giang-vien', [SiteController::class, 'faculty']);
+$router->get('/viec-lam/doanh-nghiep', [SiteController::class, 'partners']);
+$router->get('/dao-tao', [SiteController::class, 'education']);
+$router->get('/dao-tao/tuyen-sinh', [SiteController::class, 'admissions']);
+$router->get('/dao-tao/chuong-trinh-dao-tao', [SiteController::class, 'academicPrograms']);
+$router->get('/dao-tao/chuan-dau-ra', [SiteController::class, 'programOutcomes']);
+$router->get('/dao-tao/danh-sach-mon-hoc', [SiteController::class, 'curriculum']);
 // Đăng ký route /portal để tự chuyển hướng theo role thay vì phải set cứng
 $router->get('/portal', [SiteController::class, 'portal'])->middleware([VerifyAuth::class]);
 
@@ -163,6 +172,7 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
   // CMS Pages
   $router->prefix('cms-pages')->group(function ($router) {
     $router->get('/', [CmsPageController::class, 'index']);
+    $router->post('/{slug}/preview', [CmsPageController::class, 'preview']);
     $router->get('/{slug}', [CmsPageController::class, 'edit']);
     $router->post('/{slug}', [CmsPageController::class, 'update']);
     $router->post('/{slug}/publish', [CmsPageController::class, 'publish']);
@@ -180,6 +190,10 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
 
     // Referral Letters
     $router->get('/{id}/referral_letters', [InternshipBatchController::class, 'referralLetters']);
+    $router->post('/{id}/referral_letters/bulk-print', [InternshipBatchController::class, 'bulkPrintReferralLetters']);
+    $router->post('/{id}/referral_letters/bulk-print/confirm', [InternshipBatchController::class, 'confirmBulkPrint']);
+    $router->post('/{id}/referral_letters/merged-print', [InternshipBatchController::class, 'mergedPrintReferralLetters']);
+    $router->post('/{id}/referral_letters/merged-print/confirm', [InternshipBatchController::class, 'confirmMergedPrint']);
     $router->get('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'printReferralLetter']);
     $router->post('/{id}/referral_letters/{letterId}/print', [InternshipBatchController::class, 'confirmPrint']);
 
@@ -189,6 +203,47 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     // Teachers
     $router->get('/{id}/teachers', [InternshipBatchController::class, 'teachers']);
   });
+
+  // Project Batches
+  $router->prefix('project_batches')->group(function ($router) {
+    $router->get('/', [ProjectBatchController::class, 'index']);
+    $router->get('/create', [ProjectBatchController::class, 'create']);
+    $router->post('/', [ProjectBatchController::class, 'store']);
+    $router->get('/{id}', [ProjectBatchController::class, 'show']);
+    $router->post('/{id}', [ProjectBatchController::class, 'update']);
+    $router->post('/delete/{id}', [ProjectBatchController::class, 'destroy']);
+    $router->post('/{id}/publish', [ProjectBatchController::class, 'publish']);
+    $router->post('/{id}/close', [ProjectBatchController::class, 'close']);
+
+    // Topics
+    $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
+    $router->get('/{id}/topics/{topicId}', [ProjectBatchController::class, 'topicDetail']);
+    // Teachers
+    $router->get('/{id}/teachers', [ProjectBatchController::class, 'teachers']);
+    $router->post('/{id}/teachers/add', [ProjectBatchController::class, 'addTeacher']);
+    $router->post('/{id}/teachers/update-capacity', [ProjectBatchController::class, 'updateTeacherCapacity']);
+    $router->post('/{id}/teachers/remove', [ProjectBatchController::class, 'removeTeacher']);
+
+    // Import Excel 
+    $router->post('/{id}/allocation/import-preview', [ProjectAllocationController::class, 'previewImport']);
+    $router->post('/{id}/allocation/import-confirm', [ProjectAllocationController::class, 'confirmImport']);
+
+    // Xử lý ngoại lệ do việc import
+    $router->post('/{id}/allocation/dissolve-group', [ProjectAllocationController::class, 'handleDissolveGroup']);
+    $router->post('/{id}/allocation/bulk-dissolve-invalid', [ProjectAllocationController::class, 'handleBulkDissolveInvalidGroups']);
+    $router->post('/{id}/allocation/approve-solo', [ProjectAllocationController::class, 'handleApproveSolo']);
+    $router->post('/{id}/allocation/replace-member', [ProjectAllocationController::class, 'handleReplaceMember']);
+
+    // Allocation 
+    $router->get('/{id}/allocation', [ProjectAllocationController::class, 'index']);
+    $router->get('/{id}/allocation/export', [ProjectAllocationController::class, 'exportAllocation']);
+    $router->post('/{id}/allocation/auto', [ProjectAllocationController::class, 'autoAllocate']);
+    $router->post('/{id}/allocation/random', [ProjectAllocationController::class, 'randomAllocate']);
+    $router->post('/{id}/allocation/manual', [ProjectAllocationController::class, 'manualAssign']);
+    $router->post('/{id}/allocation/publish', [ProjectAllocationController::class, 'publishAllocation']);
+    $router->post('/{id}/allocation/unpublish', [ProjectAllocationController::class, 'unpublishAllocation']);
+  });
+
 
   // Companies
   $router->prefix('companies')->group(function ($router) {
@@ -229,7 +284,24 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
   $router->get('/internship', [StudentDashboardController::class, 'internshipRedirect']);
   $router->get('/internship/{batch_id}', [StudentDashboardController::class, 'internship']);
   // Thông tin đồ án tốt nghiệp
-  $router->get('/graduation', [StudentDashboardController::class, 'graduation']);
+  $router->prefix('project_batches')->group(function ($router) {
+    $router->get('/', [StudentProjectDashboardController::class, 'index']);
+    $router->get('/{id}', [StudentProjectDashboardController::class, 'show']);
+
+    // Quản lý nhóm
+    $router->post('/{id}/group/create', [StudentProjectDashboardController::class, 'createGroup']);
+    $router->post('/{id}/group/confirm', [StudentProjectDashboardController::class, 'confirmGroup']);
+    $router->post('/{id}/group/reject', [StudentProjectDashboardController::class, 'rejectGroup']);
+    $router->post('/{id}/group/cancel', [StudentProjectDashboardController::class, 'cancelGroupInvite']);
+
+    // Quản lý nguyện vọng
+    $router->get('/{id}/topics', [StudentProjectDashboardController::class, 'topics']);
+    $router->post('/{id}/aspirations/add', [StudentProjectDashboardController::class, 'addAspiration']);
+    $router->post('/{id}/aspirations/remove', [StudentProjectDashboardController::class, 'removeAspiration']);
+    $router->post('/{id}/aspirations/reorder', [StudentProjectDashboardController::class, 'reorderAspirations']);
+    $router->post('/{id}/aspirations/lock', [StudentProjectDashboardController::class, 'lockAspirations']);
+    $router->post('/{id}/aspirations/unlock', [StudentProjectDashboardController::class, 'unlockAspirations']);
+  });
   // Cập nhật thông tin cá nhân
   $router->post('/profile/update', [StudentDashboardController::class, 'updateProfile']);
 
@@ -240,6 +312,10 @@ $router->prefix('student')->middleware([VerifyAuth::class, new VerifyRole('stude
   // Đăng ký giấy giới thiệu
   $router->get('/internship/{batch_id}/referral_letters/create', [StudentDashboardController::class, 'createReferralLetter']);
   $router->post('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'requestReferralLetter']);
+
+  // Báo cáo tuần
+  $router->get('/internship/{batch_id}/weekly_reports', [StudentDashboardController::class, 'weeklyReports']);
+  $router->post('/internship/{batch_id}/weekly_reports', [StudentDashboardController::class, 'submitWeeklyReport']);
 
   // Trang danh sách giấy giới thiệu
   $router->get('/internship/{batch_id}/referral_letters', [StudentDashboardController::class, 'referralLetters']);
@@ -259,7 +335,24 @@ $router->prefix('teacher')->middleware([VerifyAuth::class, new VerifyRole('teach
   $router->prefix('internship_batches')->group(function ($router) {
     $router->get('/', [TeacherDashboardController::class, 'internshipIndex']);
     $router->get('/{id}', [TeacherDashboardController::class, 'internshipShow']);
+    $router->get('/{batchId}/weekly_reports', [TeacherDashboardController::class, 'weeklyReports']);
+    $router->get('/{batchId}/student/{batchStudentId}', [TeacherDashboardController::class, 'studentDetail']);
     $router->get('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'internshipGrade']);
     $router->post('/{batchId}/grade/{batchStudentId}', [TeacherDashboardController::class, 'submitGrade']);
+    $router->post('/{batchId}/publish_grades', [TeacherDashboardController::class, 'publishAllGrades']);
+  });
+  // Thông tin đồ án
+  $router->prefix('project_batches')->group(function ($router) {
+    $router->get('/', [TeacherProjectDashboardController::class, 'index']);
+    $router->get('/{id}', [TeacherProjectDashboardController::class, 'show']);
+    $router->get('/{id}/groups/{groupId}/registration-form', [TeacherProjectDashboardController::class, 'previewRegistrationForm']);
+    $router->post('/{id}/registration-forms/preview', [TeacherProjectDashboardController::class, 'previewRegistrationForms']);
+    $router->post('/{id}/registration-forms/save', [TeacherProjectDashboardController::class, 'saveRegistrationForms']);
+    $router->get('/{id}/topics/create', [TeacherProjectDashboardController::class, 'createTopic']);
+    $router->post('/{id}/topics/create', [TeacherProjectDashboardController::class, 'storeTopic']);
+    $router->get('/{id}/topics/{topicId}/edit', [TeacherProjectDashboardController::class, 'editTopic']);
+    $router->post('/{id}/topics/{topicId}/edit', [TeacherProjectDashboardController::class, 'updateTopic']);
+    $router->post('/{id}/topics/{topicId}/submit', [TeacherProjectDashboardController::class, 'submitTopic']);
+    $router->post('/{id}/topics/{topicId}/delete', [TeacherProjectDashboardController::class, 'deleteTopic']);
   });
 });

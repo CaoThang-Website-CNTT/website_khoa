@@ -9,15 +9,12 @@ $current = $current ?? null;
 $referralLetters = $referralLetters ?? [];
 
 $rlData = array_map(function ($rl) {
-  $statusLabel = 'Chờ xử lý';
-  $statusVariant = 'secondary';
-  if ($rl['status'] === 'printed') {
-    $statusLabel = 'Đã in';
-    $statusVariant = 'primary';
-  } elseif ($rl['status'] !== 'pending') {
-    $statusLabel = 'Đã hủy';
-    $statusVariant = 'destructive';
-  }
+  $statuses = [
+    'pending' => ['Chờ duyệt', 'secondary'], 'approved' => ['Đang xử lý', 'secondary'],
+    'completed' => ['Hoàn thành', 'success'], 'received' => ['Đã nhận', 'success'],
+    'rejected' => ['Từ chối', 'destructive'], 'cancelled' => ['Đã hủy', 'destructive'],
+  ];
+  [$statusLabel, $statusVariant] = $statuses[$rl['status']] ?? [$rl['status'], 'outline'];
 
   return [
     'id' => $rl['id'],
@@ -50,10 +47,12 @@ $rlData = array_map(function ($rl) {
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
-<a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" id="btn-request" class="btn" data-variant="primary" data-size="md">
-  <i class="fa-solid fa-plus mr-2"></i>
-  Đăng ký mới
-</a>
+<?php if ($canRequestLetter ?? false): ?>
+  <a href="<?= url("student/internship/{$current['id']}/referral_letters/create") ?>" id="btn-request" class="btn" data-variant="primary" data-size="md">
+    <i class="fa-solid fa-plus mr-2"></i>
+    Đăng ký mới
+  </a>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <div class="tm-container" data-tm="student_referral_letters_table" data-tm-mode="client" data-tm-searchable
@@ -76,15 +75,15 @@ $rlData = array_map(function ($rl) {
     </div>
   </template>
 
-  <template data-tm-col="status_label" data-tm-label="Trạng thái" data-tm-filter-type="select"
-    data-tm-filter-options='[{"value":"","label":"Tất cả"},{"value":"pending","label":"Chờ xử lý"},{"value":"printed","label":"Đã in"},{"value":"cancelled","label":"Đã hủy"}]'>
+  <template data-tm-col="status" data-tm-label="Trạng thái" data-tm-filter-type="select"
+    data-tm-filter-options='[{"value":"pending","label":"Chờ duyệt"},{"value":"approved","label":"Đang xử lý"},{"value":"completed","label":"Hoàn thành"},{"value":"received","label":"Đã nhận"},{"value":"rejected","label":"Từ chối"},{"value":"cancelled","label":"Đã hủy"}]'>
     <span class="badge" data-variant="{{ row.status_variant }}">{{ row.status_label }}</span>
   </template>
 
   <template data-tm-col="_actions" data-tm-label="Thao tác" data-tm-width="150px" data-tm-align="right">
     <div class="flex gap-2 justify-end">
       <button type="button" class="btn btn-cancel {{ row.status !== 'pending' ? 'hidden' : '' }}" data-variant="destructive" data-size="sm"
-        data-id="{{ row.id }}" data-modal-trigger="#rl_cancelModal">
+        data-id="{{ row.id }}" data-company-name="{{ row.company_name }}" data-modal-trigger="#rl_cancelModal">
         <i class="fa-solid fa-xmark"></i> Hủy
       </button>
       <a href="<?= url("student/internship/{$current['id']}/referral_letters") ?>/{{ row.id }}" class="btn btn-detail" data-variant="outline" data-size="sm">
@@ -111,7 +110,7 @@ $rlData = array_map(function ($rl) {
   <div>
     <form method="POST" id="rl_cancelForm">
       <?= csrf_field() ?>
-      <p class="mb-4">Bạn có chắc chắn muốn hủy giấy giới thiệu này?</p>
+      <p class="mb-4" id="rl_cancelModal_desc">Bạn có chắc chắn muốn hủy giấy giới thiệu này?</p>
       <div class="field" data-field-required>
         <label class="field__label">Lý do hủy</label>
         <div class="flex flex-wrap gap-2 mb-2">

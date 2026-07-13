@@ -2,6 +2,7 @@
 .company-merge-layout {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
 }
 
 .company-merge-layout__source {
@@ -44,7 +45,7 @@
 
 .company-merge-search__clear {
   margin-left: 0.5rem;
-  color: #ef4444;
+  color: var(--destructive);
   cursor: pointer;
   border: none;
   background: none;
@@ -52,7 +53,7 @@
 }
 
 .company-merge-search__clear:hover {
-  color: #b91c1c;
+  color: color-mix(in oklab, var(--destructive) 80%, black);
 }
 
 /* Cảnh báo */
@@ -149,4 +150,23 @@
   margin-top: 1rem;
   display: flex;
   justify-content: flex-end;
+}
+
+@media (max-width: 48rem) {
+  .company-merge-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .company-merge-layout__source {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .merge-grid {
+    min-width: 42rem;
+  }
+
+  .company-merge-actions .btn {
+    width: 100%;
+  }
 }

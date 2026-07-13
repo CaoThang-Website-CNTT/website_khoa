@@ -1,0 +1,221 @@
+.weekly-timeline {
+  position: relative;
+}
+
+.weekly-timeline__track {
+  position: absolute;
+  inset: 1.5rem auto 0 0.625rem;
+  width: 0.25rem;
+  height: auto;
+  transform: none;
+  z-index: 0;
+}
+
+.weekly-timeline__item {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 0;
+}
+
+.weekly-timeline .weekly-timeline__item[disabled] {
+  opacity: 1;
+}
+
+.weekly-timeline__item[disabled] .weekly-timeline__trigger {
+  opacity: 0.5;
+}
+
+.weekly-timeline__item:last-child {
+  padding-bottom: 0;
+}
+
+.weekly-timeline__marker {
+  position: relative;
+  flex: 0 0 auto;
+  margin-top: 1.5rem;
+  z-index: 1;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--text-xs);
+  cursor: default;
+  transform: none;
+  opacity: 1;
+}
+
+.weekly-timeline__marker .fa-check {
+  font-size: 0.5rem;
+}
+
+.weekly-timeline__marker[data-step-wizard-state="upcoming"] {
+  color: var(--muted-foreground);
+  background: var(--muted);
+}
+
+.weekly-timeline__trigger {
+  display: flex;
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  color: var(--card-foreground);
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-height: 3rem;
+}
+
+.weekly-timeline__trigger:not(:disabled) {
+  cursor: pointer;
+}
+
+.weekly-timeline__trigger:not(:disabled):hover {
+  background: var(--muted);
+}
+
+.weekly-timeline__trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.weekly-timeline__item[data-state="open"] .weekly-timeline__trigger {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.weekly-timeline__week {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.weekly-timeline__week small {
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+}
+
+.weekly-timeline__meta {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weekly-timeline__content {
+  flex: 0 0 calc(100% - 2.25rem);
+  margin-left: 2.25rem;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.weekly-submissions {
+  display: grid;
+  padding: 0 1rem;
+}
+
+.weekly-submission {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.weekly-submission:last-child {
+  border-bottom: 0;
+}
+
+.weekly-submission__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.weekly-submission__heading time {
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+}
+
+.weekly-report-copy,
+.weekly-no-activity {
+  color: var(--foreground);
+}
+
+.weekly-no-activity {
+  padding: 0.75rem;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+}
+
+.weekly-image-preview,
+.weekly-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.weekly-image-preview img,
+.weekly-attachments img {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+@media (max-width: 640px) {
+  .weekly-timeline__trigger,
+  .weekly-submission__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .weekly-timeline__meta {
+    justify-content: space-between;
+  }
+
+  .weekly-timeline {
+    display: block;
+  }
+
+  .weekly-timeline__track {
+    left: 0.5rem;
+  }
+
+  .weekly-timeline__marker {
+    flex-basis: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 1rem;
+    font-size: 0.625rem;
+  }
+
+  .weekly-timeline__trigger {
+    gap: 0.6rem;
+    padding: 0.75rem;
+  }
+
+  .weekly-timeline__item {
+    gap: 0 0.5rem;
+  }
+
+  .weekly-timeline__content {
+    flex-basis: calc(100% - 1.75rem);
+    margin-left: 1.75rem;
+  }
+
+  .weekly-submissions {
+    padding: 0 0.75rem;
+  }
+
+  .weekly-submission {
+    padding: 0.75rem 0;
+  }
+}

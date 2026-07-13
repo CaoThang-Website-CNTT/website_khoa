@@ -6,12 +6,23 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Cms\CmsStaticPageRenderer;
 use App\Middlewares\Traits\HasDashboardRouting;
-use App\Services\{PostService, CarouselService, MenuService, WebSettingsService, CmsPageService};
+use App\Services\{PostService, CarouselService, MenuService, WebSettingsService, CmsPageService, CategoryService};
 use App\Editor\BlockRenderer;
 use App\Models\Menu;
 
 class SiteController extends Controller
 {
+  public const NEWS_ALIASES = [
+    'tin-tuc/nghien-cuu-sinh-vien' => 'nghien-cuu-khoa-hoc,sinh-vien',
+    'tin-tuc/nghien-cuu-giang-vien' => 'nghien-cuu-khoa-hoc,giang-vien',
+  ];
+
+  public const NEWS_FILTER_SLUGS = [
+    'hoat-dong', 'cong-tac-giang-day', 'nghien-cuu-khoa-hoc', 'hoc-thuat',
+    'thi-dua-doan-the', 'phong-trao-ngoai-khoa', 'clb-tin-hoc', 'thong-bao',
+    'tuyen-dung',
+  ];
+
   use HasDashboardRouting;
 
   private MenuService $_menuService;
@@ -19,11 +30,13 @@ class SiteController extends Controller
   private CarouselService $_carouselService;
   private WebSettingsService $_settingService;
   private CmsPageService $_cmsPageService;
+  private CategoryService $_categoryService;
 
   /**
    * Header Menu
    */
   private ?Menu $_headerMenu = null;
+  private ?Menu $_footerMenu = null;
 
   /**
    * Settings được load một lần tại constructor và tái sử dụng cho mọi method.
@@ -49,12 +62,14 @@ class SiteController extends Controller
     PostService $postService,
     WebSettingsService $settingService,
     CmsPageService $cmsPageService,
+    CategoryService $categoryService,
   ) {
     $this->_menuService = $menuService;
     $this->_carouselService = $carouselService;
     $this->_postService = $postService;
     $this->_settingService = $settingService;
     $this->_cmsPageService = $cmsPageService;
+    $this->_categoryService = $categoryService;
 
     $this->_loadHeaderMenu();
     $this->_loadSettings();
@@ -84,37 +99,100 @@ class SiteController extends Controller
 
     return $this->render('site/landing', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'carouselSlides' => $carouselSlides,
       'featuredNews' => $featuredNews,
       'latestNewsItems' => $latestNewsItems,
       'cmsHtml' => $cmsHtml,
       'settings' => $this->_settings,
+      'pageTitle' => 'Trang chủ - Khoa CNTT',
+      'pageDescription' => 'Trang thông tin chính thức của Khoa Công nghệ Thông tin - trường Cao đẳng Kỹ thuật Cao Thắng. Cập nhật tin tức, sự kiện, thông báo và thông tin tuyển sinh mới nhất.',
     ], "site_layout");
   }
 
-  public function news_index()
+  public function alias_news_index(Request $request)
   {
+    $path = trim($request->path(), '/');
+    $category = self::NEWS_ALIASES[$path] ?? '';
+    return $this->news_index($request, $category, $path);
+  }
 
-    $featuredNews = $this->_postService->getFeaturedPosts(2, true, ['status' => 'published']);
+  public function category_news_index(Request $request, string $slug)
+  {
+    return $this->news_index($request, $slug, 'danh-muc/' . $slug);
+  }
 
-    $allNews = $this->_postService->getPosts(1, 6, true, [
+  public function news_index(Request $request, ?string $forcedCategory = null, ?string $customPath = null)
+  {
+    $page = max(1, (int) $request->query('page', 1));
+    $search = trim((string) $request->query('search', ''));
+    $category = $forcedCategory ?? trim((string) $request->query('category', $request->query('filter', '')));
+    $sortMode = $request->query('sort') === 'oldest' ? 'oldest' : 'newest';
+    $filters = [
       'status' => 'published',
-      'is_featured' => "0"
+      'search' => $search,
+      'category' => $category,
+      'sort' => 'published_at',
+      'order' => $sortMode === 'oldest' ? 'asc' : 'desc',
+    ];
+
+    $featuredPage = $this->_postService->getPosts(1, 2, true, [
+      ...$filters,
+      'is_featured' => '1',
+      'order' => 'desc',
+    ]);
+    $featuredNews = $featuredPage->getItems();
+    $allNews = $this->_postService->getPosts($page, 6, true, [
+      ...$filters,
+      'is_featured' => '0',
     ]);
 
-    $pageUrl = url('tin-tuc');
+    $allCategories = $this->_categoryService->getAllCategories();
+    $categoryMap = [];
+    $urlMap = [
+      'all' => url('tin-tuc'),
+    ];
+    foreach (self::NEWS_ALIASES as $aliasPath => $catString) {
+      $urlMap[$catString] = url($aliasPath);
+    }
+    foreach ($allCategories as $item) {
+      $categoryMap[(string) $item->slug] = $item;
+      $urlMap[(string) $item->slug] = url('danh-muc/' . $item->slug);
+    }
+    $filterSlugs = self::NEWS_FILTER_SLUGS;
+    $newsCategories = array_values(array_filter(array_map(
+      fn(string $slug) => $categoryMap[$slug] ?? null,
+      $filterSlugs,
+    )));
+
+    $activeCategoryNames = [];
+    foreach (array_filter(array_map('trim', explode(',', $category))) as $slug) {
+      if (isset($categoryMap[$slug])) $activeCategoryNames[] = $categoryMap[$slug]->name;
+    }
+
+    $pageCanonical = $customPath ?? 'tin-tuc';
+    $pageUrl = url($pageCanonical);
     $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
-    $pageTitle = 'Tin tức & Sự kiện';
-    $pageDescription = 'Tin tức và sự kiện mới nhất từ Khoa Công nghệ Thông tin. Cập nhật thông tin về sinh viên, nghiên cứu, tuyển dụng và các sự kiện đặc biệt.';
+    $pageTitle = $search !== ''
+      ? 'Kết quả tìm kiếm tin tức'
+      : ($activeCategoryNames ? implode(' · ', $activeCategoryNames) : 'Tin tức & Sự kiện');
+    $pageDescription = $search !== ''
+      ? 'Kết quả tìm kiếm cho “' . $search . '” trên trang tin Khoa Công nghệ Thông tin.'
+      : 'Tin tức và sự kiện mới nhất từ Khoa Công nghệ Thông tin. Cập nhật thông tin về sinh viên, nghiên cứu và các hoạt động của Khoa.';
 
     return $this->render('site/news/index', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'featuredNews' => $featuredNews,
       'allNews' => $allNews,
+      'newsCategories' => $newsCategories,
+      'newsQuery' => compact('search', 'category', 'sortMode'),
+      'activeCategoryNames' => $activeCategoryNames,
       'settings' => $this->_settings,
       'pageTitle' => $pageTitle,
       'pageDescription' => $pageDescription,
-      'pageCanonical' => 'tin-tuc',
+      'pageCanonical' => $pageCanonical,
+      'urlMap' => $urlMap,
       'pageSeo' => [
         'og:title' => seo_title($pageTitle, $siteTitle),
         'og:description' => $pageDescription,
@@ -143,6 +221,7 @@ class SiteController extends Controller
 
     return $this->render('site/news/detail', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'news' => $news,
       'newsSettings' => json_decode($news->settings_json ?? '{}', true)['settings'] ?? [],
       'detail' => $result,
@@ -171,9 +250,82 @@ class SiteController extends Controller
 
     return $this->render('site/about', [
       'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
       'cmsHtml' => $cmsHtml,
       'settings' => $this->_settings,
     ], "site_layout");
+  }
+
+  public function faculty(): void
+  {
+    $title = 'Đội ngũ giảng viên';
+    $description = 'Đội ngũ giảng viên Khoa Công nghệ Thông tin giàu kinh nghiệm, vững chuyên môn và tiên phong đổi mới.';
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công nghệ Thông tin';
+
+    $this->render('site/faculty', [
+      'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
+      'cmsHtml' => $this->_renderCmsPage('faculty'),
+      'settings' => $this->_settings,
+      'pageTitle' => $title,
+      'pageDescription' => $description,
+      'pageCanonical' => 'giang-vien',
+      'pageSeo' => [
+        'og:title' => seo_title($title, $siteTitle),
+        'og:description' => $description,
+        'og:type' => 'website',
+        'og:url' => url('giang-vien'),
+        'og:site_name' => $siteTitle,
+      ],
+    ], 'site_layout');
+  }
+
+  public function partners(): void
+  {
+    $partnerships = $this->_cmsPageService->getSectionData('landing', 'partnerships');
+    $partners = array_values(array_filter(
+      is_array($partnerships['partners'] ?? null) ? $partnerships['partners'] : [],
+      static fn(mixed $partner): bool => is_array($partner) && trim((string) ($partner['name'] ?? '')) !== '',
+    ));
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+    $description = 'Các doanh nghiệp đồng hành cùng Khoa Công nghệ thông tin trong đào tạo, thực tập và tuyển dụng.';
+
+    $this->render('site/partners', [
+      'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
+      'partners' => $partners,
+      'settings' => $this->_settings,
+      'pageTitle' => 'Doanh nghiệp đối tác',
+      'pageDescription' => $description,
+      'pageCanonical' => 'viec-lam/doanh-nghiep',
+      'pageSeo' => ['og:title' => seo_title('Doanh nghiệp đối tác', $siteTitle), 'og:description' => $description,
+        'og:type' => 'website', 'og:url' => url('viec-lam/doanh-nghiep'), 'og:site_name' => $siteTitle],
+    ], 'site_layout');
+  }
+
+  public function education(): void
+  {
+    $this->_renderEducationPage('education', 'Đào tạo', 'Khám phá chương trình đào tạo, chuẩn đầu ra và kế hoạch học tập của Khoa Công nghệ thông tin.', 'dao-tao');
+  }
+
+  public function admissions(): void
+  {
+    $this->redirect('dao-tao#tuyen-sinh', 301);
+  }
+
+  public function academicPrograms(): void
+  {
+    $this->redirect('dao-tao#chuong-trinh-dao-tao', 301);
+  }
+
+  public function programOutcomes(): void
+  {
+    $this->redirect('dao-tao#chuan-dau-ra', 301);
+  }
+
+  public function curriculum(): void
+  {
+    $this->redirect('dao-tao#danh-sach-mon-hoc', 301);
   }
 
   public function portal(Request $request): void
@@ -193,6 +345,7 @@ class SiteController extends Controller
   private function _loadHeaderMenu(): void
   {
     $this->_headerMenu = $this->_menuService->getMenuByKeyWithItems('header_menu');
+    $this->_footerMenu = $this->_menuService->getMenuByKeyWithItems('footer_menu');
   }
 
   /**
@@ -215,5 +368,26 @@ class SiteController extends Controller
       ?? $this->_cmsPageService->getPageBySlug($slug);
 
     return (new CmsStaticPageRenderer($context, pageSlug: $slug))->render($page->content());
+  }
+
+  private function _renderEducationPage(string $slug, string $title, string $description, string $canonical): void
+  {
+    $siteTitle = $this->_settings['site_title'] ?? 'Khoa Công Nghệ Thông Tin';
+    $this->render('site/education', [
+      'headerMenu' => $this->_headerMenu->items,
+      'footerMenu' => $this->_footerMenu?->items ?? [],
+      'cmsHtml' => $this->_renderCmsPage($slug),
+      'settings' => $this->_settings,
+      'pageTitle' => $title,
+      'pageDescription' => $description,
+      'pageCanonical' => $canonical,
+      'pageSeo' => [
+        'og:title' => seo_title($title, $siteTitle),
+        'og:description' => $description,
+        'og:type' => 'website',
+        'og:url' => url($canonical),
+        'og:site_name' => $siteTitle,
+      ],
+    ], 'site_layout');
   }
 }

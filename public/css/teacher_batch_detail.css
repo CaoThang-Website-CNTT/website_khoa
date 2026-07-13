@@ -7,71 +7,6 @@
   File này chỉ chứa style bổ sung đặc thù.
 */
 
-/* Grid cho các thẻ thống kê */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.stat-card__icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-lg);
-  font-size: 1.5rem;
-}
-
-/* Biến thể màu cho icon thống kê sử dụng color-mix từ hệ thống */
-.stat-card__icon--primary {
-  background-color: color-mix(in oklab, var(--primary) 10%, transparent);
-  color: var(--primary);
-}
-
-.stat-card__icon--success {
-  background-color: color-mix(in oklab, var(--chart-3) 10%, transparent);
-  color: var(--chart-3);
-}
-
-.stat-card__icon--info {
-  background-color: color-mix(
-    in oklab,
-    var(--toast-info-icon) 10%,
-    transparent
-  );
-  color: var(--toast-info-icon);
-}
-
-.stat-card__icon--warning {
-  background-color: color-mix(in oklab, var(--chart-4) 10%, transparent);
-  color: var(--chart-4);
-}
-
-.stat-card__info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-card__label {
-  font-size: var(--text-sm);
-  color: var(--muted-foreground);
-}
-
-.stat-card__value {
-  font-size: var(--text-xl);
-  font-weight: var(--fw-bold);
-  color: var(--foreground);
-  text-align: center;
-}
-
 @media screen and (min-width: 1280px) {
   .teacher-batch-layout {
     grid-template-columns: 2fr 1fr;
@@ -84,22 +19,10 @@
   color: var(--primary);
 }
 
-.student-table__submission {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-}
-
-.student-table__filename {
+.company-truncate {
   max-width: 150px;
-  display: inline-block;
-  vertical-align: bottom;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Text status helpers sử dụng biến hệ thống */
-.text-success {
-  color: var(--chart-3);
-}
-.text-danger {
-  color: var(--destructive);
-}

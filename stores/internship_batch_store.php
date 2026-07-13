@@ -3,6 +3,8 @@
 namespace App\Stores;
 
 use App\Core\Store;
+use App\Core\Schema\QueryBuilder;
+use App\Core\Schema\Compiler\MySQLCompiler;
 use PDO;
 
 interface IInternshipBatchStore
@@ -24,6 +26,7 @@ interface IInternshipBatchStore
   public function update(int $id, array $data): bool;
   public function delete(int $id): bool;
   public function updateStatus(int $id, string $status, array $extraData = []): bool;
+  public function publishBatchGrades(int $batchId): bool;
   public function getBatchStudentsWithDetails(int $batchId): array;
   public function getBatchSupervisorsWithDetails(int $batchId): array;
   public function removeStudentFromBatch(int $batchId, int $studentId): bool;
@@ -34,29 +37,26 @@ interface IInternshipBatchStore
   public function getBatchesByStudentId(int $studentId): array;
   public function getTeacherStudentsInBatch(int $batchId, int $teacherId): array;
   public function getStudentGradingDetail(int $batchStudentId): ?array;
+  public function getTeacherStudentDetail(int $batchStudentId): ?array;
   public function getTeacherBatchStats(int $batchId, int $teacherId): array;
   public function isSupervisorOfBatch(int $batchId, int $teacherId): bool;
+  public function hasOverlappingEnrollment(int $studentId, string $startAt, string $endAt, ?int $excludeBatchId = null): bool;
+  public function getBatchStudent(int $batchId, int $studentId): ?array;
+  public function batchStudentHasDependencies(int $batchStudentId): bool;
 }
 
 class InternshipBatchStore extends Store implements IInternshipBatchStore
 {
   public function createBatch(array $data): int
   {
-    $sql = "INSERT INTO internship_batches 
-            (title, description, class_of, level, start_at, end_at, status, created_by) 
-            VALUES (:title, :description, :class_of, :level, :start_at, :end_at, :status, :created_by)";
-
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-      ':title' => $data['title'],
-      ':description' => $data['description'] ?? null,
-      ':class_of' => $data['class_of'] ?? null,
-      ':level' => $data['level'] ?? null,
-      ':start_at' => $data['start_at'],
-      ':end_at' => $data['end_at'],
-      ':status' => 'draft',
-      ':created_by' => $data['created_by'] ?? null
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batches')->insert([
+      'title' => $data['title'], 'description' => $data['description'] ?? null,
+      'class_of' => $data['class_of'] ?? null, 'level' => $data['level'] ?? null,
+      'start_at' => $data['start_at'], 'end_at' => $data['end_at'],
+      'status' => 'draft', 'created_by' => $data['created_by'] ?? null,
     ]);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
 
     return (int)$this->db->lastInsertId();
   }
@@ -64,56 +64,38 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function addClassroomsToBatch(int $batchId, array $classroomIds): bool
   {
     if (empty($classroomIds)) return true;
-
-    $sql = "INSERT INTO internship_batch_classrooms (batch_id, classroom_id) VALUES ";
-    $values = [];
-    $params = [];
-    foreach ($classroomIds as $i => $id) {
-      $values[] = "(:batch_id_$i, :classroom_id_$i)";
-      $params[":batch_id_$i"] = $batchId;
-      $params[":classroom_id_$i"] = $id;
-    }
-    $sql .= implode(', ', $values);
-
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute($params);
+    $rows = array_map(fn($id) => ['batch_id' => $batchId, 'classroom_id' => $id], $classroomIds);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batch_classrooms')->insert($rows);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return true;
   }
 
   public function addStudentsToBatch(int $batchId, array $studentIds): bool
   {
     if (empty($studentIds)) return true;
 
-    $sql = "INSERT INTO internship_batch_students (batch_id, student_id, status, source) VALUES ";
-    $values = [];
-    $params = [];
-    foreach ($studentIds as $i => $id) {
-      $values[] = "(:batch_id_$i, :student_id_$i, 'pending', 'db_select')";
-      $params[":batch_id_$i"] = $batchId;
-      $params[":student_id_$i"] = $id;
-    }
-    $sql .= implode(', ', $values);
-
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute($params);
+    $rows = array_map(fn($id) => [
+      'batch_id' => $batchId, 'student_id' => $id, 'status' => 'pending', 'source' => 'db_select',
+    ], $studentIds);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batch_students')->insert($rows);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return true;
   }
 
   public function addSupervisorsToBatch(int $batchId, array $supervisors): bool
   {
     if (empty($supervisors)) return true;
 
-    $sql = "INSERT INTO internship_batch_supervisors (batch_id, teacher_id, max_students, is_active) VALUES ";
-    $values = [];
-    $params = [];
-    foreach ($supervisors as $i => $sup) {
-      $values[] = "(:batch_id_$i, :teacher_id_$i, :max_students_$i, 1)";
-      $params[":batch_id_$i"] = $batchId;
-      $params[":teacher_id_$i"] = $sup['teacher_id'];
-      $params[":max_students_$i"] = $sup['max_students'];
-    }
-    $sql .= implode(', ', $values);
-
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute($params);
+    $rows = array_map(fn($sup) => [
+      'batch_id' => $batchId, 'teacher_id' => $sup['teacher_id'],
+      'max_students' => $sup['max_students'], 'is_active' => 1,
+    ], $supervisors);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batch_supervisors')->insert($rows);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return true;
   }
 
   public function getEligibleStudentsByClassroom(int $classroomId): array
@@ -238,9 +220,10 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function getById(int $id): ?array
   {
-    $sql = "SELECT * FROM internship_batches WHERE id = :id AND deleted_at IS NULL";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batches')
+      ->select('*')->eq('id', $id)->is('deleted_at', null);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
   }
@@ -254,7 +237,8 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
       'total_referrals' => 0,
       'pending_referrals' => 0,
       'has_submissions' => false,
-      'has_grades' => false
+      'has_grades' => false,
+      'locked_grades' => 0
     ];
 
     // Đếm sinh viên
@@ -309,63 +293,74 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $stmt->execute([':id' => $id]);
     $stats['has_grades'] = (int)$stmt->fetchColumn() > 0;
 
+    // Đếm điểm đã chốt
+    $sqlLockedGrades = "SELECT COUNT(*) FROM internship_grades g
+                        JOIN internship_batch_students bs ON g.batch_student_id = bs.id
+                        WHERE bs.batch_id = :id AND g.grade_lock_at IS NOT NULL";
+    $stmt = $this->db->prepare($sqlLockedGrades);
+    $stmt->execute([':id' => $id]);
+    $stats['locked_grades'] = (int)$stmt->fetchColumn();
+
     return $stats;
   }
 
   public function update(int $id, array $data): bool
   {
-    $sql = "UPDATE internship_batches SET 
-            title = :title, 
-            description = :description, 
-            start_at = :start_at, 
-            end_at = :end_at,
-            updated_at = NOW()
-            WHERE id = :id";
-
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute([
-      ':id' => $id,
-      ':title' => $data['title'],
-      ':description' => $data['description'] ?? null,
-      ':start_at' => $data['start_at'],
-      ':end_at' => $data['end_at']
-    ]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batches')->update([
+      'title' => $data['title'], 'description' => $data['description'] ?? null,
+      'start_at' => $data['start_at'], 'end_at' => $data['end_at'],
+      'updated_at' => date('Y-m-d H:i:s'),
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->rowCount() > 0;
   }
 
   public function delete(int $id): bool
   {
-    $sql = "UPDATE internship_batches SET deleted_at = NOW() WHERE id = :id";
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute([':id' => $id]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batches')->update([
+      'deleted_at' => date('Y-m-d H:i:s'),
+    ])->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->rowCount() > 0;
   }
 
   public function updateStatus(int $id, string $status, array $extraData = []): bool
   {
-    $fields = ["status = :status"];
-    $params = [':id' => $id, ':status' => $status];
-
-    if (isset($extraData['published_at'])) {
-      $fields[] = "published_at = :published_at";
-      $params[':published_at'] = $extraData['published_at'];
+    $data = ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')];
+    foreach (['published_at', 'closed_at'] as $key) {
+      if (array_key_exists($key, $extraData)) $data[$key] = $extraData[$key];
     }
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batches')->update($data)->eq('id', $id);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->rowCount() > 0;
+  }
 
-    if (isset($extraData['closed_at'])) {
-      $fields[] = "closed_at = :closed_at";
-      $params[':closed_at'] = $extraData['closed_at'];
-    }
-
-    $sql = "UPDATE internship_batches SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE id = :id";
+  public function publishBatchGrades(int $batchId): bool
+  {
+    $sql = "UPDATE internship_batches SET grades_published_at = NOW(), updated_at = NOW() WHERE id = :id";
     $stmt = $this->db->prepare($sql);
-    return $stmt->execute($params);
+    $stmt->execute([':id' => $batchId]);
+    return $stmt->rowCount() > 0;
   }
 
   public function getBatchStudentsWithDetails(int $batchId): array
   {
     $sql = "SELECT bs.id as batch_student_id, bs.student_id, s.full_name, s.student_id as student_code, 
-                   c.short_name as classroom_name, bs.status, bs.note
+                   c.short_name as classroom_name, bs.status, bs.note,
+                   ig.final_score as grade, ig.grade_lock_at, ig.score_reason, ig.feedback,
+                   co.name as company_name, co.tax_code as company_tax_code, co.address as company_address,
+                   bs.company_mentor_name, bs.company_mentor_phone, bs.company_mentor_email,
+                   t.id as teacher_id, t.full_name as teacher_name
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN internship_grades ig ON ig.batch_student_id = bs.id
+            LEFT JOIN companies co ON bs.company_id = co.id
+            LEFT JOIN internship_assignments ia ON ia.batch_student_id = bs.id
+            LEFT JOIN teachers t ON ia.teacher_id = t.id
             WHERE bs.batch_id = :batch_id
             ORDER BY s.full_name ASC";
     $stmt = $this->db->prepare($sql);
@@ -393,16 +388,20 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function removeStudentFromBatch(int $batchId, int $studentId): bool
   {
-    $sql = "DELETE FROM internship_batch_students WHERE batch_id = :batch_id AND student_id = :student_id";
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute([':batch_id' => $batchId, ':student_id' => $studentId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batch_students')->delete()
+      ->eq('batch_id', $batchId)->eq('student_id', $studentId);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->rowCount() > 0;
   }
 
   public function removeSupervisorFromBatch(int $batchId, int $teacherId): bool
   {
-    $sql = "DELETE FROM internship_batch_supervisors WHERE batch_id = :batch_id AND teacher_id = :teacher_id";
-    $stmt = $this->db->prepare($sql);
-    return $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batch_supervisors')->delete()
+      ->eq('batch_id', $batchId)->eq('teacher_id', $teacherId);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    return $stmt->rowCount() > 0;
   }
 
   public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool
@@ -476,12 +475,13 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function getBatchesByStudentId(int $studentId): array
   {
     $sql = "SELECT b.*, bs.status as student_status, bs.id as batch_student_id, 
-                   bs.company_id, bs.position, bs.internship_start_date, bs.internship_end_date,
+                   bs.company_id, bs.position, bs.company_mentor_name, bs.company_mentor_phone, bs.company_mentor_email,
+                   bs.internship_start_date, bs.internship_end_date,
                    c.name as company_name, c.tax_code as company_tax_code, c.address as company_address, c.phone as company_phone
             FROM internship_batches b
             JOIN internship_batch_students bs ON b.id = bs.batch_id
             LEFT JOIN companies c ON bs.company_id = c.id
-            WHERE bs.student_id = :student_id AND b.deleted_at IS NULL AND b.status IN ('draft','published','closed')
+             WHERE bs.student_id = :student_id AND b.deleted_at IS NULL AND b.status IN ('published','closed')
             ORDER BY b.start_at DESC";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':student_id' => $studentId]);
@@ -492,7 +492,10 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   {
     $sql = "UPDATE internship_batch_students SET 
             company_id = :company_id, 
-            position = :position, 
+            position = :position,
+            company_mentor_name = :company_mentor_name,
+            company_mentor_phone = :company_mentor_phone,
+            company_mentor_email = :company_mentor_email,
             internship_start_date = :internship_start_date, 
             internship_end_date = :internship_end_date,
             updated_at = NOW()
@@ -503,6 +506,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
       ':id' => $batchStudentId,
       ':company_id' => $data['company_id'],
       ':position' => $data['position'],
+      ':company_mentor_name' => $data['company_mentor_name'] ?? null,
+      ':company_mentor_phone' => $data['company_mentor_phone'] ?? null,
+      ':company_mentor_email' => $data['company_mentor_email'] ?? null,
       ':internship_start_date' => $data['internship_start_date'],
       ':internship_end_date' => $data['internship_end_date']
     ]);
@@ -524,6 +530,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               g.score_reason,
               g.feedback,
               g.graded_at,
+              g.grade_lock_at,
               bs.id AS batch_student_id
             FROM internship_assignments a
             JOIN internship_batch_students bs ON a.batch_student_id = bs.id
@@ -573,11 +580,46 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               c.short_name AS classroom_name,
               co.name AS company_name,
               co.address AS company_address,
+              bs.company_mentor_name,
+              bs.company_mentor_phone,
+              bs.company_mentor_email,
               bs.position,
               bs.internship_start_date,
               bs.internship_end_date
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
+            LEFT JOIN classrooms c ON s.classroom_id = c.id
+            LEFT JOIN companies co ON bs.company_id = co.id
+            WHERE bs.id = :batch_student_id";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_student_id' => $batchStudentId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result ?: null;
+  }
+
+  public function getTeacherStudentDetail(int $batchStudentId): ?array
+  {
+    $sql = "SELECT
+              bs.id AS batch_student_id,
+              bs.batch_id,
+              s.student_id AS student_code,
+              s.full_name,
+              s.phone,
+              s.dob,
+              s.gender,
+              a.email,
+              c.short_name AS classroom_name,
+              co.name AS company_name,
+              co.address AS company_address,
+              bs.position,
+              bs.internship_start_date,
+              bs.internship_end_date,
+              bs.company_mentor_name,
+              bs.company_mentor_phone,
+              bs.company_mentor_email
+            FROM internship_batch_students bs
+            JOIN students s ON bs.student_id = s.id
+            LEFT JOIN accounts a ON s.account_id = a.id
             LEFT JOIN classrooms c ON s.classroom_id = c.id
             LEFT JOIN companies co ON bs.company_id = co.id
             WHERE bs.id = :batch_student_id";
@@ -626,6 +668,10 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $sqlGrade = "SELECT COUNT(DISTINCT batch_student_id) FROM internship_grades WHERE batch_student_id IN ($inClause)";
     $stats['has_grade'] = (int)$this->db->query($sqlGrade)->fetchColumn();
 
+    // Đếm điểm đã chốt
+    $sqlLockedGrade = "SELECT COUNT(DISTINCT batch_student_id) FROM internship_grades WHERE batch_student_id IN ($inClause) AND grade_lock_at IS NOT NULL";
+    $stats['locked_grades'] = (int)$this->db->query($sqlLockedGrade)->fetchColumn();
+
     return $stats;
   }
 
@@ -635,6 +681,51 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
             WHERE batch_id = :batch_id AND teacher_id = :teacher_id AND is_active = 1";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':batch_id' => $batchId, ':teacher_id' => $teacherId]);
+    return (bool)$stmt->fetchColumn();
+  }
+
+  public function hasOverlappingEnrollment(int $studentId, string $startAt, string $endAt, ?int $excludeBatchId = null): bool
+  {
+    $sql = "SELECT 1
+            FROM internship_batch_students bs
+            JOIN internship_batches b ON b.id = bs.batch_id
+            WHERE bs.student_id = :student_id
+              AND b.status IN ('draft', 'published')
+              AND b.deleted_at IS NULL
+              AND b.start_at <= :end_at
+              AND b.end_at >= :start_at";
+    $params = [':student_id' => $studentId, ':start_at' => $startAt, ':end_at' => $endAt];
+    if ($excludeBatchId !== null) {
+      $sql .= ' AND b.id <> :exclude_batch_id';
+      $params[':exclude_batch_id'] = $excludeBatchId;
+    }
+    $stmt = $this->db->prepare($sql . ' LIMIT 1');
+    $stmt->execute($params);
+    return (bool)$stmt->fetchColumn();
+  }
+
+  public function getBatchStudent(int $batchId, int $studentId): ?array
+  {
+    $sql = 'SELECT * FROM internship_batch_students WHERE batch_id = :batch_id AND student_id = :student_id';
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':batch_id' => $batchId, ':student_id' => $studentId]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result ?: null;
+  }
+
+  public function batchStudentHasDependencies(int $batchStudentId): bool
+  {
+    $sql = "SELECT
+              EXISTS(SELECT 1 FROM internship_assignments WHERE batch_student_id = :id1)
+              OR EXISTS(SELECT 1 FROM referral_letters WHERE batch_student_id = :id2)
+              OR EXISTS(SELECT 1 FROM referral_letter_students WHERE batch_student_id = :id3)
+              OR EXISTS(SELECT 1 FROM internship_submissions WHERE batch_student_id = :id4)
+              OR EXISTS(SELECT 1 FROM internship_grades WHERE batch_student_id = :id5)";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([
+      ':id1' => $batchStudentId, ':id2' => $batchStudentId, ':id3' => $batchStudentId,
+      ':id4' => $batchStudentId, ':id5' => $batchStudentId,
+    ]);
     return (bool)$stmt->fetchColumn();
   }
 
@@ -710,10 +801,13 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               co.name AS company_name,
               co.tax_code AS company_tax_code,
               co.address AS company_address,
+              bs.company_mentor_name,
+              bs.company_mentor_phone,
+              bs.company_mentor_email,
               t.full_name AS teacher_name,
-              ig.final_score AS grade_score,
-              ig.score_reason AS grade_reason,
-              ig.feedback AS grade_feedback
+              IF(ig.grade_lock_at IS NOT NULL, ig.final_score, NULL) AS grade_score,
+              IF(ig.grade_lock_at IS NOT NULL, ig.score_reason, NULL) AS grade_reason,
+              IF(ig.grade_lock_at IS NOT NULL, ig.feedback, NULL) AS grade_feedback
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN accounts acc ON s.account_id = acc.id

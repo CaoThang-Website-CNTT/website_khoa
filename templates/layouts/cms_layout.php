@@ -6,18 +6,29 @@
   <?= $layout->yield('head'); ?>
 </head>
 
-<?php if ($flash = request()->session()->getFlash("notification")): ?>
+<?php if ($flash = request()->session()->getFlash('notification')): ?>
+  <?php
+  $flashType = (string) ($flash['type'] ?? 'info');
+  $toastMethod = match ($flashType) {
+    'success' => 'success',
+    'error', 'danger' => 'error',
+    'warning' => 'warn',
+    default => 'info',
+  };
+  $toastJsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT;
+  ?>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      toast.<?= $flash['type'] ?>(
-        "<?= htmlspecialchars($flash['title']) ?>",
-        "<?= htmlspecialchars($flash['desc']) ?>"
+      window.toast?.[<?= json_encode($toastMethod, $toastJsonFlags) ?>]?.(
+        <?= json_encode((string) ($flash['title'] ?? ''), $toastJsonFlags) ?>,
+        <?= json_encode((string) ($flash['desc'] ?? ''), $toastJsonFlags) ?>
       );
     });
   </script>
 <?php endif; ?>
 
 <body>
+  <?php $helpSurface = 'cms'; include BASE_PATH . '/templates/components/editor_help_drawer.php'; ?>
   <?php include_once BASE_PATH . '/templates/components/preloader.php'; ?>
   <?php require_once BASE_PATH . '/templates/components/media_selector_modal.php'; ?>
 
@@ -63,6 +74,7 @@
 
   <?php include_once BASE_PATH . '/templates/partials/cms_scripts.php'; ?>
   <?= $layout->yield('scripts'); ?>
+  <?= $layout->yield('script'); ?>
 </body>
 
 </html>

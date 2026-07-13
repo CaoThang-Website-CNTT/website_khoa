@@ -273,6 +273,10 @@ class PostStore extends Store implements IPostStore
   {
     return match ($sort) {
       'published_at' => 'published_at',
+      'created_at' => 'created_at',
+      'view_count' => 'view_count',
+      'title' => 'title',
+      'id' => 'id',
       default => 'published_at',
     };
   }

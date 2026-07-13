@@ -18,23 +18,21 @@ $studentsData = array_map(function ($sv) {
     'classroom_name' => $sv['classroom_name'],
     'company_name' => $sv['company_name'],
     'submission_name' => $sv['submission_name'],
-    'submission_url' => url('public/media/' . $sv['submission_path']),
+    'submission_url' => url('storage/' . ltrim($sv['submission_path'], '/')),
     'submission_count' => (int) $sv['submission_count'],
     'grade' => $sv['grade'] !== null ? (float) $sv['grade'] : null,
+    'is_locked' => $sv['grade_lock_at'] !== null ? '1' : '0',
+    'grade_color' => ($sv['grade_lock_at'] !== null)
+      ? 'var(--primary)'
+      : 'var(--muted-foreground)',
     'batch_student_id' => $sv['batch_student_id'],
     // Các trường hỗ trợ filter (0/1)
     'has_submission' => $sv['submission_name'] ? '1' : '0',
-    'has_grade' => $sv['grade'] !== null ? '1' : '0'
+    'has_grade' => $sv['grade'] !== null ? '1' : '0',
+    'grade_btn_variant' => ($sv['submission_name'] && $sv['grade'] === null) ? 'primary' : 'outline-alt'
   ];
 }, $students);
 
-// Tạo danh sách lớp cho filter dropdown
-$classrooms = array_unique(array_filter(array_column($students, 'classroom_name')));
-sort($classrooms);
-$classOptions = [];
-foreach ($classrooms as $c) {
-  $classOptions[] = ['label' => $c, 'value' => $c];
-}
 ?>
 <link rel="stylesheet" href="<?= url('public/css/teacher_batch_detail.css') ?>">
 
@@ -63,62 +61,67 @@ foreach ($classrooms as $c) {
   <i class="fa-solid fa-chevron-left"></i>
   Quay lại
 </a>
+<a href="<?= url("teacher/internship_batches/{$batch['id']}/weekly_reports") ?>" data-variant="secondary" data-size="md"
+  class="btn">
+  <i class="fa-solid fa-calendar-week mr-2"></i>
+  Báo cáo tuần
+</a>
+<form id="publishForm" action="<?= url("teacher/internship_batches/{$batch['id']}/publish_grades") ?>" method="POST"
+  class="inline-block">
+  <?= csrf_field() ?>
+  <button type="button" data-modal-trigger="#publish-confirm-modal" class="btn" data-variant="primary" data-size="md">
+    <i class="fa-solid fa-lock mr-2"></i> Công bố điểm
+  </button>
+</form>
 <?php $layout->end() ?>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Tài liệu báo cáo</span>
+      <span class="stats-card__value"><?= number_format($stats['has_submission']) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Đã có công ty</span>
+      <span class="stats-card__value"><?= number_format($stats['has_company']) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Đã nhập điểm</span>
+      <span class="stats-card__value"><?= number_format($stats['has_grade']) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+
+  <div class="card stats-card">
+    <div class="card__header">
+      <span class="stats-card__label">Điểm đã chốt</span>
+      <span class="stats-card__value"><?= number_format($stats['locked_grades'] ?? 0) ?></span>
+    </div>
+    <div class="card__footer">
+      Trên tổng số <?= number_format($stats['total_students']) ?> sinh viên
+    </div>
+  </div>
+</div>
+
 <div class="detail-layout">
   <!-- CỘT CHÍNH (TRÁI) -->
   <div class="detail-layout__main">
-
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--primary">
-          <i class="fa-solid fa-user-graduate"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">SV Hướng dẫn</div>
-          <div class="stat-card__value"><?= number_format($stats['total_students']) ?></div>
-        </div>
-      </div>
-
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--info">
-          <i class="fa-solid fa-file-alt"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">Tài liệu đã nộp</div>
-          <div class="stat-card__value">
-            <?= number_format($stats['has_submission']) ?> <span class="text-sm font-normal"
-              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--success">
-          <i class="fa-solid fa-building"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">Đã có công ty</div>
-          <div class="stat-card__value">
-            <?= number_format($stats['has_company']) ?> <span class="text-sm font-normal"
-              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card card p-4">
-        <div class="stat-card__icon stat-card__icon--warning">
-          <i class="fa-solid fa-star"></i>
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__label">Đã nhập điểm</div>
-          <div class="stat-card__value">
-            <?= number_format($stats['has_grade']) ?> <span class="text-sm font-normal"
-              style="color: var(--muted-foreground)">/ <?= number_format($stats['total_students']) ?></span>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Table Sinh Viên -->
     <div class="card shadow-sm">
@@ -127,7 +130,7 @@ foreach ($classrooms as $c) {
       </div>
 
       <hr class="separator">
-      <div class="card__content p-4">
+      <div class="card__content">
         <div class="tm-container" data-tm="students_table" data-tm-mode="client" data-tm-searchable>
           <!-- Cột MSSV -->
           <template data-tm-col="student_code" data-tm-label="MSSV" data-tm-width="120px" data-tm-sortable
@@ -137,20 +140,18 @@ foreach ($classrooms as $c) {
 
           <!-- Cột Họ và tên -->
           <template data-tm-col="full_name" data-tm-label="Họ và tên" data-tm-sortable data-tm-filter-type="text">
-            <span class="student-table__name">{{ value }}</span>
-          </template>
-
-          <!-- Cột Lớp -->
-          <template data-tm-col="classroom_name" data-tm-label="Lớp" data-tm-width="120px" data-tm-sortable
-            data-tm-filter-type="select" data-tm-filter-options='<?= json_encode($classOptions) ?>'>
-            {{ value || '-' }}
+            <div class="flex flex-col">
+              <span class="student-table__name font-medium">{{ value }}</span>
+              <span class="text-xs" style="color: var(--muted-foreground);">{{ row.classroom_name || '-' }}</span>
+            </div>
           </template>
 
           <!-- Cột Công ty -->
           <template data-tm-col="company_name" data-tm-label="Công ty TT" data-tm-sortable>
             <div>
               <span class="badge" data-variant="secondary" style="{{ value ? 'display:none' : '' }}">Chưa có</span>
-              <span title="{{ value }}" style="{{ value ? '' : 'display:none' }}">{{ value }}</span>
+              <div title="{{ value }}" style="{{ value ? '' : 'display:none' }}" class="company-truncate">{{ value }}
+              </div>
             </div>
           </template>
 
@@ -158,21 +159,7 @@ foreach ($classrooms as $c) {
           <template data-tm-col="has_submission" data-tm-label="Tài liệu TT">
             <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
               nộp</span>
-            <div style="{{ value === '1' ? 'display:inline-flex' : 'display:none' }}" class="student-table__submission">
-              <span class="student-table__filename text-sm" title="{{ row.submission_name }}"
-                style="color: var(--primary)">
-                {{ row.submission_name && row.submission_name.length > 20 ? row.submission_name.substring(0, 17) + '...'
-                : row.submission_name }}
-              </span>
-              <a href="{{ row.submission_url }}" target="_blank" class="btn" data-variant="primary" data-size="sm"
-                title="Tải xuống" style="{{ row.submission_url ? '' : 'display:none' }}">
-                <i class="fa-solid fa-download"></i>
-              </a>
-              <span class="badge ml-1" data-variant="primary"
-                style="{{ row.submission_count > 1 ? '' : 'display:none' }}; font-size: 10px; height: 16px; padding: 0 4px;">
-                +{{ row.submission_count - 1 }}
-              </span>
-            </div>
+            <span class="badge" data-variant="primary" style="{{ value === '1' ? '' : 'display:none' }}">Đã nộp</span>
           </template>
 
           <!-- Cột Điểm -->
@@ -180,8 +167,8 @@ foreach ($classrooms as $c) {
             data-tm-align="center">
             <span class="badge" data-variant="secondary" style="{{ value === '1' ? 'display:none' : '' }}">Chưa
               nhập</span>
-            <span class="font-bold {{ row.grade >= 5 ? 'text-success' : 'text-danger' }}"
-              style="{{ value === '1' ? '' : 'display:none' }}">
+            <span class="font-bold" style="{{ value === '1' ? '' : 'display:none' }}; color: {{ row.grade_color }};"
+              title="{{ row.is_locked === '1' ? 'Đã chốt' : 'Bản nháp' }}">
               {{ row.grade }}
             </span>
           </template>
@@ -193,7 +180,7 @@ foreach ($classrooms as $c) {
                 data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
                 <i class="fa-solid fa-eye"></i>
               </button>
-              <button class="btn btn-icon" data-variant="outline-alt" data-size="sm" title="Nhập điểm"
+              <button class="btn btn-icon" data-variant="{{ row.grade_btn_variant }}" data-size="sm" title="Nhập điểm"
                 data-action="grade" data-id="{{ row.batch_student_id }}" data-name="{{ row.full_name }}">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
@@ -217,30 +204,30 @@ foreach ($classrooms as $c) {
         <h3 class="font-semibold">Thông tin cơ bản</h3>
       </div>
       <hr class="separator">
-      <div class="card__content p-6">
+      <div class="card__content">
         <div class="field-group">
           <div class="field" data-field-readonly>
             <label class="field__label" for="title">Tên đợt thực tập</label>
             <input type="text" id="title" name="title" class="field__input"
-              value="<?= htmlspecialchars($batch['title']) ?>" required>
+              value="<?= htmlspecialchars($batch['title']) ?>" readonly>
           </div>
 
           <div class="field" data-field-readonly>
             <label class="field__label" for="description">Mô tả</label>
-            <textarea id="description" name="description" class="field__input"
-              rows="6"><?= htmlspecialchars($batch['description'] ?? '') ?></textarea>
+            <textarea id="description" name="description" class="field__input" rows="6"
+              readonly><?= htmlspecialchars($batch['description'] ?? '') ?></textarea>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div class="field" data-field-readonly>
               <label class="field__label" for="start_at">Ngày bắt đầu</label>
               <input type="date" id="start_at" name="start_at" class="field__input"
-                value="<?= date('Y-m-d', strtotime($batch['start_at'])) ?>" required>
+                value="<?= date('Y-m-d', strtotime($batch['start_at'])) ?>" readonly>
             </div>
             <div class="field" data-field-readonly>
               <label class="field__label" for="end_at">Ngày kết thúc</label>
               <input type="date" id="end_at" name="end_at" class="field__input"
-                value="<?= date('Y-m-d', strtotime($batch['end_at'])) ?>" required>
+                value="<?= date('Y-m-d', strtotime($batch['end_at'])) ?>" readonly>
             </div>
           </div>
         </div>
@@ -248,36 +235,53 @@ foreach ($classrooms as $c) {
     </div>
 
     <!-- Thông tin thời gian -->
-    <div class="card shadow-sm">
+    <div class="metadata-card card shadow">
       <div class="card__header">
-        <h3 class="font-semibold">Thông tin khác</h3>
+        <div class="card__title">Thông tin thời gian</div>
       </div>
       <hr class="separator">
-      <div class="card__content p-4 text-xs space-y-3">
-        <div class="flex justify-between">
-          <span>ID:</span>
-          <span class="font-medium">#<?= $batch['id'] ?></span>
-        </div>
-        <div class="flex justify-between">
-          <span>Ngày tạo:</span>
-          <span><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></span>
-        </div>
+      <div class="card__content space-y-4">
+        <dl class="flex justify-between">
+          <dt>ID</dt>
+          <dd>#<?= htmlspecialchars((string) $batch['id']) ?></dd>
+        </dl>
+        <hr class="separator">
+        <dl class="flex justify-between">
+          <dt>Được tạo vào</dt>
+          <dd><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></dd>
+        </dl>
         <?php if ($batch['published_at']): ?>
-          <div class="flex justify-between">
-            <span>Ngày công bố:</span>
-            <span><?= $batch['published_at'] ? date('d/m/Y H:i', strtotime($batch['published_at'])) : 'N/A' ?></span>
-          </div>
+          <hr class="separator">
+          <dl class="flex justify-between">
+            <dt>Được công bố vào</dt>
+            <dd><?= date('d/m/Y H:i', strtotime($batch['published_at'])) ?></dd>
+          </dl>
         <?php endif; ?>
         <?php if ($batch['closed_at']): ?>
-          <div class="flex justify-between">
-            <span>Ngày kết thúc:</span>
-            <span
-              class="text-danger"><?= $batch['closed_at'] ? date('d/m/Y H:i', strtotime($batch['closed_at'])) : 'N/A' ?></span>
-          </div>
+          <hr class="separator">
+          <dl class="flex justify-between">
+            <dt>Được kết thúc vào</dt>
+            <dd class="text-danger"><?= date('d/m/Y H:i', strtotime($batch['closed_at'])) ?></dd>
+          </dl>
         <?php endif; ?>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Modal: Xác nhận Công bố điểm -->
+<div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
+  <div class="modal__header">
+    <h3 class="modal__title">Xác nhận công bố điểm</h3>
+    <p class="modal__description">Hành động này sẽ chốt và công bố <span class="font-semibold">TOÀN BỘ</span> điểm nháp
+      hiện tại của bạn cho sinh viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?
+    </p>
+  </div>
+  <div class="modal__footer">
+    <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
+    <button form="publishForm" data-variant="primary" class="btn" data-size="lg" type="submit">Xác nhận</button>
+  </div>
+  <button class="modal__close" type="button" data-modal-close><i class="fa-solid fa-xmark"></i></button>
 </div>
 
 <!-- JSON Data Source cho TableManager -->

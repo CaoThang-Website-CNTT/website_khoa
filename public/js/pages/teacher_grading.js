@@ -1,28 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Tab Switching
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const viewerPanes = document.querySelectorAll('.viewer-pane');
-
-  tabBtns.forEach(btn => {
-    if (btn.hasAttribute('data-target')) {
-      btn.addEventListener('click', () => {
-        // Remove active from all
-        tabBtns.forEach(b => b.classList.remove('active'));
-        viewerPanes.forEach(p => p.classList.remove('active'));
-
-        // Add active to clicked
-        btn.classList.add('active');
-        const targetId = btn.getAttribute('data-target');
-        if (targetId) {
-          const targetPane = document.getElementById(targetId);
-          if (targetPane) {
-            targetPane.classList.add('active');
-          }
-        }
-      });
-    }
-  });
-
   // Version Selector Logic
   const versionSelects = document.querySelectorAll('.js-version-select');
   versionSelects.forEach(select => {
@@ -38,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Lightbox Logic
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightbox-img');
-  const lightboxClose = document.querySelector('.lightbox-close');
+  const lightboxClose = lightbox?.querySelector('.lightbox-close');
   const lightboxTriggers = document.querySelectorAll('.js-lightbox-trigger');
 
   if (lightbox && lightboxImg) {
@@ -53,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close lightbox
     const closeLightbox = () => {
       lightbox.classList.add('hidden');
-      setTimeout(() => { lightboxImg.src = ''; }, 200);
+      lightboxImg.src = '';
     };
 
     if (lightboxClose) {
@@ -72,6 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
         closeLightbox();
       }
+    });
+  }
+
+  // Sync Score Select to Hidden Input
+  const scoreSelect = document.querySelector('[data-select-id="grading-score"]');
+  const scoreInput = document.querySelector('#score-input');
+  if (scoreSelect && scoreInput) {
+    scoreSelect.addEventListener('select:change', (e) => {
+      scoreInput.value = e.detail.value || '';
     });
   }
 });

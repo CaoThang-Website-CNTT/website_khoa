@@ -1,6 +1,9 @@
 .prettierignore
 .env.**
 /storage/**
+/public/media/
 docs
 .cursorrules
 /tests/**
+/tmp/**
+.agents/skills/

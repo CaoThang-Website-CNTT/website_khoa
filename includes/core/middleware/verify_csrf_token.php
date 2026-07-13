@@ -2,6 +2,7 @@
 
 namespace App\Core\Middleware;
 
+use App\Core\JsonResponse;
 use App\Core\Request;
 use App\Core\Session;
 use Closure;
@@ -20,15 +21,10 @@ class VerifyCsrfToken extends BaseMiddleware
       return $next($request);
     }
 
-    $path = $request->path();
-    // API JSON - không dùng form session token (có thể bổ sung Bearer/API key sau)
-    if ($path === '/api' || str_starts_with($path, '/api/')) {
-      return $next($request);
-    }
-
     $session = $request->session();
     $sessionToken = $session->get(Session::KEY_CSRF);
     $token = $request->input('_token')
+      ?? $request->json('_token')
       ?? $request->header('X-CSRF-TOKEN')
       ?? $request->header('X-XSRF-TOKEN');
 
@@ -37,6 +33,11 @@ class VerifyCsrfToken extends BaseMiddleware
       || !is_string($token) || $token === ''
       || !hash_equals($sessionToken, $token)
     ) {
+      if ($request->expectsJson()) {
+        return new JsonResponse(null, 'Phiên làm việc đã hết hạn hoặc token bảo mật không hợp lệ. Vui lòng tải lại trang.', 419);
+      }
+
+      $session->flashNotify('warning', 'Phiên đã hết hạn', 'Vui lòng tải lại trang và thử lại.');
       http_response_code(419);
       require BASE_PATH . '/templates/pages/419.php';
       exit;

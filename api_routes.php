@@ -1,12 +1,17 @@
 <?php
 
-use App\Controllers\Api\{AccountApiController, MediaApiController, StudentApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController};
+use App\Controllers\Api\{AccountApiController, AiSuggestionApiController, MediaApiController, StudentApiController, TeacherApiController, TicketApiController, CmsPageApiController, CarouselApiController, MenuApiController, InternshipAssignmentApiController, InternshipBatchApiController, CompanyApiController, InternshipBatchManagementApiController, PostApiController, TeacherDashboardApiController, ExportApiController, ClassroomApiController, ProjectBatchApiController, ProjectTopicApiController};
 use App\Core\Router;
+use App\Middlewares\{VerifyAuth, VerifyRole};
 
 $router->prefix('api')->group(function ($router) {
   $router->prefix('v1')->group(function ($router) {
     $router->prefix('accounts')->group(function ($router) {
       $router->get('/', [AccountApiController::class, 'index']);
+    });
+
+    $router->prefix('classrooms')->group(function ($router) {
+      $router->get('/', [ClassroomApiController::class, 'index']);
     });
 
     $router->prefix('students')->group(function ($router) {
@@ -15,6 +20,16 @@ $router->prefix('api')->group(function ($router) {
       $router->get('/{student_id}', [StudentApiController::class, 'show']);
       $router->put('/{student_id}', [StudentApiController::class, 'update']);
     });
+
+    $router->get('/teachers', [TeacherApiController::class, 'index']);
+    $router->get('/tickets', [TicketApiController::class, 'index']);
+    $router->get('/cms_pages', [CmsPageApiController::class, 'index']);
+
+    $router->prefix('ai')
+      ->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])
+      ->group(function ($router) {
+        $router->post('/editor-suggestions', [AiSuggestionApiController::class, 'editorSuggestions']);
+      });
 
     $router->prefix('internship/batches')->group(function ($router) {
       $router->get('/classrooms', [InternshipBatchApiController::class, 'getClassrooms']);
@@ -28,6 +43,8 @@ $router->prefix('api')->group(function ($router) {
         $router->get('/students', [InternshipBatchManagementApiController::class, 'getStudents']);
         $router->post('/students', [InternshipBatchManagementApiController::class, 'addStudent']);
         $router->delete('/students/{student_id}', [InternshipBatchManagementApiController::class, 'removeStudent']);
+        $router->post('/students/{batch_student_id}/grade', [InternshipBatchManagementApiController::class, 'adminUpdateGrade']);
+        $router->post('/publish-grades', [InternshipBatchManagementApiController::class, 'publishGrades']);
 
         $router->get('/supervisors', [InternshipBatchManagementApiController::class, 'getSupervisors']);
         $router->post('/supervisors', [InternshipBatchManagementApiController::class, 'addSupervisor']);
@@ -37,13 +54,35 @@ $router->prefix('api')->group(function ($router) {
         $router->get('/search-eligible-students', [InternshipBatchManagementApiController::class, 'searchStudents']);
         $router->get('/search-eligible-teachers', [InternshipBatchManagementApiController::class, 'searchTeachers']);
 
+        $router->get('/referral-letters', [InternshipBatchManagementApiController::class, 'getPaginatedReferralLetters']);
         $router->post('/referral-letters/bulk-action', [InternshipBatchManagementApiController::class, 'bulkActionReferralLetters']);
+        $router->post('/referral-letters/{letterId}/receive', [InternshipBatchManagementApiController::class, 'receiveReferralLetter']);
       });
 
       $router->get('/{id}/assignments', [InternshipAssignmentApiController::class, 'getAssignments']);
       $router->get('/{id}/supervisors', [InternshipAssignmentApiController::class, 'getSupervisors']);
       $router->post('/{id}/auto-assign', [InternshipAssignmentApiController::class, 'autoAssign']);
       $router->post('/{id}/bulk-save', [InternshipAssignmentApiController::class, 'bulkSave']);
+    });
+
+    $router->prefix('project_batches')->group(function ($router) {
+      $router->get('/teachers-available', [ProjectBatchApiController::class, 'getAvailableTeachers']);
+      $router->post('/', [ProjectBatchApiController::class, 'store']);
+      $router->get('/{id}/allocations', [ProjectBatchApiController::class, 'getAllocations']);
+    });
+
+    $router->prefix('project_batches')
+      ->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])
+      ->group(function ($router) {
+        $router->get('/{id}/topics', [ProjectTopicApiController::class, 'indexByBatch']);
+      });
+
+    $router->prefix('project_topics')
+      ->middleware([VerifyAuth::class, new VerifyRole('admin', 'editor', 'super_admin')])
+      ->group(function ($router) {
+      $router->post('/{id}/approve', [ProjectTopicApiController::class, 'approve']);
+      $router->post('/{id}/reject', [ProjectTopicApiController::class, 'reject']);
+      $router->post('/bulk-approve', [ProjectTopicApiController::class, 'bulkApprove']);
     });
 
     // Media
@@ -85,6 +124,7 @@ $router->prefix('api')->group(function ($router) {
 
     // Companies
     $router->prefix('companies')->group(function (Router $router) {
+      $router->get('/', [CompanyApiController::class, 'index']);
       $router->get('/suggest-by-name', [CompanyApiController::class, 'suggestByName']);
       $router->get('/search-merge', [CompanyApiController::class, 'searchForMerge']);
     });

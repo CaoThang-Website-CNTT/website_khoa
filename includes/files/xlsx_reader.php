@@ -135,6 +135,10 @@ class XlsxReader
       throw new \RuntimeException("Không tìm thấy file: {$filePath}");
     }
 
+    if (!class_exists(\ZipArchive::class)) {
+      throw new \RuntimeException('PHP ZIP extension is required to read XLSX files.');
+    }
+
     $zip = new \ZipArchive();
     if ($zip->open($filePath) !== true) {
       throw new \RuntimeException("Không thể mở file XLSX (không phải định dạng ZIP hợp lệ): {$filePath}");
@@ -260,13 +264,13 @@ class XlsxReader
       $rowIdx = (int) $row['r'];
 
       foreach ($row->c as $c) {
-        if (!isset($c->v)) {
+        $type = (string) $c['t'];
+        if (!isset($c->v) && $type !== 'inlineStr') {
           continue; // Bỏ qua ô trống
         }
 
         $ref = (string) $c['r'];
-        $type = (string) $c['t'];
-        $raw = (string) $c->v;
+        $raw = isset($c->v) ? (string) $c->v : '';
         // Tách lấy chữ cái trong tọa độ để chuyển thành số thứ tự cột
         $colIdx = self::colLettersToIndex(
           (string) preg_replace('/[0-9]/', '', $ref)

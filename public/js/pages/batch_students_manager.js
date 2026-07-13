@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let supervisors = [];
   let tableData = [];
   let bulkActionsRegistered = false;
+  let isTableInitialized = false;
 
   // Modals
   const modalHandler = ModalHandler.instance;
@@ -31,26 +32,33 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   const loadData = async () => {
     try {
-      const [supRes, assRes] = await Promise.all([
+      const [supRes] = await Promise.all([
         fetch(`${apiBase}/${batchId}/supervisors`),
-        fetch(`${apiBase}/${batchId}/assignments`),
       ]);
 
-      if (!supRes.ok || !assRes.ok)
-        throw new Error("Không thể tải dữ liệu từ máy chủ.");
+      if (!supRes.ok) throw new Error("Không thể tải dữ liệu từ máy chủ.");
 
       const supData = await supRes.json();
-      const assData = await assRes.json();
 
       supervisors = supData.data || [];
-      tableData = assData.data || [];
 
-      // Cập nhật thống kê
-      renderStats();
+      // Cập nhật thống kê giảng viên
       renderSupervisorStats();
 
       // Khởi tạo/Cập nhật bảng
-      renderTable();
+      const tm =
+        typeof TableManager !== "undefined"
+          ? TableManager.get("batch_students_table")
+          : null;
+      if (tm && isTableInitialized) {
+        tm.root.dispatchEvent(
+          new CustomEvent("tm:state-change", {
+            detail: { reason: "reload", state: tm.getState() },
+          }),
+        );
+      } else {
+        renderTable();
+      }
     } catch (error) {
       console.error(error);
       if (window.toast) toast.error("Lỗi", error.message);
@@ -58,23 +66,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /**
-   * Cập nhật Dashboard thống kê tổng quan
-   */
-  const renderStats = () => {
-    const total = tableData.length;
-    const assigned = tableData.filter((r) => r.teacher_id).length;
-    const unassigned = total - assigned;
-
-    statTotalStudents.textContent = total;
-    statAssignedStudents.textContent = assigned;
-    statUnassignedStudents.textContent = unassigned;
-    supervisorCountBadge.textContent = supervisors.length;
-  };
-
-  /**
    * Render danh sách giảng viên ở sidebar kèm quota
    */
   const renderSupervisorStats = () => {
+    if (supervisorCountBadge) {
+      supervisorCountBadge.textContent = supervisors.length;
+    }
+
     if (!supervisorStatsContainer) return;
 
     if (supervisors.length === 0) {
@@ -95,19 +93,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const isFull = sup.current_assigned >= sup.max_students;
 
       html += `
-        <div class="supervisor-card shadow-sm border" ${isFull ? "style='background: var(--muted)'" : ""}>
+        <div class="supervisor-card">
           <div class="supervisor-card__header">
             <div>
               <div class="supervisor-card__name text-sm">${sup.teacher_name}</div>
               <div class="text-xs">${sup.email || ""}</div>
             </div>
             <div class="supervisor-card__stats">
-              <span class="font-bold text-sm">${sup.current_assigned}</span>
-              <span>/${sup.max_students}</span>
+              <div><span class="font-bold text-sm">${sup.current_assigned}</span><span>/${sup.max_students}</span></div>
+              ${isFull ? '<span class="badge" data-variant="secondary">Đã đầy</span>' : ""}
             </div>
           </div>
           <div class="quota-progress">
-            <div class="quota-progress__inner ${isFull ? "quota-progress__inner--full" : ""}" 
+            <div class="quota-progress__inner"
                  style="width: ${percent}%"></div>
           </div>
         </div>`;
@@ -127,36 +125,159 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tm || retries > 5) {
         clearInterval(interval);
         if (tm) {
-          tm.loadData(tableData);
-          attachTableEvents();
-          registerBulkActions();
-          
-          // Đăng ký Export Excel
-          const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
-          ExportManager.register(tm, {
-            source: 'batch_students',
-            source_id: batchId,
-            endpoint: window.API_BASE_URL.replace('/internship/batches', '/export'),
-            filename: `Danh-sach-sinh-vien-${batchTitle}`,
-            metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
-            metadataDateRange: window.BATCH_START && window.BATCH_END
-              ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
-              : null,
-            columnsMap: {
-              student_code: "MSSV",
-              student_name: "Họ và tên",
-              classroom_name: "Lớp",
-              student_phone: "SĐT",
-              student_email: "Email",
-              company_name: "Tên Công ty",
-              company_tax_code: "Mã số thuế",
-              company_address: "Địa chỉ",
-              teacher_name: "Giảng viên hướng dẫn",
-              grade_score: "Điểm số",
-              grade_reason: "Diễn giải điểm",
-              grade_feedback: "Nhận xét"
-            }
-          });
+          if (!isTableInitialized) {
+            isTableInitialized = true;
+
+            tm.root.addEventListener("tm:state-change", async (e) => {
+              const { reason, state } = e.detail;
+
+              if (
+                reason === "search" ||
+                reason === "filter" ||
+                reason === "sort" ||
+                reason === "pagination" ||
+                reason === "reload"
+              ) {
+                try {
+                  const url = new URL(
+                    `${apiBase}/${batchId}/assignments`,
+                    window.location.origin,
+                  );
+
+                  if (state.search)
+                    url.searchParams.set("search", `%${state.search}%`);
+
+                  const page = (state.pagination?.pageIndex || 0) + 1;
+                  const limit = state.pagination?.pageSize || 15;
+                  url.searchParams.set("page", page);
+                  url.searchParams.set("limit", limit);
+
+                  if (state.sort && state.sort.col) {
+                    url.searchParams.set("sort[col]", state.sort.col);
+                    url.searchParams.set("sort[dir]", state.sort.dir);
+                  }
+
+                  if (state.filters && state.filters.length > 0) {
+                    state.filters.forEach((f, i) => {
+                      url.searchParams.set(`filters[${i}][col]`, f.col);
+                      url.searchParams.set(`filters[${i}][op]`, f.op);
+                      url.searchParams.set(`filters[${i}][value]`, f.value);
+                    });
+                  }
+
+                  const response = await fetch(url);
+                  if (!response.ok)
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  const result = await response.json();
+                  const payload = result.data || {};
+
+                  tm.loadData({
+                    rows: payload.data || [],
+                    total: payload.total || 0,
+                    page: payload.page || 1,
+                    limit: payload.limit || 15,
+                  });
+                } catch (error) {
+                  console.error("Lỗi khi fetch dữ liệu:", error);
+                }
+              }
+            });
+
+            // Initial fetch
+            tm.root.dispatchEvent(
+              new CustomEvent("tm:state-change", {
+                detail: { reason: "pagination", state: tm.getState() },
+              }),
+            );
+
+            attachTableEvents();
+            registerBulkActions();
+
+            // Đăng ký Export Excel
+            const slugify = (str) => {
+              return String(str)
+                .normalize("NFKD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[đĐ]/g, "d")
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9 -]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-");
+            };
+
+            const batchTitle = window.BATCH_TITLE || `Đợt ${batchId}`;
+            const batchSlug = slugify(batchTitle);
+
+            ExportManager.register(tm, {
+              target: "#batch-students-export-action",
+              triggerLabel: "Export dữ liệu",
+              triggerIcon: "fa-file-excel",
+              triggerVariant: "outline",
+              triggerSize: "lg",
+              source: "batch_students",
+              source_id: batchId,
+              endpoint: window.API_BASE_URL.replace(
+                "/internship/batches",
+                "/export",
+              ),
+              filename: `danh-sach-sinh-vien-${batchSlug}`,
+              metadataTitle: `Danh sách sinh viên - ${batchTitle}`,
+              metadataDateRange:
+                window.BATCH_START && window.BATCH_END
+                  ? `Từ ngày ${window.BATCH_START} đến ngày ${window.BATCH_END}`
+                  : null,
+              columnGroups: [
+                {
+                  label: "Sinh viên",
+                  columns: [
+                    "student_code",
+                    "student_name",
+                    "classroom_name",
+                    "student_phone",
+                    "student_email",
+                  ],
+                },
+                {
+                  label: "Công ty",
+                  columns: [
+                    "company_name",
+                    "company_tax_code",
+                    "company_address",
+                    "company_mentor_name",
+                    "company_mentor_phone",
+                    "company_mentor_email",
+                  ],
+                },
+                {
+                  label: "Kết quả",
+                  columns: [
+                    "teacher_name",
+                    "grade_score",
+                    "grade_reason",
+                    "grade_feedback",
+                  ],
+                },
+              ],
+              columnsMap: {
+                student_code: "MSSV",
+                student_name: "Họ và tên",
+                classroom_name: "Lớp",
+                student_phone: "SĐT",
+                student_email: "Email",
+                company_name: "Tên Công ty",
+                company_tax_code: "Mã số thuế",
+                company_address: "Địa chỉ",
+                company_mentor_name: "Cán bộ hướng dẫn",
+                company_mentor_phone: "SĐT CBHD",
+                company_mentor_email: "Email CBHD",
+                teacher_name: "Giảng viên hướng dẫn",
+                grade_score: "Điểm số",
+                grade_reason: "Diễn giải điểm",
+                grade_feedback: "Nhận xét",
+              },
+            });
+          }
         }
       }
       retries++;
@@ -164,24 +285,38 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const registerBulkActions = () => {
-    if (bulkActionsRegistered) return;
-    bulkActionsRegistered = true;
-
     TableManager.registerBulkActions("batch_students_table", {
-      countLabel: count => `Đã chọn: ${count}`,
+      countLabel: (count) => `Đã chọn: ${count}`,
       actions: [
         {
           id: "assign",
-          label: "Phân công giảng viên",
+          label: "Phân công",
           icon: "fa-solid fa-user-plus",
           variant: "primary",
           onClick: ({ selectedIds }) => {
-            document.querySelector("#bulk-student-count").textContent = selectedIds.length;
+            document.querySelector("#bulk-student-count").textContent =
+              selectedIds.length;
 
             const select = document.querySelector("#bulk-teacher-select");
             renderTeacherOptions(select, null);
 
             modalHandler.open("#modal-bulk-assign");
+          },
+        },
+        {
+          id: "export-selected",
+          label: "Export đã chọn",
+          tooltip: "Export các dòng sinh viên đã chọn",
+          icon: "fa-solid fa-file-excel",
+          variant: "outline",
+          onClick: () => {
+            document
+              .querySelector('[data-tm="batch_students_table"]')
+              ?.dispatchEvent(
+                new CustomEvent("tm:export", {
+                  detail: { mode: "selected" },
+                }),
+              );
           },
         },
         {
@@ -191,7 +326,8 @@ document.addEventListener("DOMContentLoaded", () => {
           destructive: true,
           confirm: false,
           onClick: ({ selectedIds }) => {
-            document.querySelector("#bulk-unassign-count").textContent = selectedIds.length;
+            document.querySelector("#bulk-unassign-count").textContent =
+              selectedIds.length;
             modalHandler.open("#modal-bulk-unassign");
           },
         },
@@ -209,6 +345,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Xử lý click để bật editor
     tableRoot.addEventListener("click", (e) => {
+      const viewDetailsBtn = e.target.closest(".btn-view-details");
+      if (viewDetailsBtn) {
+        const studentId = viewDetailsBtn.dataset.id;
+        showStudentDetails(studentId);
+        return;
+      }
+
+      const editGradeBtn = e.target.closest(".btn-edit-grade");
+      if (editGradeBtn) {
+        const studentId = editGradeBtn.dataset.id;
+        openEditGradeModal(studentId);
+        return;
+      }
+
       if (batchStatus === "closed") return;
 
       const display = e.target.closest(".teacher-cell__display");
@@ -292,29 +442,65 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /**
+   * Xác nhận thay đổi phân công khi đợt đã công bố
+   */
+  const confirmPublishedAssignment = () => {
+    return new Promise((resolve) => {
+      const modal = document.querySelector(
+        "#modal-confirm-published-assignment",
+      );
+      if (!modal) return resolve(true);
+
+      const btnConfirm = modal.querySelector(
+        "#btn-confirm-published-assignment",
+      );
+      const btnCancel = modal.querySelector("#btn-close-published-assignment");
+      const btnClose = modal.querySelector(".modal__close");
+
+      const cleanup = () => {
+        btnConfirm.removeEventListener("click", onConfirm);
+        btnCancel.removeEventListener("click", onCancel);
+        btnClose.removeEventListener("click", onCancel);
+      };
+
+      const onConfirm = () => {
+        cleanup();
+        modalHandler.close();
+        resolve(true);
+      };
+
+      const onCancel = () => {
+        cleanup();
+        modalHandler.close();
+        resolve(false);
+      };
+
+      btnConfirm.addEventListener("click", onConfirm);
+      btnCancel.addEventListener("click", onCancel);
+      btnClose.addEventListener("click", onCancel);
+
+      modalHandler.open("#modal-confirm-published-assignment");
+    });
+  };
+
+  /**
    * Gọi API lưu phân công
    */
   const saveAssignments = async (assignments, reason) => {
     try {
-      if (batchStatus === "published" && !reason) {
-        reason = prompt(
-          "Đợt thực tập đã công bố. Vui lòng nhập lý do thay đổi:",
-          "",
-        );
-        if (reason === null) {
-          loadData(); // Reset UI
-          return false;
-        }
-        if (!reason.trim()) {
-          toast.warning("Yêu cầu", "Lý do không được để trống.");
-          loadData();
+      if (batchStatus === "published") {
+        const confirmed = await confirmPublishedAssignment();
+        if (!confirmed) {
           return false;
         }
       }
 
       const res = await fetch(`${apiBase}/${batchId}/bulk-save`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
+        },
         body: JSON.stringify({
           reason: reason || "Quản trị viên cập nhật phân công.",
           assignments: assignments,
@@ -325,11 +511,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(data.message || "Lỗi khi lưu dữ liệu.");
 
       toast.success("Thành công", "Đã cập nhật phân công.");
-      await loadData();
+      setTimeout(() => window.location.reload(), 500);
       return true;
     } catch (error) {
       toast.error("Lỗi", error.message);
-      loadData();
       return false;
     }
   };
@@ -338,25 +523,30 @@ document.addEventListener("DOMContentLoaded", () => {
     .querySelector("#btn-confirm-bulk-assign")
     .addEventListener("click", async () => {
       const teacherId = document.querySelector("#bulk-teacher-select").value;
-      if (!teacherId || teacherId === "unassign") {
+      if (!teacherId) {
         alert("Vui lòng chọn một giảng viên.");
         return;
       }
 
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
-        const row = tableData.find((r) => r.batch_student_id == sid);
         return {
-          assignment_id: row?.assignment_id || null,
           batch_student_id: parseInt(sid),
-          new_teacher_id: parseInt(teacherId),
+          new_teacher_id: teacherId === "unassign" ? null : parseInt(teacherId),
         };
       });
 
       modalHandler.close();
-      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      TableManager.setBulkActionLoading(
+        "batch_students_table",
+        true,
+        "Đang xử lý...",
+      );
       try {
-        const saved = await saveAssignments(assignments, "Cập nhật phân công hàng loạt.");
+        const saved = await saveAssignments(
+          assignments,
+          "Cập nhật phân công hàng loạt.",
+        );
         if (saved) TableManager.clearSelection("batch_students_table");
       } finally {
         TableManager.setBulkActionLoading("batch_students_table", false);
@@ -366,20 +556,25 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .querySelector("#btn-confirm-bulk-unassign")
     .addEventListener("click", async () => {
-      const selectedIds = TableManager.getSelectedIds("batch_students_table");
+      const selectedIds = TableManager.getRowSelection("batch_students_table");
       const assignments = selectedIds.map((sid) => {
-        const row = tableData.find((r) => r.batch_student_id == sid);
         return {
-          assignment_id: row?.assignment_id || null,
           batch_student_id: parseInt(sid),
           new_teacher_id: null,
         };
       });
 
       modalHandler.close();
-      TableManager.setBulkActionLoading("batch_students_table", true, "Đang xử lý...");
+      TableManager.setBulkActionLoading(
+        "batch_students_table",
+        true,
+        "Đang xử lý...",
+      );
       try {
-        const saved = await saveAssignments(assignments, "Hủy phân công hàng loạt.");
+        const saved = await saveAssignments(
+          assignments,
+          "Hủy phân công hàng loạt.",
+        );
         if (saved) TableManager.clearSelection("batch_students_table");
       } finally {
         TableManager.setBulkActionLoading("batch_students_table", false);
@@ -408,6 +603,130 @@ document.addEventListener("DOMContentLoaded", () => {
       await performAutoAssign("auto_even");
     });
 
+  // Action: Publish Grades
+  document
+    .querySelector("#btn-publish-grades")
+    ?.addEventListener("click", () => {
+      modalHandler.open("#modal-publish-grades");
+    });
+
+  document
+    .querySelector("#btn-confirm-publish-grades")
+    ?.addEventListener("click", async () => {
+      try {
+        const res = await fetch(
+          `${apiBase}/${batchId}/management/publish-grades`,
+          {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": window.CSRF_TOKEN || "" },
+          },
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Lỗi khi công bố điểm.");
+        modalHandler.close("#modal-publish-grades");
+        toast.success("Thành công", data.message);
+        setTimeout(() => window.location.reload(), 1000);
+      } catch (e) {
+        modalHandler.close("#modal-publish-grades");
+        toast.error("Lỗi", e.message);
+      }
+    });
+
+  // Edit grade submit
+  document
+    .querySelector("#edit-grade-form")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const batchStudentId = document.querySelector(
+        "#edit-grade-batch-student-id",
+      ).value;
+      const score = document.querySelector("#edit-grade-score").value;
+      const reason = document.querySelector("#edit-grade-reason").value;
+      const feedback = document.querySelector("#edit-grade-feedback").value;
+
+      try {
+        const res = await fetch(
+          `${apiBase}/${batchId}/management/students/${batchStudentId}/grade`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
+            },
+            body: JSON.stringify({
+              grade: score,
+              score_reason: reason,
+              feedback,
+            }),
+          },
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Lỗi khi cập nhật điểm.");
+        toast.success("Thành công", data.message);
+        modalHandler.close();
+        loadData();
+      } catch (error) {
+        toast.error("Lỗi", error.message);
+      }
+    });
+
+  const showStudentDetails = (batchStudentId) => {
+    const tm = TableManager.get("batch_students_table");
+    const rowData = tm.data.find((r) => r.batch_student_id == batchStudentId);
+    if (!rowData) return;
+
+    const fallback =
+      '<span style="color: var(--muted-foreground);">Chưa cập nhật</span>';
+
+    const content = document.querySelector("#student-details-content");
+    content.innerHTML = `
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Công ty:</span>
+        <span class="col-span-2 font-medium">${rowData.company_name || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Địa chỉ:</span>
+        <span class="col-span-2">${rowData.company_address || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Mã số thuế:</span>
+        <span class="col-span-2">${rowData.company_tax_code || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">CBHD Doanh nghiệp:</span>
+        <span class="col-span-2 font-medium">${rowData.company_mentor_name || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2 border-b" style="border-color: var(--border);">
+        <span class="font-semibold" style="color: var(--muted-foreground);">SĐT CBHD:</span>
+        <span class="col-span-2">${rowData.company_mentor_phone || fallback}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 py-2">
+        <span class="font-semibold" style="color: var(--muted-foreground);">Email CBHD:</span>
+        <span class="col-span-2">${rowData.company_mentor_email || fallback}</span>
+      </div>
+    `;
+    modalHandler.open("#modal-student-details");
+  };
+
+  const openEditGradeModal = (batchStudentId) => {
+    const tm = TableManager.get("batch_students_table");
+    const rowData = tm.data.find((r) => r.batch_student_id == batchStudentId);
+    if (!rowData) return;
+
+    document.querySelector("#edit-grade-student-name").textContent =
+      `${rowData.student_name} - ${rowData.student_code}`;
+    document.querySelector("#edit-grade-batch-student-id").value =
+      batchStudentId;
+    document.querySelector("#edit-grade-score").value =
+      rowData.grade !== null ? rowData.grade : "";
+    document.querySelector("#edit-grade-reason").value =
+      rowData.score_reason || "";
+    document.querySelector("#edit-grade-feedback").value =
+      rowData.feedback || "";
+
+    modalHandler.open("#modal-edit-grade");
+  };
+
   /**
    * Helper thực hiện API phân công tự động
    */
@@ -415,7 +734,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch(`${apiBase}/${batchId}/auto-assign`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": window.CSRF_TOKEN || "",
+        },
         body: JSON.stringify({ method }),
       });
 

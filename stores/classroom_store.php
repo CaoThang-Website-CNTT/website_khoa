@@ -18,7 +18,7 @@ interface IClassroomStore
   /** @return Classroom[] */
   public function getAll(): array;
   /** @return Classroom[] */
-  public function getPaginated(int $page, int $limit = 15): array;
+  public function getPaginated(int $pageTo, int $limit = 15, string $search = '%', array $filters = [], array $sort = []): array;
   public function getById(int $id): ?Classroom;
   public function getByShortName(string $shortName): ?Classroom;
   /** @return Classroom[] */
@@ -60,10 +60,13 @@ class ClassroomStore extends Store implements IClassroomStore
   public function getAll(): array
   {
     $sql = "
-      SELECT *
-      FROM classrooms
-      WHERE deleted_at IS NULL
-      ORDER BY class_of DESC, letter DESC
+      SELECT c.*
+      FROM classrooms c
+      LEFT JOIN majors m ON c.major_id = m.id
+      LEFT JOIN departments d ON m.department_id = d.id
+      LEFT JOIN specializations s ON c.specialization_id = s.id
+      WHERE c.deleted_at IS NULL
+      ORDER BY c.class_of DESC, d.full_name ASC, m.level ASC, m.full_name ASC, s.full_name ASC, c.letter ASC
     ";
 
     $stmt = $this->db->prepare($sql);
@@ -73,19 +76,57 @@ class ClassroomStore extends Store implements IClassroomStore
   }
 
   /** @return Classroom[] */
-  public function getPaginated(int $page, int $limit = 15): array
+  public function getPaginated(int $page, int $limit = 15, string $search = '%', array $filters = [], array $sort = []): array
   {
     $offset = (max(1, $page) - 1) * $limit;
 
     $sql = "
-      SELECT *
-      FROM classrooms
-      WHERE deleted_at IS NULL
-      ORDER BY class_of DESC, letter DESC
-      LIMIT :limit OFFSET :offset
+      SELECT c.*,
+             (SELECT COUNT(*) FROM students st WHERE st.classroom_id = c.id AND st.deleted_at IS NULL) as student_count_alias
+      FROM classrooms c
+      LEFT JOIN majors m ON c.major_id = m.id
+      LEFT JOIN departments d ON m.department_id = d.id
+      LEFT JOIN specializations s ON c.specialization_id = s.id
+      WHERE c.deleted_at IS NULL
     ";
 
+    $params = [];
+    if ($search !== '%') {
+      $sql .= " AND (c.short_name LIKE :search1 OR m.full_name LIKE :search2)";
+      $params[':search1'] = $search;
+      $params[':search2'] = $search;
+    }
+    
+    foreach ($filters as $index => $filter) {
+      if ($filter['col'] === 'major_name') {
+        $sql .= " AND m.full_name = :major_filter_$index";
+        $params[":major_filter_$index"] = $filter['value'];
+      }
+    }
+
+    if (!empty($sort) && isset($sort['col']) && isset($sort['dir'])) {
+      $col = $sort['col'];
+      $dir = strtoupper($sort['dir']) === 'ASC' ? 'ASC' : 'DESC';
+      $allowedCols = [
+        'id' => 'c.id',
+        'short_name' => 'c.short_name',
+        'student_count' => 'student_count_alias',
+      ];
+      if (isset($allowedCols[$col])) {
+        $sql .= " ORDER BY " . $allowedCols[$col] . " $dir";
+      } else {
+        $sql .= " ORDER BY c.class_of DESC, d.full_name ASC, m.level ASC, m.full_name ASC, s.full_name ASC, c.letter ASC";
+      }
+    } else {
+      $sql .= " ORDER BY c.class_of DESC, d.full_name ASC, m.level ASC, m.full_name ASC, s.full_name ASC, c.letter ASC";
+    }
+
+    $sql .= " LIMIT :limit OFFSET :offset";
+
     $stmt = $this->db->prepare($sql);
+    foreach ($params as $key => $value) {
+      $stmt->bindValue($key, $value);
+    }
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -212,14 +253,31 @@ class ClassroomStore extends Store implements IClassroomStore
     return $stmt->execute([':id' => $id]);
   }
 
-  public function getTotalCount(): int
+  public function getTotalCount(string $search = '%', array $filters = []): int
   {
-    $stmt = $this->db->prepare("
-      SELECT COUNT(*)
-      FROM classrooms
-      WHERE deleted_at IS NULL
-    ");
-    $stmt->execute();
+    $sql = "
+      SELECT COUNT(c.id)
+      FROM classrooms c
+      LEFT JOIN majors m ON c.major_id = m.id
+      WHERE c.deleted_at IS NULL
+    ";
+
+    $params = [];
+    if ($search !== '%') {
+      $sql .= " AND (c.short_name LIKE :search1 OR m.full_name LIKE :search2)";
+      $params[':search1'] = $search;
+      $params[':search2'] = $search;
+    }
+
+    foreach ($filters as $index => $filter) {
+      if ($filter['col'] === 'major_name') {
+        $sql .= " AND m.full_name = :major_filter_$index";
+        $params[":major_filter_$index"] = $filter['value'];
+      }
+    }
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
     return (int) $stmt->fetchColumn();
   }
 
@@ -389,7 +447,6 @@ class ClassroomStore extends Store implements IClassroomStore
       WHERE major_id = :major_id AND deleted_at IS NULL ORDER BY full_name
     ");
     $stmt->execute([':major_id' => $majorId]);
-    $stmt->execute([':major_id' => $majorId]);
     return array_map(fn($row) => Specialization::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
@@ -488,5 +545,35 @@ class ClassroomStore extends Store implements IClassroomStore
       deleted_at = NOW() WHERE id = :id
     ");
     return $stmt->execute([':id' => $id]);
+  }
+
+  /**
+   * Đếm số sinh viên theo từng classroom_id
+   * @param int[] $classroomIds
+   * @return array<int, int> [classroom_id => count]
+   */
+  public function getStudentCountByClassroomIds(array $classroomIds): array
+  {
+    if (empty($classroomIds)) {
+      return [];
+    }
+
+    $placeholders = str_repeat('?,', count($classroomIds) - 1) . '?';
+
+    $sql = "
+      SELECT classroom_id, COUNT(*) as student_count
+      FROM students
+      WHERE classroom_id IN ($placeholders) AND deleted_at IS NULL
+      GROUP BY classroom_id
+    ";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($classroomIds);
+
+    $result = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+      $result[(int) $row['classroom_id']] = (int) $row['student_count'];
+    }
+    return $result;
   }
 }

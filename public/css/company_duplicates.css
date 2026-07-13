@@ -9,12 +9,12 @@
 .company-duplicates-table__th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
-  color: #6b7280;
-  background-color: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  color: var(--muted-foreground);
+  background-color: var(--muted);
+  border-bottom: 1px solid var(--border);
 }
 
 .company-duplicates-table__td--action {

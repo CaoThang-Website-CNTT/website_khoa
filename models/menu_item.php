@@ -41,6 +41,57 @@ class MenuItem extends Model
    */
   public function isActive(string $currentUrl): bool
   {
-    return rtrim($this->url, '/') === rtrim($currentUrl, '/');
+    $itemUrl = $this->normalizeUrl($this->url);
+    $current = $this->normalizeUrl($currentUrl);
+
+    if ($itemUrl === null || $current === null || $itemUrl['path'] !== $current['path']) {
+      return false;
+    }
+
+    foreach ($itemUrl['query'] as $key => $value) {
+      if (!array_key_exists($key, $current['query']) || $current['query'][$key] !== $value) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public function isActiveTree(string $currentUrl): bool
+  {
+    if ($this->isActive($currentUrl)) {
+      return true;
+    }
+
+    foreach ($this->children as $child) {
+      if ($child instanceof self && $child->isActiveTree($currentUrl)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /** @return array{path: string, query: array<string, mixed>}|null */
+  private function normalizeUrl(string $url): ?array
+  {
+    $url = trim($url);
+    if ($url === '' || $url === '#') {
+      return null;
+    }
+
+    if (parse_url($url, PHP_URL_HOST) !== null) {
+      return null;
+    }
+
+    $path = (string) (parse_url($url, PHP_URL_PATH) ?? '/');
+    $path = '/' . ltrim($path, '/');
+    $path = $path === '/' ? '/' : rtrim($path, '/');
+
+    $query = [];
+    parse_str((string) (parse_url($url, PHP_URL_QUERY) ?? ''), $query);
+    ksort($query);
+
+    return ['path' => $path, 'query' => $query];
   }
 }

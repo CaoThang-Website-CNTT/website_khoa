@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="<?= url('public/css/main.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_preview.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/block_editor.css') ?>">
+<link rel="stylesheet" href="<?= url('public/css/editor_help.css') ?>">
 
 <script src="<?= url('/public/js/toast.js') ?>"></script>
 <script src="<?= url('/public/js/dnd.js') ?>"></script>

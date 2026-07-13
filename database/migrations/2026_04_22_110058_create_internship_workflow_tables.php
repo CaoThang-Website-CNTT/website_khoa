@@ -76,10 +76,12 @@ return new class extends BaseMigration {
 
       $table->bigInt('batch_student_id')->unsigned();
       $table->bigInt('company_id')->unsigned();
-      $table->enum('status', ['pending', 'printed', 'cancelled'])->default('pending');
+      $table->enum('status', ['pending', 'approved', 'printed', 'rejected', 'cancelled'])->default('pending');
       $table->text('cancel_reason')->nullable();
+      $table->timestamp('reviewed_at')->nullable();
       $table->timestamp('printed_at')->nullable();
       $table->bigInt('processed_by')->unsigned()->nullable();
+      $table->bigInt('cancelled_by')->unsigned()->nullable();
       $table->timestamps();
 
       $table->foreign('batch_student_id')
@@ -93,6 +95,11 @@ return new class extends BaseMigration {
         ->onDelete('restrict');
 
       $table->foreign('processed_by')
+        ->references('id')
+        ->on('accounts')
+        ->onDelete('set null');
+
+      $table->foreign('cancelled_by')
         ->references('id')
         ->on('accounts')
         ->onDelete('set null');

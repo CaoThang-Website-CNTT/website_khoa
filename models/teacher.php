@@ -35,4 +35,13 @@ class Teacher extends Model
     public ?Department $department = null,
     public ?Account $account = null
   ) {}
+
+  public static function fromArray(array $data): static
+  {
+    $instance = parent::fromArray($data);
+    if (!isset($instance->department)) $instance->department = null;
+    if (!isset($instance->account)) $instance->account = null;
+
+    return $instance;
+  }
 }

@@ -20,6 +20,17 @@ class Classroom extends Model
     public ?Teacher $homeroomTeacher = null,
     public ?Major $major = null,
     public ?Specialization $specialization = null,
-  ) {
+    public int $student_count = 0
+  ) {}
+
+  public static function fromArray(array $data): static
+  {
+    $instance = parent::fromArray($data);
+    if (!isset($instance->homeroomTeacher)) $instance->homeroomTeacher = null;
+    if (!isset($instance->major)) $instance->major = null;
+    if (!isset($instance->specialization)) $instance->specialization = null;
+    if (!isset($instance->student_count)) $instance->student_count = 0;
+
+    return $instance;
   }
 }

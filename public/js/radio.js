@@ -37,6 +37,27 @@ class RadioHandler {
     this._initGroup(group);
   }
 
+  setValue(group, value, { emit = true } = {}) {
+    this._initGroup(group);
+    const hiddenInput = group.querySelector('input[type="hidden"]');
+    const radioBtns = group.querySelectorAll("button.radio-group__item");
+    let selected = null;
+
+    radioBtns.forEach(btn => {
+      const checked = btn.value === String(value);
+      btn.dataset.state = checked ? "checked" : "unchecked";
+      btn.setAttribute("aria-checked", checked ? "true" : "false");
+      if (checked) selected = btn;
+    });
+    if (!selected || !hiddenInput) return;
+    hiddenInput.value = selected.value;
+
+    if (emit) group.dispatchEvent(new CustomEvent("radio:change", {
+      bubbles: true,
+      detail: { name: hiddenInput.name, value: selected.value }
+    }));
+  }
+
   /**
    * Khởi tạo một .radio-group: tạo hidden input, set state, bind events.
    * Đảm bảo idempotent (không bind trùng lặp).
@@ -74,10 +95,12 @@ class RadioHandler {
   _setDefaultState(group, radioBtn, hiddenInput) {
     if (radioBtn.dataset.state === "checked") {
       hiddenInput.value = radioBtn.value;
+      radioBtn.setAttribute("aria-checked", "true");
       return;
     }
     if (radioBtn.value && group.dataset.radioDefaultValue === radioBtn.value) {
       radioBtn.dataset.state = "checked";
+      radioBtn.setAttribute("aria-checked", "true");
       hiddenInput.value = radioBtn.value;
       return;
     }
@@ -85,6 +108,7 @@ class RadioHandler {
     if (!radioBtn.dataset.state) {
       radioBtn.dataset.state = "unchecked";
     }
+    radioBtn.setAttribute("aria-checked", "false");
   }
 
   /**
@@ -105,8 +129,10 @@ class RadioHandler {
   _toggle(siblingBtns, clickedRadioBtn, hiddenInput, group) {
     siblingBtns.forEach(btn => {
       btn.dataset.state = "unchecked";
+      btn.setAttribute("aria-checked", "false");
     });
     clickedRadioBtn.dataset.state = "checked";
+    clickedRadioBtn.setAttribute("aria-checked", "true");
     hiddenInput.value = clickedRadioBtn.value;
 
     group.dispatchEvent(new CustomEvent("radio:change", {
@@ -118,3 +144,5 @@ class RadioHandler {
     }));
   }
 }
+
+window.RadioHandler = RadioHandler;

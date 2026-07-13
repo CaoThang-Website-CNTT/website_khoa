@@ -57,15 +57,28 @@ class PostService implements IPostService
     $filters['page'] = max(1, $page);
     $filters['limit'] = max(1, $limit);
 
-    if (isset($filters['category']) && trim((string)$filters['category']) !== '') {
-      $category = trim((string)$filters['category']);
-      $categoryModel = ctype_digit($category)
-        ? $this->_categoryStore->getById((int) $category)
-        : $this->_categoryStore->getBySlug($category);
+    if (isset($filters['category']) && trim((string) $filters['category']) !== '') {
+      $categoryKeys = array_values(array_unique(array_filter(array_map(
+        'trim',
+        explode(',', (string) $filters['category'])
+      ))));
 
-      $filters['post_ids'] = $categoryModel
-        ? $this->_categoryPostStore->getPostIdsByCategoryId((int) $categoryModel->id)
-        : [];
+      $matchingPostIds = null;
+      foreach ($categoryKeys as $categoryKey) {
+        $category = ctype_digit($categoryKey)
+          ? $this->_categoryStore->getById((int) $categoryKey)
+          : $this->_categoryStore->getBySlug($categoryKey);
+        $postIds = $category
+          ? $this->_categoryPostStore->getPostIdsByCategoryId((int) $category->id)
+          : [];
+
+        // Multiple category keys use AND semantics: a post must have every category.
+        $matchingPostIds = $matchingPostIds === null
+          ? $postIds
+          : array_values(array_intersect($matchingPostIds, $postIds));
+      }
+
+      $filters['post_ids'] = $matchingPostIds ?? [];
     }
 
     $posts = $this->_postStore->getPaginated($filters);

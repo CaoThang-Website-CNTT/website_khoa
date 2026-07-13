@@ -33,9 +33,11 @@ require_once BASE_PATH . '/includes/console/commands/add_migration_command.php';
 
 // Symlink
 require_once BASE_PATH . '/includes/console/commands/storage_link_command.php';
+require_once BASE_PATH . '/includes/console/commands/media_link_command.php';
+require_once BASE_PATH . '/includes/console/commands/media_unlink_command.php';
 
 use App\Console\Kernel;
-use App\Console\Commands\{AddMigrationCommand, RollbackMigrationCommand, MigrateCommand, StorageLinkCommand};
+use App\Console\Commands\{AddMigrationCommand, RollbackMigrationCommand, MigrateCommand, StorageLinkCommand, MediaLinkCommand, MediaUnlinkCommand};
 
 $kernel = new Kernel();
 
@@ -43,5 +45,7 @@ $kernel->register(new AddMigrationCommand());
 $kernel->register(new RollbackMigrationCommand());
 $kernel->register(new MigrateCommand());
 $kernel->register(new StorageLinkCommand());
+$kernel->register(new MediaLinkCommand());
+$kernel->register(new MediaUnlinkCommand());
 
 $kernel->handle($argv);

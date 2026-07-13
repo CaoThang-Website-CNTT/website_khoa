@@ -4,6 +4,8 @@ namespace App\Controllers\Api;
 
 use App\Core\Request;
 use App\Core\Controller;
+use App\Core\Pageable;
+use App\Models\Media;
 use App\Services\MediaService;
 use App\Core\RequestValidator;
 use App\Core\Files\UploadedFileHandler;
@@ -35,7 +37,12 @@ class MediaApiController extends Controller
     
     try {
       $pageable = $this->_mediaService->getMedias($page, $perPage, $search);
-      return $this->json($pageable, 200);
+      return $this->json(new Pageable(
+        array_map(fn(Media $media) => $this->serializeMedia($media), $pageable->getItems()),
+        $pageable->getTotal(),
+        $pageable->getPerPage(),
+        $pageable->getCurrentPage()
+      ), 200);
     } catch (Exception $e) {
       error_log('Lỗi lấy dữ liệu media: ' . $e->getMessage());
       return $this->json(['message' => 'Không tìm thấy dữ liệu yêu cầu.'], 404);
@@ -83,7 +90,7 @@ class MediaApiController extends Controller
         $media = $this->_mediaService->create($uploadedFile, $data, compressMode: 'standard');
 
       return $this->json(
-        data: $media->toArray(),
+        data: $this->serializeMedia($media),
         message: 'Upload thành công.',
         status: 201,
       );
@@ -100,7 +107,7 @@ class MediaApiController extends Controller
       return $this->json(data: null, message: 'Không tìm thấy media.', status: 404);
     }
 
-    return $this->json(data: $media->toArray(), message: 'OK');
+    return $this->json(data: $this->serializeMedia($media), message: 'OK');
   }
 
   public function updateMetadata(Request $request, int $id)
@@ -119,7 +126,7 @@ class MediaApiController extends Controller
 
       $media = $this->_mediaService->updateMetadata($id, $data);
 
-      return $this->json(data: $media->toArray(), message: 'Cập nhật thành công.');
+      return $this->json(data: $this->serializeMedia($media), message: 'Cập nhật thành công.');
     } catch (\RuntimeException $e) {
       return $this->json(data: null, message: $e->getMessage(), status: 422);
     }
@@ -133,5 +140,12 @@ class MediaApiController extends Controller
     } catch (\RuntimeException $e) {
       return $this->json(data: null, message: $e->getMessage(), status: 422);
     }
+  }
+
+  private function serializeMedia(Media $media): array
+  {
+    $data = $media->toArray();
+    $data['file_url'] = url('public/media/' . $media->file_path);
+    return $data;
   }
 }

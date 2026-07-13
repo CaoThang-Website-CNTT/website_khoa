@@ -1,3 +1,7 @@
+<?php $layout->start('head') ?>
+<link rel="stylesheet" href="<?= url('public/css/company_duplicates.css') ?>">
+<?php $layout->end() ?>
+
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Công ty có dấu hiệu trùng lặp</h2>
 <p class="title-wrapper__description">Danh sách các công ty có khả năng bị trùng lặp trong hệ thống.</p>
@@ -8,8 +12,6 @@
   <i class="fa-solid fa-chevron-left"></i> Quay lại
 </a>
 <?php $layout->end() ?>
-
-<link rel="stylesheet" href="<?= url('public/css/company_duplicates.css') ?>">
 
 <?php $layout->start("content") ?>
 
@@ -139,6 +141,7 @@
 
 <?php $layout->end() ?>
 
+<?php $layout->start('scripts') ?>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     let currentFormId = null;
@@ -165,3 +168,4 @@
     });
   });
 </script>
+<?php $layout->end() ?>

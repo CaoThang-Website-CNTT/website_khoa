@@ -98,6 +98,7 @@ class TooltipHandler {
       content,
       preferredSide: root.dataset.side || 'top',
       preferredAlign: root.dataset.align || 'center',
+      gap: Number(root.dataset.tooltipGap) || TooltipHandler.GAP,
       touchDelay: Number(root.dataset.tooltipTouchDelay) || TooltipHandler.TOUCH_DELAY,
       touchDismissDelay: Number(root.dataset.tooltipTouchDismissDelay) || TooltipHandler.TOUCH_DISMISS_DELAY,
       isOpen: false,
@@ -267,8 +268,8 @@ class TooltipHandler {
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
 
     const contentRect = this._measureContent(content);
-    const side = this._resolveSide(preferredSide, triggerRect, contentRect, viewportWidth, viewportHeight);
-    let { top, left } = this._computeCoords(side, preferredAlign, triggerRect, contentRect);
+    const side = this._resolveSide(preferredSide, triggerRect, contentRect, viewportWidth, viewportHeight, instance.gap);
+    let { top, left } = this._computeCoords(side, preferredAlign, triggerRect, contentRect, instance.gap);
 
     const margin = TooltipHandler.VIEWPORT_MARGIN;
     left = Math.max(margin, Math.min(left, viewportWidth - contentRect.width - margin));
@@ -294,8 +295,7 @@ class TooltipHandler {
     return rect;
   }
 
-  _resolveSide(preferred, triggerRect, contentRect, viewportWidth, viewportHeight) {
-    const gap = TooltipHandler.GAP;
+  _resolveSide(preferred, triggerRect, contentRect, viewportWidth, viewportHeight, gap = TooltipHandler.GAP) {
     const margin = TooltipHandler.VIEWPORT_MARGIN;
     const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
     const side = ['top', 'right', 'bottom', 'left'].includes(preferred) ? preferred : 'top';
@@ -319,8 +319,7 @@ class TooltipHandler {
     return side;
   }
 
-  _computeCoords(side, align, triggerRect, contentRect) {
-    const gap = TooltipHandler.GAP;
+  _computeCoords(side, align, triggerRect, contentRect, gap = TooltipHandler.GAP) {
     let top = 0;
     let left = 0;
 

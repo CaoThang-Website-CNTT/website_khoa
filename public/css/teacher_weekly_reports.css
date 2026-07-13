@@ -1,0 +1,5 @@
+.report-content-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 32rem;
+}

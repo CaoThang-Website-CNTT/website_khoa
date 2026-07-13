@@ -127,8 +127,12 @@ document.addEventListener("DOMContentLoaded", () => {
       uploadStatusText.textContent = "Đang xử lý file...";
 
       try {
+        const csrfToken = document.querySelector('input[name="_token"]')?.value || "";
         const response = await fetch(`${apiBase}/parse-import`, {
           method: "POST",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken
+          },
           body: formData,
         });
 
@@ -152,11 +156,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         state.importedStudents = data;
-        uploadStatusText.innerHTML = `<span class="text-success"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
+        uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
 
         initOrReloadTableManager();
       } catch (error) {
-        uploadStatusText.innerHTML = `<span><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
+        uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
         if (window.toast) toast.error("Lỗi Import", error.message);
 
         wrapperTableStudents.setAttribute("data-state", "closed");
@@ -467,7 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedIds = Object.keys(state.selectedTeachers);
       if (selectedIds.length === 0) {
         if (window.toast)
-          toast.warning("Cảnh báo", "Vui lòng chọn ít nhất 1 giảng viên.");
+          toast.warn("Cảnh báo", "Vui lòng chọn ít nhất 1 giảng viên.");
         return;
       }
 
@@ -515,9 +519,14 @@ document.addEventListener("DOMContentLoaded", () => {
           `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...`;
       }
 
+      const csrfToken = document.querySelector('input[name="_token"]')?.value || "";
+
       const res = await fetch(apiBase, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken
+        },
         body: JSON.stringify(payload),
       });
 

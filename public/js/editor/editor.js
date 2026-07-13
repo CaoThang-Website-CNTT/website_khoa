@@ -614,6 +614,7 @@ export class EditorManager {
       blocks: trimmedBlocks,
     };
   }
+
 }
 /** Quản lý các block hiện tại trong trang */
 class EditorCanvas {

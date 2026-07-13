@@ -32,9 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteBtn = e.target.closest('.btn-delete-teacher');
     if (deleteBtn) {
       const teacherId = deleteBtn.dataset.teacherId;
+      const teacherName = deleteBtn.dataset.teacherName;
       document.getElementById('delete-teacher-id').value = teacherId;
+      
+      const desc = document.getElementById('delete-teacher-desc');
+      if (desc) desc.textContent = `Bạn có chắc chắn muốn xóa giảng viên ${teacherName} khỏi đợt thực tập không?`;
+
       if (typeof ModalHandler !== 'undefined') {
-        ModalHandler.open('modal-delete-teacher');
+        ModalHandler.instance.open('#modal-delete-teacher');
+      } else {
+        document.getElementById('modal-delete-teacher').setAttribute('data-state', 'open');
       }
       return;
     }

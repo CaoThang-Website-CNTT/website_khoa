@@ -70,8 +70,13 @@ final class Post extends Model
       return $imagePath;
     }
 
-    $relativePath = ltrim($imagePath, '/\\');
-    $mediaFilePath = BASE_PATH . '/public/media/' . $relativePath;
+    $relativePath = ltrim(str_replace('\\', '/', $imagePath), '/');
+    if (str_starts_with($relativePath, 'public/media/')) {
+      $relativePath = substr($relativePath, strlen('public/media/'));
+    } elseif (str_starts_with($relativePath, 'media/')) {
+      $relativePath = substr($relativePath, strlen('media/'));
+    }
+    $mediaFilePath = BASE_PATH . '/storage/media/' . $relativePath;
 
     if (!is_file($mediaFilePath)) {
       return $fallbackUrl;
