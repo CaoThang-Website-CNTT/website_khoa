@@ -149,7 +149,7 @@ if (confirmBtn) {
           if (acceptedAsp) {
             container.innerHTML = `<span class="badge" data-variant="success">Đạt NV${acceptedAsp.priority}</span>`;
           } else {
-            container.innerHTML = `<span class="badge" data-variant="secondary">Phân bổ thủ công</span>`;
+            container.innerHTML = `<span class="badge" data-variant="warning">Ngoài NV</span>`;
           }
         } else {
           let isLocked = !!groupData.aspirations[0].locked_at;

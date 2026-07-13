@@ -17,6 +17,7 @@ interface IProjectGroupService
   public function confirmMember(int $groupId, int $studentId): bool;
   public function removeMember(int $groupId, int $studentId): bool;
   public function autoAllocateTopics(int $batchId): array;
+  public function randomAllocateTopics(int $batchId): array;
   public function manualAssignTopic(int $groupId, int $topicId): bool;
   public function kickIneligibleMembers(int $batchId, array $ineligibleStudentIds): bool;
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
@@ -383,6 +384,94 @@ class ProjectGroupService implements IProjectGroupService
       'failed' => $failedCount,
       'message' => "Đã phân bổ thành công $successCount nhóm"
     ];
+  }
+
+  public function randomAllocateTopics(int $batchId): array
+  {
+    // 1. Lấy danh sách nhóm hợp lệ CHƯA CÓ đề tài
+    $allGroups = $this->_store->getValidGroupsForAllocation($batchId);
+    $unassignedGroups = array_filter($allGroups, fn($g) => empty($g['assigned_topic_id']));
+    $unassignedGroups = array_values($unassignedGroups);
+
+    if (empty($unassignedGroups)) {
+      return ['success' => 0, 'total' => 0, 'message' => 'Không có nhóm nào cần phân bổ ngẫu nhiên.'];
+    }
+
+    // 2. Lấy dữ liệu quota giảng viên
+    $supervisors = $this->_batchStore->getSupervisorsByBatchId($batchId);
+    $teacherSlots = [];
+    foreach ($supervisors as $sup) {
+      $maxStudents = (int)$sup['max_students'];
+      $maxGroups = $maxStudents === 0 ? PHP_INT_MAX : max(1, (int)floor($maxStudents / 2));
+      $teacherSlots[$sup['teacher_id']] = [
+        'max_groups' => $maxGroups,
+        'assigned_groups' => 0
+      ];
+    }
+
+    // 3. Lấy danh sách đề tài đã duyệt và tính slot còn trống
+    $allTopics = $this->_topicStore->getApprovedTopics($batchId);
+    $availableSlots = [];
+
+    foreach ($allTopics as $topic) {
+      $maxStudents = (int)$topic['max_students'];
+      $maxGroups = max(1, (int)($maxStudents / 2));
+      $assignedGroups = (int)($topic['assigned_groups_count'] ?? 0);
+      $teacherId = $topic['teacher_id'];
+
+      // Cập nhật assigned_groups cho giảng viên
+      if (isset($teacherSlots[$teacherId])) {
+        $teacherSlots[$teacherId]['assigned_groups'] += $assignedGroups;
+      }
+
+      $remainingSlots = $maxGroups - $assignedGroups;
+      for ($i = 0; $i < $remainingSlots; $i++) {
+        $availableSlots[] = [
+          'topic_id' => $topic['id'],
+          'teacher_id' => $teacherId
+        ];
+      }
+    }
+
+    // 4. Shuffle cả 2 danh sách để random
+    shuffle($unassignedGroups);
+    shuffle($availableSlots);
+
+    // 5. Gán 1-1, kiểm tra quota giảng viên
+    $successCount = 0;
+    $totalUnassigned = count($unassignedGroups);
+
+    foreach ($unassignedGroups as $group) {
+      $assigned = false;
+
+      foreach ($availableSlots as $key => $slot) {
+        $teacherId = $slot['teacher_id'];
+
+        // Kiểm tra quota giảng viên
+        if (isset($teacherSlots[$teacherId]) && $teacherSlots[$teacherId]['assigned_groups'] >= $teacherSlots[$teacherId]['max_groups']) {
+          continue;
+        }
+
+        // Gán đề tài
+        if ($this->_store->assignTopic($group['id'], $slot['topic_id'])) {
+          $successCount++;
+          if (isset($teacherSlots[$teacherId])) {
+            $teacherSlots[$teacherId]['assigned_groups']++;
+          }
+          unset($availableSlots[$key]);
+          $assigned = true;
+          break;
+        }
+      }
+    }
+
+    $remainingCount = $totalUnassigned - $successCount;
+    $msg = "Đã phân bổ ngẫu nhiên thành công $successCount/$totalUnassigned nhóm.";
+    if ($remainingCount > 0) {
+      $msg .= " Còn $remainingCount nhóm không thể phân bổ do hết chỗ trống.";
+    }
+
+    return ['success' => $successCount, 'total' => $totalUnassigned, 'message' => $msg];
   }
 
   public function manualAssignTopic(int $groupId, int $topicId): bool
