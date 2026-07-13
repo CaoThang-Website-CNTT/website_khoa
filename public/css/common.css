@@ -2989,10 +2989,11 @@
     color: var(--banner-icon-color);
   }
 
+  .site-header {
+    background: var(--background);
+  }
+
   .main-header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
     background: var(--background);
   }
 
@@ -3211,7 +3212,12 @@
 
   /* NAVBAR */
   .navbar {
-    border-top: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-block: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    background: var(--background);
   }
 
   .navbar__item {
@@ -3303,6 +3309,13 @@
     .mobile-search__bar {
       min-height: 2.75rem;
       padding: 0 0.75rem;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    :root {
+      --header-banner-height: 2.5rem;
+      --header-navbar-height: 3rem;
     }
   }
 

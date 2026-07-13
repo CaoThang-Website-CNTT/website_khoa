@@ -162,6 +162,9 @@
     /* #0a0a0a */
 
     /* Brand & Layout */
+    --header-banner-height: 0rem;
+    --header-navbar-height: 0rem;
+    --header-height: var(--header-navbar-height);
     --banner-background: oklch(0.28 0.13 255.45);
     /* #003280 */
     --footer-background: oklch(0.17 0.03 252.62);
