@@ -97,6 +97,7 @@ class InternshipBatchController extends Controller
         'internship_start_date' => ['nullable', 'date'],
         'internship_end_date' => ['nullable', 'date', 'after:internship_start_date'],
         'document_number' => ['nullable', 'max:50'],
+        'approver_name' => ['required', 'max:255'],
       ]);
     } catch (ValidationException $e) {
       return $this->json(['errors' => $e->getErrors()], 422, 'Dữ liệu không hợp lệ.');
