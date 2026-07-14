@@ -8,6 +8,7 @@ use App\Stores\InternshipSubmissionStore;
 use App\Stores\InternshipBatchStore;
 use App\Stores\InternshipAssignmentStore;
 use DateTime;
+use App\Core\AppTime;
 
 interface IInternshipGradeService
 {
@@ -119,7 +120,7 @@ class InternshipGradeService implements IInternshipGradeService
     if (!$batch || empty($batch['start_at']))
       return false;
 
-    $now = new DateTime();
+    $now = AppTime::now();
     $startAt = new DateTime($batch['start_at']);
 
     if ($now < $startAt)

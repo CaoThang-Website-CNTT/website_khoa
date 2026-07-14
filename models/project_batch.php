@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProjectBatchStatus;
+use App\Core\AppTime;
 
 class ProjectBatch extends Model
 {
@@ -42,7 +43,7 @@ class ProjectBatch extends Model
       return ProjectBatchStatus::ALLOCATED;
     }
 
-    $now = time();
+    $now = AppTime::time();
     $proposalStart = $this->topic_proposal_start ? strtotime($this->topic_proposal_start) : 0;
     $proposalEnd = $this->topic_proposal_end ? strtotime($this->topic_proposal_end) : 0;
     $regStart = $this->registration_start ? strtotime($this->registration_start) : 0;

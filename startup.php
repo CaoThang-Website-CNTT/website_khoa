@@ -53,6 +53,7 @@ require_once BASE_PATH . '/includes/files/xlsx_writer.php';
 
 // Helpers
 require_once BASE_PATH . '/includes/helpers.php';
+require_once BASE_PATH . '/includes/core/app_time.php';
 
 // Model
 require_once BASE_PATH . '/models/account.php';

@@ -11,6 +11,7 @@ use App\Enums\ProjectBatchStatus;
 use App\Enums\ProjectTopicStatus;
 use Exception;
 use Database;
+use App\Core\AppTime;
 
 interface IProjectRegistrationService
 {
@@ -217,7 +218,7 @@ class ProjectRegistrationService implements IProjectRegistrationService
       throw new Exception('Đợt đồ án chưa được công bố hoặc đã đóng.');
     }
 
-    $now = time();
+    $now = AppTime::time();
     $start = strtotime((string) $batch['registration_start']);
     $end = strtotime((string) $batch['registration_end']);
 

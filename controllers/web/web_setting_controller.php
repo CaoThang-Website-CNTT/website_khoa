@@ -127,6 +127,31 @@ class WebSettingsController extends Controller
     }
     return $this->redirect('admin/web_settings/' . $setting->group . '/edit');
   }
+
+  public function updateMockTime(Request $request)
+  {
+    $action = $request->input('action');
+    $mockTime = $request->input('mock_time');
+    $filePath = __DIR__ . '/../../storage/mock_time.json';
+
+    if ($action === 'enable' && !empty($mockTime)) {
+      $config = [
+        'enabled' => true,
+        'value' => date('Y-m-d H:i:s', strtotime($mockTime))
+      ];
+    } else {
+      $config = [
+        'enabled' => false,
+        'value' => ''
+      ];
+    }
+
+    file_put_contents($filePath, json_encode($config, JSON_PRETTY_PRINT));
+    
+    $request->session()->flashNotify('success', 'Đã cập nhật trạng thái thời gian giả lập!');
+    return $this->redirect('admin/web_settings?tab=testing_tools');
+  }
+
   private function _buildUpdatePayload(WebSetting $setting, mixed $newValue): array
   {
     return [

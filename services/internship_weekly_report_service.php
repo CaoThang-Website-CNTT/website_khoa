@@ -6,6 +6,7 @@ use App\Core\Pageable;
 use App\Stores\InternshipWeeklyReportStore;
 use DateTime;
 use Exception;
+use App\Core\AppTime;
 
 interface IInternshipWeeklyReportService
 {
@@ -51,7 +52,7 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     $submissionDays = (int) $this->_webSettingsService->getValue('internship_report_submission_days', 14);
     $limitDt = (clone $endDt)->modify("+{$submissionDays} days");
 
-    $now = new DateTime();
+    $now = AppTime::now();
     $maxDt = min($limitDt, $now);
 
     $weekNumber = 1;
@@ -94,7 +95,7 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
       throw new Exception("Tuần báo cáo không hợp lệ.");
     }
 
-    $today = (new DateTime())->format('Y-m-d');
+    $today = AppTime::now()->format('Y-m-d');
     if ($targetWeek['start'] > $today) {
       throw new Exception("Chưa thể nộp báo cáo cho tuần chưa bắt đầu.");
     }
@@ -108,7 +109,7 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
       throw new Exception("Vui lòng nhập nội dung công việc.");
     }
 
-    $now = new DateTime();
+    $now = AppTime::now();
     $weekEndDt = new DateTime($targetWeek['end']);
     // Chuyển weekEndDt đến cuối ngày CN
     $weekEndDt->setTime(23, 59, 59);
@@ -178,7 +179,7 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
     $currentWeekNumber = null;
     $currentWeekStatus = 'missing';
 
-    $now = new DateTime();
+    $now = AppTime::now();
     $nowStr = $now->format('Y-m-d');
 
     if (!empty($weeks) && $nowStr < $weeks[0]['start']) {
@@ -228,7 +229,7 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
       $reportsMap[$report['week_number']] = $report;
     }
 
-    $now = new DateTime();
+    $now = AppTime::now();
     $nowStr = $now->format('Y-m-d');
 
     foreach ($weeks as &$week) {
