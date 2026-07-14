@@ -241,11 +241,20 @@ $studentsData = array_map(function ($sv) {
       </div>
       <hr class="separator">
       <div class="card__content space-y-4">
-        <dl class="flex justify-between">
-          <dt>ID</dt>
-          <dd>#<?= htmlspecialchars((string) $batch['id']) ?></dd>
-        </dl>
-        <hr class="separator">
+        <?php if ($batch['end_at']): ?>
+          <div class="flex flex-col gap-1">
+            <dl class="flex justify-between">
+              <dt>Hạn chót chấm điểm</dt>
+              <dd style="color: var(--destructive);">
+                <?= date('d/m/Y', strtotime($batch['end_at'] . " + {$deadlineWeeks} weeks")) ?>
+              </dd>
+            </dl>
+            <p style="color: var(--muted-foreground);">
+              Hệ thống sẽ tự động khóa các chức năng chấm điểm sau thời gian này.
+            </p>
+          </div>
+          <hr class="separator">
+        <?php endif; ?>
         <dl class="flex justify-between">
           <dt>Được tạo vào</dt>
           <dd><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></dd>

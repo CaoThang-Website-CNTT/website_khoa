@@ -109,7 +109,7 @@ foreach (($timeline['weeks'] ?? []) as $week) {
         <?php if ($isLocked): ?>
           <div class="alert mb-4" data-variant="success">
             <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-            Điểm đã được chốt và công bố.
+            Điểm đã được chốt và gửi cho Quản trị viên.
           </div>
         <?php elseif (!$canGrade): ?>
           <div class="alert mb-4" data-variant="destructive">

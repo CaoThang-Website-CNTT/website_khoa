@@ -178,7 +178,7 @@ foreach ($reports_data->getItems() as $student) {
     <!-- Cột Thao tác -->
     <template data-tm-col="actions" data-tm-label="Thao tác" data-tm-width="150px" data-tm-align="right">
       <a href="{{ row.grading_url }}" class="btn" data-variant="outline" data-size="sm">
-        <i class="fa-solid fa-eye" aria-hidden="true"></i> Xem báo cáo
+        <i class="fa-solid fa-eye" aria-hidden="true"></i> Xem
       </a>
     </template>
 
