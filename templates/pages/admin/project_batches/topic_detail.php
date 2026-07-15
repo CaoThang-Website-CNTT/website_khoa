@@ -62,7 +62,7 @@ $statusVariant = ProjectTopicStatus::getVariant($topicObj->status);
           <p class="mt-1"><?= nl2br(htmlspecialchars($topicObj->description ?: 'Không có mô tả')) ?></p>
         </div>
         <?php if (!empty($topicObj->pdf_file_path)): ?>
-          <a href="<?= url('/storage/' . ltrim($topicObj->pdf_file_path, '/')) ?>" target="_blank" class="btn" data-size="md" data-variant="secondary">
+          <a href="<?= url('public/storage/' . ltrim($topicObj->pdf_file_path, '/')) ?>" target="_blank" class="btn" data-size="md" data-variant="secondary">
             <i class="fa-solid fa-file-pdf"></i>
             <span>Xem chi tiết đề tài</span>
           </a>

@@ -123,8 +123,8 @@ $timelineWeeks = array_reverse($weeks_data);
                       <?php if (!empty($version['images'])): ?>
                         <div class="weekly-attachments">
                           <?php foreach ($version['images'] as $img): ?><a
-                              href="<?= url('storage/' . ltrim($img['file_path'], '/')) ?>" target="_blank" rel="noopener"><img
-                                src="<?= url('storage/' . ltrim($img['file_path'], '/')) ?>"
+                              href="<?= url('public/storage/' . ltrim($img['file_path'], '/')) ?>" target="_blank" rel="noopener"><img
+                                src="<?= url('public/storage/' . ltrim($img['file_path'], '/')) ?>"
                                 alt="<?= htmlspecialchars($img['original_file_name']) ?>"></a>
                           <?php endforeach; ?>
                         </div>

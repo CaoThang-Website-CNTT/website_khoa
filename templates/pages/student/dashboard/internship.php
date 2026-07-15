@@ -621,7 +621,7 @@ $effectiveMetadata = $effStatus ? [
                   </div>
                   <div class="mt-2">
                     <?php
-                    $downloadUrl = url('storage/' . ltrim($submission['file_path'], '/'));
+                    $downloadUrl = url('public/storage/' . ltrim($submission['file_path'], '/'));
                     if ($downloadUrl):
                       ?>
                       <a href="<?= $downloadUrl ?>" target="_blank" class="btn" data-variant="outline" data-size="sm"

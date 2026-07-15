@@ -48,6 +48,12 @@ function url(string $path = '', bool $strict = false): string
     }
     return APP_URL . 'public/media/' . $mediaPath;
   }
+  if (str_starts_with($normalized, 'storage/')) {
+    return APP_URL . 'public/storage/' . substr($normalized, strlen('storage/'));
+  }
+  if (str_starts_with($normalized, 'public/storage/storage/')) {
+    return APP_URL . 'public/storage/' . substr($normalized, strlen('public/storage/storage/'));
+  }
 
   return APP_URL . ltrim($path, '/');
 }

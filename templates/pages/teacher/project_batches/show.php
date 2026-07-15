@@ -322,7 +322,7 @@ if ($canPropose):
         'action_class' => in_array($t->status, [ProjectTopicStatus::DRAFT, ProjectTopicStatus::REJECTED]) ? '' : 'display: none !important;',
         'edit_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/edit"),
         'delete_url' => url("teacher/project_batches/{$batch['id']}/topics/{$t->id}/delete"),
-        'pdf_url' => $t->pdf_file_path ? url("storage/" . $t->pdf_file_path) : null
+        'pdf_url' => $t->pdf_file_path ? url("public/storage/" . $t->pdf_file_path) : null
       ];
     }, array_keys($topics), array_values($topics)),
     'total' => count($topics),

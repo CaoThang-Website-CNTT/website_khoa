@@ -77,7 +77,7 @@ $rejectReason = $topic['reject_reason'] ?? null;
           <input type="file" name="pdf_file" id="pdf_file" class="field__input" accept=".pdf">
           <?php if ($pdfFilePath): ?>
             <div class="field__description">
-              Đã tải lên: <a class="btn" data-size="sm" data-variant="secondary" href="<?= url('storage/' . $pdfFilePath) ?>" target="_blank">Xem file</a>. Chọn file mới nếu muốn thay đổi.
+              Đã tải lên: <a class="btn" data-size="sm" data-variant="secondary" href="<?= url('public/storage/' . $pdfFilePath) ?>" target="_blank">Xem file</a>. Chọn file mới nếu muốn thay đổi.
             </div>
           <?php else: ?>
             <div class="field__description">Bắt buộc khi gửi duyệt. Dung lượng tối đa 10MB.</div>
