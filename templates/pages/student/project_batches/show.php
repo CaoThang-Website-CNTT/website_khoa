@@ -102,7 +102,7 @@ if ($group) {
 
         <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex items-start gap-3">
-            <div class="w-10 h-10 flex items-center justify-center flex-shrink-0">
+            <div class="flex items-center justify-center flex-shrink-0">
               <i class="fa-solid fa-calendar-check text-xl"></i>
             </div>
             <div>
@@ -111,6 +111,16 @@ if ($group) {
                 <?= $currentBatch['registration_start'] ? date('d/m/Y', strtotime($currentBatch['registration_start'])) : 'Chưa có' ?>
                 -
                 <?= $currentBatch['registration_end'] ? date('d/m/Y', strtotime($currentBatch['registration_end'])) : 'Chưa có' ?>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-users text-xl"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium">Niên khóa được phép đăng ký</p>
+              <p class="text-sm mt-1"><?= htmlspecialchars($currentBatch['min_class_of'] ?? 'không có') ?> - <?= htmlspecialchars($currentBatch['max_class_of'] ?? 'không có') ?>
               </p>
             </div>
           </div>
