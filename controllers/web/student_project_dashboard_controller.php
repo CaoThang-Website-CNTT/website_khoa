@@ -78,7 +78,7 @@ class StudentProjectDashboardController extends Controller
     }
 
     // Bổ sung kiểm tra sinh viên có đang tham gia đợt đồ án khác chưa đóng
-    if (($_ENV['APP_ENV']) !== 'local') {
+    if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') {
       $student = $this->_studentService->getStudentByStudentId($studentId);
       if ($student) {
         $activeBatchStudents = $this->_projectGroupService->getStudentsInOtherActiveBatches($batch['id'], [$student->id]);
