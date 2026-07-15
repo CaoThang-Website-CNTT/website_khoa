@@ -68,24 +68,102 @@ document.addEventListener("DOMContentLoaded", () => {
     setMode(event.detail.value);
   });
 
-  images.addEventListener("change", () => {
-    previews.innerHTML = "";
-    const files = [...images.files];
-    if (files.length > 5 || files.some((file) => file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
-      window.toast?.error("Ảnh không hợp lệ", "Chọn tối đa 5 ảnh JPG, PNG hoặc WEBP, mỗi ảnh không quá 5 MB.");
-      images.value = "";
-      return;
-    }
-    files.forEach((file) => {
+  // Hàm hỗ trợ giảm chất lượng ảnh upload
+  const compressImage = async (file) => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = ({ target }) => {
-        const img = document.createElement("img");
+        const img = new Image();
+        img.onload = () => {
+          const MAX_WIDTH = 1280;
+          const MAX_HEIGHT = 1280;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round(height * (MAX_WIDTH / width));
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round(width * (MAX_HEIGHT / height));
+              height = MAX_HEIGHT;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Nén thành dạng JPEG để tiết kiệm bandwidth
+          canvas.toBlob((blob) => {
+            const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+            const newFile = new File([blob], newFileName, {
+              type: "image/jpeg",
+              lastModified: Date.now()
+            });
+            resolve({ file: newFile, previewSrc: URL.createObjectURL(blob) });
+          }, "image/jpeg", 0.8);
+        };
         img.src = target.result;
-        img.alt = file.name;
-        previews.appendChild(img);
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  images.addEventListener("change", async () => {
+    previews.innerHTML = "";
+    const files = [...images.files];
+    
+    if (files.length > 5) {
+      window.toast?.error("Ảnh không hợp lệ", "Chỉ được phép chọn tối đa 5 hình ảnh báo cáo.");
+      images.value = "";
+      return;
+    }
+    
+    if (files.some((file) => file.size > 10 * 1024 * 1024)) {
+      window.toast?.error("Ảnh không hợp lệ", "Dung lượng mỗi ảnh không được vượt quá 10MB.");
+      images.value = "";
+      return;
+    }
+    
+    if (files.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
+      window.toast?.error("Ảnh không hợp lệ", "Chỉ hỗ trợ định dạng ảnh JPG, PNG hoặc WEBP.");
+      images.value = "";
+      return;
+    }
+
+    submitBtn.disabled = true;
+    const oldHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang xử lý...';
+    
+    const dataTransfer = new DataTransfer();
+    
+    for (const file of files) {
+      try {
+        const result = await compressImage(file);
+        dataTransfer.items.add(result.file);
+        
+        const img = document.createElement("img");
+        img.src = result.previewSrc;
+        img.alt = result.file.name;
+        previews.appendChild(img);
+      } catch (err) {
+        window.toast?.error("Lỗi xử lý ảnh", "Có lỗi xảy ra khi xử lý ảnh. Vui lòng thử lại.");
+        images.value = "";
+        previews.innerHTML = "";
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = oldHtml;
+        return;
+      }
+    }
+    
+    images.files = dataTransfer.files;
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = oldHtml;
   });
 
   submitBtn.addEventListener("click", (event) => {

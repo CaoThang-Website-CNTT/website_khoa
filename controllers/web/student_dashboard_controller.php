@@ -876,19 +876,60 @@ class StudentDashboardController extends Controller
             mkdir($uploadDir, 0755, true);
           }
 
-          $ext = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
-          $fileName = bin2hex(random_bytes(16)) . '.' . $ext;
-          $destPath = $uploadDir . $fileName;
+          // Xử lý nén ảnh
+          $tmpName = $files['tmp_name'][$i];
+          $imageString = file_get_contents($tmpName);
+          $sourceImage = @imagecreatefromstring($imageString);
 
-          if (!move_uploaded_file($files['tmp_name'][$i], $destPath)) {
-            throw new Exception("Không thể lưu file ảnh vào máy chủ.");
+          if (!$sourceImage) {
+            throw new Exception("File ảnh bị lỗi hoặc định dạng không được hỗ trợ: " . $files['name'][$i]);
           }
 
+          $width = imagesx($sourceImage);
+          $height = imagesy($sourceImage);
+          $maxWidth = 1280;
+          $maxHeight = 1280;
+
+          $newWidth = $width;
+          $newHeight = $height;
+
+          if ($width > $height) {
+            if ($width > $maxWidth) {
+              $newHeight = (int)floor($height * ($maxWidth / $width));
+              $newWidth = $maxWidth;
+            }
+          } else {
+            if ($height > $maxHeight) {
+              $newWidth = (int)floor($width * ($maxHeight / $height));
+              $newHeight = $maxHeight;
+            }
+          }
+
+          $targetImage = imagecreatetruecolor($newWidth, $newHeight);
+
+          // Giữ nền trong suốt cho ảnh đầu vào là PNG/WebP (nếu có)
+          imagealphablending($targetImage, false);
+          imagesavealpha($targetImage, true);
+          $transparent = imagecolorallocatealpha($targetImage, 255, 255, 255, 127);
+          imagefilledrectangle($targetImage, 0, 0, $newWidth, $newHeight, $transparent);
+
+          imagecopyresampled($targetImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+          $fileName = bin2hex(random_bytes(16)) . '.webp';
+          $destPath = $uploadDir . $fileName;
+
+          // Lưu ảnh với định dạng WebP, chất lượng 75%
+          if (!imagewebp($targetImage, $destPath, 75)) {
+            throw new Exception("Không thể xử lý và lưu file ảnh vào máy chủ.");
+          }
+
+          $finalFileSize = filesize($destPath);
+
           $imagesData[] = [
-            'original_file_name' => $files['name'][$i],
-            'mime_type' => $mime,
+            'original_file_name' => preg_replace('/\.[^.]+$/', '.webp', $files['name'][$i]),
+            'mime_type' => 'image/webp',
             'file_path' => $subDir . '/' . $fileName,
-            'file_size' => $files['size'][$i]
+            'file_size' => $finalFileSize
           ];
         }
       }

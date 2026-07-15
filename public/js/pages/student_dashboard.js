@@ -267,35 +267,50 @@ document.addEventListener("DOMContentLoaded", () => {
       fileInputs.forEach((input) => {
         if (input.files.length > 0) {
           hasFile = true;
-          const file = input.files[0];
-
-          if (file.size > maxSize) {
-            window.toast?.error(
-              "Lỗi",
-              `File ${file.name} vượt quá dung lượng 10MB`,
-            );
+          
+          if (input.id === "file_related_photo" && input.files.length > 5) {
+            window.toast?.error("Ảnh không hợp lệ", "Chỉ được phép chọn tối đa 5 hình ảnh liên quan.");
             input.value = "";
             hasError = true;
             return;
           }
 
-          const isImage =
-            file.type.startsWith("image/") ||
-            file.name.match(/\.(jpg|jpeg|png|webp)$/i);
-          const isPdf =
-            file.type === "application/pdf" || file.name.match(/\.pdf$/i);
+          for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const isRelatedPhoto = input.id === "file_related_photo";
 
-          if (input.accept.includes("image") && !isImage) {
-            window.toast?.error(
-              "Lỗi",
-              "Tài liệu này yêu cầu định dạng hình ảnh (JPG, PNG, WEBP)",
-            );
-            input.value = "";
-            hasError = true;
-          } else if (input.accept.includes(".pdf") && !isPdf) {
-            window.toast?.error("Lỗi", "Tài liệu này yêu cầu định dạng PDF");
-            input.value = "";
-            hasError = true;
+            if (file.size > maxSize) {
+              if (isRelatedPhoto) {
+                window.toast?.error("Ảnh không hợp lệ", "Dung lượng mỗi ảnh không được vượt quá 10MB.");
+              } else {
+                window.toast?.error("Lỗi", `File ${file.name} vượt quá dung lượng 10MB`);
+              }
+              input.value = "";
+              hasError = true;
+              return;
+            }
+
+            const isImage =
+              file.type.startsWith("image/") ||
+              file.name.match(/\.(jpg|jpeg|png|webp)$/i);
+            const isPdf =
+              file.type === "application/pdf" || file.name.match(/\.pdf$/i);
+
+            if (input.accept.includes("image") && !isImage) {
+              if (isRelatedPhoto) {
+                window.toast?.error("Ảnh không hợp lệ", "Chỉ hỗ trợ định dạng ảnh JPG, PNG hoặc WEBP.");
+              } else {
+                window.toast?.error("Lỗi", `Tài liệu ${file.name} yêu cầu định dạng hình ảnh (JPG, PNG, WEBP)`);
+              }
+              input.value = "";
+              hasError = true;
+              return;
+            } else if (input.accept.includes(".pdf") && !isPdf) {
+              window.toast?.error("Lỗi", `Tài liệu ${file.name} yêu cầu định dạng PDF`);
+              input.value = "";
+              hasError = true;
+              return;
+            }
           }
         }
       });
@@ -316,5 +331,91 @@ document.addEventListener("DOMContentLoaded", () => {
     fileInputs.forEach((input) => {
       input.addEventListener("change", validateFiles);
     });
+
+    const fileRelatedPhotoInput = document.getElementById("file_related_photo");
+    if (fileRelatedPhotoInput) {
+      const compressImage = async (file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = ({ target }) => {
+            const img = new Image();
+            img.onload = () => {
+              const MAX_WIDTH = 1280;
+              const MAX_HEIGHT = 1280;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height = Math.round(height * (MAX_WIDTH / width));
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width = Math.round(width * (MAX_HEIGHT / height));
+                  height = MAX_HEIGHT;
+                }
+              }
+
+              const canvas = document.createElement("canvas");
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, width, height);
+
+              canvas.toBlob(
+                (blob) => {
+                  const newFileName =
+                    file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                  const newFile = new File([blob], newFileName, {
+                    type: "image/jpeg",
+                    lastModified: Date.now(),
+                  });
+                  resolve(newFile);
+                },
+                "image/jpeg",
+                0.8,
+              );
+            };
+            img.src = target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+
+      fileRelatedPhotoInput.addEventListener("change", async (e) => {
+        const files = [...e.target.files];
+        if (files.length === 0) return;
+
+        // Bỏ qua nén nếu file quá lớn hoặc không phải ảnh
+        const isInvalid = files.some(
+          (file) =>
+            file.size > 10 * 1024 * 1024 || !file.type.startsWith("image/"),
+        );
+        if (isInvalid || files.length > 5) return;
+
+        if (uploadBtn) {
+          uploadBtn.disabled = true;
+          const oldHtml = uploadBtn.innerHTML;
+          uploadBtn.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang xử lý...';
+
+          const dataTransfer = new DataTransfer();
+          for (const file of files) {
+            try {
+              const compressedFile = await compressImage(file);
+              dataTransfer.items.add(compressedFile);
+            } catch (err) {
+              console.error("Lỗi nén ảnh:", err);
+              dataTransfer.items.add(file);
+            }
+          }
+
+          e.target.files = dataTransfer.files;
+          uploadBtn.innerHTML = oldHtml;
+          validateFiles(); // Cập nhật lại trạng thái nút upload
+        }
+      });
+    }
   }
 });

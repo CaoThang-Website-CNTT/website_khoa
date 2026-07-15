@@ -213,7 +213,7 @@ $timelineWeeks = array_reverse($weeks_data);
               placeholder="Mô tả công việc, kết quả và điều đã học được..."></textarea></div>
           <div class="field mb-4"><label class="field__label" for="report_images">Hình ảnh đính kèm (không bắt
               buộc)</label>
-            <p class="field__description">Tối đa 5 ảnh JPG, PNG hoặc WEBP; mỗi ảnh không quá 5 MB.</p><input type="file"
+            <p class="field__description">Tối đa 5 ảnh JPG, PNG hoặc WEBP; mỗi ảnh không quá 10 MB.</p><input type="file"
               name="images[]" id="report_images" class="field__input" accept="image/jpeg,image/png,image/webp" multiple>
             <div id="imagePreviewContainer" class="weekly-image-preview"></div>
           </div>
