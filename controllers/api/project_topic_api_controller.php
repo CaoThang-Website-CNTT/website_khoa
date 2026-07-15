@@ -143,7 +143,7 @@ class ProjectTopicApiController extends Controller
         'label' => ProjectTopicStatus::getLabel((string) $topic['status']),
         'variant' => ProjectTopicStatus::getVariant((string) $topic['status']),
       ],
-      'pdf_file_url' => !empty($topic['pdf_file_path']) ? url("admin/project_batches/{$topic['batch_id']}/topics/{$topic['id']}/file") : null,
+      'pdf_file_url' => !empty($topic['pdf_file_path']) ? url('/storage/' . ltrim($topic['pdf_file_path'], '/')) : null,
       'reject_reason' => (string) ($topic['reject_reason'] ?? ''),
     ];
   }

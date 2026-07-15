@@ -218,7 +218,6 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     // Topics
     $router->get('/{id}/topics', [ProjectBatchController::class, 'topics']);
     $router->get('/{id}/topics/{topicId}', [ProjectBatchController::class, 'topicDetail']);
-    $router->get('/{id}/topics/{topicId}/file', [ProjectBatchController::class, 'topicFile']);
     // Teachers
     $router->get('/{id}/teachers', [ProjectBatchController::class, 'teachers']);
     $router->post('/{id}/teachers/add', [ProjectBatchController::class, 'addTeacher']);
