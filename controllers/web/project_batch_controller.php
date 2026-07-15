@@ -117,6 +117,32 @@ class ProjectBatchController extends Controller
     ], layout: "dashboard_layout");
   }
 
+  public function topicFile($id, $topicId, Request $request): void
+  {
+    $topic = $this->_TopicService->getTopicById((int) $topicId);
+    if (!$topic || (int) $topic['batch_id'] !== (int) $id || empty($topic['pdf_file_path'])) {
+      $this->abort(404);
+    }
+
+    $relativePath = str_replace('\\', '/', ltrim((string) $topic['pdf_file_path'], '/'));
+    if (!str_starts_with($relativePath, 'project_topics/') || str_contains($relativePath, '..')) {
+      $this->abort(404);
+    }
+
+    $filePath = BASE_PATH . '/storage/' . $relativePath;
+    if (!is_file($filePath)) {
+      $this->abort(404);
+    }
+
+    $fileName = basename($filePath);
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="' . addslashes($fileName) . '"');
+    header('Content-Length: ' . filesize($filePath));
+    header('X-Content-Type-Options: nosniff');
+    readfile($filePath);
+    exit;
+  }
+
   public function update($id, Request $request)
   {
     try {
