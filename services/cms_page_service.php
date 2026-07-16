@@ -13,6 +13,7 @@ interface ICmsPageService
   public function getPages(int $page = 1, int $limit = 15, array $filters = []): Pageable;
   public function getPage(int $id): CmsPage;
   public function getPageBySlug(string $slug): CmsPage;
+  public function getDefaultPageBySlug(string $slug): CmsPage;
   public function getPublishedPageBySlug(string $slug): ?CmsPage;
   public function getSectionData(string $slug, string $sectionId): array;
   public function getPageForEditing(string $slug): array;
@@ -59,6 +60,15 @@ class CmsPageService implements ICmsPageService
       ?? $this->makeDefaultPage($slug);
   }
 
+  public function getDefaultPageBySlug(string $slug): CmsPage
+  {
+    if (!$this->_schemas->hasPage($slug)) {
+      throw new \InvalidArgumentException("CMS page '{$slug}' is not registered.");
+    }
+
+    return $this->makeDefaultPage($slug);
+  }
+
   public function getPublishedPageBySlug(string $slug): ?CmsPage
   {
     if (!$this->_schemas->hasPage($slug)) {
@@ -70,7 +80,7 @@ class CmsPageService implements ICmsPageService
 
   public function getSectionData(string $slug, string $sectionId): array
   {
-    $page = $this->getPublishedPageBySlug($slug) ?? $this->getPageBySlug($slug);
+    $page = $this->getPublishedPageBySlug($slug) ?? $this->getDefaultPageBySlug($slug);
     $document = $this->normalizeDocument($slug, $page->content());
 
     foreach ($document['sections'] as $section) {

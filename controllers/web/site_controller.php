@@ -365,7 +365,7 @@ class SiteController extends Controller
   private function _renderCmsPage(string $slug, array $context = []): string
   {
     $page = $this->_cmsPageService->getPublishedPageBySlug($slug)
-      ?? $this->_cmsPageService->getPageBySlug($slug);
+      ?? $this->_cmsPageService->getDefaultPageBySlug($slug);
 
     return (new CmsStaticPageRenderer($context, pageSlug: $slug))->render($page->content());
   }
