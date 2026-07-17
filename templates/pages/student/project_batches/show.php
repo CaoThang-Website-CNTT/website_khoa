@@ -200,6 +200,24 @@ if ($group) {
               </div>
 
             <?php else: ?>
+              <?php
+              $hasIneligibleMember = false;
+              foreach ($groupMembers as $m) {
+                if (!($m['is_eligible'] ?? true)) {
+                  $hasIneligibleMember = true;
+                  break;
+                }
+              }
+              ?>
+              <?php if ($hasIneligibleMember): ?>
+                <div class="alert mb-4" data-variant="error">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <div class="alert-content">
+                    <h3 class="alert-title">Cảnh báo thành viên</h3>
+                    <p class="alert-description">Nhóm của bạn có thành viên không đủ điều kiện tham gia đợt này. Vui lòng liên hệ văn phòng Khoa CNTT để được hỗ trợ.</p>
+                  </div>
+                </div>
+              <?php endif; ?>
               <!-- Danh sách thành viên nhóm -->
               <div class="space-y-3">
                 <?php foreach ($groupMembers as $member): ?>
@@ -211,8 +229,14 @@ if ($group) {
                           <span class="badge" data-variant="primary">Nhóm trưởng</span>
                         <?php endif; ?>
                       </div>
-                      <div class="text-sm text-gray-500 mt-1">
-                        SĐT: <?= htmlspecialchars($member['phone'] ?? 'N/A') ?> | Lớp: <?= htmlspecialchars($member['classroom_name'] ?? 'N/A') ?>
+                      <div class="text-sm mt-1">
+                        SĐT: <?= htmlspecialchars($member['phone'] ?? 'Chưa cập nhật') ?> | Lớp: <?= htmlspecialchars($member['classroom_name'] ?? 'Chưa cập nhật') ?>
+                        <?php if (!($member['is_eligible'] ?? true)): ?>
+                          <div class="mt-2">
+                            <span class="badge" data-variant="destructive">Không đủ Điều kiện</span>
+                            <span style="color: var(--destructive);">Lý do: <?= htmlspecialchars($member['ineligibility_reason'] ?? 'Không đủ điều kiện dự thi tốt nghiệp (làm đồ án tốt nghiệp)') ?></span>
+                          </div>
+                        <?php endif; ?>
                       </div>
                     </div>
                     <div>

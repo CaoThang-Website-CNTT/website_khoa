@@ -226,10 +226,11 @@ class StudentProjectDashboardController extends Controller
         $groupMembers = $this->_projectGroupService->getGroupMembers($group['id']);
         $aspirations = $this->_projectAspirationService->getAspirationsByGroup($group['id']);
         $isLocked = $this->_projectAspirationService->isLocked($group['id']);
-        foreach ($groupMembers as $member) {
+        foreach ($groupMembers as $key => $member) {
           if ($member['student_id'] == $student->id && $member['is_leader']) {
             $isLeader = true;
           }
+          $groupMembers[$key]['is_eligible'] = (bool)$member['is_eligible'];
         }
         if (!empty($group['assigned_topic_id'])) {
           $assignedTopic = $this->_projectTopicService->getTopicById($group['assigned_topic_id']);

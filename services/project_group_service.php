@@ -521,6 +521,14 @@ class ProjectGroupService implements IProjectGroupService
       throw new \RuntimeException('Bạn không có quyền cập nhật một hoặc nhiều nhóm đã chọn.');
     }
 
+    foreach ($authorized as $group) {
+      foreach ($group['members'] as $member) {
+        if (isset($member['is_eligible']) && $member['is_eligible'] == 0) {
+          throw new \RuntimeException('Không thể lưu phiếu đăng ký cho nhóm có thành viên không đủ điều kiện.');
+        }
+      }
+    }
+
     $sanitize = static function ($html): string {
       $html = trim((string)$html);
       // contenteditable uses <div> for new lines in some browsers. Normalize
