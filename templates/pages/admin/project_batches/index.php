@@ -35,7 +35,7 @@ use App\Models\ProjectBatch;
   <template data-tm-col="class_of" data-tm-label="Khóa" data-tm-sortable></template>
 
   <!-- Cột Ngày bắt đầu -->
-  <template data-tm-col="registration_start" data-tm-label="ĐK Bắt đầu" data-tm-sortable></template>
+  <!-- <template data-tm-col="registration_start" data-tm-label="ĐK Bắt đầu" data-tm-sortable></template> -->
 
   <!-- Cột Ngày kết thúc -->
   <!-- <template data-tm-col="registration_end" data-tm-label="ĐK Kết thúc" data-tm-sortable></template> -->

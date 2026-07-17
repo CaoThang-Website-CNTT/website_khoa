@@ -162,6 +162,7 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
   // Web Settings
   $router->prefix('web_settings')->group(function ($router) {
     $router->get('/', [WebSettingsController::class, 'index']);
+    $router->post('/mock-time', [WebSettingsController::class, 'updateMockTime']);
     $router->get('/create', [WebSettingsController::class, 'create']);
     $router->post('/', [WebSettingsController::class, 'store']);
     $router->get('/{group}/edit', [WebSettingsController::class, 'edit']);

@@ -12,7 +12,7 @@ class GeminiAiProvider
   public function generate(string $prompt, string $systemInstruction): string
   {
     if ($this->apiKey === '') {
-      throw new RuntimeException('Chưa cấu hình GEMINI_API_KEY trong .env.local.');
+      throw new RuntimeException('Chưa cấu hình GEMINI_API_KEY.');
     }
 
     $url = 'https://generativelanguage.googleapis.com/v1beta/interactions';

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BatchStatus;
+use App\Core\AppTime;
 
 class InternshipBatch
 {
@@ -29,7 +30,7 @@ class InternshipBatch
     if ($this->status === BatchStatus::DRAFT) return BatchStatus::DRAFT;
     if ($this->status === BatchStatus::CLOSED) return BatchStatus::CLOSED;
 
-    $now = time();
+    $now = AppTime::time();
     $start = $this->start_at ? strtotime($this->start_at) : 0;
     $end = $this->end_at ? strtotime($this->end_at) : 0;
 

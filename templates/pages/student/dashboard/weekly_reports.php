@@ -1,10 +1,11 @@
 <?php
 
+use App\Core\AppTime;
 use App\Enums\BatchStatus;
 
 $isClosed = ($effStatus ?? '') === BatchStatus::CLOSED;
 $lateBuffer = $lateBufferDays ?? 7;
-$nowDt = new DateTime();
+$nowDt = AppTime::now();
 
 $layout->start('head'); ?>
 <link rel="stylesheet" href="<?= url('public/css/student_weekly_reports.css') ?>">

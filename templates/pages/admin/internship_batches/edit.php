@@ -64,6 +64,13 @@ $currentStatus = [
   <?php endif; ?>
   <?php $layout->end() ?>
 
+  <?php if ($batchObj->grades_published_at): ?>
+    <div class="alert mb-2" data-variant="warning">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Kết quả điểm của đợt thực tập này đã được công bố cho sinh viên vào lúc <strong><?= date('H:i d/m/Y', strtotime($batchObj->grades_published_at)) ?></strong>.</span>
+    </div>
+  <?php endif; ?>
+
   <!-- Stats Grid -->
   <div class="stats-grid">
     <!-- Sinh viên Card -->

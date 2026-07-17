@@ -5,6 +5,8 @@
  * Route: /admin/internship_batches/{id}/referral_letters/{letter_id}/print
  */
 
+use App\Core\AppTime;
+
 $batch = $batch ?? [];
 $letter = $letter ?? [];
 
@@ -20,7 +22,7 @@ $trainingPrograms = array_unique(array_filter(array_column($students, 'training_
 $trainingProgramStr = implode(', ', $trainingPrograms) ?: 'Công nghệ thông tin';
 
 // Định dạng ngày hiển thị trên công văn
-$now = new DateTime();
+$now = AppTime::now();
 $docDateStr = "TP.Hồ Chí Minh, ngày " . $now->format('d') . " tháng " . $now->format('m') . " năm " . $now->format('Y');
 
 $startDateStr = $letter['internship_start_date'] ? date('d/m/Y', strtotime($letter['internship_start_date'])) : date('d/m/Y', strtotime($batch['start_at']));

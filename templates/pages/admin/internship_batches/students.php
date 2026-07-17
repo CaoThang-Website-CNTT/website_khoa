@@ -48,6 +48,12 @@ $isReadOnly = ($batch['status'] ?? null) === BatchStatus::CLOSED;
 
 <?php $layout->end() ?>
 
+<?php if ($batch['grades_published_at']): ?>
+  <div class="alert mb-2" data-variant="warning">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Kết quả điểm của đợt thực tập này đã được công bố cho sinh viên vào lúc <strong><?= date('H:i d/m/Y', strtotime($batch['grades_published_at'])) ?></strong>.</span>
+  </div>
+<?php endif; ?>
 <!-- Overall Stats -->
 <div class="stats-grid">
   <div class="card stats-card">

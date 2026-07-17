@@ -70,7 +70,7 @@ $studentsData = array_map(function ($sv) {
   class="inline-block">
   <?= csrf_field() ?>
   <button type="button" data-modal-trigger="#publish-confirm-modal" class="btn" data-variant="primary" data-size="md">
-    <i class="fa-solid fa-lock mr-2"></i> Công bố điểm
+    <i class="fa-solid fa-lock mr-2"></i> Nộp điểm
   </button>
 </form>
 <?php $layout->end() ?>
@@ -241,11 +241,20 @@ $studentsData = array_map(function ($sv) {
       </div>
       <hr class="separator">
       <div class="card__content space-y-4">
-        <dl class="flex justify-between">
-          <dt>ID</dt>
-          <dd>#<?= htmlspecialchars((string) $batch['id']) ?></dd>
-        </dl>
-        <hr class="separator">
+        <?php if ($batch['end_at']): ?>
+          <div class="flex flex-col gap-1">
+            <dl class="flex justify-between">
+              <dt>Hạn chót chấm điểm</dt>
+              <dd style="color: var(--destructive);">
+                <?= date('d/m/Y', strtotime($batch['end_at'] . " + {$deadlineWeeks} weeks")) ?>
+              </dd>
+            </dl>
+            <p style="color: var(--muted-foreground);">
+              Hệ thống sẽ tự động khóa các chức năng chấm điểm sau thời gian này.
+            </p>
+          </div>
+          <hr class="separator">
+        <?php endif; ?>
         <dl class="flex justify-between">
           <dt>Được tạo vào</dt>
           <dd><?= $batch['created_at'] ? date('d/m/Y H:i', strtotime($batch['created_at'])) : 'N/A' ?></dd>
@@ -269,12 +278,12 @@ $studentsData = array_map(function ($sv) {
   </div>
 </div>
 
-<!-- Modal: Xác nhận Công bố điểm -->
+<!-- Modal: Xác nhận nộp điểm -->
 <div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
-    <h3 class="modal__title">Xác nhận công bố điểm</h3>
-    <p class="modal__description">Hành động này sẽ chốt và công bố <span class="font-semibold">TOÀN BỘ</span> điểm nháp
-      hiện tại của bạn cho sinh viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?
+    <h3 class="modal__title">Xác nhận nộp điểm</h3>
+    <p class="modal__description">Hành động này sẽ chốt và gửi <span class="font-semibold">TOÀN BỘ</span> điểm nháp
+      hiện tại của bạn cho quản trị viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?
     </p>
   </div>
   <div class="modal__footer">

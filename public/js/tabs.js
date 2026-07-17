@@ -68,6 +68,16 @@ class TabHandler {
       );
     }
 
+    // Check hash first (e.g., #tabsId:key)
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const [hashTabId, hashKey] = hash.split(":");
+      if (hashTabId === tabPanelId && hashKey) {
+        const matched = this.getOwnedElements(tabs, `[data-tabs-panel="${hashKey}"]`)[0];
+        if (matched) return hashKey;
+      }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const paramKey = params.get(tabPanelId);
 
@@ -108,6 +118,8 @@ class TabHandler {
     this.syncObservers(tabsId, key);
     if (this.canSyncParams(tabs) && tabsId) {
       this.syncParams(tabsId, key);
+    } else if (tabs.dataset.tabsMode !== "navigation" && tabsId) {
+      history.replaceState(null, "", `#${tabsId}:${key}`);
     }
   }
 

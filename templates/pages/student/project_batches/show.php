@@ -102,7 +102,7 @@ if ($group) {
 
         <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex items-start gap-3">
-            <div class="w-10 h-10 flex items-center justify-center flex-shrink-0">
+            <div class="flex items-center justify-center flex-shrink-0">
               <i class="fa-solid fa-calendar-check text-xl"></i>
             </div>
             <div>
@@ -111,6 +111,16 @@ if ($group) {
                 <?= $currentBatch['registration_start'] ? date('d/m/Y', strtotime($currentBatch['registration_start'])) : 'Chưa có' ?>
                 -
                 <?= $currentBatch['registration_end'] ? date('d/m/Y', strtotime($currentBatch['registration_end'])) : 'Chưa có' ?>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-users text-xl"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium">Niên khóa được phép đăng ký</p>
+              <p class="text-sm mt-1"><?= htmlspecialchars($currentBatch['min_class_of'] ?? 'không có') ?> - <?= htmlspecialchars($currentBatch['max_class_of'] ?? 'không có') ?>
               </p>
             </div>
           </div>
@@ -190,6 +200,24 @@ if ($group) {
               </div>
 
             <?php else: ?>
+              <?php
+              $hasIneligibleMember = false;
+              foreach ($groupMembers as $m) {
+                if (!($m['is_eligible'] ?? true)) {
+                  $hasIneligibleMember = true;
+                  break;
+                }
+              }
+              ?>
+              <?php if ($hasIneligibleMember): ?>
+                <div class="alert mb-4" data-variant="error">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <div class="alert-content">
+                    <h3 class="alert-title">Cảnh báo thành viên</h3>
+                    <p class="alert-description">Nhóm của bạn có thành viên không đủ điều kiện tham gia đợt này. Vui lòng liên hệ văn phòng Khoa CNTT để được hỗ trợ.</p>
+                  </div>
+                </div>
+              <?php endif; ?>
               <!-- Danh sách thành viên nhóm -->
               <div class="space-y-3">
                 <?php foreach ($groupMembers as $member): ?>
@@ -201,8 +229,14 @@ if ($group) {
                           <span class="badge" data-variant="primary">Nhóm trưởng</span>
                         <?php endif; ?>
                       </div>
-                      <div class="text-sm text-gray-500 mt-1">
-                        SĐT: <?= htmlspecialchars($member['phone'] ?? 'N/A') ?> | Lớp: <?= htmlspecialchars($member['classroom_name'] ?? 'N/A') ?>
+                      <div class="text-sm mt-1">
+                        SĐT: <?= htmlspecialchars($member['phone'] ?? 'Chưa cập nhật') ?> | Lớp: <?= htmlspecialchars($member['classroom_name'] ?? 'Chưa cập nhật') ?>
+                        <?php if (!($member['is_eligible'] ?? true)): ?>
+                          <div class="mt-2">
+                            <span class="badge" data-variant="destructive">Không đủ Điều kiện</span>
+                            <span style="color: var(--destructive);">Lý do: <?= htmlspecialchars($member['ineligibility_reason'] ?? 'Không đủ điều kiện dự thi tốt nghiệp (làm đồ án tốt nghiệp)') ?></span>
+                          </div>
+                        <?php endif; ?>
                       </div>
                     </div>
                     <div>

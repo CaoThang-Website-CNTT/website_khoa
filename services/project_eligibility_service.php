@@ -88,7 +88,7 @@ class ProjectEligibilityService
     }
 
     if (!empty($eligibleIds)) {
-      if (($_ENV['APP_ENV']) !== 'local') {
+      if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') {
         $activeBatchStudents = $this->_groupStore->getStudentsInOtherActiveBatches($batchId, $eligibleIds);
         if (!empty($activeBatchStudents)) {
           $errorMsg = 'Có ' . count($activeBatchStudents) . ' sinh viên đang tham gia đợt đồ án khác chưa đóng: ';

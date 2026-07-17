@@ -8,6 +8,7 @@ use App\Core\Pageable;
 use App\Enums\ProjectTopicStatus;
 use App\Enums\ProjectBatchStatus;
 use Exception;
+use App\Core\AppTime;
 
 interface IProjectTopicService
 {
@@ -210,7 +211,7 @@ class ProjectTopicService implements IProjectTopicService
       throw new Exception('Đợt đồ án không ở trạng thái cho phép đề xuất đề tài.');
     }
 
-    $now = time();
+    $now = AppTime::time();
     $start = strtotime((string) $batch['topic_proposal_start']);
     $end = strtotime((string) $batch['topic_proposal_end']);
     if ($end !== false && date('H:i:s', $end) === '00:00:00') {

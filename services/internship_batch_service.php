@@ -187,9 +187,11 @@ class InternshipBatchService implements IInternshipBatchService
       $studentIds = array_unique($studentIds);
       $classroomIds = array_unique($classroomIds);
 
-      foreach ($studentIds as $studentId) {
-        if ($this->_store->hasOverlappingEnrollment((int) $studentId, $batchData['start_at'], $batchData['end_at'], $batchId)) {
-          throw new Exception('Sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
+      if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') {
+        foreach ($studentIds as $studentId) {
+          if ($this->_store->hasOverlappingEnrollment((int) $studentId, $batchData['start_at'], $batchData['end_at'], $batchId)) {
+            throw new Exception('Sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
+          }
         }
       }
 
@@ -236,9 +238,11 @@ class InternshipBatchService implements IInternshipBatchService
         continue;
       }
 
-      if ($s['batch_id']) {
-        $invalid[] = ['student_id' => $studentId, 'reason' => 'Đã tham gia một đợt thực tập khác.'];
-        continue;
+      if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') {
+        if ($s['batch_id']) {
+          $invalid[] = ['student_id' => $studentId, 'reason' => 'Đã tham gia một đợt thực tập khác.'];
+          continue;
+        }
       }
 
       $valid[] = $s;
@@ -295,9 +299,11 @@ class InternshipBatchService implements IInternshipBatchService
   {
     $this->checkBatchModifiable($id);
     $this->validateBatchDates($data);
-    foreach ($this->_store->getBatchStudentsWithDetails($id) as $student) {
-      if ($this->_store->hasOverlappingEnrollment((int) $student['student_id'], $data['start_at'], $data['end_at'], $id)) {
-        throw new Exception("Không thể cập nhật ngày vì sinh viên {$student['student_code']} có một đợt thực tập khác bị trùng lịch.");
+    if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') {
+      foreach ($this->_store->getBatchStudentsWithDetails($id) as $student) {
+        if ($this->_store->hasOverlappingEnrollment((int) $student['student_id'], $data['start_at'], $data['end_at'], $id)) {
+          throw new Exception("Không thể cập nhật ngày vì sinh viên {$student['student_code']} có một đợt thực tập khác bị trùng lịch.");
+        }
       }
     }
     return $this->_store->update($id, $data);
@@ -341,6 +347,10 @@ class InternshipBatchService implements IInternshipBatchService
       throw new Exception('Chỉ có đợt thực tập đang diễn ra hoặc đã kết thúc mới có thể công bố điểm.');
     }
 
+    if ($this->_gradeStore->hasUnlockedDraftGrades($batchId)) {
+      throw new Exception('Không thể công bố điểm vì vẫn còn điểm nháp chưa được chốt.');
+    }
+
     return $this->_store->publishBatchGrades($batchId);
   }
 
@@ -374,8 +384,10 @@ class InternshipBatchService implements IInternshipBatchService
     if ($this->_store->getBatchStudent($batchId, $studentId)) {
       throw new Exception('Sinh viên đã được đăng ký vào đợt thực tập này.');
     }
-    if ($this->_store->hasOverlappingEnrollment($studentId, $batch['start_at'], $batch['end_at'], $batchId)) {
-      throw new Exception('Sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
+    if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') {
+      if ($this->_store->hasOverlappingEnrollment($studentId, $batch['start_at'], $batch['end_at'], $batchId)) {
+        throw new Exception('Sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
+      }
     }
     return $this->_store->addStudentsToBatch($batchId, [$studentId]);
   }

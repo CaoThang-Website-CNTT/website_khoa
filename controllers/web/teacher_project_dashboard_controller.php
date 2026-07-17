@@ -132,6 +132,15 @@ class TeacherProjectDashboardController extends Controller
             return $this->redirect("/teacher/project_batches/{$id}");
         }
 
+        foreach ($groups as $group) {
+            foreach ($group['members'] as $member) {
+                if (isset($member['is_eligible']) && $member['is_eligible'] == 0) {
+                    $request->session()->flashNotify('error', 'Không thể in phiếu đăng ký cho nhóm có thành viên không đủ điều kiện.');
+                    return $this->redirect("/teacher/project_batches/{$id}");
+                }
+            }
+        }
+
         $this->render('teacher/project_batches/registration_form_print', [
             'batch' => $batch,
             'groups' => $groups,
@@ -149,6 +158,15 @@ class TeacherProjectDashboardController extends Controller
         if (!$batch || count($groups) !== 1) {
             $request->session()->flashNotify('error', 'Nhóm không tồn tại hoặc không thuộc quyền hướng dẫn của bạn.');
             return $this->redirect("/teacher/project_batches/{$id}");
+        }
+
+        foreach ($groups as $group) {
+            foreach ($group['members'] as $member) {
+                if (isset($member['is_eligible']) && $member['is_eligible'] == 0) {
+                    $request->session()->flashNotify('error', 'Không thể in phiếu đăng ký cho nhóm có thành viên không đủ điều kiện.');
+                    return $this->redirect("/teacher/project_batches/{$id}");
+                }
+            }
         }
         $this->render('teacher/project_batches/registration_form_print', [
             'batch' => $batch,

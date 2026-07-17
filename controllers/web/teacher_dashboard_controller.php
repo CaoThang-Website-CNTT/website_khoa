@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
-use App\Services\{TeacherService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, InternshipGradeService, InternshipWeeklyReportService};
+use App\Services\{TeacherService, ClassroomService, InternshipBatchService, InternshipAssignmentService, CompanyService, InternshipSubmissionService, ReferralLetterService, InternshipGradeService, InternshipWeeklyReportService, WebSettingsService};
 use App\Core\Files\UploadedFileHandler;
 use Exception;
 
@@ -20,6 +20,7 @@ class TeacherDashboardController extends Controller
   private ReferralLetterService $_referralLetterService;
   private InternshipGradeService $_gradeInternshipService;
   private InternshipWeeklyReportService $_weeklyReportService;
+  private WebSettingsService $_webSettingsService;
 
   public function __construct(
     TeacherService $teacherService,
@@ -30,7 +31,8 @@ class TeacherDashboardController extends Controller
     InternshipSubmissionService $submissionService,
     ReferralLetterService $referralLetterService,
     InternshipGradeService $gradeInternshipService,
-    InternshipWeeklyReportService $weeklyReportService
+    InternshipWeeklyReportService $weeklyReportService,
+    WebSettingsService $webSettingsService
   ) {
     $this->_teacherService = $teacherService;
     $this->_classroomService = $classroomService;
@@ -41,6 +43,7 @@ class TeacherDashboardController extends Controller
     $this->_referralLetterService = $referralLetterService;
     $this->_gradeInternshipService = $gradeInternshipService;
     $this->_weeklyReportService = $weeklyReportService;
+    $this->_webSettingsService = $webSettingsService;
   }
 
   /**
@@ -173,11 +176,14 @@ class TeacherDashboardController extends Controller
       return $this->redirect('/teacher/internship_batches');
     }
 
+    $deadlineWeeks = (int) $this->_webSettingsService->getValue('internship_grading_deadline_weeks', 2);
+
     return $this->render('teacher/internship_batches/show', [
       'teacher' => $teacher,
       'batch' => $detail['batch'],
       'stats' => $detail['stats'],
       'students' => $detail['students'],
+      'deadlineWeeks' => $deadlineWeeks,
       'title' => 'Chi tiết đợt thực tập #' . $detail['batch']['id']
     ], layout: 'dashboard_layout');
   }
@@ -226,10 +232,7 @@ class TeacherDashboardController extends Controller
     if (!$teacher) return $this->redirect('/');
 
     $canGrade = $this->_gradeInternshipService->canTeacherGrade($batchId, $teacher->id, $batchStudentId);
-    if (!$canGrade['allowed']) {
-      $request->session()->flashNotify('error', 'Không thể chấm điểm đợt thực tập này.');
-      return $this->redirect("/teacher/internship_batches/{$batchId}");
-    }
+    $canGradeBool = $canGrade['allowed'];
 
     $data = $this->_gradeInternshipService->getStudentGradingData($batchStudentId, $teacher->id);
     if (!$data) {
@@ -264,7 +267,7 @@ class TeacherDashboardController extends Controller
       'batchStudentId' => $batchStudentId,
       'data' => $data,
       'timeline' => $timeline,
-      'canGrade' => $canGrade,
+      'canGrade' => $canGradeBool,
       'prevStudentId' => $prevStudentId,
       'nextStudentId' => $nextStudentId,
       'title' => 'Chấm điểm sinh viên: ' . $data['student']['full_name']
@@ -389,7 +392,7 @@ class TeacherDashboardController extends Controller
       return $this->redirect("/teacher/internship_batches/{$batchId}");
     }
 
-    $result = $this->_gradeInternshipService->publishAllTeacherGrades($batchId, $teacher->id);
+    $result = $this->_gradeInternshipService->lockAllTeacherGrades($batchId, $teacher->id);
 
     if ($result['success']) {
       $request->session()->flashNotify('success', $result['message']);

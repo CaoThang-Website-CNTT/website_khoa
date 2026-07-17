@@ -1,11 +1,14 @@
 <?php
+
+use App\Core\AppTime;
+
 $batch = $batch ?? [];
 $letters = array_values($letters ?? []);
 $letter = $letters[0] ?? [];
 $isMerged = $isMerged ?? false;
 $confirmUrl = $confirmUrl ?? url("admin/internship_batches/{$batch['id']}/referral_letters/bulk-print/confirm");
 $ids = $ids ?? [];
-$now = new DateTime();
+$now = AppTime::now();
 $documentNumber = $letter['document_number'] ?? '';
 $authUser = $authUser ?? [];
 $defaultApproverName = $letter['approver_name'] ?? ($authUser['full_name'] ?? ($authUser['name'] ?? ($authUser['email'] ?? '')));

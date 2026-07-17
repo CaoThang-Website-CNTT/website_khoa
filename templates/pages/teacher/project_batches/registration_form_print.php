@@ -89,10 +89,8 @@ foreach ($groups as $group) {
         <?php foreach ($groups as $group):
           $requirements = $defaultHtml($group['registration_requirements'], $group['topic_description'] ?? '');
           $opinion = $defaultHtml($group['supervisor_opinion']);
-          $classYears = array_values(array_unique(array_filter(array_map(function ($member) {
-            return preg_match('/(\d{2})/', (string)($member['classroom_name'] ?? ''), $match) ? $match[1] : null;
-          }, $group['members'] ?? []))));
-          $academicYear = $classYears ? implode(', ', $classYears) : (($batch['min_class_of'] ?? '') . ' - ' . ($batch['max_class_of'] ?? ''));
+          $maxClassOf = (int)($batch['max_class_of'] ?? 0);
+          $academicYear = $maxClassOf > 0 ? $maxClassOf . ' - ' . ($maxClassOf + 3) : '';
         ?>
           <article class="project-registration-page" data-print-group="<?= (int)$group['id'] ?>">
             <div class="project-registration-header">
@@ -108,7 +106,7 @@ foreach ($groups as $group) {
                 <li><strong><?= $escape($member['full_name']) ?></strong><span>MSSV: <?= $escape($member['student_code']) ?></span><span>Lớp: <?= $escape($member['classroom_name']) ?></span></li>
               <?php endforeach; ?>
             </ol>
-            <p><strong>TÊN ĐỀ TÀI:</strong> <?= $escape($group['assigned_topic_title']) ?></p>
+            <p><strong>TÊN ĐỀ TÀI:</strong> <?= mb_strtoupper($escape($group['assigned_topic_title'])) ?></p>
             <section><h2>NỘI DUNG YÊU CẦU CỦA ĐỀ TÀI:</h2><div data-preview-field="registration_requirements"><?= $requirements ?></div></section>
             <p>Thời gian thực hiện đề tài: từ ngày <strong data-preview-field="execution_start"><?= $escape($group['execution_start'] ? date('d/m/Y', strtotime($group['execution_start'])) : '.../.../......') ?></strong> đến ngày <strong data-preview-field="execution_end"><?= $escape($group['execution_end'] ? date('d/m/Y', strtotime($group['execution_end'])) : '.../.../......') ?></strong></p>
             <section><h2>Ý KIẾN CỦA GIẢNG VIÊN HƯỚNG DẪN:</h2><div data-preview-field="supervisor_opinion"><?= $opinion ?></div></section>
