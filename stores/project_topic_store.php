@@ -12,7 +12,7 @@ interface IProjectTopicStore
   public function createTopic(array $data): int;
   public function updateTopic(int $id, array $data): bool;
   public function deleteTopic(int $id): bool;
-  public function updateStatus(int $id, string $status, array $extraData = []): bool;
+  public function updateStatus(int $id, string $status, array $extraData = [], ?string $expectedOldStatus = null): bool;
   public function getById(int $id): ?array;
   public function getPaginatedByBatch(int $batchId, int $page, int $limit = 15, array $filters = []): array;
   public function getTotalCountByBatch(int $batchId, array $filters = []): int;
@@ -76,7 +76,7 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
     return $stmt->rowCount() > 0;
   }
 
-  public function updateStatus(int $id, string $status, array $extraData = []): bool
+  public function updateStatus(int $id, string $status, array $extraData = [], ?string $expectedOldStatus = null): bool
   {
     $data = ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')];
     foreach (['reviewed_at', 'reviewed_by', 'reject_reason', 'submitted_at'] as $key) {
@@ -85,6 +85,11 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
       }
     }
     $query = (new QueryBuilder(new MySQLCompiler()))->from('project_topics')->update($data)->eq('id', $id);
+    
+    if ($expectedOldStatus !== null) {
+      $query->eq('status', $expectedOldStatus);
+    }
+    
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
     return $stmt->rowCount() > 0;

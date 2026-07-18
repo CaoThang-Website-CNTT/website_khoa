@@ -135,10 +135,16 @@ class ReferralLetterService implements IReferralLetterService
       throw new Exception('Chỉ có thể hủy giấy giới thiệu đang chờ xử lý');
     }
 
-    return $this->_store->updateStatus($id, ReferralLetterStatus::CANCELLED, [
+    $success = $this->_store->updateStatus($id, ReferralLetterStatus::CANCELLED, [
       'cancel_reason' => $reason,
       'cancelled_by' => $cancelledBy,
-    ]);
+    ], 'pending');
+    
+    if (!$success) {
+      throw new Exception('Yêu cầu này đã được xử lý hoặc không còn ở trạng thái chờ.');
+    }
+    
+    return true;
   }
 
   public function approve(int $id, int $processedBy): bool
@@ -161,11 +167,17 @@ class ReferralLetterService implements IReferralLetterService
     if ($letter->status !== ReferralLetterStatus::PENDING) {
       throw new Exception('Chỉ giấy giới thiệu đang chờ duyệt mới có thể được duyệt hoặc từ chối.');
     }
-    return $this->_store->updateStatus($id, $status, [
+    $success = $this->_store->updateStatus($id, $status, [
       'cancel_reason' => $reason ?: null,
       'processed_by' => $processedBy,
       'reviewed_at' => date('Y-m-d H:i:s'),
-    ]);
+    ], ReferralLetterStatus::PENDING);
+    
+    if (!$success) {
+      throw new Exception('Dữ liệu đã bị thay đổi. Vui lòng tải lại trang.');
+    }
+    
+    return true;
   }
 
   public function bulkReview(array $ids, int $batchId, string $action, string $reason, int $processedBy): int
@@ -203,7 +215,11 @@ class ReferralLetterService implements IReferralLetterService
       throw new Exception('Chỉ giấy đang xử lý mới có thể hoàn thành.');
     if (!$letter->printed_at)
       throw new Exception('Giấy phải được in trước khi xác nhận hoàn thành.');
-    return $this->_store->updateStatus($id, ReferralLetterStatus::COMPLETED, ['processed_by' => $processedBy]);
+    $success = $this->_store->updateStatus($id, ReferralLetterStatus::COMPLETED, ['processed_by' => $processedBy], ReferralLetterStatus::APPROVED);
+    if (!$success) {
+      throw new Exception('Dữ liệu đã bị thay đổi. Vui lòng tải lại trang.');
+    }
+    return true;
   }
 
   public function receive(int $id, int $batchId, array $recipient, int $receivedBy): bool
@@ -325,10 +341,15 @@ class ReferralLetterService implements IReferralLetterService
         $this->_store->updatePrintInfo($id, $printData);
       }
 
-      return $this->_store->updateStatus($id, ReferralLetterStatus::APPROVED, [
+      $success = $this->_store->updateStatus($id, ReferralLetterStatus::APPROVED, [
         'printed_at' => date('Y-m-d H:i:s'),
         'processed_by' => $processedBy
-      ]);
+      ], ReferralLetterStatus::APPROVED);
+      
+      if (!$success) {
+        throw new Exception('Dữ liệu đã bị thay đổi. Vui lòng tải lại trang.');
+      }
+      return true;
     });
   }
 
@@ -361,9 +382,11 @@ class ReferralLetterService implements IReferralLetterService
       foreach ($letters as $letter) {
         $id = (int)$letter->id;
         $this->_store->updatePrintInfo($id, $printData);
-        if ($this->_store->updateStatus($id, ReferralLetterStatus::APPROVED, [
-          'printed_at' => date('Y-m-d H:i:s'), 'processed_by' => $processedBy
-        ])) $count++;
+        $success = $this->_store->updateStatus($id, ReferralLetterStatus::APPROVED, [
+          'printed_at' => date('Y-m-d H:i:s'),
+          'processed_by' => $processedBy
+        ], ReferralLetterStatus::APPROVED);
+        if ($success) $count++;
       }
       return $count;
     });
@@ -387,7 +410,7 @@ class ReferralLetterService implements IReferralLetterService
       $success = $this->_store->updateStatus($letter->id, 'cancelled', [
         'cancel_reason' => $reason,
         'processed_by' => $processedBy
-      ]);
+      ], 'pending');
       if ($success) {
         $processedCount++;
       }

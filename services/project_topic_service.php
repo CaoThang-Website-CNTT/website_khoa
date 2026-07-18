@@ -114,9 +114,15 @@ class ProjectTopicService implements IProjectTopicService
 
     $this->validateTopicPhase($topic['batch_id'], $teacherId);
 
-    return $this->_store->updateStatus($id, ProjectTopicStatus::PENDING, [
+    $updated = $this->_store->updateStatus($id, ProjectTopicStatus::PENDING, [
       'submitted_at' => date('Y-m-d H:i:s')
-    ]);
+    ], $topic['status']);
+
+    if (!$updated) {
+      throw new Exception('Dữ liệu đã bị thay đổi. Vui lòng tải lại trang.');
+    }
+
+    return true;
   }
 
   public function getTopicById(int $id): ?array
@@ -164,10 +170,10 @@ class ProjectTopicService implements IProjectTopicService
       'reviewed_by' => $adminId,
       'reviewed_at' => date('Y-m-d H:i:s'),
       'reject_reason' => $reason
-    ]);
+    ], ProjectTopicStatus::PENDING);
 
     if (!$updated) {
-      throw new Exception('Không thể cập nhật trạng thái đề tài.');
+      throw new Exception('Dữ liệu đã bị thay đổi. Vui lòng tải lại trang.');
     }
 
     return true;
