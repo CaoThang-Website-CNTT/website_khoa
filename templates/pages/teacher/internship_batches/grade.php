@@ -139,19 +139,14 @@ foreach (($timeline['weeks'] ?? []) as $week) {
           <input type="hidden" name="action" value="draft">
 
           <div class="field" data-field-required>
-            <span class="field__label" id="score-label">Điểm tổng kết</span>
-            <input type="hidden" name="score" id="score-input" value="<?= htmlspecialchars($selectedScore) ?>">
-            <button type="button" class="select w-full" data-select-id="grading-score" role="listbox"
-              aria-labelledby="score-label" data-select-placeholder="Chọn điểm"
-              data-select-default-value="<?= htmlspecialchars($selectedScore) ?>" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>>
-              <div class="select__content">
-                <?php for ($quarter = 0; $quarter <= 40; $quarter++):
-                  $scoreValue = number_format($quarter / 4, 2, '.', ''); ?>
-                  <div class="select__item" data-select-value="<?= $scoreValue ?>"><?= rtrim(rtrim($scoreValue, '0'), '.') ?></div>
-                <?php endfor; ?>
-              </div>
-            </button>
-            <p class="field__description">Thang điểm 0–10.</p>
+            <label class="field__label" for="score-input">Điểm tổng kết</label>
+            <input type="number" name="score" id="score-input"
+              class="field__input"
+              min="0" max="10" step="0.25"
+              placeholder="Nhập điểm (VD: 8.5)"
+              value="<?= htmlspecialchars(rtrim(rtrim($selectedScore, '0'), '.') ?: '') ?>"
+              <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>>
+            <p class="field__description">Thang điểm 0–10. Làm tròn đến 0.25.</p>
           </div>
 
           <div class="field">

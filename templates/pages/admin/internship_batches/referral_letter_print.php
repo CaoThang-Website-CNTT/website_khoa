@@ -136,7 +136,6 @@ $approverStorageKey = 'referral-letter-approver:' . (string)($authUser['account_
   <div class="print-page page-2">
     <div class="page2-header">
       <div class="page2-title">DANH SÁCH SINH VIÊN THỰC TẬP TỐT NGHIỆP</div>
-      <div class="page2-subtitle">Kèm theo công văn Số: <span class="dyn-num"><?= htmlspecialchars($displayDocNum) ?></span><span>/CĐKTCT-CTCT HSSV</span> ngày <?= $now->format('d') ?> tháng <?= $now->format('m') ?> năm <?= $now->format('Y') ?></div>
     </div>
 
     <table class="table">

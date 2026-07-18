@@ -92,7 +92,6 @@ $defaultEnd = date('Y-m-d', strtotime($batch['end_at']));
     <div class="print-page page-2">
       <div class="page2-header">
         <div class="page2-title">DANH SÁCH SINH VIÊN THỰC TẬP TỐT NGHIỆP</div>
-        <div class="page2-subtitle">Kèm theo công văn Số: <span class="dyn-num"><?= htmlspecialchars($documentNumber ?: '___') ?></span>/CĐKTCT-CTCT HSSV ngày <?= $now->format('d') ?> tháng <?= $now->format('m') ?> năm <?= $now->format('Y') ?></div>
       </div>
       <table class="table"><thead><tr><th class="col-stt">STT</th><th>HỌ VÀ TÊN</th><th class="col-major">NGÀNH, NGHỀ</th><th class="col-dob">NGÀY SINH</th><th class="col-address">ĐỊA CHỈ</th></tr></thead><tbody>
         <?php foreach ($students as $index => $student): ?><tr><td><?= $index + 1 ?></td><td><?= htmlspecialchars($student['full_name']) ?></td><td><?= htmlspecialchars($student['training_program'] ?? '') ?></td><td><?= $student['dob'] ? date('d/m/Y', strtotime($student['dob'])) : '' ?></td><td><?= htmlspecialchars($student['address'] ?? '') ?></td></tr><?php endforeach; ?>

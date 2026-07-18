@@ -46,7 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="field" data-field-required>
           <label class="field__label mb-1 text-xs">Ngành/Nghề</label>
-          <input type="text" name="student_major[]" class="field__input py-2 px-2 text-sm" value="${data.majorName || ""}" required>
+          <select name="student_major[]" class="field__input text-sm" required>
+            <option value="">-- Chọn ngành/nghề --</option>
+            ${window.__studentReferralLetters__.majors.map(m => `<option value="${m}" ${m === data.majorName ? 'selected' : ''}>${m}</option>`).join('')}
+          </select>
         </div>
         <div class="field" data-field-required>
           <label class="field__label mb-1 text-xs">Ngày sinh</label>

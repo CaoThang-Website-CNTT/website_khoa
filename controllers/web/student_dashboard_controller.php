@@ -548,12 +548,15 @@ class StudentDashboardController extends Controller
       }
     }
 
+    $allMajors = $this->_classroomService->getAllMajors();
+
     return $this->render('student/dashboard/referral_letters_create', [
       'current' => $batch,
       'student' => $student,
       'majorName' => $majorName,
       'batch_student_id' => $batchStudentId,
-      'batch_students' => $this->_internshipBatchService->getBatchStudents($batch_id)
+      'batch_students' => $this->_internshipBatchService->getBatchStudents($batch_id),
+      'allMajors' => $allMajors
     ], layout: 'dashboard_layout');
   }
 
