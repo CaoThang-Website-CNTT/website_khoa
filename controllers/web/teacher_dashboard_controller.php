@@ -87,7 +87,7 @@ class TeacherDashboardController extends Controller
       return $this->redirect('/');
     }
 
-    $data = $request->all();
+    $data = $request->sanitized();
     $validator = new RequestValidator();
 
     // Chỉ cho phép cập nhật một số thông tin cơ bản
@@ -289,7 +289,7 @@ class TeacherDashboardController extends Controller
       return $this->redirect("/teacher/internship_batches/{$batchId}/grade/{$batchStudentId}");
     }
 
-    $data = $request->all();
+    $data = $request->sanitized();
     $validator = new RequestValidator();
     $rules = [
       'score' => ['required', 'numeric'],

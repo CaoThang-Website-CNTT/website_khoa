@@ -236,7 +236,7 @@ class TeacherProjectDashboardController extends Controller
             return $this->redirect('/teacher/project_batches');
         }
 
-        $data = $request->all();
+        $data = $request->sanitized();
         $data['batch_id'] = $id;
 
         // Upload PDF
@@ -346,7 +346,7 @@ class TeacherProjectDashboardController extends Controller
         $authUser = $request->session()->authUser();
         $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
 
-        $data = $request->all();
+        $data = $request->sanitized();
 
         $batch = $this->_batchService->getBatchById($id);
         $topic = $this->_topicService->getTopicById($topicId);
