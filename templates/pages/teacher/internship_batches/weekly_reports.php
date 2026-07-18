@@ -1,6 +1,7 @@
 <?php
 $layout->start("head");
 ?>
+<meta name="csrf-token" content="<?= csrf_token() ?>">
 <link rel="stylesheet" href="<?= url('public/css/teacher_weekly_reports.css') ?>">
 <?php $layout->end(); ?>
 
@@ -15,6 +16,7 @@ $submitted = 0;
 $late = 0;
 $exempt = 0;
 $missing = 0;
+$hasUnread = false;
 
 $processedData = [];
 
@@ -39,7 +41,25 @@ foreach ($reports_data->getItems() as $student) {
   }
   $student['status_key'] = $statusKey;
   $student['submitted_at_formatted'] = $student['submitted_at'] ? date('d/m/Y H:i', strtotime($student['submitted_at'])) : '';
-  $student['grading_url'] = url("teacher/internship_batches/{$batch['id']}/grade/{$student['batch_student_id']}") . '#teacher-grading:weekly';
+  $student['grading_url'] = url("teacher/internship_batches/{$batch['id']}/grade/{$student['batch_student_id']}?week={$current_week}&ref=weekly_reports") . '#teacher-grading:weekly';
+
+  $teacherStatus = 'Chưa duyệt';
+  $teacherStatusVariant = 'secondary';
+  if ($student['report_id']) {
+    if (!empty($student['is_seen_by_teacher'])) {
+      $teacherStatus = 'Đã duyệt';
+      $teacherStatusVariant = 'primary';
+    } else {
+      $teacherStatus = 'Chưa duyệt';
+      $teacherStatusVariant = 'warning';
+      $hasUnread = true;
+    }
+  } else {
+    $teacherStatus = '';
+    $teacherStatusVariant = '';
+  }
+  $student['teacher_status'] = $teacherStatus;
+  $student['teacher_status_variant'] = $teacherStatusVariant;
 
   $processedData[] = $student;
 }
@@ -61,6 +81,12 @@ foreach ($reports_data->getItems() as $student) {
 <a href="<?= url("teacher/internship_batches/{$batch['id']}") ?>" class="btn" data-variant="outline" data-size="md">
   <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại
 </a>
+<?php if ($hasUnread): ?>
+  <button type="button" class="btn" id="markAllSeenBtn" data-variant="primary" data-size="md"
+    data-url="<?= url("teacher/internship_batches/{$batch['id']}/weekly_reports/mark-seen") ?>">
+    <i class="fa-solid fa-check-double mr-2"></i> Đánh dấu đã duyệt tất cả
+  </button>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <?php $layout->start("content") ?>
@@ -173,6 +199,17 @@ foreach ($reports_data->getItems() as $student) {
         {{ value === 'submitted' ? 'Đã nộp' : (value === 'late' ? 'Nộp muộn' : (value === 'exempt' ? 'Nghỉ' : (value ===
         'missing' ? 'Chưa nộp' : (value === 'current' ? 'Tuần hiện tại' : 'Chưa đến')))) }}
       </span>
+    </template>
+
+    <!-- Cột Phản hồi GV -->
+    <template data-tm-col="teacher_status" data-tm-label="Phản hồi GV" data-tm-filter-type="select"
+      data-tm-filter-options='[{"label":"Đã duyệt", "value":"Đã duyệt"}, {"label":"Chưa duyệt", "value":"Chưa duyệt"}]'
+      data-tm-sortable data-tm-width="100px">
+      <div style="display: {{ row.report_id ? 'block' : 'none' }}">
+        <span class="badge" data-variant="{{ row.teacher_status_variant }}">
+          {{ value }}
+        </span>
+      </div>
     </template>
 
     <!-- Cột Thao tác -->

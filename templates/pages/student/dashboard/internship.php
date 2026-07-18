@@ -420,7 +420,7 @@ $effectiveMetadata = $effStatus ? [
               <div class="internship-grade-state">
                 <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
                 <div><strong>Đã chấm, đang chờ chốt điểm</strong>
-                  <p>Điểm sẽ hiển thị sau khi giảng viên hoàn tất khóa điểm.</p>
+                  <p>Điểm sẽ hiển thị sau khi Khoa CNTT công bố điểm chính thức.</p>
                 </div>
               </div>
             <?php else: ?>

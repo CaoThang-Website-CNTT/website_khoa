@@ -130,6 +130,29 @@ $timelineWeeks = array_reverse($weeks_data);
                           <?php endforeach; ?>
                         </div>
                       <?php endif; ?>
+
+                      <?php if ($index === 0 && (!empty($version['is_seen_by_teacher']) || !empty($version['teacher_feedback']))): ?>
+                        <div class="mt-4 pt-4 border-t">
+                          <?php if (!empty($version['teacher_feedback'])): ?>
+                            <div class="alert" data-variant="success">
+                              <div class="alert-content">
+                                <h5 class="alert-title"><i class="fa-solid fa-comment-dots mr-2"></i>Nhận xét của Giảng viên</h5>
+                                <p class="alert-description mt-2"><?= nl2br(htmlspecialchars($version['teacher_feedback'])) ?></p>
+                                <?php if (!empty($version['teacher_interacted_at'])): ?>
+                                  <span class="text-xs mt-2 block">Vào lúc: <?= date('d/m/Y H:i', strtotime($version['teacher_interacted_at'])) ?></span>
+                                <?php endif; ?>
+                              </div>
+                            </div>
+                          <?php else: ?>
+                            <p class="text-sm font-medium flex items-center" style="color: var(--primary);">
+                              <i class="fa-solid fa-check-double mr-2"></i> Giảng viên đã duyệt
+                              <?php if (!empty($version['teacher_interacted_at'])): ?>
+                                <span class="text-xs ml-2">(<?= date('d/m/Y H:i', strtotime($version['teacher_interacted_at'])) ?>)</span>
+                              <?php endif; ?>
+                            </p>
+                          <?php endif; ?>
+                        </div>
+                      <?php endif; ?>
                     </section>
                   <?php endforeach; ?>
                 </div>

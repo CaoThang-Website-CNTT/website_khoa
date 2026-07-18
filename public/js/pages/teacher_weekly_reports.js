@@ -31,3 +31,54 @@ const enhanceEmptyState = () => {
 
 table?.addEventListener("tm:render", enhanceEmptyState);
 requestAnimationFrame(enhanceEmptyState);
+
+// Xử lý nút Đánh dấu đã duyệt tất cả
+const markAllSeenBtn = document.getElementById('markAllSeenBtn');
+if (markAllSeenBtn) {
+  markAllSeenBtn.addEventListener('click', async () => {
+    try {
+      const dataStr = document.getElementById('weeklyDataJson')?.textContent || document.querySelector('[data-tm-data="weekly_reports_table"]')?.textContent;
+      if (!dataStr) return;
+      const data = JSON.parse(dataStr);
+      
+      const reportIds = data.rows
+        .filter(row => row.report_id && (!row.is_seen_by_teacher || row.is_seen_by_teacher === 0))
+        .map(row => row.report_id);
+        
+      if (reportIds.length === 0) {
+        window.toast?.info('Thông báo', 'Tất cả báo cáo trong tuần này đã được duyệt.');
+        return;
+      }
+      
+      const url = markAllSeenBtn.getAttribute('data-url');
+      if (!url) throw new Error('Không tìm thấy đường dẫn xử lý');
+      
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      
+      markAllSeenBtn.disabled = true;
+      markAllSeenBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang xử lý...';
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrf,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ report_ids: reportIds })
+      });
+      
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Lỗi hệ thống');
+      }
+      
+      window.toast?.success('Thành công', json.message);
+      setTimeout(() => location.reload(), 500);
+    } catch (e) {
+      window.toast?.error('Lỗi', e.message);
+      markAllSeenBtn.disabled = false;
+      markAllSeenBtn.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> Đánh dấu đã duyệt tất cả';
+    }
+  });
+}

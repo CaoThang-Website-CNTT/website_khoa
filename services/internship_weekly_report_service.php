@@ -16,6 +16,8 @@ interface IInternshipWeeklyReportService
   public function getStudentWeeklyData(int $batchStudentId, string $startAt, string $endAt): array;
   public function getTeacherWeeklyOverview(int $batchId, int $teacherId, int $weekNumber, int $page = 1, int $limit = 15): Pageable;
   public function getStudentWeeklyTimeline(int $batchStudentId, string $startAt, string $endAt): array;
+  public function submitTeacherFeedback(int $reportId, int $isSeen, ?string $feedback): void;
+  public function markMultipleAsSeen(array $reportIds): int;
 }
 
 class InternshipWeeklyReportService implements IInternshipWeeklyReportService
@@ -304,5 +306,15 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
         'percentage' => $totalWeeks > 0 ? round(($submitted / $totalWeeks) * 100) : 0
       ]
     ];
+  }
+
+  public function submitTeacherFeedback(int $reportId, int $isSeen, ?string $feedback): void
+  {
+    $this->_store->updateTeacherFeedback($reportId, $isSeen, $feedback);
+  }
+
+  public function markMultipleAsSeen(array $reportIds): int
+  {
+    return $this->_store->markMultipleAsSeen($reportIds);
   }
 }
