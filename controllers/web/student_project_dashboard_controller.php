@@ -465,7 +465,7 @@ class StudentProjectDashboardController extends Controller
 
     if ($group && $group['leader_student_id'] == $student->id) {
       if ($this->_projectAspirationService->unlockAspirations($group['id'])) {
-        $request->session()->flashNotify('success', 'Đã mở khóa nguyện vọng thành công. Lưu ý: tiebreaker của nhóm đã bị đặt lại.');
+        $request->session()->flashNotify('success', 'Đã mở khóa nguyện vọng thành công.');
       } else {
         $request->session()->flashNotify('error', 'Có lỗi xảy ra hoặc nguyện vọng chưa được chốt.');
       }

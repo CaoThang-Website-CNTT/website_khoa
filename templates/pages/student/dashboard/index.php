@@ -39,9 +39,6 @@ $old_input = request()->session()->getOldInputs() ?? [];
                 <label class="field__label" for="full_name">Họ và tên</label>
                 <input id="full_name" class="field__input" type="text" name="full_name"
                   value="<?= htmlspecialchars($old_input['full_name'] ?? $student->full_name ?? '') ?>">
-                <?php if (isset($errors['full_name'])): ?>
-                  <span class="field__error"><?= $errors['full_name'][0] ?></span>
-                <?php endif; ?>
               </div>
 
               <div class="grid grid-cols-2 gap-4">
@@ -187,5 +184,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
   </div>
 
   <?php $layout->start("scripts") ?>
+  <script>
+    window.__errors__ = <?= json_encode($errors) ?>;
+    window.__old__ = <?= json_encode($old_input) ?>;
+  </script>
   <script src="<?= url('public/js/pages/student/dashboard/index.js') ?>" type="module"></script>
   <?php $layout->end() ?>

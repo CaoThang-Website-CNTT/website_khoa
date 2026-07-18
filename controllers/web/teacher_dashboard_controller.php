@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Core\AppTime;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Core\RequestValidator;
@@ -86,7 +87,7 @@ class TeacherDashboardController extends Controller
       return $this->redirect('/');
     }
 
-    $data = $request->all();
+    $data = $request->sanitized();
     $validator = new RequestValidator();
 
     // Chỉ cho phép cập nhật một số thông tin cơ bản
@@ -288,7 +289,7 @@ class TeacherDashboardController extends Controller
       return $this->redirect("/teacher/internship_batches/{$batchId}/grade/{$batchStudentId}");
     }
 
-    $data = $request->all();
+    $data = $request->sanitized();
     $validator = new RequestValidator();
     $rules = [
       'score' => ['required', 'numeric'],
@@ -346,7 +347,7 @@ class TeacherDashboardController extends Controller
 
     // Tìm tuần hiện tại
     $currentWeekNumber = 1;
-    $now = new \DateTime();
+    $now = AppTime::now();
     $nowStr = $now->format('Y-m-d');
 
     foreach ($weeks as $w) {
@@ -372,6 +373,72 @@ class TeacherDashboardController extends Controller
       'reports_data' => $data,
       'title' => 'Báo cáo hàng tuần đợt thực tập'
     ], layout: 'dashboard_layout');
+  }
+
+  public function weeklyReportsFeedback(Request $request, int $batchId)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->json(['success' => false, 'message' => 'Unauthorized'], 401);
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) return $this->json(['success' => false, 'message' => 'Not found'], 404);
+
+    if (!$this->_internshipBatchService->isSupervisorOfBatch($batchId, $teacher->id)) {
+      return $this->json(['success' => false, 'message' => 'Forbidden'], 403);
+    }
+
+    $data = $request->json() ?: $request->all();
+    $reportId = (int)($data['report_id'] ?? 0);
+    $feedback = htmlspecialchars(trim($data['feedback'] ?? ''), ENT_QUOTES, 'UTF-8');
+
+    // Luôn luôn đánh dấu đã xem khi nhận xét hoặc bấm nút "Đã xem"
+    // is_seen sẽ là 1. Nếu feedback rỗng thì chỉ là đánh dấu đã xem.
+    $isSeen = 1;
+
+    try {
+      $this->_weeklyReportService->submitTeacherFeedback($reportId, $isSeen, $feedback ?: null);
+      return $this->json([
+        'success' => true,
+        'message' => 'Đã lưu phản hồi thành công.',
+        'data' => [
+          'is_seen_by_teacher' => $isSeen,
+          'teacher_feedback' => $feedback ?: null,
+        ]
+      ]);
+    } catch (\Throwable $e) {
+      return $this->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
+    }
+  }
+
+  public function weeklyReportsMarkSeen(Request $request, int $batchId)
+  {
+    $authUser = $request->session()->authUser();
+    if (!$authUser) return $this->json(['success' => false, 'message' => 'Unauthorized'], 401);
+
+    $teacher = $this->_teacherService->getTeacherByAccountId($authUser['account_id']);
+    if (!$teacher) return $this->json(['success' => false, 'message' => 'Not found'], 404);
+
+    if (!$this->_internshipBatchService->isSupervisorOfBatch($batchId, $teacher->id)) {
+      return $this->json(['success' => false, 'message' => 'Forbidden'], 403);
+    }
+
+    $data = $request->all();
+    $reportIds = $data['report_ids'] ?? [];
+    if (!is_array($reportIds) || empty($reportIds)) {
+      return $this->json(['success' => false, 'message' => 'Vui lòng chọn báo cáo.']);
+    }
+
+    $reportIds = array_map('intval', $reportIds);
+
+    try {
+      $updatedCount = $this->_weeklyReportService->markMultipleAsSeen($reportIds);
+      return $this->json([
+        'success' => true,
+        'message' => 'Đã duyệt ' . $updatedCount . ' báo cáo.'
+      ]);
+    } catch (\Throwable $e) {
+      return $this->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
+    }
   }
 
   public function publishAllGrades(Request $request, int $batchId)

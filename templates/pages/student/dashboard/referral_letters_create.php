@@ -16,7 +16,8 @@ $layout->start("scripts"); ?>
       'batchStudentId' => $item['batch_student_id'],
       'fullName' => $item['full_name'],
       'studentCode' => $item['student_code'],
-    ], $batch_students ?? [])), JSON_UNESCAPED_UNICODE) ?>
+    ], $batch_students ?? [])), JSON_UNESCAPED_UNICODE) ?>,
+    majors: <?= json_encode(array_values(array_map(fn($m) => $m->full_name, $allMajors ?? [])), JSON_UNESCAPED_UNICODE) ?>
   };
 </script>
 <script src="<?= url('public/js/pages/student_dashboard.js') ?>"></script>

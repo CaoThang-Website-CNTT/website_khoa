@@ -51,8 +51,11 @@ foreach (($timeline['weeks'] ?? []) as $week) {
 }
 ?>
 
+<?php $layout->start('head') ?>
+<meta name="csrf-token" content="<?= csrf_token() ?>">
 <link rel="stylesheet" href="<?= url('public/css/student_weekly_reports.css') ?>">
 <link rel="stylesheet" href="<?= url('public/css/teacher_grading.css') ?>">
+<?php $layout->end() ?>
 
 <?php $layout->start('heading') ?>
 <h2 class="title-wrapper__title">Chấm điểm thực tập</h2>
@@ -66,7 +69,14 @@ foreach (($timeline['weeks'] ?? []) as $week) {
 <?php $layout->end() ?>
 
 <?php $layout->start('actions') ?>
-<a href="<?= url("teacher/internship_batches/{$batchId}") ?>" class="btn" data-variant="outline" data-size="md">
+<?php
+  $backUrl = url("teacher/internship_batches/{$batchId}");
+  if (isset($_GET['ref']) && $_GET['ref'] === 'weekly_reports') {
+    $backWeek = $_GET['week'] ?? '';
+    $backUrl = url("teacher/internship_batches/{$batchId}/weekly_reports" . ($backWeek ? "?week={$backWeek}" : ""));
+  }
+?>
+<a href="<?= htmlspecialchars($backUrl) ?>" class="btn" data-variant="outline" data-size="md">
   <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Quay lại
 </a>
 <?php if ($canGrade && !$isLocked): ?>
@@ -129,19 +139,14 @@ foreach (($timeline['weeks'] ?? []) as $week) {
           <input type="hidden" name="action" value="draft">
 
           <div class="field" data-field-required>
-            <span class="field__label" id="score-label">Điểm tổng kết</span>
-            <input type="hidden" name="score" id="score-input" value="<?= htmlspecialchars($selectedScore) ?>">
-            <button type="button" class="select w-full" data-select-id="grading-score" role="listbox"
-              aria-labelledby="score-label" data-select-placeholder="Chọn điểm"
-              data-select-default-value="<?= htmlspecialchars($selectedScore) ?>" <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>>
-              <div class="select__content">
-                <?php for ($quarter = 0; $quarter <= 40; $quarter++):
-                  $scoreValue = number_format($quarter / 4, 2, '.', ''); ?>
-                  <div class="select__item" data-select-value="<?= $scoreValue ?>"><?= rtrim(rtrim($scoreValue, '0'), '.') ?></div>
-                <?php endfor; ?>
-              </div>
-            </button>
-            <p class="field__description">Thang điểm 0–10.</p>
+            <label class="field__label" for="score-input">Điểm tổng kết</label>
+            <input type="number" name="score" id="score-input"
+              class="field__input"
+              min="0" max="10" step="0.25"
+              placeholder="Nhập điểm (VD: 8.5)"
+              value="<?= htmlspecialchars(rtrim(rtrim($selectedScore, '0'), '.') ?: '') ?>"
+              <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>>
+            <p class="field__description">Thang điểm 0–10. Làm tròn đến 0.25.</p>
           </div>
 
           <div class="field">
@@ -314,10 +319,36 @@ foreach (($timeline['weeks'] ?? []) as $week) {
                             <?php endforeach; ?>
                           </div>
                         <?php endif; ?>
-                        <time class="block text-xs mt-3">Nộp lúc: <?= date('d/m/Y H:i', strtotime($week['report']['submitted_at'])) ?></time>
+                        <time class="block text-xs mt-3 mb-4">Nộp lúc: <?= date('d/m/Y H:i', strtotime($week['report']['submitted_at'])) ?></time>
+
+                        <div class="teacher-feedback-block p-4 rounded-md mt-4 border">
+                          <h4 class="font-semibold mb-2" style="color: var(--primary)">Phản hồi của giảng viên</h4>
+                          <form class="teacher-feedback-form" data-report-id="<?= (int) $week['report']['id'] ?>" data-url="<?= url("teacher/internship_batches/{$batchId}/weekly_reports/feedback") ?>">
+                            <div class="field mb-3">
+                              <textarea name="feedback" class="field__input text-sm" rows="2" placeholder="Nhập nhận xét (không bắt buộc)..."><?= htmlspecialchars($week['report']['teacher_feedback'] ?? '') ?></textarea>
+                            </div>
+                            <div class="flex items-center justify-between">
+                              <span class="teacher-feedback-status">
+                                <?php if (!empty($week['report']['is_seen_by_teacher'])): ?>
+                                  <span class="badge" data-variant="primary"><i class="fa-solid fa-check mr-1"></i> Đã duyệt</span>
+                                <?php else: ?>
+                                  <span class="badge" data-variant="secondary"><i class="fa-solid fa-clock mr-1"></i> Chưa duyệt</span>
+                                <?php endif; ?>
+                              </span>
+                              <div class="flex gap-2">
+                                <?php if (empty($week['report']['is_seen_by_teacher']) && empty($week['report']['teacher_feedback'])): ?>
+                                  <button type="button" class="btn mark-seen-btn" data-variant="outline" data-size="md">Đánh dấu đã duyệt</button>
+                                <?php endif; ?>
+                                <button type="submit" class="btn" data-variant="primary" data-size="md">Lưu phản hồi</button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
                       </section>
                     </div>
                   </div>
+                <?php else: ?>
+                  <div class="accordion__content weekly-timeline__content" hidden></div>
                 <?php endif; ?>
               </article>
             <?php endforeach; ?>

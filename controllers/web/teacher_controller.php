@@ -37,7 +37,7 @@ class TeacherController extends Controller
 
   public function store(Request $request)
   {
-    $data = $request->all();
+    $data = $request->sanitized();
 
     $validator = new RequestValidator();
     $rules = [
@@ -100,7 +100,7 @@ class TeacherController extends Controller
 
   public function update($id, Request $request)
   {
-    $data = $request->all();
+    $data = $request->sanitized();
 
     $validator = new RequestValidator();
     $rules = [

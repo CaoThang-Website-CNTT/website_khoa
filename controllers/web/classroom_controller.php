@@ -51,14 +51,14 @@ class ClassroomController extends Controller
 
   public function store(Request $request)
   {
-    $data = $request->all();
+    $data = $request->sanitized();
     $validator = new RequestValidator();
 
     $rules = [
       'major_id' => ['required'],
       'specialization_id' => ['nullable'],
-      'class_of' => ['required'],
-      'letter' => ['size:1'],
+      'class_of' => ['required', 'regex:/^\d+$/'],
+      'letter' => ['required'],
       'homeroom_teacher_id' => ['nullable'],
     ];
 
@@ -68,16 +68,21 @@ class ClassroomController extends Controller
       return $this->redirect('admin/classrooms/create');
     }
 
-    $newClassroom = $this->_classroomService->createClassroom($data);
+    try {
+      $newClassroom = $this->_classroomService->createClassroom($data);
 
-    if ($newClassroom) {
-      $request->session()->flashNotify(
-        'success',
-        'Lớp học đã được tạo thành công!',
-        'Lớp ' . $newClassroom->short_name . ' đã được tạo.'
-      );
-    } else {
-      $request->session()->flashNotify('error', 'Có lỗi xảy ra, không thể tạo lớp học.');
+      if ($newClassroom) {
+        $request->session()->flashNotify(
+          'success',
+          'Lớp học đã được tạo thành công!',
+          'Lớp ' . $newClassroom->short_name . ' đã được tạo.'
+        );
+      } else {
+        $request->session()->flashNotify('error', 'Có lỗi xảy ra, không thể tạo lớp học.');
+      }
+    } catch (\InvalidArgumentException $e) {
+      $request->flashOldInputs();
+      $request->session()->flashNotify('error', $e->getMessage());
     }
 
     return $this->redirect('admin/classrooms/create');
@@ -110,14 +115,14 @@ class ClassroomController extends Controller
 
   public function update($id, Request $request)
   {
-    $data = $request->all();
+    $data = $request->sanitized();
     $validator = new RequestValidator();
 
     $rules = [
       'major_id' => ['required'],
       'specialization_id' => ['nullable'],
-      'class_of' => ['required'],
-      'letter' => ['size:1'],
+      'class_of' => ['required', 'regex:/^\d+$/'],
+      'letter' => ['required'],
       'homeroom_teacher_id' => ['nullable'],
     ];
 
@@ -127,12 +132,17 @@ class ClassroomController extends Controller
       return $this->redirect("admin/classrooms/{$id}");
     }
 
-    $isSuccess = $this->_classroomService->updateClassroom($id, $data);
+    try {
+      $isSuccess = $this->_classroomService->updateClassroom($id, $data);
 
-    if ($isSuccess) {
-      $request->session()->flashNotify('success', 'Cập nhật lớp học thành công!');
-    } else {
-      $request->session()->flashNotify('error', 'Cập nhật lớp học không thành công.');
+      if ($isSuccess) {
+        $request->session()->flashNotify('success', 'Cập nhật lớp học thành công!');
+      } else {
+        $request->session()->flashNotify('error', 'Cập nhật lớp học không thành công.');
+      }
+    } catch (\InvalidArgumentException $e) {
+      $request->flashOldInputs();
+      $request->session()->flashNotify('error', $e->getMessage());
     }
 
     return $this->redirect("admin/classrooms/{$id}");

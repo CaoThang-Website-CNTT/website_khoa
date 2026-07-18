@@ -15,6 +15,9 @@ class InternshipWeeklyReport
     public bool $is_late = false,
     public bool $is_latest = true,
     public ?string $submitted_at = null,
+    public bool $is_seen_by_teacher = false,
+    public ?string $teacher_feedback = null,
+    public ?string $teacher_interacted_at = null,
     public ?string $created_at = null,
     public ?string $updated_at = null
   ) {}

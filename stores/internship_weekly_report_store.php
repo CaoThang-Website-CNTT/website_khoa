@@ -5,6 +5,7 @@ namespace App\Stores;
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
+use App\Core\AppTime;
 use PDO;
 
 interface IInternshipWeeklyReportStore
@@ -20,6 +21,8 @@ interface IInternshipWeeklyReportStore
   public function addImage(array $data): int;
   public function countSubmittedWeeks(int $batchStudentId): int;
   public function getHistoryByBatchStudentAndWeek(int $batchStudentId, int $weekNumber): array;
+  public function updateTeacherFeedback(int $reportId, int $isSeen, ?string $feedback): void;
+  public function markMultipleAsSeen(array $reportIds): int;
   
   // Transactions
   public function beginTransaction(): void;
@@ -71,6 +74,9 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
               wr.is_late,
               wr.is_exempt,
               wr.submitted_at,
+              wr.is_seen_by_teacher,
+              wr.teacher_feedback,
+              wr.teacher_interacted_at,
               (SELECT COUNT(*) FROM internship_weekly_report_images WHERE weekly_report_id = wr.id) AS image_count
             FROM internship_batch_students ibs
             JOIN students s ON s.id = ibs.student_id
@@ -108,6 +114,9 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
               wr.is_late,
               wr.is_exempt,
               wr.submitted_at,
+              wr.is_seen_by_teacher,
+              wr.teacher_feedback,
+              wr.teacher_interacted_at,
               (SELECT COUNT(*) FROM internship_weekly_report_images WHERE weekly_report_id = wr.id) AS image_count
             FROM internship_batch_students ibs
             JOIN students s ON s.id = ibs.student_id
@@ -242,6 +251,37 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     return $result ?: [];
+  }
+  public function updateTeacherFeedback(int $reportId, int $isSeen, ?string $feedback): void
+  {
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_weekly_reports')
+      ->update([
+        'is_seen_by_teacher' => $isSeen,
+        'teacher_feedback' => $feedback,
+        'teacher_interacted_at' => AppTime::now()->format('Y-m-d H:i:s')
+      ])
+      ->eq('id', $reportId);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+  }
+
+  public function markMultipleAsSeen(array $reportIds): int
+  {
+    if (empty($reportIds)) return 0;
+    
+    $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_weekly_reports')
+      ->update([
+        'is_seen_by_teacher' => 1,
+        'teacher_interacted_at' => date('Y-m-d H:i:s')
+      ])
+      ->in('id', $reportIds)
+      ->eq('is_seen_by_teacher', 0);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+    
+    return $stmt->rowCount();
   }
 
   public function beginTransaction(): void

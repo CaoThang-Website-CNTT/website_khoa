@@ -18,7 +18,7 @@ interface IReferralLetterStore
   public function getByIdWithCompany(int $id): ?array;
   public function getLettersWithCompanyByBatchStudentId(int $batchStudentId): array;
   public function getPaginated(int $pageTo, int $limit = 15): array;
-  public function updateStatus(int $id, string $status, array $extraData = []): bool;
+  public function updateStatus(int $id, string $status, array $extraData = [], ?string $expectedOldStatus = null): bool;
   public function updateCompanyId(int $id, int $companyId): bool;
   public function getAllWithDetailsByBatchId(int $batchId): array;
   public function getWithStudentsByLetterId(int $id): ?array;
@@ -397,11 +397,11 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
    * 
    * @param int $id
    * @param string $status
-   * @param array $extraData
+   * @param string|null $expectedOldStatus
    * 
    * @return bool
    */
-  public function updateStatus(int $id, string $status, array $extraData = []): bool
+  public function updateStatus(int $id, string $status, array $extraData = [], ?string $expectedOldStatus = null): bool
   {
     $fields = ["status = :status"];
     $params = [':id' => $id, ':status' => $status];
@@ -436,8 +436,14 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
       if (array_key_exists($key, $extraData)) $data[$key] = $extraData[$key];
     }
     $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->update($data)->eq('id', $id);
+    
+    if ($expectedOldStatus !== null) {
+      $query->eq('status', $expectedOldStatus);
+    }
+    
     $stmt = $this->db->prepare($query->toSql());
-    return $stmt->execute($query->getBindings());
+    $stmt->execute($query->getBindings());
+    return $stmt->rowCount() > 0;
   }
 
   public function updateCompanyId(int $id, int $companyId): bool

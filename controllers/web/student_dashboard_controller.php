@@ -85,7 +85,7 @@ class StudentDashboardController extends Controller
       return $this->redirect('/');
     }
 
-    $data = $request->all();
+    $data = $request->sanitized();
     $validator = new RequestValidator();
 
     // Chỉ cho phép cập nhật một số thông tin cơ bản
@@ -352,7 +352,7 @@ class StudentDashboardController extends Controller
       }
     }
 
-    $data = $request->all();
+    $data = $request->sanitized();
     $isManual = isset($data['is_manual']) && $data['is_manual'] == 1;
 
     $validator = new RequestValidator();
@@ -548,12 +548,15 @@ class StudentDashboardController extends Controller
       }
     }
 
+    $allMajors = $this->_classroomService->getAllMajors();
+
     return $this->render('student/dashboard/referral_letters_create', [
       'current' => $batch,
       'student' => $student,
       'majorName' => $majorName,
       'batch_student_id' => $batchStudentId,
-      'batch_students' => $this->_internshipBatchService->getBatchStudents($batch_id)
+      'batch_students' => $this->_internshipBatchService->getBatchStudents($batch_id),
+      'allMajors' => $allMajors
     ], layout: 'dashboard_layout');
   }
 
@@ -575,7 +578,7 @@ class StudentDashboardController extends Controller
       return $this->redirect("/student/internship/{$batch_id}/referral_letters");
     }
 
-    $data = $request->all();
+    $data = $request->sanitized();
     $isManual = isset($data['is_manual']) && $data['is_manual'] == 1;
 
     $validator = new RequestValidator();
@@ -887,11 +890,12 @@ class StudentDashboardController extends Controller
       return $this->redirect("/student/internship/{$batch_id}/weekly_reports");
     }
 
-    $weekNumber = (int)$request->input('week_number');
-    $content = $request->input('content');
-    $isExempt = (bool)$request->input('is_exempt');
-    $noActivityReason = $request->input('no_activity_reason');
-    $noActivityNote = $request->input('no_activity_note');
+    $sanitized = $request->sanitized();
+    $weekNumber = (int)($sanitized['week_number'] ?? 0);
+    $content = $sanitized['content'] ?? null;
+    $isExempt = (bool)($sanitized['is_exempt'] ?? false);
+    $noActivityReason = $sanitized['no_activity_reason'] ?? null;
+    $noActivityNote = $sanitized['no_activity_note'] ?? null;
 
     $maxImages = (int)$this->_webSettingsService->getValue('internship_weekly_report_max_images', 5);
     $maxSizeMb = (float)$this->_webSettingsService->getValue('internship_weekly_report_image_max_size_mb', 5);
