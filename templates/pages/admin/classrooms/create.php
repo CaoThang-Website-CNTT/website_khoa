@@ -40,9 +40,9 @@ $old_input = request()->session()->getOldInputs() ?? [];
           <div class="field-group">
 
             <div class="field" data-field-required>
-              <label class="field__label" for="major_id">Ngành học</label>
+              <label class="field__label" for="major_id">Ngành / nghề</label>
               <select id="major_id" class="field__input" name="major_id">
-                <option value="">-- Chọn ngành học --</option>
+                <option value="">-- Chọn ngành / nghề --</option>
                 <?php foreach ($majors as $major): ?>
                   <option value="<?= htmlspecialchars($major->id) ?>"
                     data-short="<?= htmlspecialchars($major->short_name) ?>"
