@@ -15,12 +15,12 @@ class MigrateCommand extends BaseCommand
   public function handle(array $args): void
   {
     $target = $args[0] ?? '--all';
-    $compiler = new MySQLCompiler();
-    $runner = new MigrationRunner($compiler);
 
     ConsoleColor::logLabel('MIGRATE', "Khởi động quy trình migration...", ConsoleColor::BG_BLUE);
 
     try {
+      $compiler = new MySQLCompiler();
+      $runner = new MigrationRunner($compiler);
       if ($target === '--all') {
         $runner->forward();
       } else {
@@ -29,8 +29,14 @@ class MigrateCommand extends BaseCommand
       }
 
       ConsoleColor::success("Tất cả các thay đổi đã được cập nhật vào Database.");
-    } catch (\Exception $e) {
-      ConsoleColor::error("Lỗi khi chạy migration: " . $e->getMessage());
+    } catch (\Throwable $e) {
+      $message = "Migration failed:" . PHP_EOL . (string) $e . PHP_EOL;
+      if (defined('STDERR')) {
+        fwrite(STDERR, $message);
+      } else {
+        echo $message;
+      }
+      exit(1);
     }
   }
 }
