@@ -156,10 +156,17 @@ document.addEventListener("DOMContentLoaded", () => {
             companyNameInput.setAttribute("readonly", "readonly");
             companyAddressInput.setAttribute("readonly", "readonly");
           } else {
-            mstError.textContent = "Không tìm thấy thông tin công ty.";
+            const errorMsg = result.desc || "Không tìm thấy thông tin công ty.";
+            if (mstError && !document.body.contains(mstError)) {
+              mstLoading.insertAdjacentElement('afterend', mstError);
+            }
+            mstError.textContent = errorMsg;
             mstError.classList.remove("hidden");
           }
         } catch (error) {
+          if (mstError && !document.body.contains(mstError)) {
+            mstLoading.insertAdjacentElement('afterend', mstError);
+          }
           mstError.textContent = "Lỗi kết nối API lấy mã số thuế.";
           mstError.classList.remove("hidden");
         } finally {
