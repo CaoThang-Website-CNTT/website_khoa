@@ -34,6 +34,23 @@ export class CmsFieldPanel {
     });
 
     this.root?.addEventListener('click', (event) => {
+      const toggleButton = event.target.closest('[data-cms-media-toggle-path]');
+      if (toggleButton) {
+        const path = toggleButton.dataset.cmsMediaTogglePath;
+        if (toggleButton.dataset.cmsMediaHasImage === 'true') {
+          this.bus.dispatch('field:media_clear_request', { path });
+        } else {
+          this.bus.dispatch('field:media_select_request', { path });
+        }
+        return;
+      }
+
+      const clearButton = event.target.closest('[data-cms-media-clear-path]');
+      if (clearButton) {
+        this.bus.dispatch('field:media_clear_request', { path: clearButton.dataset.cmsMediaClearPath });
+        return;
+      }
+
       const button = event.target.closest('[data-cms-media-path]');
       if (button) {
         this.bus.dispatch('field:media_select_request', { path: button.dataset.cmsMediaPath });
@@ -164,19 +181,37 @@ export class CmsFieldPanel {
   #renderImageField(field, activePath) {
     const imageUrl = assetUrl(this.cmsDocument.urls, field.value);
     const active = activePath === field.path ? ' is-active' : '';
+    const hasImage = Boolean(field.value);
 
     return `
       <div class="field cms-image-field${active}">
         <span class="field__label">${escapeHtml(field.label)}</span>
-        <div class="cms-image-field__preview">
-          ${imageUrl
-        ? `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(field.label)}">`
-        : `<div class="cms-image-field__empty"><i class="fa-regular fa-image"></i></div>`
-      }
+        <div class="field w-full" data-orientation="horizontal">
+          <div class="field__content flex-1">
+            <label class="field__label">Có hình ảnh</label>
+          </div>
+          <button
+            type="button"
+            class="switch"
+            role="switch"
+            aria-checked="${hasImage ? 'true' : 'false'}"
+            aria-label="Có hình ảnh"
+            data-switch-state="${hasImage ? 'checked' : 'unchecked'}"
+            data-cms-media-toggle-path="${escapeAttr(field.path)}"
+            data-cms-media-has-image="${hasImage ? 'true' : 'false'}"
+            ${hasImage ? '' : 'data-modal-trigger="#media-selector-modal"'}
+          >
+            <span class="switch__thumb" data-switch-state="${hasImage ? 'checked' : 'unchecked'}"></span>
+          </button>
         </div>
-        <button type="button" class="btn" data-size="sm" data-variant="outline" data-cms-media-path="${escapeAttr(field.path)}" data-modal-trigger="#media-selector-modal">
-          <i class="fa-solid fa-images"></i> Đổi Hình Ảnh
-        </button>
+        ${hasImage ? `
+          <div class="cms-image-field__preview">
+            ${imageUrl ? `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(field.label)}">` : ''}
+          </div>
+          <button type="button" class="btn" data-size="sm" data-variant="outline" data-cms-media-path="${escapeAttr(field.path)}" data-modal-trigger="#media-selector-modal">
+            <i class="fa-solid fa-images"></i> Đổi Hình Ảnh
+          </button>
+        ` : ''}
       </div>
     `;
   }
@@ -362,7 +397,7 @@ export class CmsFieldPanel {
     const textFields = this.cmsDocument.textFieldInstances(section.id)
       .filter((field) => field.path.startsWith(prefix) && !field.path.slice(prefix.length).includes('.'));
     const imageFields = this.cmsDocument.imageFieldInstances(section.id)
-      .filter((field) => field.path.startsWith(prefix));
+      .filter((field) => field.path.startsWith(prefix) && !field.path.slice(prefix.length).match(/^(alt|caption)$/));
     const fields = [
       ...textFields.map((field) => this.#renderTextField(field, getPath(section.data || {}, field.path), '')),
       ...imageFields.map((field) => this.#renderImageField(field, '')),

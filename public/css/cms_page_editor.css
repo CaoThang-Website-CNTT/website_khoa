@@ -124,6 +124,10 @@
   outline-offset: -1px;
 }
 
+.bento-grid-item__image[data-section-id] {
+  position: absolute;
+}
+
 [data-section-id]:hover,
 [data-section-id].is-active {
   outline-color: color-mix(in oklab, var(--primary) 50%, transparent);
@@ -162,6 +166,7 @@
   outline: none;
 }
 [data-cms-image-edit="true"],
+[data-cms-image-proxy-path],
 [data-cms-icon-edit="true"],
 [data-cms-link-edit="true"],
 [data-cms-repeater-path] {
@@ -175,7 +180,10 @@
 }
 [data-cms-image-edit="true"]:hover,
 [data-cms-image-edit="true"].is-active,
-.cms-preview-body--highlight-editables [data-cms-image-edit="true"] {
+.cms-preview-body--highlight-editables [data-cms-image-edit="true"],
+[data-cms-image-proxy-path]:hover,
+[data-cms-image-proxy-path].is-active,
+.cms-preview-body--highlight-editables [data-cms-image-proxy-path] {
   outline: 2px solid color-mix(in oklab, var(--primary) 30%, transparent);
   outline-offset: -2px;
 }

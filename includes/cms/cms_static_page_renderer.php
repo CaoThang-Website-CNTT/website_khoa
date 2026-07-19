@@ -842,7 +842,7 @@ final class CmsStaticPageRenderer
             <div
               class="flex flex-col md:<?= $index % 2 !== 0 ? 'flex-row-reverse' : 'flex-row' ?> flex-1 items-center gap-12"
               <?= $context->repeaterItemAttributes('sections', $index) ?>>
-              <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl">
+              <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl" <?= $context->editorMode() ? 'data-section-id="' . $this->e($context->sectionId()) . '" data-cms-image-proxy-path="sections.' . $index . '.image.src"' : '' ?>>
                 <div class="history-image-wrapper image-wrapper"><img class="image w-full h-full"
                     <?= $context->imageAttributes("sections.$index.image.src") ?>
                     src="<?= $this->e($this->asset($item['image']['src'] ?? '')) ?>"
@@ -886,6 +886,7 @@ final class CmsStaticPageRenderer
               <div
                 class="card bento-grid-item <?= $hasImage ? 'bento-grid-item--has-image' : 'bento-grid-item--empty-image' ?>"
                 <?= $context->repeaterItemAttributes('items', $index) ?>
+                <?= $context->editorMode() ? 'data-cms-image-proxy-path="items.' . $index . '.image.src"' : '' ?>
                 <?= $this->bentoStyle($item) ?>>
                 <?php if ($hasImage): ?><img class="bento-grid-item__image"
                     <?= $context->imageAttributes("items.$index.image.src") ?>

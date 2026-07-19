@@ -100,6 +100,7 @@ export class CmsPreview {
     doc.querySelectorAll('.is-active').forEach((node) => node.classList.remove('is-active'));
     if (active.sectionId && active.path) {
       doc.querySelector(`[data-section-id="${cssEscape(active.sectionId)}"][data-cms-path="${cssEscape(active.path)}"]`)?.classList.add('is-active');
+      doc.querySelector(`[data-section-id="${cssEscape(active.sectionId)}"][data-cms-image-proxy-path="${cssEscape(active.path)}"]`)?.classList.add('is-active');
     } else if (active.sectionId) {
       doc.querySelector(`[data-section-id="${cssEscape(active.sectionId)}"]`)?.classList.add('is-active');
     }
@@ -122,11 +123,13 @@ export class CmsPreview {
       const editable = event.target.closest('[data-inline-edit="true"]'); const image = event.target.closest('[data-cms-image-edit="true"]');
       const link = event.target.closest('[data-cms-link-edit="true"]'); const icon = event.target.closest('[data-cms-icon-edit="true"]'); const repeater = event.target.closest('[data-cms-repeater-path]'); const section = event.target.closest('[data-section-id]');
       const overlayImage = event.target.closest('.image-wrapper')?.querySelector('[data-cms-image-edit="true"]');
+      const imageProxy = event.target.closest('[data-cms-image-proxy-path]');
       if (image) this.bus.dispatch('preview:image_selected', { sectionId: image.dataset.sectionId, path: image.dataset.cmsPath });
       else if (editable) this.bus.dispatch('preview:editable_selected', { sectionId: editable.dataset.sectionId, path: editable.dataset.cmsPath, value: plainEditableText(editable) });
       else if (link) this.bus.dispatch('preview:link_selected', { sectionId: link.dataset.sectionId, path: link.dataset.cmsPath });
       else if (icon) this.bus.dispatch('preview:icon_selected', { sectionId: icon.dataset.sectionId, path: icon.dataset.cmsPath });
       else if (overlayImage) this.bus.dispatch('preview:image_selected', { sectionId: overlayImage.dataset.sectionId, path: overlayImage.dataset.cmsPath });
+      else if (imageProxy) this.bus.dispatch('preview:image_selected', { sectionId: imageProxy.dataset.sectionId, path: imageProxy.dataset.cmsImageProxyPath });
       else if (repeater) this.bus.dispatch('preview:repeater_selected', { sectionId: repeater.dataset.sectionId, path: repeater.dataset.cmsRepeaterPath, index: Number(repeater.dataset.cmsRepeaterIndex) });
       else if (section) this.bus.dispatch('section:select_request', { sectionId: section.dataset.sectionId, scroll: false, rerenderPreview: false });
     });

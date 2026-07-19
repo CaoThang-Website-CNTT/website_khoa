@@ -1,16 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const tabHandler = new TabHandler({ syncParams: false });
+  const tabHandler = new TabHandler();
   tabHandler.init();
 });
 
 class TabHandler {
-  constructor(options) {
+  constructor() {
     this._tabsList = document.querySelectorAll("[data-tabs]");
-
-    this.config = {
-      syncParams: false,
-      ...options
-    };
   }
 
   /**
@@ -19,6 +14,8 @@ class TabHandler {
    */
   init() {
     if (!this._tabsList.length) return;
+
+    this.clearTabHash();
 
     this._tabsList.forEach(tabs => {
       const tabId = tabs.dataset.tabsId;
@@ -29,31 +26,43 @@ class TabHandler {
 
       // Gán events cho tab triggers
       this.getOwnedElements(tabs, "[data-tabs-trigger]").forEach(trigger => {
-        trigger.addEventListener("click", e => {
+        trigger.addEventListener("click", event => {
           if (isNavigation) return;
 
-          e.preventDefault();
+          event.preventDefault();
           this.activate(tabs, trigger.dataset.tabsTrigger);
         });
       });
     });
   }
+
   /**
-   * Xác định tab có được phép đồng bộ URL không
-   * Dựa vào Global config HOẶC data-attribute trên HTML
+   * Xóa hash tab cũ khỏi URL. Tabs không còn đồng bộ URL khi người dùng chuyển tab.
    */
-  canSyncParams(tabs) {
-    // Nếu cấu hình toàn cục là true, kiểm tra xem HTML có ghi đè bằng data-tabs-sync="false" không
-    return this.config.syncParams && tabs.dataset.tabsSync !== "false";
+  clearTabHash() {
+    const hash = window.location.hash.substring(1);
+    if (!hash) return;
+
+    const [hashTabId, hashKey] = hash.split(":");
+    if (!hashTabId || !hashKey) return;
+
+    const matchedTab = Array.from(this._tabsList).find(tabs =>
+      tabs.dataset.tabsId === hashTabId &&
+      this.getOwnedElements(tabs, `[data-tabs-panel="${hashKey}"]`).length > 0
+    );
+
+    if (!matchedTab) return;
+
+    history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
   }
 
   getOwnedElements(tabs, selector) {
     return Array.from(tabs.querySelectorAll(selector))
-      .filter(element => element.closest('[data-tabs]') === tabs);
+      .filter(element => element.closest("[data-tabs]") === tabs);
   }
+
   /**
-   * Xác định key khởi tạo - ưu tiên query param, fallback về data-active.
-   * URL format: ?users=students&reports=monthly
+   * Xác định key khởi tạo, fallback về data-active.
    *
    * @param {HTMLElement} tabs
    * @param {string} tabPanelId
@@ -66,24 +75,6 @@ class TabHandler {
         this.getOwnedElements(tabs, '[data-tabs-trigger-state="active"]')[0]?.dataset.tabsTrigger ??
         this.getOwnedElements(tabs, "[data-tabs-trigger]")[0]?.dataset.tabsTrigger
       );
-    }
-
-    // Check hash first (e.g., #tabsId:key)
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      const [hashTabId, hashKey] = hash.split(":");
-      if (hashTabId === tabPanelId && hashKey) {
-        const matched = this.getOwnedElements(tabs, `[data-tabs-panel="${hashKey}"]`)[0];
-        if (matched) return hashKey;
-      }
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const paramKey = params.get(tabPanelId);
-
-    if (paramKey) {
-      const matched = this.getOwnedElements(tabs, `[data-tabs-panel="${paramKey}"]`)[0];
-      if (matched) return paramKey;
     }
 
     return (
@@ -116,11 +107,6 @@ class TabHandler {
     });
 
     this.syncObservers(tabsId, key);
-    if (this.canSyncParams(tabs) && tabsId) {
-      this.syncParams(tabsId, key);
-    } else if (tabs.dataset.tabsMode !== "navigation" && tabsId) {
-      history.replaceState(null, "", `#${tabsId}:${key}`);
-    }
   }
 
   /**
@@ -139,25 +125,5 @@ class TabHandler {
       const [, observerKey] = observer.dataset.tabsObserve.split(":");
       observer.dataset.tabsPanelState = observerKey === key ? "active" : "idle";
     });
-  }
-
-  /**
-   * Đồng bộ URL query params - cập nhật key của tab hiện tại,
-   * giữ nguyên tất cả các tab khác đang có trong URL.
-   * 
-   * Ví dụ: 
-   * Trước: ?users=students&reports=monthly
-   * Sau:  ?users=teachers&reports=monthly  ← chỉ đổi key của tab này
-   * 
-   * Hiện tại đang ví dụ đơn giản cách sử dụng, thực tế đặt id của tabs sao cho dễ nhận biết để tránh trùng `query params` khi `GET request` lên server yêu cầu dữ liệu.
-   * Có thể nghĩ đến việc thêm `prefix`, `postfix` hay bất kì `convention` nào khác để tránh trùng `query params`.
-   *
-   * @param {string} tabId
-   * @param {string} key
-   */
-  syncParams(tabId, key) {
-    const params = new URLSearchParams(window.location.search);
-    params.set(tabId, key);
-    history.replaceState(null, "", `?${params.toString()}`);
   }
 }

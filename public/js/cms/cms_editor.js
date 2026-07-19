@@ -111,6 +111,7 @@ export class CmsEditorManager {
     this.#bus.subscribe('field:background_input', (payload) => this.#onBackgroundInput(payload));
     this.#bus.subscribe('field:focus', (payload) => this.#onFieldFocus(payload));
     this.#bus.subscribe('field:media_select_request', (payload) => this.#onMediaSelectRequest(payload));
+    this.#bus.subscribe('field:media_clear_request', (payload) => this.#onMediaClearRequest(payload));
     this.#bus.subscribe('preview:editable_selected', (payload) => this.#onPreviewEditableSelected(payload));
     this.#bus.subscribe('preview:image_selected', (payload) => this.#onPreviewImageSelected(payload));
     this.#bus.subscribe('preview:link_selected', (payload) => this.#onPreviewImageSelected(payload));
@@ -209,6 +210,16 @@ export class CmsEditorManager {
   #onMediaSelectRequest({ path }) {
     this.#activePath = path;
     this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
+  }
+
+  #onMediaClearRequest({ path }) {
+    const section = this.#cmsDocument.section(this.#activeSectionId);
+    if (!section || !this.#cmsDocument.isImageEditable(this.#activeSectionId, path)) return;
+
+    setPath(section.data, path, '');
+    this.#activePath = path;
+    this.#fieldPanel.render(this.#activeSectionId, this.#activePath);
+    this.#preview.render();
   }
 
   #onMediaSelected(event) {
