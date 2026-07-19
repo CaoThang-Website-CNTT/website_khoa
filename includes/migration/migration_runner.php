@@ -94,7 +94,6 @@ class MigrationRunner
     } catch (\Throwable $e) {
       ConsoleColor::error("Lỗi tại $name ($method): " . $e->getMessage());
       $this->logSQL(BASE_PATH . '/storage/migration_logs.sql', $name, "-- ERROR: " . $e->getMessage());
-      throw $e;
     }
   }
 
