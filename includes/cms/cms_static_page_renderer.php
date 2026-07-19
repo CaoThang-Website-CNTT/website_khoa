@@ -840,24 +840,26 @@ final class CmsStaticPageRenderer
         <div class="container-wrapper flex flex-col gap-16">
           <?php foreach ($this->items($data, 'sections') as $index => $item): ?>
             <div
-              class="flex flex-col md:<?= $index % 2 !== 0 ? 'flex-row-reverse' : 'flex-row' ?> flex-1 items-center gap-12">
+              class="flex flex-col md:<?= $index % 2 !== 0 ? 'flex-row-reverse' : 'flex-row' ?> flex-1 items-center gap-12"
+              <?= $context->repeaterItemAttributes('sections', $index) ?>>
               <div class="history-image-card flex-1 relative overflow-hidden rounded-3xl">
                 <div class="history-image-wrapper image-wrapper"><img class="image w-full h-full"
+                    <?= $context->imageAttributes("sections.$index.image.src") ?>
                     src="<?= $this->e($this->asset($item['image']['src'] ?? '')) ?>"
                     alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async"></div>
                 <div class="history-image-wrapper__content absolute inset-0 flex flex-col justify-end gap-1">
-                  <div class="text-6xl"><?= $this->e($item['year'] ?? '') ?></div>
-                  <div class="text-xl"><?= $this->e($item['image']['caption'] ?? '') ?></div>
+                  <div class="text-6xl" <?= $context->textAttributes("sections.$index.year") ?>><?= $this->e($item['year'] ?? '') ?></div>
+                  <div class="text-xl" <?= $context->textAttributes("sections.$index.image.caption") ?>><?= $this->e($item['image']['caption'] ?? '') ?></div>
                 </div>
               </div>
               <div class="flex-1 history-content flex flex-col justify-center gap-8">
-                <span class="badge" data-variant="primary"><?= $item['badge'] ?? '' ?></span>
-                <p class="text-4xl"><?= $this->e($item['title'] ?? '') ?></p>
+                <span class="badge" data-variant="primary" <?= $context->textAttributes("sections.$index.badge") ?>><?= $item['badge'] ?? '' ?></span>
+                <p class="text-4xl" <?= $context->textAttributes("sections.$index.title") ?>><?= $this->e($item['title'] ?? '') ?></p>
                 <div class="history-content-timeline flex flex-col gap-4">
-                  <?php foreach ($this->items($item, 'timeline') as $timeline): ?>
-                    <div class="history-content-timeline__item"><span
-                        class="history-content-timeline__item-year"><?= $this->e($timeline['year'] ?? '') ?>:</span>
-                      <span><?= $this->e($timeline['description'] ?? '') ?></span>
+                  <?php foreach ($this->items($item, 'timeline') as $timelineIndex => $timeline): ?>
+                    <div class="history-content-timeline__item" <?= $context->repeaterItemAttributes("sections.$index.timeline", $timelineIndex) ?>><span
+                        class="history-content-timeline__item-year" <?= $context->textAttributes("sections.$index.timeline.$timelineIndex.year") ?>><?= $this->e($timeline['year'] ?? '') ?>:</span>
+                      <span <?= $context->textAttributes("sections.$index.timeline.$timelineIndex.description", true) ?>><?= $this->e($timeline['description'] ?? '') ?></span>
                     </div>
                   <?php endforeach; ?>
                 </div>
@@ -883,17 +885,19 @@ final class CmsStaticPageRenderer
               <?php $hasImage = !empty($item['image']['src']); ?>
               <div
                 class="card bento-grid-item <?= $hasImage ? 'bento-grid-item--has-image' : 'bento-grid-item--empty-image' ?>"
+                <?= $context->repeaterItemAttributes('items', $index) ?>
                 <?= $this->bentoStyle($item) ?>>
                 <?php if ($hasImage): ?><img class="bento-grid-item__image"
+                    <?= $context->imageAttributes("items.$index.image.src") ?>
                     src="<?= $this->e($this->asset($item['image']['src'])) ?>"
                     alt="<?= $this->e($item['image']['alt'] ?? '') ?>" loading="lazy" decoding="async"><?php endif; ?>
                 <div class="card__header"><span class="badge"
-                    data-variant="glass"><?= $item['badge'] ?? '<i class="fa-solid fa-lock"></i>' ?></span></div>
+                    data-variant="glass" <?= $context->textAttributes("items.$index.badge") ?>><?= $item['badge'] ?? '<i class="fa-solid fa-lock"></i>' ?></span></div>
                 <div class="card__content">
-                  <div class="text-4xl md:text-6xl"><?= $this->e($item['content'] ?? '') ?></div>
-                  <div class="text-xl"><?= $this->e($item['subContent'] ?? '') ?></div>
+                  <div class="text-4xl md:text-6xl" <?= $context->textAttributes("items.$index.content") ?>><?= $this->e($item['content'] ?? '') ?></div>
+                  <div class="text-xl" <?= $context->textAttributes("items.$index.subContent") ?>><?= $this->e($item['subContent'] ?? '') ?></div>
                 </div>
-                <div class="card__footer flex flex-row flex-wrap"><?= $item['footer'] ?? '' ?></div>
+                <div class="card__footer flex flex-row flex-wrap" <?= $context->textAttributes("items.$index.footer", true) ?>><?= $item['footer'] ?? '' ?></div>
               </div>
             <?php endforeach; ?>
           </div>
@@ -915,23 +919,23 @@ final class CmsStaticPageRenderer
       <div class="container">
         <div class="container-wrapper">
           <header class="flex flex-col items-center gap-2 md:gap-4 mb-8 md:mb-12 text-center">
-            <h2 class="section__title"><?= $this->e($data['title'] ?? '') ?></h2>
-            <p class="section__sub-title"><?= $this->e($data['introduction'] ?? '') ?></p>
+            <h2 class="section__title" <?= $context->textAttributes('title') ?>><?= $this->e($data['title'] ?? '') ?></h2>
+            <p class="section__sub-title" <?= $context->textAttributes('introduction', true) ?>><?= $this->e($data['introduction'] ?? '') ?></p>
           </header>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 items-stretch">
             <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
               <div class="flex gap-2 md:gap-4 items-center">
                 <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-eye stats__benefit-card-icon" aria-hidden="true"></i></div>
-                <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['vision_title'] ?? 'Tầm nhìn') ?></h3>
+                <h3 class="text-lg md:text-2xl font-semibold" <?= $context->textAttributes('vision_title') ?>><?= $this->e($data['vision_title'] ?? 'Tầm nhìn') ?></h3>
               </div>
-              <p><?= $this->e($data['vision'] ?? '') ?></p>
+              <p <?= $context->textAttributes('vision', true) ?>><?= $this->e($data['vision'] ?? '') ?></p>
             </article>
             <article class="stats__benefit-card flex flex-col gap-3 md:gap-6 p-3 md:p-6 rounded-3xl">
               <div class="flex gap-2 md:gap-4 items-center">
                 <div class="stats__benefit-card-icon-wrapper flex justify-center items-center rounded-full"><i class="fa-solid fa-bullseye stats__benefit-card-icon" aria-hidden="true"></i></div>
-                <h3 class="text-lg md:text-2xl font-semibold"><?= $this->e($data['mission_title'] ?? 'Sứ mệnh') ?></h3>
+                <h3 class="text-lg md:text-2xl font-semibold" <?= $context->textAttributes('mission_title') ?>><?= $this->e($data['mission_title'] ?? 'Sứ mệnh') ?></h3>
               </div>
-              <p><?= $this->e($data['mission'] ?? '') ?></p>
+              <p <?= $context->textAttributes('mission', true) ?>><?= $this->e($data['mission'] ?? '') ?></p>
             </article>
           </div>
         </div>
