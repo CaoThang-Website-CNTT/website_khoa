@@ -68,14 +68,14 @@ $layout->start("scripts"); ?>
     <div class="field mb-4" data-field-required>
       <label class="field__label">Tên công ty</label>
       <div class="field__suggest-wrapper">
-        <input type="text" name="name" id="rl_company_name" class="field__input relative" required autocomplete="off">
+        <input type="text" name="name" id="rl_company_name" class="field__input relative" required readonly autocomplete="off">
         <div id="rl_companySuggestions" class="suggestions-list hidden"></div>
       </div>
     </div>
 
     <div class="field mb-4" data-field-required>
       <label class="field__label">Địa chỉ</label>
-      <textarea name="address" id="rl_company_address" class="field__input" required></textarea>
+      <textarea name="address" id="rl_company_address" class="field__input" required readonly></textarea>
     </div>
 
     <hr class="my-6" />
