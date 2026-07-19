@@ -97,7 +97,7 @@ final class CmsStaticPageRenderer
     $registry->register(new CmsCallbackSectionDefinition(
       'sections/landing_about',
       'Landing about',
-      ['variant' => 'default', 'items' => []],
+      LandingPageDefaults::about(),
       [
         'items.*.number',
         'items.*.image.src',
@@ -125,7 +125,7 @@ final class CmsStaticPageRenderer
     $registry->register(new CmsCallbackSectionDefinition(
       'sections/why_choose_us',
       'Why choose us',
-      ['variant' => 'default', 'badge' => '', 'title' => '', 'subtitle' => '', 'feature' => [], 'stats' => [], 'perks' => [], 'highlights' => []],
+      LandingPageDefaults::whyChooseUs(),
       [
         'badge',
         'title',
@@ -177,7 +177,7 @@ final class CmsStaticPageRenderer
     $registry->register(new CmsCallbackSectionDefinition(
       'sections/stats',
       'Statistics',
-      ['variant' => 'default', 'title' => '', 'subtitle' => '', 'stats' => [], 'benefits' => [], 'cta' => []],
+      LandingPageDefaults::stats(),
       [
         'title',
         'subtitle',
@@ -245,7 +245,7 @@ final class CmsStaticPageRenderer
     $registry->register(new CmsCallbackSectionDefinition(
       'sections/about_hero',
       'About hero',
-      ['variant' => 'default', 'image' => 'public/img/about.jpg', 'badge' => '', 'title' => '', 'subtitle' => ''],
+      AboutPageDefaults::hero(),
       ['image', 'badge', 'title', 'subtitle'],
       ['default' => 'Default'],
       fn(array $data, CmsRenderContext $context): string => $renderer->renderAboutHero($data, $context),
@@ -282,7 +282,7 @@ final class CmsStaticPageRenderer
     $registry->register(new CmsCallbackSectionDefinition(
       'sections/history',
       'History',
-      ['variant' => 'default', 'sections' => []],
+      AboutPageDefaults::history(),
       [
         'sections.*.image.src',
         'sections.*.image.alt',
@@ -310,7 +310,7 @@ final class CmsStaticPageRenderer
     $registry->register(new CmsCallbackSectionDefinition(
       'sections/bento_grid',
       'Bento grid',
-      ['variant' => 'default', 'items' => []],
+      AboutPageDefaults::bentoGrid(),
       [
         'items.*.badge',
         'items.*.image.src',

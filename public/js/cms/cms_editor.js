@@ -66,6 +66,7 @@ export class CmsEditorManager {
   #activePath = null;
   #previewMode = 'desktop';
   #highlightEditables = false;
+  #pageStatus = 'draft';
 
   constructor(payload = {}) {
     this.#bus = new CmsEditorEventBus();
@@ -87,6 +88,7 @@ export class CmsEditorManager {
     this.#form = document.querySelector('#cms-page-form');
     this.#editorData = document.querySelector('#cms-editor-data');
     this.#errorBox = document.querySelector('#cms-editor-error');
+    this.#pageStatus = this.#cmsDocument.page.status === 'published' ? 'published' : 'draft';
   }
 
   init() {
@@ -150,6 +152,12 @@ export class CmsEditorManager {
 
     document.querySelector('#be-toggle-left')?.addEventListener('click', () => this.#togglePanel('#be-left'));
     document.querySelector('#be-toggle-right')?.addEventListener('click', () => this.#togglePanel('#be-right'));
+    document.querySelector('[data-cms-page-status]')?.addEventListener('select:change', (event) => {
+      const status = event.detail?.value;
+      if (!['draft', 'published'].includes(status)) return;
+      this.#pageStatus = status;
+      this.#updatePageStatusBadge();
+    });
     this.#form?.addEventListener('submit', (event) => this.#serializeForm(event));
     document.querySelector('#media-selector-modal')?.addEventListener('msm:submit', (event) => this.#onMediaSelected(event));
   }
@@ -164,6 +172,7 @@ export class CmsEditorManager {
     this.#preview.render();
     this.#updatePreviewModeButtons();
     this.#updateHighlightButton();
+    this.#updatePageStatusBadge();
   }
 
   #selectSection({ sectionId, scroll = false, rerenderPreview = true }) {
@@ -298,7 +307,7 @@ export class CmsEditorManager {
         title: this.#cmsDocument.page.title || this.#cmsDocument.schema.title,
         content: this.#cmsDocument.document,
         settings: this.#cmsDocument.page.settings || {},
-        action: event.submitter?.value || 'draft',
+        action: this.#pageStatus,
       });
     } catch {
       event.preventDefault();
@@ -329,6 +338,13 @@ export class CmsEditorManager {
       button.dataset.variant = this.#highlightEditables ? 'primary' : 'outline';
       button.setAttribute('aria-pressed', this.#highlightEditables ? 'true' : 'false');
     });
+  }
+
+  #updatePageStatusBadge() {
+    const badge = document.querySelector('[data-cms-page-status-badge]');
+    if (!badge) return;
+    badge.textContent = this.#pageStatus;
+    badge.dataset.variant = this.#pageStatus === 'published' ? 'primary' : 'secondary';
   }
 
   #togglePanel(selector) {

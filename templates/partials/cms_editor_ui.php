@@ -17,7 +17,8 @@
   <input id="cms-page-title" class="field__input be-post-title-input" type="text"
     value="<?= htmlspecialchars($page->title) ?>" readonly>
 </div>
-<span class="badge" data-variant="<?= $page->status === 'published' ? 'primary' : 'secondary' ?>">
+<span class="badge" data-cms-page-status-badge
+  data-variant="<?= $page->status === 'published' ? 'primary' : 'secondary' ?>">
   <?= htmlspecialchars($page->status) ?>
 </span>
 <?php $layout->end() ?>
@@ -57,8 +58,7 @@
   </button>
   <span class="tooltip__content">Fields</span>
 </span>
-<button form="cms-page-form" type="submit" class="btn" data-size="md" data-variant="primary" name="action"
-  value="draft">
+<button form="cms-page-form" type="submit" class="btn" data-size="md" data-variant="primary">
   Lưu
 </button>
 <?php $layout->end() ?>
@@ -80,11 +80,32 @@
 <?php $layout->end() ?>
 
 <?php $layout->start('right_panel') ?>
-<div id="be-right" class="be-panel">
-  <div class="tabs__list be-panel__tabs-list">
-    <button type="button" class="be-panel__tabs-trigger active">Section Fields</button>
+<div id="be-right" class="be-panel" data-tabs data-tabs-id="cms-right-panel" data-tabs-panel-active="cms-overview-panel"
+  data-tabs-sync="false">
+  <div class="tabs__list be-panel__tabs-list" role="tablist">
+    <button type="button" class="be-panel__tabs-trigger" data-tabs-trigger="cms-overview-panel">Tổng quan</button>
+    <button type="button" class="be-panel__tabs-trigger" data-tabs-trigger="cms-content-panel">Nội dung</button>
   </div>
-  <div class="be-panel__content" id="cms-section-inspector"></div>
+  <div class="be-panel__content">
+    <div id="cms-overview-panel" class="tabs__panel" data-tabs-panel="cms-overview-panel" role="tabpanel">
+      <div class="field-group">
+        <div class="field">
+          <span class="field__label" id="cms-page-status-label">Trạng thái trang</span>
+          <button type="button" class="select w-full" data-select-id="cms-page-status"
+            data-select-default-value="<?= htmlspecialchars($page->status === 'published' ? 'published' : 'draft') ?>"
+            data-cms-page-status aria-labelledby="cms-page-status-label" role="listbox">
+            <div class="select__content">
+              <div class="select__item" data-select-value="draft">Bản nháp</div>
+              <div class="select__item" data-select-value="published">Xuất bản</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="cms-content-panel" class="tabs__panel" data-tabs-panel="cms-content-panel" role="tabpanel">
+      <div id="cms-section-inspector"></div>
+    </div>
+  </div>
 </div>
 <?php $layout->end() ?>
 

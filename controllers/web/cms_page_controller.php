@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\Request;
 use App\Core\JsonResponse;
 use App\Cms\CmsStaticPageRenderer;
+use App\Cms\CmsPageState;
 use App\Services\CmsPageService;
 
 class CmsPageController extends Controller
@@ -46,15 +47,15 @@ class CmsPageController extends Controller
   {
     try {
       $payload = $this->decodeEditorPayload($request);
-      $action = (string) ($request->input('action', $payload['action'] ?? 'draft'));
+      $action = CmsPageState::fromAction($payload['action'] ?? $request->input('action', ''));
 
-      $page = $action === 'publish'
+      $page = $action === CmsPageState::PUBLISHED
         ? $this->_cmsPageService->publish($slug, $payload)
         : $this->_cmsPageService->saveDraft($slug, $payload);
 
       $request->session()->flashNotify(
         'success',
-        $action === 'publish' ? 'Đã xuất bản CMS page' : 'Đã lưu bản nháp CMS',
+        'Đã lưu CMS page',
         "CMS page '{$page->title}' đã được cập nhật."
       );
     } catch (\InvalidArgumentException | \RuntimeException $e) {
