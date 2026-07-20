@@ -84,12 +84,6 @@ if (!empty($data)) {
                           value="<?= htmlspecialchars((string) $val) ?>" class="form-control" <?= $disabledAttr ?>>
                     <?php break;
                     endswitch; ?>
-
-                    <?php if (!empty($setting['default_value']) && $val != $setting['default_value']): ?>
-                      <div>
-                        Mặc định: <i><?= htmlspecialchars((string) $setting['default_value']) ?></i>
-                      </div>
-                    <?php endif; ?>
                   </div>
                 </div>
               <?php endforeach; ?>
