@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -38,7 +40,7 @@ class InternshipGradeStore extends Store implements IInternshipGradeStore
       'final_score' => $data['final_score'],
       'score_reason' => $data['score_reason'] ?? null,
       'feedback' => $data['feedback'] ?? null,
-      'graded_at' => date('Y-m-d H:i:s'), 'graded_by' => $data['graded_by'],
+      'graded_at' => AppTime::now()->format('Y-m-d H:i:s'), 'graded_by' => $data['graded_by'],
       'grade_lock_at' => $data['grade_lock_at'] ?? null
     ]);
     $stmt = $this->db->prepare($query->toSql());
@@ -49,7 +51,7 @@ class InternshipGradeStore extends Store implements IInternshipGradeStore
 
   public function update(int $id, array $data): bool
   {
-    $now = date('Y-m-d H:i:s');
+    $now = AppTime::now()->format('Y-m-d H:i:s');
     $updateData = [
       'final_score' => $data['final_score'],
       'score_reason' => $data['score_reason'] ?? null,
@@ -70,7 +72,7 @@ class InternshipGradeStore extends Store implements IInternshipGradeStore
     $sql = "UPDATE internship_grades ig
             JOIN internship_batch_students bs ON ig.batch_student_id = bs.id
             JOIN internship_assignments ia ON ia.batch_student_id = bs.id
-            SET ig.grade_lock_at = NOW()
+            SET ig.grade_lock_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "'
             WHERE bs.batch_id = :batch_id 
               AND ia.teacher_id = :teacher_id
               AND ig.final_score IS NOT NULL 

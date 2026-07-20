@@ -108,7 +108,7 @@ class WebSettingsController extends Controller
     } else {
       $request->session()->flashNotify('success', 'Cập nhật cài đặt thành công!');
     }
-    return $this->redirect('admin/web_settings/' . $group . '/edit');
+    return $this->redirect('admin/web_settings?tab=' . $group);
   }
   public function destroy(string $id, Request $request)
   {
@@ -117,7 +117,7 @@ class WebSettingsController extends Controller
       $this->abort(404);
     if ($setting->is_locked) {
       $request->session()->flashNotify('error', 'Setting này do hệ thống định nghĩa, không thể xóa.');
-      return $this->redirect('admin/web_settings/' . $setting->group . '/edit');
+      return $this->redirect('admin/web_settings?tab=' . $setting->group);
     }
     $isSuccess = $this->_settingsService->deleteSetting((int) $id);
     if ($isSuccess) {
@@ -125,7 +125,7 @@ class WebSettingsController extends Controller
     } else {
       $request->session()->flashNotify('error', 'Có lỗi xảy ra, vui lòng thử lại.');
     }
-    return $this->redirect('admin/web_settings/' . $setting->group . '/edit');
+    return $this->redirect('admin/web_settings?tab=' . $setting->group);
   }
 
   public function updateMockTime(Request $request)

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Core\AppTime;
+
 use App\Stores\ReferralLetterStore;
 use App\Models\ReferralLetter;
 use Exception;
@@ -170,7 +172,7 @@ class ReferralLetterService implements IReferralLetterService
     $success = $this->_store->updateStatus($id, $status, [
       'cancel_reason' => $reason ?: null,
       'processed_by' => $processedBy,
-      'reviewed_at' => date('Y-m-d H:i:s'),
+      'reviewed_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ], ReferralLetterStatus::PENDING);
     
     if (!$success) {
@@ -243,7 +245,7 @@ class ReferralLetterService implements IReferralLetterService
       'recipient_name' => $name,
       'recipient_phone' => $phone,
       'recipient_email' => $email,
-      'received_at' => date('Y-m-d H:i:s'),
+      'received_at' => AppTime::now()->format('Y-m-d H:i:s'),
       'received_by' => $receivedBy,
     ]);
   }
@@ -342,7 +344,7 @@ class ReferralLetterService implements IReferralLetterService
       }
 
       $success = $this->_store->updateStatus($id, ReferralLetterStatus::APPROVED, [
-        'printed_at' => date('Y-m-d H:i:s'),
+        'printed_at' => AppTime::now()->format('Y-m-d H:i:s'),
         'processed_by' => $processedBy
       ], ReferralLetterStatus::APPROVED);
       
@@ -383,7 +385,7 @@ class ReferralLetterService implements IReferralLetterService
         $id = (int)$letter->id;
         $this->_store->updatePrintInfo($id, $printData);
         $success = $this->_store->updateStatus($id, ReferralLetterStatus::APPROVED, [
-          'printed_at' => date('Y-m-d H:i:s'),
+          'printed_at' => AppTime::now()->format('Y-m-d H:i:s'),
           'processed_by' => $processedBy
         ], ReferralLetterStatus::APPROVED);
         if ($success) $count++;

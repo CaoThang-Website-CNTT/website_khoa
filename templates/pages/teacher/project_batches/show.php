@@ -3,6 +3,7 @@
 use App\Enums\ProjectBatchStatus;
 use App\Enums\ProjectTopicStatus;
 use App\Models\ProjectBatch;
+use App\Core\AppTime;
 ?>
 
 <?php $layout->start("head") ?>
@@ -24,7 +25,7 @@ use App\Models\ProjectBatch;
 <?php
 $canPropose = false;
 if (!empty($batch['topic_proposal_start']) && !empty($batch['topic_proposal_end'])) {
-  $now = new \DateTime();
+  $now = AppTime::now();
   $start = new \DateTime($batch['topic_proposal_start']);
   $end = new \DateTime($batch['topic_proposal_end']);
   if ($end->format('H:i:s') === '00:00:00') {

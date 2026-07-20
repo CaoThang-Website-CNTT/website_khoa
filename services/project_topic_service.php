@@ -115,7 +115,7 @@ class ProjectTopicService implements IProjectTopicService
     $this->validateTopicPhase($topic['batch_id'], $teacherId);
 
     $updated = $this->_store->updateStatus($id, ProjectTopicStatus::PENDING, [
-      'submitted_at' => date('Y-m-d H:i:s')
+      'submitted_at' => AppTime::now()->format('Y-m-d H:i:s')
     ], $topic['status']);
 
     if (!$updated) {
@@ -168,7 +168,7 @@ class ProjectTopicService implements IProjectTopicService
 
     $updated = $this->_store->updateStatus($id, $status, [
       'reviewed_by' => $adminId,
-      'reviewed_at' => date('Y-m-d H:i:s'),
+      'reviewed_at' => AppTime::now()->format('Y-m-d H:i:s'),
       'reject_reason' => $reason
     ], ProjectTopicStatus::PENDING);
 

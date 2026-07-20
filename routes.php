@@ -166,7 +166,7 @@ $router->prefix('admin')->middleware([VerifyAuth::class, new VerifyRole('admin',
     $router->get('/create', [WebSettingsController::class, 'create']);
     $router->post('/', [WebSettingsController::class, 'store']);
     $router->get('/{group}/edit', [WebSettingsController::class, 'edit']);
-    $router->post('/{group}', [WebSettingsController::class, 'batchUpdate']);
+    $router->post('/{group}/batch-update', [WebSettingsController::class, 'batchUpdate']);
     $router->post('/delete/{id}', [WebSettingsController::class, 'destroy']);
   });
 

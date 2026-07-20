@@ -6,6 +6,7 @@ require_once BASE_PATH . '/includes/core/store.php';
 require_once BASE_PATH . '/models/internship_assignment.php';
 require_once BASE_PATH . '/models/assignment_log.php';
 
+use App\Core\AppTime;
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -92,7 +93,7 @@ class InternshipAssignmentStore extends Store implements IInternshipAssignmentSt
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_assignments')->update([
       'teacher_id' => $newTeacherId,
-      'updated_at' => date('Y-m-d H:i:s'),
+      'updated_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $assignmentId);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());

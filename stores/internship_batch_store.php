@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -309,7 +311,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batches')->update([
       'title' => $data['title'], 'description' => $data['description'] ?? null,
       'start_at' => $data['start_at'], 'end_at' => $data['end_at'],
-      'updated_at' => date('Y-m-d H:i:s'),
+      'updated_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -319,7 +321,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
   public function delete(int $id): bool
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_batches')->update([
-      'deleted_at' => date('Y-m-d H:i:s'),
+      'deleted_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -328,7 +330,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function updateStatus(int $id, string $status, array $extraData = []): bool
   {
-    $data = ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')];
+    $data = ['status' => $status, 'updated_at' => AppTime::now()->format('Y-m-d H:i:s')];
     foreach (['published_at', 'closed_at'] as $key) {
       if (array_key_exists($key, $extraData)) $data[$key] = $extraData[$key];
     }
@@ -340,7 +342,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function publishBatchGrades(int $batchId): bool
   {
-    $sql = "UPDATE internship_batches SET grades_published_at = NOW(), updated_at = NOW() WHERE id = :id";
+    $sql = "UPDATE internship_batches SET grades_published_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "', updated_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "' WHERE id = :id";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':id' => $batchId]);
     return $stmt->rowCount() > 0;
@@ -406,7 +408,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
 
   public function updateSupervisorQuota(int $batchId, int $teacherId, int $newQuota): bool
   {
-    $sql = "UPDATE internship_batch_supervisors SET max_students = :max_students, updated_at = NOW() 
+    $sql = "UPDATE internship_batch_supervisors SET max_students = :max_students, updated_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "'
             WHERE batch_id = :batch_id AND teacher_id = :teacher_id";
     $stmt = $this->db->prepare($sql);
     return $stmt->execute([
@@ -498,7 +500,7 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
             company_mentor_email = :company_mentor_email,
             internship_start_date = :internship_start_date, 
             internship_end_date = :internship_end_date,
-            updated_at = NOW()
+            updated_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "'
             WHERE id = :id";
 
     $stmt = $this->db->prepare($sql);

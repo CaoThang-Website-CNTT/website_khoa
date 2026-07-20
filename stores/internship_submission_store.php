@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -41,7 +43,7 @@ class InternshipSubmissionStore extends Store implements IInternshipSubmissionSt
       'batch_student_id' => $data['batch_student_id'], 'original_file_name' => $data['original_file_name'],
       'storage_mode' => $data['storage_mode'] ?? 'file', 'file_path' => $data['file_path'] ?? null,
       'external_url' => $data['external_url'] ?? null, 'is_latest' => 1,
-      'submitted_at' => date('Y-m-d H:i:s'),
+      'submitted_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ]);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -83,7 +85,7 @@ class InternshipSubmissionStore extends Store implements IInternshipSubmissionSt
       'original_file_name' => $data['original_file_name'], 'mime_type' => $data['mime_type'] ?? null,
       'storage_mode' => $data['storage_mode'] ?? 'file', 'file_path' => $data['file_path'] ?? null,
       'external_url' => $data['external_url'] ?? null, 'is_latest' => 1,
-      'submitted_at' => date('Y-m-d H:i:s'),
+      'submitted_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ]);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());

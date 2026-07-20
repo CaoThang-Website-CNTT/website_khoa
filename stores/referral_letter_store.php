@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Schema\Compiler\MySQLCompiler;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Store;
@@ -206,7 +208,7 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
    */
   public function create(array $referralLetter): int
   {
-    $now = date('Y-m-d H:i:s');
+    $now = AppTime::now()->format('Y-m-d H:i:s');
     $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->insert([
       'batch_student_id' => $referralLetter['batch_student_id'] ?? null,
       'company_id' => $referralLetter['company_id'] ?? null,
@@ -431,7 +433,7 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
       $params[':cancelled_by'] = $extraData['cancelled_by'];
     }
 
-    $data = ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')];
+    $data = ['status' => $status, 'updated_at' => AppTime::now()->format('Y-m-d H:i:s')];
     foreach (['printed_at', 'processed_by', 'cancel_reason', 'reviewed_at', 'cancelled_by'] as $key) {
       if (array_key_exists($key, $extraData)) $data[$key] = $extraData[$key];
     }
@@ -449,7 +451,7 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
   public function updateCompanyId(int $id, int $companyId): bool
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('referral_letters')->update([
-      'company_id'=>$companyId, 'updated_at'=>date('Y-m-d H:i:s')
+      'company_id'=>$companyId, 'updated_at'=>AppTime::now()->format('Y-m-d H:i:s')
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     return $stmt->execute($query->getBindings());
@@ -479,7 +481,7 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
     
     if (empty($fields)) return true;
 
-    $sql = "UPDATE referral_letters SET " . implode(', ', $fields) . ", updated_at = NOW() WHERE id = :id";
+    $sql = "UPDATE referral_letters SET " . implode(', ', $fields) . ", updated_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "' WHERE id = :id";
     $stmt = $this->db->prepare($sql);
     return $stmt->execute($params);
   }
@@ -493,7 +495,7 @@ class ReferralLetterStore extends Store implements IReferralLetterStore
       'recipient_email' => $data['recipient_email'],
       'received_at' => $data['received_at'],
       'received_by' => $data['received_by'],
-      'updated_at' => date('Y-m-d H:i:s'),
+      'updated_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     return $stmt->execute($query->getBindings());

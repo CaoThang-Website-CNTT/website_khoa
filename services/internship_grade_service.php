@@ -58,7 +58,7 @@ class InternshipGradeService implements IInternshipGradeService
 
     $gradeLockAt = null;
     if ($action === 'lock') {
-        $gradeLockAt = date('Y-m-d H:i:s');
+      $gradeLockAt = AppTime::now()->format('Y-m-d H:i:s');
     }
 
     if ($existingGrade) {
@@ -197,7 +197,7 @@ class InternshipGradeService implements IInternshipGradeService
         'score_reason' => $scoreReason,
         'feedback' => $feedback,
         'graded_by' => $adminId,
-        'grade_lock_at' => date('Y-m-d H:i:s')
+        'grade_lock_at' => AppTime::now()->format('Y-m-d H:i:s')
       ]);
       return ['success' => true, 'message' => 'Admin chấm điểm thành công.'];
     }
