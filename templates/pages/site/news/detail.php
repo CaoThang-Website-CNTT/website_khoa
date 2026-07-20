@@ -195,7 +195,7 @@ $pageJsonLd = [$articleSchema, $breadcrumbSchema];
                   <span class="sr-only">Danh mục:</span>
                 </div>
                 <?php foreach ($categories as $category): ?>
-                  <a href="/tin-tuc?category=<?= urlencode($category->slug) ?>" class="badge news-detail-footer__tag"
+                  <a href="<?= htmlspecialchars(url('danh-muc/' . $category->slug)) ?>" class="badge news-detail-footer__tag"
                     data-variant="outline">
                     <?= htmlspecialchars($category->name) ?>
                   </a>

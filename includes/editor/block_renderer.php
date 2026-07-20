@@ -126,6 +126,7 @@ final class BlockRenderer
     $html = '';
     $tocEntries = [];
     $imageCount = 0;
+    $usedAnchorIds = self::collectCustomAnchorIds($blocks);
 
     foreach ($blocks as $block) {
       $type = $block['type'];
@@ -136,6 +137,10 @@ final class BlockRenderer
       }
 
       try {
+        if ($type === 'blocks/heading' && trim((string) ($block['data']['meta']['anchor_id'] ?? '')) === '') {
+          $block['data']['meta']['anchor_id'] = self::generateHeadingAnchorId($block, $usedAnchorIds);
+        }
+
         // Track first image for LCP optimization
         if ($type === 'blocks/image') {
           $imageCount++;
@@ -176,6 +181,51 @@ final class BlockRenderer
     }
 
     return new RenderResult($html, $tocEntries);
+  }
+
+  /** @return array<string, true> */
+  private static function collectCustomAnchorIds(array $blocks): array
+  {
+    $used = [];
+
+    foreach ($blocks as $block) {
+      if (($block['type'] ?? '') !== 'blocks/heading') {
+        continue;
+      }
+
+      $anchorId = trim((string) ($block['data']['meta']['anchor_id'] ?? ''));
+      if ($anchorId !== '') {
+        $used[$anchorId] = true;
+      }
+    }
+
+    return $used;
+  }
+
+  /** @param array<string, true> $usedAnchorIds */
+  private static function generateHeadingAnchorId(array $block, array &$usedAnchorIds): string
+  {
+    $plainText = trim(implode('', array_map(
+      fn($segment) => is_string($segment['text'] ?? null) ? $segment['text'] : '',
+      $block['data']['rich_text'] ?? [],
+    )));
+
+    $base = \generateSlug($plainText);
+
+    if ($base === '') {
+      $blockId = trim((string) preg_replace('/[^a-zA-Z0-9_-]+/', '-', (string) ($block['id'] ?? '')), '-');
+      $base = $blockId !== '' ? "heading-{$blockId}" : 'heading';
+    }
+
+    $anchorId = $base;
+    $suffix = 2;
+    while (isset($usedAnchorIds[$anchorId])) {
+      $anchorId = "{$base}-{$suffix}";
+      $suffix++;
+    }
+
+    $usedAnchorIds[$anchorId] = true;
+    return $anchorId;
   }
 
   // ─── Registry ─────────────────────────────────────────────────────────────

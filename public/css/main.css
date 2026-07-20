@@ -316,6 +316,10 @@
   border-radius: var(--radius-full);
 }
 
+.news-detail-content .be-heading[id] {
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+}
+
 .news-detail-footer__tags {
   display: flex;
   gap: 0.5rem;
