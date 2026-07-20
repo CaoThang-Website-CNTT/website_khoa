@@ -2,14 +2,17 @@
 
 namespace App\Controllers;
 
-require_once BASE_PATH . "/includes/core/controller.php";
-
 use App\Core\Controller;
+use App\Services\DashboardStatsService;
 
 class DashboardController extends Controller
 {
   public function index()
   {
-    $this->render("admin/index", layout: "dashboard_layout");
+    $dashboardStatsService = new DashboardStatsService();
+
+    $this->render("admin/index", [
+      'overview' => $dashboardStatsService->getOverview(),
+    ], layout: "dashboard_layout");
   }
 }

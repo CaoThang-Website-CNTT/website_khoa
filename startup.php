@@ -150,6 +150,7 @@ require_once BASE_PATH . '/stores/project_batch_store.php';
 require_once BASE_PATH . '/stores/project_topic_store.php';
 require_once BASE_PATH . '/stores/project_group_store.php';
 require_once BASE_PATH . '/stores/project_aspiration_store.php';
+require_once BASE_PATH . '/stores/dashboard_stats_store.php';
 // Services
 require_once BASE_PATH . '/services/account_service.php';
 require_once BASE_PATH . '/services/auth_service.php';
@@ -180,6 +181,7 @@ require_once BASE_PATH . '/services/project_registration_service.php';
 require_once BASE_PATH . '/services/project_group_service.php';
 require_once BASE_PATH . '/services/project_aspiration_service.php';
 require_once BASE_PATH . '/services/project_eligibility_service.php';
+require_once BASE_PATH . "/services/dashboard_stats_service.php";
 // Controllers
 // Web
 require_once BASE_PATH . '/controllers/web/auth_controller.php';
