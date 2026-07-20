@@ -21,6 +21,8 @@ interface IStudentStore
   public function getByAccountId(int $accountId): ?Student;
   public function getByStudentId(int $student_id): ?Student;
   public function create(Student $student): Student;
+  public function createMany(array $students): void;
+  public function getByStudentIds(array $studentIds): array;
   public function update(Student $student): Student;
   public function softDelete(int $id): bool;
   public function getTotalCount(): int;
@@ -137,6 +139,35 @@ class StudentStore extends Store implements IStudentStore
 
     $student->id = (int) $this->db->lastInsertId();
     return $student;
+  }
+
+  public function createMany(array $students): void
+  {
+    if (empty($students)) {
+      return;
+    }
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('students')->insert($students);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+  }
+
+  public function getByStudentIds(array $studentIds): array
+  {
+    if (empty($studentIds)) {
+      return [];
+    }
+
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('students')
+      ->select('*')
+      ->in('student_id', $studentIds)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    return array_map(fn($row) => Student::fromArray($row), $stmt->fetchAll(PDO::FETCH_ASSOC));
   }
 
   public function update(Student $student): Student

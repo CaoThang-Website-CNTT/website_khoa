@@ -34,6 +34,9 @@ class UploadedFileHandler
     'image/x-icon',
     'image/vnd.microsoft.icon',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-excel', // .xls
+    'application/msexcel', // .xls (alternative)
+    'application/x-msexcel', // .xls (alternative)
     'application/zip',
     'application/x-zip-compressed',
     'application/x-rar',
@@ -51,6 +54,7 @@ class UploadedFileHandler
     'avif',
     'ico',
     'xlsx',
+    'xls',
     'zip',
     'rar',
     'pdf',

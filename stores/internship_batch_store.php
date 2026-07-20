@@ -43,6 +43,7 @@ interface IInternshipBatchStore
   public function getTeacherBatchStats(int $batchId, int $teacherId): array;
   public function isSupervisorOfBatch(int $batchId, int $teacherId): bool;
   public function hasOverlappingEnrollment(int $studentId, string $startAt, string $endAt, ?int $excludeBatchId = null): bool;
+  public function hasOverlappingEnrollments(array $studentIds, string $startAt, string $endAt, ?int $excludeBatchId = null): array;
   public function getBatchStudent(int $batchId, int $studentId): ?array;
   public function batchStudentHasDependencies(int $batchStudentId): bool;
 }
@@ -704,6 +705,37 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     $stmt = $this->db->prepare($sql . ' LIMIT 1');
     $stmt->execute($params);
     return (bool)$stmt->fetchColumn();
+  }
+
+  public function hasOverlappingEnrollments(array $studentIds, string $startAt, string $endAt, ?int $excludeBatchId = null): array
+  {
+    if (empty($studentIds)) {
+      return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
+    $sql = "SELECT DISTINCT bs.student_id
+            FROM internship_batch_students bs
+            JOIN internship_batches b ON b.id = bs.batch_id
+            WHERE bs.student_id IN ($placeholders)
+              AND b.status IN ('draft', 'published')
+              AND b.deleted_at IS NULL
+              AND b.start_at <= ?
+              AND b.end_at >= ?";
+
+    $params = array_values($studentIds);
+    $params[] = $endAt;
+    $params[] = $startAt;
+
+    if ($excludeBatchId !== null) {
+      $sql .= ' AND b.id <> ?';
+      $params[] = $excludeBatchId;
+    }
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    $result = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return array_map('intval', $result);
   }
 
   public function getBatchStudent(int $batchId, int $studentId): ?array

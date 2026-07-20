@@ -13,6 +13,9 @@ use App\Models\Account;
 interface IAccountStore
 {
   public function create(string $email, string $hash, string $role): Account;
+  public function createMany(array $accounts): void;
+  /** @return Account[] */
+  public function getByEmails(array $emails): array;
   /** @return Account[] */
   public function getPaginated(int $pageTo, int $limit = 15): array;
 
@@ -56,6 +59,17 @@ class AccountStore extends Store implements IAccountStore
     $stmt->execute($query->getBindings());
     $id = (int) $this->db->lastInsertId();
     return $this->getById($id) ?? throw new \RuntimeException("Không thể lấy Account sau khi tạo.");
+  }
+
+  public function createMany(array $accounts): void
+  {
+    if (empty($accounts)) {
+      return;
+    }
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('accounts')->insert($accounts);
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
   }
 
   private function ensurePasswordHash(string $password): string
@@ -162,6 +176,25 @@ class AccountStore extends Store implements IAccountStore
 
     $row = $stmt->fetch(\PDO::FETCH_ASSOC);
     return $row ? Account::fromArray($row) : null;
+  }
+
+  /** @return Account[] */
+  public function getByEmails(array $emails): array
+  {
+    if (empty($emails)) {
+      return [];
+    }
+
+    $builder = new QueryBuilder(new MySQLCompiler());
+    $query = $builder->from('accounts')
+      ->select('*')
+      ->in('email', $emails)
+      ->is('deleted_at', null);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    return array_map(fn($row) => Account::fromArray($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
   }
   public function updatePassword(int $id, string $newHash): bool
   {

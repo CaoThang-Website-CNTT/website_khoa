@@ -113,18 +113,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- STEP 2: CHỌN SINH VIÊN QUA IMPORT XLSX ---
 
   if (fileUploadStudents) {
+    // Cho phép chọn nhiều file cùng lúc
+    fileUploadStudents.setAttribute("multiple", "multiple");
+    fileUploadStudents.setAttribute("accept", ".xls,.xlsx");
+
     fileUploadStudents.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
 
       const formData = new FormData();
-      formData.append("file_import", file);
+      // Append tất cả file vào cùng 1 key dạng array
+      files.forEach((file) => formData.append("file_import[]", file));
 
-      // Reset state
-      state.importedStudents = [];
-      state.selectedStudents.clear();
-      updateCounter();
-      uploadStatusText.textContent = "Đang xử lý file...";
+      uploadStatusText.textContent = `Đang xử lý ${files.length} file...`;
 
       try {
         const csrfToken = document.querySelector('input[name="_token"]')?.value || "";
@@ -142,28 +143,46 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(result.message || "Lỗi khi phân tích file.");
         }
 
-        const data = result.data || [];
+        const newData = result.data || [];
 
-        if (data.length === 0) {
+        if (newData.length === 0) {
           throw new Error("Không tìm thấy dữ liệu sinh viên trong file.");
         }
 
-        // Tự động fake 1 thuộc tính _id duy nhất (hoặc lấy mssv làm id) cho TableManager
-        data.forEach((student, index) => {
+        // Gán _id và đánh dấu sinh viên mới để select mặc định
+        const existingCodes = new Set(state.importedStudents.map((s) => s.student_code));
+        let addedCount = 0;
+
+        newData.forEach((student) => {
           student._id = student.student_code;
-          // Mặc định chọn tất cả
-          state.selectedStudents.add(student._id);
+          // Chỉ thêm nếu MSSV chưa có trong danh sách (chống trùng lặp)
+          if (!existingCodes.has(student.student_code)) {
+            state.importedStudents.push(student);
+            state.selectedStudents.add(student._id);
+            existingCodes.add(student.student_code);
+            addedCount++;
+          }
         });
 
-        state.importedStudents = data;
-        uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-check mr-1"></i> Đã tải ${data.length} sinh viên</span>`;
+        const totalCount = state.importedStudents.length;
+        const dupCount = newData.length - addedCount;
+        let statusMsg = `<span class="font-semibold"><i class="fa-solid fa-check mr-1"></i> Tổng: ${totalCount} sinh viên`;
+        if (addedCount > 0) statusMsg += ` (+${addedCount} mới)`;
+        if (dupCount > 0) statusMsg += ` · Bỏ qua ${dupCount} trùng`;
+        statusMsg += `</span>`;
+        uploadStatusText.innerHTML = statusMsg;
+
+        // Reset input để có thể chọn lại cùng file
+        fileUploadStudents.value = "";
 
         initOrReloadTableManager();
       } catch (error) {
         uploadStatusText.innerHTML = `<span class="font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i> ${error.message}</span>`;
         if (window.toast) toast.error("Lỗi Import", error.message);
 
-        wrapperTableStudents.setAttribute("data-state", "closed");
+        if (state.importedStudents.length === 0) {
+          wrapperTableStudents.setAttribute("data-state", "closed");
+        }
       }
     });
   }
