@@ -15,6 +15,8 @@ interface IPostStore
   public function getPaginated(array $filters = []): array;
   public function getById(int $id): ?Post;
   public function getFeatured(int $limit = 5, array $filters = []): array;
+  public function getRelatedPosts(array $postIds, int $excludePostId, int $limit, int $offset): array;
+  public function countRelatedPosts(array $postIds, int $excludePostId): int;
 
   public function update(int $id, array $data): Post;
   public function softDelete(int $id): void;
@@ -142,6 +144,55 @@ class PostStore extends Store implements IPostStore
       fn(array $row) => Post::fromArray($row),
       $stmt->fetchAll(\PDO::FETCH_ASSOC),
     );
+  }
+
+  /** @return Post[] */
+  public function getRelatedPosts(array $postIds, int $excludePostId, int $limit, int $offset): array
+  {
+    if (empty($postIds)) {
+      return [];
+    }
+
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('posts')
+      ->select(self::LISTING_COLUMNS)
+      ->is('deleted_at', null)
+      ->eq('status', 'published')
+      ->in('id', $postIds)
+      ->neq('id', $excludePostId)
+      ->order('is_featured', ['ascending' => false])
+      ->order('published_at', ['ascending' => false])
+      ->order('id', ['ascending' => false])
+      ->range($offset, $offset + $limit - 1);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    return array_map(
+      fn(array $row) => Post::fromArray($row),
+      $stmt->fetchAll(\PDO::FETCH_ASSOC),
+    );
+  }
+
+  public function countRelatedPosts(array $postIds, int $excludePostId): int
+  {
+    if (empty($postIds)) {
+      return 0;
+    }
+
+    $query = (new QueryBuilder(new MySQLCompiler()))
+      ->from('posts')
+      ->select('COUNT(*) AS total')
+      ->is('deleted_at', null)
+      ->eq('status', 'published')
+      ->in('id', $postIds)
+      ->neq('id', $excludePostId);
+
+    $stmt = $this->db->prepare($query->toSql());
+    $stmt->execute($query->getBindings());
+
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    return $row ? (int) $row['total'] : 0;
   }
 
   public function findBySlug(string $slug): ?Post

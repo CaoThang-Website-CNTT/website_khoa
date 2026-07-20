@@ -98,6 +98,35 @@ class PostApiController extends Controller
     }
   }
 
+  public function related(Request $request, int $id)
+  {
+    $limit = min(20, max(1, (int) $request->query('limit', 3)));
+    $offset = max(0, (int) $request->query('offset', 0));
+
+    try {
+      $post = $this->_postService->getPost($id);
+      $relatedPosts = $this->_postService->getRelatedPosts($post, $limit, $offset);
+      $total = $this->_postService->countRelatedPosts($post);
+
+      return $this->json([
+        'items' => array_map(fn($relatedPost) => [
+          'id' => $relatedPost->id,
+          'title' => $relatedPost->title,
+          'slug' => $relatedPost->slug,
+          'image_url' => $relatedPost->imageUrl(),
+          'published_at' => $relatedPost->published_at,
+          'created_at' => $relatedPost->created_at,
+          'category' => $relatedPost->categories[0]->name ?? 'Tin tức',
+        ], $relatedPosts),
+        'total' => $total,
+        'has_more' => ($offset + count($relatedPosts)) < $total,
+      ], 200);
+    } catch (Exception $e) {
+      error_log('Lỗi truy vấn bài viết liên quan: ' . $e->getMessage());
+      return $this->json(null, 500, 'Không thể tải bài viết liên quan.');
+    }
+  }
+
   private function resolvePostImageUrl(?string $imagePath): string
   {
     $fallbackUrl = url('public/img/default-post-thumb.jpg');

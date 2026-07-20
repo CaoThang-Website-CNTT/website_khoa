@@ -99,6 +99,7 @@ $router->prefix('api')->group(function ($router) {
     // Posts
     $router->prefix('posts')->group(function (Router $router) {
       $router->get('/', [PostApiController::class, 'index']);
+      $router->get('/{id}/related', [PostApiController::class, 'related']);
     });
 
     // Carousels

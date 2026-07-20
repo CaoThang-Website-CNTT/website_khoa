@@ -86,11 +86,37 @@ $pageJsonLd = [$articleSchema, $breadcrumbSchema];
       $showAuthor = $newsSettings['show_author'] ?? false;
       $showDate = $newsSettings['show_date'] ?? true;
       $showViewCount = $newsSettings['show_view_count'] ?? false;
+
+      $renderToc = static function ($detail, string $modifier): void {
+      ?>
+        <nav class="news-toc card <?= $modifier ?>" aria-label="Mục lục bài viết">
+          <div class="card__header">
+            <h2 class="card__title">Nội dung bài viết</h2>
+            <hr class="separator">
+          </div>
+          <div class="card__content">
+            <ul class="news-toc-list">
+              <?php foreach ($detail->entries() as $entry): ?>
+                <li class="news-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
+                  <?php if ($entry->anchorId !== ''): ?>
+                    <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
+                      <?= htmlspecialchars($entry->plainText) ?>
+                    </a>
+                  <?php else: ?>
+                    <span><?= htmlspecialchars($entry->plainText) ?></span>
+                  <?php endif; ?>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        </nav>
+      <?php
+      };
       ?>
 
-      <div class="relative grid <?= $detail->hasToc() ? 'grid-cols-3' : 'grid-cols-1' ?> gap-8">
+      <div class="news-detail-layout relative grid <?= ($detail->hasToc() || !empty($relatedNews)) ? 'grid-cols-3' : 'grid-cols-1' ?> gap-8">
         <!-- LEFT: MAIN -->
-        <div class="news-detail col-span-2">
+        <div class="news-detail <?= ($detail->hasToc() || !empty($relatedNews)) ? 'col-span-2' : '' ?>">
           <!-- News Header -->
           <div class="news-detail-header">
             <!-- News Category -->
@@ -104,6 +130,10 @@ $pageJsonLd = [$articleSchema, $breadcrumbSchema];
             <h1 class="news-detail-header__title">
               <?= htmlspecialchars($news->title); ?>
             </h1>
+
+            <?php if ($detail->hasToc()): ?>
+              <?php $renderToc($detail, 'news-toc--mobile'); ?>
+            <?php endif; ?>
 
             <!-- Metadata Line -->
             <div class="news-detail-header__meta">
@@ -176,34 +206,59 @@ $pageJsonLd = [$articleSchema, $breadcrumbSchema];
 
           <!-- News Author -->
         </div>
-        <?php if ($detail->hasToc()): ?>
+        <?php if ($detail->hasToc() || !empty($relatedNews)): ?>
           <!-- RIGHT: SIDEBAR -->
           <div class="news-sidebar col-span-1">
             <div class="news-sidebar-wrapper">
               <!-- News TOC -->
-              <div class="news-toc card">
-                <div class="card__header">
-                  <h3 class="card__title">Nội dung bài viết</h3>
-                  <hr class="separator">
-                </div>
-                <div class="card__content">
-                  <ul class="news-toc-list">
-                    <?php foreach ($detail->entries() as $entry): ?>
-                      <li class="new-toc-list__item" style="padding-left: <?= ($entry->level - $detail->baseLevel()) ?>rem">
-                        <?php if ($entry->anchorId !== ''): ?>
-                          <a class="link-hover--standout" href="#<?= htmlspecialchars($entry->anchorId) ?>">
-                            <?= htmlspecialchars($entry->plainText) ?>
-                          </a>
-                        <?php else: ?>
-                          <span>
-                            <?= htmlspecialchars($entry->plainText) ?>
-                          </span>
-                        <?php endif; ?>
-                      </li>
+              <?php if ($detail->hasToc()): ?>
+                <?php $renderToc($detail, 'news-toc--desktop'); ?>
+              <?php endif; ?>
+
+              <?php if (!empty($relatedNews)): ?>
+                <section class="news-detail-related card" id="related-articles-block"
+                  data-api-url="<?= url('api/v1/posts/' . $news->id . '/related') ?>"
+                  data-base-url="<?= url('tin-tuc/') ?>" data-offset="<?= count($relatedNews) ?>">
+                  <div class="card__header">
+                    <h2 class="card__title">Bài viết liên quan</h2>
+                    <hr class="separator">
+                  </div>
+                  <div class="card__content news-detail-related__list" id="related-articles-list">
+                    <?php foreach ($relatedNews as $index => $related): ?>
+                      <?php
+                      $relatedCategory = $related->categories[0]->name ?? 'Tin tức';
+                      $relatedDate = $related->published_at ?? $related->created_at;
+                      $relatedImage = $related->imageUrl();
+                      ?>
+                      <?php if ($index > 0): ?><hr class="separator" aria-hidden="true"><?php endif; ?>
+                      <article class="news-detail-related__item">
+                        <a href="<?= url('tin-tuc/' . $related->slug) ?>" class="news-detail-related__link">
+                          <img class="news-detail-related__image" src="<?= htmlspecialchars($relatedImage) ?>"
+                            alt="" loading="lazy">
+                          <div class="news-detail-related__content">
+                            <span class="badge" data-variant="outline"><?= htmlspecialchars($relatedCategory) ?></span>
+                            <h3 class="news-detail-related__heading"><?= htmlspecialchars($related->title) ?></h3>
+                            <?php if (!empty($relatedDate)): ?>
+                              <time class="news-detail-related__date" datetime="<?= date('Y-m-d', strtotime($relatedDate)) ?>">
+                                <?= date('d/m/Y', strtotime($relatedDate)) ?>
+                              </time>
+                            <?php endif; ?>
+                          </div>
+                        </a>
+                      </article>
                     <?php endforeach; ?>
-                  </ul>
-                </div>
-              </div>
+                  </div>
+                  <?php if ($hasMoreRelated): ?>
+                    <div class="card__footer">
+                      <button class="news-detail-related__more btn" id="load-more-related-btn" type="button"
+                        data-variant="outline">
+                        <span>Xem thêm</span>
+                        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  <?php endif; ?>
+                </section>
+              <?php endif; ?>
             </div>
           </div>
         <?php endif; ?>
@@ -211,6 +266,11 @@ $pageJsonLd = [$articleSchema, $breadcrumbSchema];
     </div>
   </div>
 </section>
+
+<button class="news-back-to-top btn" id="news-back-to-top" type="button" data-variant="primary"
+  aria-label="Trở về đầu trang" title="Trở về đầu trang">
+  <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+</button>
 
 <?php $layout->start("scripts") ?>
 <script src="<?= url('public/js/pages/site/news/detail.js') ?>" type="module"></script>

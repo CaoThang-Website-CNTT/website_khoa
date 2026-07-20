@@ -23,6 +23,9 @@ interface IPostService
    * @return Post[]
    */
   public function getFeaturedPosts(int $limit = 5, bool $with_categories = false, array $filters = []): array;
+  /** @return Post[] */
+  public function getRelatedPosts(Post $post, int $limit = 3, int $offset = 0): array;
+  public function countRelatedPosts(Post $post): int;
   /**
    * Cập nhật nội dung và/hoặc trạng thái của bài viết.
    * Chỉ các field được truyền mới bị ghi đè - các field còn lại giữ nguyên.
@@ -138,6 +141,32 @@ class PostService implements IPostService
       }
     }
     return $posts;
+  }
+
+  /** @return Post[] */
+  public function getRelatedPosts(Post $post, int $limit = 3, int $offset = 0): array
+  {
+    $categoryIds = array_map(fn($category) => (int) $category->id, $post->categories ?? []);
+    if (empty($categoryIds)) {
+      return [];
+    }
+
+    $postIds = $this->_categoryPostStore->getPostIdsByCategoryIds($categoryIds);
+    $relatedPosts = $this->_postStore->getRelatedPosts($postIds, (int) $post->id, $limit, $offset);
+    $this->eagerLoadListingRelations($relatedPosts);
+
+    return $relatedPosts;
+  }
+
+  public function countRelatedPosts(Post $post): int
+  {
+    $categoryIds = array_map(fn($category) => (int) $category->id, $post->categories ?? []);
+    if (empty($categoryIds)) {
+      return 0;
+    }
+
+    $postIds = $this->_categoryPostStore->getPostIdsByCategoryIds($categoryIds);
+    return $this->_postStore->countRelatedPosts($postIds, (int) $post->id);
   }
 
   public function create(array $payload): Post
