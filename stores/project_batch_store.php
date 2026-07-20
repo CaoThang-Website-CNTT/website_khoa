@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -65,7 +67,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
       'max_aspirations' => $data['max_aspirations'] ?? 3,
       'min_class_of' => $data['min_class_of'] ?? 0,
       'max_class_of' => $data['max_class_of'] ?? 0,
-      'updated_at' => date('Y-m-d H:i:s'),
+      'updated_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -76,7 +78,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('project_batches')->update([
       'allocation_published_at' => $time,
-      'updated_at' => date('Y-m-d H:i:s'),
+      'updated_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -85,7 +87,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
 
   public function updateStatus(int $id, string $status, array $extraData = []): bool
   {
-    $data = ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')];
+    $data = ['status' => $status, 'updated_at' => AppTime::now()->format('Y-m-d H:i:s')];
     foreach (['published_at', 'closed_at'] as $key) {
       if (array_key_exists($key, $extraData)) {
         $data[$key] = $extraData[$key];
@@ -100,7 +102,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
   public function deleteBatch(int $id): bool
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('project_batches')->update([
-      'deleted_at' => date('Y-m-d H:i:s'),
+      'deleted_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -229,7 +231,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
   {
     if (empty($supervisors)) return;
     $rows = [];
-    $now = date('Y-m-d H:i:s');
+    $now = AppTime::now()->format('Y-m-d H:i:s');
     foreach ($supervisors as $sv) {
       $rows[] = [
         'batch_id' => $batchId,
@@ -272,7 +274,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
   {
     $this->db->prepare("
       INSERT INTO project_batch_supervisors (batch_id, teacher_id, min_students, max_students, is_active, created_at, updated_at) 
-      VALUES (?, ?, ?, ?, 1, NOW(), NOW())
+      VALUES (?, ?, ?, ?, 1, '" . AppTime::now()->format('Y-m-d H:i:s') . "', '" . AppTime::now()->format('Y-m-d H:i:s') . "')
     ")->execute([$batchId, $teacherId, $minStudents, $maxStudents]);
   }
 
@@ -280,7 +282,7 @@ class ProjectBatchStore extends Store implements IProjectBatchStore
   {
     $this->db->prepare("
       UPDATE project_batch_supervisors 
-      SET min_students = ?, max_students = ?, updated_at = NOW() 
+      SET min_students = ?, max_students = ?, updated_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "' 
       WHERE batch_id = ? AND teacher_id = ?
     ")->execute([$minStudents, $maxStudents, $batchId, $teacherId]);
   }

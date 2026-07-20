@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -48,7 +50,7 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
       'title' => $data['title'],
       'description' => $data['description'] ?? null,
       'max_students' => $data['max_students'] ?? 2,
-      'updated_at' => date('Y-m-d H:i:s'),
+      'updated_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ];
     if (isset($data['pdf_file_path'])) {
       $updateData['pdf_file_path'] = $data['pdf_file_path'];
@@ -69,7 +71,7 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
   public function deleteTopic(int $id): bool
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('project_topics')->update([
-      'deleted_at' => date('Y-m-d H:i:s'),
+      'deleted_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -78,7 +80,7 @@ class ProjectTopicStore extends Store implements IProjectTopicStore
 
   public function updateStatus(int $id, string $status, array $extraData = [], ?string $expectedOldStatus = null): bool
   {
-    $data = ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')];
+    $data = ['status' => $status, 'updated_at' => AppTime::now()->format('Y-m-d H:i:s')];
     foreach (['reviewed_at', 'reviewed_by', 'reject_reason', 'submitted_at'] as $key) {
       if (array_key_exists($key, $extraData)) {
         $data[$key] = $extraData[$key];

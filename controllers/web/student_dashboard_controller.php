@@ -9,6 +9,7 @@ use App\Services\{StudentService, ClassroomService, InternshipBatchService, Inte
 use App\Core\Files\UploadedFileHandler;
 use App\Enums\BatchStatus;
 use App\Models\InternshipBatch;
+use App\Core\AppTime;
 use Exception;
 
 class StudentDashboardController extends Controller
@@ -178,7 +179,7 @@ class StudentDashboardController extends Controller
       $startAt = new \DateTime($dashboardData['current']['start_at']);
       $companyDeadlineDt = (clone $startAt)->modify("+{$allowedWeeks} weeks");
       $companyDeadline = $companyDeadlineDt->format('Y-m-d');
-      $now = new \DateTime();
+      $now = AppTime::now();
       $canEditCompany = ($now <= $companyDeadlineDt);
     }
 
@@ -208,7 +209,7 @@ class StudentDashboardController extends Controller
         $reportDeadlineDt = (clone $endAtDt)->modify("+{$allowedDays} days");
         $reportDeadline = $reportDeadlineDt->format('Y-m-d');
 
-        $now = new \DateTime();
+        $now = AppTime::now();
         if ($now > $reportDeadlineDt) {
           $canSubmitReport = false;
           $cannotSubmitReason = 'Đã hết hạn nộp';
@@ -231,7 +232,7 @@ class StudentDashboardController extends Controller
     }
 
     // Chuẩn hóa trạng thái hành trình để view chỉ chịu trách nhiệm trình bày.
-    $now = new \DateTime();
+    $now = AppTime::now();
     $startAt = !empty($dashboardData['current']['start_at']) ? new \DateTime($dashboardData['current']['start_at']) : null;
     $endAt = !empty($dashboardData['current']['end_at']) ? new \DateTime($dashboardData['current']['end_at']) : null;
     
@@ -346,7 +347,7 @@ class StudentDashboardController extends Controller
     if ($batch && $batch['start_at']) {
       $allowedWeeks = (int)$this->_webSettingsService->getValue('internship_company_declaration_weeks', 3);
       $deadlineDt = (new \DateTime($batch['start_at']))->modify("+{$allowedWeeks} weeks");
-      if (new \DateTime() > $deadlineDt) {
+      if (AppTime::now() > $deadlineDt) {
         $request->session()->flashNotify('error', 'Đã hết thời hạn khai báo thông tin công ty.');
         return $this->redirect("/student/internship/{$batch_id}");
       }
@@ -443,7 +444,7 @@ class StudentDashboardController extends Controller
         if ($batch['end_at']) {
           $allowedDays = (int)$this->_webSettingsService->getValue('internship_report_submission_days', 7);
           $deadlineDt = (new \DateTime($batch['end_at']))->modify("+{$allowedDays} days");
-          if (new \DateTime() > $deadlineDt) {
+          if (AppTime::now() > $deadlineDt) {
             throw new Exception('Đã hết thời hạn nộp tài liệu thực tập.');
           }
         }
@@ -809,7 +810,7 @@ class StudentDashboardController extends Controller
     }
 
     $startAt = $dashboardData['current']['start_at'];
-    $nowStr = (new \DateTime())->format('Y-m-d');
+    $nowStr = (AppTime::now())->format('Y-m-d');
     if ($startAt) {
       $startDt = new \DateTime($startAt);
       $dayOfWeek = (int)$startDt->format('N');
@@ -862,7 +863,7 @@ class StudentDashboardController extends Controller
     }
 
     $startAt = $dashboardData['current']['start_at'];
-    $nowStr = (new \DateTime())->format('Y-m-d');
+    $nowStr = (AppTime::now())->format('Y-m-d');
     if ($startAt) {
       $startDt = new \DateTime($startAt);
       $dayOfWeek = (int)$startDt->format('N');

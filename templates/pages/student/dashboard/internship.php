@@ -2,6 +2,7 @@
 
 use App\Enums\BatchStatus;
 use App\Models\InternshipBatch;
+use App\Core\AppTime;
 
 /**
  * View: Thông tin thực tập sinh viên
@@ -156,7 +157,7 @@ $effectiveMetadata = $effStatus ? [
         id="internship-phase-1" role="tabpanel" aria-labelledby="internship-phase-tab-1">
         <?php
         $deadlineDt = $company_deadline ? new \DateTime($company_deadline) : null;
-        $now = new \DateTime();
+        $now = AppTime::now();
         ?>
           <?php if ($can_edit_company): ?>
             <form action="<?= url("student/internship/{$current['id']}/company") ?>" method="POST" id="companyForm">

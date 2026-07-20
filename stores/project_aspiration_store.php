@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -75,7 +77,7 @@ class ProjectAspirationStore extends Store implements IProjectAspirationStore
   public function updateAspirationStatus(int $id, string $status): bool
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('project_aspirations')
-      ->update(['status' => $status, 'updated_at' => date('Y-m-d H:i:s')])
+      ->update(['status' => $status, 'updated_at' => AppTime::now()->format('Y-m-d H:i:s')])
       ->eq('id', $id);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -85,7 +87,7 @@ class ProjectAspirationStore extends Store implements IProjectAspirationStore
   public function updateStatusByGroupAndTopic(int $groupId, int $topicId, string $status): bool
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('project_aspirations')
-      ->update(['status' => $status, 'updated_at' => date('Y-m-d H:i:s')])
+      ->update(['status' => $status, 'updated_at' => AppTime::now()->format('Y-m-d H:i:s')])
       ->eq('group_id', $groupId)->eq('topic_id', $topicId);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -107,7 +109,7 @@ class ProjectAspirationStore extends Store implements IProjectAspirationStore
 
   public function lockAspirations(int $groupId): bool
   {
-    $sql = "UPDATE project_aspirations SET locked_at = NOW() WHERE group_id = :group_id AND locked_at IS NULL";
+    $sql = "UPDATE project_aspirations SET locked_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "' WHERE group_id = :group_id AND locked_at IS NULL";
     $stmt = $this->db->prepare($sql);
     $stmt->execute([':group_id' => $groupId]);
     return $stmt->rowCount() > 0;

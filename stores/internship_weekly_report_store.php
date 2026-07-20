@@ -173,7 +173,7 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
       'no_activity_note' => $data['no_activity_note'] ?? null,
       'is_late' => $data['is_late'] ?? 0,
       'is_latest' => 1,
-      'submitted_at' => date('Y-m-d H:i:s')
+      'submitted_at' => AppTime::now()->format('Y-m-d H:i:s')
     ]);
 
     $stmt = $this->db->prepare($query->toSql());
@@ -273,7 +273,7 @@ class InternshipWeeklyReportStore extends Store implements IInternshipWeeklyRepo
     $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_weekly_reports')
       ->update([
         'is_seen_by_teacher' => 1,
-        'teacher_interacted_at' => date('Y-m-d H:i:s')
+        'teacher_interacted_at' => AppTime::now()->format('Y-m-d H:i:s')
       ])
       ->in('id', $reportIds)
       ->eq('is_seen_by_teacher', 0);

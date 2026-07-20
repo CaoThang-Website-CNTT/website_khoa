@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Core\AppTime;
+
 use App\Stores\ProjectBatchStore;
 use App\Core\Pageable;
 use App\Enums\ProjectBatchStatus;
@@ -102,13 +104,13 @@ class ProjectBatchService implements IProjectBatchService
     }
 
     return $this->_store->updateStatus($id, ProjectBatchStatus::PUBLISHED, [
-      'published_at' => date('Y-m-d H:i:s')
+      'published_at' => AppTime::now()->format('Y-m-d H:i:s')
     ]);
   }
 
   public function setAllocationPublished(int $batchId): void
   {
-    $this->_store->updateAllocationPublishedAt($batchId, date('Y-m-d H:i:s'));
+    $this->_store->updateAllocationPublishedAt($batchId, AppTime::now()->format('Y-m-d H:i:s'));
   }
 
   public function unpublishAllocation(int $batchId): void
@@ -127,7 +129,7 @@ class ProjectBatchService implements IProjectBatchService
     }
 
     return $this->_store->updateStatus($id, ProjectBatchStatus::CLOSED, [
-      'closed_at' => date('Y-m-d H:i:s')
+      'closed_at' => AppTime::now()->format('Y-m-d H:i:s')
     ]);
   }
 

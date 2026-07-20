@@ -58,7 +58,7 @@ class InternshipGradeService implements IInternshipGradeService
 
     $gradeLockAt = null;
     if ($action === 'lock') {
-        $gradeLockAt = date('Y-m-d H:i:s');
+      $gradeLockAt = AppTime::now()->format('Y-m-d H:i:s');
     }
 
     if ($existingGrade) {

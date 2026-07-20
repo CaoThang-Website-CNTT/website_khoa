@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Core\AppTime;
 use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore, InternshipGradeStore};
 use App\Models\Student;
 use App\Core\Pageable;
@@ -333,7 +334,7 @@ class InternshipBatchService implements IInternshipBatchService
       throw new Exception('Vui lòng thêm ít nhất một sinh viên trước khi công bố.');
     }
     return $this->_store->updateStatus($id, BatchStatus::PUBLISHED, [
-      'published_at' => date('Y-m-d H:i:s')
+      'published_at' => AppTime::now()->format('Y-m-d H:i:s')
     ]);
   }
 
@@ -363,7 +364,7 @@ class InternshipBatchService implements IInternshipBatchService
       throw new Exception('Chỉ có đợt thực tập đã công bố mới có thể đóng.');
     }
     return $this->_store->updateStatus($id, BatchStatus::CLOSED, [
-      'closed_at' => date('Y-m-d H:i:s')
+      'closed_at' => AppTime::now()->format('Y-m-d H:i:s')
     ]);
   }
 

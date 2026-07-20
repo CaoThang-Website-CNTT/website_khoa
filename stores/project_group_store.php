@@ -2,6 +2,8 @@
 
 namespace App\Stores;
 
+use App\Core\AppTime;
+
 use App\Core\Store;
 use App\Core\Schema\QueryBuilder;
 use App\Core\Schema\Compiler\MySQLCompiler;
@@ -74,7 +76,7 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('project_group_members')->update([
       'is_confirmed' => 1,
-      'confirmed_at' => date('Y-m-d H:i:s')
+      'confirmed_at' => AppTime::now()->format('Y-m-d H:i:s')
     ])->eq('group_id', $groupId)->eq('student_id', $studentId);
     $stmt = $this->db->prepare($query->toSql());
     $stmt->execute($query->getBindings());
@@ -271,7 +273,7 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
   public function assignTopic(int $groupId, int $topicId): bool
   {
     $sql = "UPDATE project_groups 
-                SET assigned_topic_id = :topic_id, assigned_at = NOW(), updated_at = NOW() 
+                SET assigned_topic_id = :topic_id, assigned_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "', updated_at = '" . AppTime::now()->format('Y-m-d H:i:s') . "' 
                 WHERE id = :group_id";
     $stmt = $this->db->prepare($sql);
     return $stmt->execute([
@@ -562,7 +564,7 @@ class ProjectGroupStore extends Store implements IProjectGroupStore
       'supervisor_opinion' => $data['supervisor_opinion'] ?: null,
       'execution_start' => $data['execution_start'] ?: null,
       'execution_end' => $data['execution_end'] ?: null,
-      'updated_at' => date('Y-m-d H:i:s'),
+      'updated_at' => AppTime::now()->format('Y-m-d H:i:s'),
     ])->eq('id', $groupId);
     $stmt = $this->db->prepare($query->toSql());
     return $stmt->execute($query->getBindings());
