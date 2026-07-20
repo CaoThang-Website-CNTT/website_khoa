@@ -263,6 +263,34 @@ class CompanyService implements ICompanyService
    */
   private function normalizeName(string $name): string
   {
-    return mb_strtolower(trim($name), 'UTF-8');
+    $name = mb_strtolower(trim($name), 'UTF-8');
+
+    // Xóa dấu tiếng Việt
+    $unicode = [
+      'a' => 'á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ',
+      'd' => 'đ',
+      'e' => 'é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ',
+      'i' => 'í|ì|ỉ|ĩ|ị',
+      'o' => 'ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ',
+      'u' => 'ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự',
+      'y' => 'ý|ỳ|ỷ|ỹ|ỵ',
+    ];
+    foreach ($unicode as $nonUnicode => $uni) {
+      $name = preg_replace("/($uni)/i", $nonUnicode, $name);
+    }
+
+    // Xóa ký tự đặc biệt, dấu câu, chỉ giữ a-z, 0-9 và khoảng trắng
+    $name = preg_replace('/[^a-z0-9\s]/', ' ', $name);
+
+    // Xóa các tiền tố/hậu tố pháp lý phổ biến không mang tính phân biệt
+    $removeWords = ['cong ty', 'tnhh', 'mtv', 'cp', 'co phan', 'tap doan', 'chi nhanh', 'jsc', 'ltd'];
+    foreach ($removeWords as $word) {
+      $name = preg_replace("/\b$word\b/i", ' ', $name);
+    }
+
+    // Xóa khoảng trắng thừa
+    $name = preg_replace('/\s+/', ' ', $name);
+
+    return trim($name);
   }
 }
