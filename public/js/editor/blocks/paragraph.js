@@ -30,8 +30,7 @@ export class ParagraphBlock extends EditorBlock {
 
     el.addEventListener('paste', (e) => {
       e.preventDefault();
-      const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-      this.paste(this.esc(text));
+      this.pasteRichText((e.originalEvent || e).clipboardData, el);
     });
 
     // input: không lưu HTML string - chỉ sync khi serialize (serializeData đọc từ DOM)

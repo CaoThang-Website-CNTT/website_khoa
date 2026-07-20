@@ -170,6 +170,55 @@ export class EditorBlock {
     sel.collapseToEnd();
   }
 
+  /**
+   * Lọc HTML từ clipboard qua danh sách định dạng rich-text được trình soạn thảo cho phép.
+   * Các phần tử và kiểu dáng không được hỗ trợ sẽ được chuyển thành văn bản;
+   * các định dạng hợp lệ (bao gồm liên kết an toàn) vẫn được giữ nguyên.
+   *
+   * @param {DataTransfer|null} clipboardData
+   * @param {HTMLElement|null} editableEl
+   */
+  pasteRichText(clipboardData, editableEl = this.dom) {
+    const selection = window.getSelection();
+    if (!selection?.rangeCount || !editableEl) return;
+
+    const range = selection.getRangeAt(0);
+    if (!editableEl.contains(range.commonAncestorContainer)) return;
+
+    const clipboardHtml = clipboardData?.getData('text/html') ?? '';
+    const clipboardText = clipboardData?.getData('text/plain') ?? '';
+    let safeHtml = '';
+
+    if (clipboardHtml) {
+      const tokens = RichTextParser.parse(clipboardHtml);
+      const safeSegments = BlockSerializer.tokensToSegments(tokens);
+      const safeTokens = BlockSerializer.segmentsToTokens(safeSegments);
+      safeHtml = RichTextParser.serialize(safeTokens);
+    }
+
+    // execCommand tạo một giao dịch chỉnh sửa gốc của contenteditable, nhờ đó
+    // thao tác dán có thể hoàn tác/làm lại bằng Ctrl+Z, Ctrl+Y.
+    const command = safeHtml ? 'insertHTML' : 'insertText';
+    const value = safeHtml || clipboardText;
+    if (editableEl.ownerDocument.execCommand(command, false, value)) return;
+
+    // Fallback cho trình duyệt không hỗ trợ lệnh chỉnh sửa ở trên.
+    const fragment = safeHtml
+      ? range.createContextualFragment(safeHtml)
+      : document.createTextNode(clipboardText);
+    const lastNode = fragment.lastChild;
+    const caretNode = lastNode || fragment;
+
+    range.deleteContents();
+    range.insertNode(fragment);
+    range.setStartAfter(caretNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    editableEl.normalize();
+    editableEl.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
   exportCanonical() {
     return {
       rich_text: this.data.rich_text ?? [],

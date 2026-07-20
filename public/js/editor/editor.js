@@ -486,13 +486,64 @@ export class EditorManager {
    * Xử lý phím Enter tập trung
    */
   #handleGlobalEnter(e) {
-    const { blockId, blockType } = this.#contextStore.cursor;
+    if (e.isComposing) return;
 
-    if (!blockId || this.#contextStore.type === 'none') return;
+    const editable = e.target.closest('[data-be-editable][contenteditable="true"]');
+    const card = editable?.closest('[data-be-block-id]');
+    const blockId = card?.dataset.beBlockId;
+    const block = blockId ? this.#canvas.getBlock(blockId) : null;
+    if (!editable || !block || block.type !== 'blocks/paragraph') return;
 
-    if (blockType === 'blocks/paragraph') {
-      e.preventDefault();
+    const selection = window.getSelection();
+    if (!selection?.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const offsets = InlineFormatter.getRangeOffsets(range, editable);
+    if (!offsets) return;
+
+    e.preventDefault();
+
+    const tokens = InlineFormatter.parse(editable.innerHTML);
+    const contentLength = tokens.reduce((total, token) => total + token.text.length, 0);
+    const beforeTokens = this.#sliceRichTokens(tokens, 0, offsets.start);
+    const afterTokens = this.#sliceRichTokens(tokens, offsets.end, contentLength);
+    const beforeContent = BlockSerializer.tokensToSegments(beforeTokens);
+    const afterContent = BlockSerializer.tokensToSegments(afterTokens);
+
+    this.#canvas.updateBlock(blockId, { rich_text: beforeContent }, { silent: true });
+    editable.innerHTML = InlineFormatter.serialize(beforeTokens);
+
+    const newBlock = this.#canvas.addBlock('blocks/paragraph', {
+      rich_text: afterContent,
+      meta: { ...block.data.meta, anchor_id: '' },
+    }, blockId);
+
+    this.#isDirty = true;
+    requestAnimationFrame(() => newBlock.focus(this.#bus, 'start'));
+  }
+
+  /**
+   * Cắt một khoảng ký tự từ danh sách token mà vẫn giữ định dạng và liên kết.
+   */
+  #sliceRichTokens(tokens, start, end) {
+    if (start >= end) return [];
+
+    const result = [];
+    let offset = 0;
+
+    for (const token of tokens) {
+      const tokenStart = offset;
+      const tokenEnd = offset + token.text.length;
+      offset = tokenEnd;
+
+      if (tokenEnd <= start || tokenStart >= end) continue;
+
+      const sliceStart = Math.max(start, tokenStart) - tokenStart;
+      const sliceEnd = Math.min(end, tokenEnd) - tokenStart;
+      result.push(token.clone({ text: token.text.slice(sliceStart, sliceEnd) }));
     }
+
+    return result;
   }
 
   #getEditableEl(blockId, range = null) {

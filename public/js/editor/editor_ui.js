@@ -235,11 +235,44 @@ class EditorMetaBinder {
   }
 
   #bindEvents() {
+    this.container.addEventListener('paste', e => this.#handlePaste(e));
     this.container.addEventListener('input', e => this.#handleInput(e));
     this.container.addEventListener('change', e => this.#handleChange(e));
     this.container.addEventListener('click', e => this.#handleSwitchClick(e));
 
     document.addEventListener('select:change', e => this.#handleSelectClick(e));
+  }
+
+  #handlePaste(e) {
+    const el = e.target.closest('[contenteditable="true"][data-be-meta-key]');
+    if (!el) return;
+
+    e.preventDefault();
+
+    // Metadata editables such as the post title are plain-text fields.
+    // Collapse pasted line breaks so browser clipboard HTML cannot create
+    // nested elements or carry foreign formatting into the canvas.
+    const text = (e.clipboardData?.getData('text/plain') ?? '')
+      .replace(/\s*\r?\n\s*/g, ' ');
+    if (el.ownerDocument.execCommand('insertText', false, text)) return;
+
+    // Fallback cho trình duyệt không hỗ trợ insertText.
+    const selection = window.getSelection();
+    if (!selection?.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    if (!el.contains(range.commonAncestorContainer)) return;
+
+    range.deleteContents();
+    const textNode = document.createTextNode(text);
+    range.insertNode(textNode);
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    el.normalize();
+
+    el.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   #handleInput(e) {
