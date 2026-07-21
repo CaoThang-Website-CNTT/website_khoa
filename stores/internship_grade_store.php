@@ -37,6 +37,7 @@ class InternshipGradeStore extends Store implements IInternshipGradeStore
   {
     $query = (new QueryBuilder(new MySQLCompiler()))->from('internship_grades')->insert([
       'batch_student_id' => $data['batch_student_id'],
+      'has_submitted_hardcopy' => $data['has_submitted_hardcopy'] ?? 0,
       'final_score' => $data['final_score'],
       'score_reason' => $data['score_reason'] ?? null,
       'feedback' => $data['feedback'] ?? null,
@@ -58,6 +59,9 @@ class InternshipGradeStore extends Store implements IInternshipGradeStore
       'feedback' => $data['feedback'] ?? null,
       'graded_at' => $now, 'graded_by' => $data['graded_by'], 'updated_at' => $now,
     ];
+    if (array_key_exists('has_submitted_hardcopy', $data)) {
+        $updateData['has_submitted_hardcopy'] = $data['has_submitted_hardcopy'];
+    }
     if (array_key_exists('grade_lock_at', $data)) {
         $updateData['grade_lock_at'] = $data['grade_lock_at'];
     }
@@ -76,6 +80,7 @@ class InternshipGradeStore extends Store implements IInternshipGradeStore
             WHERE bs.batch_id = :batch_id 
               AND ia.teacher_id = :teacher_id
               AND ig.final_score IS NOT NULL 
+              AND ig.has_submitted_hardcopy = 1
               AND ig.grade_lock_at IS NULL";
               
     $stmt = $this->db->prepare($sql);

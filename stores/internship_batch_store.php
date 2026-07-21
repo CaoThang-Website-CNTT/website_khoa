@@ -839,9 +839,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               bs.company_mentor_phone,
               bs.company_mentor_email,
               t.full_name AS teacher_name,
-              IF(ig.grade_lock_at IS NOT NULL, ig.final_score, 0) AS grade_score,
-              IF(ig.grade_lock_at IS NOT NULL, ig.score_reason, NULL) AS grade_reason,
-              IF(ig.grade_lock_at IS NOT NULL, ig.feedback, NULL) AS grade_feedback
+              IF(ig.grade_lock_at IS NOT NULL AND ig.has_submitted_hardcopy = 1, ig.final_score, 0) AS grade_score,
+              IF(ig.grade_lock_at IS NOT NULL AND ig.has_submitted_hardcopy = 1, ig.score_reason, NULL) AS grade_reason,
+              IF(ig.grade_lock_at IS NOT NULL AND ig.has_submitted_hardcopy = 1, ig.feedback, NULL) AS grade_feedback
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN accounts acc ON s.account_id = acc.id

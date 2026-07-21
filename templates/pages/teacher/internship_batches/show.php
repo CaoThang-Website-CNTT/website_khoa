@@ -282,9 +282,7 @@ $studentsData = array_map(function ($sv) {
 <div class="modal" id="publish-confirm-modal" tabindex="-1" data-state="closed">
   <div class="modal__header">
     <h3 class="modal__title">Xác nhận nộp điểm</h3>
-    <p class="modal__description">Hành động này sẽ chốt và gửi <span class="font-semibold">TOÀN BỘ</span> điểm nháp
-      hiện tại của bạn cho quản trị viên. Các sinh viên chưa được nhập điểm sẽ bị bỏ qua. Bạn có chắc chắn muốn tiếp tục?
-    </p>
+    <p class="modal__description">Bạn có chắc chắn muốn nộp điểm về Khoa không? Hệ thống sẽ <span class="font-semibold">chỉ gửi điểm của những sinh viên được xác nhận "Đã nộp bản in báo cáo"</span>. Sau khi nộp, bạn sẽ không thể chỉnh sửa điểm của các sinh viên này được nữa.</p>
   </div>
   <div class="modal__footer">
     <button data-modal-close data-variant="outline" class="btn" data-size="lg" type="button">Hủy</button>
