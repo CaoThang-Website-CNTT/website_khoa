@@ -2,6 +2,8 @@
 
 namespace App\Core\Files;
 
+use Shuchkin\SimpleXLS;
+
 /**
  * Cấu hình cho việc import danh sách sinh viên đợt thực tập.
  * Áp dụng cho định dạng file .xls xuất từ phần mềm quản lý điểm.
@@ -66,10 +68,10 @@ class BatchStudentImporter
   {
     require_once BASE_PATH . '/includes/files/simplexls.php';
 
-    $xls = \Shuchkin\SimpleXLS::parse($filePath);
+    $xls = SimpleXLS::parse($filePath);
 
     if (!$xls) {
-      throw new \RuntimeException('Không thể đọc file XLS: ' . \Shuchkin\SimpleXLS::parseError());
+      throw new \RuntimeException('Không thể đọc file XLS: ' . SimpleXLS::parseError());
     }
 
     $allRows = $xls->rows(0);
