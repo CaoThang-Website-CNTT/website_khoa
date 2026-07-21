@@ -115,6 +115,14 @@ class InternshipWeeklyReportService implements IInternshipWeeklyReportService
 
     $isLate = $now > $weekEndDt;
 
+    // Tính mốc nộp bù dựa trên setting (mặc định 7 ngày)
+    $lateBufferDays = (int) $this->_webSettingsService->getValue('internship_weekly_report_late_days', 7);
+    $hardDeadline = (clone $weekEndDt)->modify("+{$lateBufferDays} days");
+
+    if ($now > $hardDeadline) {
+      throw new Exception("Đã quá thời hạn nộp/cập nhật báo cáo cho tuần {$weekNumber}. Báo cáo chỉ được nộp muộn tối đa {$lateBufferDays} ngày.");
+    }
+
     $this->_store->beginTransaction();
     try {
       // Đặt is_latest = 0 cho bản ghi cũ

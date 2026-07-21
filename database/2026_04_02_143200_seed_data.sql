@@ -231,7 +231,8 @@ INSERT INTO `web_settings` (`key`, `group`, `group_label`, `type`, `value`, `lab
 ('internship_report_submission_days', 'internship', 'Thực tập tốt nghiệp', 'int', '7', 'Hạn nộp báo cáo sau khi đợt kết thúc (ngày)'),
 ('internship_company_warning_days', 'internship', 'Thực tập tốt nghiệp', 'int', '3', 'Thời gian cảnh báo khai báo công ty (ngày)'),
 ('internship_report_warning_days', 'internship', 'Thực tập tốt nghiệp', 'int', '3', 'Thời gian cảnh báo nộp báo cáo (ngày)'),
-('internship_grading_deadline_weeks', 'internship', 'Thực tập tốt nghiệp', 'int', '2', 'Thời hạn chấm điểm (tuần)');
+('internship_grading_deadline_weeks', 'internship', 'Thực tập tốt nghiệp', 'int', '2', 'Thời hạn chấm điểm (tuần)'),
+('internship_weekly_report_late_days', 'internship', 'Thực tập tốt nghiệp', 'int', '7', 'Hạn nộp bù báo cáo tuần (ngày)');
 
 
 -- ---------------------------------------------------------------------------- 

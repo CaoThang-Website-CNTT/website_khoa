@@ -790,13 +790,23 @@ class StudentDashboardController extends Controller
     $startAt = $dashboardData['current']['start_at'];
     $endAt = $dashboardData['current']['end_at'];
 
+    $batchModel = new InternshipBatch();
+    $batchModel->status = $dashboardData['current']['status'];
+    $batchModel->start_at = $startAt;
+    $batchModel->end_at = $endAt;
+    $effStatus = $batchModel->getEffectiveStatus();
+
+    $lateBufferDays = (int) $this->_webSettingsService->getValue('internship_weekly_report_late_days', 7);
+
     $weeksData = $this->_weeklyReportService->getStudentWeeklyData($batchStudentId, $startAt, $endAt);
 
     return $this->render('student/dashboard/weekly_reports', array_merge($dashboardData, [
       'student' => $student,
       'title' => 'Báo cáo hàng tuần',
       'weeks_data' => $weeksData,
-      'batch_student_id' => $batchStudentId
+      'batch_student_id' => $batchStudentId,
+      'effStatus' => $effStatus,
+      'lateBufferDays' => $lateBufferDays
     ]), layout: 'dashboard_layout');
   }
 
@@ -832,6 +842,17 @@ class StudentDashboardController extends Controller
     $batchStudentId = (int)$dashboardData['current']['batch_student_id'];
     $startAt = $dashboardData['current']['start_at'];
     $endAt = $dashboardData['current']['end_at'];
+
+    $batchModel = new InternshipBatch();
+    $batchModel->status = $dashboardData['current']['status'] ?? 'draft';
+    $batchModel->start_at = $startAt;
+    $batchModel->end_at = $endAt;
+    $effStatus = $batchModel->getEffectiveStatus();
+
+    if ($effStatus === BatchStatus::CLOSED) {
+      $request->session()->flashNotify('error', 'Đợt thực tập đã đóng, không thể nộp báo cáo tuần.');
+      return $this->redirect("/student/internship/{$batch_id}/weekly_reports");
+    }
 
     $weekNumber = (int)$request->input('week_number');
     $content = $request->input('content');

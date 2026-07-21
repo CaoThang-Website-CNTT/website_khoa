@@ -1,4 +1,11 @@
 <?php
+
+use App\Enums\BatchStatus;
+
+$isClosed = ($effStatus ?? '') === BatchStatus::CLOSED;
+$lateBuffer = $lateBufferDays ?? 7;
+$nowDt = new DateTime();
+
 $layout->start('head'); ?>
 <link rel="stylesheet" href="<?= url('public/css/student_weekly_reports.css') ?>">
 <?php $layout->end();
@@ -39,10 +46,12 @@ $timelineWeeks = array_reverse($weeks_data);
 <a href="<?= url("student/internship/{$current['id']}") ?>" class="btn" data-variant="outline" data-size="md">
   <i class="fa-solid fa-arrow-left mr-2" aria-hidden="true"></i>Thông tin thực tập
 </a>
-<button type="button" class="btn" data-variant="primary" data-size="md" id="submitBtn"
-  data-modal-trigger="#weekly-report-confirm-modal">
-  <i class="fa-solid fa-paper-plane mr-2" aria-hidden="true"></i>Lưu báo cáo
-</button>
+<?php if (!$isClosed): ?>
+  <button type="button" class="btn" data-variant="primary" data-size="md" id="submitBtn"
+    data-modal-trigger="#weekly-report-confirm-modal">
+    <i class="fa-solid fa-paper-plane mr-2" aria-hidden="true"></i>Lưu báo cáo
+  </button>
+<?php endif; ?>
 <?php $layout->end() ?>
 
 <?php $layout->start('content') ?>
@@ -140,6 +149,12 @@ $timelineWeeks = array_reverse($weeks_data);
     </div>
     <hr class="separator">
     <div class="card__content">
+      <?php if ($isClosed): ?>
+        <div class="alert mt-4" data-variant="warning">
+          <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+          Đợt thực tập này đã đóng, bạn không thể nộp hoặc chỉnh sửa báo cáo tuần được nữa.
+        </div>
+      <?php else: ?>
       <form action="<?= url("student/internship/{$current['id']}/weekly_reports") ?>" method="POST"
         enctype="multipart/form-data" id="weeklyReportForm">
         <?= csrf_field() ?>
@@ -219,6 +234,7 @@ $timelineWeeks = array_reverse($weeks_data);
           </div>
         </div>
       </form>
+      <?php endif; ?>
     </div>
   </div>
 </div>
