@@ -43,6 +43,7 @@ interface IInternshipBatchStore
   public function getTeacherBatchStats(int $batchId, int $teacherId): array;
   public function isSupervisorOfBatch(int $batchId, int $teacherId): bool;
   public function hasOverlappingEnrollment(int $studentId, string $startAt, string $endAt, ?int $excludeBatchId = null): bool;
+  public function hasOverlappingEnrollments(array $studentIds, string $startAt, string $endAt, ?int $excludeBatchId = null): array;
   public function getBatchStudent(int $batchId, int $studentId): ?array;
   public function batchStudentHasDependencies(int $batchStudentId): bool;
 }
@@ -706,6 +707,37 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
     return (bool)$stmt->fetchColumn();
   }
 
+  public function hasOverlappingEnrollments(array $studentIds, string $startAt, string $endAt, ?int $excludeBatchId = null): array
+  {
+    if (empty($studentIds)) {
+      return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
+    $sql = "SELECT DISTINCT bs.student_id
+            FROM internship_batch_students bs
+            JOIN internship_batches b ON b.id = bs.batch_id
+            WHERE bs.student_id IN ($placeholders)
+              AND b.status IN ('draft', 'published')
+              AND b.deleted_at IS NULL
+              AND b.start_at <= ?
+              AND b.end_at >= ?";
+
+    $params = array_values($studentIds);
+    $params[] = $endAt;
+    $params[] = $startAt;
+
+    if ($excludeBatchId !== null) {
+      $sql .= ' AND b.id <> ?';
+      $params[] = $excludeBatchId;
+    }
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($params);
+    $result = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return array_map('intval', $result);
+  }
+
   public function getBatchStudent(int $batchId, int $studentId): ?array
   {
     $sql = 'SELECT * FROM internship_batch_students WHERE batch_id = :batch_id AND student_id = :student_id';
@@ -807,9 +839,9 @@ class InternshipBatchStore extends Store implements IInternshipBatchStore
               bs.company_mentor_phone,
               bs.company_mentor_email,
               t.full_name AS teacher_name,
-              IF(ig.grade_lock_at IS NOT NULL, ig.final_score, 0) AS grade_score,
-              IF(ig.grade_lock_at IS NOT NULL, ig.score_reason, NULL) AS grade_reason,
-              IF(ig.grade_lock_at IS NOT NULL, ig.feedback, NULL) AS grade_feedback
+              IF(ig.grade_lock_at IS NOT NULL AND ig.has_submitted_hardcopy = 1, ig.final_score, 0) AS grade_score,
+              IF(ig.grade_lock_at IS NOT NULL AND ig.has_submitted_hardcopy = 1, ig.score_reason, NULL) AS grade_reason,
+              IF(ig.grade_lock_at IS NOT NULL AND ig.has_submitted_hardcopy = 1, ig.feedback, NULL) AS grade_feedback
             FROM internship_batch_students bs
             JOIN students s ON bs.student_id = s.id
             LEFT JOIN accounts acc ON s.account_id = acc.id

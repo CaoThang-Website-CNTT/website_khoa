@@ -163,6 +163,15 @@ foreach (($timeline['weeks'] ?? []) as $week) {
               placeholder="Nhận xét về thái độ, tiến độ và kết quả thực tập"
               <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>><?= htmlspecialchars($grade['feedback'] ?? '') ?></textarea>
           </div>
+
+          <div class="field">
+            <label class="field__label" for="has_submitted_hardcopy">
+              <input class="field__input" type="checkbox" name="has_submitted_hardcopy" id="has_submitted_hardcopy" value="1"
+                <?= !empty($grade['has_submitted_hardcopy']) ? 'checked' : '' ?>
+                <?= (!$canGrade || $isLocked) ? 'disabled' : '' ?>>
+              <span class="font-medium">Xác nhận sinh viên đã nộp bản in báo cáo thực tập</span>
+            </label>
+          </div>
         </form>
       </div>
     </div>

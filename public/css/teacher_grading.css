@@ -59,6 +59,9 @@
   border-radius: var(--radius-full);
   cursor: pointer;
 }
+#has_submitted_hardcopy:disabled {
+  background-color: var(--primary);
+}
 
 @media screen and (min-width: 768px) {
   .pdf-viewer {

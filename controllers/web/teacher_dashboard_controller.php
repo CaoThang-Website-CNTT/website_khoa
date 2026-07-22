@@ -294,7 +294,8 @@ class TeacherDashboardController extends Controller
     $rules = [
       'score' => ['required', 'numeric'],
       'score_reason' => ['nullable'],
-      'feedback' => ['nullable']
+      'feedback' => ['nullable'],
+      'has_submitted_hardcopy' => ['nullable']
     ];
 
     if (!$validator->validate($data, $rules)) {
@@ -304,6 +305,7 @@ class TeacherDashboardController extends Controller
     }
 
     $action = $data['action'] ?? 'draft';
+    $hasSubmittedHardcopy = !empty($data['has_submitted_hardcopy']);
 
     $result = $this->_gradeInternshipService->saveGrade(
       $batchStudentId,
@@ -311,6 +313,7 @@ class TeacherDashboardController extends Controller
       $data['score_reason'] ?? null,
       $data['feedback'] ?? null,
       $teacher->id,
+      $hasSubmittedHardcopy,
       $action
     );
 

@@ -319,7 +319,7 @@ foreach ($teachers as $t) {
   <form action="<?= url("admin/project_batches/{$batchObj->id}/allocation/import-preview") ?>" method="POST" enctype="multipart/form-data">
     <?= csrf_field() ?>
     <div class="modal__content p-4">
-      <p class="text-sm">Upload file Excel danh sách sinh viên đủ điều kiện làm đồ án. Cột chứa MSSV phải nằm ở cột thứ 2 (cột B), dữ liệu bắt đầu từ dòng 2.</p>
+      <p class="text-sm">Upload file Excel danh sách sinh viên đủ điều kiện làm đồ án. Cột chứa MSSV phải nằm ở cột thứ 2 (cột B), dữ liệu bắt đầu từ dòng 6 (theo mẫu xuất từ phần mềm của trường).</p>
 
       <div class="alert mt-4" data-variant="info">
         <p class="mb-2 text-sm">Hệ thống sẽ đối chiếu file này với danh sách sinh viên đã tạo nhóm. Những ai không có tên trong file sẽ bị đánh dấu 'Không đủ điều kiện' (Nhóm của họ sẽ rơi vào trạng thái chờ xử lý).</p>

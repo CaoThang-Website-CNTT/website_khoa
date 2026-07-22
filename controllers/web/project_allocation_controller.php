@@ -9,8 +9,8 @@ use App\Services\ProjectBatchService;
 use App\Services\ProjectTopicService;
 use App\Services\ProjectEligibilityService;
 use App\Enums\ProjectBatchStatus;
-use App\Core\Files\XlsxReader;
 use Exception;
+use Shuchkin\SimpleXLS;
 
 class ProjectAllocationController extends Controller
 {
@@ -172,12 +172,27 @@ class ProjectAllocationController extends Controller
 
     $tmpPath = $_FILES['excel_file']['tmp_name'];
     try {
-      require_once BASE_PATH . '/includes/files/xlsx_reader.php';
-      $reader = XlsxReader::open($tmpPath);
+      require_once BASE_PATH . '/includes/files/simplexls.php';
+      $xls = SimpleXLS::parse($tmpPath);
+      if (!$xls) {
+        throw new Exception('Không thể đọc file XLS: ' . SimpleXLS::parseError());
+      }
+
+      $allRows = $xls->rows(0);
       $excelStudentCodes = [];
 
-      foreach ($reader->rows(2) as $row) {
-        $mssv = trim((string)($row[2] ?? ''));
+      // Dữ liệu bắt đầu từ dòng 6 (index 5)
+      foreach ($allRows as $rowIdx => $row) {
+        if ($rowIdx < 5) continue;
+
+        // Kiểm tra STT ở cột 1 (index 0)
+        $stt = $row[0] ?? null;
+        if (!is_numeric($stt) || (int) $stt <= 0) {
+          continue;
+        }
+
+        // Lấy MSSV ở cột 2 (index 1)
+        $mssv = trim((string)($row[1] ?? ''));
         if ($mssv !== '') {
           $excelStudentCodes[] = $mssv;
         }

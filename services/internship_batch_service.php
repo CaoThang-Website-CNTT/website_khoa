@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\AppTime;
+use App\Core\Files\BatchStudentImporter;
 use App\Stores\{InternshipBatchStore, InternshipAssignmentStore, TeacherStore, AccountStore, InternshipSubmissionStore, ReferralLetterStore, StudentStore, ClassroomStore, InternshipGradeStore};
 use App\Models\Student;
 use App\Core\Pageable;
@@ -94,10 +95,18 @@ class InternshipBatchService implements IInternshipBatchService
         }
       }
 
+      $allClassrooms = $this->_classroomStore->getAll();
+      $classroomMap = [];
+      foreach ($allClassrooms as $c) {
+        $normName = BatchStudentImporter::normalizeClassroomName($c->short_name);
+        $classroomMap[$normName] = $c;
+      }
+
       $missingClassrooms = [];
       foreach ($studentsInput as $studentInput) {
         $classroomShortName = trim($studentInput['classroom_name'] ?? '');
-        if ($classroomShortName === '' || !$this->_classroomStore->getByShortName($classroomShortName)) {
+        $normName = BatchStudentImporter::normalizeClassroomName($classroomShortName);
+        if ($classroomShortName === '' || !isset($classroomMap[$normName])) {
           $missingClassrooms[] = $classroomShortName !== '' ? $classroomShortName : '(trống)';
         }
       }
@@ -119,68 +128,121 @@ class InternshipBatchService implements IInternshipBatchService
       $studentIds = [];
       $classroomIds = [];
 
-      // Phân tích danh sách sinh viên
-      foreach ($studentsInput as $sv) {
-        // --- 1. XỬ LÝ CLASSROOM ---
-        $classroomShortName = trim($sv['classroom_name'] ?? '');
-        $classroom = $this->_classroomStore->getByShortName($classroomShortName);
+      // Phân tích danh sách sinh viên: Tách nhóm hiện có và nhóm mới
+      $allStudentCodes = array_map(fn($sv) => trim($sv['student_code']), $studentsInput);
+      $existingStudents = $this->_studentStore->getByStudentIds($allStudentCodes);
 
-        // All classrooms are validated before creating the batch. Keep this guard
-        // close to the lookup so a concurrent deletion cannot silently remap data.
+      $existingStudentMap = [];
+      foreach ($existingStudents as $es) {
+        $existingStudentMap[$es->student_id] = $es;
+      }
+
+      $newStudentsInput = [];
+      foreach ($studentsInput as $sv) {
+        $studentCode = trim($sv['student_code']);
+
+        // Xử lý lớp (dành cho việc gán vào đợt)
+        $classroomShortName = trim($sv['classroom_name'] ?? '');
+        $normName = BatchStudentImporter::normalizeClassroomName($classroomShortName);
+        $classroom = $classroomMap[$normName] ?? null;
+
         if (!$classroom) {
           throw new Exception("Lớp $classroomShortName không còn tồn tại trong hệ thống.");
         }
-
         $classroomIds[] = $classroom->id;
-        $assignedClassroomId = $classroom->id;
 
-        // --- 2. XỬ LÝ ACCOUNT & STUDENT ---
-        $studentCode = trim($sv['student_code']);
-        $existingStudent = $this->_studentStore->getByStudentId($studentCode);
-
-        if ($existingStudent) {
-          $studentIds[] = $existingStudent->id;
+        if (isset($existingStudentMap[$studentCode])) {
+          $studentIds[] = $existingStudentMap[$studentCode]->id;
         } else {
-          $nationalId = trim($sv['national_id'] ?? '');
-          if ($nationalId === '') {
-            throw new Exception("Sinh viên $studentCode thiếu số CCCD.");
-          }
+          $newStudentsInput[] = ['sv' => $sv, 'classroom' => $classroom];
+        }
+      }
 
-          // Chưa có student => tạo Account, rồi tạo Student
+      // Xử lý nhóm sinh viên mới (Bulk Insert)
+      if (!empty($newStudentsInput)) {
+        $accountsData = [];
+        $newEmails = [];
+        $now = (new \DateTime())->format('Y-m-d H:i:s');
+
+        foreach ($newStudentsInput as $item) {
+          $studentCode = trim($item['sv']['student_code']);
           $email = $studentCode . '@caothang.edu.vn';
-          // Mật khẩu mặc định là CCCD theo mẫu import.
-          $account = $this->_accountStore->create($email, $nationalId, 'student');
+          $newEmails[] = $email;
 
-          if (!$account) {
+          // Dùng cost = 4 cho Bcrypt để tối ưu tốc độ khi import hàng loạt (< 1ms thay vì 100ms)
+          $passwordHash = password_hash($studentCode, PASSWORD_BCRYPT, ['cost' => 4]);
+
+          $accountsData[] = [
+            'email' => $email,
+            'password_hash' => $passwordHash,
+            'role' => 'student',
+            'created_at' => $now,
+            'updated_at' => $now,
+          ];
+        }
+
+        // Tạo tài khoản hàng loạt
+        $this->_accountStore->createMany($accountsData);
+        $newAccounts = $this->_accountStore->getByEmails($newEmails);
+
+        $accountMap = [];
+        foreach ($newAccounts as $acc) {
+          $accountMap[$acc->email] = $acc;
+        }
+
+        // Tạo sinh viên hàng loạt
+        $studentsData = [];
+        $newStudentCodesForFetch = [];
+        $majorMap = [];
+
+        foreach ($newStudentsInput as $item) {
+          $sv = $item['sv'];
+          $classroom = $item['classroom'];
+
+          $studentCode = trim($sv['student_code']);
+          $email = $studentCode . '@caothang.edu.vn';
+
+          if (!isset($accountMap[$email])) {
             throw new Exception("Tạo tài khoản thất bại cho sinh viên $studentCode.");
           }
 
+          $accountId = $accountMap[$email]->id;
+
           $majorName = null;
           if ($classroom->major_id) {
-            $major = $this->_classroomStore->getMajorById($classroom->major_id);
-            $majorName = $major?->full_name;
+            if (!isset($majorMap[$classroom->major_id])) {
+              $major = $this->_classroomStore->getMajorById($classroom->major_id);
+              $majorMap[$classroom->major_id] = $major?->full_name;
+            }
+            $majorName = $majorMap[$classroom->major_id];
           }
 
-          $newStudent = new Student(
-            account_id: $account->id,
-            student_id: $studentCode,
-            full_name: $sv['full_name'],
-            gender: 'male',
-            dob: str_replace('/', '-', $sv['dob']),
-            national_id: $nationalId,
-            phone: '',
-            address: '',
-            classroom_id: $assignedClassroomId,
-            birth_place: '',
-            status: 'Đang học',
-            major: $majorName
-          );
+          $newStudentCodesForFetch[] = $studentCode;
 
-          $newStudent = $this->_studentStore->create($newStudent);
-          if (!$newStudent || !$newStudent->id) {
-            throw new Exception("Tạo dữ liệu sinh viên thất bại cho $studentCode.");
-          }
-          $studentIds[] = $newStudent->id;
+          $studentsData[] = [
+            'account_id' => $accountId,
+            'student_id' => $studentCode,
+            'full_name' => $sv['full_name'],
+            'gender' => 'male',
+            'dob' => str_replace('/', '-', $sv['dob']),
+            'national_id' => $studentCode,
+            'phone' => '',
+            'address' => '',
+            'classroom_id' => $classroom->id,
+            'birth_place' => '',
+            'notes' => null,
+            'status' => 'Đang học',
+            'major' => $majorName,
+            'created_at' => $now,
+            'updated_at' => $now,
+          ];
+        }
+
+        $this->_studentStore->createMany($studentsData);
+        $insertedStudents = $this->_studentStore->getByStudentIds($newStudentCodesForFetch);
+
+        foreach ($insertedStudents as $ist) {
+          $studentIds[] = $ist->id;
         }
       }
 
@@ -188,11 +250,11 @@ class InternshipBatchService implements IInternshipBatchService
       $studentIds = array_unique($studentIds);
       $classroomIds = array_unique($classroomIds);
 
-      if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') {
-        foreach ($studentIds as $studentId) {
-          if ($this->_store->hasOverlappingEnrollment((int) $studentId, $batchData['start_at'], $batchData['end_at'], $batchId)) {
-            throw new Exception('Sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
-          }
+      // Kiểm tra Overlapping bằng 1 câu truy vấn
+      if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true' && !empty($studentIds)) {
+        $overlappingIds = $this->_store->hasOverlappingEnrollments($studentIds, $batchData['start_at'], $batchData['end_at'], $batchId);
+        if (!empty($overlappingIds)) {
+          throw new Exception('Có ' . count($overlappingIds) . ' sinh viên đã được đăng ký vào một đợt thực tập khác có thời gian trùng lặp.');
         }
       }
 

@@ -69,32 +69,48 @@ class InternshipBatchApiController extends Controller
   {
     try {
       $fileHandler = new UploadedFileHandler();
-      $rawFile = $request->file('file_import');
 
-      if (!$rawFile) {
-        return $this->json(['message' => 'Vui lòng chọn file để upload.'], 400);
+      // Hỗ trợ nhận một hoặc nhiều file cùng lúc
+      $rawFiles = $request->file('file_import');
+
+      if (!$rawFiles) {
+        return $this->json(['message' => 'Vui lòng chọn ít nhất một file để upload.'], 400);
       }
 
-      $uploadedFile = $fileHandler->processUpload($rawFile);
-
-      if ($uploadedFile->extension !== 'xlsx') {
-        return $this->json(['message' => 'Chỉ hỗ trợ file định dạng .xlsx'], 400);
+      // Chuẩn hóa thành array để xử lý thống nhất (mảng của các file)
+      // Nếu $rawFiles là 1 mảng assoc chứa key 'name', nó là 1 file đơn lẻ.
+      if (isset($rawFiles['name'])) {
+        $rawFiles = [$rawFiles];
+      } else if (!is_array($rawFiles)) {
+        $rawFiles = [$rawFiles];
       }
-
-      $students = BatchStudentImporter::import($uploadedFile->tmpPath);
 
       $validClassroomNames = array_map(
-        fn(array $classroom): string => str_replace(' ', '', mb_strtolower($classroom['name'], 'UTF-8')),
+        fn(array $classroom): string => BatchStudentImporter::normalizeClassroomName($classroom['name']),
         $this->_service->getAllClassrooms()
       );
 
-      foreach ($students as &$student) {
-        $normalizedName = str_replace(' ', '', mb_strtolower($student['classroom_name'], 'UTF-8'));
-        $student['is_classroom_invalid'] = !in_array($normalizedName, $validClassroomNames, true);
-      }
-      unset($student);
+      $allStudents = [];
 
-      return $this->json($students, 200);
+      foreach ($rawFiles as $rawFile) {
+        $uploadedFile = $fileHandler->processUpload($rawFile);
+
+        if (!in_array($uploadedFile->extension, ['xls', 'xlsx'], true)) {
+          return $this->json(['message' => "File '{$uploadedFile->originalName}': Chỉ hỗ trợ định dạng .xls hoặc .xlsx"], 400);
+        }
+
+        $students = BatchStudentImporter::import($uploadedFile->tmpPath);
+
+        foreach ($students as &$student) {
+          $normalizedName = BatchStudentImporter::normalizeClassroomName($student['classroom_name']);
+          $student['is_classroom_invalid'] = !in_array($normalizedName, $validClassroomNames, true);
+        }
+        unset($student);
+
+        $allStudents = array_merge($allStudents, $students);
+      }
+
+      return $this->json($allStudents, 200);
     } catch (\Throwable $e) {
       return $this->json(['message' => $e->getMessage()], 400, $e->getMessage());
     }
