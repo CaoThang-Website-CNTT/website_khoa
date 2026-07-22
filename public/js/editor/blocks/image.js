@@ -70,7 +70,15 @@ export class ImageBlock extends EditorBlock {
     const urlInput = this.dom.querySelector('.be-image-external-url');
     const applyBtn = this.dom.querySelector('.be-apply-url-btn');
 
+    uploadBtn.addEventListener('click', () => {
+      const mediaModal = document.querySelector('#media-selector-modal');
+      if (mediaModal) mediaModal.dataset.beMediaTarget = `block-image:${this.id}`;
+    });
+
     const handleMediaSubmit = ({ detail }) => {
+      const mediaModal = document.querySelector('#media-selector-modal');
+      if (mediaModal?.dataset.beMediaTarget !== `block-image:${this.id}`) return;
+
       const { media, close } = detail;
       if (!media || !media.file_path) return;
 
@@ -88,6 +96,7 @@ export class ImageBlock extends EditorBlock {
       this.bus?.dispatch('block:updated', { block: this });
       this.#renderCurrentState();
 
+      delete mediaModal.dataset.beMediaTarget;
       if (typeof close === 'function') close();
 
       document.removeEventListener("msm:submit", handleMediaSubmit);
@@ -101,6 +110,7 @@ export class ImageBlock extends EditorBlock {
       this.data.meta.url = url;
       this.bus?.dispatch('block:updated', { block: this });
       this.#renderCurrentState();
+      document.removeEventListener("msm:submit", handleMediaSubmit);
     };
 
     applyBtn.addEventListener('click', applyExternalUrl);

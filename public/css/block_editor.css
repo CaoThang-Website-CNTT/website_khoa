@@ -455,6 +455,38 @@ body {
   font-family: var(--font-mono);
 }
 
+.be-thumbnail-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.be-thumbnail-picker__preview {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.be-thumbnail-picker__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.be-thumbnail-picker__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 /* =============================================================
    BLOCK PREVIEWS - trong canvas, render như trang public thật
    ============================================================= */

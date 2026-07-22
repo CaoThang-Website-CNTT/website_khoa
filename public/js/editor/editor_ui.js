@@ -201,6 +201,10 @@ class EditorMetaBinder {
     this.#bindEvents();
 
     this.bus.subscribe('meta:updated', ({ key, value, allMeta }) => {
+      if (key === 'featured_image') {
+        this.#syncControl(key, value);
+      }
+
       const syncToDOM = (currentPath, currentVal) => {
         if (currentVal !== null && typeof currentVal === 'object' && !Array.isArray(currentVal)) {
           for (const [subKey, subValue] of Object.entries(currentVal)) {
@@ -240,7 +244,46 @@ class EditorMetaBinder {
     this.container.addEventListener('change', e => this.#handleChange(e));
     this.container.addEventListener('click', e => this.#handleSwitchClick(e));
 
+    const thumbnailSelect = this.container.querySelector('[data-be-thumbnail-select]');
+    const thumbnailRemove = this.container.querySelector('[data-be-thumbnail-remove]');
+    const mediaModal = document.querySelector('#media-selector-modal');
+
+    thumbnailSelect?.addEventListener('click', () => {
+      if (mediaModal) mediaModal.dataset.beMediaTarget = 'post-thumbnail';
+    });
+
+    thumbnailRemove?.addEventListener('click', () => {
+      this.bus.dispatch('meta:update_request', { key: 'featured_image', value: null });
+    });
+
+    mediaModal?.addEventListener('msm:submit', e => this.#handleThumbnailSelected(e));
+
     document.addEventListener('select:change', e => this.#handleSelectClick(e));
+  }
+
+  #handleThumbnailSelected(e) {
+    const mediaModal = e.currentTarget;
+    if (mediaModal?.dataset.beMediaTarget !== 'post-thumbnail') return;
+
+    const { media, close } = e.detail ?? {};
+    if (!media?.file_path) return;
+
+    const mediaBase = (window.PUBLIC_MEDIA_BASE || `${location.origin}/public/media`).replace(/\/$/, '');
+    let filePath = String(media.file_path).replace(/\\/g, '/').replace(/^\/+/, '');
+    if (filePath.startsWith('public/media/')) filePath = filePath.slice('public/media/'.length);
+    if (filePath.startsWith('media/')) filePath = filePath.slice('media/'.length);
+
+    this.bus.dispatch('meta:update_request', {
+      key: 'featured_image',
+      value: {
+        id: media.id ?? null,
+        url: `${mediaBase}/${filePath}`,
+        alt: media.alt_text || media.title || '',
+      },
+    });
+
+    delete mediaModal.dataset.beMediaTarget;
+    if (typeof close === 'function') close();
   }
 
   #handlePaste(e) {
@@ -318,6 +361,10 @@ class EditorMetaBinder {
   }
 
   #syncControl(key, value) {
+    if (key === 'featured_image') {
+      this.#syncThumbnail(value);
+    }
+
     this.controls.get(key)?.forEach(el => {
       if (el.classList.contains('switch')) {
         const state = value ? 'checked' : 'unchecked';
@@ -342,6 +389,33 @@ class EditorMetaBinder {
         }
       }
     });
+  }
+
+  #syncThumbnail(value) {
+    const image = this.container.querySelector('[data-be-thumbnail-image]');
+    const empty = this.container.querySelector('[data-be-thumbnail-empty]');
+    const remove = this.container.querySelector('[data-be-thumbnail-remove]');
+    const selectLabel = this.container.querySelector('[data-be-thumbnail-select-label]');
+    if (!image || !empty) return;
+
+    const rawUrl = typeof value === 'string' ? value : value?.url;
+    const normalizedPath = String(rawUrl || '').replace(/\\/g, '/').replace(/^\/+/, '');
+    let imageUrl = rawUrl || '';
+
+    if (imageUrl && !/^https?:\/\//i.test(imageUrl) && !String(imageUrl).startsWith('/')) {
+      const mediaBase = (window.PUBLIC_MEDIA_BASE || `${location.origin}/public/media`).replace(/\/$/, '');
+      let relativePath = normalizedPath;
+      if (relativePath.startsWith('public/media/')) relativePath = relativePath.slice('public/media/'.length);
+      if (relativePath.startsWith('media/')) relativePath = relativePath.slice('media/'.length);
+      imageUrl = `${mediaBase}/${relativePath}`;
+    }
+
+    const hasImage = Boolean(imageUrl);
+    image.src = hasImage ? imageUrl : '';
+    image.hidden = !hasImage;
+    empty.hidden = hasImage;
+    if (remove) remove.hidden = !hasImage;
+    if (selectLabel) selectLabel.textContent = hasImage ? 'Đổi ảnh thumbnail' : 'Chọn ảnh thumbnail';
   }
 
   #syncPreview(key, value, allMeta) {

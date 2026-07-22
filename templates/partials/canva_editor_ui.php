@@ -14,6 +14,12 @@ if ($oldEditorData) {
     'meta' => json_decode($post->settings_json ?? '{}', true),
     'blocks' => json_decode($post->content_json ?? '[]', true)
   ];
+
+  // Các bài viết cũ có thể chỉ lưu thumbnail ở cột seo_image_url.
+  // Đưa giá trị này vào editor metadata để có thể xem trước và thay đổi.
+  if (!array_key_exists('featured_image', $initialPayload['meta'] ?? [])) {
+    $initialPayload['meta']['featured_image'] = $post->seo_image_url;
+  }
 }
 
 $oldTitle = $initialPayload['meta']['title'] ?? '';
@@ -230,6 +236,28 @@ $editorAuthors = array_map(
               <textarea id="be-excerpt-input" class="field__input" rows="3" name="seo_desc"
                 placeholder="Để trống: tự lấy từ đoạn văn đầu tiên" maxlength="500"
                 data-be-meta-key="excerpt"><?= htmlspecialchars($initialPayload['meta']['excerpt'] ?? '') ?></textarea>
+            </div>
+
+            <div class="field">
+              <span class="field__label">Ảnh thumbnail</span>
+              <div class="be-thumbnail-picker">
+                <div class="be-thumbnail-picker__preview" data-be-thumbnail-preview>
+                  <img data-be-thumbnail-image src="" alt="Ảnh thumbnail bài viết" hidden>
+                  <span class="be-thumbnail-picker__empty" data-be-thumbnail-empty>Chưa chọn ảnh thumbnail</span>
+                </div>
+                <div class="be-thumbnail-picker__actions">
+                  <button type="button" class="btn" data-size="sm" data-variant="outline"
+                    data-be-thumbnail-select data-modal-trigger="#media-selector-modal">
+                    <i class="fa-regular fa-image" aria-hidden="true"></i>
+                    <span data-be-thumbnail-select-label>Chọn ảnh thumbnail</span>
+                  </button>
+                  <button type="button" class="btn" data-size="sm" data-variant="destructive"
+                    data-be-thumbnail-remove hidden>
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i> Xóa ảnh
+                  </button>
+                </div>
+                <div class="field__description">Ảnh này được dùng trên danh sách tin tức và bài viết liên quan.</div>
+              </div>
             </div>
 
             <div class="field" data-orientation="horizontal">

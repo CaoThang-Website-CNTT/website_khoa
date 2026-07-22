@@ -257,7 +257,7 @@ class PostService implements IPostService
       $data['view_count'] = (int) $meta['init_view_count'];
     if (isset($meta['excerpt']))
       $data['seo_description'] = $meta['excerpt'];
-    if (isset($meta['featured_image']))
+    if (array_key_exists('featured_image', $meta))
       $data['seo_image_url'] = $this->resolveSeoImage($meta['featured_image']);
     if (isset($meta['settings']['is_featured']))
       $data['is_featured'] = $meta['settings']['is_featured'];
