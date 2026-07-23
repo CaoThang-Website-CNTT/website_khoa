@@ -19,8 +19,7 @@ final class AboutPageDefaults
 
   public static function history(): array
   {
-    return ['variant' => 'default', 'sections' => [
-      [
+    $facultyHistory = [
         'image' => ['src' => self::IMAGE, 'alt' => 'Hoạt động của Khoa Công nghệ thông tin', 'caption' => 'Khoa Công nghệ thông tin Cao Thắng'],
         'year' => '1998',
         'badge' => '<i class="fa-solid fa-graduation-cap"></i> <span class="text-sm">Khoa Công Nghệ Thông Tin</span>',
@@ -31,8 +30,8 @@ final class AboutPageDefaults
           ['year' => '2018', 'description' => 'Đội tuyển Tin học Cao Thắng giành giải nhất đồng đội khối Cao đẳng tại Olympic Tin học Sinh viên Việt Nam, cùng nhiều giải cá nhân.'],
           ['year' => '2020', 'description' => 'Khoa Điện tử - Tin học được đổi tên thành Khoa Công nghệ thông tin.'],
         ],
-      ],
-      [
+      ];
+    $schoolHistory = [
         'image' => ['src' => self::IMAGE, 'alt' => 'Trường Cao đẳng Kỹ thuật Cao Thắng', 'caption' => 'Truyền thống đào tạo kỹ thuật Cao Thắng'],
         'year' => '1906',
         'badge' => '<i class="fa-solid fa-building-columns"></i> <span class="text-sm">Trường Cao Đẳng Kỹ Thuật Cao Thắng</span>',
@@ -42,8 +41,9 @@ final class AboutPageDefaults
           ['year' => '1915', 'description' => 'Chủ tịch Tôn Đức Thắng theo học tại trường.'],
           ['year' => '2004', 'description' => 'Trường chính thức mang tên Trường Cao đẳng Kỹ thuật Cao Thắng.'],
         ],
-      ],
-    ]];
+      ];
+
+    return ['variant' => 'default', 'sections' => [$schoolHistory, $facultyHistory]];
   }
 
   public static function bentoGrid(): array

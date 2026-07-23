@@ -512,6 +512,18 @@ SET content_json = JSON_SET(
 )
 WHERE slug = 'about';
 
+-- Present the institution's history before the faculty's history.
+UPDATE `cms_pages`
+SET content_json = JSON_SET(
+  content_json,
+  '$.sections[3].data.sections',
+  JSON_ARRAY(
+    JSON_EXTRACT(content_json, '$.sections[3].data.sections[1]'),
+    JSON_EXTRACT(content_json, '$.sections[3].data.sections[0]')
+  )
+)
+WHERE slug = 'about';
+
 -- Replace Landing-page placeholders with verified Khoa CNTT information.
 UPDATE `cms_pages`
 SET content_json = JSON_SET(
